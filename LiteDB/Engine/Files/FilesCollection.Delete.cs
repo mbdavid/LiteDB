@@ -26,14 +26,16 @@ namespace LiteDB
 
             var entry = new FileEntry(doc);
 
-            _engine.Cache.Clear();
-
             _engine.Transaction.Begin();
+
+            // at this point, pages in cache are equals in disk - I can use anyone
 
             try
             {
+                // set all pages to empty directly to disk - except Header ponter and last deleted page (both are will be saved during commit)
                 _engine.Data.DeleteStreamData(entry.PageID);
 
+                // delete FileEntry document
                 _col.Delete(key);
 
                 _engine.Transaction.Commit();

@@ -27,7 +27,7 @@ namespace LiteDB
             this.UploadDate = DateTime.Now;
         }
 
-        public FileEntry(BsonDocument doc)
+        internal FileEntry(BsonDocument doc)
         {
             this.Key = doc["Key"].AsString;
             this.Length = doc["Length"].AsInt;
@@ -49,9 +49,23 @@ namespace LiteDB
             return doc;
         }
 
+        /// <summary>
+        /// Open file stream to read from database
+        /// </summary>
         public LiteFileStream OpenRead(LiteEngine db)
         {
             return new LiteFileStream(db, this);
+        }
+
+        /// <summary>
+        /// Save file content to a external file
+        /// </summary>
+        public void SaveAs(LiteEngine db, string filename, bool overwritten = true)
+        {
+            using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
+            {
+                this.OpenRead(db).CopyTo(file);
+            }
         }
     }
 }

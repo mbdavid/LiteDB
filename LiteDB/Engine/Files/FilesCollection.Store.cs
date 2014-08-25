@@ -33,9 +33,9 @@ namespace LiteDB
             if (_engine.Transaction.IsInTransaction)
                 throw new LiteDBException("Files can´t be used inside a transaction.");
 
-            _engine.Cache.Clear();
-
             _engine.Transaction.Begin();
+
+            // at this point, all cache pages are the same in disk, so I can use any of them
 
             try
             {
