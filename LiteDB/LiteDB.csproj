@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E808051A-83B7-4FA9-B004-D064EA162B60}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LiteDB</RootNamespace>
+    <AssemblyName>LiteDB</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Engine\Collections\Collection.cs" />
+    <Compile Include="Engine\Collections\Collection.Delete.cs" />
+    <Compile Include="Engine\Collections\Collection.Index.cs" />
+    <Compile Include="Engine\Collections\Collection.Find.cs" />
+    <Compile Include="Engine\Collections\Collection.Insert.cs" />
+    <Compile Include="Engine\Collections\Collection.Update.cs" />
+    <Compile Include="Engine\Files\LiteFileStream.cs" />
+    <Compile Include="Engine\Files\FilesCollection.Find.cs" />
+    <Compile Include="Engine\Files\FilesCollection.Delete.cs" />
+    <Compile Include="Engine\Files\FilesCollection.OpenRead.cs" />
+    <Compile Include="Engine\Files\FilesCollection.Store.cs" />
+    <Compile Include="Engine\Files\FileEntry.cs" />
+    <Compile Include="Engine\Files\FilesCollection.cs" />
+    <Compile Include="Query\Query.cs" />
+    <Compile Include="Bson\BsonSerializer.cs" />
+    <Compile Include="Bson\BsonValue.cs" />
+    <Compile Include="Bson\BsonType.cs" />
+    <Compile Include="Bson\BsonArray.cs" />
+    <Compile Include="Bson\BsonObject.cs" />
+    <Compile Include="Bson\BsonIgnoreAttribute.cs" />
+    <Compile Include="Bson\BsonDocument.cs" />
+    <Compile Include="Bson\fastBinaryJson\BJSON.cs" />
+    <Compile Include="Bson\fastBinaryJson\BJsonParser.cs" />
+    <Compile Include="Bson\fastBinaryJson\BJsonSerializer.cs" />
+    <Compile Include="Bson\fastBinaryJson\Getters.cs" />
+    <Compile Include="Bson\fastBinaryJson\Reflection.cs" />
+    <Compile Include="Bson\fastBinaryJson\SafeDictionary.cs" />
+    <Compile Include="Storage\Pages\DataPage.cs" />
+    <Compile Include="Storage\Pages\IndexPage.cs" />
+    <Compile Include="Storage\Services\CollectionService.cs" />
+    <Compile Include="Storage\Services\RedoService.cs" />
+    <Compile Include="Storage\Services\RecoveryService.cs" />
+    <Compile Include="Storage\Services\IndexService.cs" />
+    <Compile Include="Storage\Services\DataService.cs" />
+    <Compile Include="Storage\Pages\CollectionPage.cs" />
+    <Compile Include="Storage\Structures\CollectionIndex.cs" />
+    <Compile Include="Storage\Structures\DataBlock.cs" />
+    <Compile Include="Storage\Structures\IndexKey.cs" />
+    <Compile Include="Storage\Structures\IndexNode.cs" />
+    <Compile Include="Storage\Structures\PageAddress.cs" />
+    <Compile Include="Storage\Pages\ExtendPage.cs" />
+    <Compile Include="Storage\Services\CacheService.cs" />
+    <Compile Include="Storage\Services\PageService.cs" />
+    <Compile Include="Storage\Services\DiskService.cs" />
+    <Compile Include="Storage\Services\TransactionService.cs" />
+    <Compile Include="Utils\BinaryReaderExtensions.cs" />
+    <Compile Include="Utils\BinaryWriterExtensions.cs" />
+    <Compile Include="Utils\ConnectionString.cs" />
+    <Compile Include="Engine\LiteEngine.cs" />
+    <Compile Include="Storage\Pages\BasePage.cs" />
+    <Compile Include="Storage\Pages\HeaderPage.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\DictionaryExtensions.cs" />
+    <Compile Include="Utils\LiteDBException.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
