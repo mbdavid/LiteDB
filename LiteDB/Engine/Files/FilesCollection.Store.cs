@@ -21,9 +21,6 @@ namespace LiteDB
             if(!Regex.IsMatch(key, @"^[^\.<>\\/|:""*][^<>\\/|:""*]*(/[^\.<>\\/|:""*][^<>\\/|:""*]*)*$"))
                 throw new ArgumentException("Invalid key format. Use key as path/to/file/filename.ext");
 
-            // get _files collection page or create if not exitis (inside a transaction)
-            _col.GetCollectionPage(true);
-
             // Find document and convert to entry (or create a new one)
             var doc = _col.FindById(key);
 

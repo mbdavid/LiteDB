@@ -23,7 +23,7 @@ namespace LiteDB
         /// <summary>
         /// Get the collection page only when nedded. Gets from cache always to garantee that wil be the last (in case of _clearCache will get a new one)
         /// </summary>
-        internal CollectionPage GetCollectionPage(bool addInTransaction = false)
+        internal CollectionPage GetCollectionPage()
         {
             if (_pageID == uint.MaxValue)
             {
@@ -31,19 +31,7 @@ namespace LiteDB
 
                 if (col == null)
                 {
-                    if (addInTransaction) _engine.Transaction.Begin();
-
-                    try
-                    {
-                        col = _engine.Collections.Add(_name);
-
-                        if (addInTransaction) _engine.Transaction.Commit();
-                    }
-                    catch (Exception ex)
-                    {
-                        if (addInTransaction) _engine.Transaction.Rollback();
-                        throw ex;
-                    }
+                    col = _engine.Collections.Add(_name);
                 }
 
                 _pageID = col.PageID;
