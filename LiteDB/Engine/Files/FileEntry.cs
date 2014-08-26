@@ -12,24 +12,24 @@ namespace LiteDB
     /// </summary>
     public class FileEntry
     {
-        public string Key { get; set; }
+        public string Id { get; set; }
         public int Length { get; set; }
         public DateTime UploadDate { get; set; }
         public Dictionary<string, object> Metadata { get; set; }
 
         internal uint PageID { get; set; }
 
-        internal FileEntry(string key, Dictionary<string, object> metadata)
+        internal FileEntry(string id, Dictionary<string, object> metadata)
         {
             this.PageID = uint.MaxValue;
-            this.Key = key;
+            this.Id = id;
             this.Metadata = metadata == null ? new Dictionary<string, object>() : metadata;
             this.UploadDate = DateTime.Now;
         }
 
         internal FileEntry(BsonDocument doc)
         {
-            this.Key = doc["Key"].AsString;
+            this.Id = doc["Id"].AsString;
             this.Length = doc["Length"].AsInt;
             this.UploadDate = doc["UploadDate"].AsDateTime;
             this.Metadata = (Dictionary<string, object>)doc["Metadata"].RawValue;
@@ -40,7 +40,7 @@ namespace LiteDB
         {
             var doc = new BsonDocument();
 
-            doc["Key"] = new BsonValue(this.Key);
+            doc["Id"] = new BsonValue(this.Id);
             doc["Length"] = new BsonValue(this.Length);
             doc["UploadDate"] = new BsonValue(this.UploadDate);
             doc["Metadata"] = new BsonValue(this.Metadata);

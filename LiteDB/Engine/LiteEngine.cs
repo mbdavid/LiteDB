@@ -160,14 +160,6 @@ namespace LiteDB
                     DiskService.WritePage(writer, new CollectionPage { PageID = 1, CollectionName = "_master" });
                 }
             }
-
-            // open database to create internal collections
-            using (var db = new LiteEngine(connectionString.Filename))
-            {
-                db.BeginTrans();
-                db.Collections.Add("_files");
-                db.Commit();
-            }
         }
 
         #endregion

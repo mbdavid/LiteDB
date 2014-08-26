@@ -15,7 +15,7 @@ Same LiteDB features:
 
 ## How to use
 
-Document are storage in collections. Each collection many documents with same type. Each document have a Id (like 'Primary Key' on relation databases).
+Document are storage in collections. Each collection have many documents with same type. Each document have an Id (like 'Primary Key' on relation databases).
 
 ```C#
 // Open data file (or create if not exits)
@@ -120,13 +120,13 @@ Sametimes we need store files in database. For this, LiteDB has a special `Files
 
 ```C#
 // Storing a file stream inside database with metadata related
-db.Files.Store("my-key/image.png", stream, metadata);
+db.Files.Store("folder/image.png", stream, metadata);
 
 // Get file reference using key
-var file = db.Files.FindByKey("my-keys/image.png");
+var file = db.Files.FindById("folder/image.png");
 
 // Find all files using StartsWith
-var files = db.Files.Find("my-key");
+var files = db.Files.Find("folder/");
 
 // Get file stream
 var stream = file.OpenRead(db);

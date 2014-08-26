@@ -49,7 +49,7 @@ namespace LiteDB
         /// Find all object ids in a collection using a index. Index must exists
         /// </summary>
         /// <typeparam name="K">Type of Id value</typeparam>
-        public IEnumerable<K> FindKeys<K>(Query query)
+        public IEnumerable<K> FindIds<K>(Query query)
         {
             var col = this.GetCollectionPage();
 

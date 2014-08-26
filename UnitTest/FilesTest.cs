@@ -53,7 +53,7 @@ namespace UnitTest
 
                 Dump.Pages(db ,"after file");
 
-                var f = db.Files.FindByKey("my/foto1.jpg");
+                var f = db.Files.FindById("my/foto1.jpg");
 
                 Debug.Print("Size: " + f.Length);
                 Debug.Print("Meta: " + f.Metadata["my-data"]);
@@ -71,6 +71,46 @@ namespace UnitTest
                 Dump.Pages(db, "deleted file");
 
             }
+        }
+
+        [TestMethod]
+        public void Store_My_Picture()
+        {
+            using (var db = new LiteEngine(dbpath))
+            {
+                var files = Directory.GetFiles(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Pictures", "*.jpg", SearchOption.AllDirectories);
+
+                foreach (var f in files.Take(200))
+                {
+                    db.Files.Store(Path.GetFileName(f), f);
+                }
+            }
+
+            using (var db = new LiteEngine(dbpath))
+            {
+                Directory.CreateDirectory(@"C:\temp\restore");
+
+                foreach (var f in db.Files.All())
+                {
+                    Debug.Print(f.Id);
+                    f.SaveAs(db, @"C:\temp\restore\" + f.Id, true);
+                }
+
+                var first5 = db.Files.All().Take(5);
+
+                foreach(var f in first5)
+                    db.Files.Delete(f.Id);
+
+                Directory.CreateDirectory(@"C:\temp\restore2");
+
+                foreach (var f in db.Files.All())
+                {
+                    Debug.Print(f.Id);
+                    f.SaveAs(db, @"C:\temp\restore2\" + f.Id, true);
+                }
+
+            }
+
         }
 
     }

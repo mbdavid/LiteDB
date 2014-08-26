@@ -11,11 +11,11 @@ namespace LiteDB
         /// <summary>
         /// Load data inside storage and copy to stream
         /// </summary>
-        public LiteFileStream OpenRead(string key)
+        public LiteFileStream OpenRead(string id)
         {
-            if (string.IsNullOrEmpty(key)) throw new ArgumentNullException("key");
+            if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            var doc = _col.FindById(key);
+            var doc = _col.FindById(id);
 
             if (doc == null) return null;
 

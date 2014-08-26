@@ -13,11 +13,11 @@ namespace LiteDB
         /// <summary>
         /// Find a file inside datafile and returns FileEntry instance. Returns null if not found
         /// </summary>
-        public FileEntry FindByKey(string key)
+        public FileEntry FindById(string id)
         {
-            if (string.IsNullOrEmpty(key)) throw new ArgumentNullException("key");
+            if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            var doc = _col.FindById(key);
+            var doc = _col.FindById(id);
 
             if (doc == null) return null;
 
@@ -25,18 +25,27 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all FileEntry founded starting with key passed. Null key returns all files
+        /// Returns all FileEntry founded starting with id passed.
         /// </summary>
-        public IEnumerable<FileEntry> Find(string startsWithKey)
+        public IEnumerable<FileEntry> Find(string startsWithId)
         {
-            var result = string.IsNullOrEmpty(startsWithKey) ?
+            var result = string.IsNullOrEmpty(startsWithId) ?
                 _col.Find(Query.All()) :
-                _col.Find(Query.StartsWith("_id", startsWithKey));
+                _col.Find(Query.StartsWith("_id", startsWithId));
 
             foreach (var doc in result)
             {
                 yield return new FileEntry(doc);
             }
+        }
+
+        /// <summary>
+        /// Returns all FileEntry inside database
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<FileEntry> All()
+        {
+            return this.Find(null);
         }
     }
 }
