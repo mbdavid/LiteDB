@@ -32,7 +32,7 @@ namespace UnitTest
             using (var db = new LiteEngine(dbpath))
             {
                 var c = db.GetCollection<PerfItem>("perf");
-                c.EnsureIndex("MyGuid", true);
+                //c.EnsureIndex("MyGuid", true);
                 var id = 0;
 
                 for (var j = 0; j < 3; j++)

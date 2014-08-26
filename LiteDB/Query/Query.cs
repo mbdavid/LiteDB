@@ -121,11 +121,13 @@ namespace LiteDB
         {
             var index = col.Indexes.FirstOrDefault(x => x.Field.Equals(this.Field, StringComparison.InvariantCultureIgnoreCase));
 
-            // auto-create a index on this field
-            if (index == null)
-            {
-                engine.GetCollection(col.CollectionName).EnsureIndex(this.Field);
-            }
+            //TODO: auto-create a index on this field
+            // question: this index will be permanent or in memory only? 
+            //if (index == null)
+            //{
+            //    engine.GetCollection(col.CollectionName).EnsureIndex(this.Field);
+            //    index = col.Indexes.FirstOrDefault(x => x.Field.Equals(this.Field, StringComparison.InvariantCultureIgnoreCase));
+            //}
 
             if (index == null) throw new LiteDBException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
 
