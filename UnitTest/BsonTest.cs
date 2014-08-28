@@ -11,18 +11,6 @@ namespace UnitTest
     [TestClass]
     public class BsonTest
     {
-        public class Customer
-        {
-            public string Name { get; set; }
-            public List<Phone> Phones { get; set; }
-        }
-
-        public class Phone
-        {
-            public string Type { get; set; }
-            public string Number { get; set; }
-        }
-
         [TestInitialize]
         public void Init()
         {
@@ -41,18 +29,20 @@ namespace UnitTest
             var dt = d.ConvertTo<Customer>();
 
             Assert.AreEqual(d["Name"].AsString, dt.Name);
-            Assert.AreEqual(d["Phones"][0]["Number"].AsString, dt.Phones[0].Number);
 
             var d2 = BsonDocument.ConvertFrom(dt);
 
             Assert.AreEqual(d2["Name"].AsString, dt.Name);
-            Assert.AreEqual(d2["Phones"][0]["Number"].AsString, dt.Phones[0].Number);
         }
 
         [TestMethod]
-        public void Bson_ValueField()
+        public void Bson_GetValueField()
         {
         }
 
+        [TestMethod]
+        public void Bson_Serialize()
+        {
+        }
     }
 }

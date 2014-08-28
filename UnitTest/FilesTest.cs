@@ -21,7 +21,7 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void Store_Files()
+        public void Files_Store()
         {
             using (var db = new LiteEngine(dbpath))
             {
@@ -74,13 +74,13 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void Store_My_Picture()
+        public void Files_Store_My_Picture()
         {
             using (var db = new LiteEngine(dbpath))
             {
                 var files = Directory.GetFiles(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Pictures", "*.jpg", SearchOption.AllDirectories);
 
-                foreach (var f in files.Take(200))
+                foreach (var f in files.Take(50))
                 {
                     db.Files.Store(Path.GetFileName(f), f);
                 }
@@ -111,6 +111,10 @@ namespace UnitTest
 
             }
 
+        }
+
+        public void Files_Delete()
+        {
         }
 
     }

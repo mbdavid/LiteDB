@@ -11,7 +11,7 @@ namespace LiteDB
     /// <summary>
     /// Indicate that property will not be persist in BSON serialization
     /// </summary>
-    public class BsonIgnoreAttribute
+    public class BsonIgnoreAttribute : Attribute
     {
     }
 }
