@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>LiteDB by mbdavid</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>LiteDB</h1>
+        <h2>LiteDB - A .NET NoSQL Document Store in a single data file</h2>
+        <a href="https://github.com/mbdavid/LiteDB" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a name="litedb---a-net-nosql-document-store-in-a-single-data-file" class="anchor" href="#litedb---a-net-nosql-document-store-in-a-single-data-file"><span class="octicon octicon-link"></span></a>LiteDB - A .NET NoSQL Document Store in a single data file</h1>
+
+<p>Same LiteDB features:</p>
+
+<ul>
+<li>Serverless NoSQL Document Store</li>
+<li>Simple API similar to MongoDB</li>
+<li>100% C# code for .NET 3.5 in a single DLL - install from NuGet: <code>Install-Package LiteDB</code>
+</li>
+<li>Transaction control - ACID</li>
+<li>Recovery in writing failure (journal mode)</li>
+<li>Use with POCO class or BsonDocument</li>
+<li>Store file <code>Stream</code> too (like GridFS in MongoDB)</li>
+<li>Single data file storage (like SQLite)</li>
+<li>Up to 8 indexes per collection</li>
+<li>Open source and free for everyone - including commercial use</li>
+</ul><h2>
+<a name="how-to-use" class="anchor" href="#how-to-use"><span class="octicon octicon-link"></span></a>How to use</h2>
+
+<p>Document are storage in collections. Each collection have many documents with same type. Each document have an Id (like 'Primary Key' on relation databases).</p>
+
+<div class="highlight highlight-C#"><pre><span class="c1">// Open data file (or create if not exits)</span>
+<span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteEngine</span><span class="p">(</span><span class="s">@"C:\Temp\myUserDb.ldb"</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="c1">// Get a collection (or create, if not exits)</span>
+    <span class="kt">var</span> <span class="n">customers</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">"customers"</span><span class="p">);</span>
+
+    <span class="c1">// Insert new document, using 'int' ID </span>
+    <span class="kt">var</span> <span class="n">cust</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="k">new</span> <span class="n">Customer</span> <span class="p">{</span> <span class="n">Name</span> <span class="p">=</span> <span class="s">"John Doe"</span> <span class="p">});</span>
+
+    <span class="c1">// Update a document inside a collection</span>
+    <span class="n">cust</span><span class="p">.</span><span class="n">Name</span> <span class="p">=</span> <span class="s">"Joana Doe"</span><span class="p">;</span>
+
+    <span class="n">customers</span><span class="p">.</span><span class="n">Update</span><span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">cust</span><span class="p">);</span>
+
+    <span class="c1">// Delete a document</span>
+    <span class="n">customers</span><span class="p">.</span><span class="n">Delete</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="query" class="anchor" href="#query"><span class="octicon octicon-link"></span></a>Query</h2>
+
+<p>In LiteDB, queries use indexes to search documents. At this moment, LiteDB do not support Linq, only <code>Query</code> helper class to create indexed query results. But, the result it´s a <code>IEnumerable&lt;T&gt;</code>, so you can Linq after query execute.</p>
+
+<div class="highlight highlight-C#"><pre><span class="kt">var</span> <span class="n">customers</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">&lt;</span><span class="n">Customer</span><span class="p">&gt;(</span><span class="s">"customers"</span><span class="p">);</span>
+
+<span class="c1">// Create a new index (if not exists)</span>
+<span class="n">customers</span><span class="p">.</span><span class="n">EnsureIndex</span><span class="p">(</span><span class="s">"Name"</span><span class="p">);</span>
+
+<span class="c1">// Query documents using 'Name' index</span>
+<span class="kt">var</span> <span class="n">results</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">Query</span><span class="p">.</span><span class="n">StartsWith</span><span class="p">(</span><span class="s">"Name"</span><span class="p">,</span> <span class="s">"John"</span><span class="p">));</span>
+
+<span class="c1">// Return document by ID (PK index)</span>
+<span class="kt">var</span> <span class="n">customer</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">FindById</span><span class="p">(</span><span class="m">1</span><span class="p">);</span>
+
+<span class="c1">// Count only documents where ID &gt;= 2</span>
+<span class="kt">var</span> <span class="n">count</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">Count</span><span class="p">(</span><span class="n">Query</span><span class="p">.</span><span class="n">GTE</span><span class="p">(</span><span class="s">"_id"</span><span class="p">,</span> <span class="m">2</span><span class="p">));</span>
+
+<span class="c1">// All query results returns an IEnumerable&lt;T&gt;, so you can use Linq after</span>
+<span class="kt">var</span> <span class="n">linq</span> <span class="p">=</span> <span class="n">customers</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">Query</span><span class="p">.</span><span class="n">Between</span><span class="p">(</span><span class="s">"Salary"</span><span class="p">,</span> <span class="m">500</span><span class="p">,</span> <span class="m">1000</span><span class="p">))</span> 
+    <span class="p">.</span><span class="n">Where</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">LastName</span><span class="p">.</span><span class="n">Length</span> <span class="p">&gt;</span> <span class="m">5</span> <span class="p">&amp;&amp;</span> <span class="n">x</span><span class="p">.</span><span class="n">Age</span> <span class="p">&gt;</span> <span class="m">22</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">Select</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="p">{</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">,</span> <span class="n">x</span><span class="p">.</span><span class="n">Salary</span> <span class="p">})</span>
+    <span class="p">.</span><span class="n">OrderBy</span><span class="p">(</span><span class="n">x</span> <span class="p">=&gt;</span> <span class="n">x</span><span class="p">.</span><span class="n">Name</span><span class="p">);</span>
+</pre></div>
+
+<p><code>Query</code> class supports <code>All</code>, <code>Equals</code>, <code>Not</code>, <code>GreaterThan</code>, <code>LessThan</code>, <code>Between</code>, <code>In</code>, <code>StartsWtih</code>, <code>AND</code> and <code>OR</code>. All operations use an index.</p>
+
+<h2>
+<a name="transactions" class="anchor" href="#transactions"><span class="octicon octicon-link"></span></a>Transactions</h2>
+
+<p>All write operations are created inside a transaction. If you do not use <code>BeginTrans</code> and <code>Commit</code>, transaction are implicit for each operation.</p>
+
+<p>For simplicity, LiteDB do not support concurrency transactions. LiteDB locks your datafile to guarantee that 2 users are not changing data at same time.</p>
+
+<p>If there is any error during write data file, journaling save a redo log file with database dirty pages, to recovery your datafile when datafile open again. </p>
+
+<div class="highlight highlight-C#"><pre><span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteEngine</span><span class="p">(</span><span class="n">dbpath</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="n">db</span><span class="p">.</span><span class="n">BeginTrans</span><span class="p">();</span>
+
+    <span class="c1">// do many write operations (insert, updates, deletes)...</span>
+
+    <span class="k">if</span><span class="p">(...)</span>
+    <span class="p">{</span>
+        <span class="n">db</span><span class="p">.</span><span class="n">Rollback</span><span class="p">();</span> <span class="c1">// Discard all dirty pages - no data file changes</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">db</span><span class="p">.</span><span class="n">Commit</span><span class="p">();</span> <span class="c1">// Persist dirty pages to disk (use journal redo log file)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="bsondocument" class="anchor" href="#bsondocument"><span class="octicon octicon-link"></span></a>BsonDocument</h2>
+
+<p>You can use POCO class (as showed before) or <code>BsonDocument</code> to store scheme less documents. Document size limit is 256Kb for each document.</p>
+
+<div class="highlight highlight-C#"><pre><span class="n">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">LiteEngine</span><span class="p">(</span><span class="n">connectionString</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="c1">// Create a BsonDocument and populate</span>
+    <span class="kt">var</span> <span class="n">doc</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonDocument</span><span class="p">();</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s">"Name"</span><span class="p">]</span> <span class="p">=</span> <span class="s">"John Doe"</span><span class="p">;</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s">"Phones"</span><span class="p">]</span> <span class="p">=</span> <span class="k">new</span> <span class="n">BsonArray</span><span class="p">();</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s">"Phones"</span><span class="p">].</span><span class="n">Add</span><span class="p">(</span><span class="s">"55(51)9900-0000"</span><span class="p">);</span>
+
+    <span class="c1">// Get the collection</span>
+    <span class="kt">var</span> <span class="n">col</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">GetCollection</span><span class="p">(</span><span class="s">"customers"</span><span class="p">);</span>
+
+    <span class="n">col</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="n">doc</span><span class="p">);</span>
+
+    <span class="n">Debug</span><span class="p">.</span><span class="n">Print</span><span class="p">(</span><span class="s">"Nome: "</span> <span class="p">+</span> <span class="n">doc</span><span class="p">[</span><span class="s">"Name"</span><span class="p">].</span><span class="n">AsString</span><span class="p">);</span>
+    <span class="n">Debug</span><span class="p">.</span><span class="n">Print</span><span class="p">(</span><span class="s">"Phone:"</span> <span class="p">+</span> <span class="n">doc</span><span class="p">[</span><span class="s">"Phones"</span><span class="p">][</span><span class="m">0</span><span class="p">].</span><span class="n">AsString</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="storing-files" class="anchor" href="#storing-files"><span class="octicon octicon-link"></span></a>Storing Files</h2>
+
+<p>Sametimes we need store files in database. For this, LiteDB has a special <code>Files</code> collection to store files without document size limit (file limit is 2Gb per file).</p>
+
+<div class="highlight highlight-C#"><pre><span class="c1">// Storing a file stream inside database with metadata related</span>
+<span class="n">db</span><span class="p">.</span><span class="n">Files</span><span class="p">.</span><span class="n">Store</span><span class="p">(</span><span class="s">"folder/image.png"</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">metadata</span><span class="p">);</span>
+
+<span class="c1">// Get file reference using key</span>
+<span class="kt">var</span> <span class="n">file</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">Files</span><span class="p">.</span><span class="n">FindById</span><span class="p">(</span><span class="s">"folder/image.png"</span><span class="p">);</span>
+
+<span class="c1">// Find all files using StartsWith</span>
+<span class="kt">var</span> <span class="n">files</span> <span class="p">=</span> <span class="n">db</span><span class="p">.</span><span class="n">Files</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="s">"folder/"</span><span class="p">);</span>
+
+<span class="c1">// Get file stream</span>
+<span class="kt">var</span> <span class="n">stream</span> <span class="p">=</span> <span class="n">file</span><span class="p">.</span><span class="n">OpenRead</span><span class="p">(</span><span class="n">db</span><span class="p">);</span>
+</pre></div>
+
+<h2>
+<a name="connection-string" class="anchor" href="#connection-string"><span class="octicon octicon-link"></span></a>Connection String</h2>
+
+<p>Connection string options to initialize LiteEngine class:</p>
+
+<ul>
+<li>
+<strong>Filename</strong>: Path for datafile. You can use only path as connection string (required)</li>
+<li>
+<strong>Timeout</strong>: timeout for wait for unlock datafile (default: 00:01:00)</li>
+<li>
+<strong>Journal</strong>: Enabled journal mode - recovery support (default: true)</li>
+<li>
+<strong>MaxFileLength</strong>: Max datafile length, in bytes (default: 4TB)</li>
+</ul><h2>
+<a name="where-to-use" class="anchor" href="#where-to-use"><span class="octicon octicon-link"></span></a>Where to use?</h2>
+
+<ul>
+<li>Desktop/local applications</li>
+<li>Small web applications</li>
+<li>One datafile <strong>per account/user</strong> data store</li>
+<li>Few concurrency write users operations</li>
+</ul><h2>
+<a name="dependency" class="anchor" href="#dependency"><span class="octicon octicon-link"></span></a>Dependency</h2>
+
+<p>LiteDB has no external dependency, but use <a href="http://fastbinaryjson.codeplex.com/">fastBinaryJson</a> as Bson converter (included inside LiteDB source).</p>
+
+<h2>
+<a name="roadmap" class="anchor" href="#roadmap"><span class="octicon octicon-link"></span></a>Roadmap</h2>
+
+<p>Currently, LiteDB is in early development version. There are many tests to be done before ready for production. Please, be careful on use.</p>
+
+<p>Same features/ideas for future</p>
+
+<ul>
+<li>More tests!!</li>
+<li>A repository pattern</li>
+<li>Linq support OR string query engine</li>
+<li>Compound index: one index for multiple fields</li>
+<li>Multikey index: index for array values</li>
+<li>Full text search</li>
+<li>Simple admin GUI program</li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/mbdavid/LiteDB/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/mbdavid/LiteDB/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/mbdavid/LiteDB"></a> is maintained by <a href="https://github.com/mbdavid">mbdavid</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-54329029-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
