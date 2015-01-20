@@ -17,7 +17,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 ## Try online
 
-[Try LiteDB Web Shell](http://litedb.azurewebsites.net/). For security reasons, in online version not all commands are avaiable. Try offline version for full features tests.
+[Try LiteDB Web Shell](http://litedb.azurewebsites.net/). For security reasons, in online version not all commands are available. Try offline version for full features tests.
 
 ## How install
 
