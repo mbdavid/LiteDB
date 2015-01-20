@@ -172,3 +172,5 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+/WebShell/Properties/PublishProfiles/*.pubxml
+/WebShell/App_Data

@@ -47,6 +47,7 @@ namespace LiteDB
             foreach (var block in this.DataBlocks.Values)
             {
                 writer.Write(block.Position.Index);
+                writer.Write(block.Key);
                 writer.Write(block.ExtendPageID);
                 foreach (var idx in block.IndexRef)
                 {
@@ -67,6 +68,7 @@ namespace LiteDB
 
                 block.Page = this;
                 block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
+                block.Key = reader.ReadIndexKey();
                 block.ExtendPageID = reader.ReadUInt32();
 
                 for(var j = 0; j < CollectionIndex.INDEX_PER_COLLECTION; j++)

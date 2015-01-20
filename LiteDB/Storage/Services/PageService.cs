@@ -11,13 +11,11 @@ namespace LiteDB
     {
         private DiskService _disk;
         private CacheService _cache;
-        private ConnectionString _connectionString;
 
-        public PageService(DiskService disk, CacheService cache, ConnectionString connectionString)
+        public PageService(DiskService disk, CacheService cache)
         {
             _disk = disk;
             _cache = cache;
-            _connectionString = connectionString;
         }
 
         /// <summary>
@@ -78,8 +76,8 @@ namespace LiteDB
             {
                 page.PageID = ++_cache.Header.LastPageID;
 
-                if (page.PageID > _connectionString.MaxPageID)
-                    throw new LiteDBException("Max file length excedded");
+                if (page.PageID > _cache.Header.MaxPageID)
+                    throw new LiteException("Max file length excedded");
             }
 
             // if there a page before, just fix NextPageID pointer
@@ -100,17 +98,16 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Delete de pageID - transform them in Empty Page and add to EmptyPageList
+        /// Delete an page using pageID - transform them in Empty Page and add to EmptyPageList
         /// </summary>
         public void DeletePage(uint pageID, bool addSequence = false)
         {
-            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID) : new BasePage[] { this.GetPage<BasePage>(pageID) };
+            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { this.GetPage<BasePage>(pageID) };
 
             // Adding all pages to FreeList
             foreach (var page in pages)
             {
                 // update page to mark as completly empty page
-                page.PageType = PageType.Empty;
                 page.Clear();
                 page.IsDirty = true;
 

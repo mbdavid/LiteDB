@@ -10,9 +10,12 @@ namespace UnitTest
 {
     public class Customer
     {
+        [BsonId]
         public Guid CustomerId { get; set; }
 
         public string Name { get; set; }
+
+        public DateTime CreationDate { get; set; }
 
         public Customer()
         {
@@ -21,11 +24,15 @@ namespace UnitTest
 
     public class Order
     {
-        public int OrderId { get; set; }
+        [BsonId]
+        public int OrderKey { get; set; }
 
         public DateTime Date { get; set; }
 
         public Guid CustomerId { get; set; }
+
+        [BsonIgnore]
+        public Customer Customer { get; set; }
 
         public List<OrderItem> Items { get; set; }
 
@@ -44,7 +51,6 @@ namespace UnitTest
 
         public decimal Unit { get; set; }
 
-        [BsonIgnore]
         public decimal Total { get { return this.Qtd * this.Unit; } }
     }
 }

@@ -22,6 +22,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Debug\LiteDB.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,37 +43,90 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Engine\Collections\Collection.Include.cs" />
+    <Compile Include="Engine\Collections\Collection.Drop.cs" />
+    <Compile Include="Engine\Collections\Collection.Stats.cs" />
+    <Compile Include="Query\QueryGreater.cs" />
+    <Compile Include="Query\QueryOr.cs" />
+    <Compile Include="Query\QueryVisitor.cs" />
+    <Compile Include="Query\QueryAnd.cs" />
+    <Compile Include="Query\QueryIn.cs" />
+    <Compile Include="Query\QueryNot.cs" />
+    <Compile Include="Query\QueryLess.cs" />
+    <Compile Include="Query\QueryBetween.cs" />
+    <Compile Include="Query\QueryEquals.cs" />
+    <Compile Include="Query\QueryStartsWith.cs" />
+    <Compile Include="Query\QueryAll.cs" />
+    <Compile Include="Serializer\BsonIgnoreAttribute.cs" />
+    <Compile Include="Serializer\BsonIdAttribute.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\BJSON.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\BJsonParser.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\BJsonSerializer.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\Getters.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\Reflection.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\SafeDictionary.cs" />
     <Compile Include="Engine\Collections\Collection.cs" />
     <Compile Include="Engine\Collections\Collection.Delete.cs" />
     <Compile Include="Engine\Collections\Collection.Index.cs" />
     <Compile Include="Engine\Collections\Collection.Find.cs" />
     <Compile Include="Engine\Collections\Collection.Insert.cs" />
     <Compile Include="Engine\Collections\Collection.Update.cs" />
-    <Compile Include="Engine\Files\LiteFileStream.cs" />
-    <Compile Include="Engine\Files\FilesCollection.Find.cs" />
-    <Compile Include="Engine\Files\FilesCollection.Delete.cs" />
-    <Compile Include="Engine\Files\FilesCollection.OpenRead.cs" />
-    <Compile Include="Engine\Files\FilesCollection.Store.cs" />
-    <Compile Include="Engine\Files\FileEntry.cs" />
-    <Compile Include="Engine\Files\FilesCollection.cs" />
+    <Compile Include="Engine\FileStorage\LiteFileStream.cs" />
+    <Compile Include="Engine\FileStorage\FileStorage.Find.cs" />
+    <Compile Include="Engine\FileStorage\FileStorage.Delete.cs" />
+    <Compile Include="Engine\FileStorage\FileStorage.Download.cs" />
+    <Compile Include="Engine\FileStorage\FileStorage.Upload.cs" />
+    <Compile Include="Engine\FileStorage\FileEntry.cs" />
+    <Compile Include="Engine\FileStorage\FileStorage.cs" />
     <Compile Include="Query\Query.cs" />
-    <Compile Include="Bson\BsonSerializer.cs" />
-    <Compile Include="Bson\BsonValue.cs" />
-    <Compile Include="Bson\BsonType.cs" />
-    <Compile Include="Bson\BsonArray.cs" />
-    <Compile Include="Bson\BsonObject.cs" />
-    <Compile Include="Bson\BsonIgnoreAttribute.cs" />
-    <Compile Include="Bson\BsonDocument.cs" />
-    <Compile Include="Bson\fastBinaryJson\BJSON.cs" />
-    <Compile Include="Bson\fastBinaryJson\BJsonParser.cs" />
-    <Compile Include="Bson\fastBinaryJson\BJsonSerializer.cs" />
-    <Compile Include="Bson\fastBinaryJson\Getters.cs" />
-    <Compile Include="Bson\fastBinaryJson\Reflection.cs" />
-    <Compile Include="Bson\fastBinaryJson\SafeDictionary.cs" />
+    <Compile Include="Document\BsonValue.cs" />
+    <Compile Include="Document\BsonType.cs" />
+    <Compile Include="Document\BsonArray.cs" />
+    <Compile Include="Document\BsonObject.cs" />
+    <Compile Include="Document\BsonDocument.cs" />
+    <Compile Include="Serializer\BsonSerializer.cs" />
+    <Compile Include="Serializer\SimpleJSON\JsonEx.cs" />
+    <Compile Include="Serializer\SimpleJSON\JsonReader.cs" />
+    <Compile Include="Serializer\SimpleJSON\JsonWriter.cs" />
+    <Compile Include="Shell\Commands\Collections\Bulk.cs" />
+    <Compile Include="Shell\Commands\Collections\Collection.cs" />
+    <Compile Include="Shell\Commands\Collections\Count.cs" />
+    <Compile Include="Shell\Commands\Collections\Delete.cs" />
+    <Compile Include="Shell\Commands\Collections\Drop.cs" />
+    <Compile Include="Shell\Commands\Collections\DropIndex.cs" />
+    <Compile Include="Shell\Commands\Collections\EnsureIndex.cs" />
+    <Compile Include="Shell\Commands\Collections\Exec.cs" />
+    <Compile Include="Shell\Commands\Collections\Find.cs" />
+    <Compile Include="Shell\Commands\Collections\Indexes.cs" />
+    <Compile Include="Shell\Commands\Collections\Insert.cs" />
+    <Compile Include="Shell\Commands\Collections\Stats.cs" />
+    <Compile Include="Shell\Commands\Collections\Update.cs" />
+    <Compile Include="Shell\Commands\Files\Delete.cs" />
+    <Compile Include="Shell\Commands\Files\Download.cs" />
+    <Compile Include="Shell\Commands\Files\Files.cs" />
+    <Compile Include="Shell\Commands\Files\Find.cs" />
+    <Compile Include="Shell\Commands\Files\Update.cs" />
+    <Compile Include="Shell\Commands\Files\Upload.cs" />
+    <Compile Include="Shell\Commands\ICommand.cs" />
+    <Compile Include="Shell\Commands\Others\Dump.cs" />
+    <Compile Include="Shell\Commands\Others\Info.cs" />
+    <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
+    <Compile Include="Shell\Commands\Shell\Close.cs" />
+    <Compile Include="Shell\Commands\Shell\Comment.cs" />
+    <Compile Include="Shell\Commands\Shell\Help.cs" />
+    <Compile Include="Shell\Commands\Shell\Open.cs" />
+    <Compile Include="Shell\Commands\Shell\Pretty.cs" />
+    <Compile Include="Shell\Commands\Shell\Quit.cs" />
+    <Compile Include="Shell\Commands\Shell\Spool.cs" />
+    <Compile Include="Shell\Commands\Transactions\Begin.cs" />
+    <Compile Include="Shell\Commands\Transactions\Commit.cs" />
+    <Compile Include="Shell\Commands\Transactions\Rollback.cs" />
+    <Compile Include="Shell\Display.cs" />
+    <Compile Include="Shell\Shell.cs" />
     <Compile Include="Storage\Pages\DataPage.cs" />
     <Compile Include="Storage\Pages\IndexPage.cs" />
     <Compile Include="Storage\Services\CollectionService.cs" />
-    <Compile Include="Storage\Services\RedoService.cs" />
+    <Compile Include="Storage\Services\JournalService.cs" />
     <Compile Include="Storage\Services\RecoveryService.cs" />
     <Compile Include="Storage\Services\IndexService.cs" />
     <Compile Include="Storage\Services\DataService.cs" />
@@ -93,11 +148,17 @@
     <Compile Include="Storage\Pages\BasePage.cs" />
     <Compile Include="Storage\Pages\HeaderPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\DumpDatabase.cs" />
+    <Compile Include="Utils\IOExceptionExtensions.cs" />
+    <Compile Include="Utils\MimeTypeConverter.cs" />
     <Compile Include="Utils\StreamExtensions.cs" />
     <Compile Include="Utils\DictionaryExtensions.cs" />
-    <Compile Include="Utils\LiteDBException.cs" />
+    <Compile Include="Utils\LiteException.cs" />
+    <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Serializer\fastBinaryJSON\_README.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

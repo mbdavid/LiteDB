@@ -27,19 +27,20 @@ namespace LiteDB
         public TimeSpan Timeout { get; private set; }
 
         /// <summary>
-        /// Limits the datafile to grow up than a limit
-        /// </summary>
-        public long MaxFileLength { get; private set; }
-
-        /// <summary>
-        /// Returns MaxPageID
-        /// </summary>
-        internal uint MaxPageID { get; private set; }
-
-        /// <summary>
         /// Supports recovery mode if a fail during write pages to disk
         /// </summary>
         public bool JournalEnabled { get; private set; }
+
+        /// <summary>
+        /// Internal file for journal
+        /// </summary>
+        internal string JournalFilename { get; private set; }
+
+        /// <summary>
+        /// Define, in connection string, the user database version. When you increse this value
+        /// LiteEngine will run OnUpdate method for each new version. If defined, must be >= 1. Default: 1
+        /// </summary>
+        public int UserVersion { get; private set; }
 
         public ConnectionString(string connectionString)
         {
@@ -59,21 +60,23 @@ namespace LiteDB
             else
             {
                 // If connectionstring is only a filename, set filename 
-                values["filename"] = connectionString;
+                values["filename"] = Path.GetFullPath(connectionString);
             }
 
             // Read connection string parameters with default value
             this.Timeout = this.GetValue<TimeSpan>(values, "timeout", new TimeSpan(0, 1, 0));
-            this.Filename = this.GetValue<string>(values, "filename", "");
-            this.MaxFileLength = this.GetValue<long>(values, "maxfilelength", long.MaxValue);
+            this.Filename = Path.GetFullPath(this.GetValue<string>(values, "filename", ""));
             this.JournalEnabled = this.GetValue<bool>(values, "journal", true);
+            this.UserVersion = this.GetValue<int>(values, "version", 1);
 
-            // Validade parameter values
+            // validade parameter values
             if (string.IsNullOrEmpty(Filename)) throw new ArgumentException("Missing FileName in ConnectionString");
-            if (this.MaxFileLength < (256 * 1024)) throw new ArgumentException("MaxFileLength must be bigger than 262.144 (256Kb)");
+            if (this.UserVersion <= 0) throw new ArgumentException("Connection String version must be greater or equals to 1");
 
-            // calcs MaxPageID
-            this.MaxPageID = this.MaxFileLength == long.MaxValue ? uint.MaxValue : (uint)(this.MaxFileLength / BasePage.PAGE_SIZE);
+            // generate journal path/filename
+            this.JournalFilename = Path.Combine(Path.GetDirectoryName(this.Filename),
+                Path.GetFileNameWithoutExtension(this.Filename) + "-journal" +
+                Path.GetExtension(this.Filename));
         }
 
         private T GetValue<T>(Dictionary<string, string> values, string key, T defaultValue)

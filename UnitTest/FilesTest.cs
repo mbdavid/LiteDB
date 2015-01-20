@@ -46,27 +46,29 @@ namespace UnitTest
 
                 Dump.Pages(db, "before");
 
-                var meta = new Dictionary<string, object>();
+                var meta = new Dictionary<string, string>();
                 meta["my-data"] = "Google LiteDB";
 
-                db.Files.Store("my/foto1.jpg", new MemoryStream(new byte[5000]), meta);
+                db.Storage.Upload("my/foto1.jpg", new MemoryStream(new byte[5000]), meta);
 
                 Dump.Pages(db ,"after file");
 
-                var f = db.Files.FindById("my/foto1.jpg");
+                var f = db.Storage.FindByKey("my/foto1.jpg");
 
-                Debug.Print("Size: " + f.Length);
-                Debug.Print("Meta: " + f.Metadata["my-data"]);
-                Debug.Print("Date: " + f.UploadDate);
+                Assert.AreEqual(5000, f.Length);
+                Assert.AreEqual("Google LiteDB", f.Metadata["my-data"]);
 
                 var mem = new MemoryStream();
 
                 f.OpenRead(db).CopyTo(mem);
 
-                Debug.Print("Size in mem: " + mem.Length);
-                Debug.Print("All bytes is ZERO: " + mem.ToArray().Count(x => x == 0));
+                // file real size after read all bytes
+                Assert.AreEqual(5000, mem.Length);
 
-                db.Files.Delete("my/foto1.jpg");
+                // all bytes are 0
+                Assert.AreEqual(5000, mem.ToArray().Count(x => x == 0));
+
+                db.Storage.Delete("my/foto1.jpg");
 
                 Dump.Pages(db, "deleted file");
 
@@ -82,40 +84,32 @@ namespace UnitTest
 
                 foreach (var f in files.Take(50))
                 {
-                    db.Files.Store(Path.GetFileName(f), f);
+                    db.Storage.Upload(Path.GetFileName(f), f);
                 }
             }
 
             using (var db = new LiteEngine(dbpath))
             {
-                Directory.CreateDirectory(@"C:\temp\restore");
+                Directory.CreateDirectory(@"C:\temp\pictures-50");
 
-                foreach (var f in db.Files.All())
+                foreach (var f in db.Storage.All())
                 {
-                    Debug.Print(f.Id);
-                    f.SaveAs(db, @"C:\temp\restore\" + f.Id, true);
+                    f.SaveAs(db, @"C:\temp\pictures-50\" + f.Key, true);
                 }
 
-                var first5 = db.Files.All().Take(5);
+                var delete5 = db.Storage.All().Take(5);
 
-                foreach(var f in first5)
-                    db.Files.Delete(f.Id);
+                foreach(var f in delete5)
+                    db.Storage.Delete(f.Key);
 
-                Directory.CreateDirectory(@"C:\temp\restore2");
+                Directory.CreateDirectory(@"C:\temp\pictures-45");
 
-                foreach (var f in db.Files.All())
+                foreach (var f in db.Storage.All())
                 {
-                    Debug.Print(f.Id);
-                    f.SaveAs(db, @"C:\temp\restore2\" + f.Id, true);
+                    Debug.Print(f.Key);
+                    f.SaveAs(db, @"C:\temp\pictures-45\" + f.Key, true);
                 }
-
             }
-
         }
-
-        public void Files_Delete()
-        {
-        }
-
     }
 }

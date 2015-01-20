@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace LiteDB
@@ -9,25 +10,34 @@ namespace LiteDB
     public partial class Collection<T>
     {
         /// <summary>
-        /// Delete a item - returns false if not found id
+        /// Delete a document in collection using Document Id - returns false if not found document
         /// </summary>
         public virtual bool Delete(object id)
         {
-            var col = this.GetCollectionPage();
-
-            // find indexNode using PK index
-            var node = _engine.Indexer.FindOne(col.PK, id);
-
-            if (node == null) return false;
-
-            // start transaction - if clear cache, get again collection page
-            if (_engine.Transaction.Begin())
-            {
-                col = this.GetCollectionPage();
-            }
+            // start transaction
+            _engine.Transaction.Begin();
 
             try
             {
+                var col = this.GetCollectionPage(false);
+
+                // if collection not exists, document do not exists too
+                if (col == null)
+                {
+                    _engine.Transaction.Abort();
+                    return false;
+                }
+
+                // find indexNode using PK index
+                var node = _engine.Indexer.FindOne(col.PK, id);
+
+                // if not found, abort transaction and returns false
+                if (node == null)
+                {
+                    _engine.Transaction.Abort();
+                    return false;
+                }
+
                 this.Delete(col, node);
 
                 _engine.Transaction.Commit();
@@ -43,24 +53,36 @@ namespace LiteDB
 
         public virtual int Delete(Query query)
         {
-            var count = 0;
-            var col = this.GetCollectionPage();
-
-            // find nodes
-            var nodes = query.Execute(_engine, col);
-
-            // start transaction - if clear cache, get again collection page
-            if (_engine.Transaction.Begin())
-            {
-                col = this.GetCollectionPage();
-            }
+            // start transaction
+            _engine.Transaction.Begin();
 
             try
             {
+                var col = this.GetCollectionPage(false);
+
+                // no collection, no document - abort trans
+                if (col == null)
+                {
+                    _engine.Transaction.Abort();
+                    return 0;
+                }
+
+                var count = 0;
+
+                // find nodes
+                var nodes = query.Run(_engine, col);
+
                 foreach (var node in nodes)
                 {
                     this.Delete(col, node);
                     count++;
+                }
+
+                // no deletes, just abort transaction (no writes)
+                if (count == 0)
+                {
+                    _engine.Transaction.Abort();
+                    return 0;
                 }
 
                 _engine.Transaction.Commit();
@@ -72,6 +94,14 @@ namespace LiteDB
                 _engine.Transaction.Rollback();
                 throw ex;
             }
+        }
+
+        /// <summary>
+        /// Delete document based on a LINQ query.
+        /// </summary>
+        public virtual int Delete(Expression<Func<T, bool>> predicate)
+        {
+            return this.Delete(QueryVisitor.Visit(predicate));
         }
 
         internal virtual void Delete(CollectionPage col, IndexNode node)

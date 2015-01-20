@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -9,10 +10,12 @@ namespace LiteDB
 {
     internal class DiskService : IDisposable
     {
+        private const int LOCK_POSITION = 0;
+
         private ConnectionString _connectionString;
 
         private BinaryReader _reader;
-        private BinaryWriter _writer;
+        public BinaryWriter _writer;
 
         public DiskService(ConnectionString connectionString)
         {
@@ -30,29 +33,51 @@ namespace LiteDB
         public T ReadPage<T>(uint pageID)
             where T : BasePage, new()
         {
-            // Position cursor
-            _reader.Seek(pageID * BasePage.PAGE_SIZE);
+            var timeout = DateTime.Now.Add(_connectionString.Timeout);
 
-            // Create page instance and read from disk (read page header + content page)
-            var page = new T();
-
-            // target = it's the target position after reader header. It's used when header does not conaints all PAGE_HEADER_SIZE
-            var target = _reader.BaseStream.Position + BasePage.PAGE_HEADER_SIZE;
-
-            // read page header
-            page.ReadHeader(_reader);
-
-            // read page content if page is not empty
-            if (page.PageType != PageType.Empty)
+            while (DateTime.Now < timeout)
             {
-                // position reader to the end of page header
-                _reader.BaseStream.Seek(target - _reader.BaseStream.Position, SeekOrigin.Current);
+                try
+                {
+                    // position cursor
+                    _reader.Seek(pageID * BasePage.PAGE_SIZE);
 
-                // read page content
-                page.ReadContent(_reader);
+                    // create page instance and read from disk (read page header + content page)
+                    var page = new T();
+
+                    // target = it's the target position after reader header. It's used when header does not conaints all PAGE_HEADER_SIZE
+                    var target = _reader.BaseStream.Position + BasePage.PAGE_HEADER_SIZE;
+
+                    // read page header
+                    page.ReadHeader(_reader);
+
+                    // if T is base and PageType has a defined type, convert page
+                    var isBase = page.GetType() == typeof(BasePage);
+
+                    if (page.PageType == PageType.Index && isBase) page = (T)(object)page.CopyTo<IndexPage>();
+                    else if (page.PageType == PageType.Data && isBase) page = (T)(object)page.CopyTo<DataPage>();
+                    else if (page.PageType == PageType.Extend && isBase) page = (T)(object)page.CopyTo<ExtendPage>();
+                    else if (page.PageType == PageType.Collection && isBase) page = (T)(object)page.CopyTo<CollectionPage>();
+
+                    // read page content if page is not empty
+                    if (page.PageType != PageType.Empty)
+                    {
+                        // position reader to the end of page header
+                        _reader.BaseStream.Seek(target - _reader.BaseStream.Position, SeekOrigin.Current);
+
+                        // read page content
+                        page.ReadContent(_reader);
+                    }
+
+                    return page;
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(250);
+                }
             }
 
-            return page;
+            throw new ApplicationException("Connection timeout. Datafile has another transaction.");
         }
 
         /// <summary>
@@ -112,12 +137,11 @@ namespace LiteDB
         #region Lock/Unlock functions
 
         /// <summary>
-        /// Lock the datafile
+        /// Lock the datafile when start a begin transaction
         /// </summary>
         public void Lock()
         {
-            var stream = GetWriter().BaseStream as FileStream;
-            var autoResetEvent = new AutoResetEvent(false);
+            var stream = this.GetWriter().BaseStream as FileStream;
             var timeout = DateTime.Now.Add(_connectionString.Timeout);
 
             while (DateTime.Now < timeout)
@@ -125,27 +149,16 @@ namespace LiteDB
                 try
                 {
                     // try to lock - if is in use, a exception will be throwed
-                    stream.Lock(0, 1);
+                    stream.Lock(LOCK_POSITION, 1);
                     return;
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
-                    // Watch the file waiting for changes. When change, try again
-                    using (var w = new FileSystemWatcher(Path.GetDirectoryName(_connectionString.Filename), Path.GetFileName(_connectionString.Filename)))
-                    {
-                        w.EnableRaisingEvents = true;
-
-                        w.Changed += (s, e) =>
-                        {
-                            autoResetEvent.Set();
-                        };
-                    }
-
-                    autoResetEvent.WaitOne(_connectionString.Timeout);
+                    ex.WaitIfLocked(250);
                 }
             }
 
-            throw new ApplicationException("Connection Timeout");
+            throw new ApplicationException("Connection timeout. Datafile has another transaction.");
         }
 
         /// <summary>
@@ -153,9 +166,29 @@ namespace LiteDB
         /// </summary>
         public void UnLock()
         {
-            var stream = GetWriter().BaseStream as FileStream;
+            var stream = this.GetWriter().BaseStream as FileStream;
 
-            stream.Unlock(0, 1);
+            stream.Unlock(LOCK_POSITION, 1);
+        }
+
+        public void Flush()
+        {
+            this.GetWriter().BaseStream.Flush();
+        }
+
+        /// <summary>
+        /// Lock all file during write operations - avoid reads during inconsistence data
+        /// </summary>
+        public void ProtectWriteFile(Action fn)
+        {
+            var stream = this.GetWriter().BaseStream as FileStream;
+            var fileLength = stream.Length;
+
+            stream.Lock(LOCK_POSITION + 1, fileLength);
+
+            fn();
+
+            stream.Unlock(LOCK_POSITION + 1, fileLength);
         }
 
         #endregion
@@ -165,7 +198,9 @@ namespace LiteDB
             _reader.Close();
 
             if (_writer != null)
+            {
                 _writer.Close();
+            }
         }
     }
 }

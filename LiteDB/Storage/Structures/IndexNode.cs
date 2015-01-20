@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// Represent a index node inside a Index Page
     /// </summary>
-    internal class IndexNode : IEqualityComparer<IndexNode>
+    internal class IndexNode
     {
         public const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
                                                  PageAddress.SIZE; // DataBlock
@@ -75,15 +75,22 @@ namespace LiteDB
                 this.Next[i] = PageAddress.Empty;
             }
         }
+    }
 
+    internal class IndexNodeComparer : IEqualityComparer<IndexNode>
+    {
         public bool Equals(IndexNode x, IndexNode y)
         {
-            return x.Position.Equals(y.Position);
+            if (object.ReferenceEquals(x, y)) return true;
+
+            if (x == null || y == null) return false;
+
+            return x.DataBlock.Equals(y.DataBlock);
         }
 
         public int GetHashCode(IndexNode obj)
         {
-            return obj.GetHashCode();
+            return obj.DataBlock.GetHashCode();
         }
     }
 }

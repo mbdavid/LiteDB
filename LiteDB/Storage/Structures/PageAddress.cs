@@ -32,7 +32,7 @@ namespace LiteDB
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return (this.PageID + this.Index).GetHashCode();
         }
 
         public PageAddress(uint pageID, ushort index)

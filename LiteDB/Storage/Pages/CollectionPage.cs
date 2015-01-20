@@ -12,6 +12,7 @@ namespace LiteDB
     internal class CollectionPage : BasePage
     {
         public const int MAX_COLLECTIONS = 256;
+        public const string NAME_PATTERN = @"^\w{1,30}$";
 
         /// <summary>
         /// Name of collection
@@ -30,11 +31,6 @@ namespace LiteDB
         public uint DocumentCount { get; set; }
 
         /// <summary>
-        /// A sequence number to used (if wanted) in a sequence ID (like oracle sequence)
-        /// </summary>
-        public int Sequence { get; set; }
-
-        /// <summary>
         /// Get all indexes from this collection
         /// </summary>
         public CollectionIndex[] Indexes { get; set; }
@@ -48,18 +44,10 @@ namespace LiteDB
             {
                 if (this.Indexes[i].IsEmpty) return i;
             }
-            throw new LiteDBException("Collection " + this.CollectionName + " excceded the index limit: " + CollectionIndex.INDEX_PER_COLLECTION);
+            throw new LiteException("Collection " + this.CollectionName + " excceded the index limit: " + CollectionIndex.INDEX_PER_COLLECTION);
         }
 
         public CollectionIndex PK { get { return this.Indexes[0]; } }
-
-        /// <summary>
-        /// Bytes available in this page (not used in CollectionPage >> 1 Page = 1 Collection)
-        /// </summary>
-        public override int FreeBytes
-        {
-            get { return 0; }
-        }
 
         protected override void UpdateItemCount()
         {
@@ -72,8 +60,8 @@ namespace LiteDB
             this.PageType = PageType.Collection;
             this.FreeDataPageID = uint.MaxValue;
             this.DocumentCount = 0;
-            this.Sequence = 0;
             this.Indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
+            this.FreeBytes = 0; // no free bytes on collection page: one collection per page
 
             for (var i = 0; i < Indexes.Length; i++)
             {
@@ -86,7 +74,6 @@ namespace LiteDB
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
             this.DocumentCount = reader.ReadUInt32();
-            this.Sequence = reader.ReadInt32();
 
             foreach (var index in this.Indexes)
             {
@@ -102,7 +89,6 @@ namespace LiteDB
             writer.Write(this.CollectionName);
             writer.Write(this.FreeDataPageID);
             writer.Write(this.DocumentCount);
-            writer.Write(this.Sequence);
 
             foreach (var index in this.Indexes)
             {

@@ -28,6 +28,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Gets total pages in cache
+        /// </summary>
+        public int PagesInCache { get { return _cache.Count; } }
+
+        /// <summary>
         /// Get header page in cache or request for a new instance if not existis yet
         /// </summary>
         public HeaderPage Header
@@ -63,16 +68,6 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page)
         {
-            var p = _cache.ContainsKey(page.PageID) ? _cache[page.PageID] : null;
-
-            // if page is in cache but is basePage, the copy header attributes to new page copy
-            if (p != null && p.GetType() == typeof(BasePage) && page.GetType() != typeof(BasePage))
-            {
-                page.IsDirty = p.IsDirty;
-                page.NextPageID = p.NextPageID;
-                page.PrevPageID = p.PrevPageID;
-            }
-
             _cache[page.PageID] = page;
         }
 
@@ -87,10 +82,23 @@ namespace LiteDB
         /// <summary>
         /// Empty cache and header page
         /// </summary>
-        public void Clear()
+        public void Clear(HeaderPage newHeaderPage)
         {
-            _header = null;
+            _header = newHeaderPage;
             _cache.Clear();
+        }
+
+        /// <summary>
+        /// Remove from cache only extend pages - useful for FileStorage
+        /// </summary>
+        public void RemoveExtendPages()
+        {
+            var keys = _cache.Values.Where(x => x.PageType == PageType.Extend && x.IsDirty == false).Select(x => x.PageID).ToList();
+
+            foreach (var key in keys)
+            {
+                _cache.Remove(key);
+            }
         }
 
         /// <summary>
@@ -98,20 +106,34 @@ namespace LiteDB
         /// </summary>
         public void PersistDirtyPages()
         {
-            var pages = _cache.Values.Where(x => x.IsDirty);
-
-            if (Header.IsDirty)
-                _disk.WritePage(Header);
-
-            foreach (var page in pages)
+            foreach (var page in this.GetDirtyPages())
             {
                 _disk.WritePage(page);
             }
         }
 
+        /// <summary>
+        /// Checks if cache has dirty pages
+        /// </summary>
+        public bool HasDirtyPages()
+        {
+            return this.GetDirtyPages().FirstOrDefault() != null;
+        }
+
+        /// <summary>
+        /// Returns all dirty pages including header page
+        /// </summary>
         public IEnumerable<BasePage> GetDirtyPages()
         {
-            return _cache.Values.Where(x => x.IsDirty);
+            if (this.Header.IsDirty)
+            {
+                yield return _header;
+            }
+
+            foreach (var page in _cache.Values.Where(x => x.IsDirty))
+            {
+                yield return page;
+            }
         }
     }
 }

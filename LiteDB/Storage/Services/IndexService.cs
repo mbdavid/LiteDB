@@ -86,7 +86,7 @@ namespace LiteDB
                     var diff = this.GetNode(cur.Next[i]).Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
-                    if (diff == 0 && index.Unique) throw new LiteDBException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
+                    if (diff == 0 && index.Unique) throw new LiteException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
 
                     if (diff == 1) break;
                 }
@@ -289,7 +289,7 @@ namespace LiteDB
         /// <summary>
         /// Find nodes startswith a string
         /// </summary>
-        public IEnumerable<IndexNode> FindStarstWith(CollectionIndex index, string text, StringComparison comparisonType = StringComparison.Ordinal)
+        public IEnumerable<IndexNode> FindStarstWith(CollectionIndex index, string text)
         {
             // find first indexNode
             var node = this.FindOne(index, text, true);
@@ -299,7 +299,7 @@ namespace LiteDB
             {
                 var key = node.Key.ToString();
 
-                if (key.StartsWith(text, comparisonType)) yield return node;
+                if (key.StartsWith(text, StringComparison.InvariantCultureIgnoreCase)) yield return node;
 
                 node = this.GetNode(node.Next[0]);
             }

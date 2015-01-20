@@ -8,10 +8,13 @@ namespace LiteDB
 {
     internal class CollectionIndex
     {
+        public const string FIELD_PATTERN = @"^\w+(.\w+)*$";
+        public const int FIELD_MAX_LENGTH = 30;
+
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations
         /// </summary>
-        public const int INDEX_PER_COLLECTION = 8;
+        public const int INDEX_PER_COLLECTION = 16;
 
         /// <summary>
         /// Field name

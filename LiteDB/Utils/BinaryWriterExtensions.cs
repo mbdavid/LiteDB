@@ -68,6 +68,7 @@ namespace LiteDB
             }
 
             // other
+            else if (obj.Type == IndexDataType.Boolean) writer.Write((Boolean)obj.Value);
             else if (obj.Type == IndexDataType.DateTime) writer.Write((DateTime)obj.Value);
             else if (obj.Type == IndexDataType.Guid) writer.Write((Guid)obj.Value);
 

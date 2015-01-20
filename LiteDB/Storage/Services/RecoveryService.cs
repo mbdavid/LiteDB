@@ -13,46 +13,41 @@ namespace LiteDB
     /// </summary>
     internal class RecoveryService
     {
-        const int ERROR_SHARING_VIOLATION = 32;
-        const int ERROR_LOCK_VIOLATION = 33;
-
         private ConnectionString _connectionString;
-
-        public string RedoFile { get; private set; }
 
         public RecoveryService(ConnectionString connectionString)
         {
             _connectionString = connectionString;
-
-            this.RedoFile = Path.ChangeExtension(_connectionString.Filename, ".redo");
         }
 
         public void TryRecovery()
         {
-            // no recovery file, nothing to do
-            if (!File.Exists(this.RedoFile)) return;
+            // no journal file, nothing to do
+            if (!File.Exists(_connectionString.JournalFilename)) return;
 
-            // check if file is not in use
-            this.IsFileInUse(this.RedoFile, (stream) =>
+            // if I can open journal file, test FINISH_POSITION
+            this.OpenExclusiveFile(_connectionString.JournalFilename, (stream) =>
             {
                 // check if FINISH_POSITON is true
                 using (var reader = new BinaryReader(stream))
                 {
-                    reader.Seek(RedoService.FINISH_POSITION);
+                    reader.Seek(JournalService.FINISH_POSITION);
 
-                    // if not finish, datafile is intact and no chances are comited
+                    // if file is finish, datafile needs to be recovery. if not,
+                    // the failure ocurrs during write journal file but not finish - just discard it
                     if (reader.ReadBoolean() == true)
                     {
                         this.DoRecovery(reader);
-
-                        // work done. datafile is correct again
-                        return;
                     }
                 }
+
+                // close stream for delete file
+                stream.Close();
+
+                File.Delete(_connectionString.JournalFilename);
             });
 
-            // redo file exisits, but is invalid. just deleted
-            File.Delete(this.RedoFile);
+            // if I can't open, it's in use (and it's ok, there is a transaction executing in another process)
         }
 
         private void DoRecovery(BinaryReader reader)
@@ -65,22 +60,20 @@ namespace LiteDB
                 uint index = 0;
 
                 // while pages, read from redo, write on disk
-                while (reader.PeekChar() >= 0)
+                while (reader.BaseStream.Position != reader.BaseStream.Length)
                 {
-                    var page = this.ReadPage(index++, reader);
+                    var page = this.ReadPageJournal(index++, reader);
 
                     disk.WritePage(page);
                 }
 
                 reader.Close();
 
-                File.Delete(this.RedoFile);
-
                 disk.UnLock();
             }
         }
 
-        private BasePage ReadPage(uint index, BinaryReader reader)
+        private BasePage ReadPageJournal(uint index, BinaryReader reader)
         {
             // Position cursor
             reader.Seek(index * BasePage.PAGE_SIZE);
@@ -114,25 +107,19 @@ namespace LiteDB
             return page;
         }
 
-        private void IsFileInUse(string filename, Action<FileStream> fn)
+        private void OpenExclusiveFile(string filename, Action<FileStream> success)
         {
             // check if is using by another process, if not, call fn passing stream opened
             try
             {
                 using (var stream = File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
-                    fn(stream);
+                    success(stream);
                 }
             }
-            catch (IOException exception)
+            catch (IOException ex)
             {
-                int errorCode = Marshal.GetHRForException(exception) & ((1 << 16) - 1);
-                if (errorCode == ERROR_SHARING_VIOLATION || errorCode == ERROR_LOCK_VIOLATION)
-                {
-                    // file in use by another process, do nothing
-                    return;
-                }
-                throw exception;
+                ex.WaitIfLocked(0);
             }
         }
     }

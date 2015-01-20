@@ -58,6 +58,7 @@ namespace LiteDB
                     return new IndexKey(reader.ReadString(l));
 
                 // others
+                case IndexDataType.Boolean: return new IndexKey(reader.ReadBoolean());
                 case IndexDataType.DateTime: return new IndexKey(reader.ReadDateTime());
                 case IndexDataType.Guid: return new IndexKey(reader.ReadGuid());
             }

@@ -9,31 +9,44 @@ namespace LiteDB
     public partial class Collection<T>
     {
         /// <summary>
-        /// Update object in collection
+        /// Update a document in this collection. Returns false if not found document in collection
         /// </summary>
-        public virtual bool Update(object id, T value)
+        public virtual bool Update(T doc)
         {
-            var col = this.GetCollectionPage();
+            if (doc == null) throw new ArgumentNullException("doc");
 
-            // find indexNode from pk index
-            var indexNode = _engine.Indexer.FindOne(col.PK, id);
+            // gets document Id
+            var id = BsonSerializer.GetIdValue(doc);
 
-            if (indexNode == null) return false;
+            if (id == null) throw new LiteException("Document Id can't be null");
 
             // serialize object
-            var bytes = BsonSerializer.Serialize(value);
+            var bytes = BsonSerializer.Serialize(doc);
 
-            if (bytes.Length > BsonDocument.MAX_DOCUMENT_SIZE)
-                throw new LiteDBException("Object exceed limit of " + Math.Truncate(BsonDocument.MAX_DOCUMENT_SIZE / 1024m) + " Kb");
-
-            // start transaction - if clear cache, get again collection page
-            if (_engine.Transaction.Begin())
-            {
-                col = this.GetCollectionPage();
-            }
+            // start transaction
+            _engine.Transaction.Begin();
 
             try
             {
+                var col = this.GetCollectionPage(false);
+
+                // if no collection, no updates
+                if (col == null)
+                {
+                    _engine.Transaction.Abort();
+                    return false;
+                }
+
+                // find indexNode from pk index
+                var indexNode = _engine.Indexer.FindOne(col.PK, id);
+
+                // if not found document, no updates
+                if (indexNode == null)
+                {
+                    _engine.Transaction.Abort();
+                    return false;
+                }
+
                 // update data storage
                 var dataBlock = _engine.Data.Update(col, indexNode.DataBlock, bytes);
 
@@ -44,7 +57,7 @@ namespace LiteDB
 
                     if (!index.IsEmpty)
                     {
-                        var key = BsonSerializer.GetValueField(value, index.Field);
+                        var key = BsonSerializer.GetFieldValue(doc, index.Field);
 
                         var node = _engine.Indexer.GetNode(dataBlock.IndexRef[i]);
 

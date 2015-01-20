@@ -22,16 +22,16 @@ namespace LiteDB
         /// <summary>
         /// Insert data inside a datapage. Returns dataPageID that idicates the first page
         /// </summary>
-        public DataBlock Insert(CollectionPage col, byte[] data)
+        public DataBlock Insert(CollectionPage col, IndexKey key, byte[] data)
         {
             // need to extend (data is bigger than 1 page)
-            var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
+            var extend = (data.Length + key.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
 
             // if extend, just search for a page with BLOCK_SIZE avaiable
-            var dataPage = _pager.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            var dataPage = _pager.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : key.Length + data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
-            var block = new DataBlock { Position = new PageAddress(dataPage.PageID, dataPage.DataBlocks.NextIndex()), Page = dataPage };
+            var block = new DataBlock { Position = new PageAddress(dataPage.PageID, dataPage.DataBlocks.NextIndex()), Page = dataPage, Key = key };
 
             // if extend, store all bytes on extended page.
             if (extend)
@@ -224,160 +224,5 @@ namespace LiteDB
                 this.StoreExtendData(newPage, data.Skip(ExtendPage.PAGE_AVAILABLE_BYTES).ToArray());
             }
         }
-
-        #region Data operations without Cache - directly from disk for Files
-
-        /// <summary>
-        /// Store all bytes inside stream directly to datafile (no transaction) - returns bytes length. Do not use cache! (files can be too large).
-        /// Used only to FilesCollection
-        /// </summary>
-        public int StoreStreamData(ExtendPage page, Stream stream)
-        {
-            var buffer = new byte[ExtendPage.PAGE_AVAILABLE_BYTES];
-
-            // write first page only
-            var read = stream.Read(buffer, 0, buffer.Length);
-            var totalBytes = read;
-
-            page.Data = new byte[read];
-
-            Array.Copy(buffer, page.Data, read);
-
-            // now lets copy all other pages
-            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                totalBytes += read;
-
-                var next = this.NextPage(page);
-
-                // save to disk last page
-                _disk.WritePage(page);
-
-                page = next;
-
-                page.Data = new byte[read];
-
-                Array.Copy(buffer, page.Data, read);
-            }
-
-            // add last page to cache and remove from sequence freelist
-            page.IsDirty = true;
-
-            _cache.AddPage(page);
-
-            // if there is more pages on freemeptylist, ajust first pointer to zero
-            if (_cache.Header.FreeEmptyPageID == page.NextPageID && page.NextPageID != uint.MaxValue)
-            {
-                var next = _pager.GetPage<BasePage>(page.NextPageID);
-                next.PrevPageID = 0;
-            }
-
-            page.NextPageID = uint.MaxValue;
-
-            return totalBytes;
-        }
-
-        /// <summary>
-        /// Get the next extend page direct from disk - do not add any page to cache (excepts HeaderPage) - used for StoreStream
-        /// </summary>
-        public ExtendPage NextPage(ExtendPage prevPage = null)
-        {
-            var page = new ExtendPage();
-
-            // try get page from Empty free list
-            if (_cache.Header.FreeEmptyPageID != uint.MaxValue)
-            {
-                var free = _disk.ReadPage<BasePage>(_cache.Header.FreeEmptyPageID);
-
-                _cache.Header.FreeEmptyPageID = free.NextPageID;
-
-                page.PageID = free.PageID;
-                page.PrevPageID = free.PrevPageID;
-                page.NextPageID = free.NextPageID;
-            }
-            else
-            {
-                page.PageID = ++_cache.Header.LastPageID;
-            }
-
-            // if there a page before, just fix NextPageID pointer
-            if (prevPage != null)
-            {
-                page.PrevPageID = prevPage.PageID;
-                prevPage.NextPageID = page.PageID;
-            }
-
-            // mark header as dirty
-            _cache.Header.IsDirty = true;
-
-            return page;
-        }
-
-        /// <summary>
-        /// Read all pages/bytes from start pageID to stream. Do not use cache! (files can be too large). Used only in FilesCollection
-        /// </summary>
-        public void ReadStreamData(uint pageID, Stream stream)
-        {
-            // read first page direct from disk (no cache)
-            var page = _disk.ReadPage<ExtendPage>(pageID);
-
-            // read all pages and write directly to stream
-            while (page != null)
-            {
-                // write data to strem
-                stream.Write(page.Data, 0, page.Data.Length);
-
-                // read next page or set page to null (last page)
-                page = page.NextPageID == uint.MaxValue ? null : _disk.ReadPage<ExtendPage>(page.NextPageID);
-            }
-        }
-
-        /// <summary>
-        /// Delete all pages, startins in pageID, marking all as Empty and adding list to FreeEmptyList
-        /// </summary>
-        /// <param name="pageID"></param>
-        public void DeleteStreamData(uint pageID)
-        {
-            var page = _disk.ReadPage<BasePage>(pageID);
-
-            page.PageType = PageType.Empty;
-            page.FreeBytes = BasePage.PAGE_AVAILABLE_BYTES;
-
-            while (page.NextPageID != uint.MaxValue)
-            {
-                // save page to disk
-                _disk.WritePage(page);
-
-                // get next page in sequence
-                page = _disk.ReadPage<BasePage>(page.NextPageID);
-
-                // clear
-                page.PageType = PageType.Empty;
-                page.FreeBytes = BasePage.PAGE_AVAILABLE_BYTES;
-            }
-
-            // fix header first page in list (all in cache)
-            if (_cache.Header.FreeEmptyPageID != uint.MaxValue)
-            {
-                var first = _pager.GetPage<BasePage>(_cache.Header.FreeEmptyPageID);
-
-                // set first page to be next page after sequence
-                first.PrevPageID = page.PageID;
-                page.NextPageID = first.PageID;
-
-                first.IsDirty = true;
-            }
-
-            // ajust header to first page
-            _cache.Header.FreeEmptyPageID = pageID;
-            _cache.Header.IsDirty = true;
-
-            // add my last page sequence to cache and mark as dirty to me saved on persist
-            page.IsDirty = true;
-
-            _cache.AddPage(page);
-        }
-
-        #endregion
     }
 }

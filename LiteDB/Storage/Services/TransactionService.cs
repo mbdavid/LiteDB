@@ -13,48 +13,60 @@ namespace LiteDB
     {
         private DiskService _disk;
         private CacheService _cache;
-        private RedoService _redo;
+        private JournalService _journal;
 
         private int _level = 0;
+        private DateTime _lastFileCheck = DateTime.Now;
 
-        internal TransactionService(DiskService disk, CacheService cache, RedoService redo)
+        internal TransactionService(DiskService disk, CacheService cache, JournalService journal)
         {
             _disk = disk;
             _cache = cache;
-            _redo = redo;
+            _journal = journal;
         }
 
         public bool IsInTransaction { get { return _level > 0; } }
 
         /// <summary>
         /// Starts a new transaction - lock database to garantee that only one processes is in a transaction
-        /// Returns true if cache clears
         /// </summary>
-        public bool Begin()
+        public void Begin()
         {
-            var ret = false;
-
             if (_level == 0)
             {
-                // Get header page from DISK to check changeID
-                var header = _disk.ReadPage<HeaderPage>(0);
-
-                // If versionID was changed, clear cache
-                if (header.ChangeID != _cache.Header.ChangeID)
-                {
-                    _cache.Clear();
-                    ret = true;
-                }
-
-                // Lock (or try to) datafile
+                // lock (or try to) datafile
                 _disk.Lock();
 
-                _redo.CheckRedoFile(_disk);
+                // get header page from DISK to check changeID
+                var header = _disk.ReadPage<HeaderPage>(0);
+
+                // if changeID was changed, file was changed by another process
+                if (header.ChangeID != _cache.Header.ChangeID)
+                {
+                    _cache.Clear(header);
+                }
             }
 
             _level++;
+        }
 
-            return ret;
+        /// <summary>
+        /// Abort a transaction is used when begin and has no changes yet - no writes, no checks
+        /// </summary>
+        public void Abort()
+        {
+            if (_level == 0) return;
+
+            if (_level == 1)
+            {
+                _disk.UnLock();
+
+                _level = 0;
+            }
+            else
+            {
+                _level--;
+            }
         }
 
         /// <summary>
@@ -66,27 +78,33 @@ namespace LiteDB
 
             if (_level == 1)
             {
-                // Increase file changeID (back to 0 with overflow)
-                _cache.Header.ChangeID = _cache.Header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(_cache.Header.ChangeID + (ushort)1);
+                if (_cache.HasDirtyPages())
+                {
+                    // increase file changeID (back to 0 when overflow)
+                    _cache.Header.ChangeID = _cache.Header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(_cache.Header.ChangeID + (ushort)1);
 
-                _cache.Header.IsDirty = true;
+                    _cache.Header.IsDirty = true;
 
-                // first i will save all dirty pages to a recovery file
-                _redo.CreateRedoFile();
+                    // first i will save all dirty pages to a recovery file
+                    _journal.CreateJournalFile(() =>
+                    {
+                        // [transaction are now acepted] (all dirty pages are in journal file)
+                        // journal file still open in exlcusive mode, let's persist pages
+                        // if occurs a failure during "PersistDirtyPages" database will be recovered on next open
 
-                // Before complete redo file, transaction will be rollback in case of failure.
-                // At this point, transaction are acepted! if failure during write pages on
-                // disk, recovery mode will ajust data file
-                // The ideal is return now to user with "complete transaction", but it will be
-                // a problem in subsequente transaction.
+                        // inside this file will be all locked for avoid inconsistent reads
+                        _disk.ProtectWriteFile(() =>
+                        {
+                            // persist all dirty pages
+                            _cache.PersistDirtyPages();
 
-                // Persist all dirty pages
-                _cache.PersistDirtyPages();
+                        });
+                    });
+                }
 
-                // Delete redo file
-                _redo.DeleteRedoFile();
+                _disk.Flush();
 
-                // Unlock datafile
+                // unlock datafile
                 _disk.UnLock();
 
                 _level = 0;
@@ -102,12 +120,36 @@ namespace LiteDB
             if (_level == 0) return;
 
             // Clear all pages from memory
-            _cache.Clear(); 
+            _cache.Clear(null); 
 
             // Unlock datafile
             _disk.UnLock();
 
             _level = 0;
+        }
+
+        /// <summary>
+        /// This method must be called before read operation to avoid dirty reads.
+        /// It's occurs when my cache contains pages that was changed in another process
+        /// </summary>
+        public void AvoidDirtyRead()
+        {
+            // if is in transaction pages are not dirty (begin trans was checked)
+            if(this.IsInTransaction == true) return;
+
+            // check if file changed only after 1 second from last check
+            if (DateTime.Now.Subtract(_lastFileCheck).TotalMilliseconds < 1000) return;
+
+            _lastFileCheck = DateTime.Now;
+
+            // get header page from DISK to check changeID
+            var header = _disk.ReadPage<HeaderPage>(0);
+
+            // if changeID was changed, file was changed by another process
+            if (header.ChangeID != _cache.Header.ChangeID)
+            {
+                _cache.Clear(header);
+            }
         }
     }
 }

@@ -14,12 +14,9 @@ namespace UnitTest
     [TestClass]
     public class DebugTest
     {
-        private const string connectionString = @"C:\Temp\index.db";
-
-        [TestInitialize]
-        public void Init()
+        [TestMethod]
+        public void Debug_Output()
         {
-            File.Delete(connectionString);
         }
     }
 }
