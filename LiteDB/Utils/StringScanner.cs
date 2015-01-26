@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-    internal class StringScanner
+    public class StringScanner
     {
         public string Source { get; private set; }
         public int Index { get; private set; }

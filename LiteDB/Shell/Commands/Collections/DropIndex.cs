@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionDropIndex : Collection, ICommand, IWebCommand
+    public class CollectionDropIndex : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "drop[iI]ndex");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             display.WriteBson(this.ReadCollection(db, s).DropIndex(s.Scan(@"\w+").Trim()));
         }

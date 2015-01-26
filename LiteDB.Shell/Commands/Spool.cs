@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Spool : ICommand, IShellCommand
+    internal class Spool : IShellCommand
     {
         private TextWriter _writer;
 
@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"spo(ol)?\s*").Length > 0;
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             if(s.Scan("false|off").Length > 0 && _writer != null)
             {

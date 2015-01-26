@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FilesFind : Files, ICommand, IWebCommand
+    public class FileFind : BaseFile, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "find");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             if (s.HasTerminated)
             {

@@ -6,17 +6,15 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Commit : ICommand
+    public class Commit : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"commit(\s+trans)?$").Length > 0;
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
-            if (db == null) throw new ArgumentException("No database");
-
             db.Commit();
         }
     }

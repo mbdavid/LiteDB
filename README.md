@@ -19,7 +19,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 [Try LiteDB Web Shell](http://litedb.azurewebsites.net/). For security reasons, in online version not all commands are available. Try offline version for full features tests.
 
-## How install
+## How to install
 
 LiteDB is a serverless database, so there is no install. Just copy LiteDB.dll to your Bin folder and add as Reference. If you prefer, you can use NuGet package: `Install-Package LiteDB`. If you are running in a web environment, be sure that IIS user has write permission on data folder.
 
@@ -54,7 +54,8 @@ using(var db = new LiteEngine(@"C:\Temp\MyData.db"))
 
 ## Where to use?
 
-- Desktop/local applications
+- Desktop/local small applications
+- Application file format
 - Small web applications
 - One database **per account/user** data store
 - Few concurrency write users operations
@@ -79,6 +80,7 @@ POCO class are simple C# classes using only `get/set` properties. It's the best 
 // A poco entity, must have Id
 public class Customer
 {
+    [BsonId]
 	public Guid Id { get; set; }
 	public string Name { get; set; }
 	public List<Phone> Phones { get; set; }
@@ -95,6 +97,7 @@ public class Phone
 public enum PhoneType { Mobile, Landline }
 ``` 
 
+- Internal, document id is represent as `_id` property
 - Do not use complex data types (like `DataSet`, `DataTable`)
 - Do not use disposable objects (like `Stream`, `Graphics`)
 - Enums will be converted in strings when serialized

@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Help : ICommand, IShellCommand, IWebCommand
+    internal class Help : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"help$").Length > 0;
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display d)
+        public void Execute(LiteEngine db, StringScanner s, Display d)
         {
             d.WriteResult("Shell commands");
             d.WriteResult("==============");
@@ -26,6 +26,7 @@ namespace LiteDB.Shell.Commands
             d.WriteHelp("> spool on|off", "Spool all output in a spool file");
             d.WriteHelp("> -- comment", "Do nothing, its just a comment");
             d.WriteHelp("> /<command>/", "Support for multi line command");
+            d.WriteHelp("> exit", "Close LiteDB shell");
 
             d.WriteResult("");
             d.WriteResult("Transaction commands");
@@ -53,6 +54,7 @@ namespace LiteDB.Shell.Commands
             d.WriteHelp("> db.<collection>.drop", "Drop collection and destroy all documents inside");
             d.WriteHelp("> db.<collection>.dropIndex <field>", "Drop a index and make index area free to use with another index");
             d.WriteHelp("<filter> = <field> [=|>|>=|<|<=|!=|like|between] <jsonValue>", "Filter query syntax");
+            d.WriteHelp("<filter> = (<filter> [and|or] <filter> [and|or] ...)", "Multi queries syntax");
             d.WriteHelp("<jsonDoc> = {_id: ... , key: value, key1: value1 }", "Represent a json (extended version) for a BsonDocument. See special data types");
             d.WriteHelp("JsonEx Date", "{ mydate: { $date :\"2015-01-01T23:59:59Z\"} }");
             d.WriteHelp("JsonEx Guid", "{ myguid: { $guid :\"3a1c34b3-9f66-4d8e-975a-d545d898a4ba\"} }");
@@ -74,8 +76,15 @@ namespace LiteDB.Shell.Commands
             d.WriteResult("==============");
 
             d.WriteHelp("> db.info", "Get database informations");
+            d.WriteHelp("> db.param <paramName> <jsonValue>", "Change database parameter. See 'parameters' object in db.info");
             d.WriteHelp("> dump", "Display dump database information");
-            d.WriteHelp("> exit", "Close LiteDB shell");
+
+            d.WriteResult("");
+            d.WriteResult("Try:");
+            d.WriteResult(" > db.customers.insert { _id:1, name:\"John Doe\", age: 37 }");
+            d.WriteResult(" > db.customers.ensureIndex name");
+            d.WriteResult(" > db.customers.find name like \"J\"");
+            d.WriteResult(" > db.customers.find _id > 0");
         }
     }
 }

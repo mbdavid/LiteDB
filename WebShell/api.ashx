@@ -4,6 +4,9 @@ using System.Web;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using LiteDB;
+using LiteDB.Shell;
+using LiteDB.Shell.Commands;
 
 public class WebShell : IHttpHandler
 {
@@ -18,9 +21,23 @@ public class WebShell : IHttpHandler
 
             var filename = context.Server.MapPath("~/App_Data/" + db + ".db");
 
-            using (var shell = new LiteDB.Shell.Shell())
+            using (var shell = new LiteShell())
             {
-                shell.WebMode = true;
+                // accept only a subset commands
+                shell.Register<Help>();
+                shell.Register<ShowCollections>();
+                shell.Register<CollectionInsert>();
+                shell.Register<CollectionUpdate>();
+                shell.Register<CollectionDelete>();
+                shell.Register<CollectionEnsureIndex>();
+                shell.Register<CollectionIndexes>();
+                shell.Register<CollectionDrop>();
+                shell.Register<CollectionFind>();
+                shell.Register<CollectionCount>();
+                shell.Register<CollectionStats>();
+                shell.Register<Dump>();
+                shell.Register<Info>();
+                
                 shell.Display.Pretty = true;
                 shell.Engine = new LiteDB.LiteEngine(filename);
                 shell.Display.TextWriters.Add(context.Response.Output);
@@ -30,8 +47,8 @@ public class WebShell : IHttpHandler
         }
         catch(Exception ex)
         {
-            context.Response.StatusCode = 500;
-            context.Response.Write(ex.Message);
+            context.Response.Clear();
+            context.Response.Write("ERROR: " + ex.Message);
         }
     }
  

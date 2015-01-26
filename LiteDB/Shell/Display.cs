@@ -16,6 +16,14 @@ namespace LiteDB.Shell
             this.TextWriters = new List<TextWriter>();
         }
 
+        public void WriteWelcome()
+        {
+            this.WriteInfo("Welcome to LiteDB Shell");
+            this.WriteInfo("");
+            this.WriteInfo("Getting started with `help`");
+            this.WriteInfo("");
+        }
+
         public void WritePrompt(string text)
         {
             this.Write(ConsoleColor.White, text);

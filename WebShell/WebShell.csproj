@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Commands\Help.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="api.ashx" />

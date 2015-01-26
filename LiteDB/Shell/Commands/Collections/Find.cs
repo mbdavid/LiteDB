@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionFind : Collection, ICommand, IWebCommand
+    public class CollectionFind : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "find");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             var col = this.ReadCollection(db, s);
             var top = this.ReadTop(s);

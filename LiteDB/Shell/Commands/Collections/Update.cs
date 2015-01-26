@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionUpdate : Collection, ICommand, IWebCommand
+    public class CollectionUpdate : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "update");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             var col = this.ReadCollection(db, s);
             var value = new JsonReader().ReadValue(s);

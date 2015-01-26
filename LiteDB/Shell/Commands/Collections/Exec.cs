@@ -8,14 +8,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionExec : Collection, ICommand
+    class CollectionExec : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "exec");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             var col = this.ReadCollection(db, s);
             var query = s.Match("{") ? Query.All() : this.ReadQuery(s);
@@ -91,5 +91,4 @@ public class Program {
             });
         }
     }
-
 }

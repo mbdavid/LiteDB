@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Info : ICommand, IWebCommand
+    public class Info : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"db\.info$");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             display.WriteBson(db.GetDatabaseInfo());
         }

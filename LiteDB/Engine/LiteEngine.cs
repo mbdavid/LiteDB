@@ -104,89 +104,6 @@ namespace LiteDB
 
         #endregion
 
-        #region UserVersion
-
-        /// <summary>
-        /// Virtual method for update database when a new version (from coneection string) was setted
-        /// </summary>
-        /// <param name="newVersion">The new database version</param>
-        protected virtual void OnVersionUpdate(int newVersion)
-        {
-        }
-
-        /// <summary>
-        /// Update database version, when necessary
-        /// </summary>
-        private void UpdateDatabaseVersion()
-        {
-            // not necessary "AvoidDirtyRead" because its calls from ctor
-            var current = this.Cache.Header.UserVersion;
-            var recent = this.ConnectionString.UserVersion;
-
-            // there is no updates
-            if (current == recent) return;
-
-            // start a transaction
-            this.Transaction.Begin();
-
-            try
-            {
-                for (var newVersion = current + 1; newVersion <= recent; newVersion++)
-                {
-                    OnVersionUpdate(newVersion);
-
-                    this.Cache.Header.UserVersion = newVersion;
-                }
-
-                this.Cache.Header.IsDirty = true;
-                this.Transaction.Commit();
-
-            }
-            catch (Exception ex)
-            {
-                this.Transaction.Rollback();
-                throw ex;
-            }
-        }
-
-        #endregion
-
-        #region MaxFileLength
-
-        /// <summary>
-        /// Set database max datafile length. Minumum is 256Kb. Default is long.MaxValue.
-        /// </summary>
-        public void SetMaxFileLength(long size)
-        {
-            if (size < (256 * 1024)) throw new ArgumentException("MaxFileLength must be bigger than 262.144 (256Kb)");
-
-            // start transcation - all data are garanteed
-            this.Transaction.Begin();
-
-            if (this.Cache.Header.MaxFileLength != size)
-            {
-                this.Transaction.Abort();
-                return;
-            }
-
-            try
-            {
-                this.Cache.Header.MaxFileLength = size;
-                this.Cache.Header.IsDirty = true;
-
-                if (this.Cache.Header.MaxPageID > this.Cache.Header.LastPageID) throw new ArgumentException("File size is bigger than " + size);
-
-                this.Transaction.Commit();
-            }
-            catch (Exception ex)
-            {
-                this.Transaction.Rollback();
-                throw ex;
-            }
-        }
-
-        #endregion
-
         #region Files Storage
 
         private FileStorage _files = null;
@@ -231,30 +148,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Database info
-
-        public BsonObject GetDatabaseInfo()
-        {
-            this.Transaction.AvoidDirtyRead();
-
-            var info = new BsonObject();
-
-            info["filename"] = this.ConnectionString.Filename;
-            info["journal"] = this.ConnectionString.JournalEnabled;
-            info["timeout"] = this.ConnectionString.Timeout.TotalSeconds;
-            info["version"] = this.Cache.Header.UserVersion;
-            info["changeID"] = this.Cache.Header.ChangeID;
-            info["maxFileLength"] = this.Cache.Header.MaxFileLength == long.MaxValue ? BsonValue.Null : new BsonValue(this.Cache.Header.MaxFileLength);
-            info["fileLength"] = this.Cache.Header.LastPageID * BasePage.PAGE_SIZE;
-            info["lastPageID"] = this.Cache.Header.LastPageID;
-            info["pagesInCache"] = this.Cache.PagesInCache;
-            info["dirtyPages"] = this.Cache.HasDirtyPages();
-
-            return info;
-        }
-
-        #endregion
-
         #region Statics methods
 
         /// <summary>
@@ -271,13 +164,19 @@ namespace LiteDB
                     DiskService.WritePage(writer, new CollectionPage { PageID = 1, CollectionName = "_master" });
                 }
             }
+
+            // create _id index on _master collection
+            using (var db = new LiteEngine("filename=" + connectionString.Filename + ";journal=false"))
+            {
+                db.GetCollection("_master").EnsureIndex("_id", true);
+            }
         }
 
         #endregion
 
         public void Dispose()
         {
-            Disk.Dispose();
+            this.Disk.Dispose();
         }
     }
 }

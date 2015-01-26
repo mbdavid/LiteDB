@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class ShowCollections : ICommand, IWebCommand
+    public class ShowCollections : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"show\scollections");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             display.WriteResult(string.Join("\n", db.GetCollections().OrderBy(x => x).ToArray()));
         }

@@ -6,16 +6,16 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Quit : ICommand, IShellCommand
+    internal class Close : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Match(@"(quit|exit)$");
+            return s.Scan(@"close$").Length > 0;
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
-            Environment.Exit(0);
+            db.Dispose();
         }
     }
 }

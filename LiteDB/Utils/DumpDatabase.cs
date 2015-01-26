@@ -8,7 +8,7 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// A debugger class to show how pages are storaged. Used in shell/tests
+    /// A debugger class to show how pages are storaged. Used to debug pages in shell/tests
     /// </summary>
     internal class DumpDatabase
     {

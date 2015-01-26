@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Dump : ICommand, IWebCommand
+    public class Dump : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"dump\s*").Length > 0;
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             if (s.HasTerminated || s.Match("mem$"))
             {

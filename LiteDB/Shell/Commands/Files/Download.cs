@@ -7,14 +7,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FilesDownload : Files, ICommand
+    public class FileDownload : BaseFile, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "download");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             var id = this.ReadId(s);
             var filename = s.Scan(@"\s*.*").Trim();

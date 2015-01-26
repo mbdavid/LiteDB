@@ -7,14 +7,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionBulk : Collection, ICommand
+    public class CollectionBulk : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "bulk");
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             var col = this.ReadCollection(db, s);
             var filename = s.Scan(@".*");

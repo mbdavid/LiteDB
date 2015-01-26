@@ -6,19 +6,21 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionDelete : BaseCollection, IShellCommand
+    public class Param : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsCollectionCommand(s, "delete");
+            return s.Scan(@"db\.param\s*").Length > 0;
         }
 
         public void Execute(LiteEngine db, StringScanner s, Display display)
         {
-            var col = this.ReadCollection(db, s);
-            var query = this.ReadQuery(s);
+            var name = s.Scan(@"[\w-]+\s*").Trim();
+            var value = new JsonReader().ReadValue(s);
 
-            display.WriteBson(col.Delete(query));
+            db.SetParameter(name, value.RawValue);
+
+            display.WriteBson(db.GetDatabaseInfo());
         }
     }
 }

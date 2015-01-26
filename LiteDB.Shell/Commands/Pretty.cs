@@ -6,15 +6,16 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Comment : ICommand, IShellCommand, IWebCommand
+    internal class Pretty : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Match(@"--");
+            return s.Scan(@"pretty\s*").Length > 0;
         }
 
-        public void Execute(ref LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteEngine db, StringScanner s, Display display)
         {
+            display.Pretty = !(s.Scan(@"off\s*").Length > 0);
         }
     }
 }

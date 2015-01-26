@@ -11,13 +11,14 @@ namespace LiteDB.Shell
     {
         static void Main(string[] args)
         {
-            var shell = new Shell();
+            var shell = new LiteShell();
             var input = new InputCommand();
 
+            shell.RegisterAll();
             shell.Display.TextWriters.Add(Console.Out);
 
             // show welcome message
-            shell.Welcome();
+            shell.Display.WriteWelcome();
 
             // if has a argument, its database file - try open
             if (args.Length > 0)
@@ -39,8 +40,14 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    // run it
-                    shell.Run(cmd);
+                    if (cmd.StartsWith("open "))
+                    {
+                        shell.Engine = new LiteEngine(cmd.Substring(5));
+                    }
+                    else
+                    {
+                        shell.Run(cmd);
+                    }
                 }
                 catch (Exception ex)
                 {
