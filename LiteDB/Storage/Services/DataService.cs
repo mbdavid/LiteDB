@@ -185,43 +185,44 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Store all bytes in one extended page. If excced, call again to new page and make than continuous
+        /// Store all bytes in one extended page. If data ir bigger than a page, store in more pages and make all in sequence
         /// </summary>
         public void StoreExtendData(ExtendPage page, byte[] data)
         {
-            // if data length is less the page-size
-            if (data.Length <= ExtendPage.PAGE_AVAILABLE_BYTES)
-            {
-                page.Data = data;
+            var offset = 0;
+            var bytesLeft = data.Length;
 
-                // if this page contains more continuous pages delete them (its a update case)
-                if (page.NextPageID != uint.MaxValue)
+            while (bytesLeft > 0)
+            {
+                var bytesToCopy = Math.Min(bytesLeft, BasePage.PAGE_AVAILABLE_BYTES);
+
+                page.Data = new byte[bytesToCopy];
+
+                Buffer.BlockCopy(data, offset, page.Data, 0, bytesToCopy);
+
+                page.IsDirty = true;
+
+                bytesLeft -= bytesToCopy;
+                offset += bytesToCopy;
+
+                // if has bytes left, let's get a new page
+                if (bytesLeft > 0)
                 {
-                    // Delete nextpage and all nexts
-                    _pager.DeletePage(page.NextPageID, true);
-
-                    // set my page with no NextPageID
-                    page.NextPageID = uint.MaxValue;
+                    // if i have a continuous page, get it... or create a new one
+                    page = page.NextPageID != uint.MaxValue ?
+                        _pager.GetPage<ExtendPage>(page.NextPageID) :
+                        _pager.NewPage<ExtendPage>(page);
                 }
-
-                page.IsDirty = true;
             }
-            else
+
+            // when finish, check if last page has a nextPageId - if have, delete them
+            if (page.NextPageID != uint.MaxValue)
             {
-                // split data - insert first bytes in this page and call again to insert next data
-                page.Data = data.Take(ExtendPage.PAGE_AVAILABLE_BYTES).ToArray();
+                // Delete nextpage and all nexts
+                _pager.DeletePage(page.NextPageID, true);
 
-                ExtendPage newPage;
-
-                // if i have a continuous page, get it... or create a new one
-                if (page.NextPageID != uint.MaxValue)
-                    newPage = _pager.GetPage<ExtendPage>(page.NextPageID);
-                else
-                    newPage = _pager.NewPage<ExtendPage>(page);
-
-                page.IsDirty = true;
-
-                this.StoreExtendData(newPage, data.Skip(ExtendPage.PAGE_AVAILABLE_BYTES).ToArray());
+                // set my page with no NextPageID
+                page.NextPageID = uint.MaxValue;
             }
         }
     }

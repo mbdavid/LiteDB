@@ -75,9 +75,6 @@ namespace LiteDB
             else
             {
                 page.PageID = ++_cache.Header.LastPageID;
-
-                if (page.PageID > _cache.Header.MaxPageID)
-                    throw new LiteException("Max file length excedded");
             }
 
             // if there a page before, just fix NextPageID pointer
@@ -117,78 +114,12 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Add or Remove a page in a sequence
-        /// </summary>
-        /// <param name="add">Indicate that will add or remove from FreeList</param>
-        /// <param name="page">Page to add or remove from FreeList</param>
-        /// <param name="startPage">Page reference where start the header list node</param>
-        /// <param name="fieldPageID">Field reference, from startPage</param>
-        public void AddOrRemoveToFreeList(bool add, BasePage page, BasePage startPage, ref uint fieldPageID)
-        {
-            if (add)
-            {
-                // if this page is in sequence, its already on freelist 
-                if (page.PrevPageID != uint.MaxValue || page.NextPageID != uint.MaxValue)
-                    return;
-
-                // add this page in first place on list
-                page.PrevPageID = 0;
-                page.NextPageID = fieldPageID;
-                page.IsDirty = true;
-
-                if (fieldPageID != uint.MaxValue)
-                {
-                    // get previous page and set previous ID to my new page
-                    var prevPage = this.GetPage<BasePage>(fieldPageID);
-
-                    prevPage.PrevPageID = page.PageID;
-                    prevPage.IsDirty = true;
-                }
-
-                // update header first page to my pageID
-                fieldPageID = page.PageID;
-                startPage.IsDirty = true;
-            }
-            else
-            {
-                // if this page is not in sequence, its not on freelist 
-                if (page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue && fieldPageID != page.PageID)
-                    return;
-
-                // this page is the first of list
-                if (page.PrevPageID == 0)
-                {
-                    fieldPageID = page.NextPageID;
-                    startPage.IsDirty = true;
-                }
-                else
-                {
-                    // if not the first, get previous page to remove NextPageId
-                    var prevPage = this.GetPage<BasePage>(page.PrevPageID);
-                    prevPage.NextPageID = page.NextPageID;
-                    prevPage.IsDirty = true;
-                }
-
-                // if my page is not the last on sequence, ajust the last page
-                if (page.NextPageID != uint.MaxValue)
-                {
-                    var nextPage = this.GetPage<BasePage>(page.NextPageID);
-                    nextPage.PrevPageID = page.PrevPageID;
-                    nextPage.IsDirty = true;
-                }
-
-                page.PrevPageID = page.NextPageID = uint.MaxValue;
-                page.IsDirty = true;
-            }
-        }
-
-        /// <summary>
         /// Returns a page that contains space enouth to data to insert new object - if not exits, create a new Page
         /// </summary>
         public T GetFreePage<T>(uint startPageID, int size)
             where T : BasePage, new()
         {
-            while(startPageID != uint.MaxValue)
+            if(startPageID != uint.MaxValue)
             {
                 // get the first page
                 var page = this.GetPage<BasePage>(startPageID);
@@ -201,12 +132,148 @@ namespace LiteDB
                 {
                     return this.GetPage<T>(startPageID);
                 }
-
-                startPageID = page.NextPageID;
             }
 
-            // If not found page, create a new one
+            // if not has space on first page, there is no page with space (pages are ordered), create a new one
             return this.NewPage<T>();
+        }
+
+        /// <summary>
+        /// Add or Remove a page in a sequence
+        /// </summary>
+        /// <param name="add">Indicate that will add or remove from FreeList</param>
+        /// <param name="page">Page to add or remove from FreeList</param>
+        /// <param name="startPage">Page reference where start the header list node</param>
+        /// <param name="fieldPageID">Field reference, from startPage</param>
+        public void AddOrRemoveToFreeList(bool add, BasePage page, BasePage startPage, ref uint fieldPageID)
+        {
+            if (add)
+            {
+                // if page has no prev/next it's not on list - lets add
+                if (page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue)
+                {
+                    this.AddToFreeList(page, startPage, ref fieldPageID);
+                }
+                else
+                {
+                    // othersie this page is already in this list, lets move do put in free size desc order
+                    this.MoveToFreeList(page, startPage, ref fieldPageID);
+                }
+            }
+            else
+            {
+                // if this page is not in sequence, its not on freelist 
+                if (page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue)
+                    return;
+
+                this.RemoveToFreeList(page, startPage, ref fieldPageID);
+            }
+        }
+
+        /// <summary>
+        /// Add a page in free list in desc free size order
+        /// </summary>
+        private void AddToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
+        {
+            var free = page.FreeBytes;
+            var nextPageID = fieldPageID;
+            BasePage next = null;
+
+            // let's page in desc order
+            while (nextPageID != uint.MaxValue)
+            {
+                next = this.GetPage<BasePage>(nextPageID);
+
+                if (free >= next.FreeBytes)
+                {
+                    // assume my page in place of next page
+                    page.PrevPageID = next.PrevPageID;
+                    page.NextPageID = next.PageID;
+
+                    // link next page to my page
+                    next.PrevPageID = page.PageID;
+                    next.IsDirty = true;
+
+                    // my page is the new first page on list
+                    if (page.PrevPageID == 0)
+                    {
+                        fieldPageID = page.PageID;
+                        startPage.IsDirty = true;
+                    }
+                    else
+                    {
+                        // if not the first, ajust links from previous page
+                        var prev = this.GetPage<BasePage>(page.PrevPageID);
+                        prev.NextPageID = page.PageID;
+                        prev.IsDirty = true;
+                    }
+
+                    page.IsDirty = true;
+
+                    return; // job done - exit
+                }
+
+                nextPageID = next.NextPageID;
+            }
+
+            // empty list, be the first
+            if (next == null)
+            {
+                // it's first page on list
+                page.PrevPageID = 0;
+                fieldPageID = page.PageID;
+                startPage.IsDirty = true;
+            }
+            else
+            {
+                // it's last position on list (next = last page on list)
+                page.PrevPageID = next.PageID;
+                next.NextPageID = page.PageID;
+                next.IsDirty = true;
+            }
+
+            page.IsDirty = true;
+        }
+
+        /// <summary>
+        /// Remove a page from list - the ease part
+        /// </summary>
+        private void RemoveToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
+        {
+            // this page is the first of list
+            if (page.PrevPageID == 0)
+            {
+                fieldPageID = page.NextPageID;
+                startPage.IsDirty = true;
+            }
+            else
+            {
+                // if not the first, get previous page to remove NextPageId
+                var prevPage = this.GetPage<BasePage>(page.PrevPageID);
+                prevPage.NextPageID = page.NextPageID;
+                prevPage.IsDirty = true;
+            }
+
+            // if my page is not the last on sequence, ajust the last page
+            if (page.NextPageID != uint.MaxValue)
+            {
+                var nextPage = this.GetPage<BasePage>(page.NextPageID);
+                nextPage.PrevPageID = page.PrevPageID;
+                nextPage.IsDirty = true;
+            }
+
+            page.PrevPageID = page.NextPageID = uint.MaxValue;
+            page.IsDirty = true;
+        }
+
+        /// <summary>
+        /// When a page is already on a list it's more efficient just move comparing with sinblings
+        /// </summary>
+        private void MoveToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
+        {
+            //TODO: write a better solution
+            this.RemoveToFreeList(page, startPage, ref fieldPageID);
+            this.AddToFreeList(page, startPage, ref fieldPageID);
         }
     }
 }

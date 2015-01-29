@@ -14,7 +14,7 @@ namespace LiteDB
     internal class CacheService
     {
         // a very simple dictionary for pages cache and track
-        private Dictionary<uint, BasePage> _cache;
+        private SortedDictionary<uint, BasePage> _cache;
 
         private DiskService _disk;
 
@@ -24,11 +24,11 @@ namespace LiteDB
         {
             _disk = disk;
 
-            _cache = new Dictionary<uint, BasePage>();
+            _cache = new SortedDictionary<uint, BasePage>();
         }
 
         /// <summary>
-        /// Gets total pages in cache
+        /// Gets total pages in cache for database info
         /// </summary>
         public int PagesInCache { get { return _cache.Count; } }
 
@@ -72,14 +72,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Removing a page from cache
-        /// </summary>
-        public void RemovePage(uint pageID)
-        {
-            _cache.Remove(pageID);
-        }
-
-        /// <summary>
         /// Empty cache and header page
         /// </summary>
         public void Clear(HeaderPage newHeaderPage)
@@ -106,6 +98,9 @@ namespace LiteDB
         /// </summary>
         public void PersistDirtyPages()
         {
+            // alocate datafile file first (only when file need to grow)
+            _disk.AllocateDiskSpace((this.Header.LastPageID + 1) * BasePage.PAGE_SIZE);
+
             foreach (var page in this.GetDirtyPages())
             {
                 _disk.WritePage(page);
@@ -121,7 +116,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all dirty pages including header page
+        /// Returns all dirty pages including header page (for better write performance, get all pages in PageID increase order)
         /// </summary>
         public IEnumerable<BasePage> GetDirtyPages()
         {
@@ -130,7 +125,19 @@ namespace LiteDB
                 yield return _header;
             }
 
-            foreach (var page in _cache.Values.Where(x => x.IsDirty))
+            // for a better performance - writes last page first
+            var last = _cache.Values.Where(x => x.IsDirty).LastOrDefault();
+            var lastPageID = last == null ? uint.MaxValue : last.PageID;
+
+            if (last != null)
+            {
+                // when write last page, OS will alocate all disk space at once.
+                // This will be much faster to save others pages in sequence
+                yield return last;
+            }
+
+            // now returns all pages in sequence
+            foreach (var page in _cache.Values.Where(x => x.IsDirty && x.PageID != lastPageID))
             {
                 yield return page;
             }

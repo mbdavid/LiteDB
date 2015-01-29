@@ -22,6 +22,8 @@ namespace LiteDB.Shell.Commands
             var docs = JsonEx.Deserialize(json);
             var count = 0;
 
+            var d = DateTime.Now;
+
             db.BeginTrans();
 
             if (docs.IsArray)
@@ -40,6 +42,7 @@ namespace LiteDB.Shell.Commands
 
             db.Commit();
 
+            display.WriteBson(DateTime.Now.Subtract(d).TotalMilliseconds);
             display.WriteBson(count);
         }
     }
