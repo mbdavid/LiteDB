@@ -7,14 +7,14 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Maurício David")]
 [assembly: AssemblyProduct("LiteDB")]
-[assembly: AssemblyCopyright("MIT © 2014")]
+[assembly: AssemblyCopyright("MIT © 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("54989b5c-4bcf-4d58-b8ba-9b014a324f76")]
 
-[assembly: AssemblyVersion("0.6.1.0")]
-[assembly: AssemblyFileVersion("0.6.1.0")]
+[assembly: AssemblyVersion("0.8.0.0")]
+[assembly: AssemblyFileVersion("0.8.0.0")]
 
 [assembly: InternalsVisibleTo("UnitTest")]
 [assembly: InternalsVisibleTo("LiteDB.Shell")]
