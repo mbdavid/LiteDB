@@ -45,10 +45,9 @@
   <ItemGroup>
     <Compile Include="Engine\Collections\Collection.Include.cs" />
     <Compile Include="Engine\Collections\Collection.Drop.cs" />
-    <Compile Include="Engine\Collections\Collection.Stats.cs" />
-    <Compile Include="Engine\Tools\Shell.cs" />
+    <Compile Include="Engine\Tools\Bulk.cs" />
     <Compile Include="Engine\Tools\UserVersion.cs" />
-    <Compile Include="Engine\Tools\Parameter.cs" />
+    <Compile Include="Engine\Tools\Info.cs" />
     <Compile Include="Query\QueryGreater.cs" />
     <Compile Include="Query\QueryOr.cs" />
     <Compile Include="Query\QueryVisitor.cs" />
@@ -102,7 +101,6 @@
     <Compile Include="Shell\Commands\Collections\Find.cs" />
     <Compile Include="Shell\Commands\Collections\Indexes.cs" />
     <Compile Include="Shell\Commands\Collections\Insert.cs" />
-    <Compile Include="Shell\Commands\Collections\Stats.cs" />
     <Compile Include="Shell\Commands\Collections\Update.cs" />
     <Compile Include="Shell\Commands\Files\Delete.cs" />
     <Compile Include="Shell\Commands\Files\Download.cs" />
@@ -113,7 +111,6 @@
     <Compile Include="Shell\Commands\IShellCommand.cs" />
     <Compile Include="Shell\Commands\Others\Dump.cs" />
     <Compile Include="Shell\Commands\Others\Info.cs" />
-    <Compile Include="Shell\Commands\Others\Param.cs" />
     <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
     <Compile Include="Shell\Commands\Transactions\Begin.cs" />
     <Compile Include="Shell\Commands\Transactions\Commit.cs" />

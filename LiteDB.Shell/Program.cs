@@ -38,10 +38,17 @@ namespace LiteDB.Shell
                 // read next command from user
                 var cmd = input.ReadCommand();
 
+                if (string.IsNullOrEmpty(cmd)) continue;
+
                 try
                 {
                     if (cmd.StartsWith("open "))
                     {
+                        if (shell.Engine != null)
+                        {
+                            shell.Engine.Dispose();
+                        }
+
                         shell.Engine = new LiteEngine(cmd.Substring(5));
                     }
                     else

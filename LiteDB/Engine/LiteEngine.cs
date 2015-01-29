@@ -164,12 +164,6 @@ namespace LiteDB
                     DiskService.WritePage(writer, new CollectionPage { PageID = 1, CollectionName = "_master" });
                 }
             }
-
-            // create _id index on _master collection
-            using (var db = new LiteEngine("filename=" + connectionString.Filename + ";journal=false"))
-            {
-                db.GetCollection("_master").EnsureIndex("_id", true);
-            }
         }
 
         #endregion

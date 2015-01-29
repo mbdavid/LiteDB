@@ -21,7 +21,7 @@ namespace LiteDB
         /// <summary>
         /// Number of bytes on each chunk document to store
         /// </summary>
-        public const int CHUNK_SIZE = 255 * 1024; // 255Kb - 64 extend page
+        public const int CHUNK_SIZE = 50 * BasePage.PAGE_AVAILABLE_BYTES; // 50 extend page
 
         public string Id { get; private set; }
         public string Filename { get; set; }

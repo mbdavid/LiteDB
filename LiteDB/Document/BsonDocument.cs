@@ -13,7 +13,7 @@ namespace LiteDB
     /// </summary>
     public class BsonDocument : BsonObject
     {
-        public const int MAX_DOCUMENT_SIZE = 256 * 1024; // limits in 256 max document size to avoid large documents, memory usage and slow performance
+        public const int MAX_DOCUMENT_SIZE = 1 * 1024 * 1024; // limits in 1MB max document size to avoid large documents, memory usage and slow performance
 
         public BsonDocument()
             : base()
