@@ -22,11 +22,13 @@ namespace LiteDB
 
         public void TryRecovery()
         {
+            var journal = JournalService.GetJournalFilename(_connectionString, false);
+
             // no journal file, nothing to do
-            if (!File.Exists(_connectionString.JournalFilename)) return;
+            if (string.IsNullOrEmpty(journal)) return;
 
             // if I can open journal file, test FINISH_POSITION
-            this.OpenExclusiveFile(_connectionString.JournalFilename, (stream) =>
+            this.OpenExclusiveFile(journal, (stream) =>
             {
                 // check if FINISH_POSITON is true
                 using (var reader = new BinaryReader(stream))
@@ -44,7 +46,7 @@ namespace LiteDB
                 // close stream for delete file
                 stream.Close();
 
-                File.Delete(_connectionString.JournalFilename);
+                File.Delete(journal);
             });
 
             // if I can't open, it's in use (and it's ok, there is a transaction executing in another process)

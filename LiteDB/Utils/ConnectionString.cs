@@ -32,11 +32,6 @@ namespace LiteDB
         public bool JournalEnabled { get; private set; }
 
         /// <summary>
-        /// Internal file for journal
-        /// </summary>
-        internal string JournalFilename { get; private set; }
-
-        /// <summary>
         /// Define, in connection string, the user database version. When you increse this value
         /// LiteEngine will run OnUpdate method for each new version. If defined, must be >= 1. Default: 1
         /// </summary>
@@ -72,11 +67,6 @@ namespace LiteDB
             // validade parameter values
             if (string.IsNullOrEmpty(Filename)) throw new ArgumentException("Missing FileName in ConnectionString");
             if (this.UserVersion <= 0) throw new ArgumentException("Connection String version must be greater or equals to 1");
-
-            // generate journal path/filename
-            this.JournalFilename = Path.Combine(Path.GetDirectoryName(this.Filename),
-                Path.GetFileNameWithoutExtension(this.Filename) + "-journal" +
-                Path.GetExtension(this.Filename));
         }
 
         private T GetValue<T>(Dictionary<string, string> values, string key, T defaultValue)

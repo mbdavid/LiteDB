@@ -32,23 +32,32 @@ namespace LiteDB
                 return;
             }
 
-            if (File.Exists(_connectionString.JournalFilename))
-            {
-                throw new LiteException("Journal file detected, transaction aborted. Try reopen datafile");
-            }
+            var journal = JournalService.GetJournalFilename(_connectionString, true);
 
             // create journal file in EXCLUSIVE mode
-            using (var stream = File.Open(_connectionString.JournalFilename, 
+            using (var stream = File.Open(journal, 
                 FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
                 using (var writer = new BinaryWriter(stream))
                 {
+                    // first, allocate all journal file
+                    var total = (uint)_cache.GetDirtyPages().Count();
+                    stream.SetLength(total * BasePage.PAGE_SIZE);
+
                     uint index = 0;
 
-                    // write all dirty pages in sequence
+                    // for better performance, write first page at end of file and others in sequence order
                     foreach (var page in _cache.GetDirtyPages())
                     {
-                        this.WritePageInJournal(++index, writer, page);
+                        if (index == 0)
+                        {
+                            this.WritePageInJournal(total - 1, writer, page);
+                        }
+                        else
+                        {
+                            this.WritePageInJournal(index, writer, page);
+                        }
+                        index++;
                     }
 
                     // flush all data
@@ -64,9 +73,11 @@ namespace LiteDB
 
                     action();
                 }
-            }
 
-            this.DeleteJournalFile();
+                stream.Dispose();
+
+                File.Delete(journal);
+            }
         }
 
         /// <summary>
@@ -93,12 +104,36 @@ namespace LiteDB
             }
         }
 
-        public void DeleteJournalFile()
+        /// <summary>
+        /// Get a new journal file to write or check if exits one. Append (index) if journal file exists (when OS do not deleted yet - check better OS support)
+        /// </summary>
+        public static string GetJournalFilename(ConnectionString connectionString, bool newFile)
         {
-            if (!_connectionString.JournalEnabled) return;
+            var dir = Path.GetDirectoryName(connectionString.Filename);
+            var filename = Path.GetFileNameWithoutExtension(connectionString.Filename) + "-journal";
+            var ext = Path.GetExtension(connectionString.Filename);
 
-            // just delete journal file, main datafile is consist
-            File.Delete(_connectionString.JournalFilename);
+            if (newFile)
+            {
+                //return Path.Combine(dir, filename + ext);
+                var file = "";
+                var index = 0;
+
+                while (File.Exists(file = Path.Combine(dir, filename + (index > 0 ? index.ToString() : "") + ext)))
+                {
+                    index++;
+                }
+
+                return file;
+            }
+            else
+            {
+                //var p = Path.Combine(dir, filename + ext);
+                //return File.Exists(p) ? p : null;
+                var files = Directory.GetFiles(dir, filename + "*" + ext, SearchOption.TopDirectoryOnly);
+
+                return files.Length > 0 ? files.Last() : null;
+            }
         }
     }
 }
