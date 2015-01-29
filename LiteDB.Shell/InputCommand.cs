@@ -11,6 +11,7 @@ namespace LiteDB.Shell
     {
         private Queue<string> _queue;
         private string _last = "";
+        private Stopwatch _timer = new Stopwatch();
 
         public InputCommand()
         {
@@ -19,6 +20,12 @@ namespace LiteDB.Shell
 
         public string ReadCommand()
         {
+            if (_timer.IsRunning)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.Write(_timer.ElapsedMilliseconds.ToString("0000") + " ");
+            }
+
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("> ");
 
@@ -48,6 +55,11 @@ namespace LiteDB.Shell
                 this.OpenNotepad();
                 return null;
             }
+            else if (cmd == "timer")
+            {
+                _timer.Start();
+                return null;
+            }
             else if (cmd.StartsWith("run "))
             {
                 this.RunCommand(cmd.Substring(4));
@@ -55,6 +67,12 @@ namespace LiteDB.Shell
             }
 
             _last = cmd;
+
+            if (_timer.IsRunning)
+            {
+                _timer.Reset();
+                _timer.Start();
+            }
 
             return cmd.Trim();
         }

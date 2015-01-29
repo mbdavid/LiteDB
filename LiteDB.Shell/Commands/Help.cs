@@ -22,6 +22,7 @@ namespace LiteDB.Shell.Commands
             d.WriteHelp("> close", "Close current database");
             d.WriteHelp("> run <filename>", "Run commands inside filename");
             d.WriteHelp("> pretty on|off", "Turns on/off pretty json format");
+            d.WriteHelp("> timer", "Show timer before prompt");
             d.WriteHelp("> ed", "Open nodepad with last command to edit and execute");
             d.WriteHelp("> spool on|off", "Spool all output in a spool file");
             d.WriteHelp("> -- comment", "Do nothing, its just a comment");
@@ -50,7 +51,6 @@ namespace LiteDB.Shell.Commands
             d.WriteHelp("> db.<collection>.exec <filter> { Action<Object (id), BsonDocument (doc), Collection (col), LiteEngine (db)> }", "Execute C# code for each document based on filter.");
             d.WriteHelp("> db.<collection>.ensureIndex <field> [unique]", "Create a new index document field");
             d.WriteHelp("> db.<collection>.indexes", "List all indexes in this collection");
-            d.WriteHelp("> db.<collection>.stats", "Show some statistics about this collection");
             d.WriteHelp("> db.<collection>.drop", "Drop collection and destroy all documents inside");
             d.WriteHelp("> db.<collection>.dropIndex <field>", "Drop a index and make index area free to use with another index");
             d.WriteHelp("<filter> = <field> [=|>|>=|<|<=|!=|like|between] <jsonValue>", "Filter query syntax");
@@ -76,7 +76,6 @@ namespace LiteDB.Shell.Commands
             d.WriteResult("==============");
 
             d.WriteHelp("> db.info", "Get database informations");
-            d.WriteHelp("> db.param <paramName> <jsonValue>", "Change database parameter. See 'parameters' object in db.info");
             d.WriteHelp("> dump", "Display dump database information");
 
             d.WriteResult("");
