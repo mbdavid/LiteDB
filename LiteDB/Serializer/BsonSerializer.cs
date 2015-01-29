@@ -69,17 +69,43 @@ namespace LiteDB
         /// </summary>
         public static object GetFieldValue(object obj, string fieldName)
         {
+            // supports parent.child.name
+            var names = fieldName.Split('.');
+
             if (obj is BsonDocument)
             {
-                var doc = (BsonDocument)obj;
+                var value = (BsonValue)obj;
 
-                return doc[fieldName].RawValue;
+                if (names.Length == 1)
+                {
+                    return value[fieldName].RawValue;
+                }
+
+                foreach (var name in names)
+                {
+                    if (!value.IsObject) return null;
+                    value = value[name];
+                }
+
+                return value.RawValue;
             }
             else
             {
-                var p = obj.GetType().GetProperty(fieldName);
+                if (names.Length == 1)
+                {
+                    var info = obj.GetType().GetProperty(fieldName);
+                    return info == null ? null : info.GetValue(obj, null);
+                }
 
-                return p == null ? null : p.GetValue(obj, null);
+                foreach (var name in names)
+                {
+                    if (obj == null) return null;
+                    var info = obj.GetType().GetProperty(name);
+                    if (info == null) return null;
+                    obj = info.GetValue(obj, null);
+                }
+
+                return obj;
             }
         }
 

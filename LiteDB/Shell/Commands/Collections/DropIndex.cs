@@ -15,7 +15,7 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(LiteEngine db, StringScanner s, Display display)
         {
-            display.WriteBson(this.ReadCollection(db, s).DropIndex(s.Scan(@"\w+").Trim()));
+            display.WriteBson(this.ReadCollection(db, s).DropIndex(s.Scan(@"\w+(.\w+)*").Trim()));
         }
     }
 }

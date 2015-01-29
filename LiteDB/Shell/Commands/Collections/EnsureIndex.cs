@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
         public void Execute(LiteEngine db, StringScanner s, Display display)
         {
             var col = this.ReadCollection(db, s);
-            var field = s.Scan(@"\w+");
+            var field = s.Scan(@"\w+(.\w+)*");
             var unique = s.Scan(@"\s*unique$");
 
             display.WriteBson(col.EnsureIndex(field, unique.Length > 0));
