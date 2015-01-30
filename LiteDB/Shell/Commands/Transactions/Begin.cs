@@ -15,6 +15,8 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(LiteEngine db, StringScanner s, Display display)
         {
+            if (db == null) throw new LiteException("No database");
+
             db.BeginTrans();
         }
     }

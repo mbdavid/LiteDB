@@ -16,6 +16,8 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(LiteEngine db, StringScanner s, Display display)
         {
+            if (db == null) throw new LiteException("No database");
+
             var col = this.ReadCollection(db, s);
             var filename = s.Scan(@".*");
             var json = File.ReadAllText(filename, Encoding.UTF8);

@@ -27,6 +27,8 @@ namespace LiteDB.Shell.Commands
             }
             else if(_writer == null)
             {
+                if (db == null) throw new LiteException("No database");
+
                 var path =
                     Path.Combine(Path.GetDirectoryName(db.ConnectionString.Filename),
                     string.Format("{0}-spool-{1:yyyy-MM-dd-HH-mm}.txt", Path.GetFileNameWithoutExtension(db.ConnectionString.Filename), DateTime.Now));
