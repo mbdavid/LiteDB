@@ -76,7 +76,6 @@
     <Folder Include="App_Data\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="LiteDB_v0.8.0.zip" />
     <None Include="Properties\PublishProfiles\litedb - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\litedb - Web Deploy.pubxml" />
   </ItemGroup>

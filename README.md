@@ -199,23 +199,23 @@ using(var db = new LiteEngine(dbpath))
 
 ## Storing Files
 
-Sametimes we need store files in database. For this, LiteDB has a special `Files` collection to store files without document size limit (file limit is 2Gb per file). It's works like MongoDB `GridFS`.
+Sametimes we need store files in database. For this, LiteDB has a special `FileStorage` collection to store files without document size limit (file limit is 2Gb per file). It's works like MongoDB `GridFS`.
 
 ```C#
 // Storing a file stream inside database
 db.Files.Upload("my_key.png", stream);
 
 // Get file reference using file id
-var file = db.Files.FindById("my_key.png");
+var file = db.FileStorage.FindById("my_key.png");
 
 // Find all files using StartsWith
-var files = db.Files.Find("my_");
+var files = db.FileStorage.Find("my_");
 
 // Get file stream
 var stream = file.OpenRead();
 
 // Write file stream in a external stream
-db.Files.Download("my_key.png", stream);
+db.FileStorage.Download("my_key.png", stream);
 ```
 
 ## Connection String
