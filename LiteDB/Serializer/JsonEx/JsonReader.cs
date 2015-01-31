@@ -105,6 +105,24 @@ namespace LiteDB
             return arr;
         }
 
+        public IEnumerable<BsonValue> ReadEnumerable(string json)
+        {
+            var s = new StringScanner(json);
+
+            if (s.Scan(@"\s*\[").Length == 0) throw new ArgumentException("String is not a json array");
+
+            while (!s.Match(@"\s*\]"))
+            {
+                yield return this.ReadValue(s);
+
+                if (s.Scan(@"\s*,").Length == 0) break;
+            }
+
+            if (s.Scan(@"\s*\]").Length == 0) throw new ArgumentException("Missing close json array symbol");
+
+            yield break;
+        }
+
         private string ReadString(StringScanner s)
         {
             if(s.Scan(@"\s*\""").Length == 0) throw new ArgumentException("Invalid json string");

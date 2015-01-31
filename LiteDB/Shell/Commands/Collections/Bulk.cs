@@ -21,23 +21,15 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(db, s);
             var filename = s.Scan(@".*");
             var json = File.ReadAllText(filename, Encoding.UTF8);
-            var docs = JsonEx.Deserialize(json);
+            var docs = JsonEx.DeserializeArray<BsonDocument>(json);
             var count = 0;
 
             db.BeginTrans();
 
-            if (docs.IsArray)
+            foreach (var doc in docs)
             {
-                foreach (var doc in docs.AsArray)
-                {
-                    count++;
-                    col.Insert(new BsonDocument(doc));
-                }
-            }
-            else
-            {
-                count = 1;
-                col.Insert(new BsonDocument(docs));
+                count++;
+                col.Insert(doc);
             }
 
             db.Commit();

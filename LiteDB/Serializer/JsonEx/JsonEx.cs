@@ -53,7 +53,37 @@ namespace LiteDB
             }
             else
             {
-                throw new ArgumentException("Unknow T BsonValue type");
+                return (T)value;
+            }
+        }
+
+        /// <summary>
+        /// Deserialize a JSON as an IEnumerable of BsonValue based class
+        /// </summary>
+        public static IEnumerable<T> DeserializeArray<T>(string json)
+            where T : BsonValue
+        {
+            var reader = new JsonReader();
+            var type = typeof(T);
+
+            foreach(var value in reader.ReadEnumerable(json))
+            {
+                if (type == typeof(BsonDocument))
+                {
+                    yield return (T)(object)new BsonDocument(value);
+                }
+                else if (type == typeof(BsonObject))
+                {
+                    yield return (T)(object)value.AsObject;
+                }
+                else if (type == typeof(BsonArray))
+                {
+                    yield return (T)(object)value.AsArray;
+                }
+                else
+                {
+                    yield return (T)value;
+                }
             }
         }
     }
