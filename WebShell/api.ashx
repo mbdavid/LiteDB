@@ -34,7 +34,6 @@ public class WebShell : IHttpHandler
                 shell.Register<CollectionDrop>();
                 shell.Register<CollectionFind>();
                 shell.Register<CollectionCount>();
-                shell.Register<CollectionStats>();
                 shell.Register<Dump>();
                 shell.Register<Info>();
                 

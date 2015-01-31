@@ -17,6 +17,8 @@
         .error { color: #FF7D60; }
         .shell::-webkit-scrollbar { width: 8px; height: 8px; }
         .shell::-webkit-scrollbar-thumb { border-radius: 10px; background-color: #686868; }
+        .download { font-size: 12px; position: relative; top: -4px; text-decoration: none; }
+        .download:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -27,10 +29,13 @@
         </div>
     </div>
 
-    <h1><a href="https://github.com/mbdavid/litedb">LiteDB Web Shell</a></h1>
+    <h1>LiteDB Web Shell
+        <a class="download" href="LiteDB_v0.8.0.zip" onclick="ga('send', 'event', 'download', 'clicked');">(Download offline version v.0.8.0)</a>
+    </h1>
+
     <div class="shell">
         <div class="welcome">
-            Welcome to LiteDB Web Shell - Version 0.6<br /><br />
+            Welcome to LiteDB Web Shell - Version 0.8<br /><br />
             Getting started with `help`<br /><br />
         </div>
         <div class="prompt">
