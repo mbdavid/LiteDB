@@ -28,7 +28,14 @@ namespace LiteDB
             _indent = 0;
             _spacer = _pretty ? " " : "";
 
-            this.WriteValue(value);
+            if (value is BsonDocument)
+            {
+                this.WriteObject(value.AsObject, (value as BsonDocument).Id);
+            }
+            else
+            {
+                this.WriteValue(value);
+            }
 
             return _sb.ToString().Trim();
         }
@@ -45,7 +52,7 @@ namespace LiteDB
             }
             else if (value.Type == BsonType.Object)
             {
-                this.WriteObject(value.AsObject);
+                this.WriteObject(value.AsObject, null);
             }
             else if (value.Type == BsonType.Byte)
             {
@@ -81,11 +88,16 @@ namespace LiteDB
             }
         }
 
-        private void WriteObject(BsonObject obj)
+        private void WriteObject(BsonObject obj, object docId)
         {
             var hasData = obj.Keys.Length > 0;
 
             this.WriteStartBlock("{", hasData);
+
+            if (docId != null)
+            {
+                this.WriteKeyValue("_id", new BsonValue(docId), hasData);
+            }
 
             var index = 0;
             foreach (var key in obj.Keys)
@@ -102,7 +114,7 @@ namespace LiteDB
 
             this.WriteStartBlock("[", hasData);
 
-            for(var i = 0; i < arr.Length; i++)
+            for (var i = 0; i < arr.Length; i++)
             {
                 var item = arr[i];
 
