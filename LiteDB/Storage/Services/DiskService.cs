@@ -22,9 +22,25 @@ namespace LiteDB
             _connectionString = connectionString;
 
             // Open file as ReadOnly - if we need use Write, re-open in Write Mode
-            var stream = File.Open(_connectionString.Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var stream = new FileStream(_connectionString.Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BasePage.PAGE_SIZE);
 
             _reader = new BinaryReader(stream);
+        }
+
+        /// <summary>
+        /// Create a empty database ready to be used using connectionString as parameters
+        /// </summary>
+        public static void CreateNewDatafile(ConnectionString connectionString)
+        {
+            using (var stream = File.Create(connectionString.Filename))
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    // creating header + master collection
+                    DiskService.WritePage(writer, new HeaderPage { PageID = 0, LastPageID = 1 });
+                    DiskService.WritePage(writer, new CollectionPage { PageID = 1, CollectionName = "_master" });
+                }
+            }
         }
 
         /// <summary>
@@ -35,14 +51,17 @@ namespace LiteDB
         {
             // create page instance and read from disk (read page header + content page)
             var page = new T();
+            var stream = _reader.BaseStream;
+            var posStart = pageID * BasePage.PAGE_SIZE;
+            var posEnd = posStart + BasePage.PAGE_SIZE;
 
             this.TryExec(() =>
             {
                 // position cursor
-                _reader.Seek(pageID * BasePage.PAGE_SIZE);
-
-                // target = it's the target position after reader header. It's used when header does not conaints all PAGE_HEADER_SIZE
-                var target = _reader.BaseStream.Position + BasePage.PAGE_HEADER_SIZE;
+                if (stream.Position != posStart)
+                {
+                    stream.Seek(posStart, SeekOrigin.Begin);
+                }
 
                 // read page header
                 page.ReadHeader(_reader);
@@ -50,20 +69,23 @@ namespace LiteDB
                 // if T is base and PageType has a defined type, convert page
                 var isBase = page.GetType() == typeof(BasePage);
 
-                if (page.PageType == PageType.Index && isBase) page = (T)(object)page.CopyTo<IndexPage>();
-                else if (page.PageType == PageType.Data && isBase) page = (T)(object)page.CopyTo<DataPage>();
-                else if (page.PageType == PageType.Extend && isBase) page = (T)(object)page.CopyTo<ExtendPage>();
-                else if (page.PageType == PageType.Collection && isBase) page = (T)(object)page.CopyTo<CollectionPage>();
+                if (isBase)
+                {
+                    if (page.PageType == PageType.Index) page = (T)(object)page.CopyTo<IndexPage>();
+                    else if (page.PageType == PageType.Data) page = (T)(object)page.CopyTo<DataPage>();
+                    else if (page.PageType == PageType.Extend) page = (T)(object)page.CopyTo<ExtendPage>();
+                    else if (page.PageType == PageType.Collection) page = (T)(object)page.CopyTo<CollectionPage>();
+                }
 
                 // read page content if page is not empty
                 if (page.PageType != PageType.Empty)
                 {
-                    // position reader to the end of page header
-                    _reader.BaseStream.Seek(target - _reader.BaseStream.Position, SeekOrigin.Current);
-
-                    // read page content
                     page.ReadContent(_reader);
                 }
+
+                // position cursor at starts next page
+                _reader.ReadBytes((int)(posEnd - stream.Position));
+
             });
 
             return page;
@@ -82,23 +104,27 @@ namespace LiteDB
         /// </summary>
         public static void WritePage(BinaryWriter writer, BasePage page)
         {
-            // Position cursor
-            writer.Seek(page.PageID * BasePage.PAGE_SIZE);
+            var stream = writer.BaseStream;
+            var posStart = page.PageID * BasePage.PAGE_SIZE;
+            var posEnd = posStart + BasePage.PAGE_SIZE;
 
-            // target = it's the target position after write header. It's used when header does not conaints all PAGE_HEADER_SIZE
-            var target = writer.BaseStream.Position + BasePage.PAGE_HEADER_SIZE;
+            // position cursor
+            if (stream.Position != posStart)
+            {
+                stream.Seek(posStart, SeekOrigin.Begin);
+            }
 
-            // Write page header
+            // write page header
             page.WriteHeader(writer);
 
             // write content except for empty pages
             if (page.PageType != PageType.Empty)
             {
-                // position writer to the end of page header
-                writer.BaseStream.Seek(target - writer.BaseStream.Position, SeekOrigin.Current);
-
                 page.WriteContent(writer);
             }
+
+            // write with zero non-used page
+            writer.Write(new byte[posEnd - stream.Position]);
 
             // if page is dirty, clean up
             page.IsDirty = false;
@@ -128,7 +154,7 @@ namespace LiteDB
             {
                 _reader.Close(); // Close reader
 
-                var stream = File.Open(_connectionString.Filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                var stream = new FileStream(_connectionString.Filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, BasePage.PAGE_SIZE);
 
                 _reader = new BinaryReader(stream);
                 _writer = new BinaryWriter(stream);

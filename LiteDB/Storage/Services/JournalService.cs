@@ -35,8 +35,8 @@ namespace LiteDB
             var journal = JournalService.GetJournalFilename(_connectionString, true);
 
             // create journal file in EXCLUSIVE mode
-            using (var stream = File.Open(journal, 
-                FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            using (var stream = new FileStream(journal, 
+                FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE))
             {
                 using (var writer = new BinaryWriter(stream))
                 {
@@ -44,27 +44,17 @@ namespace LiteDB
                     var total = (uint)_cache.GetDirtyPages().Count();
                     stream.SetLength(total * BasePage.PAGE_SIZE);
 
-                    uint index = 0;
-
-                    // for better performance, write first page at end of file and others in sequence order
+                    // write all dirty pages in sequence on journal file
                     foreach (var page in _cache.GetDirtyPages())
                     {
-                        if (index == 0)
-                        {
-                            this.WritePageInJournal(total - 1, writer, page);
-                        }
-                        else
-                        {
-                            this.WritePageInJournal(index, writer, page);
-                        }
-                        index++;
+                        this.WritePageInJournal(writer, page);
                     }
 
                     // flush all data
                     writer.Flush();
 
                     // mark header as finish
-                    writer.Seek(FINISH_POSITION);
+                    stream.Seek(FINISH_POSITION, SeekOrigin.Begin);
 
                     writer.Write(true); // mark as TRUE
 
@@ -83,13 +73,12 @@ namespace LiteDB
         /// <summary>
         /// Write a page in sequence, not in absolute position
         /// </summary>
-        private void WritePageInJournal(uint index, BinaryWriter writer, BasePage page)
+        private void WritePageInJournal(BinaryWriter writer, BasePage page)
         {
-            // Position cursor
-            writer.Seek(index * BasePage.PAGE_SIZE);
-
-            // target = it's the target position after write header. It's used when header does not conaints all PAGE_HEADER_SIZE
-            var target = writer.BaseStream.Position + BasePage.PAGE_HEADER_SIZE;
+            // no need position cursor - journal writes in sequence
+            var stream = writer.BaseStream;
+            var posStart = stream.Position;
+            var posEnd = posStart + BasePage.PAGE_SIZE;
 
             // Write page header
             page.WriteHeader(writer);
@@ -97,11 +86,11 @@ namespace LiteDB
             // write content except for empty pages
             if (page.PageType != PageType.Empty)
             {
-                // position writer to the end of page header
-                writer.BaseStream.Seek(target - writer.BaseStream.Position, SeekOrigin.Current);
-
                 page.WriteContent(writer);
             }
+
+            // write with zero non-used page
+            writer.Write(new byte[posEnd - stream.Position]);
         }
 
         /// <summary>
@@ -115,7 +104,6 @@ namespace LiteDB
 
             if (newFile)
             {
-                //return Path.Combine(dir, filename + ext);
                 var file = "";
                 var index = 0;
 
@@ -128,8 +116,6 @@ namespace LiteDB
             }
             else
             {
-                //var p = Path.Combine(dir, filename + ext);
-                //return File.Exists(p) ? p : null;
                 var files = Directory.GetFiles(dir, filename + "*" + ext, SearchOption.TopDirectoryOnly);
 
                 return files.Length > 0 ? files.Last() : null;

@@ -41,9 +41,9 @@ namespace LiteDB
         {
             this.ConnectionString = new ConnectionString(connectionString);
 
-            if (!File.Exists(ConnectionString.Filename))
+            if (!File.Exists(this.ConnectionString.Filename))
             {
-                CreateNewDatabase(ConnectionString);
+                DiskService.CreateNewDatafile(this.ConnectionString);
             }
 
             this.Recovery = new RecoveryService(this.ConnectionString);
@@ -144,26 +144,6 @@ namespace LiteDB
         public void Rollback()
         {
             this.Transaction.Rollback();
-        }
-
-        #endregion
-
-        #region Statics methods
-
-        /// <summary>
-        /// Create a empty database ready to be used using connectionString as parameters
-        /// </summary>
-        private static void CreateNewDatabase(ConnectionString connectionString)
-        {
-            using (var stream = File.Create(connectionString.Filename))
-            {
-                using (var writer = new BinaryWriter(stream))
-                {
-                    // creating header + master collection
-                    DiskService.WritePage(writer, new HeaderPage { PageID = 0, LastPageID = 1 });
-                    DiskService.WritePage(writer, new CollectionPage { PageID = 1, CollectionName = "_master" });
-                }
-            }
         }
 
         #endregion

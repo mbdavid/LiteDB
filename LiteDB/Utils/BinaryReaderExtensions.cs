@@ -65,10 +65,5 @@ namespace LiteDB
 
             throw new NotImplementedException();
         }
-
-        public static long Seek(this BinaryReader reader, long position)
-        {
-            return reader.BaseStream.Seek(position, SeekOrigin.Begin);
-        }
     }
 }

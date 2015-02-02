@@ -8,7 +8,7 @@ namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public const string FIELD_PATTERN = @"^\w+(.\w+)*$";
+        public const string FIELD_PATTERN = @"^\w+(\.\w+)*$";
         public const int FIELD_MAX_LENGTH = 30;
 
         /// <summary>

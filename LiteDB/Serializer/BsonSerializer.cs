@@ -50,9 +50,9 @@ namespace LiteDB
 
             if (typeof(T) == typeof(BsonDocument))
             {
-                var dict = fastBinaryJSON.BJSON.Parse(data);
+                var dict = (Dictionary<string, object>)fastBinaryJSON.BJSON.Parse(data);
 
-                doc = new BsonDocument((Dictionary<string, object>)dict);
+                doc = new BsonDocument(dict);
             }
             else
             {
@@ -65,7 +65,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Gets from a document object (plain C# object or BsonDocument) some field value
+        /// Gets from a document object (plain C# object or BsonDocument) some field value. Returns "null" when not found any value/path
         /// </summary>
         public static object GetFieldValue(object obj, string fieldName)
         {

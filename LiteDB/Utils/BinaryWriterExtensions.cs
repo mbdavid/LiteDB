@@ -74,10 +74,5 @@ namespace LiteDB
 
             // otherwise is null
         }
-
-        public static long Seek(this BinaryWriter writer, long position)
-        {
-            return writer.BaseStream.Seek(position, SeekOrigin.Begin);
-        }
     }
 }

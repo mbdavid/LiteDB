@@ -33,7 +33,7 @@ namespace LiteDB
                 // check if FINISH_POSITON is true
                 using (var reader = new BinaryReader(stream))
                 {
-                    reader.Seek(JournalService.FINISH_POSITION);
+                    stream.Seek(JournalService.FINISH_POSITION, SeekOrigin.Begin);
 
                     // if file is finish, datafile needs to be recovery. if not,
                     // the failure ocurrs during write journal file but not finish - just discard it
@@ -59,12 +59,10 @@ namespace LiteDB
             {
                 disk.Lock();
 
-                uint index = 0;
-
                 // while pages, read from redo, write on disk
                 while (reader.BaseStream.Position != reader.BaseStream.Length)
                 {
-                    var page = this.ReadPageJournal(index++, reader);
+                    var page = this.ReadPageJournal(reader);
 
                     disk.WritePage(page);
                 }
@@ -75,16 +73,14 @@ namespace LiteDB
             }
         }
 
-        private BasePage ReadPageJournal(uint index, BinaryReader reader)
+        private BasePage ReadPageJournal(BinaryReader reader)
         {
-            // Position cursor
-            reader.Seek(index * BasePage.PAGE_SIZE);
+            var stream = reader.BaseStream;
+            var posStart = stream.Position * BasePage.PAGE_SIZE;
+            var posEnd = posStart + BasePage.PAGE_SIZE;
 
             // Create page instance and read from disk (read page header + content page)
             var page = new BasePage();
-
-            // target = it's the target position after reader header. It's used when header does not conaints all PAGE_HEADER_SIZE
-            var target = reader.BaseStream.Position + BasePage.PAGE_HEADER_SIZE;
 
             // read page header
             page.ReadHeader(reader);
@@ -99,12 +95,12 @@ namespace LiteDB
             // read page content if page is not empty
             if (page.PageType != PageType.Empty)
             {
-                // position reader to the end of page header
-                reader.BaseStream.Seek(target - reader.BaseStream.Position, SeekOrigin.Current);
-
                 // read page content
                 page.ReadContent(reader);
             }
+
+            // read non-used bytes on page and position cursor to next page
+            reader.ReadBytes((int)(posEnd - stream.Position));
 
             return page;
         }

@@ -13,23 +13,24 @@ namespace LiteDB
     /// </summary>
     public class BsonDocument : BsonObject
     {
-        public const int MAX_DOCUMENT_SIZE = 1 * 1024 * 1024; // limits in 1MB max document size to avoid large documents, memory usage and slow performance
+        public const int MAX_DOCUMENT_SIZE = 256 * BasePage.PAGE_AVAILABLE_BYTES; // limits in 1.044.224b max document size to avoid large documents, memory usage and slow performance
 
         public BsonDocument()
             : base()
         {
         }
 
+        public object Id
+        {
+            get { return this["_id"].RawValue; }
+            set { this["_id"] = new BsonValue(value); } 
+        }
+
         public BsonDocument(BsonValue value)
             : base(value.AsObject.RawValue)
         {
             if (!this.HasKey("_id")) throw new ArgumentException("BsonDocument must have an _id key");
-
-            this.Id = this["_id"].RawValue;
-            this.RemoveKey("_id");
         }
-
-        public object Id { get; set; }
 
         internal BsonDocument(Dictionary<string, object> obj)
             : base(obj)
