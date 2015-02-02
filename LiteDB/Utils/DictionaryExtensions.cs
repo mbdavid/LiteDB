@@ -23,12 +23,20 @@ namespace LiteDB
 
         public static object Get(this Dictionary<string, object> dict, string name)
         {
-            return dict.ContainsKey(name) ? dict[name] : null;
+            object res;
+            if (dict.TryGetValue(name, out res))
+                return res;
+            
+            return null;
         }
 
         public static BsonValue Get(this Dictionary<string, BsonValue> dict, string name)
         {
-            return dict.ContainsKey(name) ? dict[name] : BsonValue.Null;
+            BsonValue res;
+            if (dict.TryGetValue(name, out res))
+                return res;
+            
+            return BsonValue.Null;
         }
     }
 }
