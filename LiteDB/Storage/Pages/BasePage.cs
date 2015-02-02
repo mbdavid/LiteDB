@@ -23,15 +23,14 @@ namespace LiteDB
         public const int PAGE_HEADER_SIZE = 17;
 
         /// <summary>
-        /// Bytes avaiable to store data removing page header size - 4060 bytes
-        /// I really dont know why -1 in AVAILABLE_BYTES - but if I dont use, pages overflow on write to disk (see exception there)
+        /// Bytes avaiable to store data removing page header size - 4079 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
         /// <summary>
-        /// If a page has less that this number, it's considered full page for new items. Can be used only for update (DataPage) ~ 15% PAGE_SIZE
+        /// If a page has less that this number, it's considered full page for new items. Can be used only for update (DataPage) ~ 20% PAGE_SIZE
         /// </summary>
-        public const int RESERVED_BYTES = 600;
+        public const int RESERVED_BYTES = 850;
 
         #endregion
 
