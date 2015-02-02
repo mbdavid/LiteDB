@@ -27,11 +27,6 @@ namespace LiteDB
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
-        /// <summary>
-        /// If a page has less that this number, it's considered full page for new items. Can be used only for update (DataPage) ~ 20% PAGE_SIZE
-        /// </summary>
-        public const int RESERVED_BYTES = 850;
-
         #endregion
 
         /// <summary>

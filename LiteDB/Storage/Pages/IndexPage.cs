@@ -8,6 +8,11 @@ namespace LiteDB
 {
     internal class IndexPage : BasePage
     {
+        /// <summary>
+        /// If a Index Page has less that this free space, it's considered full page for new items.
+        /// </summary>
+        public const int RESERVED_BYTES = 100;
+
         public Dictionary<ushort, IndexNode> Nodes { get; set; }
 
         /// <summary>
@@ -15,7 +20,7 @@ namespace LiteDB
         /// </summary>
         public override int FreeBytes
         {
-            get { return PAGE_AVAILABLE_BYTES - Nodes.Sum(x => x.Value.Length); }
+            get { return PAGE_AVAILABLE_BYTES - this.Nodes.Sum(x => x.Value.Length); }
         }
 
         public IndexPage()

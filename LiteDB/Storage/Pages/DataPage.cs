@@ -12,6 +12,11 @@ namespace LiteDB
     internal class DataPage : BasePage
     {
         /// <summary>
+        /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 15% PAGE_SIZE
+        /// </summary>
+        public const int RESERVED_BYTES = 800;
+
+        /// <summary>
         /// Returns all data blocks - Each block has one object
         /// </summary>
         public Dictionary<ushort, DataBlock> DataBlocks { get; set; }
