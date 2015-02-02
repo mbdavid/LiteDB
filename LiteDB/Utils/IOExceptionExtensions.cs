@@ -20,7 +20,7 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
-                    Thread.Sleep(250);
+                    Thread.Sleep(timer);
                 }
             }
             else
