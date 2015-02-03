@@ -83,6 +83,11 @@ namespace LiteDB
             // Write page header
             page.WriteHeader(writer);
 
+            if (page.FreeBytes < 0)
+            {
+                throw new Exception("No-way!");
+            }
+
             // write content except for empty pages
             if (page.PageType != PageType.Empty)
             {

@@ -26,7 +26,7 @@ namespace LiteDB
 
             var dataBlock = _engine.Data.Read(node.DataBlock, true);
 
-            var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Data);
+            var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
 
             foreach (var action in _includes)
             {
@@ -69,7 +69,7 @@ namespace LiteDB
             {
                 var dataBlock = _engine.Data.Read(node.DataBlock, true);
 
-                var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Data);
+                var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
 
                 foreach (var action in _includes)
                 {

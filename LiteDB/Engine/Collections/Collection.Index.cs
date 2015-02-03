@@ -63,7 +63,7 @@ namespace LiteDB
                     var dataBlock = _engine.Data.Read(node.DataBlock, true);
 
                     // read object
-                    var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Data);
+                    var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
 
                     // adding index
                     var key = BsonSerializer.GetFieldValue(doc, field);
