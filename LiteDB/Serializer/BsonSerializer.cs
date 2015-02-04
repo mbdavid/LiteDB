@@ -19,25 +19,36 @@ namespace LiteDB
         static BsonSerializer()
         {
             fastBinaryJSON.BJSON.Parameters.UseExtensions = false;
-            fastBinaryJSON.BJSON.Parameters.IgnoreAttributes.Clear();
-
-            // BsonId will can be excluded from byte[] data on convert - DataBlock as a special Key data
-            fastBinaryJSON.BJSON.Parameters.IgnoreAttributes.Add(typeof(BsonIdAttribute));
-            fastBinaryJSON.BJSON.Parameters.IgnoreAttributes.Add(typeof(BsonIgnoreAttribute));
-
             fastBinaryJSON.BJSON.Parameters.UsingGlobalTypes = false;
         }
 
         public static byte[] Serialize(object obj)
         {
             if (obj == null) throw new ArgumentNullException("obj");
+            byte[] bytes;
 
-            var bytes = obj is BsonDocument ?
-                fastBinaryJSON.BJSON.ToBJSON(((BsonDocument)obj).RawValue) :
-                fastBinaryJSON.BJSON.ToBJSON(obj);
+            if(obj is BsonDocument)
+            {
+                bytes = fastBinaryJSON.BJSON.ToBJSON(((BsonDocument)obj).RawValue);
+            }
+            else
+            {
+                // add parameters on serialization to ignore BsonIgnoreAttribute + Id attribute
+                var param = new fastBinaryJSON.BJSONParameters
+                {
+                    UseExtensions = false,
+                    UsingGlobalTypes = false,
+                    IgnoreAttributes = new List<Type> { typeof(BsonIgnoreAttribute) },
+                    IgnoreProperty = GetIdProperty(obj.GetType())
+                };
+
+                bytes = fastBinaryJSON.BJSON.ToBJSON(obj, param);
+            }
 
             if (bytes.Length > BsonDocument.MAX_DOCUMENT_SIZE)
+            {
                 throw new LiteException("Document size too long");
+            }
 
             return bytes;
         }
@@ -150,9 +161,9 @@ namespace LiteDB
 
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
             prop = SelectProperty(type.GetProperties(),
-                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true));
-                //x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
-                //x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
+                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+                x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
+                x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
 
             if (prop != null)
             {

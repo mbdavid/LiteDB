@@ -10,7 +10,6 @@ namespace UnitTest
 {
     public class Customer
     {
-        [BsonId]
         public Guid CustomerId { get; set; }
 
         public string Name { get; set; }
@@ -56,7 +55,6 @@ namespace UnitTest
 
     public class Post
     {
-        [BsonId]
         public int Id { get; set; }
         public string Title { get; set; }
         public DateTime PostDate { get; set; }
