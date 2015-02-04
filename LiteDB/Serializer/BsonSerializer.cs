@@ -141,11 +141,15 @@ namespace LiteDB
         /// </summary>
         public static PropertyInfo GetIdProperty(Type type)
         {
-            if (_cacheId.ContainsKey(type))
-                return _cacheId[type];
+            PropertyInfo prop;
+
+            if(_cacheId.TryGetValue(type, out prop))
+            {
+                return prop;
+            }
 
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-            var prop = SelectProperty(type.GetProperties(),
+            prop = SelectProperty(type.GetProperties(),
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true));
                 //x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
                 //x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
