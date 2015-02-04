@@ -31,23 +31,23 @@ A quick example for store and search documents:
 // Open data file (or create if not exits)
 using(var db = new LiteEngine(@"C:\Temp\MyData.db"))
 {
-    // Get a collection (or create, if not exits)
-    var col = db.GetCollection<Customer>("customers");
-    
-    var customer = new Customer { Id = 1, Name = "John Doe" };
-
+	// Get a collection (or create, if not exits)
+	var col = db.GetCollection<Customer>("customers");
+	
+	var customer = new Customer { Id = 1, Name = "John Doe" };
+	
 	// Insert new customer document
 	col.Insert(customer);
-    
-    // Update a document inside a collection
-    customer.Name = "Joana Doe";
-    
-    col.Update(customer);
-    
+	
+	// Update a document inside a collection
+	customer.Name = "Joana Doe";
+	
+	col.Update(customer);
+	
 	// Index document using a document property
 	col.EnsureIndex(x => x.Name);
-
-    // Simple Linq support
+	
+	// Simple Linq support
 	var result = col.Find(x => x.Name.StartsWith("Jo"));
 }
 ```
@@ -62,42 +62,42 @@ using(var db = new LiteEngine(@"C:\Temp\MyData.db"))
 
 # LiteDB Guide
 
-LiteDB is a NoSQL Database based on a document store: a simple  very simple API similar to MongoDB C# official driver.
+LiteDB is a NoSQL Database based on a document store: a very simple API similar to MongoDB C# official driver.
 
 ## Documents
 
 LiteDB works with documents to store and retrive data inside data file. Your document definition can be a POCO class or BsonDocument class. In both case, LiteDB will convert your document in a BSON format to store inside disk.
 
-BSON is a Binary JSON, a serialization for store data objects as binary array. In BSON, we have more data types than JSON. LiteDB supports `Null`, `Array`, `Object`, `Byte`, `ByteArray`, `Char`, `Boolean`, `String`, `Short`, `Int`, `Long`, `UShort`, `UInt`, `ULong`, `Float`, `Double`, `Decimal`, `DateTime`, `Guid`.
+BSON is a Binary JSON, a serialization for store data objects as binary array. In BSON, we have more data types than JSON. LiteDB supports `Null`, `Array`, `Object`, `Byte`, `ByteArray`, `Char`, `Boolean`, `String`, `Short`, `Int`, `Long`, `UShort`, `UInt`, `ULong`, `Float`, `Double`, `Decimal`, `DateTime` and `Guid`.
 
-In LiteDB, documents are limited in 256Kb.
+In LiteDB, documents are limited in 1Mb size.
 
 ### Documents using POCO class
 
-POCO class are simple C# classes using only `get/set` properties. It's the best way to create a strong typed documents. Your class must have a `Id` property to LiteDB identify your document. You can use `Id` named property or decorate a property with `[BsonId]` attribute. Your `Id` value must be a unique and not null. Also, `Id` data type must be a valid indexed data type. See Index section.
+POCO class are simple C# classes using only `get/set` properties. It's the best way to create a strong typed documents. Your class must have an id property to LiteDB identify your document. You need decorate your property with `[BsonId]` attribute. Your `Id` value must be a unique and not null. Also, document id data type must be a valid indexed data type. See Index section.
 
 ``` C#
-// A poco entity, must have Id
+// A poco entity, must have Id decorated with [BsonId]
 public class Customer
 {
-    [BsonId]
+	[BsonId]
 	public Guid Id { get; set; }
 	public string Name { get; set; }
 	public List<Phone> Phones { get; set; }
 }
 
-// It's not a entity, don't need Id
+// It's not a entity, its a sub document
 public class Phone
 {
-    public int Code { get; set; }
-    public string Number { get; set; }
-    public PhoneType Type { get; set; }
+	public int Code { get; set; }
+	public string Number { get; set; }
+	public PhoneType Type { get; set; }
 }
 
 public enum PhoneType { Mobile, Landline }
 ``` 
 
-- Internal, document id is represent as `_id` property
+- Internal, document Id is represent as `_id` document attribute
 - Do not use complex data types (like `DataSet`, `DataTable`)
 - Do not use disposable objects (like `Stream`, `Graphics`)
 - Enums will be converted in strings when serialized
@@ -118,11 +118,11 @@ doc["Phones"][0]["Number"] = "(51) 8000-1234";
 doc["Phones"][0]["Type"] = "Mobile";
 ```
 
-With BsonDocument you can create any complex document schema.
+With `BsonDocument` you can create any complex document schema.
 
 ## Collections - the store
 
-LiteDB organize documents in stores (called in LiteDB as collections). Each collection has a unique name and contains documents with same schema/type. You can get a strong typed collection or a generic BsonDocument collections, using `GetCollection` from `LiteEngine` instance.
+LiteDB organize documents in stores (called in LiteDB as collections). Each collection has a unique name and contains documents with same schema/type. You can get a strong typed collection or a generic `BsonDocument` collections, using `GetCollection` from `LiteEngine` instance.
 
 ```C#
 var db = new LiteEngine(stringConnection);
@@ -137,9 +137,9 @@ var customers = db.GetCollection("Customers");
 Collection contains all method to manipulate documents:
 
 * `Insert` - Insert a new document
-* `FindById` , `FindOne` or `Find` - Find a document using Query object or LINQ expression. At this point, only simple LINQ are supported - attribute on left, value on right side.
+* `FindById` , `FindOne` or `Find` - Find a document using `Query` object or Linq expression. At this point, only simple Linq are supported - attribute on left, value on right side.
 * `Update` - Update a document
-* `Delete` - Delete a document id or using a query
+* `Delete` - Delete a document using document Id or using a Query
 * `Include` - Use include to populate properties based on others collections
 * `EnsureIndex` - Create a index if not exists. All queries must have a index.
 
@@ -157,23 +157,23 @@ customers.EnsureIndex("Name");
 var results = customers.Find(Query.StartsWith("Name", "John"));
 
 // Or using Linq
-var results = customers.Find(x > x.Name.StartsWith("John"));
+var results = customers.Find(x => x.Name.StartsWith("John"));
 
-// Return document by ID (PK index)
+// Return document by _id (PK index)
 var customer = customers.FindById(1);
 
-// Count only documents where ID >= 2
+// Count only documents where _id >= 2
 var count = customers.Count(Query.GTE("_id", 2));
 
 // All query results returns an IEnumerable<T>, so you can use Linq after too
-var linq = customers.Find(x => x.Salary > 500 && x.Salary < 1000) // indexed query 
-    .Where(x => x.LastName.Length > 5 && x.Age > 22) // in memory query
-    .Select(x => new { x.Name, x.Salary })
-    .OrderBy(x => x.Name);
+var linq = customers.Find(x => x.Salary > 500 && x.Name.StartsWith("John")) // indexed query 
+	.Where(x => x.LastName.Length > 5 && x.Age > 22) // in memory Linq object query
+	.Select(x => new { x.Name, x.Salary })
+	.OrderBy(x => x.Name);
 ```
 
-`Query` class supports `All`, `Equals`, `Not`, `GreaterThan`, `LessThan`, `Between`, `In`, `StartsWtih` and `OR`.
-All operations need an index to be executed.
+`Query` class supports `All`, `Equals`, `Not`, `GreaterThan`, `LessThan`, `Between`, `In`, `StartsWtih`, `AND` and `OR`.
+All operations need an index to be executed. `AND` and `OR` operation uses Intersect and Union Linq operations.
 
 ## Transactions
 
@@ -188,22 +188,22 @@ After commit method called, LiteDB store all dirty pages to disk. This operation
 ```C#
 using(var db = new LiteEngine(dbpath))
 {
-    db.BeginTrans();
-    
-    // Do many write operations (insert, updates, deletes),
-    //   but if throw any error during this operations, a Rollback() will be called automatic
-    
-    db.Commit();
+	db.BeginTrans();
+	
+	// Do many write operations (insert, updates, deletes),
+	//   but if throw any error during this operations, a Rollback() will be called automatic and no data was changed on disk
+	
+	db.Commit();
 }
 ```
 
 ## Storing Files
 
-Sametimes we need store files in database. For this, LiteDB has a special `FileStorage` collection to store files without document size limit (file limit is 2Gb per file). It's works like MongoDB `GridFS`.
+Sametimes we need store big files in database. For this, LiteDB has a special `FileStorage` collection to store files without document size limit (file limit is 2Gb per file). It's works like MongoDB `GridFS`. 
 
 ```C#
 // Storing a file stream inside database
-db.Files.Upload("my_key.png", stream);
+db.FileStorage.Upload("my_key.png", stream);
 
 // Get file reference using file id
 var file = db.FileStorage.FindById("my_key.png");
@@ -230,13 +230,3 @@ Connection string options to initialize LiteEngine class:
 
 LiteDB has no external dependency, but use [fastBinaryJson](http://fastbinaryjson.codeplex.com/) as BSON serializer 
 from/to .NET objects. All source are included inside LiteDB source.
-
-## Roadmap
-
-Currently, LiteDB is in testing version and are not full ready for production. Please, be careful on use.
-
-Same features/ideas for future
-
-- Compound index: one index for multiple fields
-- Multikey index: index for array values
-- Full text search
