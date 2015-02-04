@@ -74,13 +74,12 @@ In LiteDB, documents are limited in 1Mb size.
 
 ### Documents using POCO class
 
-POCO class are simple C# classes using only `get/set` properties. It's the best way to create a strong typed documents. Your class must have an id property to LiteDB identify your document. You need decorate your property with `[BsonId]` attribute. Your `Id` value must be a unique and not null. Also, document id data type must be a valid indexed data type. See Index section.
+POCO class are simple C# classes using only `get/set` properties. It's the best way to create a strong typed documents. Your class must have an identifier property. You can use `Id` named property, `<ClassName>Id` or decorate any property with `[BsonId]` attribute. Your `Id` value must be a unique and not null. Also, `Id` data type must be a valid indexed data type. See Index section.
 
 ``` C#
 // A poco entity, must have Id decorated with [BsonId]
 public class Customer
 {
-	[BsonId]
 	public Guid Id { get; set; }
 	public string Name { get; set; }
 	public List<Phone> Phones { get; set; }
