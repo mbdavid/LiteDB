@@ -66,7 +66,7 @@
 <p><a href="http://litedb.azurewebsites.net/">Try LiteDB Web Shell</a>. For security reasons, in online version not all commands are available. Try offline version for full features tests.</p>
 
 <h2>
-<a id="how-install" class="anchor" href="#how-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>How install</h2>
+<a id="how-to-install" class="anchor" href="#how-to-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to install</h2>
 
 <p>LiteDB is a serverless database, so there is no install. Just copy LiteDB.dll to your Bin folder and add as Reference. If you prefer, you can use NuGet package: <code>Install-Package LiteDB</code>. If you are running in a web environment, be sure that IIS user has write permission on data folder.</p>
 
@@ -102,7 +102,8 @@
 <a id="where-to-use" class="anchor" href="#where-to-use" aria-hidden="true"><span class="octicon octicon-link"></span></a>Where to use?</h2>
 
 <ul>
-<li>Desktop/local applications</li>
+<li>Desktop/local small applications</li>
+<li>Application file format</li>
 <li>Small web applications</li>
 <li>One database <strong>per account/user</strong> data store</li>
 <li>Few concurrency write users operations</li>
@@ -111,23 +112,23 @@
 <h1>
 <a id="litedb-guide" class="anchor" href="#litedb-guide" aria-hidden="true"><span class="octicon octicon-link"></span></a>LiteDB Guide</h1>
 
-<p>LiteDB is a NoSQL Database based on a document store: a simple  very simple API similar to MongoDB C# official driver.</p>
+<p>LiteDB is a NoSQL Database based on a document store: a very simple API similar to MongoDB C# official driver.</p>
 
 <h2>
 <a id="documents" class="anchor" href="#documents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documents</h2>
 
 <p>LiteDB works with documents to store and retrive data inside data file. Your document definition can be a POCO class or BsonDocument class. In both case, LiteDB will convert your document in a BSON format to store inside disk.</p>
 
-<p>BSON is a Binary JSON, a serialization for store data objects as binary array. In BSON, we have more data types than JSON. LiteDB supports <code>Null</code>, <code>Array</code>, <code>Object</code>, <code>Byte</code>, <code>ByteArray</code>, <code>Char</code>, <code>Boolean</code>, <code>String</code>, <code>Short</code>, <code>Int</code>, <code>Long</code>, <code>UShort</code>, <code>UInt</code>, <code>ULong</code>, <code>Float</code>, <code>Double</code>, <code>Decimal</code>, <code>DateTime</code>, <code>Guid</code>.</p>
+<p>BSON is a Binary JSON, a serialization for store data objects as binary array. In BSON, we have more data types than JSON. LiteDB supports <code>Null</code>, <code>Array</code>, <code>Object</code>, <code>Byte</code>, <code>ByteArray</code>, <code>Char</code>, <code>Boolean</code>, <code>String</code>, <code>Short</code>, <code>Int</code>, <code>Long</code>, <code>UShort</code>, <code>UInt</code>, <code>ULong</code>, <code>Float</code>, <code>Double</code>, <code>Decimal</code>, <code>DateTime</code> and <code>Guid</code>.</p>
 
-<p>In LiteDB, documents are limited in 256Kb.</p>
+<p>In LiteDB, documents are limited in 1Mb size.</p>
 
 <h3>
 <a id="documents-using-poco-class" class="anchor" href="#documents-using-poco-class" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documents using POCO class</h3>
 
-<p>POCO class are simple C# classes using only <code>get/set</code> properties. It's the best way to create a strong typed documents. Your class must have a <code>Id</code> property to LiteDB identify your document. You can use <code>Id</code> named property or decorate a property with <code>[BsonId]</code> attribute. Your <code>Id</code> value must be a unique and not null. Also, <code>Id</code> data type must be a valid indexed data type. See Index section.</p>
+<p>POCO class are simple C# classes using only <code>get/set</code> properties. It's the best way to create a strong typed documents. Your class must have an identifier property. You can use <code>Id</code> named property, <code>&lt;ClassName&gt;Id</code> or decorate any property with <code>[BsonId]</code> attribute. Your <code>Id</code> value must be a unique and not null. Also, <code>Id</code> data type must be a valid indexed data type. See Index section.</p>
 
-<div class="highlight highlight-C#"><pre><span class="pl-c">// A poco entity, must have Id</span>
+<div class="highlight highlight-C#"><pre><span class="pl-c">// A poco entity, must have Id decorated with [BsonId]</span>
 <span class="pl-s">public</span> <span class="pl-s">class</span> <span class="pl-en">Customer</span>
 {
     <span class="pl-s">public</span> Guid <span class="pl-en">Id</span> { <span class="pl-k">get</span>; <span class="pl-k">set</span>; }
@@ -135,7 +136,7 @@
     <span class="pl-s">public</span> List&lt;Phone&gt; <span class="pl-en">Phones</span> { <span class="pl-k">get</span>; <span class="pl-k">set</span>; }
 }
 
-<span class="pl-c">// It's not a entity, don't need Id</span>
+<span class="pl-c">// It's not a entity, its a sub document</span>
 <span class="pl-s">public</span> <span class="pl-s">class</span> <span class="pl-en">Phone</span>
 {
     <span class="pl-s">public</span> <span class="pl-st">int</span> <span class="pl-en">Code</span> { <span class="pl-k">get</span>; <span class="pl-k">set</span>; }
@@ -146,6 +147,7 @@
 <span class="pl-s">public</span> <span class="pl-s">enum</span> <span class="pl-en">PhoneType</span> { Mobile, Landline }</pre></div>
 
 <ul>
+<li>Internal, document Id is represent as <code>_id</code> document attribute</li>
 <li>Do not use complex data types (like <code>DataSet</code>, <code>DataTable</code>)</li>
 <li>Do not use disposable objects (like <code>Stream</code>, <code>Graphics</code>)</li>
 <li>Enums will be converted in strings when serialized</li>
@@ -166,12 +168,12 @@ doc[<span class="pl-s1"><span class="pl-pds">"</span>Phones<span class="pl-pds">
 doc[<span class="pl-s1"><span class="pl-pds">"</span>Phones<span class="pl-pds">"</span></span>][<span class="pl-c1">0</span>][<span class="pl-s1"><span class="pl-pds">"</span>Number<span class="pl-pds">"</span></span>] = <span class="pl-s1"><span class="pl-pds">"</span>(51) 8000-1234<span class="pl-pds">"</span></span>;
 doc[<span class="pl-s1"><span class="pl-pds">"</span>Phones<span class="pl-pds">"</span></span>][<span class="pl-c1">0</span>][<span class="pl-s1"><span class="pl-pds">"</span>Type<span class="pl-pds">"</span></span>] = <span class="pl-s1"><span class="pl-pds">"</span>Mobile<span class="pl-pds">"</span></span>;</pre></div>
 
-<p>With BsonDocument you can create any complex document schema.</p>
+<p>With <code>BsonDocument</code> you can create any complex document schema.</p>
 
 <h2>
 <a id="collections---the-store" class="anchor" href="#collections---the-store" aria-hidden="true"><span class="octicon octicon-link"></span></a>Collections - the store</h2>
 
-<p>LiteDB organize documents in stores (called in LiteDB as collections). Each collection has a unique name and contains documents with same schema/type. You can get a strong typed collection or a generic BsonDocument collections, using <code>GetCollection</code> from <code>LiteEngine</code> instance.</p>
+<p>LiteDB organize documents in stores (called in LiteDB as collections). Each collection has a unique name and contains documents with same schema/type. You can get a strong typed collection or a generic <code>BsonDocument</code> collections, using <code>GetCollection</code> from <code>LiteEngine</code> instance.</p>
 
 <div class="highlight highlight-C#"><pre><span class="pl-k">var</span> db = <span class="pl-s">new</span> LiteEngine(stringConnection);
 
@@ -187,11 +189,11 @@ doc[<span class="pl-s1"><span class="pl-pds">"</span>Phones<span class="pl-pds">
 <li>
 <code>Insert</code> - Insert a new document</li>
 <li>
-<code>FindById</code> , <code>FindOne</code> or <code>Find</code> - Find a document using Query object or LINQ expression. At this point, only simple LINQ are supported - attribute on left, value on right side.</li>
+<code>FindById</code> , <code>FindOne</code> or <code>Find</code> - Find a document using <code>Query</code> object or Linq expression. At this point, only simple Linq are supported - attribute on left, value on right side.</li>
 <li>
 <code>Update</code> - Update a document</li>
 <li>
-<code>Delete</code> - Delete a document id or using a query</li>
+<code>Delete</code> - Delete a document using document Id or using a Query</li>
 <li>
 <code>Include</code> - Use include to populate properties based on others collections</li>
 <li>
@@ -212,22 +214,22 @@ customers.EnsureIndex(<span class="pl-s1"><span class="pl-pds">"</span>Name<span
 <span class="pl-k">var</span> results = customers.Find(Query.StartsWith(<span class="pl-s1"><span class="pl-pds">"</span>Name<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>));
 
 <span class="pl-c">// Or using Linq</span>
-<span class="pl-k">var</span> results = customers.Find(x &gt; x.Name.StartsWith(<span class="pl-s1"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>));
+<span class="pl-k">var</span> results = customers.Find(x =&gt; x.Name.StartsWith(<span class="pl-s1"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>));
 
-<span class="pl-c">// Return document by ID (PK index)</span>
+<span class="pl-c">// Return document by _id (PK index)</span>
 <span class="pl-k">var</span> customer = customers.FindById(<span class="pl-c1">1</span>);
 
-<span class="pl-c">// Count only documents where ID &gt;= 2</span>
+<span class="pl-c">// Count only documents where _id &gt;= 2</span>
 <span class="pl-k">var</span> count = customers.Count(Query.GTE(<span class="pl-s1"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span>, <span class="pl-c1">2</span>));
 
 <span class="pl-c">// All query results returns an IEnumerable&lt;T&gt;, so you can use Linq after too</span>
-<span class="pl-k">var</span> linq = customers.Find(x =&gt; x.Salary &gt; <span class="pl-c1">500</span> &amp;&amp; x.Salary &lt; <span class="pl-c1">1000</span>) <span class="pl-c">// indexed query </span>
-    .Where(x =&gt; x.LastName.Length &gt; <span class="pl-c1">5</span> &amp;&amp; x.Age &gt; <span class="pl-c1">22</span>) <span class="pl-c">// in memory query</span>
+<span class="pl-k">var</span> linq = customers.Find(x =&gt; x.Salary &gt; <span class="pl-c1">500</span> &amp;&amp; x.Name.StartsWith(<span class="pl-s1"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>)) <span class="pl-c">// indexed query </span>
+    .Where(x =&gt; x.LastName.Length &gt; <span class="pl-c1">5</span> &amp;&amp; x.Age &gt; <span class="pl-c1">22</span>) <span class="pl-c">// in memory Linq object query</span>
     .Select(x =&gt; <span class="pl-s">new</span> { x.Name, x.Salary })
     .OrderBy(x =&gt; x.Name);</pre></div>
 
-<p><code>Query</code> class supports <code>All</code>, <code>Equals</code>, <code>Not</code>, <code>GreaterThan</code>, <code>LessThan</code>, <code>Between</code>, <code>In</code>, <code>StartsWtih</code> and <code>OR</code>.
-All operations need an index to be executed.</p>
+<p><code>Query</code> class supports <code>All</code>, <code>Equals</code>, <code>Not</code>, <code>GreaterThan</code>, <code>LessThan</code>, <code>Between</code>, <code>In</code>, <code>StartsWtih</code>, <code>AND</code> and <code>OR</code>.
+All operations need an index to be executed. <code>AND</code> and <code>OR</code> operation uses Intersect and Union Linq operations.</p>
 
 <h2>
 <a id="transactions" class="anchor" href="#transactions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Transactions</h2>
@@ -246,7 +248,7 @@ All operations need an index to be executed.</p>
     db.BeginTrans();
 
     <span class="pl-c">// Do many write operations (insert, updates, deletes),</span>
-    <span class="pl-c">//   but if throw any error during this operations, a Rollback() will be called automatic</span>
+    <span class="pl-c">//   but if throw any error during this operations, a Rollback() will be called automatic and no data was changed on disk</span>
 
     db.Commit();
 }</pre></div>
@@ -254,22 +256,22 @@ All operations need an index to be executed.</p>
 <h2>
 <a id="storing-files" class="anchor" href="#storing-files" aria-hidden="true"><span class="octicon octicon-link"></span></a>Storing Files</h2>
 
-<p>Sametimes we need store files in database. For this, LiteDB has a special <code>Files</code> collection to store files without document size limit (file limit is 2Gb per file). It's works like MongoDB <code>GridFS</code>.</p>
+<p>Sametimes we need store big files in database. For this, LiteDB has a special <code>FileStorage</code> collection to store files without document size limit (file limit is 2Gb per file). It's works like MongoDB <code>GridFS</code>. </p>
 
 <div class="highlight highlight-C#"><pre><span class="pl-c">// Storing a file stream inside database</span>
-db.Files.Upload(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<span class="pl-pds">"</span></span>, stream);
+db.FileStorage.Upload(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<span class="pl-pds">"</span></span>, stream);
 
 <span class="pl-c">// Get file reference using file id</span>
-<span class="pl-k">var</span> file = db.Files.FindById(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<span class="pl-pds">"</span></span>);
+<span class="pl-k">var</span> file = db.FileStorage.FindById(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<span class="pl-pds">"</span></span>);
 
 <span class="pl-c">// Find all files using StartsWith</span>
-<span class="pl-k">var</span> files = db.Files.Find(<span class="pl-s1"><span class="pl-pds">"</span>my_<span class="pl-pds">"</span></span>);
+<span class="pl-k">var</span> files = db.FileStorage.Find(<span class="pl-s1"><span class="pl-pds">"</span>my_<span class="pl-pds">"</span></span>);
 
 <span class="pl-c">// Get file stream</span>
 <span class="pl-k">var</span> stream = file.OpenRead();
 
 <span class="pl-c">// Write file stream in a external stream</span>
-db.Files.Download(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<span class="pl-pds">"</span></span>, stream);</pre></div>
+db.FileStorage.Download(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<span class="pl-pds">"</span></span>, stream);</pre></div>
 
 <h2>
 <a id="connection-string" class="anchor" href="#connection-string" aria-hidden="true"><span class="octicon octicon-link"></span></a>Connection String</h2>
@@ -290,19 +292,6 @@ db.Files.Download(<span class="pl-s1"><span class="pl-pds">"</span>my_key.png<sp
 
 <p>LiteDB has no external dependency, but use <a href="http://fastbinaryjson.codeplex.com/">fastBinaryJson</a> as BSON serializer 
 from/to .NET objects. All source are included inside LiteDB source.</p>
-
-<h2>
-<a id="roadmap" class="anchor" href="#roadmap" aria-hidden="true"><span class="octicon octicon-link"></span></a>Roadmap</h2>
-
-<p>Currently, LiteDB is in testing version and are not full ready for production. Please, be careful on use.</p>
-
-<p>Same features/ideas for future</p>
-
-<ul>
-<li>Compound index: one index for multiple fields</li>
-<li>Multikey index: index for array values</li>
-<li>Full text search</li>
-</ul>
       </section>
 
     </div>
