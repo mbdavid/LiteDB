@@ -15,7 +15,7 @@ namespace LiteDB
         {
         }
 
-        public BsonObject(Dictionary<string, object> obj)
+        internal BsonObject(Dictionary<string, object> obj)
             : base(obj)
         {
         }

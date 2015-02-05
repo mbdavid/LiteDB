@@ -12,6 +12,7 @@ namespace LiteDB
     internal class IndexNode
     {
         public const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
+                                                 1 + // Levels (byte)
                                                  PageAddress.SIZE; // DataBlock
 
         /// <summary>

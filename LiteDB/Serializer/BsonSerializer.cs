@@ -19,25 +19,36 @@ namespace LiteDB
         static BsonSerializer()
         {
             fastBinaryJSON.BJSON.Parameters.UseExtensions = false;
-            fastBinaryJSON.BJSON.Parameters.IgnoreAttributes.Clear();
-
-            // BsonId will can be excluded from byte[] data on convert - DataBlock as a special Key data
-            fastBinaryJSON.BJSON.Parameters.IgnoreAttributes.Add(typeof(BsonIdAttribute));
-            fastBinaryJSON.BJSON.Parameters.IgnoreAttributes.Add(typeof(BsonIgnoreAttribute));
-
             fastBinaryJSON.BJSON.Parameters.UsingGlobalTypes = false;
         }
 
         public static byte[] Serialize(object obj)
         {
             if (obj == null) throw new ArgumentNullException("obj");
+            byte[] bytes;
 
-            var bytes = obj is BsonDocument ?
-                fastBinaryJSON.BJSON.ToBJSON(((BsonDocument)obj).RawValue) :
-                fastBinaryJSON.BJSON.ToBJSON(obj);
+            if(obj is BsonDocument)
+            {
+                bytes = fastBinaryJSON.BJSON.ToBJSON(((BsonDocument)obj).RawValue);
+            }
+            else
+            {
+                // add parameters on serialization to ignore BsonIgnoreAttribute + Id attribute
+                var param = new fastBinaryJSON.BJSONParameters
+                {
+                    UseExtensions = false,
+                    UsingGlobalTypes = false,
+                    IgnoreAttributes = new List<Type> { typeof(BsonIgnoreAttribute) },
+                    IgnoreProperty = GetIdProperty(obj.GetType())
+                };
+
+                bytes = fastBinaryJSON.BJSON.ToBJSON(obj, param);
+            }
 
             if (bytes.Length > BsonDocument.MAX_DOCUMENT_SIZE)
+            {
                 throw new LiteException("Document size too long");
+            }
 
             return bytes;
         }
@@ -50,9 +61,9 @@ namespace LiteDB
 
             if (typeof(T) == typeof(BsonDocument))
             {
-                var dict = fastBinaryJSON.BJSON.Parse(data);
+                var dict = (Dictionary<string, object>)fastBinaryJSON.BJSON.Parse(data);
 
-                doc = new BsonDocument((Dictionary<string, object>)dict);
+                doc = new BsonDocument(dict);
             }
             else
             {
@@ -65,7 +76,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Gets from a document object (plain C# object or BsonDocument) some field value
+        /// Gets from a document object (plain C# object or BsonDocument) some field value. Returns "null" when not found any value/path
         /// </summary>
         public static object GetFieldValue(object obj, string fieldName)
         {
@@ -141,14 +152,18 @@ namespace LiteDB
         /// </summary>
         public static PropertyInfo GetIdProperty(Type type)
         {
-            if (_cacheId.ContainsKey(type))
-                return _cacheId[type];
+            PropertyInfo prop;
+
+            if(_cacheId.TryGetValue(type, out prop))
+            {
+                return prop;
+            }
 
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-            var prop = SelectProperty(type.GetProperties(),
-                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true));
-                //x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
-                //x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
+            prop = SelectProperty(type.GetProperties(),
+                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+                x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
+                x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
 
             if (prop != null)
             {

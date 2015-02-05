@@ -95,17 +95,23 @@ namespace LiteDB
                         // inside this file will be all locked for avoid inconsistent reads
                         _disk.ProtectWriteFile(() =>
                         {
-                            // persist all dirty pages
-                            _cache.PersistDirtyPages();
+                            //command below can be run in an async task
+                            //System.Threading.Tasks.Task.Factory.StartNew(() =>
+                            //{
+                                // persist all dirty pages
+                                _cache.PersistDirtyPages();
 
+                                // unlock datafile
+                                _disk.UnLock();
+                            //});
                         });
                     });
                 }
-
-                _disk.Flush();
-
-                // unlock datafile
-                _disk.UnLock();
+                else
+                {
+                    // if not dirty pages, just unlock datafile
+                    _disk.UnLock();
+                }
 
                 _level = 0;
             }

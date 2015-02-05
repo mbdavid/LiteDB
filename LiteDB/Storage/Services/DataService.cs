@@ -37,6 +37,7 @@ namespace LiteDB
             if (extend)
             {
                 var extendPage = _pager.NewPage<ExtendPage>();
+                block.ExtendData = data;
                 block.ExtendPageID = extendPage.PageID;
                 this.StoreExtendData(extendPage, data);
             }
@@ -51,7 +52,7 @@ namespace LiteDB
             dataPage.IsDirty = true;
 
             // add/remove dataPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > BasePage.RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             col.DocumentCount++;
 
@@ -74,6 +75,7 @@ namespace LiteDB
             {
                 // clear my block data
                 block.Data = new byte[0];
+                block.ExtendData = data;
 
                 // create (or get a existed) extendpage and store data there
                 ExtendPage extendPage;
@@ -114,7 +116,7 @@ namespace LiteDB
         /// <summary>
         /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage. If readExtendData = false, do not read extended data 
         /// </summary>
-        public DataBlock Read(PageAddress blockAddress, bool readExtendData = true)
+        public DataBlock Read(PageAddress blockAddress, bool readExtendData)
         {
             var page = _pager.GetPage<DataPage>(blockAddress.PageID);
             var block = page.DataBlocks[blockAddress.Index];
@@ -122,7 +124,7 @@ namespace LiteDB
             // if there is a extend page, read bytes to block.Data
             if (readExtendData && block.ExtendPageID != uint.MaxValue)
             {
-                block.Data = this.Read(block.ExtendPageID);
+                block.ExtendData = this.ReadExtendData(block.ExtendPageID);
             }
 
             return block;
@@ -131,7 +133,7 @@ namespace LiteDB
         /// <summary>
         /// Read all data from a extended page with all subsequences pages if exits
         /// </summary>
-        public byte[] Read(uint extendPageID)
+        public byte[] ReadExtendData(uint extendPageID)
         {
             // read all extended pages and build byte array
             using (var buffer = new MemoryStream())

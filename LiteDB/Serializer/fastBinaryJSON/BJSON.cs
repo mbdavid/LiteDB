@@ -85,6 +85,11 @@ namespace fastBinaryJSON
         /// Ignore attributes to check for (default : XmlIgnoreAttribute)
         /// </summary>
         public List<Type> IgnoreAttributes = new List<Type> { typeof(System.Xml.Serialization.XmlIgnoreAttribute) };
+
+        /// <summary>
+        /// Ignore this property when serialize object (CHANGE TO ** LITEDB **)
+        /// </summary>
+        public PropertyInfo IgnoreProperty = null;
         /// <summary>
         /// If you have parametric and no default constructor for you classes (default = False)
         /// 

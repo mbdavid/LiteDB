@@ -15,7 +15,7 @@ namespace LiteDB
         {
         }
 
-        public BsonArray(List<object> array)
+        internal BsonArray(List<object> array)
             : base(array)
         {
         }

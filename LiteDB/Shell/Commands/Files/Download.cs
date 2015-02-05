@@ -28,6 +28,10 @@ namespace LiteDB.Shell.Commands
                 file.SaveAs(filename, true);
                 display.WriteBson(file.AsDocument);
             }
+            else
+            {
+                display.WriteBson(false);
+            }
         }
     }
 }

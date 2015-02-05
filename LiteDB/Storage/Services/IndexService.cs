@@ -39,8 +39,8 @@ namespace LiteDB
             // add as first node
             page.Nodes.Add(node.Position.Index, node);
 
-            // add/remove indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(page.FreeBytes > BasePage.RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            // add indexPage on freelist if has space
+            _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
 
             // point the head node to this new node position
             index.HeadNode = node.Position;
@@ -115,7 +115,7 @@ namespace LiteDB
             }
 
             // add/remove indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(page.FreeBytes > BasePage.RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
             page.IsDirty = true;
 
@@ -161,7 +161,7 @@ namespace LiteDB
             else
             {
                 // add or remove page from free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > BasePage.RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
+                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
             page.IsDirty = true;

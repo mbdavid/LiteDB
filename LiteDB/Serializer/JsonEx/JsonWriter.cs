@@ -114,7 +114,7 @@ namespace LiteDB
 
             this.WriteStartBlock("[", hasData);
 
-            for(var i = 0; i < arr.Length; i++)
+            for (var i = 0; i < arr.Length; i++)
             {
                 var item = arr[i];
 

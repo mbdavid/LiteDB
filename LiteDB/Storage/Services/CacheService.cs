@@ -125,19 +125,8 @@ namespace LiteDB
                 yield return _header;
             }
 
-            // for a better performance - writes last page first
-            var last = _cache.Values.Where(x => x.IsDirty).LastOrDefault();
-            var lastPageID = last == null ? uint.MaxValue : last.PageID;
-
-            if (last != null)
-            {
-                // when write last page, OS will alocate all disk space at once.
-                // This will be much faster to save others pages in sequence
-                yield return last;
-            }
-
             // now returns all pages in sequence
-            foreach (var page in _cache.Values.Where(x => x.IsDirty && x.PageID != lastPageID))
+            foreach (var page in _cache.Values.Where(x => x.IsDirty))
             {
                 yield return page;
             }
