@@ -29,11 +29,6 @@ namespace LiteDB.Shell
             this.Write(ConsoleColor.White, text);
         }
 
-        public void WriteResult(string text)
-        {
-            this.WriteLine(ConsoleColor.DarkCyan, text);
-        }
-
         public void WriteInfo(string text)
         {
             this.WriteLine(ConsoleColor.Gray, text);
@@ -44,31 +39,36 @@ namespace LiteDB.Shell
             this.WriteLine(ConsoleColor.Red, err);
         }
 
-        public void WriteHelp(string line1, string line2)
-        {
-            this.WriteLine(ConsoleColor.Cyan, line1);
-            this.WriteLine(ConsoleColor.DarkCyan, "    " + line2);
-        }
-
-        public void WriteBson(BsonValue result)
-        {
-            this.WriteLine(ConsoleColor.DarkCyan, JsonEx.Serialize(result, this.Pretty, false));
-        }
-
-        public void WriteBson<T>(IEnumerable<T> result)
-            where T : BsonValue
+        public void WriteResult(BsonValue result)
         {
             var index = 0;
 
-            foreach (var doc in result)
-            {
-                this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
-                this.WriteBson(doc);
-            }
+            if (result.IsNull) return;
 
-            if (index == 0)
+            if (result.IsObject)
             {
-                this.WriteLine(ConsoleColor.DarkCyan, "no documents");
+                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+            }
+            else if (result.IsArray)
+            {
+                foreach (var doc in result.AsArray)
+                {
+                    this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
+                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(doc, this.Pretty, false));
+                }
+
+                if (index == 0)
+                {
+                    this.WriteLine(ConsoleColor.DarkCyan, "no documents");
+                }
+            }
+            else if(result.Type == BsonType.String)
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
+            }
+            else
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
             }
         }
 

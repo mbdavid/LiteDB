@@ -498,7 +498,7 @@ namespace fastBinaryJSON
             foreach (PropertyInfo p in props)
             {
                 // CHANGED FOR ** LITEDB ** IgnoreProperty
-                if (param.IgnoreProperty != null && p.MetadataToken == param.IgnoreProperty.MetadataToken && p.Module.Equals(param.IgnoreProperty.Module)) continue;
+                if (param.IgnoreProperty != null && p.Name == param.IgnoreProperty) continue;
                 if (!p.CanWrite && param.ShowReadOnlyProperties == false) continue;
                 if (param.IgnoreAttributes != null)
                 {

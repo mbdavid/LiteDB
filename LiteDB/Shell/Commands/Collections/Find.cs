@@ -13,15 +13,16 @@ namespace LiteDB.Shell.Commands
             return this.IsCollectionCommand(s, "find");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
             var col = this.ReadCollection(db, s);
             var top = this.ReadTop(s);
             var query = this.ReadQuery(s);
+            var docs = col.Find(query).Take(top);
 
-            display.WriteBson<BsonDocument>(col.Find(query).Take(top));
+            return BsonArray.FromEnumerable<BsonDocument>(docs);
         }
     }
 }

@@ -58,5 +58,18 @@ namespace LiteDB
         {
             return this.GetEnumerator();
         }
+
+        public static BsonArray FromEnumerable<T>(IEnumerable<T> array)
+            where T : BsonValue
+        {
+            var result = new BsonArray();
+
+            foreach (var item in array)
+            {
+                result.Add(item);
+            }
+
+            return result;
+        }
     }
 }

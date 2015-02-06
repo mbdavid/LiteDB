@@ -6,16 +6,20 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Close : ILiteCommand
+    internal class Close : ConsoleCommand
     {
-        public bool IsCommand(StringScanner s)
+        public override bool IsCommand(StringScanner s)
         {
             return s.Scan(@"close$").Length > 0;
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
         {
-            db.Dispose();
+            if (shell.Database == null) throw new LiteException("No database");
+
+            shell.Database.Dispose();
+
+            shell.Database = null;
         }
     }
 }

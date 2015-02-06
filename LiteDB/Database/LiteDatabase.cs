@@ -192,6 +192,7 @@ namespace LiteDB
         public void Dispose()
         {
             this.Disk.Dispose();
+            this.Cache.Dispose();
         }
     }
 }

@@ -7,14 +7,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileDownload : BaseFile, ILiteCommand
+    public class FileDownload : BaseGridFS, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "download");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
@@ -26,11 +26,12 @@ namespace LiteDB.Shell.Commands
             if (file != null)
             {
                 file.SaveAs(filename, true);
-                display.WriteBson(file.AsDocument);
+
+                return file.AsDocument;
             }
             else
             {
-                display.WriteBson(false);
+                return false;
             }
         }
     }

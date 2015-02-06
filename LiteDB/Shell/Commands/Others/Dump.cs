@@ -13,18 +13,26 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"dump\s*").Length > 0;
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
+            var result = new StringBuilder();
 
             if (s.HasTerminated || s.Match("mem$"))
             {
-                display.WriteResult(DumpDatabase.Pages(db, s.Match("mem$")));
+                var mem = s.Match("mem$");
+
+                result = DumpDatabase.Pages(db, mem);
             }
             else
             {
-                display.WriteResult(DumpDatabase.Index(db, s.Scan(@"\w+"), s.Scan(@"\s+\w+").Trim()));
+                var col = s.Scan(@"\w+");
+                var field = s.Scan(@"\s+\w+").Trim();
+
+                result = DumpDatabase.Index(db, col, field);
             }
+
+            return result.ToString();
         }
     }
 }

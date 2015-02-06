@@ -13,7 +13,7 @@ namespace LiteDB.Shell.Commands
             return this.IsCollectionCommand(s, "ensure[iI]ndex");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
@@ -21,7 +21,7 @@ namespace LiteDB.Shell.Commands
             var field = s.Scan(@"\w+(.\w+)*");
             var unique = s.Scan(@"\s*unique$");
 
-            display.WriteBson(col.EnsureIndex(field, unique.Length > 0));
+            return col.EnsureIndex(field, unique.Length > 0);
         }
     }
 }

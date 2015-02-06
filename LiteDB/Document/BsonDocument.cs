@@ -24,12 +24,13 @@ namespace LiteDB
             : base(value.AsObject.RawValue)
         {
             if (!this.HasKey("_id")) throw new ArgumentException("BsonDocument must have an _id key");
-
-            this.Id = this["_id"].RawValue;
-            this.RemoveKey("_id");
         }
 
-        public object Id { get; set; }
+        public object Id 
+        { 
+            get { return this["_id"].RawValue; }
+            set { this["_id"] = new BsonValue(value); } 
+        }
 
         internal BsonDocument(Dictionary<string, object> obj)
             : base(obj)

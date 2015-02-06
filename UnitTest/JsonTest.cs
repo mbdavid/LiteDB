@@ -43,9 +43,9 @@ namespace UnitTest
         {
             var o = CreateDoc();
 
-            var json = JsonEx.Serialize(o, true);
+            var json = JsonSerializer.Serialize(o, true);
 
-            var d = JsonEx.Deserialize<BsonDocument>(json);
+            var d = JsonSerializer.Deserialize<BsonDocument>(json);
 
             Assert.AreEqual(d["Date"].AsDateTime, o["Date"].AsDateTime);
             Assert.AreEqual(d["CustomerId"].AsGuid, o["CustomerId"].AsGuid);

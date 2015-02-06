@@ -6,16 +6,23 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Pretty : ConsoleCommand
+    internal class Open : ConsoleCommand
     {
         public override bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"pretty\s*").Length > 0;
+            return s.Scan(@"open\s+").Length > 0;
         }
 
         public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
         {
-            display.Pretty = !(s.Scan(@"off\s*").Length > 0);
+            var filename = s.Scan(@".+");
+
+            if (shell.Database != null)
+            {
+                shell.Database.Dispose();
+            }
+
+            shell.Database = new LiteDatabase(filename);
         }
     }
 }

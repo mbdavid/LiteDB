@@ -8,6 +8,6 @@ namespace LiteDB.Shell
     public interface ILiteCommand
     {
         bool IsCommand(StringScanner s);
-        void Execute(LiteDatabase db, StringScanner s, Display display);
+        BsonValue Execute(LiteDatabase db, StringScanner s);
     }
 }

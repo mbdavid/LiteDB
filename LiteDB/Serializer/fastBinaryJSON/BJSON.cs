@@ -89,7 +89,7 @@ namespace fastBinaryJSON
         /// <summary>
         /// Ignore this property when serialize object (CHANGE TO ** LITEDB **)
         /// </summary>
-        public PropertyInfo IgnoreProperty = null;
+        public string IgnoreProperty = null;
         /// <summary>
         /// If you have parametric and no default constructor for you classes (default = False)
         /// 

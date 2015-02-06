@@ -11,7 +11,7 @@ namespace LiteDB
     /// Represent all cache system and track dirty pages. All pages that load and need to be track for
     /// dirty (to be persist after) must be added in this class.
     /// </summary>
-    internal class CacheService
+    internal class CacheService : IDisposable
     {
         // a very simple dictionary for pages cache and track
         private SortedDictionary<uint, BasePage> _cache;
@@ -130,6 +130,11 @@ namespace LiteDB
             {
                 yield return page;
             }
+        }
+
+        public void Dispose()
+        {
+            this.Clear(null);
         }
     }
 }

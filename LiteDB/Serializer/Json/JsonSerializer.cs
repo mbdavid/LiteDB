@@ -7,9 +7,9 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Static class for serialize/deserialize BsonDocuments into JsonEx (extended json format)
+    /// Static class for serialize/deserialize BsonDocuments into Json extended format
     /// </summary>
-    public class JsonEx
+    public class JsonSerializer
     {
         /// <summary>
         /// Serialize a BsonDocument (or any BsonValue) into a JsonEx string

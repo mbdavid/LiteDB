@@ -7,20 +7,20 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileDelete : BaseFile, ILiteCommand
+    public class FileDelete : BaseGridFS, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "delete");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
             var id = this.ReadId(s);
 
-            display.WriteBson(db.GridFS.Delete(id));
+            return db.GridFS.Delete(id);
         }
     }
 }

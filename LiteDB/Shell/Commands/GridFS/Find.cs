@@ -6,20 +6,22 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileFind : BaseFile, ILiteCommand
+    public class FileFind : BaseGridFS, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "find");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
             if (s.HasTerminated)
             {
-                display.WriteBson<BsonDocument>(db.GridFS.FindAll().Select(x => x.AsDocument));
+                var files = db.GridFS.FindAll().Select(x => x.AsDocument);
+
+                return BsonArray.FromEnumerable<BsonDocument>(files);
             }
             else
             {
@@ -27,16 +29,15 @@ namespace LiteDB.Shell.Commands
 
                 if (id.EndsWith("*") || id.EndsWith("%"))
                 {
-                    display.WriteBson<BsonDocument>(db.GridFS.Find(id.Substring(0, id.Length - 1)).Select(x => x.AsDocument));
+                    var files = db.GridFS.Find(id.Substring(0, id.Length - 1)).Select(x => x.AsDocument);
+
+                    return BsonArray.FromEnumerable<BsonDocument>(files);
                 }
                 else
                 {
                     var file = db.GridFS.FindById(id);
 
-                    if (file != null)
-                    {
-                        display.WriteBson(file.AsDocument);
-                    }
+                    return file != null ? file.AsDocument : BsonValue.Null;
                 }
             }
         }

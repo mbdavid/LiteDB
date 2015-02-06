@@ -13,11 +13,13 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"show\scollections");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
-            display.WriteResult(string.Join("\n", db.GetCollectionNames().OrderBy(x => x).ToArray()));
+            var cols = db.GetCollectionNames().OrderBy(x => x).ToArray();
+
+            return string.Join("\n", cols);
         }
     }
 }

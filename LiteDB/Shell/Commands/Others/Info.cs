@@ -13,11 +13,11 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"db\.info$");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
-            display.WriteBson(db.GetDatabaseInfo());
+            return db.GetDatabaseInfo();
         }
     }
 }

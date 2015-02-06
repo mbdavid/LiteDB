@@ -13,7 +13,7 @@ namespace LiteDB.Shell.Commands
             return this.IsCollectionCommand(s, "insert");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
@@ -21,6 +21,8 @@ namespace LiteDB.Shell.Commands
             var value = new JsonReader().ReadValue(s);
 
             col.Insert(new BsonDocument(value));
+
+            return BsonValue.Null;
         }
     }
 }

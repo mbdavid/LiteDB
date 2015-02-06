@@ -13,12 +13,13 @@ namespace LiteDB.Shell
         {
             var shell = new LiteShell();
             var input = new InputCommand();
+            var display = new Display();
 
             shell.RegisterAll();
-            shell.Display.TextWriters.Add(Console.Out);
+            display.TextWriters.Add(Console.Out);
 
             // show welcome message
-            shell.Display.WriteWelcome();
+            display.WriteWelcome();
 
             // if has a argument, its database file - try open
             if (args.Length > 0)
@@ -29,7 +30,7 @@ namespace LiteDB.Shell
                 }
                 catch (Exception ex)
                 {
-                    shell.Display.WriteError(ex.Message);
+                    display.WriteError(ex.Message);
                 }
             }
 
@@ -42,25 +43,38 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    if (cmd.StartsWith("open "))
-                    {
-                        if (shell.Database != null)
-                        {
-                            shell.Database.Dispose();
-                        }
+                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, shell, display, input);
 
-                        shell.Database = new LiteDatabase(cmd.Substring(5));
-                    }
-                    else
+                    if (isConsoleCommand == false)
                     {
-                        shell.Run(cmd);
+                        var result = shell.Run(cmd);
+
+                        display.WriteResult(result);
                     }
                 }
                 catch (Exception ex)
                 {
-                    shell.Display.WriteError(ex.Message);
+                    display.WriteError(ex.Message);
                 }
             }
+        }
+
+        static void Open(LiteShell shell, string command, Display display)
+        {
+            if (shell.Database != null)
+            {
+                shell.Database.Dispose();
+            }
+
+            shell.Database = new LiteDatabase(command.Substring(5));
+        }
+
+        static void Spool(LiteShell shell, string command, Display display)
+        {
+        }
+
+        static void Help(Display display)
+        {
         }
     }
 }

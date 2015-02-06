@@ -13,11 +13,14 @@ namespace LiteDB.Shell.Commands
             return this.IsCollectionCommand(s, "drop[iI]ndex");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
-            display.WriteBson(this.ReadCollection(db, s).DropIndex(s.Scan(@"\w+(.\w+)*").Trim()));
+            var col = this.ReadCollection(db, s);
+            var index = s.Scan(@"\w+(.\w+)*").Trim();
+
+            return col.DropIndex(index);
         }
     }
 }

@@ -25,25 +25,19 @@ namespace LiteDB
         public static byte[] Serialize(object obj)
         {
             if (obj == null) throw new ArgumentNullException("obj");
-            byte[] bytes;
 
-            if(obj is BsonDocument)
+            // add parameters on serialization to ignore BsonIgnoreAttribute + Id attribute
+            var param = new fastBinaryJSON.BJSONParameters
             {
-                bytes = fastBinaryJSON.BJSON.ToBJSON(((BsonDocument)obj).RawValue);
-            }
-            else
-            {
-                // add parameters on serialization to ignore BsonIgnoreAttribute + Id attribute
-                var param = new fastBinaryJSON.BJSONParameters
-                {
-                    UseExtensions = false,
-                    UsingGlobalTypes = false,
-                    IgnoreAttributes = new List<Type> { typeof(BsonIgnoreAttribute) },
-                    IgnoreProperty = GetIdProperty(obj.GetType())
-                };
+                UseExtensions = false,
+                UsingGlobalTypes = false,
+                IgnoreAttributes = new List<Type> { typeof(BsonIgnoreAttribute) },
+                IgnoreProperty = obj is BsonDocument ? "_id" : GetIdProperty(obj.GetType()).Name
+            };
 
-                bytes = fastBinaryJSON.BJSON.ToBJSON(obj, param);
-            }
+            var bytes = fastBinaryJSON.BJSON.ToBJSON(
+                obj is BsonDocument ? ((BsonDocument)obj).RawValue : obj,
+                param);
 
             if (bytes.Length > BsonDocument.MAX_DOCUMENT_SIZE)
             {

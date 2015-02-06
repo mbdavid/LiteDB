@@ -13,14 +13,14 @@ namespace LiteDB.Shell.Commands
             return this.IsCollectionCommand(s, "count");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
             var col = this.ReadCollection(db, s);
             var query = this.ReadQuery(s);
 
-            display.WriteBson(col.Count(query));
+            return col.Count(query);
         }
     }
 }

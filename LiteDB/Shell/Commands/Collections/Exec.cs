@@ -15,7 +15,7 @@ namespace LiteDB.Shell.Commands
             return this.IsCollectionCommand(s, "exec");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
@@ -36,7 +36,7 @@ namespace LiteDB.Shell.Commands
 
                 db.Commit();
 
-                display.WriteBson(docs.Length);
+                return docs.Length;
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ public class Program {
     public static void DoWork(
         object id, 
         BsonDocument doc, 
-        Collection<BsonDocument> col, 
+        LiteCollection<BsonDocument> col, 
         LiteDatabase db) { [code] }
 }";
 

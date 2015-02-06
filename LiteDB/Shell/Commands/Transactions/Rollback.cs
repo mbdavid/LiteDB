@@ -13,11 +13,13 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"rollback(\s+trans)?$").Length > 0;
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
             db.Rollback();
+
+            return BsonValue.Null;
         }
     }
 }

@@ -13,22 +13,9 @@ namespace LiteDB.Shell
 
         public LiteShell()
         {
-            this.Display = new Display();
-        }
-
-        public LiteShell(LiteDatabase db, StringBuilder sb, bool pretty = true)
-            : this()
-        {
-            this.Database = db;
-
-            var writer = new StringWriter(sb);
-            this.Display.TextWriters.Add(writer);
-            this.Display.Pretty = pretty;
-            this.RegisterAll();
         }
 
         public LiteDatabase Database { get; set; }
-        public Display Display { get; set; }
 
         /// <summary>
         /// Register all commands: search for all classes that implements IShellCommand
@@ -54,9 +41,9 @@ namespace LiteDB.Shell
             _commands.Add(new T());
         }
 
-        public void Run(string command)
+        public BsonValue Run(string command)
         {
-            if (string.IsNullOrEmpty(command)) return;
+            if (string.IsNullOrEmpty(command)) return BsonValue.Null;
 
             var s = new StringScanner(command);
 
@@ -64,12 +51,11 @@ namespace LiteDB.Shell
             {
                 if (cmd.IsCommand(s))
                 {
-                    cmd.Execute(this.Database, s, this.Display);
-                    return;
+                    return cmd.Execute(this.Database, s);
                 }
             }
 
-            throw new ApplicationException("Command ´" + command + "´ is not a valid command");
+            throw new LiteException("Command ´" + command + "´ is not a valid command");
         }
 
         public void Dispose()

@@ -7,14 +7,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileUpload : BaseFile, ILiteCommand
+    public class FileUpload : BaseGridFS, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "upload");
         }
 
-        public void Execute(LiteDatabase db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             if (db == null) throw new LiteException("No database");
 
@@ -26,7 +26,7 @@ namespace LiteDB.Shell.Commands
 
             var file = db.GridFS.Upload(id, filename);
 
-            display.WriteBson(file.AsDocument);
+            return file.AsDocument;
         }
     }
 }
