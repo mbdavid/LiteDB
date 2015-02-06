@@ -10,7 +10,7 @@ namespace LiteDB.Shell.Commands
         /// <summary>
         /// Read collection name from db.(colname).(command)
         /// </summary>
-        public Collection<BsonDocument> ReadCollection(LiteEngine db, StringScanner s)
+        public LiteCollection<BsonDocument> ReadCollection(LiteDatabase db, StringScanner s)
         {
             return db.GetCollection(s.Scan(@"db\.(\w+)\.\w+\s*", 1));
         }
@@ -60,8 +60,8 @@ namespace LiteDB.Shell.Commands
             if(oper.Length == 0) throw new ApplicationException("Invalid query operator");
 
             return oper == "and" ?
-                Query.AND(left, this.ReadInlineQuery(s)) :
-                Query.OR(left, this.ReadInlineQuery(s));
+                Query.And(left, this.ReadInlineQuery(s)) :
+                Query.Or(left, this.ReadInlineQuery(s));
         }
 
         private Query ReadOneQuery(StringScanner s)

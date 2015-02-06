@@ -9,17 +9,17 @@ namespace LiteDB.Shell
 {
     public class LiteShell : IDisposable
     {
-        private List<IShellCommand> _commands = new List<IShellCommand>();
+        private List<ILiteCommand> _commands = new List<ILiteCommand>();
 
         public LiteShell()
         {
             this.Display = new Display();
         }
 
-        public LiteShell(LiteEngine db, StringBuilder sb, bool pretty = true)
+        public LiteShell(LiteDatabase db, StringBuilder sb, bool pretty = true)
             : this()
         {
-            this.Engine = db;
+            this.Database = db;
 
             var writer = new StringWriter(sb);
             this.Display.TextWriters.Add(writer);
@@ -27,7 +27,7 @@ namespace LiteDB.Shell
             this.RegisterAll();
         }
 
-        public LiteEngine Engine { get; set; }
+        public LiteDatabase Database { get; set; }
         public Display Display { get; set; }
 
         /// <summary>
@@ -35,21 +35,21 @@ namespace LiteDB.Shell
         /// </summary>
         public void RegisterAll()
         {
-            _commands = new List<IShellCommand>();
+            _commands = new List<ILiteCommand>();
 
-            var type = typeof(IShellCommand);
+            var type = typeof(ILiteCommand);
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass);
 
             foreach (var t in types)
             {
-                _commands.Add((IShellCommand)Activator.CreateInstance(t));
+                _commands.Add((ILiteCommand)Activator.CreateInstance(t));
             }
         }
 
         public void Register<T>()
-            where T : IShellCommand, new()
+            where T : ILiteCommand, new()
         {
             _commands.Add(new T());
         }
@@ -64,7 +64,7 @@ namespace LiteDB.Shell
             {
                 if (cmd.IsCommand(s))
                 {
-                    cmd.Execute(this.Engine, s, this.Display);
+                    cmd.Execute(this.Database, s, this.Display);
                     return;
                 }
             }
@@ -74,7 +74,7 @@ namespace LiteDB.Shell
 
         public void Dispose()
         {
-            if (this.Engine != null) this.Engine.Dispose();
+            if (this.Database != null) this.Database.Dispose();
         }
     }
 }

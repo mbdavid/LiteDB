@@ -17,7 +17,7 @@ namespace LiteDB.Shell.Commands
         /// </summary>
         public string ReadId(StringScanner s)
         {
-            return s.Scan(FileEntry.ID_PATTERN.Substring(1, FileEntry.ID_PATTERN.Length - 2));
+            return s.Scan(LiteFileInfo.ID_PATTERN.Substring(1, LiteFileInfo.ID_PATTERN.Length - 2));
         }
     }
 }

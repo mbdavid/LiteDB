@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteEngine
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Get all database information

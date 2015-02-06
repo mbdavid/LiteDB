@@ -5,9 +5,9 @@ using System.Text;
 
 namespace LiteDB.Shell
 {
-    public interface IShellCommand
+    public interface ILiteCommand
     {
         bool IsCommand(StringScanner s);
-        void Execute(LiteEngine db, StringScanner s, Display display);
+        void Execute(LiteDatabase db, StringScanner s, Display display);
     }
 }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class FileStorage
+    public partial class LiteGridFS
     {
         /// <summary>
         /// Copy all file content to a steam
@@ -31,21 +31,21 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            var doc = _files.FindById(id);
+            var doc = this.Files.FindById(id);
 
             if (doc == null) return null;
 
-            return this.OpenRead(new FileEntry(doc));
+            return this.OpenRead(new LiteFileInfo(doc));
         }
 
         /// <summary>
         /// Load data inside storage and returns as Stream
         /// </summary>
-        internal LiteFileStream OpenRead(FileEntry entry)
+        internal LiteFileStream OpenRead(LiteFileInfo entry)
         {
             if (entry == null) throw new ArgumentNullException("entry");
 
-            return new LiteFileStream(_engine, entry);
+            return new LiteFileStream(this.Database, entry);
         }
     }
 }

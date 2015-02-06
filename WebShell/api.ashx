@@ -38,7 +38,7 @@ public class WebShell : IHttpHandler
                 shell.Register<Info>();
                 
                 shell.Display.Pretty = true;
-                shell.Engine = new LiteDB.LiteEngine(filename);
+                shell.Database = new LiteDB.LiteDatabase(filename);
                 shell.Display.TextWriters.Add(context.Response.Output);
 
                 shell.Run(command);

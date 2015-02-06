@@ -14,7 +14,7 @@ namespace UnitTest
         [TestMethod]
         public void Include_Test()
         {
-            using (var db = new LiteEngine(DB.Path()))
+            using (var db = new LiteDatabase(DB.Path()))
             {
                 var customer1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio" };
                 var order1 = new Order { OrderKey = 1, Date = DateTime.Now, CustomerId = customer1.CustomerId };
@@ -31,7 +31,7 @@ namespace UnitTest
 
                 var query = orders
                     .Include((x) => x.Customer = customers.FindById(x.CustomerId))
-                    .All()
+                    .FindAll()
                     .Select(x => new { x.OrderKey, Cust = x.Customer.Name, CustomerInstance = x.Customer })
                     .FirstOrDefault();
 

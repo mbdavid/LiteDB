@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-    public partial class FileStorage
+    public partial class LiteGridFS
     {
         /// <summary>
         /// Delete a file inside datafile and all metadata related
@@ -17,11 +17,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            if (_engine.Transaction.IsInTransaction)
+            if (this.Database.Transaction.IsInTransaction)
                 throw new LiteException("Files can't be used inside a transaction.");
 
             // remove file reference in _files
-            var d = _files.Delete(id);
+            var d = this.Files.Delete(id);
 
             // if not found, just return false
             if(d == false) return false;
@@ -30,9 +30,9 @@ namespace LiteDB
 
             while (true)
             {
-                var del = _chunks.Delete(id + "\\" + (index ++));
+                var del = Chunks.Delete(LiteFileInfo.GetChunckId(id, index++));
 
-                _engine.Cache.RemoveExtendPages();
+                this.Database.Cache.RemoveExtendPages();
 
                 if (del == false) break;
             }

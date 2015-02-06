@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class Collection<T>
+    public partial class LiteCollection<T>
     {
         /// <summary>
         /// Find a document using Document Id. Returns null if not found.
@@ -20,11 +20,11 @@ namespace LiteDB
 
             if (col == null) return default(T);
 
-            var node = _engine.Indexer.FindOne(col.PK, id);
+            var node = this.Database.Indexer.FindOne(col.PK, id);
 
             if (node == null) return default(T);
 
-            var dataBlock = _engine.Data.Read(node.DataBlock, true);
+            var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
             var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
 
@@ -63,11 +63,11 @@ namespace LiteDB
 
             if (col == null) yield break;
 
-            var nodes = query.Run(_engine, col);
+            var nodes = query.Run(this.Database, col);
 
             foreach (var node in nodes)
             {
-                var dataBlock = _engine.Data.Read(node.DataBlock, true);
+                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
                 var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
 
@@ -91,7 +91,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents inside collection.
         /// </summary>
-        public IEnumerable<T> All()
+        public IEnumerable<T> FindAll()
         {
             return this.Find(Query.All());
         }
@@ -119,7 +119,7 @@ namespace LiteDB
 
             if (col == null) return 0;
 
-            return query.Run(_engine, col).Count();
+            return query.Run(this.Database, col).Count();
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace LiteDB
 
             if (col == null) return false;
 
-            return query.Run(_engine, col).FirstOrDefault() != null;
+            return query.Run(this.Database, col).FirstOrDefault() != null;
         }
 
         /// <summary>

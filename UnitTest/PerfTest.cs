@@ -17,11 +17,11 @@ namespace UnitTest
         {
             var path = DB.Path(true, "test.db");
 
-            using (var db = new LiteEngine("journal=true;filename=" + path))
+            using (var db = new LiteDatabase("journal=true;filename=" + path))
             {
                 db.BeginTrans();
                 var col = db.GetCollection<Post>("posts");
-                col.Insert(Post.GetData(20000));
+                col.InsertBatch(Post.GetData(20000));
                 db.Commit();
             }
         }
@@ -31,13 +31,13 @@ namespace UnitTest
         {
             var path = DB.Path(true, "test.db");
 
-            using (var db = new LiteEngine("journal=false;filename=" + path))
+            using (var db = new LiteDatabase("journal=false;filename=" + path))
             {
                 var bytes = new byte[150 * 1024 * 1024];
 
                 using (var m = new MemoryStream(bytes))
                 {
-                    db.FileStorage.Upload("myfile", m);
+                    db.GridFS.Upload("myfile", m);
                 }
             }
         }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class Collection<T>
+    public partial class LiteCollection<T>
     {
         /// <summary>
         /// Drop a collection deleting all documents and indexes
@@ -14,7 +14,7 @@ namespace LiteDB
         public virtual bool Drop()
         {
             // start transaction
-            _engine.Transaction.Begin();
+            this.Database.Transaction.Begin();
 
             try
             {
@@ -23,7 +23,7 @@ namespace LiteDB
                 // if collection not exists, no drop
                 if (col == null)
                 {
-                    _engine.Transaction.Abort();
+                    this.Database.Transaction.Abort();
                     return false;
                 }
 
@@ -31,17 +31,17 @@ namespace LiteDB
                 this.Delete(Query.All());
 
                 // delete all pages/indexes heads
-                _engine.Collections.Drop(col);
+                this.Database.Collections.Drop(col);
 
                 _pageID = uint.MaxValue;
 
-                _engine.Transaction.Commit();
+                this.Database.Transaction.Commit();
 
                 return true;
             }
             catch (Exception ex)
             {
-                _engine.Transaction.Rollback();
+                this.Database.Transaction.Rollback();
                 throw ex;
             }
         }

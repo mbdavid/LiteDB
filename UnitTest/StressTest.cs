@@ -27,10 +27,10 @@ namespace UnitTest
             var rnd = new Random(DateTime.Now.Second);
             var N = 100;
 
-            var a = new LiteEngine(file);
-            var b = new LiteEngine(file);
-            var c = new LiteEngine(file);
-            var d = new LiteEngine(file);
+            var a = new LiteDatabase(file);
+            var b = new LiteDatabase(file);
+            var c = new LiteDatabase(file);
+            var d = new LiteDatabase(file);
 
             // Task A -> Insert 100 documents
             var ta = Task.Factory.StartNew(() =>
@@ -75,7 +75,7 @@ namespace UnitTest
             // Now, test data
             Task.WaitAll(ta, tb); //, tb, tc);
 
-            using (var db = new LiteEngine(file))
+            using (var db = new LiteDatabase(file))
             {
                 var col = db.GetCollection("col1");
                 Assert.AreEqual(1, col.Count());

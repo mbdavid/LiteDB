@@ -13,7 +13,7 @@ namespace LiteDB
     {
         public int ErrorCode { get; private set; }
 
-        internal LiteException(string message)
+        public LiteException(string message)
             : base(message)
         {
         }

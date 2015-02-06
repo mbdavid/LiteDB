@@ -7,9 +7,9 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// The LiteDB engine. Used for create a LiteDB instance and use all storage resoures. It's the database connection engine.
+    /// The LiteDB database. Used for create a LiteDB instance and use all storage resoures. It's the database connection
     /// </summary>
-    public partial class LiteEngine : IDisposable
+    public partial class LiteDatabase : IDisposable
     {
         #region Properties + Ctor
 
@@ -34,10 +34,10 @@ namespace LiteDB
         internal CollectionService Collections { get; private set; }
 
         /// <summary>
-        /// Starts LiteDB engine. Open database file or create a new one if not exits
+        /// Starts LiteDB database. Open database file or create a new one if not exits
         /// </summary>
         /// <param name="connectionString">Full filename or connection string</param>
-        public LiteEngine(string connectionString)
+        public LiteDatabase(string connectionString)
         {
             this.ConnectionString = new ConnectionString(connectionString);
 
@@ -77,43 +77,84 @@ namespace LiteDB
         /// Get a collection using a strong typed POCO class. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public Collection<T> GetCollection<T>(string name)
+        public LiteCollection<T> GetCollection<T>(string name)
             where T : new()
         {
-            return new Collection<T>(this, name);
+            return new LiteCollection<T>(this, name);
         }
 
         /// <summary>
         /// Get a collection using a generic BsonDocument. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public Collection<BsonDocument> GetCollection(string name)
+        public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            return new Collection<BsonDocument>(this, name);
+            return new LiteCollection<BsonDocument>(this, name);
         }
 
         /// <summary>
         /// Get all collections name inside this database.
         /// </summary>
-        public string[] GetCollections()
+        public IEnumerable<string> GetCollectionNames()
         {
             this.Transaction.AvoidDirtyRead();
 
-            return this.Collections.GetAll().Select(x => x.CollectionName).ToArray();
+            return this.Collections.GetAll().Select(x => x.CollectionName);
+        }
+
+        /// <summary>
+        /// Checks if a collection exists on database. Collection name is case unsensitive
+        /// </summary>
+        public bool CollectionExists(string name)
+        {
+            this.Transaction.AvoidDirtyRead();
+
+            return this.Collections.Get(name) != null;
+        }
+
+        /// <summary>
+        /// Rename a collection. Returns false if oldName does not exists or newName already exists
+        /// </summary>
+        public bool RenameCollection(string oldName, string newName)
+        {
+            this.Transaction.Begin();
+
+            try
+            {
+                var col = this.Collections.Get(oldName);
+
+                if (col == null || this.CollectionExists(newName))
+                {
+                    this.Transaction.Abort();
+                    return false;
+                }
+
+                col.CollectionName = newName;
+                col.IsDirty = true;
+
+                this.Transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                this.Transaction.Rollback();
+                throw ex;
+            }
+
+            return true;
         }
 
         #endregion
 
-        #region Files Storage
+        #region GridFS
 
-        private FileStorage _files = null;
+        private LiteGridFS _gridfs = null;
 
         /// <summary>
         /// Returns a special collection for storage files/stream inside datafile
         /// </summary>
-        public FileStorage FileStorage
+        public LiteGridFS GridFS
         {
-            get { return _files ?? (_files = new FileStorage(this)); }
+            get { return _gridfs ?? (_gridfs = new LiteGridFS(this)); }
         }
 
         #endregion

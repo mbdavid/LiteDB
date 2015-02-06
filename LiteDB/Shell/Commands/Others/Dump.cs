@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class Dump : IShellCommand
+    public class Dump : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"dump\s*").Length > 0;
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteDatabase db, StringScanner s, Display display)
         {
             if (db == null) throw new LiteException("No database");
 

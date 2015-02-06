@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class Collection<T>
+    public partial class LiteCollection<T>
     {
         /// <summary>
         /// Insert a new document to this collection. Document Id must be a new value in collection
@@ -23,17 +23,17 @@ namespace LiteDB
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
 
-            _engine.Transaction.Begin();
+            this.Database.Transaction.Begin();
 
             try
             {
                 var col = this.GetCollectionPage(true);
 
                 // storage in data pages - returns dataBlock address
-                var dataBlock = _engine.Data.Insert(col, new IndexKey(id), bytes);
+                var dataBlock = this.Database.Data.Insert(col, new IndexKey(id), bytes);
 
                 // store id in a PK index [0 array]
-                var pk = _engine.Indexer.AddNode(col.PK, id);
+                var pk = this.Database.Indexer.AddNode(col.PK, id);
 
                 // do links between index <-> data block
                 pk.DataBlock = dataBlock.Position;
@@ -48,7 +48,7 @@ namespace LiteDB
                     {
                         var key = BsonSerializer.GetFieldValue(doc, index.Field);
 
-                        var node = _engine.Indexer.AddNode(index, key);
+                        var node = this.Database.Indexer.AddNode(index, key);
 
                         // point my index to data object
                         node.DataBlock = dataBlock.Position;
@@ -58,11 +58,11 @@ namespace LiteDB
                     }
                 }
 
-                _engine.Transaction.Commit();
+                this.Database.Transaction.Commit();
             }
             catch (Exception ex)
             {
-                _engine.Transaction.Rollback();
+                this.Database.Transaction.Rollback();
                 throw ex;
             }
         }
@@ -70,24 +70,24 @@ namespace LiteDB
         /// <summary>
         /// Insert an array of new documents to this collection. Document Id must be a new value in collection
         /// </summary>
-        public virtual void Insert(IEnumerable<T> docs)
+        public virtual void InsertBatch(IEnumerable<T> docs)
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
+            this.Database.Transaction.Begin();
+
             try
             {
-                _engine.Transaction.Begin();
-
                 foreach (var doc in docs)
                 {
                     this.Insert(doc);
                 }
 
-                _engine.Transaction.Commit();
+                this.Database.Transaction.Commit();
             }
             catch (Exception ex)
             {
-                _engine.Transaction.Rollback();
+                this.Database.Transaction.Rollback();
                 throw ex;
             }
         }

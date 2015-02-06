@@ -16,9 +16,9 @@ namespace LiteDB
             this.Value = value;
         }
 
-        internal override IEnumerable<IndexNode> Execute(LiteEngine engine, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
         {
-            return engine.Indexer.FindAll(index).Where(x => x.Key.CompareTo(new IndexKey(this.Value)) != 0);
+            return db.Indexer.FindAll(index).Where(x => x.Key.CompareTo(new IndexKey(this.Value)) != 0);
         }
     }
 }

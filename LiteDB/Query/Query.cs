@@ -108,7 +108,7 @@ namespace LiteDB
         /// <summary>
         /// Returns objects that exists in ALL queries results.
         /// </summary>
-        public static Query AND(Query left, Query right)
+        public static Query And(Query left, Query right)
         {
             return new QueryAnd(left, right);
         }
@@ -116,7 +116,7 @@ namespace LiteDB
         /// <summary>
         /// Returns objects that exists in ANY queries results.
         /// </summary>
-        public static Query OR(Query left, Query right)
+        public static Query Or(Query left, Query right)
         {
             return new QueryOr(left, right);
         }
@@ -124,15 +124,15 @@ namespace LiteDB
         #region Execute Query
 
         // used for execute in results (AND/OR)
-        internal abstract IEnumerable<IndexNode> Execute(LiteEngine engine, CollectionIndex index);
+        internal abstract IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index);
 
-        internal virtual IEnumerable<IndexNode> Run(LiteEngine engine, CollectionPage col)
+        internal virtual IEnumerable<IndexNode> Run(LiteDatabase db, CollectionPage col)
         {
             var index = col.Indexes.FirstOrDefault(x => x.Field.Equals(this.Field, StringComparison.InvariantCultureIgnoreCase));
 
             if (index == null) throw new LiteException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
 
-            return this.Execute(engine, index);
+            return this.Execute(db, index);
         }
 
         #endregion

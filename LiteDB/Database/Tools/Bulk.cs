@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteEngine
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Bulk documents to a collection - use data chunks for most efficient insert
@@ -26,14 +26,14 @@ namespace LiteDB
             {
                 var buff = buffer;
 
-                using (var db = new LiteEngine(connectionString))
+                using (var db = new LiteDatabase(connectionString))
                 {
                     var col = db.GetCollection<T>(collectionName);
                     var more = true;
 
                     db.BeginTrans();
 
-                    while ((more = enumerator.MoveNext()) && buff > 0)
+                    while (buff > 0 && (more = enumerator.MoveNext()))
                     {
                         col.Insert(enumerator.Current);
                         buff--;

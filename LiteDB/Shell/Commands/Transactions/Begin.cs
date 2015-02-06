@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class Begin : IShellCommand
+    public class Begin : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"begin(\s+trans)?$").Length > 0;
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteDatabase db, StringScanner s, Display display)
         {
             if (db == null) throw new LiteException("No database");
 

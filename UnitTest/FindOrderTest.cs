@@ -21,7 +21,7 @@ namespace UnitTest
         [TestMethod]
         public void Find_Order()
         {
-            using (var db = new LiteEngine(DB.Path()))
+            using (var db = new LiteDatabase(DB.Path()))
             {
                 var col = db.GetCollection<OrderObj>("order");
                 col.EnsureIndex("Text");

@@ -11,7 +11,7 @@ namespace LiteDB
     /// <summary>
     /// Represets a file inside storage collection
     /// </summary>
-    public class FileEntry
+    public class LiteFileInfo
     {
         /// <summary>
         /// File id have a specific format - it's like file path.
@@ -30,14 +30,14 @@ namespace LiteDB
         public DateTime UploadDate { get; internal set; }
         public BsonObject Metadata { get; set; }
 
-        private LiteEngine _engine;
+        private LiteDatabase _db;
 
-        public FileEntry(string id)
+        public LiteFileInfo(string id)
             : this(id, id)
         {
         }
 
-        public FileEntry(string id, string filename)
+        public LiteFileInfo(string id, string filename)
         {
             if (!Regex.IsMatch(id, ID_PATTERN)) throw new LiteException("Invalid file id format.");
 
@@ -49,9 +49,9 @@ namespace LiteDB
             this.Metadata = new BsonObject();
         }
 
-        internal FileEntry(LiteEngine engine, BsonDocument doc)
+        internal LiteFileInfo(LiteDatabase db, BsonDocument doc)
         {
-            _engine = engine;
+            _db = db;
 
             this.Id = doc.Id.ToString();
             this.Filename = doc["filename"].AsString;
@@ -84,13 +84,13 @@ namespace LiteDB
             var read = 0;
             var index = 0;
 
-            while ((read = stream.Read(buffer, 0, FileEntry.CHUNK_SIZE)) > 0)
+            while ((read = stream.Read(buffer, 0, LiteFileInfo.CHUNK_SIZE)) > 0)
             {
                 this.Length += (long)read;
 
                 var chunk = new BsonDocument
                 {
-                    Id = string.Format("{0}\\{1}", this.Id, index++) // index zero based
+                    Id = GetChunckId(this.Id, index++) // index zero based
                 };
 
                 if (read != CHUNK_SIZE)
@@ -111,13 +111,21 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns chunck Id for a file
+        /// </summary>
+        internal static string GetChunckId(string fileId, int index)
+        {
+            return string.Format("{0}\\{1:00000}", fileId, index);
+        }
+
+        /// <summary>
         /// Open file stream to read from database
         /// </summary>
         public LiteFileStream OpenRead()
         {
-            if (_engine == null) throw new LiteException("This FileEntry instance don't have reference to LiteEngine database");
+            if (_db == null) throw new LiteException("This FileEntry instance don't have reference to database");
 
-            return new LiteFileStream(_engine, this);
+            return new LiteFileStream(_db, this);
         }
 
         /// <summary>
@@ -125,7 +133,7 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
-            if (_engine == null) throw new LiteException("This FileEntry instance don't have reference to LiteEngine database");
+            if (_db == null) throw new LiteException("This FileEntry instance don't have reference to database");
 
             using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
             {

@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Quit : IShellCommand
+    internal class Quit : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"(quit|exit)$");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteDatabase db, StringScanner s, Display display)
         {
             Environment.Exit(0);
         }

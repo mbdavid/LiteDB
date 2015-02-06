@@ -14,7 +14,7 @@ namespace UnitTest
             Debug.Print(string.Format("== [ {0} ] ", text).PadRight(120, '='));
         }
 
-        public static void Pages(LiteEngine db, string text = "Page Dump")
+        public static void Pages(LiteDatabase db, string text = "Page Dump")
         {
             var sb = new StringBuilder();
 
@@ -44,7 +44,7 @@ namespace UnitTest
             Debug.Print(sb.ToString());
         }
 
-        public static void Index(LiteEngine db, CollectionIndex index, int size = 5)
+        public static void Index(LiteDatabase db, CollectionIndex index, int size = 5)
         {
             var sbs = new StringBuilder[IndexNode.MAX_LEVEL_LENGTH + 1];
             var first = true;

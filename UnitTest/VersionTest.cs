@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
-    public class VersionDB : LiteEngine
+    public class VersionDB : LiteDatabase
     {
         public VersionDB(string connectionString)
             : base(connectionString)
@@ -33,7 +33,7 @@ namespace UnitTest
             }
         }
 
-        public Collection<Customer> Customers { get { return this.GetCollection<Customer>("curtomers"); } }
+        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("curtomers"); } }
     }
 
     [TestClass]

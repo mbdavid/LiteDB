@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class Help : IShellCommand
+    public class Help : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"help$").Length > 0;
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display d)
+        public void Execute(LiteDatabase db, StringScanner s, Display d)
         {
             d.WriteResult("Web Shell Commands - try offline version for more commands");
             d.WriteResult("==========================================================");

@@ -18,9 +18,9 @@ namespace LiteDB
             this.OrEquals = orEquals;
         }
 
-        internal override IEnumerable<IndexNode> Execute(LiteEngine engine, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
         {
-            return engine.Indexer.FindGreaterThan(index, this.Value, this.OrEquals);
+            return db.Indexer.FindGreaterThan(index, this.Value, this.OrEquals);
         }
     }
 }

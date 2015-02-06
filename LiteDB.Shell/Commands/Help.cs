@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Help : IShellCommand
+    internal class Help : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"help$").Length > 0;
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display d)
+        public void Execute(LiteDatabase db, StringScanner s, Display d)
         {
             d.WriteResult("Shell commands");
             d.WriteResult("==============");
@@ -48,7 +48,7 @@ namespace LiteDB.Shell.Commands
             d.WriteHelp("> db.<collection>.find [top N]", "Show all documents. Can limit results in N documents");
             d.WriteHelp("> db.<collection>.find [top N] <filter>", "Show filtered documents based on index search");
             d.WriteHelp("> db.<collection>.count <filter>", "Show count rows according query filter");
-            d.WriteHelp("> db.<collection>.exec <filter> { Action<Object (id), BsonDocument (doc), Collection (col), LiteEngine (db)> }", "Execute C# code for each document based on filter.");
+            d.WriteHelp("> db.<collection>.exec <filter> { Action<Object (id), BsonDocument (doc), Collection (col), LiteDatabase (db)> }", "Execute C# code for each document based on filter.");
             d.WriteHelp("> db.<collection>.ensureIndex <field> [unique]", "Create a new index document field");
             d.WriteHelp("> db.<collection>.indexes", "List all indexes in this collection");
             d.WriteHelp("> db.<collection>.drop", "Drop collection and destroy all documents inside");

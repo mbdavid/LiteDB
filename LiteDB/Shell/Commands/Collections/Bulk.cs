@@ -7,14 +7,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionBulk : BaseCollection, IShellCommand
+    public class CollectionBulk : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "bulk");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteDatabase db, StringScanner s, Display display)
         {
             if (db == null) throw new LiteException("No database");
 

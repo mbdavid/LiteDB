@@ -18,9 +18,9 @@ namespace LiteDB
         {
         }
 
-        internal override IEnumerable<IndexNode> Execute(LiteEngine engine, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
         {
-            return engine.Indexer.FindAll(index);
+            return db.Indexer.FindAll(index);
         }
     }
 }

@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-    public partial class Collection<T>
+    public partial class LiteCollection<T>
     {
         /// <summary>
         /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
@@ -37,14 +37,14 @@ namespace LiteDB
             };
 
             // start transaction
-            _engine.Transaction.Begin();
+            this.Database.Transaction.Begin();
 
             try
             {
                 // if not collection yet, create a new now
                 if (col == null)
                 {
-                    col = _engine.Collections.Add(this.Name);
+                    col = this.Database.Collections.Add(this.Name);
                     _pageID = col.PageID;
                 }
 
@@ -52,15 +52,15 @@ namespace LiteDB
                 var slot = col.GetFreeIndex();
 
                 // create index head
-                var index = _engine.Indexer.CreateIndex(col.Indexes[slot]);
+                var index = this.Database.Indexer.CreateIndex(col.Indexes[slot]);
 
                 index.Field = field;
                 index.Unique = unique;
 
                 // read all objects (read from PK index)
-                foreach (var node in _engine.Indexer.FindAll(col.PK))
+                foreach (var node in this.Database.Indexer.FindAll(col.PK))
                 {
-                    var dataBlock = _engine.Data.Read(node.DataBlock, true);
+                    var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
                     // read object
                     var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
@@ -68,7 +68,7 @@ namespace LiteDB
                     // adding index
                     var key = BsonSerializer.GetFieldValue(doc, field);
 
-                    var newNode = _engine.Indexer.AddNode(index, key);
+                    var newNode = this.Database.Indexer.AddNode(index, key);
 
                     // adding this new index Node to indexRef
                     dataBlock.IndexRef[slot] = newNode.Position;
@@ -80,11 +80,11 @@ namespace LiteDB
                     dataBlock.Page.IsDirty = true;
                 }
 
-                _engine.Transaction.Commit();
+                this.Database.Transaction.Commit();
             }
             catch (Exception ex)
             {
-                _engine.Transaction.Rollback();
+                this.Database.Transaction.Rollback();
                 throw ex;
             }
 
@@ -108,7 +108,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonObject> GetIndexes()
         {
-            _engine.Transaction.AvoidDirtyRead();
+            this.Database.Transaction.AvoidDirtyRead();
 
             var col = this.GetCollectionPage(false);
 

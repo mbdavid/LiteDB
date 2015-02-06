@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteEngine
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Virtual method for update database when a new version (from coneection string) was setted

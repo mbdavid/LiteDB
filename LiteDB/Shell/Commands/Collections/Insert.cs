@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionInsert : BaseCollection, IShellCommand
+    public class CollectionInsert : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "insert");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteDatabase db, StringScanner s, Display display)
         {
             if (db == null) throw new LiteException("No database");
 

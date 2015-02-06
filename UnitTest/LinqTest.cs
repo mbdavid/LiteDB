@@ -14,7 +14,7 @@ namespace UnitTest
         [TestMethod]
         public void Linq_Test()
         {
-            using (var db = new LiteEngine(DB.Path()))
+            using (var db = new LiteDatabase(DB.Path()))
             {
                 var c1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio", CreationDate = new DateTime(2015, 1, 1) };
                 var c2 = new Customer { CustomerId = Guid.NewGuid(), Name = "Malafaia", CreationDate = new DateTime(2015, 1, 1) };
@@ -26,7 +26,7 @@ namespace UnitTest
                 col.EnsureIndex(x => x.Name, true);
                 col.EnsureIndex(x => x.CreationDate);
 
-                col.Insert(new Customer[] { c1, c2, c3, c4 });
+                col.InsertBatch(new Customer[] { c1, c2, c3, c4 });
 
                 var past = -30;
 

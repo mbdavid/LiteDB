@@ -9,8 +9,8 @@ namespace LiteDB
 {
     public class LiteFileStream : Stream
     {
-        private LiteEngine _engine;
-        private FileEntry _entry;
+        private LiteDatabase _db;
+        private LiteFileInfo _file;
         private readonly long _streamLength = 0;
 
         private long _streamPosition = 0;
@@ -19,12 +19,12 @@ namespace LiteDB
         private byte[] _currentChunkData = null;
         private int _positionInChunk = 0;
 
-        internal LiteFileStream(LiteEngine engine, FileEntry entry)
+        internal LiteFileStream(LiteDatabase db, LiteFileInfo file)
         {
-            _engine = engine;
-            _entry = entry;
+            _db = db;
+            _file = file;
 
-            if (entry.Length == 0)
+            if (file.Length == 0)
             {
                 throw new LiteException("This file has no content or is corrupted");
             }
@@ -37,7 +37,7 @@ namespace LiteDB
         /// <summary>
         /// Get file information
         /// </summary>
-        public FileEntry FileEntry { get { return _entry; } }
+        public LiteFileInfo FileInfo { get { return _file; } }
 
         public override long Length { get { return _streamLength; } }
 
@@ -84,12 +84,12 @@ namespace LiteDB
         private byte[] GetChunkData(int index)
         {
             // avoid too many extend pages on memory
-            _engine.Cache.RemoveExtendPages();
+            _db.Cache.RemoveExtendPages();
 
             // check if there is no more chunks in this file
-            var chunks = _engine.GetCollection("_chunks");
+            var chunks = _db.GetCollection("_chunks");
 
-            var chunk = chunks.FindById(_entry.Id + "\\" + index);
+            var chunk = chunks.FindById(LiteFileInfo.GetChunckId(_file.Id, index));
 
             // if chunk is null there is no more chunks
             return chunk == null ? null : chunk["data"].AsByteArray;

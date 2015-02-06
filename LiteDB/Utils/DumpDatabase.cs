@@ -12,7 +12,7 @@ namespace LiteDB
     /// </summary>
     internal class DumpDatabase
     {
-        public static string Pages(LiteEngine db, bool mem)
+        public static string Pages(LiteDatabase db, bool mem)
         {
             var sb = new StringBuilder();
 
@@ -43,7 +43,7 @@ namespace LiteDB
             return sb.ToString();
         }
 
-        private static T ReadPage<T>(LiteEngine db, uint pageID, bool mem)
+        private static T ReadPage<T>(LiteDatabase db, uint pageID, bool mem)
             where T : BasePage, new()
         {
             if (mem && pageID == 0) return (T)(object)db.Cache.Header;
@@ -51,7 +51,7 @@ namespace LiteDB
             return mem ? db.Pager.GetPage<T>(pageID) : db.Disk.ReadPage<T>(pageID);
         }
 
-        public static string Index(LiteEngine db, string collection, string field, int size = 5)
+        public static string Index(LiteDatabase db, string collection, string field, int size = 5)
         {
             var sbs = new StringBuilder[IndexNode.MAX_LEVEL_LENGTH + 1];
             var first = true;

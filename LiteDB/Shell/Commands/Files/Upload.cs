@@ -7,14 +7,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileUpload : BaseFile, IShellCommand
+    public class FileUpload : BaseFile, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "upload");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public void Execute(LiteDatabase db, StringScanner s, Display display)
         {
             if (db == null) throw new LiteException("No database");
 
@@ -24,7 +24,7 @@ namespace LiteDB.Shell.Commands
 
             if (!File.Exists(filename)) throw new IOException("File " + filename + " not found");
 
-            var file = db.FileStorage.Upload(id, filename);
+            var file = db.GridFS.Upload(id, filename);
 
             display.WriteBson(file.AsDocument);
         }

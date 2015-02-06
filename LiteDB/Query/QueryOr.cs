@@ -19,15 +19,15 @@ namespace LiteDB
         }
 
         // Never runs in AND/OR queries
-        internal override IEnumerable<IndexNode> Execute(LiteEngine engine, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
         {
             return null;
         }
 
-        internal override IEnumerable<IndexNode> Run(LiteEngine engine, CollectionPage col)
+        internal override IEnumerable<IndexNode> Run(LiteDatabase db, CollectionPage col)
         {
-            var left = this.Left.Run(engine, col);
-            var right = this.Right.Run(engine, col);
+            var left = this.Left.Run(db, col);
+            var right = this.Right.Run(db, col);
 
             return left.Union(right, new IndexNodeComparer());
         }

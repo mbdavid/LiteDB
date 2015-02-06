@@ -25,7 +25,7 @@ namespace LiteDB.Shell
             {
                 try
                 {
-                    shell.Engine = new LiteEngine(args[0]);
+                    shell.Database = new LiteDatabase(args[0]);
                 }
                 catch (Exception ex)
                 {
@@ -44,12 +44,12 @@ namespace LiteDB.Shell
                 {
                     if (cmd.StartsWith("open "))
                     {
-                        if (shell.Engine != null)
+                        if (shell.Database != null)
                         {
-                            shell.Engine.Dispose();
+                            shell.Database.Dispose();
                         }
 
-                        shell.Engine = new LiteEngine(cmd.Substring(5));
+                        shell.Database = new LiteDatabase(cmd.Substring(5));
                     }
                     else
                     {

@@ -22,7 +22,7 @@ namespace UnitTest
         [TestMethod]
         public void Page_PrevNext_Test()
         {
-            using (var db = new LiteEngine(DB.Path()))
+            using (var db = new LiteDatabase(DB.Path()))
             {
                 var k = 1;
 
@@ -50,17 +50,17 @@ namespace UnitTest
 
                 Dump.Pages(db, "After clear");
 
-                db.FileStorage.Upload("my/foto1.jpg", new MemoryStream(new byte[1024*50]));
+                db.GridFS.Upload("my/foto1.jpg", new MemoryStream(new byte[1024*50]));
             }
 
-            using (var db = new LiteEngine(DB.Path(false)))
+            using (var db = new LiteDatabase(DB.Path(false)))
             {
                 Dump.Pages(db, "After File");
             }
 
         }
 
-        private void PopulateCollection(string name, LiteEngine db, int k)
+        private void PopulateCollection(string name, LiteDatabase db, int k)
         {
             var col = db.GetCollection(name);
             col.EnsureIndex("Updates");
@@ -105,7 +105,7 @@ namespace UnitTest
 
         }
 
-        private void Verify(string name, LiteEngine db, int k)
+        private void Verify(string name, LiteDatabase db, int k)
         {
             var col = db.GetCollection(name);
 
