@@ -14,15 +14,15 @@ namespace LiteDB
         /// <summary>
         /// Serialize a BsonDocument (or any BsonValue) into a JsonEx string
         /// </summary>
-        public static string Serialize(BsonValue value, bool pretty = false, bool showbinary = true)
+        public static string Serialize(BsonValue value, bool pretty = false, bool showBinary = true)
         {
-            var writer = new JsonWriter(pretty, showbinary);
+            var writer = new JsonWriter(pretty, showBinary);
 
             return writer.Serialize(value);
         }
 
         /// <summary>
-        /// Convert a JsonEx string into a BsonValue
+        /// Convert a Json string into a BsonValue
         /// </summary>
         public static BsonValue Deserialize(string json)
         {
@@ -32,7 +32,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert a JsonEx string into a BsonValue based type (BsonObject, BsonArray or BsonDocument)
+        /// Convert a Json string into a BsonValue based type (BsonObject, BsonArray or BsonDocument)
         /// </summary>
         public static T Deserialize<T>(string json)
             where T : BsonValue
@@ -58,7 +58,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Deserialize a JSON as an IEnumerable of BsonValue based class
+        /// Deserialize a Json as an IEnumerable of BsonValue based class
         /// </summary>
         public static IEnumerable<T> DeserializeArray<T>(string json)
             where T : BsonValue

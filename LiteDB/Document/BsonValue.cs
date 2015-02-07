@@ -215,8 +215,17 @@ namespace LiteDB
         {
             get
             {
-                if(!this.IsObject) throw new LiteException("Value is not an object");
+                if (!this.IsObject) throw new LiteException("Value is not an object");
                 return new BsonObject((Dictionary<string, object>)this.RawValue);
+            }
+        }
+
+        public BsonDocument AsDocument
+        {
+            get
+            {
+                if (!this.IsObject) throw new LiteException("Value is not an document");
+                return new BsonDocument(this);
             }
         }
 
@@ -335,6 +344,11 @@ namespace LiteDB
             get { return this.Type == BsonType.Object; }
         }
 
+        public bool IsDocument
+        {
+            get { return this.Type == BsonType.Object && !this["_id"].IsNull; }
+        }
+
         public bool IsNumber
         {
             get
@@ -350,6 +364,41 @@ namespace LiteDB
                     this.Type == BsonType.Double ||
                     this.Type == BsonType.Decimal;
             }
+        }
+
+        public bool IsByte
+        {
+            get { return this.Type == BsonType.Byte; }
+        }
+
+        public bool IsByteArray
+        {
+            get { return this.Type == BsonType.ByteArray; }
+        }
+
+        public bool IsChar
+        {
+            get { return this.Type == BsonType.Char; }
+        }
+
+        public bool IsBoolean
+        {
+            get { return this.Type == BsonType.Boolean; }
+        }
+
+        public bool IsString
+        {
+            get { return this.Type == BsonType.String; }
+        }
+
+        public bool IsGuid
+        {
+            get { return this.Type == BsonType.Guid; }
+        }
+
+        public bool IsDateTime
+        {
+            get { return this.Type == BsonType.DateTime; }
         }
 
         #endregion

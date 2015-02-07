@@ -18,7 +18,7 @@ namespace LiteDB.Shell
         public LiteDatabase Database { get; set; }
 
         /// <summary>
-        /// Register all commands: search for all classes that implements IShellCommand
+        /// Register all commands: search for all classes that implements ILiteCommand
         /// </summary>
         public void RegisterAll()
         {

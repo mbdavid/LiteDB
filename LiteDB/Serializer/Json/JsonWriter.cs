@@ -14,12 +14,12 @@ namespace LiteDB
         private int _indent;
         private string _spacer;
         private bool _pretty;
-        private bool _showbinary;
+        private bool _showBinary;
 
-        public JsonWriter(bool pretty, bool showbinary)
+        public JsonWriter(bool pretty, bool showBinary)
         {
             _pretty = pretty;
-            _showbinary = showbinary;
+            _showBinary = showBinary;
         }
 
         public string Serialize(BsonValue value)
@@ -53,7 +53,7 @@ namespace LiteDB
             }
             else if (value.Type == BsonType.ByteArray)
             {
-                this.WriteExtendDataType("$binary", _showbinary ? System.Convert.ToBase64String(value.AsByteArray) : "-- " + value.AsByteArray.Length + " bytes --");
+                this.WriteExtendDataType("$binary", _showBinary ? System.Convert.ToBase64String(value.AsByteArray) : "-- " + value.AsByteArray.Length + " bytes --");
             }
             else if (value.Type == BsonType.Char)
             {

@@ -43,6 +43,14 @@ namespace LiteDB
         public string[] Keys { get { return this.RawValue.Keys.ToArray(); } }
 
         /// <summary>
+        /// Returns if object contains a named property
+        /// </summary>
+        public bool ContainsKey(string name)
+        {
+            return this.ContainsKey(name);
+        }
+
+        /// <summary>
         /// Check if this object has a specific key
         /// </summary>
         public bool HasKey(string key)
