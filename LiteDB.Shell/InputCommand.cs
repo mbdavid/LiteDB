@@ -13,6 +13,8 @@ namespace LiteDB.Shell
         public string Last { get; set; }
         public Stopwatch Timer { get; set; }
 
+        public Action<string> OnWrite { get; set; }
+
         public InputCommand()
         {
             this.Queue = new Queue<string>();
@@ -25,11 +27,11 @@ namespace LiteDB.Shell
             if (this.Timer.IsRunning)
             {
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Write(this.Timer.ElapsedMilliseconds.ToString("0000") + " ");
+                this.Write(this.Timer.ElapsedMilliseconds.ToString("0000") + " ");
             }
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("> ");
+            this.Write("> ");
 
             var cmd = this.ReadLine();
 
@@ -40,8 +42,13 @@ namespace LiteDB.Shell
 
                 while (!cmd.EndsWith("/"))
                 {
+                    if (this.Timer.IsRunning)
+                    {
+                        this.Write("     ");
+                    }
+
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write("| ");
+                    this.Write("| ");
 
                     var line = this.ReadLine();
                     cmd += line;
@@ -73,12 +80,29 @@ namespace LiteDB.Shell
             if (this.Queue.Count > 0)
             {
                 var cmd = this.Queue.Dequeue();
-                Console.WriteLine(cmd);
+                this.Write(cmd + Environment.NewLine);
                 return cmd;
             }
             else
             {
-                return Console.ReadLine();
+                var cmd = Console.ReadLine();
+
+                if (this.OnWrite != null)
+                {
+                    this.OnWrite(cmd + Environment.NewLine);
+                }
+
+                return cmd;
+            }
+        }
+
+        private void Write(string text)
+        {
+            Console.Write(text);
+
+            if (this.OnWrite != null)
+            {
+                this.OnWrite(text);
             }
         }
     }

@@ -19,7 +19,7 @@ namespace LiteDB.Shell.Commands
 
             var cols = db.GetCollectionNames().OrderBy(x => x).ToArray();
 
-            return string.Join("\n", cols);
+            return string.Join(Environment.NewLine, cols);
         }
     }
 }

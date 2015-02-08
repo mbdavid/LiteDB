@@ -21,6 +21,7 @@ namespace LiteDB.Shell.Commands
             if(s.Scan("false|off").Length > 0 && _writer != null)
             {
                 display.TextWriters.Remove(_writer);
+                input.OnWrite = null;
                 _writer.Flush();
                 _writer.Dispose();
                 _writer = null;
@@ -36,6 +37,8 @@ namespace LiteDB.Shell.Commands
                 _writer = File.CreateText(path);
 
                 display.TextWriters.Add(_writer);
+
+                input.OnWrite = (t) => _writer.Write(t);
             }
         }
     }
