@@ -38,7 +38,7 @@ namespace LiteDB
                     return false;
                 }
 
-                this.Remove(col, node);
+                this.Delete(col, node);
 
                 this.Database.Transaction.Commit();
 
@@ -77,7 +77,7 @@ namespace LiteDB
 
                 foreach (var node in nodes)
                 {
-                    this.Remove(col, node);
+                    this.Delete(col, node);
                     count++;
                 }
 
@@ -107,16 +107,7 @@ namespace LiteDB
             return this.Delete(QueryVisitor.Visit(predicate));
         }
 
-        /// <summary>
-        /// Remove all documents on this collection. Returns removed document counts
-        /// </summary>
-        /// <returns></returns>
-        public virtual int DeleteAll()
-        {
-            return this.Delete(Query.All());
-        }
-
-        internal virtual void Remove(CollectionPage col, IndexNode node)
+        internal virtual void Delete(CollectionPage col, IndexNode node)
         {
             // read dataBlock 
             var dataBlock = this.Database.Data.Read(node.DataBlock, false);

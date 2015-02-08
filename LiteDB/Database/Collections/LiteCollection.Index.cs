@@ -112,9 +112,20 @@ namespace LiteDB
 
             var col = this.GetCollectionPage(false);
 
-            if (col == null) return new List<BsonObject>();
+            if (col == null) yield break;
 
-            return col.Indexes.Where(x => !x.IsEmpty).Select(x => new BsonObject().Add("field", x.Field).Add("unique", x.Unique));
+            for (var i = 0; i < CollectionIndex.INDEX_PER_COLLECTION; i++)
+            {
+                var index = col.Indexes[i];
+
+                if (!index.IsEmpty)
+                {
+                    yield return new BsonDocument()
+                        .Add("slot", i)
+                        .Add("field", index.Field)
+                        .Add("unique", index.Unique);
+                }
+            }
         }
 
         /// <summary>
