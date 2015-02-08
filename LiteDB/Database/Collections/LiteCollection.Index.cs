@@ -82,10 +82,10 @@ namespace LiteDB
 
                 this.Database.Transaction.Commit();
             }
-            catch (Exception ex)
+            catch
             {
                 this.Database.Transaction.Rollback();
-                throw ex;
+                throw;
             }
 
             return true;
@@ -122,7 +122,47 @@ namespace LiteDB
         /// </summary>
         public bool DropIndex(string field)
         {
-            throw new NotImplementedException();
+            // start transaction
+            this.Database.Transaction.Begin();
+
+            try
+            {
+                var col = this.GetCollectionPage(false);
+
+                // if collection not exists, no drop
+                if (col == null)
+                {
+                    this.Database.Transaction.Abort();
+                    return false;
+                }
+
+                // search for index reference - do not delelte "_id" index
+                var index = col.Indexes.FirstOrDefault(x => x.Field.Equals(field, StringComparison.InvariantCultureIgnoreCase));
+
+                if (index == null || field.Equals("_id", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    this.Database.Transaction.Abort();
+                    return false;
+                }
+
+                // delete all data pages + indexes pages
+                this.Database.Indexer.DropIndex(index);
+
+                // clear index reference
+                index.Clear();
+
+                // save collection page
+                col.IsDirty = true;
+
+                this.Database.Transaction.Commit();
+
+                return true;
+            }
+            catch
+            {
+                this.Database.Transaction.Rollback();
+                throw;
+            }
         }
     }
 }

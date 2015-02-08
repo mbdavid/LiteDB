@@ -60,10 +60,10 @@ namespace LiteDB
 
                 this.Database.Transaction.Commit();
             }
-            catch (Exception ex)
+            catch
             {
                 this.Database.Transaction.Rollback();
-                throw ex;
+                throw;
             }
         }
 
@@ -85,10 +85,10 @@ namespace LiteDB
 
                 this.Database.Transaction.Commit();
             }
-            catch (Exception ex)
+            catch
             {
                 this.Database.Transaction.Rollback();
-                throw ex;
+                throw;
             }
         }
     }

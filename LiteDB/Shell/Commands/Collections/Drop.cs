@@ -10,7 +10,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsCollectionCommand(s, "drop");
+            return this.IsCollectionCommand(s, "drop$");
         }
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)

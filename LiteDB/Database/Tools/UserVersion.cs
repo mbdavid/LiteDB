@@ -44,10 +44,10 @@ namespace LiteDB
                 this.Transaction.Commit();
 
             }
-            catch (Exception ex)
+            catch
             {
                 this.Transaction.Rollback();
-                throw ex;
+                throw;
             }
         }
     }

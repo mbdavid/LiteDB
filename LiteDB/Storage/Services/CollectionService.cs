@@ -72,20 +72,45 @@ namespace LiteDB
             return _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
         }
 
+        /// <summary>
+        /// Drop a collection - remove all data pages + indexes pages
+        /// </summary>
         public void Drop(CollectionPage col)
         {
-            // delete all index pages
+            // add all pages to delete
+            var pages = new HashSet<uint>();
+
+            // search for all data page and index page
             for (byte i = 0; i < col.Indexes.Length; i++)
             {
                 var index = col.Indexes[i];
 
                 if (!index.IsEmpty)
                 {
-                    _pager.DeletePage(index.HeadNode.PageID);
+                    // get all nodes from index
+                    var nodes = _indexer.FindAll(index);
+
+                    foreach (var node in nodes)
+                    {
+                        if(i == 0)
+                        {
+                            // if PK index, add data pages too
+                            pages.Add(node.DataBlock.PageID);
+                        }
+
+                        // add index page to delete list page
+                        pages.Add(node.Position.PageID);
+                    }
                 }
             }
 
-            // ajust page pointers
+            // and now, lets delete all this pages
+            foreach (var pageID in pages)
+            {
+                _pager.DeletePage(pageID);
+            }
+
+            // ajust collection page pointers
             if (col.PrevPageID != uint.MaxValue)
             {
                 var prev = _pager.GetPage<BasePage>(col.PrevPageID);

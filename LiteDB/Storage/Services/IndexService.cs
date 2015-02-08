@@ -52,6 +52,27 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Drop all indexes pages
+        /// </summary>
+        public void DropIndex(CollectionIndex index)
+        {
+            var pages = new HashSet<uint>();
+            var nodes = this.FindAll(index);
+
+            // get reference for pageID from all index nodes
+            foreach (var node in nodes)
+            {
+                pages.Add(node.Position.PageID);
+            }
+
+            // now delete all pages
+            foreach (var page in pages)
+            {
+                _pager.DeletePage(page);
+            }
+        }
+
+        /// <summary>
         /// Insert a new node index inside a index. Use skip list
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, object value)

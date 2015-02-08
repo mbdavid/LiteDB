@@ -85,10 +85,10 @@ namespace LiteDB
 
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
                 this.Database.Transaction.Rollback();
-                throw ex;
+                throw;
             }
         }
     }

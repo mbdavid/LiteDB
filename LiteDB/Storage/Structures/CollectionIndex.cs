@@ -51,6 +51,14 @@ namespace LiteDB
 
         public CollectionIndex()
         {
+            this.Clear();
+        }
+
+        /// <summary>
+        /// Clear all index information
+        /// </summary>
+        public void Clear()
+        {
             this.Field = string.Empty;
             this.Unique = false;
             this.HeadNode = PageAddress.Empty;

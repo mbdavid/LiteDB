@@ -27,10 +27,7 @@ namespace LiteDB
                     return false;
                 }
 
-                // delete all data
-                this.Delete(Query.All());
-
-                // delete all pages/indexes heads
+                // delete all data pages + indexes pages
                 this.Database.Collections.Drop(col);
 
                 _pageID = uint.MaxValue;
@@ -39,10 +36,10 @@ namespace LiteDB
 
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
                 this.Database.Transaction.Rollback();
-                throw ex;
+                throw;
             }
         }
     }
