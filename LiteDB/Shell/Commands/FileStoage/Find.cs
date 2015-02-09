@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileFind : BaseGridFS, ILiteCommand
+    public class FileFind : BaseFileStorage, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -19,7 +19,7 @@ namespace LiteDB.Shell.Commands
 
             if (s.HasTerminated)
             {
-                var files = db.GridFS.FindAll().Select(x => x.AsDocument);
+                var files = db.FileStorage.FindAll().Select(x => x.AsDocument);
 
                 return BsonArray.FromEnumerable<BsonDocument>(files);
             }
@@ -29,13 +29,13 @@ namespace LiteDB.Shell.Commands
 
                 if (id.EndsWith("*") || id.EndsWith("%"))
                 {
-                    var files = db.GridFS.Find(id.Substring(0, id.Length - 1)).Select(x => x.AsDocument);
+                    var files = db.FileStorage.Find(id.Substring(0, id.Length - 1)).Select(x => x.AsDocument);
 
                     return BsonArray.FromEnumerable<BsonDocument>(files);
                 }
                 else
                 {
-                    var file = db.GridFS.FindById(id);
+                    var file = db.FileStorage.FindById(id);
 
                     return file != null ? file.AsDocument : BsonValue.Null;
                 }

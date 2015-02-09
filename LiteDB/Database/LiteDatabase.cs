@@ -113,6 +113,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Drop a collection and all data + indexes
+        /// </summary>
+        public bool DropCollection(string name)
+        {
+            return this.GetCollection(name).Drop();
+        }
+
+        /// <summary>
         /// Rename a collection. Returns false if oldName does not exists or newName already exists
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
@@ -145,16 +153,16 @@ namespace LiteDB
 
         #endregion
 
-        #region GridFS
+        #region FileStorage
 
-        private LiteGridFS _gridfs = null;
+        private LiteFileStorage _fs = null;
 
         /// <summary>
         /// Returns a special collection for storage files/stream inside datafile
         /// </summary>
-        public LiteGridFS GridFS
+        public LiteFileStorage FileStorage
         {
-            get { return _gridfs ?? (_gridfs = new LiteGridFS(this)); }
+            get { return _fs ?? (_fs = new LiteFileStorage(this)); }
         }
 
         #endregion

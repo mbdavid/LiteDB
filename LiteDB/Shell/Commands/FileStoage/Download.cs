@@ -7,11 +7,11 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileUpdate : BaseGridFS, ILiteCommand
+    public class FileDownload : BaseFileStorage, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsFileCommand(s, "update");
+            return this.IsFileCommand(s, "download");
         }
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
@@ -19,9 +19,20 @@ namespace LiteDB.Shell.Commands
             if (db == null) throw new LiteException("No database");
 
             var id = this.ReadId(s);
-            var metadata = new JsonReader().ReadValue(s).AsObject;
+            var filename = s.Scan(@"\s*.*").Trim();
 
-            return db.GridFS.SetMetadata(id, metadata);
+            var file = db.FileStorage.FindById(id);
+
+            if (file != null)
+            {
+                file.SaveAs(filename, true);
+
+                return file.AsDocument;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

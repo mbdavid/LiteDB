@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionCount : BaseCollection, ILiteCommand
+    public class CollectionRename : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {

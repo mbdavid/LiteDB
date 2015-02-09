@@ -70,7 +70,7 @@ namespace LiteDB
         /// <summary>
         /// Insert an array of new documents to this collection. Document Id must be a new value in collection
         /// </summary>
-        public virtual void InsertBatch(IEnumerable<T> docs)
+        public virtual void Insert(IEnumerable<T> docs)
         {
             if (docs == null) throw new ArgumentNullException("docs");
 

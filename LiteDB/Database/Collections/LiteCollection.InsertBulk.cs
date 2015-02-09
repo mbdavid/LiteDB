@@ -6,18 +6,16 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteDatabase
+    public partial class LiteCollection<T>
     {
         /// <summary>
         /// Bulk documents to a collection - use data chunks for most efficient insert
         /// </summary>
-        public static int Bulk<T>(string connectionString, string collectionName, IEnumerable<T> docs, int buffer = 2000)
-            where T : new()
+        public int InsertBulk(IEnumerable<T> docs, int buffer = 2000)
         {
-            if(string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
-            if(string.IsNullOrEmpty(collectionName)) throw new ArgumentNullException("collectionName");
-            if(docs == null) throw new ArgumentNullException("collectionName");
+            if(docs == null) throw new ArgumentNullException("docs");
             if(buffer < 100) throw new ArgumentException("buffer must be bigger than 100");
+            if (this.Database.Transaction.IsInTransaction) throw new LiteException("InsertBulk doesn't supports transaction.");
 
             var enumerator = docs.GetEnumerator();
             var count = 0;
@@ -26,26 +24,31 @@ namespace LiteDB
             {
                 var buff = buffer;
 
-                using (var db = new LiteDatabase(connectionString))
-                {
-                    var col = db.GetCollection<T>(collectionName);
-                    var more = true;
+                this.Database.Transaction.Begin();
 
-                    db.BeginTrans();
+                try
+                {
+                    var more = true;
 
                     while (buff > 0 && (more = enumerator.MoveNext()))
                     {
-                        col.Insert(enumerator.Current);
+                        this.Insert(enumerator.Current);
                         buff--;
                         count++;
                     }
 
-                    db.Commit();
+                    this.Database.Transaction.Commit();
+                    this.Database.Cache.Clear(null);
 
                     if (more == false)
                     {
                         return count;
                     }
+                }
+                catch
+                {
+                    this.Database.Rollback();
+                    throw;
                 }
             }
         }

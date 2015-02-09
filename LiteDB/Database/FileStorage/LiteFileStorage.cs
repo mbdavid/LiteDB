@@ -9,13 +9,13 @@ namespace LiteDB
     /// <summary>
     /// Storage is a special collection to store files/streams.
     /// </summary>
-    public partial class LiteGridFS
+    public partial class LiteFileStorage
     {
         public LiteCollection<BsonDocument> Files { get; private set; }
         public LiteCollection<BsonDocument> Chunks { get; private set; }
         public LiteDatabase Database { get; private set; }
 
-        internal LiteGridFS(LiteDatabase db)
+        internal LiteFileStorage(LiteDatabase db)
         {
             this.Database = db;
             this.Files = this.Database.GetCollection("_files");

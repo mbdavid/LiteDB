@@ -37,7 +37,7 @@ namespace UnitTest
 
                 using (var m = new MemoryStream(bytes))
                 {
-                    db.GridFS.Upload("myfile", m);
+                    db.FileStorage.Upload("myfile", m);
                 }
             }
         }

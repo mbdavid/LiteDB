@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-    public partial class LiteGridFS
+    public partial class LiteFileStorage
     {
         /// <summary>
         /// Insert a new file content inside datafile in _files collection

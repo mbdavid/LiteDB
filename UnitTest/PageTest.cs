@@ -50,7 +50,7 @@ namespace UnitTest
 
                 Dump.Pages(db, "After clear");
 
-                db.GridFS.Upload("my/foto1.jpg", new MemoryStream(new byte[1024*50]));
+                db.FileStorage.Upload("my/foto1.jpg", new MemoryStream(new byte[1024*50]));
             }
 
             using (var db = new LiteDatabase(DB.Path(false)))

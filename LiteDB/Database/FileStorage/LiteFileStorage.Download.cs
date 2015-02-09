@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteGridFS
+    public partial class LiteFileStorage
     {
         /// <summary>
         /// Copy all file content to a steam

@@ -55,6 +55,7 @@ namespace LiteDB.Shell.Commands
             this.Write(sb, "> db.<collection>.indexes", "List all indexes in this collection");
             this.Write(sb, "> db.<collection>.drop", "Drop collection and destroy all documents inside");
             this.Write(sb, "> db.<collection>.dropIndex <field>", "Drop a index and make index area free to use with another index");
+            this.Write(sb, "> db.<collection>.rename <newCollectionName>", "Rename a collection");
             this.Write(sb, "<filter> = <field> [=|>|>=|<|<=|!=|like|between] <jsonValue>", "Filter query syntax");
             this.Write(sb, "<filter> = (<filter> [and|or] <filter> [and|or] ...)", "Multi queries syntax");
             this.Write(sb, "<jsonDoc> = {_id: ... , key: value, key1: value1 }", "Represent a json (extended version) for a BsonDocument. See special data types");
