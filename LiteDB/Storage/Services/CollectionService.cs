@@ -11,11 +11,13 @@ namespace LiteDB
     {
         private PageService _pager;
         private IndexService _indexer;
+        private DataService _data;
 
-        public CollectionService(PageService pager, IndexService indexer)
+        public CollectionService(PageService pager, IndexService indexer, DataService data)
         {
             _pager = pager;
             _indexer = indexer;
+            _data = data;
         }
 
         /// <summary>
@@ -96,6 +98,14 @@ namespace LiteDB
                         {
                             // if PK index, add data pages too
                             pages.Add(node.DataBlock.PageID);
+
+                            // read datablock to check if there is any extended page
+                            var block = _data.Read(node.DataBlock, false);
+
+                            if (block.ExtendPageID != uint.MaxValue)
+                            {
+                                _pager.DeletePage(block.ExtendPageID, true);
+                            }
                         }
 
                         // add index page to delete list page
