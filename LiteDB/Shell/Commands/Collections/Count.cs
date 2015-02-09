@@ -6,21 +6,19 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionRename : BaseCollection, ILiteCommand
+    internal class CollectionCount : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsCollectionCommand(s, "count");
+            return this.IsCollectionCommand(s, "rename");
         }
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
-            var query = this.ReadQuery(s);
+            var newName = s.Scan(@"\w+");
 
-            return col.Count(query);
+            return db.RenameCollection(col.Name, newName);
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileFind : BaseFileStorage, ILiteCommand
+    internal class FileFind : BaseFileStorage, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -15,8 +15,6 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             if (s.HasTerminated)
             {
                 var files = db.FileStorage.FindAll().Select(x => x.AsDocument);

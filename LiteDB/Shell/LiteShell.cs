@@ -7,22 +7,16 @@ using System.Text;
 
 namespace LiteDB.Shell
 {
-    public class LiteShell : IDisposable
+    public class LiteShell
     {
-        private List<ILiteCommand> _commands = new List<ILiteCommand>();
-
-        public LiteShell()
-        {
-        }
+        public List<ILiteCommand> Commands { get; set; }
 
         public LiteDatabase Database { get; set; }
 
-        /// <summary>
-        /// Register all commands: search for all classes that implements ILiteCommand
-        /// </summary>
-        public void RegisterAll()
+        public LiteShell(LiteDatabase db)
         {
-            _commands = new List<ILiteCommand>();
+            this.Database = db;
+            this.Commands = new List<ILiteCommand>();
 
             var type = typeof(ILiteCommand);
             var types = AppDomain.CurrentDomain.GetAssemblies()
@@ -31,14 +25,8 @@ namespace LiteDB.Shell
 
             foreach (var t in types)
             {
-                _commands.Add((ILiteCommand)Activator.CreateInstance(t));
+                this.Commands.Add((ILiteCommand)Activator.CreateInstance(t));
             }
-        }
-
-        public void Register<T>()
-            where T : ILiteCommand, new()
-        {
-            _commands.Add(new T());
         }
 
         public BsonValue Run(string command)
@@ -47,20 +35,20 @@ namespace LiteDB.Shell
 
             var s = new StringScanner(command);
 
-            foreach (var cmd in _commands)
+            foreach (var cmd in this.Commands)
             {
                 if (cmd.IsCommand(s))
                 {
+                    if (this.Database == null)
+                    {
+                        throw new LiteException("No database. Use `open <filename>` to open/create database"); 
+                    }
+
                     return cmd.Execute(this.Database, s);
                 }
             }
 
             throw new LiteException("Command ´" + command + "´ is not a valid command");
-        }
-
-        public void Dispose()
-        {
-            if (this.Database != null) this.Database.Dispose();
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileUpload : BaseFileStorage, ILiteCommand
+    internal class FileUpload : BaseFileStorage, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -16,8 +16,6 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var id = this.ReadId(s);
 
             var filename = Path.GetFullPath(s.Scan(@"\s*.*").Trim());

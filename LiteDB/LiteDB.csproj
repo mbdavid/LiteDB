@@ -95,8 +95,8 @@
     <Compile Include="Serializer\Json\JsonWriter.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
     <Compile Include="Shell\Commands\Collections\BaseCollection.cs" />
-    <Compile Include="Shell\Commands\Collections\Rename.cs" />
     <Compile Include="Shell\Commands\Collections\Count.cs" />
+    <Compile Include="Shell\Commands\Collections\Rename.cs" />
     <Compile Include="Shell\Commands\Collections\Delete.cs" />
     <Compile Include="Shell\Commands\Collections\Drop.cs" />
     <Compile Include="Shell\Commands\Collections\DropIndex.cs" />

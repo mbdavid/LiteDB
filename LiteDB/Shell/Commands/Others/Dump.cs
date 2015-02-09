@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class Dump : ILiteCommand
+    internal class Dump : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -15,7 +15,6 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
             var result = new StringBuilder();
 
             if (s.HasTerminated || s.Match("mem$"))

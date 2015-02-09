@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class BaseCollection
+    internal class BaseCollection
     {
         /// <summary>
         /// Read collection name from db.(colname).(command)

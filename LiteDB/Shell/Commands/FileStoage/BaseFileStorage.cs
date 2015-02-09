@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class BaseFileStorage
+    internal class BaseFileStorage
     {
         public bool IsFileCommand(StringScanner s, string command)
         {

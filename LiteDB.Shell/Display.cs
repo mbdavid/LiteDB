@@ -39,6 +39,24 @@ namespace LiteDB.Shell
             this.WriteLine(ConsoleColor.Red, err);
         }
 
+        public void WriteHelp(string line1 = null, string line2 = null)
+        {
+            if (string.IsNullOrEmpty(line1))
+            {
+                this.WriteLine("");
+            }
+            else
+            {
+                this.WriteLine(ConsoleColor.Cyan, line1);
+
+                if (!string.IsNullOrEmpty(line2))
+                {
+                    this.WriteLine(ConsoleColor.DarkCyan, "    " + line2);
+                    this.WriteLine("");
+                }
+            }
+        }
+
         public void WriteResult(BsonValue result)
         {
             var index = 0;

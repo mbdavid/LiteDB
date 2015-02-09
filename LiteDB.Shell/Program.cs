@@ -11,11 +11,10 @@ namespace LiteDB.Shell
     {
         static void Main(string[] args)
         {
-            var shell = new LiteShell();
+            var shell = new LiteShell(null);
             var input = new InputCommand();
             var display = new Display();
 
-            shell.RegisterAll();
             display.TextWriters.Add(Console.Out);
 
             // show welcome message
@@ -57,24 +56,6 @@ namespace LiteDB.Shell
                     display.WriteError(ex.Message);
                 }
             }
-        }
-
-        static void Open(LiteShell shell, string command, Display display)
-        {
-            if (shell.Database != null)
-            {
-                shell.Database.Dispose();
-            }
-
-            shell.Database = new LiteDatabase(command.Substring(5));
-        }
-
-        static void Spool(LiteShell shell, string command, Display display)
-        {
-        }
-
-        static void Help(Display display)
-        {
         }
     }
 }

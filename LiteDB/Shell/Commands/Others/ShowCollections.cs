@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class ShowCollections : ILiteCommand
+    internal class ShowCollections : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -15,8 +15,6 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var cols = db.GetCollectionNames().OrderBy(x => x).ToArray();
 
             return string.Join(Environment.NewLine, cols);

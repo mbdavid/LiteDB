@@ -24,18 +24,7 @@ public class WebShell : IHttpHandler
             using (var shell = new LiteShell())
             {
                 // accept only a subset commands
-                shell.Register<Help>();
-                shell.Register<ShowCollections>();
-                shell.Register<CollectionInsert>();
-                shell.Register<CollectionUpdate>();
-                shell.Register<CollectionDelete>();
-                shell.Register<CollectionEnsureIndex>();
-                shell.Register<CollectionIndexes>();
-                shell.Register<CollectionDrop>();
-                shell.Register<CollectionFind>();
-                shell.Register<CollectionCount>();
-                shell.Register<Dump>();
-                shell.Register<Info>();
+                shell.WebMode = true;
                 
                 shell.Display.Pretty = true;
                 shell.Database = new LiteDB.LiteDatabase(filename);

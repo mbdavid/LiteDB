@@ -8,7 +8,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionExec : BaseCollection, ILiteCommand
+    internal class CollectionExec : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -17,8 +17,6 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
             var query = s.Match("{") ? Query.All() : this.ReadQuery(s);
             var code = DynamicCode.GetCode(s);

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionEnsureIndex : BaseCollection, ILiteCommand
+    internal class CollectionEnsureIndex : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -15,8 +15,6 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
             var field = s.Scan(@"\w+(.\w+)*");
             var unique = s.Scan(@"\s*unique$");

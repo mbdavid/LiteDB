@@ -18,9 +18,7 @@ namespace LiteDB
         {
             if (_shell == null)
             {
-                _shell = new LiteShell();
-                _shell.RegisterAll();
-                _shell.Database = this;
+                _shell = new LiteShell(this);
             }
             return _shell.Run(command);
         }
