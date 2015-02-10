@@ -27,6 +27,10 @@ namespace LiteDB
             info["pagesInCache"] = this.Cache.PagesInCache;
             info["dirtyPages"] = this.Cache.GetDirtyPages().Count();
 
+            //TODO: Add collections info
+            //      Add indexes info
+            //      Add storage used/free info
+
             return info;
         }
     }
