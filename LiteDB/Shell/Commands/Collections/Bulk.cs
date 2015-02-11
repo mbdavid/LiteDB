@@ -21,7 +21,7 @@ namespace LiteDB.Shell.Commands
             var json = File.ReadAllText(filename, Encoding.UTF8);
             var docs = JsonSerializer.DeserializeArray<BsonDocument>(json);
 
-            return col.InsertBulk(docs);
+            return col.InsertBatch(docs);
         }
     }
 }

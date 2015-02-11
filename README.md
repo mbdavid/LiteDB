@@ -29,7 +29,7 @@ A quick example for store and search documents:
 
 ```C#
 // Open data file (or create if not exits)
-using(var db = new LiteEngine(@"C:\Temp\MyData.db"))
+using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 {
 	// Get a collection (or create, if not exits)
 	var col = db.GetCollection<Customer>("customers");
@@ -121,10 +121,10 @@ With `BsonDocument` you can create any complex document schema.
 
 ## Collections - the store
 
-LiteDB organize documents in stores (called in LiteDB as collections). Each collection has a unique name and contains documents with same schema/type. You can get a strong typed collection or a generic `BsonDocument` collections, using `GetCollection` from `LiteEngine` instance.
+LiteDB organize documents in stores (called in LiteDB as collections). Each collection has a unique name and contains documents with same schema/type. You can get a strong typed collection or a generic `BsonDocument` collections, using `GetCollection` from `LiteDatabase` instance.
 
 ```C#
-var db = new LiteEngine(stringConnection);
+var db = new LiteDatabase(stringConnection);
 
 // Get a strong typed collection
 var customers = db.GetCollection<Customer>("Customers");
@@ -185,7 +185,7 @@ For simplicity, LiteDB do not support concurrency transactions. LiteDB locks you
 After commit method called, LiteDB store all dirty pages to disk. This operations is a fail torelance. Before write direct to disk, LiteDB create a temp file (called journal file) to store all dirty pages. If there is any error during write data file, journaling save a redo log file with database dirty pages, to recovery your datafile when datafile open again. 
 
 ```C#
-using(var db = new LiteEngine(dbpath))
+using(var db = new LiteDatabase(dbpath))
 {
 	db.BeginTrans();
 	
@@ -219,7 +219,7 @@ db.FileStorage.Download("my_key.png", stream);
 
 ## Connection String
 
-Connection string options to initialize LiteEngine class:
+Connection string options to initialize `LiteDatabase` class:
 
 - **Filename**: Path for datafile. You can use only path as connection string (required)
 - **Timeout**: timeout for wait for unlock datafile (default: 00:01:00)

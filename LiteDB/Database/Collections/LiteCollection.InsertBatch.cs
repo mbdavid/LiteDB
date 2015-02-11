@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Bulk documents to a collection - use data chunks for most efficient insert
         /// </summary>
-        public int InsertBulk(IEnumerable<T> docs, int buffer = 2000)
+        public int InsertBatch(IEnumerable<T> docs, int buffer = 2000)
         {
             if(docs == null) throw new ArgumentNullException("docs");
             if(buffer < 100) throw new ArgumentException("buffer must be bigger than 100");

@@ -73,7 +73,7 @@ namespace LiteDB
                 var count = 0;
 
                 // find nodes
-                var nodes = query.Run(this.Database, col);
+                var nodes = query.Run<T>(this.Database, col);
 
                 foreach (var node in nodes)
                 {

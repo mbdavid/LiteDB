@@ -63,7 +63,7 @@ namespace LiteDB
 
             if (col == null) yield break;
 
-            var nodes = query.Run(this.Database, col);
+            var nodes = query.Run<T>(this.Database, col);
 
             foreach (var node in nodes)
             {
@@ -119,7 +119,7 @@ namespace LiteDB
 
             if (col == null) return 0;
 
-            return query.Run(this.Database, col).Count();
+            return query.Run<T>(this.Database, col).Count();
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace LiteDB
 
             if (col == null) return false;
 
-            return query.Run(this.Database, col).FirstOrDefault() != null;
+            return query.Run<T>(this.Database, col).FirstOrDefault() != null;
         }
 
         /// <summary>

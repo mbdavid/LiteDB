@@ -31,6 +31,8 @@ namespace UnitTest
                 var past = -30;
 
                 // simple
+                Assert.AreEqual(1, col.Count(x => x.CustomerId == c1.CustomerId));
+
                 Assert.AreEqual(1, col.Count(x => x.Name == "Chris"));
                 Assert.AreEqual(2, col.Count(x => x.CreationDate == new DateTime(2015, 1, 1)));
                 Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));

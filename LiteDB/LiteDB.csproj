@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="Database\Collections\LiteCollection.Include.cs" />
     <Compile Include="Database\Collections\LiteCollection.Drop.cs" />
-    <Compile Include="Database\Collections\LiteCollection.InsertBulk.cs" />
+    <Compile Include="Database\Collections\LiteCollection.InsertBatch.cs" />
     <Compile Include="Database\Tools\RunCommand.cs" />
     <Compile Include="Database\Tools\UserVersion.cs" />
     <Compile Include="Database\Tools\GetDatabaseInfo.cs" />
