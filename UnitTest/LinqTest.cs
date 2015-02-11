@@ -26,7 +26,7 @@ namespace UnitTest
                 col.EnsureIndex(x => x.Name, true);
                 col.EnsureIndex(x => x.CreationDate);
 
-                col.InsertBatch(new Customer[] { c1, c2, c3, c4 });
+                col.InsertBulk(new Customer[] { c1, c2, c3, c4 });
 
                 var past = -30;
 

@@ -56,5 +56,14 @@ namespace UnitTest
 
         }
 
+        [TestMethod]
+        public void Json_Perf_Test()
+        {
+            var f = @"C:\Github\LiteDB_dev\LiteDB.Shell\bin\Debug\test-20000.json";
+            var json = File.ReadAllText(f);
+
+            JsonSerializer.Deserialize(json);
+        }
+
     }
 }

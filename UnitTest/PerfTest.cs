@@ -21,7 +21,7 @@ namespace UnitTest
             {
                 db.BeginTrans();
                 var col = db.GetCollection<Post>("posts");
-                col.InsertBatch(Post.GetData(20000));
+                col.InsertBulk(Post.GetData(20000));
                 db.Commit();
             }
         }

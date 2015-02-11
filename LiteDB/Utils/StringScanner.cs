@@ -34,7 +34,11 @@ namespace LiteDB
 
         public string Scan(string pattern)
         {
-            var regex = new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.Scan(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace));
+        }
+
+        public string Scan(Regex regex)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
 
             if (match.Success)
@@ -53,7 +57,11 @@ namespace LiteDB
         /// </summary>
         public string Scan(string pattern, int group)
         {
-            var regex = new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.Scan(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace), group);
+        }
+
+        public string Scan(Regex regex, int group)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
 
             if (match.Success)
@@ -69,7 +77,11 @@ namespace LiteDB
 
         public string ScanUntil(string pattern)
         {
-            var regex = new Regex(pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.ScanUntil(new Regex(pattern, RegexOptions.IgnorePatternWhitespace));
+        }
+
+        public string ScanUntil(Regex regex)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
 
             if (match.Success)
@@ -86,7 +98,11 @@ namespace LiteDB
 
         public bool Match(string pattern)
         {
-            var regex = new Regex((pattern.StartsWith("^") ? "": "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.Match(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace));
+        }
+
+        public bool Match(Regex regex)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
             return match.Success;
         }
