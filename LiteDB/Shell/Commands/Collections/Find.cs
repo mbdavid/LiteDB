@@ -18,10 +18,16 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(db, s);
             var query = this.ReadQuery(s);
             var docs = col.Find(query);
+            int? skip = null;
+            int? limit = null;
 
-            var result = this.ReadSkipLimit(s, docs);
+            this.ReadSkipLimit(s, ref skip, ref limit);
 
-            return BsonArray.FromEnumerable<BsonDocument>(result);
+            // skip and limit must be in order: "skip" then "limit"
+            if (skip.HasValue) docs = docs.Skip(skip.Value);
+            if (limit.HasValue) docs = docs.Take(limit.Value);
+
+            return BsonArray.FromEnumerable<BsonDocument>(docs);
         }
     }
 }

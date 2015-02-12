@@ -20,25 +20,23 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"db\.\w+\." + command);
         }
 
-        public IEnumerable<BsonDocument> ReadSkipLimit(StringScanner s, IEnumerable<BsonDocument> docs)
+        public void ReadSkipLimit(StringScanner s, ref int? skip, ref int? limit)
         {
-            if (s.Match(@"skip\s+\d+"))
+            if (s.Match(@"\s*skip\s+\d+"))
             {
-                docs = docs.Skip(Convert.ToInt32(s.Scan(@"skip\s+(\d+)\s*", 1)));
+                skip = Convert.ToInt32(s.Scan(@"\s*skip\s+(\d+)\s*", 1));
             }
 
-            if (s.Match(@"limit\s+\d+"))
+            if (s.Match(@"\s*limit\s+\d+"))
             {
-                docs = docs.Take(Convert.ToInt32(s.Scan(@"limit\s+(\d+)\s*", 1)));
+                limit = Convert.ToInt32(s.Scan(@"\s*limit\s+(\d+)\s*", 1));
             }
 
             // skip can be before or after limit command
-            if (s.Match(@"skip\s+\d+"))
+            if (s.Match(@"\s*skip\s+\d+"))
             {
-                docs = docs.Skip(Convert.ToInt32(s.Scan(@"skip\s+(\d+)\s*", 1)));
+                skip = Convert.ToInt32(s.Scan(@"\s*skip\s+(\d+)\s*", 1));
             }
-
-            return docs;
         }
 
         public Query ReadQuery(StringScanner s)
@@ -47,26 +45,20 @@ namespace LiteDB.Shell.Commands
             {
                 return Query.All();
             }
-            else if(s.Scan(@"\(").Length > 0)
-            {
-                return this.ReadInlineQuery(s);
-            }
-            else
-            {
-                return this.ReadOneQuery(s);
-            }
+
+            return this.ReadInlineQuery(s);
         }
 
         private Query ReadInlineQuery(StringScanner s)
         {
             var left = this.ReadOneQuery(s);
 
-            if (s.Scan(@"\s*\)\s*").Length > 0)
+            if (s.Match(@"\s+(and|or)\s+") == false)
             {
                 return left;
             }
 
-            var oper = s.Scan(@"\s*(and|or)\s*").Trim();
+            var oper = s.Scan(@"\s+(and|or)\s+").Trim();
 
             if(oper.Length == 0) throw new ApplicationException("Invalid query operator");
 

@@ -13,7 +13,7 @@ namespace LiteDB
 
         #region Regular expressions
 
-        private static Regex SPACE = new Regex(@"^\s*");
+        private static Regex WHITESPACE = new Regex(@"^\s*");
         private static Regex NULL = new Regex(@"^null");
         private static Regex BEGIN_ARRAY = new Regex(@"^\[");
         private static Regex END_ARRAY = new Regex(@"^\]");
@@ -41,7 +41,7 @@ namespace LiteDB
 
         internal BsonValue ReadValue(StringScanner s)
         {
-            s.Scan(SPACE);
+            s.Scan(WHITESPACE);
 
             if (s.Scan(NULL).Length > 0)
             {
@@ -89,7 +89,7 @@ namespace LiteDB
 
                 obj[key] = this.ReadValue(s);
 
-                s.Scan(SPACE);
+                s.Scan(WHITESPACE);
 
                 if(s.Scan(COMMA).Length  == 0) break;
             }
@@ -109,7 +109,7 @@ namespace LiteDB
             {
                 arr.Add(this.ReadValue(s));
 
-                s.Scan(SPACE);
+                s.Scan(WHITESPACE);
 
                 if(s.Scan(COMMA).Length  == 0) break;
             }
@@ -123,7 +123,7 @@ namespace LiteDB
         {
             var s = new StringScanner(json);
 
-            s.Scan(SPACE);
+            s.Scan(WHITESPACE);
 
             if (s.Scan(BEGIN_ARRAY).Length == 0) throw new ArgumentException("String is not a json array");
 
@@ -131,7 +131,7 @@ namespace LiteDB
             {
                 yield return this.ReadValue(s);
 
-                s.Scan(SPACE);
+                s.Scan(WHITESPACE);
 
                 if (s.Scan(COMMA).Length == 0) break;
             }
@@ -173,7 +173,7 @@ namespace LiteDB
             var key = this.ReadKey(s);
             s.Scan(KEY_VALUE_SEP);
             var value = this.ReadString(s);
-            s.Scan(SPACE);
+            s.Scan(WHITESPACE);
             s.Scan(END_DOC);
 
             try
@@ -195,7 +195,7 @@ namespace LiteDB
 
         private string ReadKey(StringScanner s)
         {
-            s.Scan(SPACE);
+            s.Scan(WHITESPACE);
 
             var key = s.Scan(KEY);
 

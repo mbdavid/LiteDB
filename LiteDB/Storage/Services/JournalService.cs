@@ -83,11 +83,6 @@ namespace LiteDB
             // Write page header
             page.WriteHeader(writer);
 
-            if (page.FreeBytes < 0)
-            {
-                throw new Exception("No-way!");
-            }
-
             // write content except for empty pages
             if (page.PageType != PageType.Empty)
             {
@@ -99,7 +94,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a new journal file to write or check if exits one. Append (index) if journal file exists (when OS do not deleted yet - check better OS support)
+        /// Get a new journal file to write or check if exits one. If exists, test durint timeout - can be another process deleting
         /// </summary>
         public static string GetJournalFilename(ConnectionString connectionString, bool newFile)
         {
@@ -107,23 +102,27 @@ namespace LiteDB
             var filename = Path.GetFileNameWithoutExtension(connectionString.Filename) + "-journal";
             var ext = Path.GetExtension(connectionString.Filename);
 
+            var journal = Path.Combine(dir, filename + ext);
+
             if (newFile)
             {
-                var file = "";
-                var index = 0;
+                var timeout = DateTime.Now.Add(connectionString.Timeout);
 
-                while (File.Exists(file = Path.Combine(dir, filename + (index > 0 ? index.ToString() : "") + ext)))
+                while (DateTime.Now < timeout)
                 {
-                    index++;
+                    if (!File.Exists(journal))
+                    {
+                        return journal;
+                    }
+
+                    System.Threading.Thread.Sleep(250);
                 }
 
-                return file;
+                throw new LiteException("There is a jounal file. Please reopen database");
             }
             else
             {
-                var files = Directory.GetFiles(dir, filename + "*" + ext, SearchOption.TopDirectoryOnly);
-
-                return files.Length > 0 ? files.Last() : null;
+                return File.Exists(journal) ? journal : null;
             }
         }
     }
