@@ -20,19 +20,30 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"db\.\w+\." + command);
         }
 
-        public int ReadTop(StringScanner s)
+        public IEnumerable<BsonDocument> ReadSkipLimit(StringScanner s, IEnumerable<BsonDocument> docs)
         {
-            if (s.Match(@"top\s+\d+\s*"))
+            if (s.Match(@"skip\s+\d+"))
             {
-                return Convert.ToInt32(s.Scan(@"top\s+(\d+)\s*", 1));
+                docs = docs.Skip(Convert.ToInt32(s.Scan(@"skip\s+(\d+)\s*", 1)));
             }
 
-            return int.MaxValue;
+            if (s.Match(@"limit\s+\d+"))
+            {
+                docs = docs.Take(Convert.ToInt32(s.Scan(@"limit\s+(\d+)\s*", 1)));
+            }
+
+            // skip can be before or after limit command
+            if (s.Match(@"skip\s+\d+"))
+            {
+                docs = docs.Skip(Convert.ToInt32(s.Scan(@"skip\s+(\d+)\s*", 1)));
+            }
+
+            return docs;
         }
 
         public Query ReadQuery(StringScanner s)
         {
-            if (s.HasTerminated)
+            if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d"))
             {
                 return Query.All();
             }

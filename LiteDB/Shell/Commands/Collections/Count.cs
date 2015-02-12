@@ -10,15 +10,15 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsCollectionCommand(s, "rename");
+            return this.IsCollectionCommand(s, "count");
         }
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             var col = this.ReadCollection(db, s);
-            var newName = s.Scan(@"\w+");
+            var query = this.ReadQuery(s);
 
-            return db.RenameCollection(col.Name, newName);
+            return col.Count(query);
         }
     }
 }

@@ -16,11 +16,12 @@ namespace LiteDB.Shell.Commands
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             var col = this.ReadCollection(db, s);
-            var top = this.ReadTop(s);
             var query = this.ReadQuery(s);
-            var docs = col.Find(query).Take(top);
+            var docs = col.Find(query);
 
-            return BsonArray.FromEnumerable<BsonDocument>(docs);
+            var result = this.ReadSkipLimit(s, docs);
+
+            return BsonArray.FromEnumerable<BsonDocument>(result);
         }
     }
 }
