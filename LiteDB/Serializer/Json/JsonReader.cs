@@ -9,8 +9,6 @@ namespace LiteDB
 {
     internal class JsonReader
     {
-        internal static NumberFormatInfo _enUS = new CultureInfo("en-US").NumberFormat;
-
         #region Regular expressions
 
         private static Regex WHITESPACE = new Regex(@"^\s*");

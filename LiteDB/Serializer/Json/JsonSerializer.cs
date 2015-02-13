@@ -1,24 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace LiteDB
 {
     /// <summary>
-    /// Static class for serialize/deserialize BsonDocuments into Json extended format
+    /// Static class for serialize/deserialize BsonDocuments into json extended format
     /// </summary>
     public class JsonSerializer
     {
         /// <summary>
-        /// Serialize a BsonDocument (or any BsonValue) into a JsonEx string
+        /// Serialize a BsonDocument (or any BsonValue) into a json string
         /// </summary>
-        public static string Serialize(BsonValue value, bool pretty = false, bool showBinary = true)
+        public static string Serialize(BsonValue value, bool pretty = false, bool writeBinary = true)
         {
-            var writer = new JsonWriter(pretty, showBinary);
+            var sb = new StringBuilder();
 
-            return writer.Serialize(value);
+            using (var w = new StringWriter(sb))
+            {
+                var writer = new JsonWriter(w);
+                writer.Pretty = pretty;
+                writer.WriteBinary = writeBinary;
+                writer.Serialize(value);
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>
