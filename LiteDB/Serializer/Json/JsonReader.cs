@@ -23,7 +23,7 @@ namespace LiteDB
         private static Regex NUMBER = new Regex(@"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?");
         private static Regex BOOLEAN = new Regex(@"^(true|false)");
         private static Regex KEY = new Regex(@"^[\w$]+");
-        private static Regex KEY_VALUE_SEP = new Regex(@"\s*:\s*");
+        private static Regex COLON = new Regex(@"\s*:\s*");
         private static Regex COMMA = new Regex(@"^,");
 
         #endregion
@@ -51,7 +51,7 @@ namespace LiteDB
             }
             else if (s.Match(EXT_DATA))
             {
-                return this.ReadExtendDataType(s);
+                return this.ReadExtendDataType(s); // must precede ReadObject
             }
             else if (s.Match(BEGIN_DOC))
             {
@@ -83,7 +83,7 @@ namespace LiteDB
             {
                 var key = this.ReadKey(s);
 
-                s.Scan(KEY_VALUE_SEP);
+                s.Scan(COLON);
 
                 obj[key] = this.ReadValue(s);
 
@@ -169,7 +169,7 @@ namespace LiteDB
         {
             s.Scan(BEGIN_DOC);
             var key = this.ReadKey(s);
-            s.Scan(KEY_VALUE_SEP);
+            s.Scan(COLON);
             var value = this.ReadString(s);
             s.Scan(WHITESPACE);
             s.Scan(END_DOC);
