@@ -151,8 +151,8 @@ namespace LiteDB
         {
             get 
             {
-                if (!this.IsArray) throw new LiteException("Value is not an array");
-                return new BsonArray((List<BsonValue>)this.RawValue);
+                if (this.IsArray) return new BsonArray((List<BsonValue>)this.RawValue);
+                throw new LiteException("Value is not an array");
             }
         }
 
@@ -160,8 +160,8 @@ namespace LiteDB
         {
             get
             {
-                if (!this.IsObject) throw new LiteException("Value is not an object");
-                return new BsonObject((Dictionary<string, BsonValue>)this.RawValue);
+                if (this.IsObject) return new BsonObject((Dictionary<string, BsonValue>)this.RawValue);
+                throw new LiteException("Value is not an object");
             }
         }
 

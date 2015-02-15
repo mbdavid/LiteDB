@@ -20,20 +20,25 @@ namespace UnitTest
             doc["CustomerId"] = Guid.NewGuid();
             doc["Date"] = DateTime.Now;
             doc["MyNull"] = null;
-            doc["Items"] = new BsonArray();
-            doc["MyObj"] = new BsonObject();
+            doc["EmptyObj"] = new BsonObject();
             doc["EmptyString"] = "";
-            var obj = new BsonObject();
-            obj["Qtd"] = 3;
-            obj["Description"] = "Big beer package";
-            obj["Unit"] = (double)10 / (double)3;
-            doc["Items"].AsArray.Add(obj);
+            doc["Customer"] = new BsonObject();
+            doc["Customer"]["Address"] = new BsonObject();
+            doc["Customer"]["Address"]["Street"] = "Av. Cacapava";
+
+
+            doc["Items"] = new BsonArray();
+
+            doc["Items"].AsArray.Add(new BsonObject());
+            doc["Items"].AsArray[0]["Qtd"] = 3;
+            doc["Items"].AsArray[0]["Description"] = "Big beer package";
+            doc["Items"].AsArray[0]["Unit"] = (double)10 / (double)3;
+
             doc["Items"].AsArray.Add("string-one");
             doc["Items"].AsArray.Add(null);
             doc["Items"].AsArray.Add(true);
             doc["Items"].AsArray.Add(DateTime.Now);
 
-            doc["MyObj"]["IsFirstId"] = true;
 
             return doc;
         }

@@ -36,35 +36,5 @@ namespace LiteDB
             : base(obj)
         {
         }
-
-        /// <summary>
-        /// Get value from a field - supports dotted name: Customer.Address.Street
-        /// </summary>
-        public object GetFieldValue(string fieldName)
-        {
-            // supports parent.child.name
-            var names = fieldName.Split('.');
-
-            if (names.Length == 1)
-            {
-                return this[fieldName].RawValue;
-            }
-
-            var value = this.AsObject;
-
-            foreach (var name in names)
-            {
-                if (value[name].IsObject)
-                {
-                    value = value[name].AsObject;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-            return value.RawValue;
-        }
     }
 }

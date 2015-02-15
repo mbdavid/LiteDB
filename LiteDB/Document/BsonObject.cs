@@ -70,5 +70,43 @@ namespace LiteDB
         {
             return this.RawValue.Remove(key);
         }
+
+        /// <summary>
+        /// Get value from a path - supports dotted name: Customer.Address.Street
+        /// </summary>
+        public object GetPathValue(string path)
+        {
+            // supports parent.child.name
+            var names = path.Split('.');
+
+            if (names.Length == 1)
+            {
+                return this[path].RawValue;
+            }
+
+            var value = this;
+
+            for (var i = 0; i < names.Length - 1; i++)
+            {
+                var name = names[i];
+
+                if (value[name].IsObject)
+                {
+                    value = value[name].AsObject;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return value[names.Last()].RawValue;
+        }
+
+        public BsonObject SetPath(string path)
+            where T : BsonValue
+        {
+            return null;
+        }
     }
 }

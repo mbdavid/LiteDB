@@ -73,7 +73,7 @@ namespace LiteDB
             {
                 return _reader.ReadInt32();
             }
-            else if (type == 0x12) // Int32
+            else if (type == 0x12) // Int64
             {
                 return _reader.ReadInt64();
             }

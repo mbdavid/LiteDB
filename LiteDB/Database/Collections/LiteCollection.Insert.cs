@@ -41,7 +41,7 @@ namespace LiteDB
                 // for each index, insert new IndexNode
                 foreach(var index in col.GetIndexes(false))
                 {
-                    var key = doc.GetFieldValue(index.Field);
+                    var key = doc.GetPathValue(index.Field);
 
                     var node = this.Database.Indexer.AddNode(index, key);
 
