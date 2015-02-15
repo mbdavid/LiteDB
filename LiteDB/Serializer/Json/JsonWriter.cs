@@ -14,9 +14,9 @@ namespace LiteDB
         private TextWriter _writer;
         private int _indent;
 
-        private string Spacer { get { return this.Pretty ? " " : ""; } }
         public bool Pretty { get; set; } 
         public bool WriteBinary { get; set; }
+        private string Spacer { get { return this.Pretty ? " " : ""; } }
 
         public JsonWriter(TextWriter writer)
         {
@@ -36,45 +36,41 @@ namespace LiteDB
             {
                 this.Write("null");
             }
-            else if (value.Type == BsonType.Array)
+            else if (value.IsArray)
             {
                 this.WriteArray(value.AsArray);
             }
-            else if (value.Type == BsonType.Object)
+            else if (value.IsObject)
             {
                 this.WriteObject(value.AsObject);
             }
-            else if (value.Type == BsonType.Byte)
-            {
-                this.Write(value.AsByte.ToString());
-            }
-            else if (value.Type == BsonType.ByteArray)
-            {
-                this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(value.AsByteArray) : "-- " + value.AsByteArray.Length + " bytes --");
-            }
-            else if (value.Type == BsonType.Char)
-            {
-                this.WriteString(value.AsChar.ToString());
-            }
-            else if (value.Type == BsonType.Boolean)
+            else if (value.IsBoolean)
             {
                 this.Write(value.AsBoolean.ToString().ToLower());
             }
-            else if (value.Type == BsonType.String)
+            else if (value.IsString)
             {
                 this.WriteString(value.AsString);
             }
-            else if (value.IsNumber)
+            else if (value.IsInt32 || value.IsDouble)
             {
                 this.WriteFormat(string.Format(CultureInfo.InvariantCulture.NumberFormat, "{0}", value.RawValue));
             }
-            else if (value.Type == BsonType.DateTime)
+            else if (value.IsBinary)
             {
-                this.WriteExtendDataType("$date", value.AsDateTime.ToString("yyyy-MM-ddTHH:mm:ssK"));
+                this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(value.AsBinary) : "-- " + value.AsBinary.Length + " bytes --");
             }
-            else if (value.Type == BsonType.Guid)
+            else if (value.IsDateTime)
+            {
+                this.WriteExtendDataType("$date", value.AsDateTime.ToUniversalTime().ToString("o"));
+            }
+            else if (value.IsGuid)
             {
                 this.WriteExtendDataType("$guid", value.AsGuid.ToString());
+            }
+            else if (value.IsInt64)
+            {
+                this.WriteExtendDataType("$numberLong", value.AsInt64.ToString());
             }
         }
 
@@ -105,22 +101,22 @@ namespace LiteDB
 
         private void WriteArray(BsonArray arr)
         {
-            var hasData = arr.Length > 0;
+            var hasData = arr.Count > 0;
 
             this.WriteStartBlock("[", hasData);
 
-            for (var i = 0; i < arr.Length; i++)
+            for (var i = 0; i < arr.Count; i++)
             {
                 var item = arr[i];
 
-                if (!((item.IsObject && item.AsObject.Keys.Length > 0) || (item.IsArray && item.AsArray.Length > 0)))
+                if (!((item.IsObject && item.AsObject.Keys.Length > 0) || (item.IsArray && item.AsArray.Count > 0)))
                 {
                     this.WriteIndent();
                 }
 
                 this.WriteValue(item);
 
-                if (i < arr.Length - 1)
+                if (i < arr.Count - 1)
                 {
                     this.Write(",");
                 }
@@ -194,7 +190,7 @@ namespace LiteDB
             this.WriteIndent();
             this.WriteFormat("\"{0}\":{1}", key, this.Spacer);
 
-            if ((value.IsObject && value.AsObject.Keys.Length > 0) || (value.IsArray && value.AsArray.Length > 0))
+            if ((value.IsObject && value.AsObject.Keys.Length > 0) || (value.IsArray && value.AsArray.Count > 0))
             {
                 this.WriteNewLine();
             }

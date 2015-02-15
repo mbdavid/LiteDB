@@ -178,8 +178,9 @@ namespace LiteDB
             {
                 switch (key)
                 {
-                    case "$date": return new BsonValue(DateTime.Parse(value));
+                    case "$date": return new BsonValue(DateTime.Parse(value).ToLocalTime());
                     case "$guid": return new BsonValue(new Guid(value));
+                    case "$numberLong": return new BsonValue(Convert.ToInt64(value));
                     case "$binary": return new BsonValue(Convert.FromBase64String(value));
                 }
             }
@@ -188,7 +189,7 @@ namespace LiteDB
                 throw new FormatException("Invalid " + key + " key in " + value, ex);
             }
 
-            throw new ArgumentException("Invalid json extended format");
+            throw new ArgumentException("Not supported json extended format: " + key);
         }
 
         private string ReadKey(StringScanner s)

@@ -53,6 +53,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="BsonTest.cs" />
     <Compile Include="PerfTest.cs" />
     <Compile Include="StressTest.cs" />
     <Compile Include="JsonTest.cs" />
@@ -66,7 +67,6 @@
     <Compile Include="PageTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Model.cs" />
-    <Compile Include="Utils\Dump.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">

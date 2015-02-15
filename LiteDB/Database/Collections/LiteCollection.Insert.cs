@@ -11,14 +11,13 @@ namespace LiteDB
         /// <summary>
         /// Insert a new document to this collection. Document Id must be a new value in collection
         /// </summary>
-        public virtual void Insert(T doc)
+        public virtual void Insert(T document)
         {
-            if (doc == null) throw new ArgumentNullException("doc");
+            if (document == null) throw new ArgumentNullException("document");
 
-            // gets document Id
-            var id = BsonSerializer.GetIdValue(doc);
+            var doc = this.Database.Mapper.ToDocument(document);
 
-            if (id == null) throw new LiteException("Document Id can't be null");
+            if (doc.Id == null) throw new LiteException("Document Id can't be null");
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
@@ -30,32 +29,27 @@ namespace LiteDB
                 var col = this.GetCollectionPage(true);
 
                 // storage in data pages - returns dataBlock address
-                var dataBlock = this.Database.Data.Insert(col, new IndexKey(id), bytes);
+                var dataBlock = this.Database.Data.Insert(col, bytes);
 
                 // store id in a PK index [0 array]
-                var pk = this.Database.Indexer.AddNode(col.PK, id);
+                var pk = this.Database.Indexer.AddNode(col.PK, doc.Id);
 
                 // do links between index <-> data block
                 pk.DataBlock = dataBlock.Position;
                 dataBlock.IndexRef[0] = pk.Position;
 
                 // for each index, insert new IndexNode
-                for (byte i = 1; i < col.Indexes.Length; i++)
+                foreach(var index in col.GetIndexes(false))
                 {
-                    var index = col.Indexes[i];
+                    var key = doc.GetFieldValue(index.Field);
 
-                    if (!index.IsEmpty)
-                    {
-                        var key = BsonSerializer.GetFieldValue(doc, index.Field);
+                    var node = this.Database.Indexer.AddNode(index, key);
 
-                        var node = this.Database.Indexer.AddNode(index, key);
+                    // point my index to data object
+                    node.DataBlock = dataBlock.Position;
 
-                        // point my index to data object
-                        node.DataBlock = dataBlock.Position;
-
-                        // point my dataBlock
-                        dataBlock.IndexRef[i] = node.Position;
-                    }
+                    // point my dataBlock
+                    dataBlock.IndexRef[index.Slot] = node.Position;
                 }
 
                 this.Database.Transaction.Commit();

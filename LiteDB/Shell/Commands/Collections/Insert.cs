@@ -18,7 +18,7 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(db, s);
             var value = new JsonReader().ReadValue(s);
 
-            col.Insert(new BsonDocument(value));
+            col.Insert(new BsonDocument(value.AsObject));
 
             return BsonValue.Null;
         }

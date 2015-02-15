@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             var col = this.ReadCollection(db, s);
-            var doc = new BsonDocument(new JsonReader().ReadValue(s));
+            var doc = new BsonDocument(new JsonReader().ReadValue(s).AsObject);
 
             return col.Update(doc);
         }

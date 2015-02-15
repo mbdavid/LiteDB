@@ -11,29 +11,34 @@ namespace LiteDB
     public class BsonObject : BsonValue
     {
         public BsonObject()
-            : base(new Dictionary<string, object>())
+            : base(new Dictionary<string, BsonValue>())
         {
         }
 
-        internal BsonObject(Dictionary<string, object> obj)
+        public BsonObject(int capacity)
+            : base(new Dictionary<string, BsonValue>(capacity))
+        {
+        }
+
+        public BsonObject(Dictionary<string, BsonValue> obj)
             : base(obj)
         {
         }
 
-        public new Dictionary<string, object> RawValue
+        public new Dictionary<string, BsonValue> RawValue
         {
             get
             {
-                return (Dictionary<string, object>)base.RawValue;
+                return (Dictionary<string, BsonValue>)base.RawValue;
             }
         }
 
         /// <summary>
         /// Add fields in fluent api
         /// </summary>
-        public BsonObject Add(string key, object value)
+        public BsonObject Add(string key, BsonValue value)
         {
-            this[key] = new BsonValue(value);
+            this[key] = value;
             return this;
         }
 

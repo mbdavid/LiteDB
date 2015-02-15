@@ -38,11 +38,11 @@ namespace LiteDB
         /// <summary>
         /// Returns first free slot to be used 
         /// </summary>
-        public byte GetFreeIndex()
+        public CollectionIndex GetFreeIndex()
         {
             for (byte i = 0; i < this.Indexes.Length; i++)
             {
-                if (this.Indexes[i].IsEmpty) return i;
+                if (this.Indexes[i].IsEmpty) return this.Indexes[i];
             }
             throw new LiteException("Collection " + this.CollectionName + " excceded the index limit: " + CollectionIndex.INDEX_PER_COLLECTION);
         }
@@ -65,8 +65,16 @@ namespace LiteDB
 
             for (var i = 0; i < Indexes.Length; i++)
             {
-                this.Indexes[i] = new CollectionIndex() { Page = this };
+                this.Indexes[i] = new CollectionIndex() { Page = this, Slot = i };
             }
+        }
+
+        /// <summary>
+        /// Returns all USED indexes
+        /// </summary>
+        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
+        {
+            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
         }
 
         public override void ReadContent(BinaryReader reader)

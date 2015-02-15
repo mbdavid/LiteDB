@@ -33,12 +33,16 @@ namespace LiteDB
 
         internal CollectionService Collections { get; private set; }
 
+        public BsonMapper Mapper { get; private set; }
+
         /// <summary>
         /// Starts LiteDB database. Open database file or create a new one if not exits
         /// </summary>
         /// <param name="connectionString">Full filename or connection string</param>
         public LiteDatabase(string connectionString)
         {
+            this.Mapper = new BsonMapper();
+
             this.ConnectionString = new ConnectionString(connectionString);
 
             if (!File.Exists(this.ConnectionString.Filename))

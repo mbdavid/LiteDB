@@ -20,8 +20,8 @@ namespace LiteDB
         {
         }
 
-        public BsonDocument(BsonValue value)
-            : base(value.AsObject.RawValue)
+        public BsonDocument(BsonObject value)
+            : base(value.RawValue)
         {
             if (!this.HasKey("_id")) throw new ArgumentException("BsonDocument must have an _id key");
         }
@@ -32,9 +32,39 @@ namespace LiteDB
             set { this["_id"] = new BsonValue(value); } 
         }
 
-        internal BsonDocument(Dictionary<string, object> obj)
+        public BsonDocument(Dictionary<string, BsonValue> obj)
             : base(obj)
         {
+        }
+
+        /// <summary>
+        /// Get value from a field - supports dotted name: Customer.Address.Street
+        /// </summary>
+        public object GetFieldValue(string fieldName)
+        {
+            // supports parent.child.name
+            var names = fieldName.Split('.');
+
+            if (names.Length == 1)
+            {
+                return this[fieldName].RawValue;
+            }
+
+            var value = this.AsObject;
+
+            foreach (var name in names)
+            {
+                if (value[name].IsObject)
+                {
+                    value = value[name].AsObject;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return value.RawValue;
         }
     }
 }

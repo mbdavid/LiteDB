@@ -11,18 +11,25 @@ namespace LiteDB
     public class BsonArray : BsonValue, IEnumerable<BsonValue>
     {
         public BsonArray()
-            : base(new List<object>())
+            : base(new List<BsonValue>())
         {
         }
 
-        internal BsonArray(List<object> array)
+        public BsonArray(int capacity)
+            : base(new List<BsonValue>(capacity))
+        {
+        }
+
+        public BsonArray(List<BsonValue> array)
             : base(array)
         {
         }
 
         public void Add(BsonValue value)
         {
-            this.RawValue.Add(value == null ? null : value.RawValue);
+            if (value == null) value = BsonValue.Null;
+
+            this.RawValue.Add(value);
         }
 
         public void Remove(int index)
@@ -30,7 +37,7 @@ namespace LiteDB
             this.RawValue.RemoveAt(index);
         }
 
-        public int Length
+        public int Count
         {
             get
             {
@@ -38,11 +45,11 @@ namespace LiteDB
             }
         }
 
-        public new List<object> RawValue
+        public new List<BsonValue> RawValue
         {
             get
             {
-                return (List<object>)base.RawValue;
+                return (List<BsonValue>)base.RawValue;
             }
         }
 

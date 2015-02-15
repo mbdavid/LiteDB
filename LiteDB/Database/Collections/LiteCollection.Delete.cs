@@ -73,7 +73,7 @@ namespace LiteDB
                 var count = 0;
 
                 // find nodes
-                var nodes = query.Run<T>(this.Database, col);
+                var nodes = query.Run(this.Database, col);
 
                 foreach (var node in nodes)
                 {
@@ -113,14 +113,9 @@ namespace LiteDB
             var dataBlock = this.Database.Data.Read(node.DataBlock, false);
 
             // lets remove all indexes that point to this in dataBlock
-            for (byte i = 0; i < col.Indexes.Length; i++)
+            foreach (var index in col.GetIndexes(true))
             {
-                var index = col.Indexes[i];
-
-                if (!index.IsEmpty)
-                {
-                    this.Database.Indexer.Delete(index, dataBlock.IndexRef[i]);
-                }
+                this.Database.Indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
             }
 
             // remove object data

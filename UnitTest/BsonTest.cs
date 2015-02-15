@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace UnitTest
 {
     [TestClass]
-    public class JsonTest
+    public class BsonTest
     {
         private BsonDocument CreateDoc()
         {
@@ -18,7 +18,7 @@ namespace UnitTest
             doc.Id = 123;
             doc["FirstString"] = "BEGIN this string \" has \" \t and this \f \n\r END";
             doc["CustomerId"] = Guid.NewGuid();
-            doc["Date"] = new DateTime(2015, 1, 1);
+            doc["Date"] = DateTime.Now;
             doc["MyNull"] = null;
             doc["Items"] = new BsonArray();
             doc["MyObj"] = new BsonObject();
@@ -26,7 +26,7 @@ namespace UnitTest
             var obj = new BsonObject();
             obj["Qtd"] = 3;
             obj["Description"] = "Big beer package";
-            obj["Unit"] = 1299.995;
+            obj["Unit"] = (double)10 / (double)3;
             doc["Items"].AsArray.Add(obj);
             doc["Items"].AsArray.Add("string-one");
             doc["Items"].AsArray.Add(null);
@@ -39,31 +39,30 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void Json_Test()
+        public void Bson_Test()
         {
             var o = CreateDoc();
 
-            var json = JsonSerializer.Serialize(o, true);
+            var bson = BsonSerializer.Serialize(o);
 
-            var d = JsonSerializer.Deserialize(json).AsDocument;
+            var json = JsonSerializer.Serialize(o);
 
-            Assert.AreEqual(d["Date"].AsDateTime, o["Date"].AsDateTime);
-            Assert.AreEqual(d["CustomerId"].AsGuid, o["CustomerId"].AsGuid);
-            Assert.AreEqual(d["Items"].AsArray.Count, o["Items"].AsArray.Count);
+            var d = BsonSerializer.Deserialize(bson).AsDocument;
+
             Assert.AreEqual(d.Id, 123);
             Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
 
+            Assert.AreEqual(o["FirstString"].AsString, d["FirstString"].AsString);
+            Assert.AreEqual(o["Date"].AsDateTime.ToString(), d["Date"].AsDateTime.ToString());
+            Assert.AreEqual(o["CustomerId"].AsGuid, d["CustomerId"].AsGuid);
+            Assert.AreEqual(o["MyNull"].RawValue, d["MyNull"].RawValue);
+            Assert.AreEqual(o["EmptyString"].AsString, d["EmptyString"].AsString);
+
+            Assert.AreEqual(o["Items"].AsArray.Count, d["Items"].AsArray.Count);
+            Assert.AreEqual(o["Items"][0]["Unit"].AsDouble, d["Items"][0]["Unit"].AsDouble);
+            Assert.AreEqual(o["Items"][4].AsDateTime.ToString(), d["Items"][4].AsDateTime.ToString());
+
 
         }
-
-        [TestMethod]
-        public void Json_Perf_Test()
-        {
-            var f = @"C:\Github\LiteDB_dev\LiteDB.Shell\bin\Debug\test-20000.json";
-            var json = File.ReadAllText(f);
-
-            JsonSerializer.Deserialize(json);
-        }
-
     }
 }

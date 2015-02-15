@@ -26,14 +26,16 @@ namespace LiteDB
 
             var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
-            var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
+            var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+            var obj = this.Database.Mapper.ToObject<T>(doc);
 
             foreach (var action in _includes)
             {
-                action(doc);
+                action(obj);
             }
 
-            return doc;
+            return obj;
         }
 
         /// <summary>
@@ -63,20 +65,23 @@ namespace LiteDB
 
             if (col == null) yield break;
 
-            var nodes = query.Run<T>(this.Database, col);
+            var nodes = query.Run(this.Database, col);
 
             foreach (var node in nodes)
             {
                 var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
-                var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
+                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                // get object from BsonDocument
+                var obj = this.Database.Mapper.ToObject<T>(doc);
 
                 foreach (var action in _includes)
                 {
-                    action(doc);
+                    action(obj);
                 }
 
-                yield return doc;
+                yield return obj;
             }
         }
 
@@ -119,7 +124,7 @@ namespace LiteDB
 
             if (col == null) return 0;
 
-            return query.Run<T>(this.Database, col).Count();
+            return query.Run(this.Database, col).Count();
         }
 
         /// <summary>
@@ -141,7 +146,7 @@ namespace LiteDB
 
             if (col == null) return false;
 
-            return query.Run<T>(this.Database, col).FirstOrDefault() != null;
+            return query.Run(this.Database, col).FirstOrDefault() != null;
         }
 
         /// <summary>

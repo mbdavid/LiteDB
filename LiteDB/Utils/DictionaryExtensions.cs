@@ -21,15 +21,6 @@ namespace LiteDB
             return next;
         }
 
-        public static object Get(this Dictionary<string, object> dict, string name)
-        {
-            object res;
-            if (dict.TryGetValue(name, out res))
-                return res;
-            
-            return null;
-        }
-
         public static BsonValue Get(this Dictionary<string, BsonValue> dict, string name)
         {
             BsonValue res;

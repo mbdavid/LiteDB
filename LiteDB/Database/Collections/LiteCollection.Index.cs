@@ -48,11 +48,8 @@ namespace LiteDB
                     _pageID = col.PageID;
                 }
 
-                // get index slot
-                var slot = col.GetFreeIndex();
-
                 // create index head
-                var index = this.Database.Indexer.CreateIndex(col.Indexes[slot]);
+                var index = this.Database.Indexer.CreateIndex(col);
 
                 index.Field = field;
                 index.Unique = unique;
@@ -63,15 +60,15 @@ namespace LiteDB
                     var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
                     // read object
-                    var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
+                    var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
                     // adding index
-                    var key = BsonSerializer.GetFieldValue(doc, field);
+                    var key = doc.GetFieldValue(field);
 
                     var newNode = this.Database.Indexer.AddNode(index, key);
 
                     // adding this new index Node to indexRef
-                    dataBlock.IndexRef[slot] = newNode.Position;
+                    dataBlock.IndexRef[index.Slot] = newNode.Position;
 
                     // link index node to datablock
                     newNode.DataBlock = dataBlock.Position;
@@ -114,17 +111,12 @@ namespace LiteDB
 
             if (col == null) yield break;
 
-            for (var i = 0; i < CollectionIndex.INDEX_PER_COLLECTION; i++)
+            foreach(var index in col.GetIndexes(true))
             {
-                var index = col.Indexes[i];
-
-                if (!index.IsEmpty)
-                {
-                    yield return new BsonDocument()
-                        .Add("slot", i)
-                        .Add("field", index.Field)
-                        .Add("unique", index.Unique);
-                }
+                yield return new BsonObject()
+                    .Add("slot", index.Slot)
+                    .Add("field", index.Field)
+                    .Add("unique", index.Unique);
             }
         }
 

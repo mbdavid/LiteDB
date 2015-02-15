@@ -56,7 +56,7 @@ namespace LiteDB
             this.Id = doc.Id.ToString();
             this.Filename = doc["filename"].AsString;
             this.MimeType = doc["mimeType"].AsString;
-            this.Length = doc["length"].AsLong;
+            this.Length = doc["length"].AsInt64;
             this.UploadDate = doc["uploadDate"].AsDateTime;
             this.Metadata = doc["metadata"].AsObject;
         }

@@ -17,6 +17,11 @@ namespace LiteDB
         public const int INDEX_PER_COLLECTION = 16;
 
         /// <summary>
+        /// Represent slot position on index array on dataBlock/collection indexes - non-persistable
+        /// </summary>
+        public int Slot { get; set; }
+
+        /// <summary>
         /// Field name
         /// </summary>
         public string Field { get; set; }

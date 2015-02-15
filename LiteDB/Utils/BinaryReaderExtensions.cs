@@ -37,27 +37,12 @@ namespace LiteDB
             switch (type)
             {
                 case IndexDataType.Null: return new IndexKey(null);
-
-                // int
-                case IndexDataType.Byte: return new IndexKey(reader.ReadByte());
-                case IndexDataType.Int16: return new IndexKey(reader.ReadInt16());
-                case IndexDataType.UInt16: return new IndexKey(reader.ReadUInt16());
                 case IndexDataType.Int32: return new IndexKey(reader.ReadInt32());
-                case IndexDataType.UInt32: return new IndexKey(reader.ReadUInt32());
                 case IndexDataType.Int64: return new IndexKey(reader.ReadInt64());
-                case IndexDataType.UInt64: return new IndexKey(reader.ReadUInt64());
-
-                // decimal
-                case IndexDataType.Single: return new IndexKey(reader.ReadSingle());
                 case IndexDataType.Double: return new IndexKey(reader.ReadDouble());
-                case IndexDataType.Decimal: return new IndexKey(reader.ReadDecimal());
-
-                // string
                 case IndexDataType.String:
                     var l = reader.ReadByte();
                     return new IndexKey(reader.ReadString(l));
-
-                // others
                 case IndexDataType.Boolean: return new IndexKey(reader.ReadBoolean());
                 case IndexDataType.DateTime: return new IndexKey(reader.ReadDateTime());
                 case IndexDataType.Guid: return new IndexKey(reader.ReadGuid());

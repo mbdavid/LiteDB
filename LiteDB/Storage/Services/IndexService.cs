@@ -26,8 +26,11 @@ namespace LiteDB
         /// <summary>
         /// Create a new index and returns head page address (skip list)
         /// </summary>
-        public CollectionIndex CreateIndex(CollectionIndex index)
+        public CollectionIndex CreateIndex(CollectionPage col)
         {
+            // get index slot
+            var index = col.GetFreeIndex();
+
             // get a new index page for first index page
             var page = _pager.NewPage<IndexPage>();
 
