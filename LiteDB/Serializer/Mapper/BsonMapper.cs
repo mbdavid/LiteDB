@@ -208,47 +208,54 @@ namespace LiteDB
         {
             if (value.IsNull) return null;
 
+            if (Reflection.IsNullable(type))
+            {
+                type = Reflection.UnderlyingTypeOf(type);
+            }
 
-            //// check if this object type has a direct converter
-            //if (this.Settings.Deserialize.TryGetValue(type, out conv))
-            //{
-            //    return conv(value);
-            //}
+            // bson types convert
+            if (type == typeof(String) || 
+                type == typeof(Int32) || 
+                type == typeof(Int64) || 
+                type == typeof(Boolean) || 
+                type == typeof(Guid) || 
+                type == typeof(DateTime) || 
+                type == typeof(Byte[]) || 
+                type == typeof(Double))
+                return value.RawValue;
 
-            //var o = Reflection.CreateInstance(type);
+            var o = Reflection.CreateInstance(type);
 
-            //// check if type is a IEnumerable
-            //if(o is IEnumerable && type.IsGenericType)
-            //{
-            //    var t = Reflection.UnderlyingTypeOf(type);
-            //    var arr = value.AsArray;
+            // check if type is a IList
+            if (o is IList && type.IsGenericType)
+            {
+                var typeT = Reflection.UnderlyingTypeOf(type);
+                var array = value.AsArray;
+                var list = (IList)o;
 
-            //    foreach (var item in arr)
-            //    {
-            //        var v = this.Deserialize(t, item);
+                foreach (var item in array)
+                {
+                    list.Add(this.Deserialize(typeT, item));
+                }
 
-            //        Reflection.AddToArray(type, o, v);
-            //    }
+                return o;
+            }
 
-            //    return o;
-            //}
+            // otherwise is a object
+            var obj = value.AsObject;
+            var props = this.GetPropertyMapper(type);
 
-            //var obj = value.AsObject;
-            //var props = Reflection.GetProperties(type);
+            foreach (var prop in props.Values)
+            {
+                var val = obj[prop.ResolvedName];
 
-            //foreach (var prop in props)
-            //{
-            //    // get property 
-            //    var name = this.Settings.ResolvePropertyName(prop.Name);
-            //    var v = obj[name];
+                if (!val.IsNull)
+                {
+                    prop.Setter(o, this.Deserialize(prop.PropertyType, val));
+                }
+            }
 
-            //    if (!v.IsNull)
-            //    {
-            //        Reflection.SetValue(prop, o, this.Deserialize(prop.PropertyType, v));
-            //    }
-            //}
-
-            return null;
+            return o;
         }
 
         #endregion

@@ -46,6 +46,7 @@ namespace UnitTest
                 Id = 123,
                 MyString = "John",
                 MyGuid = Guid.NewGuid(),
+                MyDateTime = DateTime.Now,
                 MyIgnore = "IgnoreTHIS",
                 MyIntNullable = 999,
                 MyStringList = new List<string>(),

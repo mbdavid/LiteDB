@@ -89,7 +89,6 @@ namespace LiteDB
                 { 
                     ResolvedName = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name), 
                     PropertyName = prop.Name, 
-                    PropertyInfo = prop,
                     PropertyType = prop.PropertyType,
                     Getter = getter,
                     Setter = setter
