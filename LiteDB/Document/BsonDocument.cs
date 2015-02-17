@@ -26,6 +26,12 @@ namespace LiteDB
             if (!this.HasKey("_id")) throw new ArgumentException("BsonDocument must have an _id key");
         }
 
+        public BsonDocument(BsonObject value, object id)
+            : base(value.RawValue)
+        {
+            this.Id = id;
+        }
+
         public object Id 
         { 
             get { return this["_id"].RawValue; }

@@ -62,8 +62,8 @@
     <Compile Include="Query\QueryEquals.cs" />
     <Compile Include="Query\QueryStartsWith.cs" />
     <Compile Include="Query\QueryAll.cs" />
-    <Compile Include="Document\Mapper\BsonIgnoreAttribute.cs" />
-    <Compile Include="Document\Mapper\BsonIdAttribute.cs" />
+    <Compile Include="Serializer\Mapper\BsonIgnoreAttribute.cs" />
+    <Compile Include="Serializer\Mapper\BsonIdAttribute.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
     <Compile Include="Database\Collections\LiteCollection.Delete.cs" />
     <Compile Include="Database\Collections\LiteCollection.Index.cs" />
@@ -89,7 +89,10 @@
     <Compile Include="Serializer\Json\JsonSerializer.cs" />
     <Compile Include="Serializer\Json\JsonReader.cs" />
     <Compile Include="Serializer\Json\JsonWriter.cs" />
-    <Compile Include="Document\Mapper\BsonMapper.cs" />
+    <Compile Include="Serializer\Mapper\BsonMapper.cs" />
+    <Compile Include="Serializer\Mapper\CustomTypeMapper.cs" />
+    <Compile Include="Serializer\Mapper\PropertyMapper.cs" />
+    <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
     <Compile Include="Shell\Commands\Collections\BaseCollection.cs" />
     <Compile Include="Shell\Commands\Collections\Rename.cs" />

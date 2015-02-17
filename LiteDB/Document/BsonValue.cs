@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -13,6 +14,8 @@ namespace LiteDB
     /// </summary>
     public class BsonValue
     {
+        public static Regex PropertyPattern = new Regex(@"^\w[\w_-]*$");
+
         public BsonType Type { get; private set; }
         public virtual object RawValue { get; private set; }
 
@@ -127,6 +130,8 @@ namespace LiteDB
             }
             set
             {
+                if (!PropertyPattern.IsMatch(name)) throw new ArgumentException("Name invalid pattern");
+
                 this.AsObject.RawValue[name] = value == null ? BsonValue.Null : value;
             }
         }

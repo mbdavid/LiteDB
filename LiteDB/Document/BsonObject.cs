@@ -102,11 +102,5 @@ namespace LiteDB
 
             return value[names.Last()].RawValue;
         }
-
-        public BsonObject SetPath(string path)
-            where T : BsonValue
-        {
-            return null;
-        }
     }
 }

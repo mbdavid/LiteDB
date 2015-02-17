@@ -31,7 +31,7 @@ namespace LiteDB
             var col = this.GetCollectionPage(false);
 
             // check if index already exists (collection must exists)
-            if (col != null && col.Indexes.FirstOrDefault(x => x.Field.Equals(field, StringComparison.InvariantCultureIgnoreCase)) != null)
+            if (col != null && col.GetIndex(field) != null)
             {
                 return false;
             };
@@ -140,7 +140,7 @@ namespace LiteDB
                 }
 
                 // search for index reference - do not delelte "_id" index
-                var index = col.Indexes.FirstOrDefault(x => x.Field.Equals(field, StringComparison.InvariantCultureIgnoreCase));
+                var index = col.GetIndex(field);
 
                 if (index == null || field.Equals("_id", StringComparison.InvariantCultureIgnoreCase))
                 {

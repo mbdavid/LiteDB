@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -12,7 +13,8 @@ namespace LiteDB
     internal class CollectionPage : BasePage
     {
         public const int MAX_COLLECTIONS = 256;
-        public const string NAME_PATTERN = @"^\w{1,30}$";
+
+        public static Regex NamePattern = new Regex(@"^\w{1,30}$");
 
         /// <summary>
         /// Name of collection
@@ -31,12 +33,12 @@ namespace LiteDB
         public uint DocumentCount { get; set; }
 
         /// <summary>
-        /// Get all indexes from this collection
+        /// Get all indexes from this collection - includes non-used indexes
         /// </summary>
         public CollectionIndex[] Indexes { get; set; }
 
         /// <summary>
-        /// Returns first free slot to be used 
+        /// Returns first free index slot to be used 
         /// </summary>
         public CollectionIndex GetFreeIndex()
         {
@@ -47,7 +49,26 @@ namespace LiteDB
             throw new LiteException("Collection " + this.CollectionName + " excceded the index limit: " + CollectionIndex.INDEX_PER_COLLECTION);
         }
 
+        /// <summary>
+        /// Get index from field name (index field name is case sensitive) - returns null if not found
+        /// </summary>
+        public CollectionIndex GetIndex(string field)
+        {
+            return this.Indexes.FirstOrDefault(x => x.Field == field);
+        }
+
+        /// <summary>
+        /// Get primary key index (_id index)
+        /// </summary>
         public CollectionIndex PK { get { return this.Indexes[0]; } }
+
+        /// <summary>
+        /// Returns all used indexes
+        /// </summary>
+        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
+        {
+            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
+        }
 
         protected override void UpdateItemCount()
         {
@@ -67,14 +88,6 @@ namespace LiteDB
             {
                 this.Indexes[i] = new CollectionIndex() { Page = this, Slot = i };
             }
-        }
-
-        /// <summary>
-        /// Returns all USED indexes
-        /// </summary>
-        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
-        {
-            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
         }
 
         public override void ReadContent(BinaryReader reader)

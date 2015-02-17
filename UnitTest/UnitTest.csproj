@@ -54,6 +54,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="BsonTest.cs" />
+    <Compile Include="MapperTest.cs" />
     <Compile Include="PerfTest.cs" />
     <Compile Include="StressTest.cs" />
     <Compile Include="JsonTest.cs" />

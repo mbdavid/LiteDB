@@ -40,7 +40,7 @@ namespace LiteDB
         public CollectionPage Add(string name)
         {
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if(!Regex.IsMatch(name, CollectionPage.NAME_PATTERN)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
+            if(!CollectionPage.NamePattern.IsMatch(name)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
 
             var pages = _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
 

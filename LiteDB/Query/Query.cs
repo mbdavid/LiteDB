@@ -128,7 +128,7 @@ namespace LiteDB
 
         internal virtual IEnumerable<IndexNode> Run(LiteDatabase db, CollectionPage col)
         {
-            var index = col.Indexes.FirstOrDefault(x => x.Field.Equals(this.Field, StringComparison.InvariantCultureIgnoreCase));
+            var index = col.GetIndex(this.Field);
 
             if (index == null) throw new LiteException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
 

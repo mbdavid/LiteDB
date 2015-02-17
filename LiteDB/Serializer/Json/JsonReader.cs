@@ -70,7 +70,7 @@ namespace LiteDB
                 return this.ReadNumber(s);
             }
 
-            throw new ArgumentException("String is not a valid JsonEx");
+            throw new ArgumentException("String is not a valid json");
         }
 
         private BsonObject ReadObject(StringScanner s)
@@ -78,6 +78,7 @@ namespace LiteDB
             var obj = new BsonObject();
 
             s.Scan(BEGIN_DOC);
+            s.Scan(WHITESPACE);
 
             while (!s.Match(END_DOC))
             {
@@ -102,6 +103,7 @@ namespace LiteDB
             var arr = new BsonArray();
 
             s.Scan(BEGIN_ARRAY);
+            s.Scan(WHITESPACE);
 
             while(!s.Match(END_ARRAY))
             {

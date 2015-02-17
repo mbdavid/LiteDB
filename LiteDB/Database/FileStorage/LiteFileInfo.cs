@@ -18,6 +18,8 @@ namespace LiteDB
         /// </summary>
         public const string ID_PATTERN = @"^[\w-$@!+%;\.]+(\/[\w-$@!+%;\.]+)*$";
 
+        private static Regex IdPattern = new Regex(ID_PATTERN);
+
         /// <summary>
         /// Number of bytes on each chunk document to store
         /// </summary>
@@ -39,7 +41,7 @@ namespace LiteDB
 
         public LiteFileInfo(string id, string filename)
         {
-            if (!Regex.IsMatch(id, ID_PATTERN)) throw new LiteException("Invalid file id format.");
+            if (!IdPattern.IsMatch(id)) throw new LiteException("Invalid file id format.");
 
             this.Id = id;
             this.Filename = Path.GetFileName(filename);
