@@ -19,10 +19,8 @@ namespace UnitTest
 
             using (var db = new LiteDatabase("journal=true;filename=" + path))
             {
-                db.BeginTrans();
                 var col = db.GetCollection<Post>("posts");
                 col.InsertBulk(Post.GetData(20000));
-                db.Commit();
             }
         }
 
