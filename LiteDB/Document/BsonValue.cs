@@ -126,7 +126,7 @@ namespace LiteDB
         {
             get
             {
-                return this.AsObject.RawValue.Get(name);
+                return this.AsObject.RawValue.GetOrDefault(name, BsonValue.Null);
             }
             set
             {

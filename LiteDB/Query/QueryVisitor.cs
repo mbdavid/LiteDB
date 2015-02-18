@@ -123,7 +123,7 @@ namespace LiteDB
         /// <summary>
         /// Get a Bson property from a simple Linq expression: x => x.CustomerName
         /// </summary>
-        public string GetBsonProperty<T, K>(Expression<Func<T, K>> expr)
+        public string GetBsonProperty<TK, K>(Expression<Func<TK, K>> expr)
         {
             var member = expr.Body as MemberExpression;
 

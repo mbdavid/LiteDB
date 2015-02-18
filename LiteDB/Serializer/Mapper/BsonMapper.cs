@@ -47,16 +47,10 @@ namespace LiteDB
             this.ResolvePropertyName = (s) => s;
         }
 
-        #region Static global instance - used for cache data
-
-        public static BsonMapper Global { get; private set; }
-
-        static BsonMapper()
-        {
-            Global = new BsonMapper();
-        }
-
-        #endregion
+        /// <summary>
+        /// Global BsonMapper instance
+        /// </summary>
+        public static BsonMapper Global = new BsonMapper();
 
         #region Predefinded Property Resolvers
 

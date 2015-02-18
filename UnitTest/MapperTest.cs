@@ -108,7 +108,7 @@ namespace UnitTest
 
             // Cache before
             var doc = mapper.ToDocument(model);
-            fastBinaryJSON.BJSON.ToBJSON(model);
+            //fastBinaryJSON.BJSON.ToBJSON(model);
 
             var d = DateTime.Now;
 
@@ -129,14 +129,14 @@ namespace UnitTest
 
             Debug.Print("BsonDocument to BsonBytes = " + DateTime.Now.Subtract(d).TotalMilliseconds);
 
-            d = DateTime.Now;
-
-            for (var i = 0; i < 20000; i++)
-            {
-                fastBinaryJSON.BJSON.ToBJSON(model);
-            }
-
-            Debug.Print("FastBinaryJson = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+            //d = DateTime.Now;
+            //
+            //for (var i = 0; i < 20000; i++)
+            //{
+            //    fastBinaryJSON.BJSON.ToBJSON(model);
+            //}
+            //
+            //Debug.Print("FastBinaryJson = " + DateTime.Now.Subtract(d).TotalMilliseconds);
 
         }
 
