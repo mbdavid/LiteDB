@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// If a Index Page has less that this free space, it's considered full page for new items.
         /// </summary>
-        public const int RESERVED_BYTES = 100;
+        public const int INDEX_RESERVED_BYTES = 100;
 
         public Dictionary<ushort, IndexNode> Nodes { get; set; }
 

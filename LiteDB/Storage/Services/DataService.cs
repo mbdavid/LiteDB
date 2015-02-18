@@ -52,7 +52,7 @@ namespace LiteDB
             dataPage.IsDirty = true;
 
             // add/remove dataPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             col.DocumentCount++;
 
@@ -106,7 +106,7 @@ namespace LiteDB
             }
 
             // Add/Remove dataPage on freelist if has space AND its on/off free list
-            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             dataPage.IsDirty = true;
 
@@ -175,7 +175,7 @@ namespace LiteDB
             else
             {
                 // add or remove to free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > DataPage.RESERVED_BYTES, page, col, ref col.FreeDataPageID);
+                _pager.AddOrRemoveToFreeList(page.FreeBytes > DataPage.DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
             }
 
             col.DocumentCount--;

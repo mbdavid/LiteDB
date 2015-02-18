@@ -139,7 +139,7 @@ namespace LiteDB
             }
 
             // add/remove indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
             page.IsDirty = true;
 
@@ -185,7 +185,7 @@ namespace LiteDB
             else
             {
                 // add or remove page from free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
+                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
             page.IsDirty = true;
