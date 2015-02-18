@@ -84,10 +84,17 @@ namespace LiteDB
                 // if not getter or setter - no mapping
                 if (getter == null || setter == null) continue;
 
+                var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
+
+                // check if property has [BsonProperty]
+                var attr = (BsonPropertyAttribute)prop.GetCustomAttributes(typeof(BsonPropertyAttribute), false).FirstOrDefault();
+
+                if (attr != null) name = attr.Name;
+
                 // create a property mapper
                 var p = new PropertyMapper
                 { 
-                    ResolvedName = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name), 
+                    ResolvedName = name, 
                     PropertyName = prop.Name, 
                     PropertyType = prop.PropertyType,
                     Getter = getter,
@@ -109,8 +116,47 @@ namespace LiteDB
         /// </summary>
         public static object CreateInstance(Type type)
         {
-            //TODO: create il way
-            return Activator.CreateInstance(type);
+            try
+            {
+                CreateObject c = null;
+
+                if (_cacheCtor.TryGetValue(type, out c))
+                {
+                    return c();
+                }
+                else
+                {
+                    if (type.IsClass)
+                    {
+                        var dynMethod = new DynamicMethod("_", type, null);
+                        var il = dynMethod.GetILGenerator();
+                        il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
+                        il.Emit(OpCodes.Ret);
+                        c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+                        _cacheCtor.Add(type, c);
+                    }
+                    else // structs
+                    {
+                        var dynMethod = new DynamicMethod("_", typeof(object), null);
+                        var il = dynMethod.GetILGenerator();
+                        var lv = il.DeclareLocal(type);
+                        il.Emit(OpCodes.Ldloca_S, lv);
+                        il.Emit(OpCodes.Initobj, type);
+                        il.Emit(OpCodes.Ldloc_0);
+                        il.Emit(OpCodes.Box, type);
+                        il.Emit(OpCodes.Ret);
+                        c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+                        _cacheCtor.Add(type, c);
+                    }
+
+                    return c();
+                }
+            }
+            catch (Exception)
+            {
+                throw new LiteException(string.Format("Failed to create instance for type '{0}' from assembly '{1}'",
+                    type.FullName, type.AssemblyQualifiedName));
+            }
         }
 
         private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo)

@@ -19,8 +19,10 @@ namespace LiteDB
     ///     - Entity class must have Id property, [ClassName]Id property or [BsonId] attribute
     ///     - No circular references
     ///     - Fields are not valid
+    ///     - IList, Array supports
+    ///     - IDictionary supports (Key must be a simple datatype - converted by ChangeType)
     /// </summary>
-    public class BsonMapper
+    public partial class BsonMapper
     {
         private const int MAX_DEPTH = 20;
 
@@ -72,36 +74,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Mapper methods
-
-        /// <summary>
-        /// Serialize a POCO class to BsonDocument
-        /// </summary>
-        public BsonDocument ToDocument(object obj)
-        {
-            if (obj == null) throw new ArgumentNullException("obj");
-
-            // if object is BsonDocument, just return them
-            if (obj is BsonDocument) return (BsonDocument)obj;
-
-            return this.Serialize(obj, 0).AsDocument;
-
-        }
-
-        /// <summary>
-        /// Deserialize a BsonDocument to POCO class
-        /// </summary>
-        public T ToObject<T>(BsonDocument doc)
-            where T : new()
-        {
-            var type = typeof(T);
-
-            // if T is BsonDocument, just return them
-            if (type == typeof(BsonDocument)) return (T)(object)doc;
-
-            return (T)this.Deserialize(type, doc);
-        }
-
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results
         /// </summary>
@@ -118,147 +90,5 @@ namespace LiteDB
 
             return _mapper[type];
         }
-
-        #endregion
-
-        #region Serialize
-
-        private BsonValue Serialize(object obj, int depth)
-        {
-            if (depth > MAX_DEPTH) throw new LiteException("Serialization class reach MAX_DEPTH - Check for circular references");
-
-            if (obj == null) return BsonValue.Null;
-
-            var type = obj.GetType();
-
-            // basic Bson data types
-            if (obj is String || obj is Int32 || obj is Int64 || obj is Double || obj is Boolean || obj is Byte[] || obj is DateTime || obj is Guid)
-            {
-                return new BsonValue(obj);
-            }
-            // basic .net type to convert to bson
-            else if (obj is Int16 || obj is UInt16)
-            {
-                return new BsonValue(Convert.ToInt32(obj));
-            }
-            else if (obj is UInt32 || obj is UInt64)
-            {
-                return new BsonValue(Convert.ToInt64(obj));
-            }
-            else if (obj is Single || obj is Decimal)
-            {
-                return new BsonValue(Convert.ToDouble(obj));
-            }
-            else if (obj is Char || obj is Enum)
-            {
-                return new BsonValue(obj.ToString());
-            }
-            // check if is a list
-            else if (obj is IList)
-            {
-                return this.SerializeArray(obj as IList, depth);
-            }
-            //else if (obj is IDictionary)
-            //{
-            //}
-
-            // do more...
-
-            // last case: a plain object
-            else
-            {
-                return this.SerializeObject(type, obj, depth);
-            }
-        }
-
-        private BsonArray SerializeArray(IEnumerable array, int depth)
-        {
-            var arr = new BsonArray();
-
-            foreach (var item in array)
-            {
-                arr.Add(this.Serialize(item, depth + 1));
-            }
-
-            return arr;
-        }
-
-        private BsonObject SerializeObject(Type type, object obj, int depth)
-        {
-            var o = new BsonObject();
-            var mapper = this.GetPropertyMapper(type);
-
-            foreach (var prop in mapper.Values)
-            {
-                // get property value 
-                var value = prop.Getter(obj);
-
-                if (value == null && this.SerializeNullValues == false) continue;
-
-                o.Add(prop.ResolvedName, this.Serialize(value, depth + 1));
-            }
-
-            return o;
-        }
-        #endregion
-
-        #region Deserialize
-
-        private object Deserialize(Type type, BsonValue value)
-        {
-            if (value.IsNull) return null;
-
-            if (Reflection.IsNullable(type))
-            {
-                type = Reflection.UnderlyingTypeOf(type);
-            }
-
-            // bson types convert
-            if (type == typeof(String) || 
-                type == typeof(Int32) || 
-                type == typeof(Int64) || 
-                type == typeof(Boolean) || 
-                type == typeof(Guid) || 
-                type == typeof(DateTime) || 
-                type == typeof(Byte[]) || 
-                type == typeof(Double))
-                return value.RawValue;
-
-            var o = Reflection.CreateInstance(type);
-
-            // check if type is a IList
-            if (o is IList && type.IsGenericType)
-            {
-                var typeT = Reflection.UnderlyingTypeOf(type);
-                var array = value.AsArray;
-                var list = (IList)o;
-
-                foreach (var item in array)
-                {
-                    list.Add(this.Deserialize(typeT, item));
-                }
-
-                return o;
-            }
-
-            // otherwise is a object
-            var obj = value.AsObject;
-            var props = this.GetPropertyMapper(type);
-
-            foreach (var prop in props.Values)
-            {
-                var val = obj[prop.ResolvedName];
-
-                if (!val.IsNull)
-                {
-                    prop.Setter(o, this.Deserialize(prop.PropertyType, val));
-                }
-            }
-
-            return o;
-        }
-
-        #endregion
-
     }
 }

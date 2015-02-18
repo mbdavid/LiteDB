@@ -10,9 +10,15 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Indicate that property will be used as BsonDocument Id
+    /// Set a name to this property in BsonDocument
     /// </summary>
-    public class BsonIdAttribute : Attribute
+    public class BsonPropertyAttribute : Attribute
     {
+        public string Name { get; set; }
+
+        public BsonPropertyAttribute(string name)
+        {
+            this.Name = name;
+        }
     }
 }

@@ -130,7 +130,7 @@ namespace LiteDB
             }
             set
             {
-                if (!PropertyPattern.IsMatch(name)) throw new ArgumentException("Name invalid pattern");
+                if (!PropertyPattern.IsMatch(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
 
                 this.AsObject.RawValue[name] = value == null ? BsonValue.Null : value;
             }

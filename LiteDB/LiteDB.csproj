@@ -90,6 +90,9 @@
     <Compile Include="Serializer\Json\JsonReader.cs" />
     <Compile Include="Serializer\Json\JsonWriter.cs" />
     <Compile Include="Serializer\Mapper\BsonMapper.cs" />
+    <Compile Include="Serializer\Mapper\BsonMapper.Serialize.cs" />
+    <Compile Include="Serializer\Mapper\BsonMapper.Deserialize.cs" />
+    <Compile Include="Serializer\Mapper\BsonPropertyField.cs" />
     <Compile Include="Serializer\Mapper\PropertyMapper.cs" />
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
