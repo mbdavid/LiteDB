@@ -62,6 +62,12 @@
     <Compile Include="Query\QueryEquals.cs" />
     <Compile Include="Query\QueryStartsWith.cs" />
     <Compile Include="Query\QueryAll.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\BJSON.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\BJsonParser.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\BJsonSerializer.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\Getters.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\Reflection.cs" />
+    <Compile Include="Serializer\fastBinaryJSON\SafeDictionary.cs" />
     <Compile Include="Serializer\Mapper\BsonIgnoreAttribute.cs" />
     <Compile Include="Serializer\Mapper\BsonIdAttribute.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
@@ -154,6 +160,9 @@
     <Compile Include="Utils\DictionaryExtensions.cs" />
     <Compile Include="Utils\LiteException.cs" />
     <Compile Include="Utils\StringScanner.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Serializer\fastBinaryJSON\_README.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

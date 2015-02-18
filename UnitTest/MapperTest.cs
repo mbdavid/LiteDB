@@ -21,7 +21,7 @@ namespace UnitTest
         public DateTime? MyDateTimeNullable { get; set; }
         public int? MyIntNullable { get; set; }
         public MyEnum MyEnumProp { get; set; }
-        public char MyChar { get; set; }
+        //public char MyChar { get; set; }
         public byte MyByte { get; set; }
 
         // do not serialize this properties
@@ -63,7 +63,7 @@ namespace UnitTest
                 MyDict = new Dictionary<int,string>(),
                 MyStringArray = new string[] { "One", "Two" },
                 MyEnumProp = MyEnum.Second,
-                MyChar = 'Y',
+                //MyChar = 'Y',
                 MyByte = 255
             };
 
@@ -98,5 +98,48 @@ namespace UnitTest
             //Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
 
         }
+
+        [TestMethod]
+        public void MapperPerf_Test()
+        {
+            var model = CreateModel();
+            var mapper = new BsonMapper();
+            mapper.UseLowerCaseDelimiter();
+
+            // Cache before
+            var doc = mapper.ToDocument(model);
+            fastBinaryJSON.BJSON.ToBJSON(model);
+
+            var d = DateTime.Now;
+
+            // .NET Class to BsonDocument
+            for (var i = 0; i < 20000; i++)
+            {
+                mapper.ToDocument(model);
+            }
+
+            Debug.Print(".NET Class to BsonDocument = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+
+            d = DateTime.Now;
+
+            for (var i = 0; i < 20000; i++)
+            {
+                BsonSerializer.Serialize(doc);
+            }
+
+            Debug.Print("BsonDocument to BsonBytes = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+
+            d = DateTime.Now;
+
+            for (var i = 0; i < 20000; i++)
+            {
+                fastBinaryJSON.BJSON.ToBJSON(model);
+            }
+
+            Debug.Print("FastBinaryJson = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+
+        }
+
+
     }
 }

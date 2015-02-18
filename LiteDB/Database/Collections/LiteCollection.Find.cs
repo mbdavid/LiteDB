@@ -51,7 +51,7 @@ namespace LiteDB
         /// </summary>
         public T FindOne(Expression<Func<T, bool>> predicate)
         {
-            return this.Find(QueryVisitor.Visit(predicate)).FirstOrDefault();
+            return this.Find(_visitor.Visit(predicate)).FirstOrDefault();
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate)
         {
-            return this.Find(QueryVisitor.Visit(predicate));
+            return this.Find(_visitor.Visit(predicate));
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace LiteDB
         /// </summary>
         public int Count(Expression<Func<T, bool>> predicate)
         {
-            return this.Count(QueryVisitor.Visit(predicate));
+            return this.Count(_visitor.Visit(predicate));
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(Expression<Func<T, bool>> predicate)
         {
-            return this.Exists(QueryVisitor.Visit(predicate));
+            return this.Exists(_visitor.Visit(predicate));
         }
     }
 }

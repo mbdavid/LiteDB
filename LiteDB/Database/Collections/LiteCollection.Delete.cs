@@ -104,7 +104,7 @@ namespace LiteDB
         /// </summary>
         public virtual int Delete(Expression<Func<T, bool>> predicate)
         {
-            return this.Delete(QueryVisitor.Visit(predicate));
+            return this.Delete(_visitor.Visit(predicate));
         }
 
         internal virtual void Delete(CollectionPage col, IndexNode node)

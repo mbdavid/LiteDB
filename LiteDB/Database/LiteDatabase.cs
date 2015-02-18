@@ -41,15 +41,14 @@ namespace LiteDB
         /// <param name="connectionString">Full filename or connection string</param>
         public LiteDatabase(string connectionString)
         {
-            // use a glogal mapper to cache mapper classes/bsondoc
-            this.Mapper = BsonMapper.Global;
-
             this.ConnectionString = new ConnectionString(connectionString);
 
             if (!File.Exists(this.ConnectionString.Filename))
             {
                 DiskService.CreateNewDatafile(this.ConnectionString);
             }
+
+            this.Mapper = BsonMapper.Global;
 
             this.Recovery = new RecoveryService(this.ConnectionString);
 
