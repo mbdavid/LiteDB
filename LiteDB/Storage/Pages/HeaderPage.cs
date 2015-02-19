@@ -16,7 +16,7 @@ namespace LiteDB
         /// <summary>
         /// Datafile specification version
         /// </summary>
-        private const byte FILE_VERSION = 3;
+        private const byte FILE_VERSION = 4;
 
         /// <summary>
         /// Get/Set the changeID of data. When a client read pages, all pages are in the same version. But when OpenTransaction, we need validade that current changeID is the sabe that we have in cache
