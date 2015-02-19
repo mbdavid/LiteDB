@@ -4,7 +4,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 in a single DLL - install from NuGet: `Install-Package LiteDB`
+- 100% C# code for .NET 3.5 in a single DLL (less then 200kb)
 - Transaction control - ACID
 - Recovery in writing failure (journal mode)
 - Store POCO classes or BsonDocument
@@ -14,6 +14,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Inital LINQ support for queries
 - Shell command line - [try this online version](http://litedb.azurewebsites.net/)
 - Open source and free for everyone - including commercial use
+- Install from NuGet: `Install-Package LiteDB`
 
 ## Try online
 
@@ -66,44 +67,15 @@ LiteDB is a NoSQL Database based on a document store: a very simple API similar 
 
 ## Documents
 
-LiteDB works with documents to store and retrive data inside data file. Your document definition can be a POCO class or BsonDocument class. In both case, LiteDB will convert your document in a BSON format to store inside disk.
+LiteDB works with documents to store and retrive data inside data file. Your document definition can be a POCO class or BsonDocument class. In both case, LiteDB will convert your document in a [BSON format](http://bsonspec.org/spec.html) to store inside disk.
 
-BSON is a Binary JSON, a serialization for store data objects as binary array. In BSON, we have more data types than JSON. LiteDB supports `Null`, `Array`, `Object`, `Byte`, `ByteArray`, `Char`, `Boolean`, `String`, `Short`, `Int`, `Long`, `UShort`, `UInt`, `ULong`, `Float`, `Double`, `Decimal`, `DateTime` and `Guid`.
+BSON is a Binary JSON, a serialization for store data objects as binary array. In BSON, we have more data types than JSON. LiteDB supports `Null`, `Array`, `Object`, `ByteArray`, `Boolean`, `String`, `Int32`, `In64`, `Double`, `DateTime` and `Guid`.
 
 In LiteDB, documents are limited in 1Mb size.
 
-### Documents using POCO class
-
-POCO class are simple C# classes using only `get/set` properties. It's the best way to create a strong typed documents. Your class must have an identifier property. You can use `Id` named property, `<ClassName>Id` or decorate any property with `[BsonId]` attribute. Your `Id` value must be a unique and not null. Also, `Id` data type must be a valid indexed data type. See Index section.
-
-``` C#
-// A poco entity, must have Id decorated with [BsonId]
-public class Customer
-{
-	public Guid Id { get; set; }
-	public string Name { get; set; }
-	public List<Phone> Phones { get; set; }
-}
-
-// It's not a entity, its a sub document
-public class Phone
-{
-	public int Code { get; set; }
-	public string Number { get; set; }
-	public PhoneType Type { get; set; }
-}
-
-public enum PhoneType { Mobile, Landline }
-``` 
-
-- Internal, document Id is represent as `_id` document attribute
-- Do not use complex data types (like `DataSet`, `DataTable`)
-- Do not use disposable objects (like `Stream`, `Graphics`)
-- Enums will be converted in strings when serialized
-
 ### Documents using BsonDocument
 
-BsonDocument is a special class that maps any document with a internal `Dictionary<string, object>`. Is very useful to read a unknown document type or use as a generic document.
+BsonDocument is a special class that maps any document structure. Is very useful to read a unknown document type or use as a generic document. BsonDocument supports same data type than BSON serialization.
 
 ```C#
 // Create a BsonDocument for Customer with phones
@@ -117,7 +89,41 @@ doc["Phones"][0]["Number"] = "(51) 8000-1234";
 doc["Phones"][0]["Type"] = "Mobile";
 ```
 
-With `BsonDocument` you can create any complex document schema.
+### Documents using POCO class
+
+POCO are simple C# classes using only `get/set` properties. It's the best way to create a strong typed documents. LiteDB will convert your POCO class to BsonDocument before serialize using `BsonMapper` class. See below some rules about POCO class:
+
+- Classes must be public
+- Entity class must have an `Id` named property, `<ClassName>Id` or decorate any property with `[BsonId]` attribute.
+- Only public property (with public get and set) will be converted. Fields are not supported.
+- No circular references
+- Max depth is 20 sub-classes
+- You can define `[BsonIgnore]` to not serialize some property
+- You can define `[BsonField("new_name")]` to rename a property when convert to BsonDocument
+- `BsonMapper` supports:
+	- All .NET basic types, including `Nullables` and `Enum`
+	- Arrays, List<T>, Dictionary<K, T>
+	- Embedded classes
+
+``` C#
+// A POCO Entity class
+public class Customer
+{
+	public Guid Id { get; set; }
+	public string Name { get; set; }
+	public List<Phone> Phones { get; set; }
+}
+
+// A sub class
+public class Phone
+{
+	public int Code { get; set; }
+	public string Number { get; set; }
+	public PhoneType Type { get; set; }
+}
+
+public enum PhoneType { Mobile, Landline }
+``` 
 
 ## Collections - the store
 
@@ -227,5 +233,4 @@ Connection string options to initialize `LiteDatabase` class:
 
 ## Dependency
 
-LiteDB has no external dependency, but use [fastBinaryJson](http://fastbinaryjson.codeplex.com/) as BSON serializer 
-from/to .NET objects. All source are included inside LiteDB source.
+LiteDB has no external dependency - all source are included in LiteDB project.
