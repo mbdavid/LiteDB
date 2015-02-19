@@ -26,14 +26,16 @@ namespace LiteDB
 
             var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
-            var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
+            var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+            var obj = this.Database.Mapper.ToObject<T>(doc);
 
             foreach (var action in _includes)
             {
-                action(doc);
+                action(obj);
             }
 
-            return doc;
+            return obj;
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace LiteDB
         /// </summary>
         public T FindOne(Expression<Func<T, bool>> predicate)
         {
-            return this.Find(QueryVisitor.Visit(predicate)).FirstOrDefault();
+            return this.Find(_visitor.Visit(predicate)).FirstOrDefault();
         }
 
         /// <summary>
@@ -63,20 +65,23 @@ namespace LiteDB
 
             if (col == null) yield break;
 
-            var nodes = query.Run<T>(this.Database, col);
+            var nodes = query.Run(this.Database, col);
 
             foreach (var node in nodes)
             {
                 var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
-                var doc = BsonSerializer.Deserialize<T>(dataBlock.Key, dataBlock.Buffer);
+                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                // get object from BsonDocument
+                var obj = this.Database.Mapper.ToObject<T>(doc);
 
                 foreach (var action in _includes)
                 {
-                    action(doc);
+                    action(obj);
                 }
 
-                yield return doc;
+                yield return obj;
             }
         }
 
@@ -85,7 +90,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate)
         {
-            return this.Find(QueryVisitor.Visit(predicate));
+            return this.Find(_visitor.Visit(predicate));
         }
 
         /// <summary>
@@ -119,7 +124,7 @@ namespace LiteDB
 
             if (col == null) return 0;
 
-            return query.Run<T>(this.Database, col).Count();
+            return query.Run(this.Database, col).Count();
         }
 
         /// <summary>
@@ -127,7 +132,7 @@ namespace LiteDB
         /// </summary>
         public int Count(Expression<Func<T, bool>> predicate)
         {
-            return this.Count(QueryVisitor.Visit(predicate));
+            return this.Count(_visitor.Visit(predicate));
         }
 
         /// <summary>
@@ -141,7 +146,7 @@ namespace LiteDB
 
             if (col == null) return false;
 
-            return query.Run<T>(this.Database, col).FirstOrDefault() != null;
+            return query.Run(this.Database, col).FirstOrDefault() != null;
         }
 
         /// <summary>
@@ -149,7 +154,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(Expression<Func<T, bool>> predicate)
         {
-            return this.Exists(QueryVisitor.Visit(predicate));
+            return this.Exists(_visitor.Visit(predicate));
         }
     }
 }

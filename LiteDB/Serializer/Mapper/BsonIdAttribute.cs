@@ -10,9 +10,9 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Indicate that property will not be persist in BSON serialization
+    /// Indicate that property will be used as BsonDocument Id
     /// </summary>
-    public class BsonIgnoreAttribute : Attribute
+    public class BsonIdAttribute : Attribute
     {
     }
 }

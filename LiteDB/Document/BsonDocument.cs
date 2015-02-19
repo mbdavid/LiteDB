@@ -20,10 +20,16 @@ namespace LiteDB
         {
         }
 
-        public BsonDocument(BsonValue value)
-            : base(value.AsObject.RawValue)
+        public BsonDocument(BsonObject value)
+            : base(value.RawValue)
         {
             if (!this.HasKey("_id")) throw new ArgumentException("BsonDocument must have an _id key");
+        }
+
+        public BsonDocument(BsonObject value, object id)
+            : base(value.RawValue)
+        {
+            this.Id = id;
         }
 
         public object Id 
@@ -32,7 +38,7 @@ namespace LiteDB
             set { this["_id"] = new BsonValue(value); } 
         }
 
-        internal BsonDocument(Dictionary<string, object> obj)
+        public BsonDocument(Dictionary<string, BsonValue> obj)
             : base(obj)
         {
         }

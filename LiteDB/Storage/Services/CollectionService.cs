@@ -40,7 +40,7 @@ namespace LiteDB
         public CollectionPage Add(string name)
         {
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if(!Regex.IsMatch(name, CollectionPage.NAME_PATTERN)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
+            if(!CollectionPage.NamePattern.IsMatch(name)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
 
             var pages = _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
 
@@ -58,7 +58,7 @@ namespace LiteDB
             col.IsDirty = true;
 
             // create PK index
-            var pk = _indexer.CreateIndex(col.PK);
+            var pk = _indexer.CreateIndex(col);
 
             pk.Field = "_id";
             pk.Unique = true;
@@ -83,34 +83,29 @@ namespace LiteDB
             var pages = new HashSet<uint>();
 
             // search for all data page and index page
-            for (byte i = 0; i < col.Indexes.Length; i++)
+            foreach (var index in col.GetIndexes(true))
             {
-                var index = col.Indexes[i];
+                // get all nodes from index
+                var nodes = _indexer.FindAll(index);
 
-                if (!index.IsEmpty)
+                foreach (var node in nodes)
                 {
-                    // get all nodes from index
-                    var nodes = _indexer.FindAll(index);
-
-                    foreach (var node in nodes)
+                    // if is PK index, add dataPages
+                    if(index.Slot == 0)
                     {
-                        if(i == 0)
+                        pages.Add(node.DataBlock.PageID);
+
+                        // read datablock to check if there is any extended page
+                        var block = _data.Read(node.DataBlock, false);
+
+                        if (block.ExtendPageID != uint.MaxValue)
                         {
-                            // if PK index, add data pages too
-                            pages.Add(node.DataBlock.PageID);
-
-                            // read datablock to check if there is any extended page
-                            var block = _data.Read(node.DataBlock, false);
-
-                            if (block.ExtendPageID != uint.MaxValue)
-                            {
-                                _pager.DeletePage(block.ExtendPageID, true);
-                            }
+                            _pager.DeletePage(block.ExtendPageID, true);
                         }
-
-                        // add index page to delete list page
-                        pages.Add(node.Position.PageID);
                     }
+
+                    // add index page to delete list page
+                    pages.Add(node.Position.PageID);
                 }
             }
 
@@ -127,6 +122,7 @@ namespace LiteDB
                 prev.NextPageID = col.NextPageID;
                 prev.IsDirty = true;
             }
+
             if (col.NextPageID != uint.MaxValue)
             {
                 var next = _pager.GetPage<BasePage>(col.NextPageID);

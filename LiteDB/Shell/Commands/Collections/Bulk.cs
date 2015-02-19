@@ -19,9 +19,9 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(db, s);
             var filename = s.Scan(@".*");
             var json = File.ReadAllText(filename, Encoding.UTF8);
-            var docs = JsonSerializer.DeserializeArray<BsonDocument>(json);
+            var docs = JsonSerializer.DeserializeArray(json);
 
-            return col.InsertBulk(docs);
+            return col.InsertBulk(docs.Select(x => x.AsDocument));
         }
     }
 }

@@ -52,7 +52,7 @@ namespace LiteDB
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
-            var page = _cache.ContainsKey(pageID) ? _cache[pageID] : null;
+            var page = _cache.GetOrDefault(pageID, null);
 
             // if a need a specific page but has a BasePage, returns null
             if (page != null && page.GetType() == typeof(BasePage) && typeof(T) != typeof(BasePage))

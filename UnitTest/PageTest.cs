@@ -41,21 +41,12 @@ namespace UnitTest
                 //this.Verify("my_collection_3", db, k);
                 //this.Verify("my_collection_4", db, k);
 
-                Dump.Pages(db);
-
                 db.GetCollection("my_collection_1").Delete(Query.All());
                 //db.GetCollection("my_collection_2").Delete(Query.All());
                 //db.GetCollection("my_collection_3").Delete(Query.All());
                 //db.GetCollection("my_collection_4").Delete(Query.All());
 
-                Dump.Pages(db, "After clear");
-
                 db.FileStorage.Upload("my/foto1.jpg", new MemoryStream(new byte[1024*50]));
-            }
-
-            using (var db = new LiteDatabase(DB.Path(false)))
-            {
-                Dump.Pages(db, "After File");
             }
 
         }

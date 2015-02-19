@@ -24,10 +24,10 @@ namespace LiteDB
             return null;
         }
 
-        internal override IEnumerable<IndexNode> Run<T>(LiteDatabase db, CollectionPage col)
+        internal override IEnumerable<IndexNode> Run(LiteDatabase db, CollectionPage col)
         {
-            var left = this.Left.Run<T>(db, col);
-            var right = this.Right.Run<T>(db, col);
+            var left = this.Left.Run(db, col);
+            var right = this.Right.Run(db, col);
 
             return left.Union(right, new IndexNodeComparer());
         }

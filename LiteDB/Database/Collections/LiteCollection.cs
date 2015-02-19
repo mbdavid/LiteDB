@@ -11,6 +11,7 @@ namespace LiteDB
     {
         private uint _pageID;
         private List<Action<T>> _includes;
+        private QueryVisitor<T> _visitor;
 
         /// <summary>
         /// Get collection name
@@ -27,6 +28,7 @@ namespace LiteDB
             this.Name = name;
             this.Database = db;
             _pageID = uint.MaxValue;
+            _visitor = new QueryVisitor<T>(db.Mapper);
             _includes = new List<Action<T>>();
         }
 

@@ -26,8 +26,11 @@ namespace LiteDB
         /// <summary>
         /// Create a new index and returns head page address (skip list)
         /// </summary>
-        public CollectionIndex CreateIndex(CollectionIndex index)
+        public CollectionIndex CreateIndex(CollectionPage col)
         {
+            // get index slot
+            var index = col.GetFreeIndex();
+
             // get a new index page for first index page
             var page = _pager.NewPage<IndexPage>();
 
@@ -136,7 +139,7 @@ namespace LiteDB
             }
 
             // add/remove indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
             page.IsDirty = true;
 
@@ -182,7 +185,7 @@ namespace LiteDB
             else
             {
                 // add or remove page from free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
+                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
             page.IsDirty = true;

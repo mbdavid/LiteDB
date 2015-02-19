@@ -33,6 +33,8 @@ namespace LiteDB
 
         internal CollectionService Collections { get; private set; }
 
+        public BsonMapper Mapper { get; private set; }
+
         /// <summary>
         /// Starts LiteDB database. Open database file or create a new one if not exits
         /// </summary>
@@ -45,6 +47,8 @@ namespace LiteDB
             {
                 DiskService.CreateNewDatafile(this.ConnectionString);
             }
+
+            this.Mapper = BsonMapper.Global;
 
             this.Recovery = new RecoveryService(this.ConnectionString);
 

@@ -126,15 +126,9 @@ namespace LiteDB
         // used for execute in results (AND/OR)
         internal abstract IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index);
 
-        internal virtual IEnumerable<IndexNode> Run<T>(LiteDatabase db, CollectionPage col)
+        internal virtual IEnumerable<IndexNode> Run(LiteDatabase db, CollectionPage col)
         {
-            var type = typeof(T);
-            var idAttr = type == typeof(BsonDocument) ? "_id" : BsonSerializer.GetIdProperty(type).Name;
-
-            // if you are running a query with Id attribute, lets convert to _id
-            if (this.Field == idAttr) this.Field = "_id";
-
-            var index = col.Indexes.FirstOrDefault(x => x.Field.Equals(this.Field, StringComparison.InvariantCultureIgnoreCase));
+            var index = col.GetIndex(this.Field);
 
             if (index == null) throw new LiteException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
 

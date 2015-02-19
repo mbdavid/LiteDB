@@ -92,7 +92,7 @@ namespace LiteDB
             var chunk = chunks.FindById(LiteFileInfo.GetChunckId(_file.Id, index));
 
             // if chunk is null there is no more chunks
-            return chunk == null ? null : chunk["data"].AsByteArray;
+            return chunk == null ? null : chunk["data"].AsBinary;
         }
 
         #region Not supported operations

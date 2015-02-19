@@ -55,9 +55,11 @@ namespace LiteDB
         {
             var sbs = new StringBuilder[IndexNode.MAX_LEVEL_LENGTH + 1];
             var first = true;
+
             var col = db.GetCollection(collection).GetCollectionPage(false);
             if (col == null) throw new ArgumentException("Invalid collection name");
-            var index = col.Indexes.FirstOrDefault(x => x.Field == field);
+
+            var index = col.GetIndex(field);
             if (index == null) throw new ArgumentException("Invalid index field name");
 
             for (var i = 0; i < sbs.Length; i++)
@@ -190,19 +192,13 @@ namespace LiteDB
                 page.DocumentCount,
                 page.FreeDataPageID.Dump());
 
-            var idx = 0;
-
-            foreach (var i in page.Indexes)
+            foreach (var i in page.GetIndexes(true))
             {
-                if (i.IsEmpty) continue;
-
                 sb.AppendFormat("[{0}] Field: '{1}', Head: {2}, FreeIndexPageID: {3} / ",
-                    idx,
+                    i.Slot,
                     i.Field,
                     i.HeadNode.Dump(),
                     i.FreeIndexPageID.Dump());
-
-                idx++;
             }
         }
 

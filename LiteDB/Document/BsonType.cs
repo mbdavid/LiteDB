@@ -11,27 +11,15 @@ namespace LiteDB
     public enum BsonType
     { 
         Null,
-
         Array,
         Object, 
 
-        Byte,
-        ByteArray,
-        Char,
+        Binary,
         Boolean,
         String,
-
-        Short,
-        Int,
-        Long,
-        UShort,
-        UInt,
-        ULong,
-
-        Float,
+        Int32,
+        Int64,
         Double,
-        Decimal,
-
         DateTime,
         Guid
     }

@@ -12,9 +12,10 @@ namespace LiteDB
     internal class DataPage : BasePage
     {
         /// <summary>
-        /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 15% PAGE_SIZE
+        /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 50% PAGE_AVAILABLE_BYTES
+        /// This value is used for minimize 
         /// </summary>
-        public const int RESERVED_BYTES = 800;
+        public const int DATA_RESERVED_BYTES = PAGE_AVAILABLE_BYTES / 2;
 
         /// <summary>
         /// Returns all data blocks - Each block has one object
@@ -52,7 +53,6 @@ namespace LiteDB
             foreach (var block in this.DataBlocks.Values)
             {
                 writer.Write(block.Position.Index);
-                writer.Write(block.Key);
                 writer.Write(block.ExtendPageID);
                 foreach (var idx in block.IndexRef)
                 {
@@ -73,7 +73,6 @@ namespace LiteDB
 
                 block.Page = this;
                 block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
-                block.Key = reader.ReadIndexKey();
                 block.ExtendPageID = reader.ReadUInt32();
 
                 for(var j = 0; j < CollectionIndex.INDEX_PER_COLLECTION; j++)

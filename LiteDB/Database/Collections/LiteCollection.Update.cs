@@ -11,14 +11,14 @@ namespace LiteDB
         /// <summary>
         /// Update a document in this collection. Returns false if not found document in collection
         /// </summary>
-        public virtual bool Update(T doc)
+        public virtual bool Update(T document)
         {
-            if (doc == null) throw new ArgumentNullException("doc");
+            if (document == null) throw new ArgumentNullException("document");
 
-            // gets document Id
-            var id = BsonSerializer.GetIdValue(doc);
+            // get BsonDocument from object
+            var doc = this.Database.Mapper.ToDocument(document);
 
-            if (id == null) throw new LiteException("Document Id can't be null");
+            if (doc.Id == null) throw new LiteException("Document Id can't be null");
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
@@ -38,7 +38,7 @@ namespace LiteDB
                 }
 
                 // find indexNode from pk index
-                var indexNode = this.Database.Indexer.FindOne(col.PK, id);
+                var indexNode = this.Database.Indexer.FindOne(col.PK, doc.Id);
 
                 // if not found document, no updates
                 if (indexNode == null)
@@ -51,33 +51,28 @@ namespace LiteDB
                 var dataBlock = this.Database.Data.Update(col, indexNode.DataBlock, bytes);
 
                 // delete/insert indexes - do not touch on PK
-                for (byte i = 1; i < col.Indexes.Length; i++)
+                foreach (var index in col.GetIndexes(false))
                 {
-                    var index = col.Indexes[i];
+                    var key = doc.GetPathValue(index.Field);
 
-                    if (!index.IsEmpty)
+                    var node = this.Database.Indexer.GetNode(dataBlock.IndexRef[index.Slot]);
+
+                    // check if my index node was changed
+                    if (node.Key.CompareTo(new IndexKey(key)) != 0)
                     {
-                        var key = BsonSerializer.GetFieldValue(doc, index.Field);
+                        // remove old index node
+                        this.Database.Indexer.Delete(index, node.Position);
 
-                        var node = this.Database.Indexer.GetNode(dataBlock.IndexRef[i]);
+                        // and add a new one
+                        var newNode = this.Database.Indexer.AddNode(index, key);
 
-                        // check if my index node was changed
-                        if (node.Key.CompareTo(new IndexKey(key)) != 0)
-                        {
-                            // remove old index node
-                            this.Database.Indexer.Delete(index, node.Position);
+                        // point my index to data object
+                        newNode.DataBlock = dataBlock.Position;
 
-                            // and add a new one
-                            var newNode = this.Database.Indexer.AddNode(index, key);
+                        // point my dataBlock
+                        dataBlock.IndexRef[index.Slot] = newNode.Position;
 
-                            // point my index to data object
-                            newNode.DataBlock = dataBlock.Position;
-
-                            // point my dataBlock
-                            dataBlock.IndexRef[i] = newNode.Position;
-
-                            dataBlock.Page.IsDirty = true;
-                        }
+                        dataBlock.Page.IsDirty = true;
                     }
                 }
 

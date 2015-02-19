@@ -26,7 +26,7 @@ namespace UnitTest
             var obj = new BsonObject();
             obj["Qtd"] = 3;
             obj["Description"] = "Big beer package";
-            obj["Unit"] = 1299.995m;
+            obj["Unit"] = 1299.995;
             doc["Items"].AsArray.Add(obj);
             doc["Items"].AsArray.Add("string-one");
             doc["Items"].AsArray.Add(null);
@@ -45,25 +45,15 @@ namespace UnitTest
 
             var json = JsonSerializer.Serialize(o, true);
 
-            var d = JsonSerializer.Deserialize<BsonDocument>(json);
+            var d = JsonSerializer.Deserialize(json).AsDocument;
 
             Assert.AreEqual(d["Date"].AsDateTime, o["Date"].AsDateTime);
             Assert.AreEqual(d["CustomerId"].AsGuid, o["CustomerId"].AsGuid);
-            Assert.AreEqual(d["Items"].AsArray.Length, o["Items"].AsArray.Length);
+            Assert.AreEqual(d["Items"].AsArray.Count, o["Items"].AsArray.Count);
             Assert.AreEqual(d.Id, 123);
-            Assert.AreEqual(d["_id"].AsLong, o["_id"].AsLong);
+            Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
 
 
         }
-
-        [TestMethod]
-        public void Json_Perf_Test()
-        {
-            var f = @"C:\Github\LiteDB_dev\LiteDB.Shell\bin\Debug\test-20000.json";
-            var json = File.ReadAllText(f);
-
-            JsonSerializer.Deserialize(json);
-        }
-
     }
 }
