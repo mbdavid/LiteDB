@@ -53,6 +53,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> spool on|off", "Spool all output in a spool file");
                 d.WriteHelp("> -- comment", "Do nothing, its just a comment");
                 d.WriteHelp("> /<command>/", "Support for multi line command");
+                d.WriteHelp("> version", "Show LiteDB version");
                 d.WriteHelp("> exit", "Close LiteDB shell");
 
                 d.WriteHelp();
