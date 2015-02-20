@@ -44,7 +44,8 @@ namespace LiteDB
             }
             set
             {
-                if (!PropertyPattern.IsMatch(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
+                //TODO: implement more efficient or use a internal method when Mapper/Serialize/Deserialize
+                //if (!PropertyPattern.IsMatch(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
 
                 this.RawValue[name] = value;
             }
