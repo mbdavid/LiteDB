@@ -63,7 +63,7 @@ namespace LiteDB
                     var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
                     // adding index
-                    var key = doc.GetPathValue(field);
+                    var key = doc.Get(field);
 
                     var newNode = this.Database.Indexer.AddNode(index, key);
 

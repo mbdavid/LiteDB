@@ -33,11 +33,15 @@ namespace LiteDB
 
             var type = obj.GetType();
 
-            // basic Bson data types
-            if (obj is String || obj is Int32 || obj is Int64 || obj is Double || obj is Boolean || obj is Byte[] || obj is DateTime || obj is Guid)
-            {
-                return new BsonValue(obj);
-            }
+            // basic Bson data types (cast datatype for better performance optimization)
+            if (obj is String) return new BsonValue((String)obj);
+            else if (obj is Int32) return new BsonValue((Int32)obj);
+            else if (obj is Int64) return new BsonValue((Int64)obj);
+            else if (obj is Double) return new BsonValue((Double)obj);
+            else if (obj is Boolean) return new BsonValue((Boolean)obj);
+            else if (obj is Byte[]) return new BsonValue((Byte[])obj);
+            else if (obj is DateTime) return new BsonValue((DateTime)obj);
+            else if (obj is Guid) return new BsonValue((Guid)obj);
             // basic .net type to convert to bson
             else if (obj is Int16 || obj is UInt16 || obj is Byte)
             {
@@ -58,7 +62,7 @@ namespace LiteDB
             // check if is a list or array
             else if (obj is IList || type.IsArray)
             {
-                return this.SerializeArray(obj as IList, depth);
+                return this.SerializeArray(obj as IEnumerable, depth);
             }
             // for dictionary
             else if (obj is IDictionary)

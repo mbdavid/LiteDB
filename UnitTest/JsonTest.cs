@@ -33,7 +33,7 @@ namespace UnitTest
             doc["Items"].AsArray.Add(true);
             doc["Items"].AsArray.Add(DateTime.Now);
 
-            doc["MyObj"]["IsFirstId"] = true;
+            doc.Set("MyObj.IsFirstId", true);
 
             return doc;
         }

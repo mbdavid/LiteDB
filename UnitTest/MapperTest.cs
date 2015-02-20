@@ -105,38 +105,78 @@ namespace UnitTest
             var model = CreateModel();
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter();
+            var size = 100000;
 
             // Cache before
             var doc = mapper.ToDocument(model);
-            //fastBinaryJSON.BJSON.ToBJSON(model);
+            var bytesBson = BsonSerializer.Serialize(doc);
+            var bytesJson = fastBinaryJSON.BJSON.ToBJSON(model);
 
-            var d = DateTime.Now;
+
+            Debug.Print("--------------------------");
+
+            var sm = Stopwatch.StartNew();
 
             // .NET Class to BsonDocument
-            for (var i = 0; i < 20000; i++)
+            for (var i = 0; i < size; i++)
             {
                 mapper.ToDocument(model);
             }
 
-            Debug.Print(".NET Class to BsonDocument = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+            sm.Stop();
 
-            d = DateTime.Now;
+            Debug.Print(".NET Class to BsonDocument = " + sm.ElapsedMilliseconds);
 
-            for (var i = 0; i < 20000; i++)
+            sm.Restart();
+
+            for (var i = 0; i < size; i++)
             {
                 BsonSerializer.Serialize(doc);
             }
 
-            Debug.Print("BsonDocument to BsonBytes = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+            Debug.Print("BsonDocument to BsonBytes = " + sm.ElapsedMilliseconds);
 
-            //d = DateTime.Now;
-            //
-            //for (var i = 0; i < 20000; i++)
-            //{
-            //    fastBinaryJSON.BJSON.ToBJSON(model);
-            //}
-            //
-            //Debug.Print("FastBinaryJson = " + DateTime.Now.Subtract(d).TotalMilliseconds);
+            sm.Restart();
+
+            for (var i = 0; i < size; i++)
+            {
+                fastBinaryJSON.BJSON.ToBJSON(model);
+            }
+
+            Debug.Print("fastBinaryJson (mapper+serialize) = " + sm.ElapsedMilliseconds);
+
+            Debug.Print("=====================");
+
+            sm.Restart();
+
+            // BsonDocument to .NET class
+            for (var i = 0; i < size; i++)
+            {
+                mapper.ToObject<MyClass>(doc);
+            }
+
+            sm.Stop();
+
+            Debug.Print("BsonDocument to .NET Class = " + sm.ElapsedMilliseconds);
+
+            sm.Restart();
+
+            for (var i = 0; i < size; i++)
+            {
+                BsonSerializer.Deserialize(bytesBson);
+            }
+
+            Debug.Print("BsonBytes to BsonDocument = " + sm.ElapsedMilliseconds);
+
+
+            sm.Restart();
+
+            for (var i = 0; i < size; i++)
+            {
+                fastBinaryJSON.BJSON.ToObject<MyClass>(bytesJson);
+            }
+
+            Debug.Print("fastBinaryJson (mapper+deserialize) = " + sm.ElapsedMilliseconds);
 
         }
 

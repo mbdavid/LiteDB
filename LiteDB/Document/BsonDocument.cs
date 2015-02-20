@@ -37,10 +37,5 @@ namespace LiteDB
             get { return this["_id"].RawValue; }
             set { this["_id"] = new BsonValue(value); } 
         }
-
-        public BsonDocument(Dictionary<string, BsonValue> obj)
-            : base(obj)
-        {
-        }
     }
 }

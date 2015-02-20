@@ -27,78 +27,70 @@ namespace LiteDB
 
         private void WriteElement(BinaryWriter writer, string key, BsonValue value)
         {
-            if (value.IsDouble)
+            switch (value.Type)
             {
-                writer.Write((byte)0x01);
-                this.WriteCString(writer, key);
-                writer.Write(value.AsDouble);
-            }
-            else if (value.IsString)
-            {
-                writer.Write((byte)0x02);
-                this.WriteCString(writer, key);
-                this.WriteString(writer, value.AsString);
-            }
-            else if (value.IsObject)
-            {
-                writer.Write((byte)0x03);
-                this.WriteCString(writer, key);
-                this.WriteDocument(writer, value.AsObject);
-            }
-            else if (value.IsArray)
-            {
-                writer.Write((byte)0x04);
-                this.WriteCString(writer, key);
-                this.WriteArray(writer, value.AsArray);
-            }
-            else if (value.IsBinary)
-            {
-                writer.Write((byte)0x05);
-                this.WriteCString(writer, key);
-                var bytes = value.AsBinary;
-                writer.Write(bytes.Length);
-                writer.Write((byte)0x00); // subtype 00 - Generic binary subtype
-                writer.Write(bytes);
-            }
-            else if (value.IsGuid)
-            {
-                writer.Write((byte)0x05);
-                this.WriteCString(writer, key);
-                var bytes = value.AsGuid.ToByteArray();
-                writer.Write(bytes.Length);
-                writer.Write((byte)0x04); // UUID
-                writer.Write(bytes);
-            }
-            else if (value.IsBoolean)
-            {
-                writer.Write((byte)0x08);
-                this.WriteCString(writer, key);
-                writer.Write((byte)(value.AsBoolean ? 0x01 : 0x00));
-            }
-            else if (value.IsDateTime)
-            {
-                writer.Write((byte)0x09);
-                this.WriteCString(writer, key);
-                var utc = value.AsDateTime.ToUniversalTime();
-                var ts = utc - UnixEpoch;
-                writer.Write(Convert.ToInt64(ts.TotalMilliseconds));
-            }
-            else if (value.IsNull)
-            {
-                writer.Write((byte)0x0A);
-                this.WriteCString(writer, key);
-            }
-            else if (value.IsInt32)
-            {
-                writer.Write((byte)0x10);
-                this.WriteCString(writer, key);
-                writer.Write(value.AsInt32);
-            }
-            else if (value.IsInt64)
-            {
-                writer.Write((byte)0x12);
-                this.WriteCString(writer, key);
-                writer.Write(value.AsInt64);
+                case BsonType.Double:
+                    writer.Write((byte)0x01);
+                    this.WriteCString(writer, key);
+                    writer.Write((Double)value.RawValue);
+                    break;
+                case BsonType.String:
+                    writer.Write((byte)0x02);
+                    this.WriteCString(writer, key);
+                    this.WriteString(writer, (String)value.RawValue);
+                    break;
+                case BsonType.Object:
+                    writer.Write((byte)0x03);
+                    this.WriteCString(writer, key);
+                    this.WriteDocument(writer, new BsonObject((Dictionary<string, BsonValue>)value.RawValue));
+                    break;
+                case BsonType.Array:
+                    writer.Write((byte)0x04);
+                    this.WriteCString(writer, key);
+                    this.WriteArray(writer, new BsonArray((List<BsonValue>)value.RawValue));
+                    break;
+                case BsonType.Binary:
+                    writer.Write((byte)0x05);
+                    this.WriteCString(writer, key);
+                    var bytes = (byte[])value.RawValue;
+                    writer.Write(bytes.Length);
+                    writer.Write((byte)0x00); // subtype 00 - Generic binary subtype
+                    writer.Write(bytes);
+                    break;
+                case BsonType.Guid:
+                    writer.Write((byte)0x05);
+                    this.WriteCString(writer, key);
+                    var guid = ((Guid)value.RawValue).ToByteArray();
+                    writer.Write(guid.Length);
+                    writer.Write((byte)0x04); // UUID
+                    writer.Write(guid);
+                    break;
+                case BsonType.Boolean:
+                    writer.Write((byte)0x08);
+                    this.WriteCString(writer, key);
+                    writer.Write((byte)(((Boolean)value.RawValue) ? 0x01 : 0x00));
+                    break;
+                case BsonType.DateTime:
+                    writer.Write((byte)0x09);
+                    this.WriteCString(writer, key);
+                    var utc = ((DateTime)value.RawValue).ToUniversalTime();
+                    var ts = utc - UnixEpoch;
+                    writer.Write(Convert.ToInt64(ts.TotalMilliseconds));
+                    break;
+                case BsonType.Null:
+                    writer.Write((byte)0x0A);
+                    this.WriteCString(writer, key);
+                    break;
+                case BsonType.Int32:
+                    writer.Write((byte)0x10);
+                    this.WriteCString(writer, key);
+                    writer.Write((Int32)value.RawValue);
+                    break;
+                case BsonType.Int64:
+                    writer.Write((byte)0x12);
+                    this.WriteCString(writer, key);
+                    writer.Write((Int64)value.RawValue);
+                    break;
             }
         }
 

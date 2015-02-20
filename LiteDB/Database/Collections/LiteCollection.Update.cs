@@ -53,7 +53,7 @@ namespace LiteDB
                 // delete/insert indexes - do not touch on PK
                 foreach (var index in col.GetIndexes(false))
                 {
-                    var key = doc.GetPathValue(index.Field);
+                    var key = doc.Get(index.Field);
 
                     var node = this.Database.Indexer.GetNode(dataBlock.IndexRef[index.Slot]);
 

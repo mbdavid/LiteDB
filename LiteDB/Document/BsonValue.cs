@@ -14,8 +14,6 @@ namespace LiteDB
     /// </summary>
     public class BsonValue
     {
-        public static Regex PropertyPattern = new Regex(@"^\w[\w_-]*$");
-
         public BsonType Type { get; private set; }
         public virtual object RawValue { get; private set; }
 
@@ -26,6 +24,7 @@ namespace LiteDB
         public BsonValue()
         {
             this.Type = BsonType.Null;
+            this.RawValue = null;
         }
 
         public BsonValue(List<BsonValue> value)
@@ -99,8 +98,8 @@ namespace LiteDB
             this.RawValue = value;
 
             if (value == null) this.Type = BsonType.Null;
-            else if (value is List<object>) this.Type = BsonType.Array;
-            else if (value is Dictionary<string, object>) this.Type = BsonType.Object;
+            else if (value is List<BsonValue>) this.Type = BsonType.Array;
+            else if (value is Dictionary<string, BsonValue>) this.Type = BsonType.Object;
             else if (value is byte[]) this.Type = BsonType.Binary;
             else if (value is bool) this.Type = BsonType.Boolean;
             else if (value is string) this.Type = BsonType.String;
@@ -116,36 +115,6 @@ namespace LiteDB
                 this.RawValue = v.RawValue;
             }
             else throw new InvalidCastException("Value is not a valid data type");
-        }
-
-        #endregion
-
-        #region "this" operators for BsonObject/BsonArray
-
-        public BsonValue this[string name]
-        {
-            get
-            {
-                return this.AsObject.RawValue.GetOrDefault(name, BsonValue.Null);
-            }
-            set
-            {
-                if (!PropertyPattern.IsMatch(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
-
-                this.AsObject.RawValue[name] = value == null ? BsonValue.Null : value;
-            }
-        }
-
-        public BsonValue this[int index]
-        {
-            get
-            {
-                return this.AsArray.RawValue.ElementAt(index);
-            }
-            set
-            {
-                this.AsArray.RawValue[index] = value == null ? BsonValue.Null : value;
-            }
         }
 
         #endregion
@@ -248,7 +217,7 @@ namespace LiteDB
 
         public bool IsDocument
         {
-            get { return this.Type == BsonType.Object && !this["_id"].IsNull; }
+            get { return this.Type == BsonType.Object && ((Dictionary<string, BsonValue>)this.RawValue).GetOrDefault("_id").IsNull == false; }
         }
 
         public bool IsInt32

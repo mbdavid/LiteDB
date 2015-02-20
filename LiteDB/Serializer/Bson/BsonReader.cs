@@ -29,11 +29,11 @@ namespace LiteDB
 
             if (type == 0x01) // Double
             {
-                return _reader.ReadDouble();
+                return new BsonValue(_reader.ReadDouble());
             }
             else if (type == 0x02) // String
             {
-                return this.ReadString();
+                return new BsonValue(this.ReadString());
             }
             else if (type == 0x03) // Document
             {
@@ -51,19 +51,19 @@ namespace LiteDB
 
                 switch (subType)
                 {
-                    case 0x00: return bytes;
-                    case 0x04: return new Guid(bytes);
+                    case 0x00: return new BsonValue(bytes);
+                    case 0x04: return new BsonValue(new Guid(bytes));
                 }
             }
             else if (type == 0x08) // Boolean
             {
-                return _reader.ReadBoolean();
+                return new BsonValue(_reader.ReadBoolean());
             }
             else if (type == 0x09) // DateTime
             {
                 var ts = _reader.ReadInt64();
 
-                return BsonWriter.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
+                return new BsonValue(BsonWriter.UnixEpoch.AddMilliseconds(ts).ToLocalTime());
             }
             else if (type == 0x0A) // Null
             {
@@ -71,11 +71,11 @@ namespace LiteDB
             }
             else if (type == 0x10) // Int32
             {
-                return _reader.ReadInt32();
+                return new BsonValue(_reader.ReadInt32());
             }
             else if (type == 0x12) // Int64
             {
-                return _reader.ReadInt64();
+                return new BsonValue(_reader.ReadInt64());
             }
 
             throw new LiteException("Bson type not supported");

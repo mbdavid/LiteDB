@@ -22,17 +22,15 @@ namespace UnitTest
             doc["MyNull"] = null;
             doc["EmptyObj"] = new BsonObject();
             doc["EmptyString"] = "";
-            doc["Customer"] = new BsonObject();
-            doc["Customer"]["Address"] = new BsonObject();
-            doc["Customer"]["Address"]["Street"] = "Av. Cacapava";
+            doc.Set("Customer.Address.Street", "Av. Cacapava");
 
 
             doc["Items"] = new BsonArray();
 
             doc["Items"].AsArray.Add(new BsonObject());
-            doc["Items"].AsArray[0]["Qtd"] = 3;
-            doc["Items"].AsArray[0]["Description"] = "Big beer package";
-            doc["Items"].AsArray[0]["Unit"] = (double)10 / (double)3;
+            doc["Items"].AsArray[0].AsObject["Qtd"] = 3;
+            doc["Items"].AsArray[0].AsObject["Description"] = "Big beer package";
+            doc["Items"].AsArray[0].AsObject["Unit"] = (double)10 / (double)3;
 
             doc["Items"].AsArray.Add("string-one");
             doc["Items"].AsArray.Add(null);
@@ -64,8 +62,8 @@ namespace UnitTest
             Assert.AreEqual(o["EmptyString"].AsString, d["EmptyString"].AsString);
 
             Assert.AreEqual(o["Items"].AsArray.Count, d["Items"].AsArray.Count);
-            Assert.AreEqual(o["Items"][0]["Unit"].AsDouble, d["Items"][0]["Unit"].AsDouble);
-            Assert.AreEqual(o["Items"][4].AsDateTime.ToString(), d["Items"][4].AsDateTime.ToString());
+            Assert.AreEqual(o["Items"].AsArray[0].AsObject["Unit"].AsDouble, d["Items"].AsArray[0].AsObject["Unit"].AsDouble);
+            Assert.AreEqual(o["Items"].AsArray[4].AsDateTime.ToString(), d["Items"].AsArray[4].AsDateTime.ToString());
 
 
         }

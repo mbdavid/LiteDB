@@ -25,6 +25,18 @@ namespace LiteDB
         {
         }
 
+        public BsonValue this[int index]
+        {
+            get
+            {
+                return this.RawValue.ElementAt(index);
+            }
+            set
+            {
+                this.RawValue[index] = value == null ? BsonValue.Null : value;
+            }
+        }
+
         public void Add(BsonValue value)
         {
             if (value == null) value = BsonValue.Null;
