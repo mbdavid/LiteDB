@@ -18,7 +18,7 @@ namespace LiteDB
     {
         public string PropertyName { get; set; }
         public Type PropertyType { get; set; }
-        public string ResolvedName { get; set; }
+        public string FieldName { get; set; }
         public GenericGetter Getter { get; set; }
         public GenericSetter Setter { get; set; }
     }

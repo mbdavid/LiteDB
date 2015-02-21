@@ -95,7 +95,7 @@ namespace LiteDB
             foreach (var key in dict.Keys)
             {
                 var value = dict[key];
-                o.Add(key.ToString(), this.Serialize(value, depth));
+                o.RawValue[key.ToString()] = this.Serialize(value, depth);
             }
 
             return o;
@@ -113,7 +113,7 @@ namespace LiteDB
 
                 if (value == null && this.SerializeNullValues == false) continue;
 
-                o.Add(prop.ResolvedName, this.Serialize(value, depth));
+                o.RawValue[prop.FieldName] = this.Serialize(value, depth);
             }
 
             return o;

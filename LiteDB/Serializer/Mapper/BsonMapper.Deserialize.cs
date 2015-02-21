@@ -83,7 +83,6 @@ namespace LiteDB
             {
                 return this.DeserializeArray(type.GetElementType(), value.AsArray);
             }
-            //TODO: custom types here
 
             // create instance for object type
             var o = Reflection.CreateInstance(type);
@@ -147,7 +146,7 @@ namespace LiteDB
 
             foreach (var prop in props.Values)
             {
-                var val = value[prop.ResolvedName];
+                var val = value[prop.FieldName];
 
                 if (!val.IsNull)
                 {

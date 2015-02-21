@@ -17,7 +17,7 @@ namespace LiteDB.Shell.Commands
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             var id = this.ReadId(s);
-            var metadata = new JsonReader().ReadValue(s).AsObject;
+            var metadata = JsonSerializer.Deserialize(s).AsObject;
 
             return db.FileStorage.SetMetadata(id, metadata);
         }

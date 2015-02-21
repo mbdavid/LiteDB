@@ -151,7 +151,7 @@ namespace LiteDB
 
             if (map.TryGetValue(propInfo.Name, out prop))
             {
-                return prop.ResolvedName;
+                return prop.FieldName;
             }
             else
             {

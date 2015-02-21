@@ -12,11 +12,11 @@ namespace LiteDB
     /// <summary>
     /// Set a name to this property in BsonDocument
     /// </summary>
-    public class BsonPropertyAttribute : Attribute
+    public class BsonFieldAttribute : Attribute
     {
         public string Name { get; set; }
 
-        public BsonPropertyAttribute(string name)
+        public BsonFieldAttribute(string name)
         {
             this.Name = name;
         }

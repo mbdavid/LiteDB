@@ -1,208 +1,166 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// A class that read a json string using a tokenizer (without regex)
+    /// </summary>
     internal class JsonReader
     {
-        #region Regular expressions
+        private JsonTokenizer _tokenizer = null;
 
-        private static Regex WHITESPACE = new Regex(@"^\s*");
-        private static Regex NULL = new Regex(@"^null");
-        private static Regex BEGIN_ARRAY = new Regex(@"^\[");
-        private static Regex END_ARRAY = new Regex(@"^\]");
-        private static Regex EXT_DATA = new Regex(@"^{\s*[""]?\$\w+[""]?\s*:\s*""[^""]*""\s*}");
-        private static Regex BEGIN_DOC = new Regex(@"^\{");
-        private static Regex END_DOC = new Regex(@"^\}");
-        private static Regex BEGIN_STRING = new Regex("^\"");
-        private static Regex STRING = new Regex(@"(?:[^""\\]|\\.)*");
-        private static Regex NUMBER = new Regex(@"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?");
-        private static Regex BOOLEAN = new Regex(@"^(true|false)");
-        private static Regex KEY = new Regex(@"^[\w$]+");
-        private static Regex COLON = new Regex(@"\s*:\s*");
-        private static Regex COMMA = new Regex(@"^,");
+        public long Position { get { return _tokenizer.Position; } }
 
-        #endregion
-
-        public BsonValue Deserialize(string json)
+        public JsonReader(TextReader reader)
         {
-            if(string.IsNullOrEmpty(json)) return new BsonObject();
+            if (reader == null) throw new ArgumentNullException("reader");
 
-            var s = new StringScanner(json.Trim());
-
-            return this.ReadValue(s);
+            _tokenizer = new JsonTokenizer(reader);
         }
 
-        internal BsonValue ReadValue(StringScanner s)
+        public BsonValue Deserialize()
         {
-            s.Scan(WHITESPACE);
+            var token = _tokenizer.ReadToken();
 
-            if (s.Scan(NULL).Length > 0)
-            {
-                return BsonValue.Null;
-            }
-            else if (s.Match(BEGIN_ARRAY))
-            {
-                return this.ReadArray(s);
-            }
-            else if (s.Match(EXT_DATA))
-            {
-                return this.ReadExtendDataType(s); // must precede ReadObject
-            }
-            else if (s.Match(BEGIN_DOC))
-            {
-                return this.ReadObject(s);
-            }
-            else if (s.Match(BEGIN_STRING))
-            {
-                return new BsonValue(this.ReadString(s));
-            }
-            else if (s.Match(BOOLEAN))
-            {
-                return new BsonValue(bool.Parse(s.Scan(BOOLEAN)));
-            }
-            else if (s.Match(NUMBER))
-            {
-                return this.ReadNumber(s);
-            }
+            if (token.TokenType == JsonTokenType.EOF) return BsonValue.Null;
 
-            throw new ArgumentException("String is not a valid json");
+            var value = this.ReadValue(token);
+
+            return value;
         }
 
-        private BsonObject ReadObject(StringScanner s)
+        public IEnumerable<BsonValue> DeserializeArray()
         {
-            var obj = new BsonObject();
+            var token = _tokenizer.ReadToken();
 
-            s.Scan(BEGIN_DOC);
-            s.Scan(WHITESPACE);
+            if (token.TokenType == JsonTokenType.EOF) yield break;
 
-            while (!s.Match(END_DOC))
+            token.Expect(JsonTokenType.BeginArray);
+
+            token = _tokenizer.ReadToken();
+
+            while (token.TokenType != JsonTokenType.EndArray)
             {
-                var key = this.ReadKey(s);
+                yield return this.ReadValue(token);
 
-                s.Scan(COLON);
+                token = _tokenizer.ReadToken();
 
-                obj[key] = this.ReadValue(s);
-
-                s.Scan(WHITESPACE);
-
-                if(s.Scan(COMMA).Length  == 0) break;
+                if (token.TokenType == JsonTokenType.Comma)
+                {
+                    token = _tokenizer.ReadToken();
+                }
             }
 
-            if (s.Scan(END_DOC).Length == 0) throw new ArgumentException("Missing close json object symbol");
-
-            return obj;
-        }
-
-        private BsonArray ReadArray(StringScanner s)
-        {
-            var arr = new BsonArray();
-
-            s.Scan(BEGIN_ARRAY);
-            s.Scan(WHITESPACE);
-
-            while(!s.Match(END_ARRAY))
-            {
-                arr.Add(this.ReadValue(s));
-
-                s.Scan(WHITESPACE);
-
-                if(s.Scan(COMMA).Length  == 0) break;
-            }
-
-            if(s.Scan(END_ARRAY).Length == 0) throw new ArgumentException("Missing close json array symbol");
-
-            return arr;
-        }
-
-        public IEnumerable<BsonValue> ReadEnumerable(string json)
-        {
-            var s = new StringScanner(json);
-
-            s.Scan(WHITESPACE);
-
-            if (s.Scan(BEGIN_ARRAY).Length == 0) throw new ArgumentException("String is not a json array");
-
-            while (!s.Match(END_ARRAY))
-            {
-                yield return this.ReadValue(s);
-
-                s.Scan(WHITESPACE);
-
-                if (s.Scan(COMMA).Length == 0) break;
-            }
-
-            if (s.Scan(END_ARRAY).Length == 0) throw new ArgumentException("Missing close json array symbol");
+            token.Expect(JsonTokenType.EndArray);
 
             yield break;
         }
 
-        private string ReadString(StringScanner s)
+        internal BsonValue ReadValue(JsonToken token)
         {
-            if(s.Scan(BEGIN_STRING).Length == 0) throw new ArgumentException("Invalid json string");
+            switch (token.TokenType)
+            {
+                case JsonTokenType.String: return token.Token;
+                case JsonTokenType.BeginDoc: return this.ReadObject();
+                case JsonTokenType.BeginArray: return this.ReadArray();
+                case JsonTokenType.Number: return token.Token.Contains(".") ? 
+                    new BsonValue(Convert.ToDouble(token.Token, CultureInfo.InvariantCulture.NumberFormat)) : 
+                    new BsonValue(Convert.ToInt32(token.Token));
+                case JsonTokenType.Word:
+                    switch (token.Token)
+                    {
+                        case "null": return BsonValue.Null;
+                        case "true": return true;
+                        case "false": return false;
+                        default: throw new LiteException("Unexpected json token: " + token.Token);
+                    }
+            }
 
-            var str = s.ScanUntil(STRING);
-
-            if (s.Scan(BEGIN_STRING).Length == 0) throw new ArgumentException("Invalid json string");
-
-            return str;
+            throw new LiteException("Unexpected json token: " + token.Token);
         }
 
-        private BsonValue ReadNumber(StringScanner s)
+        private BsonValue ReadObject()
         {
-            var nf = CultureInfo.InvariantCulture.NumberFormat;
-            var value = s.Scan(NUMBER);
+            var obj = new BsonObject();
 
-            if (value.Contains("."))
-            {
-                return new BsonValue(Convert.ToDouble(value, nf));
-            }
-            else
-            {
-                return new BsonValue(Convert.ToInt32(value));
-            }
-        }
+            var token = _tokenizer.ReadToken();
 
-        private BsonValue ReadExtendDataType(StringScanner s)
-        {
-            s.Scan(BEGIN_DOC);
-            var key = this.ReadKey(s);
-            s.Scan(COLON);
-            var value = this.ReadString(s);
-            s.Scan(WHITESPACE);
-            s.Scan(END_DOC);
-
-            try
+            while (token.TokenType != JsonTokenType.EndDoc)
             {
-                switch (key)
+                token.Expect(JsonTokenType.String, JsonTokenType.Word);
+
+                var key = token.Token;
+
+                token = _tokenizer.ReadToken();
+
+                token.Expect(JsonTokenType.Colon);
+
+                var value = this.ReadValue(_tokenizer.ReadToken());
+
+                if (key[0] == '$')
                 {
-                    case "$date": return new BsonValue(DateTime.Parse(value).ToLocalTime());
-                    case "$guid": return new BsonValue(new Guid(value));
-                    case "$numberLong": return new BsonValue(Convert.ToInt64(value));
-                    case "$binary": return new BsonValue(Convert.FromBase64String(value));
+                    return this.ReadExtendedDataType(key, value);
+                }
+
+                obj[key] = value;
+
+                token = _tokenizer.ReadToken();
+
+                if(token.TokenType == JsonTokenType.Comma)
+                {
+                    token = _tokenizer.ReadToken();
                 }
             }
-            catch (Exception ex)
+
+            return obj;
+        }
+
+        private BsonArray ReadArray()
+        {
+            var arr = new BsonArray();
+
+            var token = _tokenizer.ReadToken();
+
+            while (token.TokenType != JsonTokenType.EndArray)
             {
-                throw new FormatException("Invalid " + key + " key in " + value, ex);
+                var value = this.ReadValue(token);
+
+                arr.Add(value);
+
+                token = _tokenizer.ReadToken();
+
+                if(token.TokenType == JsonTokenType.Comma)
+                {
+                    token = _tokenizer.ReadToken();
+                }
             }
 
-            throw new ArgumentException("Not supported json extended format: " + key);
+            return arr;
         }
 
-        private string ReadKey(StringScanner s)
+        private BsonValue ReadExtendedDataType(string key, string value)
         {
-            s.Scan(WHITESPACE);
+            BsonValue val;
 
-            var key = s.Scan(KEY);
+            switch (key)
+            {
+                case "$date": val = new BsonValue(DateTime.Parse(value).ToLocalTime()); break;
+                case "$guid": val = new BsonValue(new Guid(value)); break;
+                case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
+                case "$binary": val = new BsonValue(Convert.FromBase64String(value)); break;
+                default: throw new LiteException("Not supported json extended format: " + key);
+            }
 
-            if (key.Length == 0) key = this.ReadString(s);
+            _tokenizer.ReadToken().Expect(JsonTokenType.EndDoc);
 
-            return key;
+            return val;
         }
+
     }
 }

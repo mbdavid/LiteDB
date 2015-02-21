@@ -14,7 +14,7 @@ namespace UnitTest
     public class MyClass
     {
         public int Id { get; set; }
-        [BsonProperty("MY-STRING")]
+        [BsonField("MY-STRING")]
         public string MyString { get; set; }
         public Guid MyGuid { get; set; }
         public DateTime MyDateTime { get; set; }
@@ -110,7 +110,7 @@ namespace UnitTest
             // Cache before
             var doc = mapper.ToDocument(model);
             var bytesBson = BsonSerializer.Serialize(doc);
-            var bytesJson = fastBinaryJSON.BJSON.ToBJSON(model);
+            //var bytesJson = fastBinaryJSON.BJSON.ToBJSON(model);
 
 
             Debug.Print("--------------------------");
@@ -136,14 +136,14 @@ namespace UnitTest
 
             Debug.Print("BsonDocument to BsonBytes = " + sm.ElapsedMilliseconds);
 
-            sm.Restart();
+            //sm.Restart();
 
-            for (var i = 0; i < size; i++)
-            {
-                fastBinaryJSON.BJSON.ToBJSON(model);
-            }
+            //for (var i = 0; i < size; i++)
+            //{
+            //    fastBinaryJSON.BJSON.ToBJSON(model);
+            //}
 
-            Debug.Print("fastBinaryJson (mapper+serialize) = " + sm.ElapsedMilliseconds);
+            //Debug.Print("fastBinaryJson (mapper+serialize) = " + sm.ElapsedMilliseconds);
 
             Debug.Print("=====================");
 
@@ -171,12 +171,12 @@ namespace UnitTest
 
             sm.Restart();
 
-            for (var i = 0; i < size; i++)
-            {
-                fastBinaryJSON.BJSON.ToObject<MyClass>(bytesJson);
-            }
+            //for (var i = 0; i < size; i++)
+            //{
+            //    fastBinaryJSON.BJSON.ToObject<MyClass>(bytesJson);
+            //}
 
-            Debug.Print("fastBinaryJson (mapper+deserialize) = " + sm.ElapsedMilliseconds);
+            //Debug.Print("fastBinaryJson (mapper+deserialize) = " + sm.ElapsedMilliseconds);
 
         }
 

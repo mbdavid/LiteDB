@@ -27,6 +27,7 @@ namespace LiteDB
 
         private void WriteElement(BinaryWriter writer, string key, BsonValue value)
         {
+            // cast RawValue to avoid one if on As<Type>
             switch (value.Type)
             {
                 case BsonType.Double:
@@ -105,7 +106,7 @@ namespace LiteDB
 
                 foreach (var key in obj.Keys)
                 {
-                    this.WriteElement(w, key, obj[key]);
+                    this.WriteElement(w, key, obj[key] ?? BsonValue.Null);
                 }
 
                 writer.Write((Int32)mem.Position);
@@ -122,7 +123,7 @@ namespace LiteDB
 
                 for (var i = 0; i < arr.Count; i++)
                 {
-                    this.WriteElement(w, i.ToString(), arr[i]);
+                    this.WriteElement(w, i.ToString(), arr[i] ?? BsonValue.Null);
                 }
 
                 writer.Write((Int32)mem.Position);

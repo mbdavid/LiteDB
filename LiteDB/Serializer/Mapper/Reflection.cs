@@ -87,14 +87,14 @@ namespace LiteDB
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
                 // check if property has [BsonProperty]
-                var attr = (BsonPropertyAttribute)prop.GetCustomAttributes(typeof(BsonPropertyAttribute), false).FirstOrDefault();
+                var attr = (BsonFieldAttribute)prop.GetCustomAttributes(typeof(BsonFieldAttribute), false).FirstOrDefault();
 
                 if (attr != null) name = attr.Name;
 
                 // create a property mapper
                 var p = new PropertyMapper
                 { 
-                    ResolvedName = name, 
+                    FieldName = name, 
                     PropertyName = prop.Name, 
                     PropertyType = prop.PropertyType,
                     Getter = getter,

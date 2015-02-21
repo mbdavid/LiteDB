@@ -29,11 +29,11 @@ namespace LiteDB
 
             if (type == 0x01) // Double
             {
-                return new BsonValue(_reader.ReadDouble());
+                return _reader.ReadDouble();
             }
             else if (type == 0x02) // String
             {
-                return new BsonValue(this.ReadString());
+                return this.ReadString();
             }
             else if (type == 0x03) // Document
             {
@@ -51,19 +51,19 @@ namespace LiteDB
 
                 switch (subType)
                 {
-                    case 0x00: return new BsonValue(bytes);
-                    case 0x04: return new BsonValue(new Guid(bytes));
+                    case 0x00: return bytes;
+                    case 0x04: return new Guid(bytes);
                 }
             }
             else if (type == 0x08) // Boolean
             {
-                return new BsonValue(_reader.ReadBoolean());
+                return _reader.ReadBoolean();
             }
             else if (type == 0x09) // DateTime
             {
                 var ts = _reader.ReadInt64();
 
-                return new BsonValue(BsonWriter.UnixEpoch.AddMilliseconds(ts).ToLocalTime());
+                return BsonWriter.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
             }
             else if (type == 0x0A) // Null
             {
@@ -71,11 +71,11 @@ namespace LiteDB
             }
             else if (type == 0x10) // Int32
             {
-                return new BsonValue(_reader.ReadInt32());
+                return _reader.ReadInt32();
             }
             else if (type == 0x12) // Int64
             {
-                return new BsonValue(_reader.ReadInt64());
+                return _reader.ReadInt64();
             }
 
             throw new LiteException("Bson type not supported");
@@ -91,7 +91,7 @@ namespace LiteDB
             {
                 string name;
                 var value = this.ReadElement(out name);
-                obj.Add(name, value);
+                obj.RawValue[name] = value;
             }
 
             _reader.ReadByte(); // zero

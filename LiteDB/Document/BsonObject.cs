@@ -11,8 +11,6 @@ namespace LiteDB
 {
     public class BsonObject : BsonValue
     {
-        public static Regex PropertyPattern = new Regex(@"^\w[\w_-]*$");
-
         public BsonObject()
             : base(new Dictionary<string, BsonValue>())
         {
@@ -44,10 +42,9 @@ namespace LiteDB
             }
             set
             {
-                //TODO: implement more efficient or use a internal method when Mapper/Serialize/Deserialize
-                //if (!PropertyPattern.IsMatch(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
+                if (!this.IsValidFieldName(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
 
-                this.RawValue[name] = value;
+                this.RawValue[name] = value ?? BsonValue.Null;
             }
         }
 
@@ -87,6 +84,29 @@ namespace LiteDB
         public bool RemoveKey(string key)
         {
             return this.RawValue.Remove(key);
+        }
+
+        /// <summary>
+        /// Test if field name is a valid string: only -_[a-z][A-Z]
+        /// </summary>
+        private bool IsValidFieldName(string field)
+        {
+            // do not use regex because is too slow
+            for (var i = 0; i < field.Length; i++)
+            {
+                var c = field[i];
+
+                if(char.IsLetterOrDigit(c) || c == '-' || c == '_')
+                {
+                    continue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #region Get/Set methods

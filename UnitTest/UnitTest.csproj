@@ -35,9 +35,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="fastBinaryJSON">
-      <HintPath>..\..\..\Temp\fastBinaryJSON_v1.4.6\fastBinaryJSON\bin\Debug\fastBinaryJSON.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.XML" />
