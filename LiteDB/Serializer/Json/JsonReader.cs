@@ -103,9 +103,13 @@ namespace LiteDB
 
                 var value = this.ReadValue(_tokenizer.ReadToken());
 
-                if (key[0] == '$')
+                // check if not a special data type - only if is first attribute
+                if (key[0] == '$' && obj.Count == 0)
                 {
-                    return this.ReadExtendedDataType(key, value);
+                    var val = this.ReadExtendedDataType(key, value);
+
+                    // if val is null then it's not a extended data type - it's just a object with $ attribute
+                    if(!val.IsNull) return val;
                 }
 
                 obj[key] = value;
@@ -154,7 +158,7 @@ namespace LiteDB
                 case "$guid": val = new BsonValue(new Guid(value)); break;
                 case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
                 case "$binary": val = new BsonValue(Convert.FromBase64String(value)); break;
-                default: throw new LiteException("Not supported json extended format: " + key);
+                default: return BsonValue.Null; // is not a special data type
             }
 
             _tokenizer.ReadToken().Expect(JsonTokenType.EndDoc);

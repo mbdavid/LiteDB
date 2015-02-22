@@ -43,6 +43,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Database\Collections\LiteDBRef.cs" />
     <Compile Include="Database\Collections\LiteCollection.Include.cs" />
     <Compile Include="Database\Collections\LiteCollection.Drop.cs" />
     <Compile Include="Database\Collections\LiteCollection.InsertBulk.cs" />

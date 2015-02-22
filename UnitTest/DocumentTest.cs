@@ -21,7 +21,7 @@ namespace UnitTest
             var orderObject = new Order
             {
                 OrderKey = 123,
-                CustomerId = cid,
+                //CustomerId = cid,
                 Date = now,
                 Items = new List<OrderItem>() {
                     new OrderItem { Qtd = 3, Description = "Package", Unit = 99m } 
@@ -31,7 +31,7 @@ namespace UnitTest
             // create same object, but using BsonDocument
             var orderDoc = new BsonDocument();
             orderDoc.Id = 123;
-            orderDoc["CustomerId"] = cid;
+            //orderDoc["CustomerId"] = cid;
             orderDoc["Date"] = now;
             orderDoc["Items"] = new BsonArray();
             var i = new BsonObject();

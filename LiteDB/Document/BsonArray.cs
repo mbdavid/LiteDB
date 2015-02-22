@@ -15,14 +15,33 @@ namespace LiteDB
         {
         }
 
-        public BsonArray(int capacity)
-            : base(new List<BsonValue>(capacity))
-        {
-        }
-
         public BsonArray(List<BsonValue> array)
             : base(array)
         {
+        }
+
+        public BsonArray(IEnumerable<BsonValue> items)
+            : this()
+        {
+            this.AddRange<BsonValue>(items);
+        }
+
+        public BsonArray(IEnumerable<BsonObject> items)
+            : this()
+        {
+            this.AddRange<BsonObject>(items);
+        }
+
+        public BsonArray(IEnumerable<BsonArray> items)
+            : this()
+        {
+            this.AddRange<BsonArray>(items);
+        }
+
+        public BsonArray(IEnumerable<BsonDocument> items)
+            : this()
+        {
+            this.AddRange<BsonDocument>(items);
         }
 
         public BsonValue this[int index]
@@ -42,6 +61,15 @@ namespace LiteDB
             if (value == null) value = BsonValue.Null;
 
             this.RawValue.Add(value);
+        }
+
+        public void AddRange<T>(IEnumerable<T> array)
+            where T : BsonValue
+        {
+            foreach (var item in array)
+            {
+                this.Add(item);
+            }
         }
 
         public void Remove(int index)
@@ -78,17 +106,5 @@ namespace LiteDB
             return this.GetEnumerator();
         }
 
-        public static BsonArray FromEnumerable<T>(IEnumerable<T> array)
-            where T : BsonValue
-        {
-            var result = new BsonArray();
-
-            foreach (var item in array)
-            {
-                result.Add(item);
-            }
-
-            return result;
-        }
     }
 }

@@ -12,15 +12,15 @@ namespace LiteDB
         /// <summary>
         /// Find a document using Document Id. Returns null if not found.
         /// </summary>
-        public T FindById(object id)
+        public T FindById(BsonValue id)
         {
-            if (id == null) throw new ArgumentNullException("id");
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
             var col = this.GetCollectionPage(false);
 
             if (col == null) return default(T);
 
-            var node = this.Database.Indexer.FindOne(col.PK, id);
+            var node = this.Database.Indexer.FindOne(col.PK, id.RawValue);
 
             if (node == null) return default(T);
 

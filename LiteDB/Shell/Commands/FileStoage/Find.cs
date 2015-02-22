@@ -19,7 +19,7 @@ namespace LiteDB.Shell.Commands
             {
                 var files = db.FileStorage.FindAll().Select(x => x.AsDocument);
 
-                return BsonArray.FromEnumerable<BsonDocument>(files);
+                return new BsonArray(files);
             }
             else
             {
@@ -29,7 +29,7 @@ namespace LiteDB.Shell.Commands
                 {
                     var files = db.FileStorage.Find(id.Substring(0, id.Length - 1)).Select(x => x.AsDocument);
 
-                    return BsonArray.FromEnumerable<BsonDocument>(files);
+                    return new BsonArray(files);
                 }
                 else
                 {

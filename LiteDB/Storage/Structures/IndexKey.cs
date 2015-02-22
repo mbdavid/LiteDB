@@ -79,27 +79,25 @@ namespace LiteDB
             if (this.Type != other.Type)
             {
                 // if both values are number, convert them to Double to compare
-                // using Double because it's faster then Decimal and bigger range
                 if (this.IsNumber && other.IsNumber)
                 {
                     return Convert.ToDouble(this.Value).CompareTo(Convert.ToDouble(other.Value));
                 }
 
                 // if not, convert both to string
-                return string.Compare(Value.ToString(), other.Value.ToString(), StringComparison.InvariantCultureIgnoreCase);
+                return string.Compare(this.Value.ToString(), other.Value.ToString(), StringComparison.InvariantCultureIgnoreCase);
             }
 
             // for both values with same datatype just compare
-
             switch(this.Type)
             {
-                case IndexDataType.Int32: return ((Int32)this.Value).CompareTo(other.Value);
-                case IndexDataType.Int64: return ((Int64)this.Value).CompareTo(other.Value);
-                case IndexDataType.Double: return ((Double)this.Value).CompareTo(other.Value);
-                case IndexDataType.String: return string.Compare((String)this.Value, other.Value.ToString(), StringComparison.InvariantCultureIgnoreCase);
-                case IndexDataType.Boolean: return ((Boolean)this.Value).CompareTo(other.Value);
-                case IndexDataType.DateTime: return ((DateTime)this.Value).CompareTo(other.Value);
-                case IndexDataType.Guid: return ((Guid)this.Value).CompareTo(other.Value);
+                case IndexDataType.Int32: return ((Int32)this.Value).CompareTo((Int32)other.Value);
+                case IndexDataType.Int64: return ((Int64)this.Value).CompareTo((Int64)other.Value);
+                case IndexDataType.Double: return ((Double)this.Value).CompareTo((Double)other.Value);
+                case IndexDataType.String: return string.Compare((String)this.Value, (String)other.Value, StringComparison.InvariantCultureIgnoreCase);
+                case IndexDataType.Boolean: return ((Boolean)this.Value).CompareTo((Boolean)other.Value);
+                case IndexDataType.DateTime: return ((DateTime)this.Value).CompareTo((DateTime)other.Value);
+                case IndexDataType.Guid: return ((Guid)this.Value).CompareTo((Guid)other.Value);
             }
 
  	        throw new NotImplementedException();

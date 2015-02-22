@@ -17,7 +17,7 @@ namespace LiteDB
 
             var doc = this.Database.Mapper.ToDocument(document);
 
-            if (doc.Id == null) throw new LiteException("Document Id can't be null");
+            if (doc.Id == null || doc.Id.IsNull) throw new LiteException("Document Id can't be null");
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
@@ -32,7 +32,7 @@ namespace LiteDB
                 var dataBlock = this.Database.Data.Insert(col, bytes);
 
                 // store id in a PK index [0 array]
-                var pk = this.Database.Indexer.AddNode(col.PK, doc.Id);
+                var pk = this.Database.Indexer.AddNode(col.PK, doc.Id.RawValue);
 
                 // do links between index <-> data block
                 pk.DataBlock = dataBlock.Position;

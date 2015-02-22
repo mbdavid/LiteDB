@@ -16,11 +16,6 @@ namespace LiteDB
         {
         }
 
-        public BsonObject(int capacity)
-            : base(new Dictionary<string, BsonValue>(capacity))
-        {
-        }
-
         public BsonObject(Dictionary<string, BsonValue> obj)
             : base(obj)
         {
@@ -42,7 +37,7 @@ namespace LiteDB
             }
             set
             {
-                if (!this.IsValidFieldName(name)) throw new ArgumentException(string.Format("Property name '{0}' is invalid pattern", name));
+                if (!this.IsValidFieldName(name)) throw new ArgumentException(string.Format("Field name '{0}' is invalid pattern or reserved keyword", name));
 
                 this.RawValue[name] = value ?? BsonValue.Null;
             }
@@ -61,6 +56,17 @@ namespace LiteDB
         /// Returns all object keys
         /// </summary>
         public string[] Keys { get { return this.RawValue.Keys.ToArray(); } }
+
+        /// <summary>
+        /// Returns how many fields this object contains
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return this.RawValue.Count;
+            }
+        }
 
         /// <summary>
         /// Returns if object contains a named property
@@ -87,16 +93,22 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if field name is a valid string: only -_[a-z][A-Z]
+        /// Test if field name is a valid string: only $-_[a-z][A-Z]
         /// </summary>
         private bool IsValidFieldName(string field)
         {
+            // test if keywords
+            if (field == "$date" || field == "$guid" || field == "$numberLong" || field == "$binary")
+            {
+                return false;
+            }
+
             // do not use regex because is too slow
             for (var i = 0; i < field.Length; i++)
             {
                 var c = field[i];
 
-                if(char.IsLetterOrDigit(c) || c == '-' || c == '_')
+                if(char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == '$')
                 {
                     continue;
                 }

@@ -18,7 +18,7 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(db, s);
             var docs = col.GetIndexes();
 
-            return BsonArray.FromEnumerable<BsonObject>(docs);
+            return new BsonArray(docs);
         }
     }
 }

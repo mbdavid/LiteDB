@@ -69,7 +69,7 @@ namespace LiteDB.Shell.Commands
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = s.Scan(@"\w+(\.\w+)*\s*").Trim();
+            var field = s.Scan(@"[\w-\$]+(\.[\w-$]+)*\s*").Trim();
             var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between)");
             var value = JsonSerializer.Deserialize(s);
 

@@ -27,7 +27,7 @@ namespace LiteDB.Shell.Commands
             if (skip.HasValue) docs = docs.Skip(skip.Value);
             if (limit.HasValue) docs = docs.Take(limit.Value);
 
-            return BsonArray.FromEnumerable<BsonDocument>(docs);
+            return new BsonArray(docs);
         }
     }
 }

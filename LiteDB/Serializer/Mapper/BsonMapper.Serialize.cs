@@ -33,8 +33,11 @@ namespace LiteDB
 
             var type = obj.GetType();
 
+            // if is already a bson value
+            if (obj is BsonValue) return new BsonValue((BsonValue)obj);
+
             // basic Bson data types (cast datatype for better performance optimization)
-            if (obj is String) return new BsonValue((String)obj);
+            else if (obj is String) return new BsonValue((String)obj);
             else if (obj is Int32) return new BsonValue((Int32)obj);
             else if (obj is Int64) return new BsonValue((Int64)obj);
             else if (obj is Double) return new BsonValue((Double)obj);

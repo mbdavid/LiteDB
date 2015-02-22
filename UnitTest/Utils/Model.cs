@@ -28,10 +28,7 @@ namespace UnitTest
 
         public DateTime Date { get; set; }
 
-        public Guid CustomerId { get; set; }
-
-        [BsonIgnore]
-        public Customer Customer { get; set; }
+        public LiteDBRef<Customer> Customer { get; set; }
 
         public List<OrderItem> Items { get; set; }
 

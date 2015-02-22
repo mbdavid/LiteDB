@@ -66,8 +66,22 @@ namespace LiteDB
                 type = Reflection.UnderlyingTypeOf(type);
             }
 
+            // check if your type is already a BsonValue
+            if (type == typeof(BsonValue))
+            {
+                return new BsonValue(value);
+            }
+            else if (type == typeof(BsonObject))
+            {
+                return value.AsObject;
+            }
+            else if (type == typeof(BsonArray))
+            {
+                return value.AsArray;
+            }
+
             // bson types convert
-            if (_bsonTypes.Contains(type))
+            else if (_bsonTypes.Contains(type))
             {
                 return value.RawValue;
             }

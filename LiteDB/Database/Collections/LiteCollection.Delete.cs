@@ -12,8 +12,10 @@ namespace LiteDB
         /// <summary>
         /// Remove an document in collection using Document Id - returns false if not found document
         /// </summary>
-        public virtual bool Delete(object id)
+        public virtual bool Delete(BsonValue id)
         {
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+
             // start transaction
             this.Database.Transaction.Begin();
 
@@ -29,7 +31,7 @@ namespace LiteDB
                 }
 
                 // find indexNode using PK index
-                var node = this.Database.Indexer.FindOne(col.PK, id);
+                var node = this.Database.Indexer.FindOne(col.PK, id.RawValue);
 
                 // if not found, abort transaction and returns false
                 if (node == null)

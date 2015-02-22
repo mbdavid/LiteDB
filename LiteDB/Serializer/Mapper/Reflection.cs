@@ -154,7 +154,7 @@ namespace LiteDB
             }
             catch (Exception)
             {
-                throw new LiteException(string.Format("Failed to create instance for type '{0}' from assembly '{1}'",
+                throw new LiteException(string.Format("Failed to create instance for type '{0}' from assembly '{1}'. Checks if this class has a public non parameter constructor",
                     type.FullName, type.AssemblyQualifiedName));
             }
         }

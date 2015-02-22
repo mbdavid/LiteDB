@@ -13,8 +13,8 @@ namespace LiteDB
         /// </summary>
         public int InsertBulk(IEnumerable<T> docs, int buffer = 32768)
         {
-            if(docs == null) throw new ArgumentNullException("docs");
-            if(buffer < 100) throw new ArgumentException("buffer must be bigger than 100");
+            if (docs == null) throw new ArgumentNullException("docs");
+            if (buffer < 100) throw new ArgumentException("buffer must be bigger than 100");
             if (this.Database.Transaction.IsInTransaction) throw new LiteException("InsertBulk doesn't supports transaction.");
 
             var enumerator = docs.GetEnumerator();

@@ -171,17 +171,13 @@ namespace LiteDB
         {
             // format: { "$type": "string-value" }
             // no string.Format to better performance
-            _writer.Write("{");
-            _writer.Write(_spacer);
-            _writer.Write("\"");
+            _writer.Write("{\"");
             _writer.Write(type);
             _writer.Write("\":");
             _writer.Write(_spacer);
             _writer.Write("\"");
             _writer.Write(value);
-            _writer.Write("\"");
-            _writer.Write(_spacer);
-            _writer.Write("}");
+            _writer.Write("\"}");
         }
 
         private void WriteKeyValue(string key, BsonValue value, bool comma)
