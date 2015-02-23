@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
     internal class BaseCollection
     {
+        public Regex FieldPattern = new Regex(@"[\w-\$]+(\.[\w-$]+)*\s*");
+
         /// <summary>
         /// Read collection name from db.(colname).(command)
         /// </summary>
@@ -69,7 +72,7 @@ namespace LiteDB.Shell.Commands
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = s.Scan(@"[\w-\$]+(\.[\w-$]+)*\s*").Trim();
+            var field = s.Scan(this.FieldPattern).Trim();
             var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between)");
             var value = JsonSerializer.Deserialize(s);
 

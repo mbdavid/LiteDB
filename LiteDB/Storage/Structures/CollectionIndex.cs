@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public const string FIELD_PATTERN = @"^\w+(\.\w+)*$";
-        public const int FIELD_MAX_LENGTH = 30;
+        public static Regex IndexPattern = new Regex(@"^[-$\w]+(\.[-$\w]+)*$");
 
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations

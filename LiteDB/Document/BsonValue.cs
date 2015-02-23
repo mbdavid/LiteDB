@@ -261,6 +261,82 @@ namespace LiteDB
 
         #endregion
 
+        #region Methods for BsonDocument/BsonArray
+
+        //public BsonValue this[string name]
+        //{
+        //    get
+        //    {
+        //        var dict = this.RawValue as Dictionary<string, BsonValue>;
+
+        //        if (dict != null)
+        //        {
+        //            return dict.GetOrDefault(name, BsonValue.Null);
+        //        }
+        //        else
+        //        {
+        //            throw new LiteException("BsonValue is not a document");
+        //        }
+        //    }
+        //    set
+        //    {
+        //        var dict = this.RawValue as Dictionary<string, BsonValue>;
+
+        //        if (dict != null)
+        //        {
+        //            if (!BsonDocument.IsValidFieldName(name)) throw new ArgumentException(string.Format("Field name '{0}' is invalid pattern or reserved keyword", name));
+
+        //            dict[name] = value ?? BsonValue.Null;
+        //        }
+        //        else
+        //        {
+        //            throw new LiteException("BsonValue is not a document");
+        //        }
+        //    }
+        //}
+
+        //public BsonValue this[int index]
+        //{
+        //    get
+        //    {
+        //        var list = this.RawValue as List<BsonValue>;
+
+        //        if (list != null)
+        //        {
+        //            return list.ElementAt(index);
+        //        }
+        //        else
+        //        {
+        //            throw new LiteException("BsonValue is not an array");
+        //        }
+        //    }
+        //    set
+        //    {
+        //        var list = this.RawValue as List<BsonValue>;
+
+        //        if (list != null)
+        //        {
+        //            list[index] = value == null ? BsonValue.Null : value;
+        //        }
+        //        else
+        //        {
+        //            throw new LiteException("BsonValue is not an array");
+        //        }
+        //    }
+        //}
+
+        //public virtual void Add(BsonValue value)
+        //{
+        //    this.AsArray.Add(value);
+        //}
+
+        //public virtual BsonDocument Add(string key, BsonValue value)
+        //{
+        //    return this.AsDocument.Add(key, value);
+        //}
+
+        #endregion
+
         #region Implicit Ctor
 
         public static implicit operator Byte[](BsonValue value)
@@ -425,14 +501,16 @@ namespace LiteDB
 
         #region Operators == !=
 
-        public static bool operator !=(BsonValue a, BsonValue b)
+        public static bool operator !=(BsonValue lhs, BsonValue rhs)
         {
-            return !a.Equals(b);
+            return !(lhs == rhs);
         }
 
-        public static bool operator ==(BsonValue a, BsonValue b)
+        public static bool operator ==(BsonValue lhs, BsonValue rhs)
         {
-            return a.Equals(b);
+            if (object.ReferenceEquals(lhs, null)) return object.ReferenceEquals(rhs, null);
+            if (object.ReferenceEquals(rhs, null)) return false; // don't check type because sometimes different types can be ==
+            return lhs.CompareTo(rhs) == 0; // some subclasses override OperatorEqualsImplementation
         }
 
         public override bool Equals(object obj)

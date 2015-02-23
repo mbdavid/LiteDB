@@ -15,14 +15,14 @@ namespace LiteDB
         /// <summary>
         /// Serialize a POCO class to BsonDocument
         /// </summary>
-        public BsonDocument ToDocument(object obj)
+        public BsonDocument ToDocument(object poco)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
+            if (poco == null) throw new ArgumentNullException("obj");
 
             // if object is BsonDocument, just return them
-            if (obj is BsonDocument) return (BsonDocument)obj;
+            if (poco is BsonDocument) return (BsonDocument)poco;
 
-            return this.Serialize(obj, 0).AsDocument;
+            return this.Serialize(poco, 0).AsDocument;
         }
 
         private BsonValue Serialize(object obj, int depth)

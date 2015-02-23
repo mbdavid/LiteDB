@@ -16,8 +16,8 @@ namespace LiteDB.Shell.Commands
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             var col = this.ReadCollection(db, s);
-            var field = s.Scan(@"\w+(.\w+)*");
-            var unique = s.Scan(@"\s*unique$");
+            var field = s.Scan(this.FieldPattern).Trim();
+            var unique = s.Scan(@"unique$");
 
             return col.EnsureIndex(field, unique.Length > 0);
         }

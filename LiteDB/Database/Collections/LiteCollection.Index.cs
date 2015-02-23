@@ -20,20 +20,18 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            if (!Regex.IsMatch(field, CollectionIndex.FIELD_PATTERN) || field.Length > CollectionIndex.FIELD_MAX_LENGTH) throw new LiteException("Invalid field format.");
-
-            if (typeof(T) != typeof(BsonDocument) && typeof(T).GetProperty(field) == null)
-            {
-                throw new LiteException(string.Format("Property name {0} not found in {1} class", field, typeof(T).Name));
-            }
+            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new LiteException("Invalid field format.");
 
             // do not create collection at this point
             var col = this.GetCollectionPage(false);
 
             // check if index already exists (collection must exists)
-            if (col != null && col.GetIndex(field) != null)
+            var existsIndex = col.GetIndex(field);
+
+            if (col != null &&  existsIndex != null)
             {
-                return false;
+                // if index exists but has a diferent "unique" parameter, lets change
+                return existsIndex.Unique == unique ? false : this.ChangeIndexUnique(col, existsIndex, unique);
             };
 
             // start transaction
@@ -98,6 +96,29 @@ namespace LiteDB
             var field = _visitor.GetBsonProperty(property);
 
             return this.EnsureIndex(field, unique);
+        }
+
+        private bool ChangeIndexUnique(CollectionPage col, CollectionIndex index, bool unique)
+        {
+            // start transaction
+            this.Database.Transaction.Begin();
+
+            try
+            {
+                // just change flag and commit collection dirty page
+                index.Unique = unique;
+
+                col.IsDirty = true;
+
+                this.Database.Transaction.Commit();
+
+                return true;
+            }
+            catch
+            {
+                this.Database.Transaction.Rollback();
+                throw;
+            }
         }
 
         /// <summary>

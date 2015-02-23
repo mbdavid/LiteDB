@@ -104,7 +104,7 @@ namespace LiteDB
         /// <summary>
         /// Test if field name is a valid string: only $-_[a-z][A-Z]
         /// </summary>
-        private bool IsValidFieldName(string field)
+        internal bool IsValidFieldName(string field)
         {
             // test if keywords
             if (field == "$date" || field == "$guid" || field == "$numberLong" || field == "$binary")
@@ -167,7 +167,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set value to a path - supports dotted path like: Customer.Address.Street - Returns new BsonValue
+        /// Set value to a path - supports dotted path like: Customer.Address.Street - Returns value
         /// </summary>
         public BsonValue Set(string path, BsonValue value)
         {
@@ -180,32 +180,30 @@ namespace LiteDB
                 return value;
             }
 
-            //var obj = this[names[0]];
+            var doc = this;
 
-            //for (var i = 1; i < names.Length - 1; i++)
-            //{
-            //    if(obj.IsObject)
-            //    {
-            //        obj = 
-            //    }
-            //    else if(obj.IsNull)
-            //    {
-            //        this[names
-            //    }
-            //    var val = value[name];
-            //    if (obj.IsObject)
-            //    {
-            //        value = obj.AsObject;
-            //    }
-            //    else if(obj.is
-            //    {
-            //        obj = new BsonObject();
+            // walk on path creating object when do not exists
+            for (var i = 0; i < names.Length - 1; i++)
+            {
+                var name = names[i];
 
-            //    }
-            //}
+                if (doc[name].IsDocument)
+                {
+                    doc = doc[name].AsDocument;
+                }
+                else if (doc[name].IsNull)
+                {
+                    var d = new BsonDocument();
+                    doc[name] = d;
+                    doc = d;
+                }
+                else
+                {
+                    return null;
+                }
+            }
 
-            //return value[names.Last()].RawValue;
-
+            doc[names.Last()] = value;
 
             return value;
         }
