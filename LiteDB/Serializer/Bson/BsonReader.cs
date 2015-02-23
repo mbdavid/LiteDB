@@ -17,7 +17,7 @@ namespace LiteDB
             _reader = new BinaryReader(stream);
         }
 
-        public BsonObject Deserialize()
+        public BsonDocument Deserialize()
         {
             return this.ReadDocument();
         }
@@ -81,11 +81,11 @@ namespace LiteDB
             throw new LiteException("Bson type not supported");
         }
 
-        public BsonObject ReadDocument()
+        public BsonDocument ReadDocument()
         {
             var length = _reader.ReadInt32();
             var end = (int)_reader.BaseStream.Position + length - 1;
-            var obj = new BsonObject();
+            var obj = new BsonDocument();
 
             while (_reader.BaseStream.Position < end)
             {

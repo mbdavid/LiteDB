@@ -82,7 +82,6 @@
     <Compile Include="Document\BsonValue.cs" />
     <Compile Include="Document\BsonType.cs" />
     <Compile Include="Document\BsonArray.cs" />
-    <Compile Include="Document\BsonObject.cs" />
     <Compile Include="Document\BsonDocument.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />

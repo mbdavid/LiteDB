@@ -30,7 +30,7 @@ namespace LiteDB
         public string MimeType { get; set; }
         public long Length { get; private set; }
         public DateTime UploadDate { get; internal set; }
-        public BsonObject Metadata { get; set; }
+        public BsonDocument Metadata { get; set; }
 
         private LiteDatabase _db;
 
@@ -48,19 +48,19 @@ namespace LiteDB
             this.MimeType = MimeTypeConverter.GetMimeType(this.Filename);
             this.Length = 0;
             this.UploadDate = DateTime.Now;
-            this.Metadata = new BsonObject();
+            this.Metadata = new BsonDocument();
         }
 
         internal LiteFileInfo(LiteDatabase db, BsonDocument doc)
         {
             _db = db;
 
-            this.Id = doc.Id.ToString();
+            this.Id = doc["_id"].ToString();
             this.Filename = doc["filename"].AsString;
             this.MimeType = doc["mimeType"].AsString;
             this.Length = doc["length"].AsInt64;
             this.UploadDate = doc["uploadDate"].AsDateTime;
-            this.Metadata = doc["metadata"].AsObject;
+            this.Metadata = doc["metadata"].AsDocument;
         }
 
         public BsonDocument AsDocument
@@ -69,12 +69,12 @@ namespace LiteDB
             {
                 var doc = new BsonDocument();
 
-                doc.Id = this.Id;
+                doc["_id"] = this.Id;
                 doc["filename"] = this.Filename;
                 doc["mimeType"] = this.MimeType;
                 doc["length"] = this.Length;
                 doc["uploadDate"] = this.UploadDate;
-                doc["metadata"] = this.Metadata ?? new BsonObject();
+                doc["metadata"] = this.Metadata ?? new BsonDocument();
 
                 return doc;
             }
@@ -90,10 +90,9 @@ namespace LiteDB
             {
                 this.Length += (long)read;
 
-                var chunk = new BsonDocument
-                {
-                    Id = GetChunckId(this.Id, index++) // index zero based
-                };
+                var chunk = new BsonDocument();
+
+                chunk["_id"] = GetChunckId(this.Id, index++); // index zero based
 
                 if (read != CHUNK_SIZE)
                 {

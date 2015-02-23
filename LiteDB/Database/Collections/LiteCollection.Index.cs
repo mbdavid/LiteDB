@@ -103,7 +103,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all indexes in this collections
         /// </summary>
-        public IEnumerable<BsonObject> GetIndexes()
+        public IEnumerable<BsonDocument> GetIndexes()
         {
             this.Database.Transaction.AvoidDirtyRead();
 
@@ -113,7 +113,7 @@ namespace LiteDB
 
             foreach(var index in col.GetIndexes(true))
             {
-                yield return new BsonObject()
+                yield return new BsonDocument()
                     .Add("slot", index.Slot)
                     .Add("field", index.Field)
                     .Add("unique", index.Unique);

@@ -18,7 +18,7 @@ namespace LiteDB
             _stream = stream;
         }
 
-        public void Serialize(BsonObject value)
+        public void Serialize(BsonDocument value)
         {
             var writer = new BinaryWriter(_stream);
 
@@ -40,10 +40,10 @@ namespace LiteDB
                     this.WriteCString(writer, key);
                     this.WriteString(writer, (String)value.RawValue);
                     break;
-                case BsonType.Object:
+                case BsonType.Document:
                     writer.Write((byte)0x03);
                     this.WriteCString(writer, key);
-                    this.WriteDocument(writer, new BsonObject((Dictionary<string, BsonValue>)value.RawValue));
+                    this.WriteDocument(writer, new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
                     break;
                 case BsonType.Array:
                     writer.Write((byte)0x04);
@@ -98,7 +98,7 @@ namespace LiteDB
         /// <summary>
         /// Write a bson document
         /// </summary>
-        private void WriteDocument(BinaryWriter writer, BsonObject obj)
+        private void WriteDocument(BinaryWriter writer, BsonDocument obj)
         {
             using (var mem = new MemoryStream())
             {

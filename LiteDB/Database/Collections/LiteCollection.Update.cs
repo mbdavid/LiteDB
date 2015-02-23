@@ -18,7 +18,9 @@ namespace LiteDB
             // get BsonDocument from object
             var doc = this.Database.Mapper.ToDocument(document);
 
-            if (doc.Id == null || doc.Id.IsNull) throw new LiteException("Document Id can't be null");
+            var id = doc["_id"];
+
+            if (id.IsNull) throw new LiteException("Document Id can't be null");
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
@@ -38,7 +40,7 @@ namespace LiteDB
                 }
 
                 // find indexNode from pk index
-                var indexNode = this.Database.Indexer.FindOne(col.PK, doc.Id.RawValue);
+                var indexNode = this.Database.Indexer.FindOne(col.PK, id.RawValue);
 
                 // if not found document, no updates
                 if (indexNode == null)

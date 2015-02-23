@@ -30,11 +30,11 @@ namespace UnitTest
 
             // create same object, but using BsonDocument
             var orderDoc = new BsonDocument();
-            orderDoc.Id = 123;
+            orderDoc["_id"] = 123;
             //orderDoc["CustomerId"] = cid;
             orderDoc["Date"] = now;
             orderDoc["Items"] = new BsonArray();
-            var i = new BsonObject();
+            var i = new BsonDocument();
             i["Qtd"] = 3;
             i["Description"] = "Package";
             i["Unit"] = 99;

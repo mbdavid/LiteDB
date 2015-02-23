@@ -14,7 +14,7 @@ namespace LiteDB
     /// Class that converts POCO class to/from BsonDocument
     /// If you prefer use a new instance of BsonMapper (not Global), be sure cache this instance for better performance 
     /// Serialization rules:
-    ///     - Classes must be "public"
+    ///     - Classes must be "public" with a public constructor (without parameters)
     ///     - Properties must have public getter and setter
     ///     - Entity class must have Id property, [ClassName]Id property or [BsonId] attribute
     ///     - No circular references

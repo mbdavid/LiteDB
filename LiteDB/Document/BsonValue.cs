@@ -39,7 +39,7 @@ namespace LiteDB
 
         public BsonValue(Dictionary<string, BsonValue> value)
         {
-            this.Type = BsonType.Object;
+            this.Type = BsonType.Document;
             this.RawValue = value;
         }
 
@@ -103,7 +103,7 @@ namespace LiteDB
 
             if (value == null) this.Type = BsonType.Null;
             else if (value is List<BsonValue>) this.Type = BsonType.Array;
-            else if (value is Dictionary<string, BsonValue>) this.Type = BsonType.Object;
+            else if (value is Dictionary<string, BsonValue>) this.Type = BsonType.Document;
             else if (value is byte[]) this.Type = BsonType.Binary;
             else if (value is bool) this.Type = BsonType.Boolean;
             else if (value is string) this.Type = BsonType.String;
@@ -140,28 +140,13 @@ namespace LiteDB
             }
         }
 
-        public BsonObject AsObject
-        {
-            get
-            {
-                if (this.IsObject)
-                {
-                    return new BsonObject((Dictionary<string, BsonValue>)this.RawValue);
-                }
-                else
-                {
-                    return default(BsonObject);
-                }
-            }
-        }
-
         public BsonDocument AsDocument
         {
             get
             {
-                if (this.IsObject)
+                if (this.IsDocument)
                 {
-                    return new BsonDocument(this.AsObject);
+                    return new BsonDocument((Dictionary<string, BsonValue>)this.RawValue);
                 }
                 else
                 {
@@ -224,14 +209,9 @@ namespace LiteDB
             get { return this.Type == BsonType.Array; }
         }
 
-        public bool IsObject
-        {
-            get { return this.Type == BsonType.Object; }
-        }
-
         public bool IsDocument
         {
-            get { return this.Type == BsonType.Object && ((Dictionary<string, BsonValue>)this.RawValue).GetOrDefault("_id").IsNull == false; }
+            get { return this.Type == BsonType.Document; }
         }
 
         public bool IsInt32
@@ -380,7 +360,7 @@ namespace LiteDB
 
         public static implicit operator BsonValue(Dictionary<string, BsonValue> value)
         {
-            return new BsonValue { Type = BsonType.Object, RawValue = value };
+            return new BsonValue { Type = BsonType.Document, RawValue = value };
         }
 
         public override string ToString()
@@ -409,7 +389,7 @@ namespace LiteDB
                 }
 
                 // array / object can't be compared
-                if (this.IsObject || this.IsArray || other.IsObject || other.IsArray)
+                if (this.IsDocument || this.IsArray || other.IsDocument || other.IsArray)
                 {
                     throw new LiteException("BsonArray and BsonObject can't be compared");
                 }

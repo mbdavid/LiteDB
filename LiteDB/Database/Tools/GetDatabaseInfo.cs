@@ -11,11 +11,11 @@ namespace LiteDB
         /// <summary>
         /// Get all database information
         /// </summary>
-        public BsonObject GetDatabaseInfo()
+        public BsonDocument GetDatabaseInfo()
         {
             this.Transaction.AvoidDirtyRead();
 
-            var info = new BsonObject();
+            var info = new BsonDocument();
 
             info["filename"] = this.ConnectionString.Filename;
             info["journal"] = this.ConnectionString.JournalEnabled;

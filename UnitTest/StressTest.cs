@@ -93,7 +93,7 @@ namespace UnitTest
         private BsonDocument CreateDoc(int id, string name)
         {
             var doc = new BsonDocument();
-            doc.Id = id;
+            doc["_id"] = id;
             doc["Name"] = name;
 
             return doc;

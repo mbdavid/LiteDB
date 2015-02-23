@@ -62,7 +62,7 @@ namespace UnitTest
                 for (var i = 1; i <= 100; i++)
                 {
                     var doc = new BsonDocument();
-                    doc.Id = Guid.NewGuid();
+                    doc["_id"] = Guid.NewGuid();
                     doc["Today"] = DateTime.Today;
                     doc["Name"] = "John Doe";
                     doc["Updates"] = 0;

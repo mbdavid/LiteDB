@@ -42,8 +42,8 @@ namespace LiteDB
                 case BsonType.Array:
                     this.WriteArray(new BsonArray((List<BsonValue>)value.RawValue));
                     break;
-                case BsonType.Object:
-                    this.WriteObject(new BsonObject((Dictionary<string, BsonValue>)value.RawValue));
+                case BsonType.Document:
+                    this.WriteObject(new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
                     break;
                 case BsonType.Boolean:
                     _writer.Write(((bool)value.RawValue).ToString().ToLower());
@@ -73,7 +73,7 @@ namespace LiteDB
             }
         }
 
-        private void WriteObject(BsonObject obj)
+        private void WriteObject(BsonDocument obj)
         {
             var hasData = obj.Keys.Length > 0;
 
@@ -102,7 +102,7 @@ namespace LiteDB
                 // do not do this tests if is not pretty format - to better performance
                 if (this.Pretty == true)
                 {
-                    if (!((item.IsObject && item.AsObject.Keys.Length > 0) || (item.IsArray && item.AsArray.Count > 0)))
+                    if (!((item.IsDocument && item.AsDocument.Keys.Length > 0) || (item.IsArray && item.AsArray.Count > 0)))
                     {
                         this.WriteIndent();
                     }
@@ -193,7 +193,7 @@ namespace LiteDB
             {
                 _writer.Write(' ');
 
-                if ((value.IsObject && value.AsObject.Keys.Length > 0) || (value.IsArray && value.AsArray.Count > 0))
+                if ((value.IsDocument && value.AsDocument.Keys.Length > 0) || (value.IsArray && value.AsArray.Count > 0))
                 {
                     this.WriteNewLine();
                 }

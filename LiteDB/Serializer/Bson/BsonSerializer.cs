@@ -15,7 +15,7 @@ namespace LiteDB
     /// </summary>
     public class BsonSerializer
     {
-        public static byte[] Serialize(BsonObject value)
+        public static byte[] Serialize(BsonDocument value)
         {
             if (value == null) throw new ArgumentNullException("value");
 
@@ -28,7 +28,7 @@ namespace LiteDB
             }
         }
 
-        public static BsonObject Deserialize(byte[] bson)
+        public static BsonDocument Deserialize(byte[] bson)
         {
             if (bson == null || bson.Length == 0) throw new ArgumentNullException("bson");
 

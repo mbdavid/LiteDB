@@ -18,7 +18,7 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(db, s);
             var value = JsonSerializer.Deserialize(s);
 
-            col.Insert(new BsonDocument(value.AsObject));
+            col.Insert(new BsonDocument(value.AsDocument));
 
             return BsonValue.Null;
         }

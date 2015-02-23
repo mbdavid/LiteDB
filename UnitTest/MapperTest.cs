@@ -94,7 +94,7 @@ namespace UnitTest
 
             var n = mapper.ToObject<MyClass>(doc);
 
-            Assert.AreEqual(doc.Id, 123);
+            Assert.AreEqual(doc["_id"], 123);
             //Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
 
         }

@@ -63,7 +63,7 @@ namespace LiteDB.Shell
 
             if (result.IsNull) return;
 
-            if (result.IsObject)
+            if (result.IsDocument)
             {
                 this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
             }

@@ -71,9 +71,9 @@ namespace LiteDB
             {
                 return new BsonValue(value);
             }
-            else if (type == typeof(BsonObject))
+            else if (type == typeof(BsonDocument))
             {
-                return value.AsObject;
+                return value.AsDocument;
             }
             else if (type == typeof(BsonArray))
             {
@@ -111,12 +111,12 @@ namespace LiteDB
                 var k = type.GetGenericArguments()[0];
                 var t = type.GetGenericArguments()[1];
 
-                this.DeserializeDictionary(k, t, (IDictionary)o, value.AsObject);
+                this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
             }
             else
             {
                 // otherwise is plain object
-                this.DeserializeObject(type, o, value.AsObject);
+                this.DeserializeObject(type, o, value.AsDocument);
             }
 
             return o;
@@ -143,7 +143,7 @@ namespace LiteDB
             }
         }
 
-        private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonObject value)
+        private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
         {
             foreach (var key in value.Keys)
             {
@@ -154,7 +154,7 @@ namespace LiteDB
             }
         }
 
-        private void DeserializeObject(Type type, object obj, BsonObject value)
+        private void DeserializeObject(Type type, object obj, BsonDocument value)
         {
             var props = this.GetPropertyMapper(type);
 

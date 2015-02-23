@@ -69,7 +69,7 @@ namespace LiteDB
         /// <summary>
         /// Update metada on a file. File must exisits
         /// </summary>
-        public bool SetMetadata(string id, BsonObject metadata)
+        public bool SetMetadata(string id, BsonDocument metadata)
         {
             var file = this.FindById(id);
             if (file == null) return false;

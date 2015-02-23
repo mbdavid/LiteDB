@@ -91,9 +91,9 @@ namespace LiteDB
             return arr;
         }
 
-        private BsonObject SerializeDictionary(IDictionary dict, int depth)
+        private BsonDocument SerializeDictionary(IDictionary dict, int depth)
         {
-            var o = new BsonObject();
+            var o = new BsonDocument();
 
             foreach (var key in dict.Keys)
             {
@@ -104,9 +104,9 @@ namespace LiteDB
             return o;
         }
 
-        private BsonObject SerializeObject(Type type, object obj, int depth)
+        private BsonDocument SerializeObject(Type type, object obj, int depth)
         {
-            var o = new BsonObject();
+            var o = new BsonDocument();
             var mapper = this.GetPropertyMapper(type);
 
             foreach (var prop in mapper.Values)

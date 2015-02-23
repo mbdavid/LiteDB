@@ -12,7 +12,7 @@ namespace LiteDB
     { 
         Null,
         Array,
-        Object, 
+        Document, 
 
         Binary,
         Boolean,

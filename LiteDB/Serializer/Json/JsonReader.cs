@@ -87,7 +87,7 @@ namespace LiteDB
 
         private BsonValue ReadObject()
         {
-            var obj = new BsonObject();
+            var obj = new BsonDocument();
 
             var token = _tokenizer.ReadToken();
 
