@@ -111,5 +111,9 @@ namespace LiteDB
             return this.GetEnumerator();
         }
 
+        public override string ToString()
+        {
+            return JsonSerializer.Serialize(this, false, true);
+        }
     }
 }

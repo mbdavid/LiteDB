@@ -78,7 +78,7 @@ namespace LiteDB
         /// <summary>
         /// Insert a new node index inside a index. Use skip list
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, object value)
+        public IndexNode AddNode(CollectionIndex index, BsonValue value)
         {
             // create persist value - used on key
             var key = new IndexKey(value);

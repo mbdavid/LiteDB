@@ -137,14 +137,14 @@ namespace LiteDB
         /// <summary>
         /// Get value from a path - supports dotted path like: Customer.Address.Street
         /// </summary>
-        public object Get(string path)
+        public BsonValue Get(string path)
         {
             // supports parent.child.name
             var names = path.Split('.');
 
             if (names.Length == 1)
             {
-                return this[path].RawValue;
+                return this[path];
             }
 
             var value = this;
@@ -163,7 +163,7 @@ namespace LiteDB
                 }
             }
 
-            return value[names.Last()].RawValue;
+            return value[names.Last()];
         }
 
         /// <summary>
@@ -209,5 +209,10 @@ namespace LiteDB
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return JsonSerializer.Serialize(this, false, true);
+        }
     }
 }

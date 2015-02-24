@@ -25,13 +25,21 @@ namespace LiteDB
             // do not create collection at this point
             var col = this.GetCollectionPage(false);
 
-            // check if index already exists (collection must exists)
-            var existsIndex = col.GetIndex(field);
-
-            if (col != null &&  existsIndex != null)
+            if (col != null)
             {
-                // if index exists but has a diferent "unique" parameter, lets change
-                return existsIndex.Unique == unique ? false : this.ChangeIndexUnique(col, existsIndex, unique);
+                // check if index already exists (collection must exists)
+                var existsIndex = col.GetIndex(field);
+
+                if (existsIndex != null && existsIndex.Unique != unique)
+                {
+                    // if index exists but has a diferent "unique" parameter, lets change
+                    return  this.ChangeIndexUnique(col, existsIndex, unique);
+                }
+                else
+                {
+                    // nothing to todo
+                    return false;
+                }
             };
 
             // start transaction
