@@ -47,6 +47,9 @@ namespace LiteDB
             // add as first node
             page.Nodes.Add(node.Position.Index, node);
 
+            // update freebytes + item count
+            page.UpdateItemCount();
+
             // add indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
 
@@ -86,7 +89,7 @@ namespace LiteDB
         public IndexNode AddNode(CollectionIndex index, BsonValue value)
         {
             // test if value exceed max limit
-            if (value.GetByteCount() > MAX_INDEX_LENGTH)
+            if (value.GetBytesCount() > MAX_INDEX_LENGTH)
             {
                 throw LiteException.IndexKeyTooLong();
             }
@@ -105,11 +108,14 @@ namespace LiteDB
             // add index node to page
             page.Nodes.Add(node.Position.Index, node);
 
+            // update freebytes + items count
+            page.UpdateItemCount();
+
             // now, let's link my index node on right place
             var cur = this.GetNode(index.HeadNode);
 
             // scan from top left
-            for (int i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
                 // for(; <while_not_this>; <do_this>) { ... }
                 for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
@@ -181,6 +187,9 @@ namespace LiteDB
             }
 
             page.Nodes.Remove(node.Position.Index);
+
+            // update freebytes + items count
+            page.UpdateItemCount();
 
             // if there is no more nodes in this page, delete them
             if (page.Nodes.Count == 0)

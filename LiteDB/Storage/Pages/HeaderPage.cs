@@ -47,6 +47,7 @@ namespace LiteDB
             this.ChangeID = 0;
             this.LastPageID = 0;
             this.UserVersion = 0;
+            this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
         }
 

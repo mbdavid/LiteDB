@@ -217,18 +217,26 @@ namespace LiteDB
             // if types are diferent, returns sort type order
             if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
 
+            var thisKeys = this.Keys;
+            var thisLength = thisKeys.Length;
+
             var otherDoc = other.AsDocument;
+            var otherKeys = otherDoc.Keys;
+            var otherLength = otherKeys.Length;
 
-            // compare each key/value
-            foreach (var key in this.Keys)
-            {
-                var result = this[key].CompareTo(otherDoc[key]);
+            var result = 0;
+            var i = 0;
+            var stop = Math.Min(thisLength, otherLength);
 
-                if (result != 0) return result;
-            }
+            for (; 0 == result && i < stop; i++)
+                result = this[thisKeys[i]].CompareTo(otherDoc[thisKeys[i]]);
 
-            // if other doc has all my key/value and more, then he is bigger than I
-            return -1;
+            // are diferents
+            if (result != 0) return result;
+
+            // test keys length to check wich is bigger
+            if (i == thisLength) return i == otherLength ? 0 : -1;
+            return 1;
         }
 
         public override string ToString()

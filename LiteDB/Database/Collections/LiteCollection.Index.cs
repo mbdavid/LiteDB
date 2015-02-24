@@ -30,15 +30,12 @@ namespace LiteDB
                 // check if index already exists (collection must exists)
                 var existsIndex = col.GetIndex(field);
 
-                if (existsIndex != null && existsIndex.Unique != unique)
+                if (existsIndex != null)
                 {
                     // if index exists but has a diferent "unique" parameter, lets change
-                    return  this.ChangeIndexUnique(col, existsIndex, unique);
-                }
-                else
-                {
-                    // nothing to todo
-                    return false;
+                    return existsIndex.Unique != unique ?
+                        this.ChangeIndexUnique(col, existsIndex, unique) :
+                        false;
                 }
             };
 

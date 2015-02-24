@@ -15,30 +15,29 @@ namespace LiteDB
 
         public Dictionary<ushort, IndexNode> Nodes { get; set; }
 
-        /// <summary>
-        /// Bytes available in this page
-        /// </summary>
-        public override int FreeBytes
-        {
-            get { return PAGE_AVAILABLE_BYTES - this.Nodes.Sum(x => x.Value.Length); }
-        }
-
         public IndexPage()
             : base()
         {
-            this.PageType = LiteDB.PageType.Index;
+            this.PageType = PageType.Index;
             this.Nodes = new Dictionary<ushort, IndexNode>();
         }
 
-        protected override void UpdateItemCount()
-        {
-            this.ItemCount = this.Nodes.Count;
-        }
-
+        /// <summary>
+        /// Clear page content - nodes
+        /// </summary>
         public override void Clear()
         {
             base.Clear();
             this.Nodes = new Dictionary<ushort, IndexNode>();
+        }
+
+        /// <summary>
+        /// Update freebytes + items count
+        /// </summary>
+        public override void UpdateItemCount()
+        {
+            this.ItemCount = this.Nodes.Count;
+            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.Nodes.Sum(x => x.Value.Length);
         }
 
         public override void ReadContent(BinaryReader reader)

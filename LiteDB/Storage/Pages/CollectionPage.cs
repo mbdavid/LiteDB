@@ -37,52 +37,15 @@ namespace LiteDB
         /// </summary>
         public CollectionIndex[] Indexes { get; set; }
 
-        /// <summary>
-        /// Returns first free index slot to be used 
-        /// </summary>
-        public CollectionIndex GetFreeIndex()
-        {
-            for (byte i = 0; i < this.Indexes.Length; i++)
-            {
-                if (this.Indexes[i].IsEmpty) return this.Indexes[i];
-            }
-            throw new LiteException("Collection " + this.CollectionName + " excceded the index limit: " + CollectionIndex.INDEX_PER_COLLECTION);
-        }
-
-        /// <summary>
-        /// Get index from field name (index field name is case sensitive) - returns null if not found
-        /// </summary>
-        public CollectionIndex GetIndex(string field)
-        {
-            return this.Indexes.FirstOrDefault(x => x.Field == field);
-        }
-
-        /// <summary>
-        /// Get primary key index (_id index)
-        /// </summary>
-        public CollectionIndex PK { get { return this.Indexes[0]; } }
-
-        /// <summary>
-        /// Returns all used indexes
-        /// </summary>
-        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
-        {
-            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
-        }
-
-        protected override void UpdateItemCount()
-        {
-            this.ItemCount = 1; // Fixed for CollectionPage
-        }
-
         public CollectionPage()
             : base()
         {
             this.PageType = PageType.Collection;
             this.FreeDataPageID = uint.MaxValue;
             this.DocumentCount = 0;
+            this.ItemCount = 1; // fixed for CollectionPage
+            this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
             this.Indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
-            this.FreeBytes = 0; // no free bytes on collection page: one collection per page
 
             for (var i = 0; i < Indexes.Length; i++)
             {
@@ -119,5 +82,42 @@ namespace LiteDB
                 writer.Write(index.FreeIndexPageID);
             }
         }
+
+        #region Methods to work with index array
+
+        /// <summary>
+        /// Returns first free index slot to be used 
+        /// </summary>
+        public CollectionIndex GetFreeIndex()
+        {
+            for (byte i = 0; i < this.Indexes.Length; i++)
+            {
+                if (this.Indexes[i].IsEmpty) return this.Indexes[i];
+            }
+            throw new LiteException("Collection " + this.CollectionName + " excceded the index limit: " + CollectionIndex.INDEX_PER_COLLECTION);
+        }
+
+        /// <summary>
+        /// Get index from field name (index field name is case sensitive) - returns null if not found
+        /// </summary>
+        public CollectionIndex GetIndex(string field)
+        {
+            return this.Indexes.FirstOrDefault(x => x.Field == field);
+        }
+
+        /// <summary>
+        /// Get primary key index (_id index)
+        /// </summary>
+        public CollectionIndex PK { get { return this.Indexes[0]; } }
+
+        /// <summary>
+        /// Returns all used indexes
+        /// </summary>
+        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
+        {
+            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
+        }
+
+        #endregion
     }
 }

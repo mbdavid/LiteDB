@@ -22,14 +22,6 @@ namespace LiteDB
         /// </summary>
         public Dictionary<ushort, DataBlock> DataBlocks { get; set; }
 
-        /// <summary>
-        /// Bytes available in this page
-        /// </summary>
-        public override int FreeBytes
-        {
-            get { return PAGE_AVAILABLE_BYTES - this.DataBlocks.Sum(x => x.Value.Length); }
-        }
-
         public DataPage()
             : base()
         {
@@ -37,15 +29,22 @@ namespace LiteDB
             this.DataBlocks = new Dictionary<ushort, DataBlock>();
         }
 
+        /// <summary>
+        /// Clear page content - dataBlocks
+        /// </summary>
         public override void Clear()
         {
             base.Clear();
             this.DataBlocks = new Dictionary<ushort, DataBlock>();
         }
 
-        protected override void UpdateItemCount()
+        /// <summary>
+        /// Update freebytes + items count
+        /// </summary>
+        public override void UpdateItemCount()
         {
             this.ItemCount = (ushort)this.DataBlocks.Count;
+            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.DataBlocks.Sum(x => x.Value.Length);
         }
 
         public override void WriteContent(BinaryWriter writer)

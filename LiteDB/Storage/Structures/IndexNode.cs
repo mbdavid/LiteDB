@@ -59,7 +59,7 @@ namespace LiteDB
             { 
                 return IndexNode.INDEX_NODE_FIXED_SIZE + 
                     (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
-                    this.Value.GetByteCount(); // Bytes in BsonValue
+                    this.Value.GetBytesCount(); // bytes count in BsonValue
             }
         }
 

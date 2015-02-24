@@ -561,8 +561,10 @@ namespace LiteDB
         /// Returns how many bytes this BsonValue will use to persist in a binary stream
         /// Used only in Index
         /// </summary>
-        internal int GetByteCount()
+        internal int GetBytesCount()
         {
+            //TODO: it´s calling 3 times in insert!
+
             var length = 1; // used to store BsonType
 
             switch (this.Type)
@@ -582,11 +584,30 @@ namespace LiteDB
                 case BsonType.Binary: length += ((Byte[])this.RawValue).Length + 1; break;
                 case BsonType.String: length += Encoding.UTF8.GetByteCount((string)this.RawValue) + 1; break;
 
-                //TODO: fix this number
-                // to avoid serialize Array/Document i will assume that BsonValue is the MAX_INDEX_LENGTH
-                case BsonType.Array: 
+                // TODO: fix this - its not good
+                case BsonType.Array:
+                    using(var ma = new MemoryStream())
+                    {
+                        using (var w = new BinaryWriter(ma))
+                        {
+                            new BsonWriter()
+                                .WriteArray(w, this.AsArray);
+
+                            length += (int)ma.Position;
+                        }
+                    }
+                    break;
                 case BsonType.Document:
-                    length = IndexService.MAX_INDEX_LENGTH;
+                    using(var md = new MemoryStream())
+                    {
+                        using (var w = new BinaryWriter(md))
+                        {
+                            new BsonWriter()
+                                .WriteDocument(w, this.AsDocument);
+
+                            length += (int)md.Position;
+                        }
+                    }
                     break;
             }
 

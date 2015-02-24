@@ -89,7 +89,7 @@ namespace LiteDB
         {
             var obj = new BsonDocument();
 
-            var token = _tokenizer.ReadToken();
+            var token = _tokenizer.ReadToken(); // read "<key>"
 
             while (token.TokenType != JsonTokenType.EndDoc)
             {
@@ -97,28 +97,28 @@ namespace LiteDB
 
                 var key = token.Token;
 
-                token = _tokenizer.ReadToken();
+                token = _tokenizer.ReadToken(); // read ":"
 
                 token.Expect(JsonTokenType.Colon);
 
-                var value = this.ReadValue(_tokenizer.ReadToken());
+                token = _tokenizer.ReadToken(); // read "<value>"
 
                 // check if not a special data type - only if is first attribute
                 if (key[0] == '$' && obj.Count == 0)
                 {
-                    var val = this.ReadExtendedDataType(key, value);
+                    var val = this.ReadExtendedDataType(key, token.Token);
 
                     // if val is null then it's not a extended data type - it's just a object with $ attribute
                     if(!val.IsNull) return val;
                 }
 
-                obj[key] = value;
+                obj[key] = this.ReadValue(token); // read "," or "}"
 
                 token = _tokenizer.ReadToken();
 
                 if(token.TokenType == JsonTokenType.Comma)
                 {
-                    token = _tokenizer.ReadToken();
+                    token = _tokenizer.ReadToken(); // read "<key>"
                 }
             }
 

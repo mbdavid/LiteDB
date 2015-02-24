@@ -17,27 +17,29 @@ namespace LiteDB
         /// </summary>
         public Byte[] Data { get; set; }
 
-        public override int FreeBytes
+        public ExtendPage()
+            : base()
         {
-            get { return PAGE_AVAILABLE_BYTES - Data.Length; }
+            this.PageType = PageType.Extend;
+            this.Data = new byte[0];
         }
 
-        protected override void UpdateItemCount()
-        {
-            this.ItemCount = (ushort)Data.Length;
-        }
-
+        /// <summary>
+        /// Clear page content - Data byte array
+        /// </summary>
         public override void Clear()
         {
             base.Clear();
             this.Data = new byte[0];
         }
 
-        public ExtendPage()
-            : base()
+        /// <summary>
+        /// Update freebytes + items count
+        /// </summary>
+        public override void UpdateItemCount()
         {
-            this.PageType = LiteDB.PageType.Extend;
-            this.Data = new byte[0];
+            this.ItemCount = (ushort)Data.Length;
+            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.Data.Length; // not used on ExtendPage
         }
 
         public override void ReadContent(BinaryReader reader)

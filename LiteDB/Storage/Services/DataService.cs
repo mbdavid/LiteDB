@@ -49,6 +49,9 @@ namespace LiteDB
             // add dataBlock to this page
             dataPage.DataBlocks.Add(block.Position.Index, block);
 
+            // update freebytes + items count
+            dataPage.UpdateItemCount();
+
             dataPage.IsDirty = true;
 
             // add/remove dataPage on freelist if has space
@@ -94,10 +97,10 @@ namespace LiteDB
             }
             else
             {
-                // If no extends, just update data block
+                // if no extends, just update data block
                 block.Data = data;
 
-                // If there was a extended bytes, delete
+                // if there was a extended bytes, delete
                 if (block.ExtendPageID != uint.MaxValue)
                 {
                     _pager.DeletePage(block.ExtendPageID, true);
@@ -105,7 +108,10 @@ namespace LiteDB
                 }
             }
 
-            // Add/Remove dataPage on freelist if has space AND its on/off free list
+            // updates freebytes + items count
+            dataPage.UpdateItemCount();
+
+            // add/remove dataPage on freelist if has space AND its on/off free list
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             dataPage.IsDirty = true;
@@ -164,6 +170,9 @@ namespace LiteDB
             // delete block inside page
             page.DataBlocks.Remove(block.Position.Index);
 
+            // update freebytes + itemcount
+            page.UpdateItemCount();
+
             // if there is no more datablocks, lets delete the page
             if (page.DataBlocks.Count == 0)
             {
@@ -201,6 +210,9 @@ namespace LiteDB
                 page.Data = new byte[bytesToCopy];
 
                 Buffer.BlockCopy(data, offset, page.Data, 0, bytesToCopy);
+
+                // updates free bytes + items count
+                page.UpdateItemCount();
 
                 page.IsDirty = true;
 
