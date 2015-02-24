@@ -111,6 +111,26 @@ namespace LiteDB
             return this.GetEnumerator();
         }
 
+        public override int CompareTo(BsonValue other)
+        {
+            // if types are diferent, returns sort type order
+            if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
+
+            var otherArray = other.AsArray;
+
+            var result = 0;
+            var i = 0;
+            var stop = Math.Min(this.Count, otherArray.Count);
+
+            // compare each element
+            for (; 0 == result && i < stop; i++)
+                result = this[i].CompareTo(otherArray[i]);
+
+            if (result != 0) return result;
+            if (i == this.Count) return i == otherArray.Count ? 0 : -1;
+            return 1;
+        }
+
         public override string ToString()
         {
             return JsonSerializer.Serialize(this, false, true);

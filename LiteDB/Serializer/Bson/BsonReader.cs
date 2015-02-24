@@ -63,7 +63,7 @@ namespace LiteDB
             {
                 var ts = _reader.ReadInt64();
 
-                return BsonWriter.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
+                return BsonValue.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
             }
             else if (type == 0x0A) // Null
             {

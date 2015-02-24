@@ -8,19 +8,26 @@ using System.Text;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// All supported BsonTypes in sort order
+    /// </summary>
     public enum BsonType
     { 
-        Null,
-        Array,
-        Document, 
+        Null = 1,
 
-        Binary,
-        Boolean,
-        String,
-        Int32,
-        Int64,
-        Double,
-        DateTime,
-        Guid
+        Int32 = 2,
+        Int64 = 3,
+        Double = 4,
+
+        String = 5,
+
+        Document = 6,
+        Array = 7,
+
+        Binary = 8,
+        Guid = 9,
+
+        Boolean = 10,
+        DateTime = 11
     }
 }

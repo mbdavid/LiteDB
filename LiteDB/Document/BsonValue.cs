@@ -14,8 +14,13 @@ namespace LiteDB
     /// </summary>
     public class BsonValue : IComparable<BsonValue>, IEquatable<BsonValue>
     {
+        public static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         public static BsonValue Null { get { return new BsonValue(); } }
 
+        /// <summary>
+        /// Indicate BsonType of this BsonValue
+        /// </summary>
         public BsonType Type { get; private set; }
 
         /// <summary>
@@ -30,10 +35,27 @@ namespace LiteDB
             this.Type = BsonType.Null;
             this.RawValue = null;
         }
-
-        public BsonValue(List<BsonValue> value)
+        public BsonValue(Int32 value)
         {
-            this.Type = BsonType.Array;
+            this.Type = BsonType.Int32;
+            this.RawValue = value;
+        }
+
+        public BsonValue(Int64 value)
+        {
+            this.Type = BsonType.Int64;
+            this.RawValue = value;
+        }
+
+        public BsonValue(Double value)
+        {
+            this.Type = BsonType.Double;
+            this.RawValue = value;
+        }
+
+        public BsonValue(String value)
+        {
+            this.Type = value == null ? BsonType.Null : BsonType.String;
             this.RawValue = value;
         }
 
@@ -43,51 +65,33 @@ namespace LiteDB
             this.RawValue = value;
         }
 
-        public BsonValue(byte[] value)
+        public BsonValue(List<BsonValue> value)
+        {
+            this.Type = BsonType.Array;
+            this.RawValue = value;
+        }
+
+        public BsonValue(Byte[] value)
         {
             this.Type = BsonType.Binary;
-            this.RawValue = value;
-        }
-
-        public BsonValue(bool value)
-        {
-            this.Type = BsonType.Boolean;
-            this.RawValue = value;
-        }
-
-        public BsonValue(string value)
-        {
-            this.Type = value == null ? BsonType.Null : BsonType.String;
-            this.RawValue = value;
-        }
-
-        public BsonValue(int value)
-        {
-            this.Type = BsonType.Int32;
-            this.RawValue = value;
-        }
-
-        public BsonValue(long value)
-        {
-            this.Type = BsonType.Int64;
-            this.RawValue = value;
-        }
-
-        public BsonValue(double value)
-        {
-            this.Type = BsonType.Double;
-            this.RawValue = value;
-        }
-
-        public BsonValue(DateTime value)
-        {
-            this.Type = BsonType.DateTime;
             this.RawValue = value;
         }
 
         public BsonValue(Guid value)
         {
             this.Type = BsonType.Guid;
+            this.RawValue = value;
+        }
+
+        public BsonValue(Boolean value)
+        {
+            this.Type = BsonType.Boolean;
+            this.RawValue = value;
+        }
+
+        public BsonValue(DateTime value)
+        {
+            this.Type = BsonType.DateTime;
             this.RawValue = value;
         }
 
@@ -102,16 +106,22 @@ namespace LiteDB
             this.RawValue = value;
 
             if (value == null) this.Type = BsonType.Null;
-            else if (value is List<BsonValue>) this.Type = BsonType.Array;
+
+            else if (value is Int32) this.Type = BsonType.Int32;
+            else if (value is Int64) this.Type = BsonType.Int64;
+            else if (value is Double) this.Type = BsonType.Double;
+
+            else if (value is String) this.Type = BsonType.String;
+
             else if (value is Dictionary<string, BsonValue>) this.Type = BsonType.Document;
-            else if (value is byte[]) this.Type = BsonType.Binary;
-            else if (value is bool) this.Type = BsonType.Boolean;
-            else if (value is string) this.Type = BsonType.String;
-            else if (value is int) this.Type = BsonType.Int32;
-            else if (value is long) this.Type = BsonType.Int64;
-            else if (value is double) this.Type = BsonType.Double;
-            else if (value is DateTime) this.Type = BsonType.DateTime;
+            else if (value is List<BsonValue>) this.Type = BsonType.Array;
+
+            else if (value is Byte[]) this.Type = BsonType.Binary;
             else if (value is Guid) this.Type = BsonType.Guid;
+
+            else if (value is Boolean) this.Type = BsonType.Boolean;
+            else if (value is DateTime) this.Type = BsonType.DateTime;
+
             else if (value is BsonValue)
             {
                 var v = (BsonValue)value;
@@ -339,104 +349,124 @@ namespace LiteDB
 
         #region Implicit Ctor
 
-        public static implicit operator Byte[](BsonValue value)
-        {
-            return (Byte[])value.RawValue;
-        }
-
-        public static implicit operator BsonValue(Byte[] value)
-        {
-            return new BsonValue { Type = BsonType.Binary, RawValue = value };
-        }
-
-        public static implicit operator Boolean(BsonValue value)
-        {
-            return (Boolean)value.RawValue;
-        }
-
-        public static implicit operator BsonValue(Boolean value)
-        {
-            return new BsonValue { Type = BsonType.Boolean, RawValue = value };
-        }
-
-        public static implicit operator String(BsonValue value)
-        {
-            return (String)value.RawValue;
-        }
-
-        public static implicit operator BsonValue(String value)
-        {
-            return new BsonValue { Type = BsonType.String, RawValue = value };
-        }
-
+        // Int32
         public static implicit operator Int32(BsonValue value)
         {
             return (Int32)value.RawValue;
         }
 
+        // Int32
         public static implicit operator BsonValue(Int32 value)
         {
             return new BsonValue { Type = BsonType.Int32, RawValue = value };
         }
 
+        // Int64
         public static implicit operator Int64(BsonValue value)
         {
             return (Int64)value.RawValue;
         }
 
+        // Int64
         public static implicit operator BsonValue(Int64 value)
         {
             return new BsonValue { Type = BsonType.Int64, RawValue = value };
         }
 
+        // Double
         public static implicit operator Double(BsonValue value)
         {
             return (Double)value.RawValue;
         }
 
+        // Double
         public static implicit operator BsonValue(Double value)
         {
             return new BsonValue { Type = BsonType.Double, RawValue = value };
         }
 
-        public static implicit operator DateTime(BsonValue value)
+        // String
+        public static implicit operator String(BsonValue value)
         {
-            return (DateTime)value.RawValue;
+            return (String)value.RawValue;
         }
 
-        public static implicit operator BsonValue(DateTime value)
+        // String
+        public static implicit operator BsonValue(String value)
         {
-            return new BsonValue { Type = BsonType.DateTime, RawValue = value };
+            return new BsonValue { Type = BsonType.String, RawValue = value };
         }
 
-        public static implicit operator Guid(BsonValue value)
-        {
-            return (Guid)value.RawValue;
-        }
-
-        public static implicit operator BsonValue(Guid value)
-        {
-            return new BsonValue { Type = BsonType.Guid, RawValue = value };
-        }
-
-        public static implicit operator List<BsonValue>(BsonValue value)
-        {
-            return (List<BsonValue>)value.RawValue;
-        }
-
-        public static implicit operator BsonValue(List<BsonValue> value)
-        {
-            return new BsonValue { Type = BsonType.Array, RawValue = value };
-        }
-
+        // Document
         public static implicit operator Dictionary<string, BsonValue>(BsonValue value)
         {
             return (Dictionary<string, BsonValue>)value.RawValue;
         }
 
+        // Document
         public static implicit operator BsonValue(Dictionary<string, BsonValue> value)
         {
             return new BsonValue { Type = BsonType.Document, RawValue = value };
+        }
+
+        // Array
+        public static implicit operator List<BsonValue>(BsonValue value)
+        {
+            return (List<BsonValue>)value.RawValue;
+        }
+
+        // Array
+        public static implicit operator BsonValue(List<BsonValue> value)
+        {
+            return new BsonValue { Type = BsonType.Array, RawValue = value };
+        }
+
+        // Binary
+        public static implicit operator Byte[](BsonValue value)
+        {
+            return (Byte[])value.RawValue;
+        }
+
+        // Binary
+        public static implicit operator BsonValue(Byte[] value)
+        {
+            return new BsonValue { Type = BsonType.Binary, RawValue = value };
+        }
+
+        // Guid
+        public static implicit operator Guid(BsonValue value)
+        {
+            return (Guid)value.RawValue;
+        }
+
+        // Guid
+        public static implicit operator BsonValue(Guid value)
+        {
+            return new BsonValue { Type = BsonType.Guid, RawValue = value };
+        }
+
+        // Boolean
+        public static implicit operator Boolean(BsonValue value)
+        {
+            return (Boolean)value.RawValue;
+        }
+
+        // Boolean
+        public static implicit operator BsonValue(Boolean value)
+        {
+            return new BsonValue { Type = BsonType.Boolean, RawValue = value };
+        }
+
+        // DateTime
+        public static implicit operator DateTime(BsonValue value)
+        {
+            return (DateTime)value.RawValue;
+        }
+
+        // DateTime
+        public static implicit operator BsonValue(DateTime value)
+        {
+            return new BsonValue { Type = BsonType.DateTime, RawValue = value };
         }
 
         public override string ToString()
@@ -448,14 +478,9 @@ namespace LiteDB
 
         #region IComparable<BsonValue>, IEquatable<BsonValue>
 
-        public int CompareTo(BsonValue other)
+        public virtual int CompareTo(BsonValue other)
         {
-            // first, compare Null values (null is always less than other type)
-            if (this.Type == BsonType.Null && other.Type == BsonType.Null) return 0;
-            if (this.Type == BsonType.Null) return -1;
-            if (other.Type == BsonType.Null) return 1;
-
-            // if types are diferentes, convert
+            // first, test if types are diferentes
             if (this.Type != other.Type)
             {
                 // if both values are number, convert them to Double to compare
@@ -463,33 +488,35 @@ namespace LiteDB
                 {
                     return Convert.ToDouble(this.RawValue).CompareTo(Convert.ToDouble(this.RawValue));
                 }
-
-                // array / object can't be compared
-                if (this.IsDocument || this.IsArray || other.IsDocument || other.IsArray)
-                {
-                    throw new LiteException("BsonArray and BsonObject can't be compared");
-                }
+                // if not, order by sort type order
                 else
                 {
-                    // if not, convert both to string
-                    return string.Compare(this.RawValue.ToString(), other.RawValue.ToString());
+                    return this.Type.CompareTo(other.Type);
                 }
             }
 
             // for both values with same datatype just compare
-
             switch (this.Type)
             {
+                case BsonType.Null: return 0; // null == null
+
                 case BsonType.Int32: return ((Int32)this.RawValue).CompareTo((Int32)other.RawValue);
                 case BsonType.Int64: return ((Int64)this.RawValue).CompareTo((Int64)other.RawValue);
                 case BsonType.Double: return ((Double)this.RawValue).CompareTo((Double)other.RawValue);
+
                 case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue);
+
+                case BsonType.Document: return this.AsDocument.CompareTo(other);
+                case BsonType.Array: return this.AsArray.CompareTo(other);
+
+                case BsonType.Binary: return ((Byte[])this.RawValue).BinaryCompareTo((Byte[])other.RawValue);
+                case BsonType.Guid: return ((Guid)this.RawValue).CompareTo((Guid)other.RawValue);
+
                 case BsonType.Boolean: return ((Boolean)this.RawValue).CompareTo((Boolean)other.RawValue);
                 case BsonType.DateTime: return ((DateTime)this.RawValue).CompareTo((DateTime)other.RawValue);
-                case BsonType.Guid: return ((Guid)this.RawValue).CompareTo((Guid)other.RawValue);
-            }
 
-            throw new LiteException("BsonArray and BsonObject can't be compared");
+                default: return 0; // never happend
+            }
         }
 
         public bool Equals(BsonValue other)

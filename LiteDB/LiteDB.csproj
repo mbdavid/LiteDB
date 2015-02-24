@@ -146,6 +146,7 @@
     <Compile Include="Storage\Pages\BasePage.cs" />
     <Compile Include="Storage\Pages\HeaderPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\BinaryExtensions.cs" />
     <Compile Include="Utils\DumpDatabase.cs" />
     <Compile Include="Utils\IOExceptionExtensions.cs" />
     <Compile Include="Utils\MimeTypeConverter.cs" />

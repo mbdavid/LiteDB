@@ -210,9 +210,32 @@ namespace LiteDB
 
         #endregion
 
+        #region CompareTo / ToString
+
+        public override int CompareTo(BsonValue other)
+        {
+            // if types are diferent, returns sort type order
+            if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
+
+            var otherDoc = other.AsDocument;
+
+            // compare each key/value
+            foreach (var key in this.Keys)
+            {
+                var result = this[key].CompareTo(otherDoc[key]);
+
+                if (result != 0) return result;
+            }
+
+            // if other doc has all my key/value and more, then he is bigger than I
+            return -1;
+        }
+
         public override string ToString()
         {
             return JsonSerializer.Serialize(this, false, true);
         }
+
+        #endregion
     }
 }

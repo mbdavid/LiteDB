@@ -9,8 +9,6 @@ namespace LiteDB
 {
     internal class BsonWriter
     {
-        internal static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
         private Stream _stream;
 
         public BsonWriter(Stream stream)
@@ -75,7 +73,7 @@ namespace LiteDB
                     writer.Write((byte)0x09);
                     this.WriteCString(writer, key);
                     var utc = ((DateTime)value.RawValue).ToUniversalTime();
-                    var ts = utc - UnixEpoch;
+                    var ts = utc - BsonValue.UnixEpoch;
                     writer.Write(Convert.ToInt64(ts.TotalMilliseconds));
                     break;
                 case BsonType.Null:
