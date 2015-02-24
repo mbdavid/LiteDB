@@ -504,7 +504,7 @@ namespace LiteDB
                 case BsonType.Int64: return ((Int64)this.RawValue).CompareTo((Int64)other.RawValue);
                 case BsonType.Double: return ((Double)this.RawValue).CompareTo((Double)other.RawValue);
 
-                case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue);
+                case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue, true);
 
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
                 case BsonType.Array: return this.AsArray.CompareTo(other);
@@ -559,11 +559,38 @@ namespace LiteDB
 
         /// <summary>
         /// Returns how many bytes this BsonValue will use to persist in a binary stream
+        /// Used only in Index
         /// </summary>
-        public int GetByteCount()
+        internal int GetByteCount()
         {
-            //TODO: implemeent - must include +1 to type definition
-            return 1;
+            var length = 1; // used to store BsonType
+
+            switch (this.Type)
+            {
+                // fixed length
+                case BsonType.Null: length += 0; break;
+
+                case BsonType.Int32: length += 4; break;
+                case BsonType.Int64: length += 8; break;
+                case BsonType.Double: length += 8; break;
+
+                case BsonType.Boolean: length += 1; break;
+                case BsonType.DateTime: length += 8; break;
+                case BsonType.Guid: length += 16; break;
+
+                // variable length = +1 to store length
+                case BsonType.Binary: length += ((Byte[])this.RawValue).Length + 1; break;
+                case BsonType.String: length += Encoding.UTF8.GetByteCount((string)this.RawValue) + 1; break;
+
+                //TODO: fix this number
+                // to avoid serialize Array/Document i will assume that BsonValue is the MAX_INDEX_LENGTH
+                case BsonType.Array: 
+                case BsonType.Document:
+                    length = IndexService.MAX_INDEX_LENGTH;
+                    break;
+            }
+
+            return length;
         }
 
         #endregion
