@@ -21,6 +21,12 @@ namespace LiteDB
             if (array == null) throw new ArgumentNullException("array");
         }
 
+        public BsonArray(BsonValue[] array)
+            : base(new List<BsonValue>(array))
+        {
+            if (array == null) throw new ArgumentNullException("array");
+        }
+
         public BsonArray(IEnumerable<BsonValue> items)
             : this()
         {
@@ -39,6 +45,17 @@ namespace LiteDB
             this.AddRange<BsonDocument>(items);
         }
 
+        public void AddRange<T>(IEnumerable<T> array)
+            where T : BsonValue
+        {
+            if (array == null) throw new ArgumentNullException("array");
+
+            foreach (var item in array)
+            {
+                this.Add(item);
+            }
+        }
+
         public BsonValue this[int index]
         {
             get
@@ -51,22 +68,13 @@ namespace LiteDB
             }
         }
 
-        public void Add(BsonValue value)
+        public BsonArray Add(BsonValue value)
         {
             if (value == null) value = BsonValue.Null;
 
             this.RawValue.Add(value);
-        }
 
-        public void AddRange<T>(IEnumerable<T> array)
-            where T : BsonValue
-        {
-            if (array == null) throw new ArgumentNullException("array");
-
-            foreach (var item in array)
-            {
-                this.Add(item);
-            }
+            return this;
         }
 
         public void Remove(int index)
