@@ -131,7 +131,6 @@
     <Compile Include="Storage\Pages\CollectionPage.cs" />
     <Compile Include="Storage\Structures\CollectionIndex.cs" />
     <Compile Include="Storage\Structures\DataBlock.cs" />
-    <Compile Include="Storage\Structures\IndexKey.cs" />
     <Compile Include="Storage\Structures\IndexNode.cs" />
     <Compile Include="Storage\Structures\PageAddress.cs" />
     <Compile Include="Storage\Pages\ExtendPage.cs" />

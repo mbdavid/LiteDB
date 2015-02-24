@@ -31,7 +31,7 @@ namespace LiteDB
                 }
 
                 // find indexNode using PK index
-                var node = this.Database.Indexer.FindOne(col.PK, id.RawValue);
+                var node = this.Database.Indexer.FindOne(col.PK, id);
 
                 // if not found, abort transaction and returns false
                 if (node == null)

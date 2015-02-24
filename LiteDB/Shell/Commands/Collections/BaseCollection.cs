@@ -78,15 +78,16 @@ namespace LiteDB.Shell.Commands
 
             switch (oper)
             {
-                case "=": return Query.EQ(field, value.RawValue);
-                case "!=": return Query.Not(field, value.RawValue);
-                case ">": return Query.GT(field, value.RawValue);
-                case ">=": return Query.GTE(field, value.RawValue);
-                case "<": return Query.LT(field, value.RawValue);
-                case "<=": return Query.LTE(field, value.RawValue);
-                case "like": return Query.StartsWith(field, value.AsString);
-                case "in": return Query.In(field, value.AsArray.RawValue.ToArray());
-                case "between": return Query.Between(field, value.AsArray.RawValue[0], value.AsArray.RawValue[1]);
+                case "=": return Query.EQ(field, value);
+                case "!=": return Query.Not(field, value);
+                case ">": return Query.GT(field, value);
+                case ">=": return Query.GTE(field, value);
+                case "<": return Query.LT(field, value);
+                case "<=": return Query.LTE(field, value);
+                case "like": return Query.StartsWith(field, value);
+                //TODO missing
+                //case "in": return Query.In(field, value.AsArray.ToArray());
+                case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
                 default: throw new ApplicationException("Invalid query operator");
             }
         }

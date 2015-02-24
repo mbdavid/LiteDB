@@ -8,9 +8,9 @@ namespace LiteDB
 {
     internal class QueryIn : Query
     {
-        public object[] Values { get; private set; }
+        public BsonValue[] Values { get; private set; }
 
-        public QueryIn(string field, object[] values)
+        public QueryIn(string field, BsonValue[] values)
             : base(field)
         {
             this.Values = values;

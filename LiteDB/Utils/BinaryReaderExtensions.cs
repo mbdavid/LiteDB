@@ -30,22 +30,39 @@ namespace LiteDB
             return new PageAddress(reader.ReadUInt32(), reader.ReadUInt16());
         }
 
-        public static IndexKey ReadIndexKey(this BinaryReader reader)
+        public static BsonValue ReadBsonValue(this BinaryReader reader)
         {
-            var type = (IndexDataType)reader.ReadByte();
+            var type = (BsonType)reader.ReadByte();
 
             switch (type)
             {
-                case IndexDataType.Null: return new IndexKey(null);
-                case IndexDataType.Int32: return new IndexKey(reader.ReadInt32());
-                case IndexDataType.Int64: return new IndexKey(reader.ReadInt64());
-                case IndexDataType.Double: return new IndexKey(reader.ReadDouble());
-                case IndexDataType.String:
-                    var l = reader.ReadByte();
-                    return new IndexKey(reader.ReadString(l));
-                case IndexDataType.Boolean: return new IndexKey(reader.ReadBoolean());
-                case IndexDataType.DateTime: return new IndexKey(reader.ReadDateTime());
-                case IndexDataType.Guid: return new IndexKey(reader.ReadGuid());
+                // fixed length
+                case BsonType.Null: return BsonValue.Null;
+
+                case BsonType.Int32: return reader.ReadInt32();
+                case BsonType.Int64: return reader.ReadInt64();
+                case BsonType.Double: return reader.ReadDouble();
+
+                case BsonType.Guid: return reader.ReadGuid();
+
+                case BsonType.Boolean: return reader.ReadBoolean();
+                case BsonType.DateTime: return reader.ReadDateTime();
+
+                // variable lengths
+                case BsonType.String:
+                    var ls = reader.ReadByte();
+                    return reader.ReadString(ls);
+
+                case BsonType.Binary:
+                    var lb = reader.ReadByte();
+                    return reader.ReadBytes(lb);
+
+                // for document/array uses BsonReader
+                case BsonType.Document:
+                    return new BsonReader().ReadDocument(reader);
+
+                case BsonType.Array:
+                    return new BsonReader().ReadArray(reader);
             }
 
             throw new NotImplementedException();

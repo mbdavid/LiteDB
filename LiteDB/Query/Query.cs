@@ -37,7 +37,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that value are equals to value (=)
         /// </summary>
-        public static Query EQ(string field, object value)
+        public static Query EQ(string field, BsonValue value)
         {
             return new QueryEquals(field, value);
         }
@@ -45,7 +45,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that value are less than value (&lt;)
         /// </summary>
-        public static Query LT(string field, object value)
+        public static Query LT(string field, BsonValue value)
         {
             return new QueryLess(field, value, false);
         }
@@ -53,7 +53,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that value are less than or equals value (&lt;=)
         /// </summary>
-        public static Query LTE(string field, object value)
+        public static Query LTE(string field, BsonValue value)
         {
             return new QueryLess(field, value, true);
         }
@@ -61,7 +61,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that value are greater than value (&gt;)
         /// </summary>
-        public static Query GT(string field, object value)
+        public static Query GT(string field, BsonValue value)
         {
             return new QueryGreater(field, value, false);
         }
@@ -69,7 +69,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that value are greater than or equals value (&gt;=)
         /// </summary>
-        public static Query GTE(string field, object value)
+        public static Query GTE(string field, BsonValue value)
         {
             return new QueryGreater(field, value, true);
         }
@@ -77,7 +77,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that values are between "start" and "end" values (BETWEEN)
         /// </summary>
-        public static Query Between(string field, object start, object end)
+        public static Query Between(string field, BsonValue start, BsonValue end)
         {
             return new QueryBetween(field, start, end);
         }
@@ -85,7 +85,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that starts with value (LIKE)
         /// </summary>
-        public static Query StartsWith(string field, string value)
+        public static Query StartsWith(string field, BsonValue value)
         {
             return new QueryStartsWith(field, value);
         }
@@ -93,7 +93,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that are not equals to value
         /// </summary>
-        public static Query Not(string field, object value)
+        public static Query Not(string field, BsonValue value)
         {
             return new QueryNot(field, value);
         }
@@ -101,7 +101,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all objects that has value in values list (IN)
         /// </summary>
-        public static Query In(string field, params object[] values)
+        public static Query In(string field, params BsonValue[] values)
         {
             return new QueryIn(field, values);
         }

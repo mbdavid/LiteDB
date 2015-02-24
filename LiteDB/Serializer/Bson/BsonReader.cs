@@ -10,44 +10,39 @@ namespace LiteDB
 {
     internal class BsonReader
     {
-        private BinaryReader _reader;
-
-        public BsonReader(Stream stream)
+        public BsonDocument Deserialize(Stream stream)
         {
-            _reader = new BinaryReader(stream);
+            var reader = new BinaryReader(stream);
+
+            return this.ReadDocument(reader);
         }
 
-        public BsonDocument Deserialize()
+        private BsonValue ReadElement(BinaryReader reader, out string name)
         {
-            return this.ReadDocument();
-        }
-
-        private BsonValue ReadElement(out string name)
-        {
-            var type = _reader.ReadByte();
-            name = this.ReadCString();
+            var type = reader.ReadByte();
+            name = this.ReadCString(reader);
 
             if (type == 0x01) // Double
             {
-                return _reader.ReadDouble();
+                return reader.ReadDouble();
             }
             else if (type == 0x02) // String
             {
-                return this.ReadString();
+                return this.ReadString(reader);
             }
             else if (type == 0x03) // Document
             {
-                return this.ReadDocument();
+                return this.ReadDocument(reader);
             }
             else if (type == 0x04) // Array
             {
-                return this.ReadArray();
+                return this.ReadArray(reader);
             }
             else if (type == 0x05) // Binary
             {
-                var length = _reader.ReadInt32();
-                var subType = _reader.ReadByte();
-                var bytes = _reader.ReadBytes(length);
+                var length = reader.ReadInt32();
+                var subType = reader.ReadByte();
+                var bytes = reader.ReadBytes(length);
 
                 switch (subType)
                 {
@@ -57,11 +52,11 @@ namespace LiteDB
             }
             else if (type == 0x08) // Boolean
             {
-                return _reader.ReadBoolean();
+                return reader.ReadBoolean();
             }
             else if (type == 0x09) // DateTime
             {
-                var ts = _reader.ReadInt64();
+                var ts = reader.ReadInt64();
 
                 return BsonValue.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
             }
@@ -71,67 +66,67 @@ namespace LiteDB
             }
             else if (type == 0x10) // Int32
             {
-                return _reader.ReadInt32();
+                return reader.ReadInt32();
             }
             else if (type == 0x12) // Int64
             {
-                return _reader.ReadInt64();
+                return reader.ReadInt64();
             }
 
             throw new LiteException("Bson type not supported");
         }
 
-        public BsonDocument ReadDocument()
+        public BsonDocument ReadDocument(BinaryReader reader)
         {
-            var length = _reader.ReadInt32();
-            var end = (int)_reader.BaseStream.Position + length - 1;
+            var length = reader.ReadInt32();
+            var end = (int)reader.BaseStream.Position + length - 1;
             var obj = new BsonDocument();
 
-            while (_reader.BaseStream.Position < end)
+            while (reader.BaseStream.Position < end)
             {
                 string name;
-                var value = this.ReadElement(out name);
+                var value = this.ReadElement(reader, out name);
                 obj.RawValue[name] = value;
             }
 
-            _reader.ReadByte(); // zero
+            reader.ReadByte(); // zero
 
             return obj;
         }
 
-        public BsonArray ReadArray()
+        public BsonArray ReadArray(BinaryReader reader)
         {
-            var length = _reader.ReadInt32();
-            var end = (int)_reader.BaseStream.Position + length - 1;
+            var length = reader.ReadInt32();
+            var end = (int)reader.BaseStream.Position + length - 1;
             var arr = new BsonArray();
 
-            while (_reader.BaseStream.Position < end)
+            while (reader.BaseStream.Position < end)
             {
                 string name;
-                var value = this.ReadElement(out name);
+                var value = this.ReadElement(reader, out name);
                 arr.Add(value);
             }
 
-            _reader.ReadByte(); // zero
+            reader.ReadByte(); // zero
 
             return arr;
         }
 
-        private string ReadString()
+        private string ReadString(BinaryReader reader)
         {
-            var length = _reader.ReadInt32();
-            var bytes = _reader.ReadBytes(length - 1);
-            _reader.ReadByte(); // discard \x00
+            var length = reader.ReadInt32();
+            var bytes = reader.ReadBytes(length - 1);
+            reader.ReadByte(); // discard \x00
             return Encoding.UTF8.GetString(bytes);
         }
 
-        private string ReadCString()
+        private string ReadCString(BinaryReader reader)
         {
             using (var ms = new MemoryStream())
             {
                 while (true)
                 {
-                    byte buf = _reader.ReadByte();
+                    byte buf = reader.ReadByte();
                     if (buf == 0x00) break;
                     ms.WriteByte(buf);
                 }

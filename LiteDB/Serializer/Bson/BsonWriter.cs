@@ -9,16 +9,9 @@ namespace LiteDB
 {
     internal class BsonWriter
     {
-        private Stream _stream;
-
-        public BsonWriter(Stream stream)
+        public void Serialize(Stream stream, BsonDocument value)
         {
-            _stream = stream;
-        }
-
-        public void Serialize(BsonDocument value)
-        {
-            var writer = new BinaryWriter(_stream);
+            var writer = new BinaryWriter(stream);
 
             this.WriteDocument(writer, value);
         }
@@ -96,15 +89,15 @@ namespace LiteDB
         /// <summary>
         /// Write a bson document
         /// </summary>
-        private void WriteDocument(BinaryWriter writer, BsonDocument obj)
+        internal void WriteDocument(BinaryWriter writer, BsonDocument doc)
         {
             using (var mem = new MemoryStream())
             {
                 var w = new BinaryWriter(mem);
 
-                foreach (var key in obj.Keys)
+                foreach (var key in doc.Keys)
                 {
-                    this.WriteElement(w, key, obj[key] ?? BsonValue.Null);
+                    this.WriteElement(w, key, doc[key] ?? BsonValue.Null);
                 }
 
                 writer.Write((Int32)mem.Position);
@@ -113,7 +106,7 @@ namespace LiteDB
             }
         }
 
-        private void WriteArray(BinaryWriter writer, BsonArray arr)
+        internal void WriteArray(BinaryWriter writer, BsonArray arr)
         {
             using (var mem = new MemoryStream())
             {

@@ -31,7 +31,7 @@ namespace LiteDB
 
         public static LiteException IndexKeyTooLong()
         {
-            return new LiteException(202, "Index key must be less than {0} bytes", IndexKey.MAX_LENGTH_SIZE);
+            return new LiteException(202, "Index key must be less than {0} bytes", IndexService.MAX_INDEX_LENGTH);
         }
     }
 }

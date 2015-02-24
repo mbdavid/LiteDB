@@ -36,9 +36,9 @@ namespace LiteDB
         public PageAddress[] Next { get; set; }
 
         /// <summary>
-        /// The object key that was indexed
+        /// The object value that was indexed
         /// </summary>
-        public IndexKey Key { get; set; }
+        public BsonValue Value { get; set; }
 
         /// <summary>
         /// Reference for a datablock - the value
@@ -59,7 +59,7 @@ namespace LiteDB
             { 
                 return IndexNode.INDEX_NODE_FIXED_SIZE + 
                     (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
-                    Key.Length; // Key
+                    this.Value.GetByteCount(); // Bytes in BsonValue
             }
         }
 

@@ -8,9 +8,9 @@ namespace LiteDB
 {
     internal class QueryEquals : Query
     {
-        public object Value { get; private set; }
+        public BsonValue Value { get; private set; }
 
-        public QueryEquals(string field, object value)
+        public QueryEquals(string field, BsonValue value)
             : base(field)
         {
             this.Value = value;

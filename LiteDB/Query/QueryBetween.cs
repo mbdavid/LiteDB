@@ -8,10 +8,10 @@ namespace LiteDB
 {
     internal class QueryBetween : Query
     {
-        public object Start { get; private set; }
-        public object End { get; private set; }
+        public BsonValue Start { get; private set; }
+        public BsonValue End { get; private set; }
 
-        public QueryBetween(string field, object start, object end)
+        public QueryBetween(string field, BsonValue start, BsonValue end)
             : base(field)
         {
             this.Start = start;

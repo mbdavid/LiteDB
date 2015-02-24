@@ -8,10 +8,10 @@ namespace LiteDB
 {
     internal class QueryGreater : Query
     {
-        public object Value { get; private set; }
+        public BsonValue Value { get; private set; }
         public bool OrEquals { get; private set; }
 
-        public QueryGreater(string field, object value, bool orEquals)
+        public QueryGreater(string field, BsonValue value, bool orEquals)
             : base(field)
         {
             this.Value = value;

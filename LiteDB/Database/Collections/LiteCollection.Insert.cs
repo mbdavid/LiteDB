@@ -34,7 +34,7 @@ namespace LiteDB
                 var dataBlock = this.Database.Data.Insert(col, bytes);
 
                 // store id in a PK index [0 array]
-                var pk = this.Database.Indexer.AddNode(col.PK, id.RawValue);
+                var pk = this.Database.Indexer.AddNode(col.PK, id);
 
                 // do links between index <-> data block
                 pk.DataBlock = dataBlock.Position;

@@ -40,7 +40,7 @@ namespace LiteDB
                 }
 
                 // find indexNode from pk index
-                var indexNode = this.Database.Indexer.FindOne(col.PK, id.RawValue);
+                var indexNode = this.Database.Indexer.FindOne(col.PK, id);
 
                 // if not found document, no updates
                 if (indexNode == null)
@@ -60,7 +60,7 @@ namespace LiteDB
                     var node = this.Database.Indexer.GetNode(dataBlock.IndexRef[index.Slot]);
 
                     // check if my index node was changed
-                    if (node.Key.CompareTo(new IndexKey(key)) != 0)
+                    if (node.Value.CompareTo(key) != 0)
                     {
                         // remove old index node
                         this.Database.Indexer.Delete(index, node.Position);

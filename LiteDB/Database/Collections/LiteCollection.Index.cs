@@ -101,7 +101,7 @@ namespace LiteDB
         /// <param name="unique">Create a unique values index?</param>
         public virtual bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false)
         {
-            var field = _visitor.GetBsonProperty(property);
+            var field = _visitor.GetBsonField(property);
 
             return this.EnsureIndex(field, unique);
         }

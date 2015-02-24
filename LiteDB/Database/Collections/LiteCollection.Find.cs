@@ -20,7 +20,7 @@ namespace LiteDB
 
             if (col == null) return default(T);
 
-            var node = this.Database.Indexer.FindOne(col.PK, id.RawValue);
+            var node = this.Database.Indexer.FindOne(col.PK, id);
 
             if (node == null) return default(T);
 

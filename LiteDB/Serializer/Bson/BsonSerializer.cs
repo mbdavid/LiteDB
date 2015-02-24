@@ -21,8 +21,8 @@ namespace LiteDB
 
             using (var mem = new MemoryStream())
             {
-                var writer = new BsonWriter(mem);
-                writer.Serialize(value);
+                var writer = new BsonWriter();
+                writer.Serialize(mem, value);
 
                 return mem.ToArray();
             }
@@ -34,9 +34,9 @@ namespace LiteDB
 
             using (var mem = new MemoryStream(bson))
             {
-                var reader = new BsonReader(mem);
+                var reader = new BsonReader();
 
-                return reader.Deserialize();
+                return reader.Deserialize(mem);
             }
         }
     }

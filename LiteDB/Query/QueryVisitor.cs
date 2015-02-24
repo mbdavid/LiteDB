@@ -101,15 +101,17 @@ namespace LiteDB
             var member = expr as MemberExpression;
             var propInfo = member.Member as PropertyInfo;
 
-            return this.GetBsonProperty(propInfo);
+            return this.GetBsonField(propInfo);
         }
 
-        private object VisitValue(Expression expr)
+        private BsonValue VisitValue(Expression expr)
         {
             // its a constant; Ex: "fixed string"
             if(expr is ConstantExpression)
             {
-                return (expr as ConstantExpression).Value;
+                var value = (expr as ConstantExpression).Value;
+
+                return _mapper.Serialize(value, 0);
             }
 
             // execute expression
@@ -117,13 +119,13 @@ namespace LiteDB
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
             var getter = getterLambda.Compile();
 
-            return getter();
+            return _mapper.Serialize(getter(), 0);
         }
 
         /// <summary>
-        /// Get a Bson property from a simple Linq expression: x => x.CustomerName
+        /// Get a Bson field from a simple Linq expression: x => x.CustomerName
         /// </summary>
-        public string GetBsonProperty<TK, K>(Expression<Func<TK, K>> expr)
+        public string GetBsonField<TK, K>(Expression<Func<TK, K>> expr)
         {
             var member = expr.Body as MemberExpression;
 
@@ -132,13 +134,13 @@ namespace LiteDB
                 throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", expr.ToString()));
             }
 
-            return this.GetBsonProperty(member.Member as PropertyInfo);
+            return this.GetBsonField(member.Member as PropertyInfo);
         }
 
         /// <summary>
-        /// Get a bson string property based on class PropertyInfo using BsonMapper class
+        /// Get a bson string field based on class PropertyInfo using BsonMapper class
         /// </summary>
-        private string GetBsonProperty(PropertyInfo propInfo)
+        private string GetBsonField(PropertyInfo propInfo)
         {
             if (propInfo == null)
             {

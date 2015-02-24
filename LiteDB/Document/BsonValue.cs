@@ -554,5 +554,19 @@ namespace LiteDB
         }
 
         #endregion
+
+        #region GetBytesLength
+
+        /// <summary>
+        /// Returns how many bytes this BsonValue will use to persist in a binary stream
+        /// </summary>
+        public int GetByteCount()
+        {
+            //TODO: implemeent - must include +1 to type definition
+            return 1;
+        }
+
+        #endregion
+
     }
 }

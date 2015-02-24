@@ -75,7 +75,7 @@ namespace LiteDB
                 var node = page.Nodes[cur.Index];
 
                 sbs[0].Append((first ? "HEAD" :
-                    node.Key.Value == null ? "null" : Limit(node.Key.Value.ToString(), size)).PadBoth(1 + (2 * size)));
+                    node.Value.IsNull ? "null" : Limit(node.Value.ToString(), size)).PadBoth(1 + (2 * size)));
 
                 first = false;
 
@@ -97,14 +97,14 @@ namespace LiteDB
                             {
                                 var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
                                 var pnode = pprev.Nodes[node.Prev[i].Index];
-                                p = pnode.Key.Value == null ? "null" : pnode.Key.Value.ToString();
+                                p = pnode.Value == null ? "null" : pnode.Value.ToString();
                             }
                         }
                         if (!node.Next[i].IsEmpty)
                         {
                             var pnext = db.Pager.GetPage<IndexPage>(node.Next[i].PageID);
                             var pnode = pnext.Nodes[node.Next[i].Index];
-                            n = pnode.Key.Value == null ? "null" : pnode.Key.Value.ToString();
+                            n = pnode.Value == null ? "null" : pnode.Value.ToString();
                         }
                     }
 
@@ -151,9 +151,9 @@ namespace LiteDB
             return address.PageID.Dump() + ":" + address.Index.Dump();
         }
 
-        public static string Dump(this IndexKey value)
+        public static string Dump(this BsonValue value)
         {
-            return string.Format("{0}{1}{0}", value.Type == IndexDataType.String ? "'" : "", value.ToString());
+            return value.ToString();
         }
 
         public static void Dump(this BasePage page, StringBuilder sb)
@@ -180,7 +180,7 @@ namespace LiteDB
             {
                 sb.AppendFormat("[{0}] Key: {1}, Data: {2} / ",
                     node.Position.Index,
-                    node.Key.Dump(),
+                    node.Value.Dump(),
                     node.DataBlock.Dump());
             }
         }

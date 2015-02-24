@@ -41,26 +41,48 @@ namespace LiteDB
             writer.Write(address.Index);
         }
 
-        public static void Write(this BinaryWriter writer, IndexKey obj)
+        public static void WriteBsonValue(this BinaryWriter writer, BsonValue value)
         {
-            writer.Write((byte)obj.Type);
+            writer.Write((byte)value.Type);
 
-            switch(obj.Type)
+            switch(value.Type)
             {
-                case IndexDataType.Int32: writer.Write((Int32)obj.Value); break;
-                case IndexDataType.Int64: writer.Write((Int64)obj.Value); break;
-                case IndexDataType.Double: writer.Write((Double)obj.Value); break;
-                case IndexDataType.String:
-                    var length = (byte)Encoding.UTF8.GetByteCount((String)obj.Value);
-                    writer.Write(length);
-                    writer.Write((String)obj.Value, length);
-                    break;
-                case IndexDataType.Boolean: writer.Write((Boolean)obj.Value); break;
-                case IndexDataType.DateTime: writer.Write((DateTime)obj.Value); break;
-                case IndexDataType.Guid: writer.Write((Guid)obj.Value); break;
-            }
+                // fixed length
+                case BsonType.Null: break;
 
-            // otherwise is null - write only obj.Type = Null
+                case BsonType.Int32: writer.Write((Int32)value.RawValue); break;
+                case BsonType.Int64: writer.Write((Int64)value.RawValue); break;
+                case BsonType.Double: writer.Write((Double)value.RawValue); break;
+
+                case BsonType.Guid: writer.Write((Guid)value.RawValue); break;
+                case BsonType.Boolean: writer.Write((Boolean)value.RawValue); break;
+                case BsonType.DateTime: writer.Write((DateTime)value.RawValue); break;
+
+                // variable lengths
+                case BsonType.String:
+                    var str = (String)value.RawValue;
+                    var length = (byte)Encoding.UTF8.GetByteCount(str);
+                    writer.Write(length); // 1 byte for length
+                    writer.Write(str, length);
+                    break;
+
+                case BsonType.Binary:
+                    var bytes = (Byte[])value.RawValue;
+                    writer.Write((byte)bytes.Length); // 1 byte for length
+                    writer.Write(bytes);
+                    break;
+
+                // for document and array used BsonWriter
+                case BsonType.Document:
+                    new BsonWriter().WriteDocument(writer, value.AsDocument);
+                    break;
+
+                case BsonType.Array:
+                    new BsonWriter().WriteArray(writer, value.AsArray);
+                    break;
+
+                default: throw new NotImplementedException();
+            }
         }
     }
 }

@@ -25,7 +25,7 @@ namespace LiteDB
             return this.Serialize(poco, 0).AsDocument;
         }
 
-        private BsonValue Serialize(object obj, int depth)
+        internal BsonValue Serialize(object obj, int depth)
         {
             if (++depth > MAX_DEPTH) throw new LiteException("Serialization class reach MAX_DEPTH - Check for circular references");
 

@@ -12,6 +12,11 @@ namespace LiteDB
     /// </summary>
     internal class IndexService
     {
+        /// <summary>
+        /// Max size of a index entry - usde for string, binary, array and documents
+        /// </summary>
+        public const int MAX_INDEX_LENGTH = 255;
+
         private PageService _pager;
         private CacheService _cache;
 
@@ -35,7 +40,7 @@ namespace LiteDB
             var page = _pager.NewPage<IndexPage>();
 
             // create a empty node with full max level
-            var node = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) { Key = new IndexKey(null), Page = page };
+            var node = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) { Value = BsonValue.Null, Page = page };
 
             node.Position = new PageAddress(page.PageID, 0);
 
@@ -80,13 +85,16 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue value)
         {
-            // create persist value - used on key
-            var key = new IndexKey(value);
+            // test if value exceed max limit
+            if (value.GetByteCount() > MAX_INDEX_LENGTH)
+            {
+                throw LiteException.IndexKeyTooLong();
+            }
 
             var level = this.FlipCoin();
 
             // creating a new index node 
-            var node = new IndexNode(level) { Key = key };
+            var node = new IndexNode(level) { Value = value };
 
             // get a free page to insert my index node
             var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
@@ -107,7 +115,7 @@ namespace LiteDB
                 for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
                 {
                     // read next node to compare
-                    var diff = this.GetNode(cur.Next[i]).Key.CompareTo(key);
+                    var diff = this.GetNode(cur.Next[i]).Value.CompareTo(value);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
                     if (diff == 0 && index.Unique) throw new LiteException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
@@ -235,26 +243,25 @@ namespace LiteDB
         /// <summary>
         /// Find first indexNode that match with value - if not found, can return first greater (used for greaterThan/Between)
         /// </summary>
-        public IndexNode FindOne(CollectionIndex index, object value, bool greater = false)
+        public IndexNode FindOne(CollectionIndex index, BsonValue value, bool greater = false)
         {
             var cur = this.GetNode(index.HeadNode);
-            var key = new IndexKey(value);
 
             for (int i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
                 for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
                 {
                     var next = this.GetNode(cur.Next[i]);
-                    var diff = next.Key.CompareTo(key);
+                    var diff = next.Value.CompareTo(value);
 
                     if (diff == 1 && (i > 0 || !greater)) break;
                     if (diff == 1 && i == 0 && greater) return next;
 
-                    // if equals, test for duplicates
+                    // if equals, test for duplicates - go back to first occurs on duplicate values
                     if (diff == 0)
                     {
                         var last = next;
-                        while (next.Key.CompareTo(key) == 0)
+                        while (next.Value.CompareTo(value) == 0)
                         {
                             last = next;
                             if (index.HeadNode.Equals(next.Prev[0])) break;
@@ -272,7 +279,7 @@ namespace LiteDB
         /// <summary>
         /// Find all indexNodes that match with value
         /// </summary>
-        public IEnumerable<IndexNode> FindEquals(CollectionIndex index, object value)
+        public IEnumerable<IndexNode> FindEquals(CollectionIndex index, BsonValue value)
         {
             // find first indexNode
             var node = this.FindOne(index, value);
@@ -281,10 +288,8 @@ namespace LiteDB
 
             yield return node;
 
-            var key = new IndexKey(value);
-
             // navigate using next[0] do next node - if equals, returns
-            while (!node.Next[0].IsEmpty && ((node = this.GetNode(node.Next[0])).Key.CompareTo(key) == 0))
+            while (!node.Next[0].IsEmpty && ((node = this.GetNode(node.Next[0])).Value.CompareTo(value) == 0))
             {
                 yield return node;
             }
@@ -293,16 +298,15 @@ namespace LiteDB
         /// <summary>
         /// Find nodes between start and end and (inclusive)
         /// </summary>
-        public IEnumerable<IndexNode> FindBetween(CollectionIndex index, object start, object end)
+        public IEnumerable<IndexNode> FindBetween(CollectionIndex index, BsonValue start, BsonValue end)
         {
             // find first indexNode
             var node = this.FindOne(index, start, true);
-            var key = new IndexKey(end);
 
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var diff = node.Key.CompareTo(key);
+                var diff = node.Value.CompareTo(end);
 
                 if (diff <= 0) yield return node;
 
@@ -321,9 +325,17 @@ namespace LiteDB
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var key = node.Key.ToString();
+                var value = node.Value.AsString;
 
-                if (key.StartsWith(text, StringComparison.InvariantCultureIgnoreCase)) yield return node;
+                // value will not be null because null occurs before string (bsontype sort order)
+                if (value.StartsWith(text, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    yield return node;
+                }
+                else
+                {
+                    break; // if not more startswith, stop scanning
+                }
 
                 node = this.GetNode(node.Next[0]);
             }
@@ -332,13 +344,11 @@ namespace LiteDB
         /// <summary>
         /// Find all nodes less than value (can be inclusive) 
         /// </summary>
-        public IEnumerable<IndexNode> FindLessThan(CollectionIndex index, object value, bool includeValue = false)
+        public IEnumerable<IndexNode> FindLessThan(CollectionIndex index, BsonValue value, bool includeValue = false)
         {
-            var key = new IndexKey(value);
-
             foreach (var node in this.FindAll(index))
             {
-                var diff = node.Key.CompareTo(key);
+                var diff = node.Value.CompareTo(value);
 
                 if (diff == 1 || (!includeValue && diff == 0)) break;
 
@@ -349,19 +359,17 @@ namespace LiteDB
         /// <summary>
         /// Find all indexNodes that are greater/equals than value
         /// </summary>
-        public IEnumerable<IndexNode> FindGreaterThan(CollectionIndex index, object value, bool includeValue = false)
+        public IEnumerable<IndexNode> FindGreaterThan(CollectionIndex index, BsonValue value, bool includeValue = false)
         {
             // find first indexNode
             var node = this.FindOne(index, value, true);
 
             if (node == null) yield break;
 
-            var key = new IndexKey(value);
-
             // move until next is last
             while (node != null)
             {
-                var diff = node.Key.CompareTo(key);
+                var diff = node.Value.CompareTo(value);
 
                 if (diff == 1 || (includeValue && diff == 0)) yield return node;
 
@@ -369,7 +377,7 @@ namespace LiteDB
             }
         }
 
-        public IEnumerable<IndexNode> FindIn(CollectionIndex index, object[] values)
+        public IEnumerable<IndexNode> FindIn(CollectionIndex index, BsonValue[] values)
         {
             foreach (var value in values.Distinct())
             {

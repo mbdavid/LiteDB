@@ -8,9 +8,9 @@ namespace LiteDB
 {
     internal class QueryNot : Query
     {
-        public object Value { get; private set; }
+        public BsonValue Value { get; private set; }
 
-        public QueryNot(string field, object value)
+        public QueryNot(string field, BsonValue value)
             : base(field)
         {
             this.Value = value;
@@ -18,7 +18,7 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
         {
-            return db.Indexer.FindAll(index).Where(x => x.Key.CompareTo(new IndexKey(this.Value)) != 0);
+            return db.Indexer.FindAll(index).Where(x => x.Value.CompareTo(this.Value) != 0);
         }
     }
 }
