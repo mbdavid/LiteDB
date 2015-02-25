@@ -558,33 +558,29 @@ namespace LiteDB
         #region GetBytesLength
 
         /// <summary>
-        /// Returns how many bytes this BsonValue will use to persist in a binary stream
-        /// Used only in Index
+        /// Returns how many bytes this BsonValue will use to persist in a binary stream - Used on index node only
         /// </summary>
-        internal int GetBytesCount()
+        internal ushort GetBytesCount()
         {
-            //TODO: it´s calling 3 times in insert!
-
-            var length = 1; // used to store BsonType
+            var length = 0;
 
             switch (this.Type)
             {
-                // fixed length
-                case BsonType.Null: length += 0; break;
+                case BsonType.Null: length = 0; break;
 
-                case BsonType.Int32: length += 4; break;
-                case BsonType.Int64: length += 8; break;
-                case BsonType.Double: length += 8; break;
+                case BsonType.Int32: length = 4; break;
+                case BsonType.Int64: length = 8; break;
+                case BsonType.Double: length = 8; break;
 
-                case BsonType.Boolean: length += 1; break;
-                case BsonType.DateTime: length += 8; break;
-                case BsonType.Guid: length += 16; break;
+                case BsonType.String: length = Encoding.UTF8.GetByteCount((string)this.RawValue); break;
 
-                // variable length = +1 to store length
-                case BsonType.Binary: length += ((Byte[])this.RawValue).Length + 1; break;
-                case BsonType.String: length += Encoding.UTF8.GetByteCount((string)this.RawValue) + 1; break;
+                case BsonType.Binary: length = ((Byte[])this.RawValue).Length; break;
+                case BsonType.Guid: length = 16; break;
 
-                // TODO: fix this - its not good
+                case BsonType.Boolean: length = 1; break;
+                case BsonType.DateTime: length = 8; break;
+
+                // for Array/Document use BsonWriter
                 case BsonType.Array:
                     using(var ma = new MemoryStream())
                     {
@@ -593,7 +589,7 @@ namespace LiteDB
                             new BsonWriter()
                                 .WriteArray(w, this.AsArray);
 
-                            length += (int)ma.Position;
+                            length = (int)ma.Position;
                         }
                     }
                     break;
@@ -605,13 +601,14 @@ namespace LiteDB
                             new BsonWriter()
                                 .WriteDocument(w, this.AsDocument);
 
-                            length += (int)md.Position;
+                            length = (int)md.Position;
                         }
                     }
                     break;
             }
 
-            return length;
+            // limits in ushort.MaxValue (store in 2 bytes only)
+            return (ushort)Math.Min(length, ushort.MaxValue);
         }
 
         #endregion

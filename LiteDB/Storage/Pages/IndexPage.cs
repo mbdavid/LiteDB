@@ -53,7 +53,8 @@ namespace LiteDB
 
                 node.Page = this;
                 node.Position = new PageAddress(this.PageID, index);
-                node.Value = reader.ReadBsonValue();
+                node.ValueLength = reader.ReadUInt16();
+                node.Value = reader.ReadBsonValue(node.ValueLength);
                 node.DataBlock = reader.ReadPageAddress();
 
                 for (var j = 0; j < node.Prev.Length; j++)
@@ -72,7 +73,8 @@ namespace LiteDB
             {
                 writer.Write(node.Position.Index); // node Index on this page
                 writer.Write((byte)node.Prev.Length); // level length
-                writer.WriteBsonValue(node.Value); // value
+                writer.Write(node.ValueLength); // valueLength
+                writer.WriteBsonValue(node.Value, node.ValueLength); // value
                 writer.Write(node.DataBlock); // data block reference
 
                 for (var j = 0; j < node.Prev.Length; j++)

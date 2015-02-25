@@ -64,7 +64,7 @@ namespace LiteDB
 
         public override void ReadContent(BinaryReader reader)
         {
-            var info = reader.ReadString(HEADER_INFO.Length);
+            var info = reader.ReadString();
 
             if (info != HEADER_INFO)
                 throw new LiteException("This file is not a LiteDB datafile");
@@ -80,7 +80,7 @@ namespace LiteDB
 
         public override void WriteContent(BinaryWriter writer)
         {
-            writer.Write(HEADER_INFO, HEADER_INFO.Length);
+            writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);

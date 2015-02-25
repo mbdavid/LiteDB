@@ -13,6 +13,8 @@ namespace LiteDB
     {
         public const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
                                                  1 + // Levels (byte)
+                                                 2 + // ValueLength (ushort)
+                                                 1 + // BsonType (byte)
                                                  PageAddress.SIZE; // DataBlock
 
         /// <summary>
@@ -34,6 +36,11 @@ namespace LiteDB
         /// Pointer to next value (used in skip lists - Prev.Length = Next.Length)
         /// </summary>
         public PageAddress[] Next { get; set; }
+
+        /// <summary>
+        /// Length of Value - used for calculate Node size
+        /// </summary>
+        public ushort ValueLength { get; set; }
 
         /// <summary>
         /// The object value that was indexed
@@ -59,7 +66,7 @@ namespace LiteDB
             { 
                 return IndexNode.INDEX_NODE_FIXED_SIZE + 
                     (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
-                    this.Value.GetBytesCount(); // bytes count in BsonValue
+                    this.ValueLength; // bytes count in BsonValue
             }
         }
 

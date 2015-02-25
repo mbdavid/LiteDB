@@ -40,7 +40,12 @@ namespace LiteDB
             var page = _pager.NewPage<IndexPage>();
 
             // create a empty node with full max level
-            var node = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) { Value = BsonValue.Null, Page = page };
+            var node = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
+            { 
+                Value = BsonValue.Null, 
+                ValueLength = BsonValue.Null.GetBytesCount(), 
+                Page = page 
+            };
 
             node.Position = new PageAddress(page.PageID, 0);
 
@@ -88,16 +93,19 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue value)
         {
-            // test if value exceed max limit
-            if (value.GetBytesCount() > MAX_INDEX_LENGTH)
-            {
-                throw LiteException.IndexKeyTooLong();
-            }
-
             var level = this.FlipCoin();
 
             // creating a new index node 
-            var node = new IndexNode(level) { Value = value };
+            var node = new IndexNode(level)
+            { 
+                Value = value, 
+                ValueLength = value.GetBytesCount()
+            };
+
+            if (node.ValueLength > MAX_INDEX_LENGTH)
+            {
+                throw LiteException.IndexKeyTooLong();
+            }
 
             // get a free page to insert my index node
             var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
