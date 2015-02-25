@@ -22,8 +22,11 @@ namespace LiteDB
         /// </summary>
         public LiteDBRef(string collection, BsonValue id)
         {
+            if (string.IsNullOrEmpty(collection)) throw new ArgumentNullException("collection");
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+
             this.Collection = collection;
-            this.Id = id;
+            this.Id = id ?? BsonValue.Null;
         }
 
         /// <summary>
@@ -31,6 +34,9 @@ namespace LiteDB
         /// </summary>
         public LiteDBRef(LiteCollection<T> collection, BsonValue id)
         {
+            if (collection == null) throw new ArgumentNullException("collection");
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+
             this.Collection = collection.Name;
             this.Id = id;
         }
@@ -44,6 +50,9 @@ namespace LiteDB
         [BsonIgnore]
         public T Item { get; private set; }
 
+        /// <summary>
+        /// Fetch document reference return them. After fetch, you can use "Item" proerty do get ref document
+        /// </summary>
         public T Fetch(LiteDatabase db)
         {
             if (this.Item == null)

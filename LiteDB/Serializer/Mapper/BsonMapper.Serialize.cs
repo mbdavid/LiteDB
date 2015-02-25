@@ -25,7 +25,15 @@ namespace LiteDB
             return this.Serialize(poco, 0).AsDocument;
         }
 
-        internal BsonValue Serialize(object obj, int depth)
+        /// <summary>
+        /// Create a instance of a object convered in BsonValue object.
+        /// </summary>
+        public BsonValue Create(object obj)
+        {
+            return this.Serialize(obj, 0);
+        }
+
+        private BsonValue Serialize(object obj, int depth)
         {
             if (++depth > MAX_DEPTH) throw new LiteException("Serialization class reach MAX_DEPTH - Check for circular references");
 

@@ -18,6 +18,8 @@ namespace LiteDB
         public T ToObject<T>(BsonDocument doc)
             where T : new()
         {
+            if (doc == null) throw new ArgumentNullException("doc");
+
             var type = typeof(T);
 
             // if T is BsonDocument, just return them

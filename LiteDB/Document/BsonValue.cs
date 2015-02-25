@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -128,7 +129,7 @@ namespace LiteDB
                 this.Type = v.Type;
                 this.RawValue = v.RawValue;
             }
-            else throw new InvalidCastException("Value is not a valid BSON data type");
+            else throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
         }
 
         #endregion
@@ -555,7 +556,7 @@ namespace LiteDB
 
         #endregion
 
-        #region GetBytesLength
+        #region GetBytesLength, Normalize
 
         /// <summary>
         /// Returns how many bytes this BsonValue will use to persist in a binary stream - Used on index node only
@@ -609,6 +610,43 @@ namespace LiteDB
 
             // limits in ushort.MaxValue (store in 2 bytes only)
             return (ushort)Math.Min(length, ushort.MaxValue);
+        }
+
+        /// <summary>
+        /// Normalize a string to better index search - Used on BsonValue#CompareTo
+        ///     - Remove whitescpace
+        ///     - Convert empty string to null
+        ///     - Remove accents
+        /// </summary>
+        internal void Normalize()
+        {
+            if (this.Type != BsonType.String) return;
+
+            // removing whitespaces
+            var text = ((String)RawValue).Trim();
+
+            // convert emptystring to null
+            if (text.Length == 0)
+            {
+                this.Type = BsonType.Null;
+                this.RawValue = null;
+            }
+
+            // removing accents
+            var normalized = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < normalized.Length; i++)
+            {
+                var c = normalized[i];
+
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            this.RawValue = sb.ToString();
         }
 
         #endregion

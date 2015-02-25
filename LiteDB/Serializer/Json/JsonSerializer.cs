@@ -23,7 +23,7 @@ namespace LiteDB
 
             using (var w = new StringWriter(sb))
             {
-                Serialize(value, w, pretty, writeBinary);
+                Serialize(value ?? BsonValue.Null, w, pretty, writeBinary);
             }
 
             return sb.ToString();
@@ -37,7 +37,7 @@ namespace LiteDB
             var w = new JsonWriter(writer);
             w.Pretty = pretty;
             w.WriteBinary = writeBinary;
-            w.Serialize(value);
+            w.Serialize(value ?? BsonValue.Null);
         }
 
         #endregion
@@ -49,6 +49,8 @@ namespace LiteDB
         /// </summary>
         public static BsonValue Deserialize(string json)
         {
+            if (json == null) throw new ArgumentNullException("json");
+
             using (var sr = new StringReader(json))
             {
                 var reader = new JsonReader(sr);
@@ -62,6 +64,8 @@ namespace LiteDB
         /// </summary>
         public static BsonValue Deserialize(TextReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
+
             var jr = new JsonReader(reader);
 
             return jr.Deserialize();
@@ -72,6 +76,8 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DeserializeArray(string json)
         {
+            if (json == null) throw new ArgumentNullException("json");
+
             var sr = new StringReader(json);
             var reader = new JsonReader(sr);
             return reader.DeserializeArray();
@@ -82,6 +88,8 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DeserializeArray(TextReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
+
             var jr = new JsonReader(reader);
 
             return jr.DeserializeArray();

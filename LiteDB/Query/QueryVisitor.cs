@@ -64,7 +64,7 @@ namespace LiteDB
                 {
                     var value = this.VisitValue(met.Arguments[0]);
 
-                    return new QueryStartsWith(this.VisitMember(met.Object), (string)value);
+                    return new QueryStartsWith(this.VisitMember(met.Object), value.AsString);
                 }
                 // Equals
                 else if (method == "Equals")
@@ -111,7 +111,8 @@ namespace LiteDB
             {
                 var value = (expr as ConstantExpression).Value;
 
-                return _mapper.Serialize(value, 0);
+                //TODO: use Create is "best" solution? Is not better use new BsonValue(..) AND accepts Decimal, Single, ... on BsonValue and converts?
+                return _mapper.Create(value);
             }
 
             // execute expression
@@ -119,7 +120,7 @@ namespace LiteDB
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
             var getter = getterLambda.Compile();
 
-            return _mapper.Serialize(getter(), 0);
+            return _mapper.Create(getter());
         }
 
         /// <summary>
@@ -144,7 +145,7 @@ namespace LiteDB
         {
             if (propInfo == null)
             {
-                throw new ArgumentException("Expression refers to a field, not a property.");
+                throw new ArgumentException("Expression is not a property.");
             }
 
             // lets get mapping bettwen .NET class and BsonDocument

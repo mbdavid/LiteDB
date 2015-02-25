@@ -55,7 +55,7 @@ namespace LiteDB
         {
             _db = db;
 
-            this.Id = doc["_id"].ToString();
+            this.Id = doc["_id"].AsString;
             this.Filename = doc["filename"].AsString;
             this.MimeType = doc["mimeType"].AsString;
             this.Length = doc["length"].AsInt64;

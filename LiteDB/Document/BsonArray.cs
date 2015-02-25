@@ -52,7 +52,7 @@ namespace LiteDB
 
             foreach (var item in array)
             {
-                this.Add(item);
+                this.Add(item ?? BsonValue.Null);
             }
         }
 
@@ -64,15 +64,13 @@ namespace LiteDB
             }
             set
             {
-                this.RawValue[index] = value == null ? BsonValue.Null : value;
+                this.RawValue[index] = value ?? BsonValue.Null;
             }
         }
 
         public BsonArray Add(BsonValue value)
         {
-            if (value == null) value = BsonValue.Null;
-
-            this.RawValue.Add(value);
+            this.RawValue.Add(value ?? BsonValue.Null);
 
             return this;
         }

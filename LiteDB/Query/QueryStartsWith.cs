@@ -8,9 +8,9 @@ namespace LiteDB
 {
     internal class QueryStartsWith : Query
     {
-        public BsonValue Value { get; private set; }
+        public string Value { get; private set; }
 
-        public QueryStartsWith(string field, BsonValue value)
+        public QueryStartsWith(string field, string value)
             : base(field)
         {
             this.Value = value;

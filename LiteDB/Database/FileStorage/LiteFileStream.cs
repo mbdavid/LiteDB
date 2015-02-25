@@ -45,14 +45,8 @@ namespace LiteDB
 
         public override long Position
         {
-            get
-            {
-                return _streamPosition;
-            }
-            set
-            {
-                throw new NotSupportedException();
-            }
+            get { return _streamPosition; }
+            set { throw new NotSupportedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)

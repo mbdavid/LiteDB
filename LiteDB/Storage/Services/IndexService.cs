@@ -394,7 +394,7 @@ namespace LiteDB
             }
         }
 
-        public IEnumerable<IndexNode> FindIn(CollectionIndex index, BsonValue[] values)
+        public IEnumerable<IndexNode> FindIn(CollectionIndex index, BsonArray values)
         {
             foreach (var value in values.Distinct())
             {

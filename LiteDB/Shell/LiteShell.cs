@@ -15,6 +15,8 @@ namespace LiteDB.Shell
 
         public LiteShell(LiteDatabase db)
         {
+            if (db == null) throw new ArgumentNullException("db");
+
             this.Database = db;
             this.Commands = new List<ILiteCommand>();
 

@@ -39,7 +39,7 @@ namespace LiteDB
         /// </summary>
         public static Query EQ(string field, BsonValue value)
         {
-            return new QueryEquals(field, value);
+            return new QueryEquals(field, value ?? BsonValue.Null);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace LiteDB
         /// </summary>
         public static Query LT(string field, BsonValue value)
         {
-            return new QueryLess(field, value, false);
+            return new QueryLess(field, value ?? BsonValue.Null, false);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace LiteDB
         /// </summary>
         public static Query LTE(string field, BsonValue value)
         {
-            return new QueryLess(field, value, true);
+            return new QueryLess(field, value ?? BsonValue.Null, true);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace LiteDB
         /// </summary>
         public static Query GT(string field, BsonValue value)
         {
-            return new QueryGreater(field, value, false);
+            return new QueryGreater(field, value ?? BsonValue.Null, false);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace LiteDB
         /// </summary>
         public static Query GTE(string field, BsonValue value)
         {
-            return new QueryGreater(field, value, true);
+            return new QueryGreater(field, value ?? BsonValue.Null, true);
         }
 
         /// <summary>
@@ -79,14 +79,16 @@ namespace LiteDB
         /// </summary>
         public static Query Between(string field, BsonValue start, BsonValue end)
         {
-            return new QueryBetween(field, start, end);
+            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null);
         }
 
         /// <summary>
         /// Returns all objects that starts with value (LIKE)
         /// </summary>
-        public static Query StartsWith(string field, BsonValue value)
+        public static Query StartsWith(string field, string value)
         {
+            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value");
+
             return new QueryStartsWith(field, value);
         }
 
@@ -95,7 +97,7 @@ namespace LiteDB
         /// </summary>
         public static Query Not(string field, BsonValue value)
         {
-            return new QueryNot(field, value);
+            return new QueryNot(field, value ?? BsonValue.Null);
         }
 
         /// <summary>
@@ -103,7 +105,9 @@ namespace LiteDB
         /// </summary>
         public static Query In(string field, params BsonValue[] values)
         {
-            return new QueryIn(field, values);
+            if (values == null) throw new ArgumentNullException("values");
+
+            return new QueryIn(field, new BsonArray(values));
         }
         /// <summary>
         /// Returns objects that exists in ALL queries results.
