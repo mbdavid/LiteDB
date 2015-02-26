@@ -23,6 +23,7 @@ namespace UnitTest
         public MyEnum MyEnumProp { get; set; }
         //public char MyChar { get; set; }
         public byte MyByte { get; set; }
+        public Uri MyUri { get; set; }
 
         // do not serialize this properties
         [BsonIgnore]
@@ -64,6 +65,7 @@ namespace UnitTest
                 MyStringArray = new string[] { "One", "Two" },
                 MyEnumProp = MyEnum.Second,
                 //MyChar = 'Y',
+                MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255
             };
 

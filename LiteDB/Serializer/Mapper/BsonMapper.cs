@@ -32,6 +32,12 @@ namespace LiteDB
         private Dictionary<Type, Dictionary<string, PropertyMapper>> _mapper = new Dictionary<Type,Dictionary<string,PropertyMapper>>();
 
         /// <summary>
+        /// Map serializer/deserialize for custom types
+        /// </summary>
+        private Dictionary<Type, Func<object, BsonValue>> _customSerializer = new Dictionary<Type, Func<object, BsonValue>>();
+        private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
+
+        /// <summary>
         /// A resolver name property
         /// </summary>
         public Func<string, string> ResolvePropertyName;
@@ -45,12 +51,30 @@ namespace LiteDB
         {
             this.SerializeNullValues = false;
             this.ResolvePropertyName = (s) => s;
+
+            // register custom types
+
+            this.RegisterType<Uri>
+            (
+                serialize: (uri) => uri.AbsoluteUri,
+                deserialize: (bson) => new Uri(bson.AsString)
+            );
+
         }
 
         /// <summary>
         /// Global BsonMapper instance
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
+
+        /// <summary>
+        /// Register a custom type
+        /// </summary>
+        public void RegisterType<T>(Func<T, BsonValue> serialize, Func<BsonValue, T> deserialize)
+        {
+            _customSerializer[typeof(T)] = (o) => serialize((T)o);
+            _customDeserializer[typeof(T)] = (b) => (T)deserialize(b);
+        }
 
         #region Predefinded Property Resolvers
 

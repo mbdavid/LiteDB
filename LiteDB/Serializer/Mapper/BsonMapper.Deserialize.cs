@@ -100,6 +100,14 @@ namespace LiteDB
                 return this.DeserializeArray(type.GetElementType(), value.AsArray);
             }
 
+            // test if has a custom type implementation
+            Func<BsonValue, object> custom;
+
+            if (_customDeserializer.TryGetValue(type, out custom))
+            {
+                return custom(value);
+            }
+
             // create instance for object type
             var o = Reflection.CreateInstance(type);
 
