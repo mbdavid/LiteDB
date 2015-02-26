@@ -95,6 +95,9 @@ namespace LiteDB
         {
             var level = this.FlipCoin();
 
+            // if value is string, normalize
+            value.Normalize();
+
             // creating a new index node 
             var node = new IndexNode(level)
             { 
@@ -262,6 +265,9 @@ namespace LiteDB
         /// </summary>
         public IndexNode FindOne(CollectionIndex index, BsonValue value, bool greater = false)
         {
+            // if value is string, normalize
+            value.Normalize();
+
             var cur = this.GetNode(index.HeadNode);
 
             for (int i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
@@ -320,6 +326,9 @@ namespace LiteDB
             // find first indexNode
             var node = this.FindOne(index, start, true);
 
+            // if end value - start value was normilized on FindOne method
+            end.Normalize();
+
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
@@ -334,10 +343,11 @@ namespace LiteDB
         /// <summary>
         /// Find nodes startswith a string
         /// </summary>
-        public IEnumerable<IndexNode> FindStarstWith(CollectionIndex index, string text)
+        public IEnumerable<IndexNode> FindStarstWith(CollectionIndex index, BsonValue text)
         {
             // find first indexNode
             var node = this.FindOne(index, text, true);
+            var str = text.AsString;
 
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
@@ -345,7 +355,7 @@ namespace LiteDB
                 var value = node.Value.AsString;
 
                 // value will not be null because null occurs before string (bsontype sort order)
-                if (value.StartsWith(text, StringComparison.InvariantCultureIgnoreCase))
+                if (value.StartsWith(str, StringComparison.InvariantCultureIgnoreCase))
                 {
                     yield return node;
                 }
@@ -363,6 +373,9 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<IndexNode> FindLessThan(CollectionIndex index, BsonValue value, bool includeValue = false)
         {
+            // normalize string value
+            value.Normalize();
+
             foreach (var node in this.FindAll(index))
             {
                 var diff = node.Value.CompareTo(value);

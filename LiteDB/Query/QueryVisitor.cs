@@ -64,7 +64,7 @@ namespace LiteDB
                 {
                     var value = this.VisitValue(met.Arguments[0]);
 
-                    return new QueryStartsWith(this.VisitMember(met.Object), value.AsString);
+                    return new QueryStartsWith(this.VisitMember(met.Object), value);
                 }
                 // Equals
                 else if (method == "Equals")
@@ -111,7 +111,6 @@ namespace LiteDB
             {
                 var value = (expr as ConstantExpression).Value;
 
-                //TODO: use Create is "best" solution? Is not better use new BsonValue(..) AND accepts Decimal, Single, ... on BsonValue and converts?
                 return _mapper.Create(value);
             }
 

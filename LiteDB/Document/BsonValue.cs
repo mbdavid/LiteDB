@@ -630,6 +630,7 @@ namespace LiteDB
             {
                 this.Type = BsonType.Null;
                 this.RawValue = null;
+                return;
             }
 
             // removing accents
