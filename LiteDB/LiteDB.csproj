@@ -92,6 +92,7 @@
     <Compile Include="Serializer\Mapper\BsonMapper.Serialize.cs" />
     <Compile Include="Serializer\Mapper\BsonMapper.Deserialize.cs" />
     <Compile Include="Serializer\Mapper\BsonFieldAttribute.cs" />
+    <Compile Include="Serializer\Mapper\BsonIndexAttribute.cs" />
     <Compile Include="Serializer\Mapper\PropertyMapper.cs" />
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
