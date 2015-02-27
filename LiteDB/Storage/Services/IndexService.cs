@@ -96,7 +96,7 @@ namespace LiteDB
             var level = this.FlipCoin();
 
             // if value is string, normalize
-            value.Normalize();
+            value.Normalize(index.Options);
 
             // creating a new index node 
             var node = new IndexNode(level)
@@ -135,7 +135,7 @@ namespace LiteDB
                     var diff = this.GetNode(cur.Next[i]).Value.CompareTo(value);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
-                    if (diff == 0 && index.Unique) throw new LiteException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
+                    if (diff == 0 && index.Options.Unique) throw new LiteException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
 
                     if (diff == 1) break;
                 }
@@ -266,7 +266,7 @@ namespace LiteDB
         public IndexNode FindOne(CollectionIndex index, BsonValue value, bool greater = false)
         {
             // if value is string, normalize
-            value.Normalize();
+            value.Normalize(index.Options);
 
             var cur = this.GetNode(index.HeadNode);
 
@@ -327,7 +327,7 @@ namespace LiteDB
             var node = this.FindOne(index, start, true);
 
             // if end value - start value was normilized on FindOne method
-            end.Normalize();
+            end.Normalize(index.Options);
 
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
@@ -374,7 +374,7 @@ namespace LiteDB
         public IEnumerable<IndexNode> FindLessThan(CollectionIndex index, BsonValue value, bool includeValue = false)
         {
             // normalize string value
-            value.Normalize();
+            value.Normalize(index.Options);
 
             foreach (var node in this.FindAll(index))
             {

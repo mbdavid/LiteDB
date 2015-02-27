@@ -17,9 +17,22 @@ namespace LiteDB.Shell.Commands
         {
             var col = this.ReadCollection(db, s);
             var field = s.Scan(this.FieldPattern).Trim();
-            var unique = s.Scan(@"unique$");
+            var doc = JsonSerializer.Deserialize(s);
 
-            return col.EnsureIndex(field, unique.Length > 0);
+            if (doc.IsNull)
+            {
+                return col.EnsureIndex(field, false);
+            }
+            else if (doc.IsBoolean)
+            {
+                return col.EnsureIndex(field, doc.AsBoolean);
+            }
+            else
+            {
+                var options = db.Mapper.ToObject<IndexOptions>(doc.AsDocument);
+
+                return col.EnsureIndex(field, options);
+            }
         }
     }
 }

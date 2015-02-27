@@ -47,13 +47,24 @@ namespace LiteDB
         /// </summary>
         public bool SerializeNullValues { get; set; }
 
+        /// <summary>
+        /// Apply .Trim() in strings
+        /// </summary>
+        public bool TrimString { get; set; }
+
+        /// <summary>
+        /// Convert EmptyString to Null
+        /// </summary>
+        public bool EmptyStringToNull { get; set; }
+
         public BsonMapper()
         {
             this.SerializeNullValues = false;
+            this.TrimString = true;
+            this.EmptyStringToNull = true;
             this.ResolvePropertyName = (s) => s;
 
             // register custom types
-
             this.RegisterType<Uri>
             (
                 serialize: (uri) => uri.AbsoluteUri,

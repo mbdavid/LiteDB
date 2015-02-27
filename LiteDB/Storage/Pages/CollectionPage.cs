@@ -62,9 +62,14 @@ namespace LiteDB
             foreach (var index in this.Indexes)
             {
                 index.Field = reader.ReadString();
-                index.Unique = reader.ReadBoolean();
                 index.HeadNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
+                index.Options.Unique = reader.ReadBoolean();
+                index.Options.IgnoreCase = reader.ReadBoolean();
+                index.Options.TrimWhitespace = reader.ReadBoolean();
+                index.Options.EmptyStringToNull = reader.ReadBoolean();
+                index.Options.RemoveAccents = reader.ReadBoolean();
+                //TODO: reserve more spaces?
             }
         }
 
@@ -77,9 +82,13 @@ namespace LiteDB
             foreach (var index in this.Indexes)
             {
                 writer.Write(index.Field);
-                writer.Write(index.Unique);
                 writer.Write(index.HeadNode);
                 writer.Write(index.FreeIndexPageID);
+                writer.Write(index.Options.Unique);
+                writer.Write(index.Options.IgnoreCase);
+                writer.Write(index.Options.TrimWhitespace);
+                writer.Write(index.Options.EmptyStringToNull);
+                writer.Write(index.Options.RemoveAccents);
             }
         }
 

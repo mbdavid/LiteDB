@@ -46,11 +46,24 @@ namespace LiteDB
             // if is already a bson value
             if (obj is BsonValue) return new BsonValue((BsonValue)obj);
 
+            // test string - mapper has some special options
+            else if (obj is String)
+            {
+                var str = this.TrimString ? (obj as String).Trim() : (String)obj;
+
+                if (this.EmptyStringToNull && str.Length == 0)
+                {
+                    return BsonValue.Null;
+                }
+                else
+                {
+                    return new BsonValue(str);
+                }
+            }
             // basic Bson data types (cast datatype for better performance optimization)
             else if (obj is Int32) return new BsonValue((Int32)obj);
             else if (obj is Int64) return new BsonValue((Int64)obj);
             else if (obj is Double) return new BsonValue((Double)obj);
-            else if (obj is String) return new BsonValue((String)obj);
             else if (obj is Byte[]) return new BsonValue((Byte[])obj);
             else if (obj is Guid) return new BsonValue((Guid)obj);
             else if (obj is Boolean) return new BsonValue((Boolean)obj);

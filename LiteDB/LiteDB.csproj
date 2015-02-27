@@ -130,6 +130,7 @@
     <Compile Include="Storage\Services\DataService.cs" />
     <Compile Include="Storage\Pages\CollectionPage.cs" />
     <Compile Include="Storage\Structures\CollectionIndex.cs" />
+    <Compile Include="Storage\Structures\IndexOptions.cs" />
     <Compile Include="Storage\Structures\DataBlock.cs" />
     <Compile Include="Storage\Structures\IndexNode.cs" />
     <Compile Include="Storage\Structures\PageAddress.cs" />

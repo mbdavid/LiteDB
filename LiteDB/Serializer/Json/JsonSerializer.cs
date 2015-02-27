@@ -102,6 +102,8 @@ namespace LiteDB
         {
             if (s == null) throw new ArgumentNullException("s");
 
+            if (s.HasTerminated) return BsonValue.Null;
+
             using (var sr = new StringReader(s.ToString()))
             {
                 var reader = new JsonReader(sr);

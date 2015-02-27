@@ -28,7 +28,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> db.<collection>.delete <filter>", "Delete documents using a filter clausule (see find)");
                 d.WriteHelp("> db.<collection>.find <filter> [skip N][limit N]", "Show filtered documents based on index search");
                 d.WriteHelp("> db.<collection>.count <filter>", "Show count rows according query filter");
-                d.WriteHelp("> db.<collection>.ensureIndex <field> [unique]", "Create a new index document field");
+                d.WriteHelp("> db.<collection>.ensureIndex <field> [true|{options}]", "Create a new index document field. For unique key, use true");
                 d.WriteHelp("> db.<collection>.indexes", "List all indexes in this collection");
                 d.WriteHelp("<filter> = <field> [=|>|>=|<|<=|!=|like|between] <jsonValue>", "Filter query syntax");
                 d.WriteHelp("<filter> = (<filter> [and|or] <filter> [and|or] ...)", "Multi queries syntax");

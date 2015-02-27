@@ -61,7 +61,7 @@ namespace LiteDB
             var pk = _indexer.CreateIndex(col);
 
             pk.Field = "_id";
-            pk.Unique = true;
+            pk.Options = new IndexOptions { Unique = true };
 
             return col;
         }

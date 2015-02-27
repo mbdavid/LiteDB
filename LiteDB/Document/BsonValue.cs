@@ -505,7 +505,7 @@ namespace LiteDB
                 case BsonType.Int64: return ((Int64)this.RawValue).CompareTo((Int64)other.RawValue);
                 case BsonType.Double: return ((Double)this.RawValue).CompareTo((Double)other.RawValue);
 
-                case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue, true);
+                case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue);
 
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
                 case BsonType.Array: return this.AsArray.CompareTo(other);
@@ -613,23 +613,30 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Normalize a string to better index search - Used on BsonValue#CompareTo
-        ///     - Remove whitescpace
-        ///     - Convert empty string to null
-        ///     - Remove accents
+        /// Normalize a string value using IndexOptions (ignore case, trim, empty->null, remove accents)
         /// </summary>
-        internal void Normalize()
+        internal void Normalize(IndexOptions options)
         {
+            // if not string, do nothing
             if (this.Type != BsonType.String) return;
 
             // removing whitespaces
-            var text = ((String)RawValue).Trim();
+            var text = ((String)RawValue);
 
+            if (options.TrimWhitespace) text = text.Trim();
+            if (options.IgnoreCase) text = text.ToLower();
+            
             // convert emptystring to null
-            if (text.Length == 0)
+            if (text.Length == 0 && options.EmptyStringToNull)
             {
                 this.Type = BsonType.Null;
                 this.RawValue = null;
+                return;
+            }
+
+            if (!options.RemoveAccents)
+            {
+                this.RawValue = text;
                 return;
             }
 

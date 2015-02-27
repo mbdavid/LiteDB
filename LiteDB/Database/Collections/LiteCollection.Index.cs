@@ -15,10 +15,11 @@ namespace LiteDB
         /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
         /// </summary>
         /// <param name="field">Document field name (case sensitive)</param>
-        /// <param name="unique">Create a unique values index?</param>
-        public virtual bool EnsureIndex(string field, bool unique = false)
+        /// <param name="options">All index options</param>
+        public virtual bool EnsureIndex(string field, IndexOptions options)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (options == null) throw new ArgumentNullException("options");
 
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new LiteException("Invalid field format.");
 
@@ -27,15 +28,20 @@ namespace LiteDB
 
             if (col != null)
             {
-                // check if index already exists (collection must exists)
+                // check if index already exists but has diferent options
                 var existsIndex = col.GetIndex(field);
 
                 if (existsIndex != null)
                 {
-                    // if index exists but has a diferent "unique" parameter, lets change
-                    return existsIndex.Unique != unique ?
-                        this.ChangeIndexUnique(col, existsIndex, unique) :
-                        false;
+                    if(!options.Equals(existsIndex.Options))
+                    {
+                        // drop index and create another
+                        this.DropIndex(field);
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             };
 
@@ -55,7 +61,7 @@ namespace LiteDB
                 var index = this.Database.Indexer.CreateIndex(col);
 
                 index.Field = field;
-                index.Unique = unique;
+                index.Options = options;
 
                 // read all objects (read from PK index)
                 foreach (var node in this.Database.Indexer.FindAll(col.PK))
@@ -92,6 +98,16 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
+        /// </summary>
+        /// <param name="field">Document field name (case sensitive)</param>
+        /// <param name="unique">All index options</param>
+        public virtual bool EnsureIndex(string field, bool unique = false)
+        {
+            return this.EnsureIndex(field, new IndexOptions { Unique = unique });
+        }
+
+        /// <summary>
         /// Create a new permanent index in all documents inside this collections if index not exists already.
         /// </summary>
         /// <param name="property">Property linq expression</param>
@@ -100,30 +116,19 @@ namespace LiteDB
         {
             var field = _visitor.GetBsonField(property);
 
-            return this.EnsureIndex(field, unique);
+            return this.EnsureIndex(field, new IndexOptions { Unique = unique });
         }
 
-        private bool ChangeIndexUnique(CollectionPage col, CollectionIndex index, bool unique)
+        /// <summary>
+        /// Create a new permanent index in all documents inside this collections if index not exists already.
+        /// </summary>
+        /// <param name="property">Property linq expression</param>
+        /// <param name="options">Use all indexes options</param>
+        public virtual bool EnsureIndex<K>(Expression<Func<T, K>> property, IndexOptions options)
         {
-            // start transaction
-            this.Database.Transaction.Begin();
+            var field = _visitor.GetBsonField(property);
 
-            try
-            {
-                // just change flag and commit collection dirty page
-                index.Unique = unique;
-
-                col.IsDirty = true;
-
-                this.Database.Transaction.Commit();
-
-                return true;
-            }
-            catch
-            {
-                this.Database.Transaction.Rollback();
-                throw;
-            }
+            return this.EnsureIndex(field, options);
         }
 
         /// <summary>
@@ -142,7 +147,7 @@ namespace LiteDB
                 yield return new BsonDocument()
                     .Add("slot", index.Slot)
                     .Add("field", index.Field)
-                    .Add("unique", index.Unique);
+                    .Add("options", this.Database.Mapper.Create(index.Options));
             }
         }
 
