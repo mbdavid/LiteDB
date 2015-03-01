@@ -21,5 +21,8 @@ namespace LiteDB
         public string FieldName { get; set; }
         public GenericGetter Getter { get; set; }
         public GenericSetter Setter { get; set; }
+
+        // if this field has a [BsonIndex] store indexoptions
+        public IndexOptions IndexOptions { get; set; }
     }
 }

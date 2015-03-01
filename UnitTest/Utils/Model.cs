@@ -12,6 +12,7 @@ namespace UnitTest
     {
         public Guid CustomerId { get; set; }
 
+        [BsonIndex(true)]
         public string Name { get; set; }
 
         public DateTime CreationDate { get; set; }
@@ -28,7 +29,7 @@ namespace UnitTest
 
         public DateTime Date { get; set; }
 
-        public LiteDBRef<Customer> Customer { get; set; }
+        public DbRef<Customer> Customer { get; set; }
 
         public List<OrderItem> Items { get; set; }
 

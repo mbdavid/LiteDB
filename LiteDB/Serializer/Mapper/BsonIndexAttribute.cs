@@ -14,8 +14,6 @@ namespace LiteDB
     /// </summary>
     public class BsonIndexAttribute : Attribute
     {
-        public string Field { get; set; }
-
         public IndexOptions Options { get; private set; }
 
         public BsonIndexAttribute()

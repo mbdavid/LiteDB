@@ -18,9 +18,9 @@ namespace LiteDB
             this.End = end;
         }
 
-        internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return db.Indexer.FindBetween(index, this.Start, this.End);
+            return indexer.FindBetween(index, this.Start, this.End);
         }
     }
 }

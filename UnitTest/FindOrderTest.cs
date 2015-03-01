@@ -8,13 +8,6 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
-    public class OrderObj
-    {
-        [BsonId]
-        public int Id { get; set; }
-        public string Text { get; set; }
-    }
-
     [TestClass]
     public class FindOrderTest
     {
@@ -23,21 +16,22 @@ namespace UnitTest
         {
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var col = db.GetCollection<OrderObj>("order");
-                col.EnsureIndex("Text");
+                var col = db.GetCollection<BsonDocument>("order");
 
-                col.Insert(new OrderObj { Id = 1, Text = "D" });
-                col.Insert(new OrderObj { Id = 2, Text = "A" });
-                col.Insert(new OrderObj { Id = 3, Text = "E" });
-                col.Insert(new OrderObj { Id = 4, Text = "C" });
-                col.Insert(new OrderObj { Id = 5, Text = "B" });
+                col.Insert(new BsonDocument().Add("_id", 1).Add("text", "D"));
+                col.Insert(new BsonDocument().Add("_id", 2).Add("text", "A"));
+                col.Insert(new BsonDocument().Add("_id", 3).Add("text", "E"));
+                col.Insert(new BsonDocument().Add("_id", 4).Add("text", "C"));
+                col.Insert(new BsonDocument().Add("_id", 5).Add("text", "B"));
 
-                var asc = col.Find(Query.All("Text"));
+                col.EnsureIndex("text");
+
+                var asc = col.Find(Query.All("text"));
                 var result = "";
 
-                foreach (var i in asc)
+                foreach (var d in asc)
                 {
-                    result += i.Text.ToString();
+                    result += d["text"].AsString;
                 }
 
                 Assert.AreEqual("ABCDE", result);

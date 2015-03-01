@@ -16,9 +16,9 @@ namespace LiteDB
             this.Values = values;
         }
 
-        internal override IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return db.Indexer.FindIn(index, this.Values);
+            return indexer.FindIn(index, this.Values);
         }
     }
 }

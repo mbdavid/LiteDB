@@ -14,6 +14,8 @@ namespace UnitTest
         [TestMethod]
         public void Linq_Test()
         {
+            LiteDB.BsonMapper.Global.UseLowerCaseDelimiter('_');
+
             using (var db = new LiteDatabase(DB.Path()))
             {
                 var c1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio", CreationDate = new DateTime(2015, 1, 1) };
@@ -23,15 +25,17 @@ namespace UnitTest
 
                 var col = db.GetCollection<Customer>("Customer");
 
-                col.EnsureIndex(x => x.Name, true);
+                // col.EnsureIndex(x => x.Name, true); // try BsonIndex
+
                 col.EnsureIndex(x => x.CreationDate);
 
-                col.InsertBulk(new Customer[] { c1, c2, c3, c4 });
+                col.Insert(new Customer[] { c1, c2, c3, c4 });
 
                 var past = -30;
 
                 // simple
                 Assert.AreEqual(1, col.Count(x => x.CustomerId == c1.CustomerId));
+                Assert.AreEqual(3, col.Count(x => x.CustomerId != c1.CustomerId));
 
                 Assert.AreEqual(1, col.Count(x => x.Name == "Chris"));
                 Assert.AreEqual(2, col.Count(x => x.CreationDate == new DateTime(2015, 1, 1)));

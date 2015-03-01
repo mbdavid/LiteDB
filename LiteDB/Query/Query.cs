@@ -11,6 +11,8 @@ namespace LiteDB
     /// </summary>
     public abstract class Query
     {
+        internal Func<string, CollectionIndex> FindIndexAttribute = null;
+
         public string Field { get; private set; }
 
         internal Query(string field)
@@ -128,15 +130,29 @@ namespace LiteDB
         #region Execute Query
 
         // used for execute in results (AND/OR)
-        internal abstract IEnumerable<IndexNode> Execute(LiteDatabase db, CollectionIndex index);
+        internal abstract IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index);
 
-        internal virtual IEnumerable<IndexNode> Run(LiteDatabase db, CollectionPage col)
+        internal virtual IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection, CollectionPage col)
+            where T : new()
         {
             var index = col.GetIndex(this.Field);
 
+            // if index not found, lets check if type T has [BsonIndex]
+            if (index == null && typeof(T) != typeof(BsonDocument))
+            {
+                var options = collection.Database.Mapper.GetIndexFromAttribute<T>(this.Field);
+
+                if (options != null)
+                {
+                    collection.EnsureIndex(this.Field, options);
+
+                    index = col.GetIndex(this.Field);
+                }
+            }
+
             if (index == null) throw new LiteException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
 
-            return this.Execute(db, index);
+            return this.Execute(collection.Database.Indexer, index);
         }
 
         #endregion

@@ -15,7 +15,7 @@ namespace LiteDB
     /// If you prefer use a new instance of BsonMapper (not Global), be sure cache this instance for better performance 
     /// Serialization rules:
     ///     - Classes must be "public" with a public constructor (without parameters)
-    ///     - Properties must have public getter and setter
+    ///     - Properties must have public getter (can be read-only)
     ///     - Entity class must have Id property, [ClassName]Id property or [BsonId] attribute
     ///     - No circular references
     ///     - Fields are not valid
@@ -118,6 +118,20 @@ namespace LiteDB
             _mapper[type] = Reflection.GetProperties(type, this.ResolvePropertyName);
 
             return _mapper[type];
+        }
+
+        /// <summary>
+        /// Search for [BsonIndex] in PropertyMapper. If not found, returns null
+        /// </summary>
+        internal IndexOptions GetIndexFromAttribute<T>(string field)
+        {
+            var props = this.GetPropertyMapper(typeof(T));
+
+            // get index options if type has
+            return props.Values
+                .Where(x => x.FieldName == field && x.IndexOptions != null)
+                .Select(x => x.IndexOptions)
+                .FirstOrDefault();
         }
     }
 }

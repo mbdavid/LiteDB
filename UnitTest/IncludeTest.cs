@@ -20,7 +20,7 @@ namespace UnitTest
                 var orders = db.GetCollection<Order>("Order");
 
                 var customer1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio" };
-                var order1 = new Order { OrderKey = 1, Date = DateTime.Now, Customer = new LiteDBRef<Customer>(customers, customer1.CustomerId) };
+                var order1 = new Order { OrderKey = 1, Date = DateTime.Now, Customer = new DbRef<Customer>(customers, customer1.CustomerId) };
                 var order2 = new Order { OrderKey = 2, Date = new DateTime(2000, 1, 1) /*, Customer = new LiteDBRef<Customer>(customers, customer1.CustomerId)*/ };
 
                 customers.EnsureIndex(x => x.Name, true);

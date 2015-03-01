@@ -32,6 +32,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Get/Set a field for document. Fields are case sensitive
+        /// </summary>
         public BsonValue this[string name]
         {
             get
@@ -167,9 +170,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set value to a path - supports dotted path like: Customer.Address.Street - Returns value
+        /// Set value to a path - supports dotted path like: Customer.Address.Street - Fluent API
         /// </summary>
-        public BsonValue Set(string path, BsonValue value)
+        public BsonDocument Set(string path, BsonValue value)
         {
             // supports parent.child.name
             var names = path.Split('.');
@@ -177,7 +180,7 @@ namespace LiteDB
             if (names.Length == 1)
             {
                 this[path] = value;
-                return value;
+                return this;
             }
 
             var doc = this;
@@ -205,7 +208,7 @@ namespace LiteDB
 
             doc[names.Last()] = value;
 
-            return value;
+            return this;
         }
 
         #endregion

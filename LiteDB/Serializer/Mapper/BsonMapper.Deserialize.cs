@@ -170,6 +170,9 @@ namespace LiteDB
 
             foreach (var prop in props.Values)
             {
+                // property is read only
+                if (prop.Setter == null) continue;
+
                 var val = value[prop.FieldName];
 
                 if (!val.IsNull)

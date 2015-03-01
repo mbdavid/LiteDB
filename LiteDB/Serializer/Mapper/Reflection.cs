@@ -64,8 +64,8 @@ namespace LiteDB
             var dict = new Dictionary<string, PropertyMapper>();
             var id = GetIdProperty(type);
             var ignore = typeof(BsonIgnoreAttribute);
-            var field = typeof(BsonFieldAttribute);
-            var index = typeof(BsonIndexAttribute);
+            var fieldAttr = typeof(BsonFieldAttribute);
+            var indexAttr = typeof(BsonIndexAttribute);
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
             foreach (var prop in props)
@@ -84,22 +84,17 @@ namespace LiteDB
                 var setter = CreateSetMethod(type, prop);
 
                 // if not getter or setter - no mapping
-                if (getter == null || setter == null) continue;
+                if (getter == null) continue;
 
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
                 // check if property has [BsonField]
-                var attr = (BsonFieldAttribute)prop.GetCustomAttributes(field, false).FirstOrDefault();
+                var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
 
-                if (attr != null) name = attr.Name;
+                if (field != null) name = field.Name;
 
                 // checks if this proerty has [BsonIndex]
-                var idx = (BsonIndexAttribute)prop.GetCustomAttributes(index, false).FirstOrDefault();
-
-                if (idx != null)
-                {
-                    
-                }
+                var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
                 // create a property mapper
                 var p = new PropertyMapper
@@ -107,6 +102,7 @@ namespace LiteDB
                     FieldName = name, 
                     PropertyName = prop.Name, 
                     PropertyType = prop.PropertyType,
+                    IndexOptions = index == null ? null : index.Options,
                     Getter = getter,
                     Setter = setter
                 };
