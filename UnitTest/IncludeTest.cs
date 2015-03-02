@@ -20,22 +20,32 @@ namespace UnitTest
                 var orders = db.GetCollection<Order>("Order");
 
                 var customer1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio" };
-                var order1 = new Order { OrderKey = 1, Date = DateTime.Now, Customer = new DbRef<Customer>(customers, customer1.CustomerId) };
-                var order2 = new Order { OrderKey = 2, Date = new DateTime(2000, 1, 1) /*, Customer = new LiteDBRef<Customer>(customers, customer1.CustomerId)*/ };
 
-                customers.EnsureIndex(x => x.Name, true);
+                var order1 = new Order
+                { 
+                    OrderKey = 1,
+                    Date = DateTime.Now,
+                    Customer = new DbRef<Customer>(customers, customer1.CustomerId)
+                };
+
+                var order2 = new Order 
+                {
+                    OrderKey = 2,
+                    Date = new DateTime(2000, 1, 1) 
+                };
 
                 customers.Insert(customer1);
+
                 orders.Insert(order1);
                 orders.Insert(order2);
 
                 var query = orders
-                    //.Include((x) => x.Customer.Fetch(db))
+                    .Include((x) => x.Customer.Fetch(db))
                     .FindAll()
-                    //.Select(x => new { x.OrderKey, Cust = x.Customer.Item.Name, CustomerInstance = x.Customer })
+                    .Select(x => new { x.OrderKey, Cust = x.Customer.Item.Name, CustomerInstance = x.Customer })
                     .FirstOrDefault();
 
-                //Assert.AreEqual(customer1.Name, query.Cust);
+                Assert.AreEqual(customer1.Name, query.Cust);
 
             }
         }
