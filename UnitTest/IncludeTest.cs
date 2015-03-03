@@ -19,7 +19,11 @@ namespace UnitTest
                 var customers = db.GetCollection<Customer>("Customer");
                 var orders = db.GetCollection<Order>("Order");
 
-                var customer1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio" };
+                var customer1 = new Customer
+                {
+                    CustomerId = Guid.NewGuid(),
+                    Name = "Mauricio"
+                };
 
                 var order1 = new Order
                 { 
@@ -28,16 +32,9 @@ namespace UnitTest
                     Customer = new DbRef<Customer>(customers, customer1.CustomerId)
                 };
 
-                var order2 = new Order 
-                {
-                    OrderKey = 2,
-                    Date = new DateTime(2000, 1, 1) 
-                };
-
                 customers.Insert(customer1);
 
                 orders.Insert(order1);
-                orders.Insert(order2);
 
                 var query = orders
                     .Include((x) => x.Customer.Fetch(db))
