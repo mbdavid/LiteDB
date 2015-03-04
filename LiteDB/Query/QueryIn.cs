@@ -18,7 +18,13 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindIn(index, this.Values);
+            foreach (var value in this.Values.Distinct())
+            {
+                foreach (var node in indexer.FindEquals(index, value))
+                {
+                    yield return node;
+                }
+            }
         }
     }
 }

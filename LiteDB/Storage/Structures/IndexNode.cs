@@ -58,6 +58,17 @@ namespace LiteDB
         public IndexPage Page { get; set; }
 
         /// <summary>
+        /// Returns Next (asc == true) OR Prev (asc == false)
+        /// </summary>
+        public PageAddress NextPrev(int index, bool asc)
+        {
+            return asc ? this.Next[index] : this.Prev[index];
+        }
+
+        //TODO: implement a indicator that this node is head/tail - better if was compared with Head/Tail position?
+        public bool IsHeadTail { get { return this.DataBlock.IsEmpty; } }
+
+        /// <summary>
         /// Get the length size of this node in disk - not persistable
         /// </summary>
         public int Length

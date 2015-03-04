@@ -272,16 +272,17 @@ namespace LiteDB
         #region Find index nodes
 
         /// <summary>
-        /// Return all nodes
+        /// Return all nodes. Can returns in asc or desc order as index storaged
         /// </summary>
-        public IEnumerable<IndexNode> FindAll(CollectionIndex index)
+        public IEnumerable<IndexNode> FindAll(CollectionIndex index, bool asc)
         {
-            var cur = this.GetNode(index.HeadNode);
+            var cur = this.GetNode(asc ? index.HeadNode : index.TailNode);
 
-            while (!cur.Next[0].IsEmpty)
+            while (!cur.NextPrev(0, asc).IsEmpty)
             {
-                cur = this.GetNode(cur.Next[0]);
+                cur = this.GetNode(cur.NextPrev(0, asc));
 
+                // empty datablock is head/tail
                 if (!cur.DataBlock.IsEmpty)
                 {
                     yield return cur;
@@ -456,21 +457,6 @@ namespace LiteDB
                 }
 
                 node = this.GetNode(node.Next[0]);
-            }
-        }
-
-        //TODO: remove-it - it's not a index service (its just code)!
-        public IEnumerable<IndexNode> FindIn(CollectionIndex index, BsonArray values)
-        {
-            foreach (var value in values.Distinct())
-            {
-                foreach(var node in this.FindEquals(index, value))
-                {
-                    if (!node.DataBlock.IsEmpty)
-                    {
-                        yield return node;
-                    }
-                }
             }
         }
 
