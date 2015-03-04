@@ -79,8 +79,8 @@ namespace LiteDB
                 for (var i = 0; i < IndexNode.MAX_LEVEL_LENGTH; i++)
                 {
                     var sb = sbs[i + 1];
-                    var p = "-";
-                    var n = "-";
+                    var p = " ";
+                    var n = " ";
 
                     if (i < node.Prev.Length)
                     {
@@ -88,13 +88,13 @@ namespace LiteDB
                         {
                             var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
                             var pnode = pprev.Nodes[node.Prev[i].Index];
-                            p = pnode.Value == null ? "null" : pnode.Value.ToString();
+                            p = pnode.Value.ToString();
                         }
                         if (!node.Next[i].IsEmpty)
                         {
                             var pnext = db.Pager.GetPage<IndexPage>(node.Next[i].PageID);
                             var pnode = pnext.Nodes[node.Next[i].Index];
-                            n = pnode.Value == null ? "null" : pnode.Value.ToString();
+                            n = pnode.Value.ToString();
                         }
                     }
 

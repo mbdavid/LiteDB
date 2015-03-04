@@ -19,9 +19,9 @@ namespace LiteDB
 
         public static readonly BsonValue Null = new BsonValue();
 
-        public static readonly BsonValue MinValue = new BsonValue { Type = BsonType.MinValue, RawValue = "(-Inf)" };
+        public static readonly BsonValue MinValue = new BsonValue { Type = BsonType.MinValue, RawValue = "-oo" };
 
-        public static readonly BsonValue MaxValue = new BsonValue { Type = BsonType.MaxValue, RawValue = "(+Inf)" };
+        public static readonly BsonValue MaxValue = new BsonValue { Type = BsonType.MaxValue, RawValue = "+oo" };
 
         /// <summary>
         /// Indicate BsonType of this BsonValue

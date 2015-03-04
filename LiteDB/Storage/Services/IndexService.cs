@@ -248,10 +248,26 @@ namespace LiteDB
             for (int R = _rand.Next(); (R & 1) == 1; R >>= 1)
             {
                 level++;
-                if (level == IndexNode.MAX_LEVEL_LENGTH - 1) break;
+                if (level == IndexNode.MAX_LEVEL_LENGTH) break;
             }
             return level;
         }
+
+        #region First/Last value
+
+        public IndexNode FindFirst(CollectionIndex index)
+        {
+            var start = this.GetNode(index.HeadNode);
+            return this.GetNode(start.Next[0]);
+        }
+
+        public IndexNode FindLast(CollectionIndex index)
+        {
+            var start = this.GetNode(index.TailNode);
+            return this.GetNode(start.Prev[0]);
+        }
+
+        #endregion
 
         #region Find index nodes
 
@@ -266,7 +282,10 @@ namespace LiteDB
             {
                 cur = this.GetNode(cur.Next[0]);
 
-                yield return cur;
+                if (!cur.DataBlock.IsEmpty)
+                {
+                    yield return cur;
+                }
             }
         }
 
@@ -288,7 +307,13 @@ namespace LiteDB
                     var diff = next.Value.CompareTo(value);
 
                     if (diff == 1 && (i > 0 || !greater)) break;
-                    if (diff == 1 && i == 0 && greater) return next;
+                    if (diff == 1 && i == 0 && greater)
+                    {
+                        if (!next.DataBlock.IsEmpty)
+                        {
+                            return next;
+                        }
+                    }
 
                     // if equals, test for duplicates - go back to first occurs on duplicate values
                     if (diff == 0)
@@ -300,8 +325,10 @@ namespace LiteDB
                             if (index.HeadNode.Equals(next.Prev[0])) break;
                             next = this.GetNode(next.Prev[0]);
                         }
-
-                        return last;
+                        if (!last.DataBlock.IsEmpty)
+                        {
+                            return last;
+                        }
                     }
                 }
             }
@@ -324,7 +351,10 @@ namespace LiteDB
             // navigate using next[0] do next node - if equals, returns
             while (!node.Next[0].IsEmpty && ((node = this.GetNode(node.Next[0])).Value.CompareTo(value) == 0))
             {
-                yield return node;
+                if (!node.DataBlock.IsEmpty)
+                {
+                    yield return node;
+                }
             }
         }
 
@@ -367,7 +397,10 @@ namespace LiteDB
                 // value will not be null because null occurs before string (bsontype sort order)
                 if (value.StartsWith(str, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    yield return node;
+                    if (!node.DataBlock.IsEmpty)
+                    {
+                        yield return node;
+                    }
                 }
                 else
                 {
@@ -392,7 +425,10 @@ namespace LiteDB
 
                 if (diff == 1 || (!includeValue && diff == 0)) break;
 
-                yield return node;
+                if (!node.DataBlock.IsEmpty)
+                {
+                    yield return node;
+                }
             }
         }
 
@@ -411,19 +447,29 @@ namespace LiteDB
             {
                 var diff = node.Value.CompareTo(value);
 
-                if (diff == 1 || (includeValue && diff == 0)) yield return node;
+                if (diff == 1 || (includeValue && diff == 0))
+                {
+                    if (!node.DataBlock.IsEmpty)
+                    {
+                        yield return node;
+                    }
+                }
 
                 node = this.GetNode(node.Next[0]);
             }
         }
 
+        //TODO: remove-it - it's not a index service (its just code)!
         public IEnumerable<IndexNode> FindIn(CollectionIndex index, BsonArray values)
         {
             foreach (var value in values.Distinct())
             {
                 foreach(var node in this.FindEquals(index, value))
                 {
-                    yield return node;
+                    if (!node.DataBlock.IsEmpty)
+                    {
+                        yield return node;
+                    }
                 }
             }
         }

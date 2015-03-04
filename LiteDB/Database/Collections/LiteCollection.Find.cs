@@ -101,6 +101,8 @@ namespace LiteDB
             return this.Find(Query.All());
         }
 
+        #region Count/Exits
+
         /// <summary>
         /// Get document count using property on collection.
         /// </summary>
@@ -156,5 +158,83 @@ namespace LiteDB
         {
             return this.Exists(_visitor.Visit(predicate));
         }
+
+        #endregion
+
+        #region Min/Max
+
+        /// <summary>
+        /// Returns the first/min value from a index field
+        /// </summary>
+        public BsonValue Min(string field)
+        {
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+
+            var col = this.GetCollectionPage(false);
+
+            if (col == null) return BsonValue.MinValue;
+
+            var index = col.GetIndex(field);
+
+            var first = this.Database.Indexer.FindFirst(index);
+
+            return first.DataBlock.IsEmpty ? BsonValue.MinValue : first.Value;
+        }
+
+        /// <summary>
+        /// Returns the first/min _id field
+        /// </summary>
+        public BsonValue Min()
+        {
+            return this.Min("_id");
+        }
+
+        /// <summary>
+        /// Returns the first/min field using a linq expression
+        /// </summary>
+        public BsonValue Min<K>(Expression<Func<T, K>> property)
+        {
+            var field = _visitor.GetBsonField(property);
+
+            return this.Min(field);
+        }
+
+        /// <summary>
+        /// Returns the last/max value from a index field
+        /// </summary>
+        public BsonValue Max(string field)
+        {
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+
+            var col = this.GetCollectionPage(false);
+
+            if (col == null) return BsonValue.MaxValue;
+
+            var index = col.GetIndex(field);
+
+            var last = this.Database.Indexer.FindLast(index);
+
+            return last.DataBlock.IsEmpty ? BsonValue.MaxValue : last.Value;
+        }
+
+        /// <summary>
+        /// Returns the last/max _id field
+        /// </summary>
+        public BsonValue Max()
+        {
+            return this.Max("_id");
+        }
+
+        /// <summary>
+        /// Returns the last/max field using a linq expression
+        /// </summary>
+        public BsonValue Max<K>(Expression<Func<T, K>> property)
+        {
+            var field = _visitor.GetBsonField(property);
+
+            return this.Max(field);
+        }
+
+        #endregion
     }
 }
