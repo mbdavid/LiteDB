@@ -13,6 +13,8 @@ namespace LiteDB
     /// </summary>
     public enum BsonType
     { 
+        MinValue = 0,
+
         Null = 1,
 
         Int32 = 2,
@@ -28,6 +30,8 @@ namespace LiteDB
         Guid = 9,
 
         Boolean = 10,
-        DateTime = 11
+        DateTime = 11,
+
+        MaxValue = 12
     }
 }

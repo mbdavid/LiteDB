@@ -158,6 +158,9 @@ namespace LiteDB
                 case "$guid": val = new BsonValue(new Guid(value)); break;
                 case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
                 case "$binary": val = new BsonValue(Convert.FromBase64String(value)); break;
+                case "$minValue": val = BsonValue.MinValue; break;
+                case "$maxValue": val = BsonValue.MaxValue; break;
+
                 default: return BsonValue.Null; // is not a special data type
             }
 

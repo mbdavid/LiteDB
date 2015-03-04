@@ -72,6 +72,14 @@ namespace LiteDB
             {
                 return reader.ReadInt64();
             }
+            else if (type == 0xFF) // MinKey
+            {
+                return BsonValue.MinValue;
+            }
+            else if (type == 0x7F) // MaxKey
+            {
+                return BsonValue.MaxValue;
+            }
 
             throw new LiteException("Bson type not supported");
         }

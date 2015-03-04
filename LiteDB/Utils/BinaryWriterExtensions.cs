@@ -43,7 +43,10 @@ namespace LiteDB
 
             switch(value.Type)
             {
-                case BsonType.Null: break;
+                case BsonType.Null:
+                case BsonType.MinValue:
+                case BsonType.MaxValue:
+                    break;
 
                 case BsonType.Int32: writer.Write((Int32)value.RawValue); break;
                 case BsonType.Int64: writer.Write((Int64)value.RawValue); break;

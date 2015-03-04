@@ -70,6 +70,12 @@ namespace LiteDB
                 case BsonType.Int64:
                     this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString());
                     break;
+                case BsonType.MinValue:
+                    this.WriteExtendDataType("$minValue", "1");
+                    break;
+                case BsonType.MaxValue:
+                    this.WriteExtendDataType("$maxValue", "1");
+                    break;
             }
         }
 

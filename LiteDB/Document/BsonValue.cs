@@ -15,9 +15,13 @@ namespace LiteDB
     /// </summary>
     public class BsonValue : IComparable<BsonValue>, IEquatable<BsonValue>
     {
-        public static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public static BsonValue Null { get { return new BsonValue(); } }
+        public static readonly BsonValue Null = new BsonValue();
+
+        public static readonly BsonValue MinValue = new BsonValue { Type = BsonType.MinValue, RawValue = "(-Inf)" };
+
+        public static readonly BsonValue MaxValue = new BsonValue { Type = BsonType.MaxValue, RawValue = "(+Inf)" };
 
         /// <summary>
         /// Indicate BsonType of this BsonValue
@@ -270,6 +274,16 @@ namespace LiteDB
             get { return this.Type == BsonType.DateTime; }
         }
 
+        public bool IsMinValue
+        {
+            get { return this.Type == BsonType.MinValue; }
+        }
+
+        public bool IsMaxValue
+        {
+            get { return this.Type == BsonType.MaxValue; }
+        }
+
         #endregion
 
         #region Methods for BsonDocument/BsonArray
@@ -499,7 +513,10 @@ namespace LiteDB
             // for both values with same datatype just compare
             switch (this.Type)
             {
-                case BsonType.Null: return 0; // null == null
+                case BsonType.Null: 
+                case BsonType.MinValue:
+                case BsonType.MaxValue:
+                    return 0;
 
                 case BsonType.Int32: return ((Int32)this.RawValue).CompareTo((Int32)other.RawValue);
                 case BsonType.Int64: return ((Int64)this.RawValue).CompareTo((Int64)other.RawValue);
@@ -567,7 +584,10 @@ namespace LiteDB
 
             switch (this.Type)
             {
-                case BsonType.Null: length = 0; break;
+                case BsonType.Null:
+                case BsonType.MinValue:
+                case BsonType.MaxValue:
+                    length = 0; break;
 
                 case BsonType.Int32: length = 4; break;
                 case BsonType.Int64: length = 8; break;

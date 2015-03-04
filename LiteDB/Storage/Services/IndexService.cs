@@ -40,26 +40,30 @@ namespace LiteDB
             var page = _pager.NewPage<IndexPage>();
 
             // create a empty node with full max level
-            var node = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
+            var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
             { 
-                Value = BsonValue.Null, 
-                ValueLength = BsonValue.Null.GetBytesCount(), 
-                Page = page 
+                Value = BsonValue.MinValue, 
+                ValueLength = BsonValue.MinValue.GetBytesCount(), 
+                Page = page,
+                Position = new PageAddress(page.PageID, 0)
             };
 
-            node.Position = new PageAddress(page.PageID, 0);
-
             // add as first node
-            page.Nodes.Add(node.Position.Index, node);
+            page.Nodes.Add(head.Position.Index, head);
 
-            // update freebytes + item count
+            // update freebytes + item count (for head)
             page.UpdateItemCount();
 
             // add indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
 
-            // point the head node to this new node position
-            index.HeadNode = node.Position;
+            // point the head/tail node to this new node position
+            index.HeadNode = head.Position;
+
+            // insert tail node
+            var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH);
+
+            index.TailNode = tail.Position;
 
             index.Page.IsDirty = true;
             page.IsDirty = true;
@@ -93,8 +97,14 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue value)
         {
-            var level = this.FlipCoin();
+            return this.AddNode(index, value, this.FlipCoin());
+        }
 
+        /// <summary>
+        /// Insert a new node index inside a index. Use skip list
+        /// </summary>
+        public IndexNode AddNode(CollectionIndex index, BsonValue value, byte level)
+        {
             // if value is string, normalize
             value.Normalize(index.Options);
 

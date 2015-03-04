@@ -51,6 +51,9 @@ namespace LiteDB
 
                 case BsonType.Boolean: return reader.ReadBoolean();
                 case BsonType.DateTime: return reader.ReadDateTime();
+
+                case BsonType.MinValue: return BsonValue.MinValue;
+                case BsonType.MaxValue: return BsonValue.MaxValue;
             }
 
             throw new NotImplementedException();

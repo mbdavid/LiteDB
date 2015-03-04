@@ -37,6 +37,11 @@ namespace LiteDB
         public PageAddress HeadNode { get; set; }
 
         /// <summary>
+        /// A link pointer to tail node
+        /// </summary>
+        public PageAddress TailNode { get; set; }
+
+        /// <summary>
         /// Get a reference for the free list index page - its private list per collection/index (must be a Field to be used as reference parameter)
         /// </summary>
         public uint FreeIndexPageID;

@@ -70,14 +70,14 @@ namespace LiteDB
             }
         }
 
-        public IndexNode(byte length)
+        public IndexNode(byte level)
         {
             this.Position = PageAddress.Empty;
             this.DataBlock = PageAddress.Empty;
-            this.Prev = new PageAddress[length];
-            this.Next = new PageAddress[length];
+            this.Prev = new PageAddress[level];
+            this.Next = new PageAddress[level];
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < level; i++)
             {
                 this.Prev[i] = PageAddress.Empty;
                 this.Next[i] = PageAddress.Empty;

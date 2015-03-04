@@ -83,6 +83,14 @@ namespace LiteDB
                     this.WriteCString(writer, key);
                     writer.Write((Int64)value.RawValue);
                     break;
+                case BsonType.MinValue:
+                    writer.Write((byte)0xFF);
+                    this.WriteCString(writer, key);
+                    break;
+                case BsonType.MaxValue:
+                    writer.Write((byte)0x7F);
+                    this.WriteCString(writer, key);
+                    break;
             }
         }
 

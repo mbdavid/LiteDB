@@ -74,10 +74,7 @@ namespace LiteDB
                 var page = db.Pager.GetPage<IndexPage>(cur.PageID);
                 var node = page.Nodes[cur.Index];
 
-                sbs[0].Append((first ? "HEAD" :
-                    node.Value.IsNull ? "null" : Limit(node.Value.ToString(), size)).PadBoth(1 + (2 * size)));
-
-                first = false;
+                sbs[0].Append((Limit(node.Value.ToString(), size)).PadBoth(1 + (2 * size)));
 
                 for (var i = 0; i < IndexNode.MAX_LEVEL_LENGTH; i++)
                 {
@@ -89,16 +86,9 @@ namespace LiteDB
                     {
                         if (!node.Prev[i].IsEmpty)
                         {
-                            if (node.Prev[i].Equals(index.HeadNode))
-                            {
-                                p = "<-H";
-                            }
-                            else
-                            {
-                                var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
-                                var pnode = pprev.Nodes[node.Prev[i].Index];
-                                p = pnode.Value == null ? "null" : pnode.Value.ToString();
-                            }
+                            var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
+                            var pnode = pprev.Nodes[node.Prev[i].Index];
+                            p = pnode.Value == null ? "null" : pnode.Value.ToString();
                         }
                         if (!node.Next[i].IsEmpty)
                         {
