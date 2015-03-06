@@ -117,6 +117,16 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that has value in values list (IN)
         /// </summary>
+        public static Query In(string field, BsonArray value)
+        {
+            if (value == null) throw new ArgumentNullException("value");
+
+            return new QueryIn(field, value.RawValue);
+        }
+
+        /// <summary>
+        /// Returns all documents that has value in values list (IN)
+        /// </summary>
         public static Query In(string field, params BsonValue[] values)
         {
             if (values == null) throw new ArgumentNullException("values");

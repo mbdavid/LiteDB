@@ -18,14 +18,13 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            throw new NotImplementedException();
-            //foreach (var value in this.Values.Distinct())
-            //{
-            //    foreach (var node in indexer.FindEquals(index, value))
-            //    {
-            //        yield return node;
-            //    }
-            //}
+            foreach (var value in _values.Distinct())
+            {
+                foreach (var node in Query.EQ(this.Field, value).Execute(indexer, index))
+                {
+                    yield return node;
+                }
+            }
         }
     }
 }

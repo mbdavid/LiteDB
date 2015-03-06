@@ -85,8 +85,7 @@ namespace LiteDB.Shell.Commands
                 case "<": return Query.LT(field, value);
                 case "<=": return Query.LTE(field, value);
                 case "like": return Query.StartsWith(field, value);
-                //TODO missing
-                //case "in": return Query.In(field, value.AsArray.ToArray());
+                case "in": return Query.In(field, value.AsArray);
                 case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
                 default: throw new ApplicationException("Invalid query operator");
             }

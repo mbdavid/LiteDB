@@ -15,7 +15,7 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            var first = indexer.GetNode(index.TailNode);
+            var first = indexer.GetNode(index.HeadNode);
             var node = indexer.GetNode(first.Next[0]);
 
             if (node.IsHeadTail) yield break;

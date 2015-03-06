@@ -231,7 +231,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a node inside a page using PageAddress
+        /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
         /// </summary>
         public IndexNode GetNode(PageAddress address)
         {
@@ -258,7 +258,7 @@ namespace LiteDB
 
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var cur = this.GetNode(order >= 0 ? index.HeadNode : index.TailNode);
+            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
             while (!cur.NextPrev(0, order).IsEmpty)
             {
@@ -279,7 +279,7 @@ namespace LiteDB
             // normalize value using index options (case, accents, ...)
             value.Normalize(index.Options);
 
-            var cur = this.GetNode(order == 1 ? index.HeadNode : index.TailNode);
+            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
             for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
@@ -300,23 +300,29 @@ namespace LiteDB
                         // if unique index has no duplicates - just return node
                         if (index.Options.Unique) return next;
 
-                        var last = next;
-
-                        while (next.Value.CompareTo(value) == 0)
-                        {
-                            last = next;
-                            next = this.GetNode(next.NextPrev(0, order * -1));
-                            if (next.IsHeadTail) break;
-                        }
-                        // if order is ASC, returns first occurence of index value
-                        // if order is DESC, returns last occurence of index value
-
-                        return last;
+                        return this.FindBoundary(next, value, order * -1, i);
                     }
                 }
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Go first/last occurence of this index value
+        /// </summary>
+        private IndexNode FindBoundary(IndexNode cur, BsonValue value, int order, int level)
+        {
+            var last = cur;
+
+            while (cur.Value.CompareTo(value) == 0)
+            {
+                last = cur;
+                cur = this.GetNode(cur.NextPrev(0, order));
+                if (cur.IsHeadTail) break;
+            }
+
+            return last;
         }
 
         #endregion
