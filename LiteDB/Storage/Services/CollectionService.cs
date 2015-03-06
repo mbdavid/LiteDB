@@ -86,7 +86,7 @@ namespace LiteDB
             foreach (var index in col.GetIndexes(true))
             {
                 // get all nodes from index
-                var nodes = _indexer.FindAll(index);
+                var nodes = _indexer.FindAll(index, Query.Ascending);
 
                 foreach (var node in nodes)
                 {

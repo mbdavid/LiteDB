@@ -8,19 +8,21 @@ namespace LiteDB
 {
     internal class QueryGreater : Query
     {
-        public BsonValue Value { get; private set; }
-        public bool OrEquals { get; private set; }
+        private BsonValue _value;
+        private bool _equals;
+        private int _order;
 
-        public QueryGreater(string field, BsonValue value, bool orEquals)
+        public QueryGreater(string field, BsonValue value, bool equals, int order)
             : base(field)
         {
-            this.Value = value;
-            this.OrEquals = orEquals;
+            _value = value;
+            _equals = equals;
+            _order = order;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindGreaterThan(index, this.Value, this.OrEquals);
+            throw new NotImplementedException();
         }
     }
 }

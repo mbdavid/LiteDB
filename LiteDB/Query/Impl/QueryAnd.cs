@@ -8,26 +8,25 @@ namespace LiteDB
 {
     internal class QueryAnd : Query
     {
-        public Query Left { get; private set; }
-        public Query Right { get; private set; }
+        private Query _left;
+        private Query _right;
 
         public QueryAnd(Query left, Query right)
             : base(null)
         {
-            this.Left = left;
-            this.Right = right;
+            _left = left;
+            _right = right;
         }
 
-        // Never runs in AND/OR queries
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return null;
+            throw new Exception("Never used in AND/OR operations");
         }
 
-        internal override IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection, CollectionPage col)
+        internal override IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)
         {
-            var left = this.Left.Run(collection, col);
-            var right = this.Right.Run(collection, col);
+            var left = _left.Run(collection);
+            var right = _right.Run(collection);
 
             return left.Intersect(right, new IndexNodeComparer());
         }

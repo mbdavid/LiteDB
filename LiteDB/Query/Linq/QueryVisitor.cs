@@ -30,29 +30,35 @@ namespace LiteDB
 
         private Query VisitExpression(Expression expr)
         {
-            if (expr.NodeType == ExpressionType.Equal)
+            if (expr.NodeType == ExpressionType.Equal) // == 
             {
-                // ==
                 var bin = expr as BinaryExpression;
                 return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right)); 
             }
-            else if (expr.NodeType == ExpressionType.NotEqual)
+            else if (expr.NodeType == ExpressionType.NotEqual) // !=
             {
-                // !=
                 var bin = expr as BinaryExpression;
-                return new QueryNot(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return Query.Not(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
             }
-            else if (expr.NodeType == ExpressionType.LessThan || expr.NodeType == ExpressionType.LessThanOrEqual)
+            else if (expr.NodeType == ExpressionType.LessThan) // <
             {
-                // < <=
                 var bin = expr as BinaryExpression;
-                return new QueryLess(this.VisitMember(bin.Left), this.VisitValue(bin.Right), expr.NodeType == ExpressionType.LessThanOrEqual);
+                return Query.LT(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
             }
-            else if (expr.NodeType == ExpressionType.GreaterThan || expr.NodeType == ExpressionType.GreaterThanOrEqual)
+            else if (expr.NodeType == ExpressionType.LessThanOrEqual) // <=
             {
-                // > >=
                 var bin = expr as BinaryExpression;
-                return new QueryGreater(this.VisitMember(bin.Left), this.VisitValue(bin.Right), expr.NodeType == ExpressionType.GreaterThanOrEqual);
+                return Query.LTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+            }
+            else if (expr.NodeType == ExpressionType.GreaterThan) // >
+            {
+                var bin = expr as BinaryExpression;
+                return Query.GT(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+            }
+            else if (expr.NodeType == ExpressionType.GreaterThanOrEqual) // >=
+            {
+                var bin = expr as BinaryExpression;
+                return Query.GTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
             }
             else if (expr is MethodCallExpression)
             {
@@ -64,14 +70,14 @@ namespace LiteDB
                 {
                     var value = this.VisitValue(met.Arguments[0]);
 
-                    return new QueryStartsWith(this.VisitMember(met.Object), value);
+                    return Query.StartsWith(this.VisitMember(met.Object), value);
                 }
                 // Equals
                 else if (method == "Equals")
                 {
                     var value = this.VisitValue(met.Arguments[0]);
 
-                    return new QueryEquals(this.VisitMember(met.Object), value);
+                    return Query.EQ(this.VisitMember(met.Object), value);
                 }
             }
             else if (expr is BinaryExpression && expr.NodeType == ExpressionType.AndAlso)
@@ -81,7 +87,7 @@ namespace LiteDB
                 var left = this.VisitExpression(bin.Left);
                 var right = this.VisitExpression(bin.Right);
 
-                return new QueryAnd(left, right);
+                return Query.And(left, right);
             }
             else if (expr is BinaryExpression && expr.NodeType == ExpressionType.OrElse)
             {
@@ -90,7 +96,7 @@ namespace LiteDB
                 var left = this.VisitExpression(bin.Left);
                 var right = this.VisitExpression(bin.Right);
 
-                return new QueryOr(left, right);
+                return Query.Or(left, right);
             }
 
             throw new NotImplementedException("Not implemented Linq expression");
@@ -106,7 +112,7 @@ namespace LiteDB
 
         private BsonValue VisitValue(Expression expr)
         {
-            // its a constant; Ex: "fixed string"
+            // its a constant; Eg: "fixed string"
             if(expr is ConstantExpression)
             {
                 var value = (expr as ConstantExpression).Value;

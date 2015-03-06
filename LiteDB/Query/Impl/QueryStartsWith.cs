@@ -6,19 +6,19 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class QueryNot : Query
+    internal class QueryStartsWith : Query
     {
-        public BsonValue Value { get; private set; }
+        private BsonValue _value;
 
-        public QueryNot(string field, BsonValue value)
+        public QueryStartsWith(string field, BsonValue value)
             : base(field)
         {
-            this.Value = value;
+            _value = value;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindAll(index).Where(x => x.Value.CompareTo(this.Value) != 0);
+            throw new NotImplementedException();
         }
     }
 }

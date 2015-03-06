@@ -54,7 +54,6 @@ namespace LiteDB
         public static StringBuilder Index(LiteDatabase db, string collection, string field, int size = 5)
         {
             var sbs = new StringBuilder[IndexNode.MAX_LEVEL_LENGTH + 1];
-            var first = true;
 
             var col = db.GetCollection(collection).GetCollectionPage(false);
             if (col == null) throw new ArgumentException("Invalid collection name");

@@ -40,7 +40,7 @@ namespace LiteDB
                 }
 
                 // find indexNode from pk index
-                var indexNode = this.Database.Indexer.FindOne(col.PK, id);
+                var indexNode = this.Database.Indexer.Find(col.PK, id, false, Query.Ascending);
 
                 // if not found document, no updates
                 if (indexNode == null)

@@ -64,7 +64,7 @@ namespace LiteDB
                 index.Options = options;
 
                 // read all objects (read from PK index)
-                foreach (var node in this.Database.Indexer.FindAll(col.PK))
+                foreach (var node in new QueryAll("_id", 1).Run(this))
                 {
                     var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 

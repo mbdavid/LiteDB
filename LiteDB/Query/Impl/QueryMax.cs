@@ -6,21 +6,21 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class QueryAll : Query
+    internal class QueryMax : Query
     {
-        public QueryAll()
-            : base("_id")
-        {
-        }
-
-        public QueryAll(string field)
+        public QueryMax(string field)
             : base(field)
         {
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindAll(index);
+            var last = indexer.GetNode(index.TailNode);
+            var node = indexer.GetNode(last.Prev[0]);
+
+            if(node.IsHeadTail) yield break;
+
+            yield return node;
         }
     }
 }

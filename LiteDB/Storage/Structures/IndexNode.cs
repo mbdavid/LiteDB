@@ -58,11 +58,11 @@ namespace LiteDB
         public IndexPage Page { get; set; }
 
         /// <summary>
-        /// Returns Next (asc == true) OR Prev (asc == false)
+        /// Returns Next (order == 1) OR Prev (order == -1)
         /// </summary>
-        public PageAddress NextPrev(int index, bool asc)
+        public PageAddress NextPrev(int index, int order)
         {
-            return asc ? this.Next[index] : this.Prev[index];
+            return order == 1 ? this.Next[index] : this.Prev[index];
         }
 
         //TODO: implement a indicator that this node is head/tail - better if was compared with Head/Tail position?

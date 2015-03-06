@@ -31,7 +31,7 @@ namespace LiteDB
                 }
 
                 // find indexNode using PK index
-                var node = this.Database.Indexer.FindOne(col.PK, id);
+                var node = this.Database.Indexer.Find(col.PK, id, false, Query.Ascending);
 
                 // if not found, abort transaction and returns false
                 if (node == null)
@@ -75,7 +75,7 @@ namespace LiteDB
                 var count = 0;
 
                 // find nodes
-                var nodes = query.Run<T>(this, col);
+                var nodes = query.Run<T>(this);
 
                 foreach (var node in nodes)
                 {

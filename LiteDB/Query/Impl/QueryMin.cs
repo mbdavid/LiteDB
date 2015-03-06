@@ -6,19 +6,21 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class QueryStartsWith : Query
+    internal class QueryMin : Query
     {
-        public BsonValue Value { get; private set; }
-
-        public QueryStartsWith(string field, BsonValue value)
+        public QueryMin(string field)
             : base(field)
         {
-            this.Value = value;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindStarstWith(index, this.Value);
+            var first = indexer.GetNode(index.TailNode);
+            var node = indexer.GetNode(first.Next[0]);
+
+            if (node.IsHeadTail) yield break;
+
+            yield return node;
         }
     }
 }

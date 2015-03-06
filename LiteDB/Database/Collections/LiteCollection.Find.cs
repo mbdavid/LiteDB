@@ -9,50 +9,7 @@ namespace LiteDB
 {
     public partial class LiteCollection<T>
     {
-        /// <summary>
-        /// Find a document using Document Id. Returns null if not found.
-        /// </summary>
-        public T FindById(BsonValue id)
-        {
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
-
-            var col = this.GetCollectionPage(false);
-
-            if (col == null) return default(T);
-
-            var node = this.Database.Indexer.FindOne(col.PK, id);
-
-            if (node == null) return default(T);
-
-            var dataBlock = this.Database.Data.Read(node.DataBlock, true);
-
-            var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
-            var obj = this.Database.Mapper.ToObject<T>(doc);
-
-            foreach (var action in _includes)
-            {
-                action(obj);
-            }
-
-            return obj;
-        }
-
-        /// <summary>
-        /// Find the first document using Query object. Returns null if not found. Must have index on query expression.
-        /// </summary>
-        public T FindOne(Query query)
-        {
-            return this.Find(query).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Find the first document using Linq expression. Returns null if not found. Must have indexes on predicate.
-        /// </summary>
-        public T FindOne(Expression<Func<T, bool>> predicate)
-        {
-            return this.Find(_visitor.Visit(predicate)).FirstOrDefault();
-        }
+        #region Find
 
         /// <summary>
         /// Find documents inside a collection using Query object. Must have indexes in query expression 
@@ -61,11 +18,7 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var col = this.GetCollectionPage(false);
-
-            if (col == null) yield break;
-
-            var nodes = query.Run<T>(this, col);
+            var nodes = query.Run<T>(this);
 
             foreach (var node in nodes)
             {
@@ -93,13 +46,45 @@ namespace LiteDB
             return this.Find(_visitor.Visit(predicate));
         }
 
+        #endregion
+
+        #region FindById + One + All
+
         /// <summary>
-        /// Returns all documents inside collection.
+        /// Find a document using Document Id. Returns null if not found.
+        /// </summary>
+        public T FindById(BsonValue id)
+        {
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+
+            return this.Find(Query.EQ("_id", id)).SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Find the first document using Query object. Returns null if not found. Must have index on query expression.
+        /// </summary>
+        public T FindOne(Query query)
+        {
+            return this.Find(query).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Find the first document using Linq expression. Returns null if not found. Must have indexes on predicate.
+        /// </summary>
+        public T FindOne(Expression<Func<T, bool>> predicate)
+        {
+            return this.Find(_visitor.Visit(predicate)).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Returns all documents inside collection order by _id index.
         /// </summary>
         public IEnumerable<T> FindAll()
         {
             return this.Find(Query.All());
         }
+
+        #endregion
 
         #region Count/Exits
 
@@ -122,11 +107,7 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var col = this.GetCollectionPage(false);
-
-            if (col == null) return 0;
-
-            return query.Run<T>(this, col).Count();
+            return query.Run<T>(this).Count();
         }
 
         /// <summary>
@@ -144,11 +125,7 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var col = this.GetCollectionPage(false);
-
-            if (col == null) return false;
-
-            return query.Run<T>(this, col).FirstOrDefault() != null;
+            return query.Run<T>(this).FirstOrDefault() != null;
         }
 
         /// <summary>
@@ -170,15 +147,9 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            var col = this.GetCollectionPage(false);
+            var node = Query.Min(field).Run(this).SingleOrDefault();
 
-            if (col == null) return BsonValue.MinValue;
-
-            var index = col.GetIndex(field);
-
-            var first = this.Database.Indexer.FindFirst(index);
-
-            return first.DataBlock.IsEmpty ? BsonValue.MinValue : first.Value;
+            return node == null ? BsonValue.MinValue : node.Value;
         }
 
         /// <summary>
@@ -206,15 +177,9 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            var col = this.GetCollectionPage(false);
+            var node = Query.Max(field).Run(this).SingleOrDefault();
 
-            if (col == null) return BsonValue.MaxValue;
-
-            var index = col.GetIndex(field);
-
-            var last = this.Database.Indexer.FindLast(index);
-
-            return last.DataBlock.IsEmpty ? BsonValue.MaxValue : last.Value;
+            return node == null ? BsonValue.MaxValue : node.Value;
         }
 
         /// <summary>

@@ -8,19 +8,19 @@ namespace LiteDB
 {
     internal class QueryBetween : Query
     {
-        public BsonValue Start { get; private set; }
-        public BsonValue End { get; private set; }
+        private BsonValue _start;
+        private BsonValue _end;
 
         public QueryBetween(string field, BsonValue start, BsonValue end)
             : base(field)
         {
-            this.Start = start;
-            this.End = end;
+            _start = start;
+            _end = end;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindBetween(index, this.Start, this.End);
+            throw new NotImplementedException();
         }
     }
 }

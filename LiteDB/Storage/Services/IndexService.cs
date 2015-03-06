@@ -72,27 +72,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Drop all indexes pages
-        /// </summary>
-        public void DropIndex(CollectionIndex index)
-        {
-            var pages = new HashSet<uint>();
-            var nodes = this.FindAll(index);
-
-            // get reference for pageID from all index nodes
-            foreach (var node in nodes)
-            {
-                pages.Add(node.Position.PageID);
-            }
-
-            // now delete all pages
-            foreach (var page in pages)
-            {
-                _pager.DeletePage(page);
-            }
-        }
-
-        /// <summary>
         /// Insert a new node index inside a index. Use skip list
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue value)
@@ -229,6 +208,28 @@ namespace LiteDB
             page.IsDirty = true;
         }
 
+
+        /// <summary>
+        /// Drop all indexes pages
+        /// </summary>
+        public void DropIndex(CollectionIndex index)
+        {
+            var pages = new HashSet<uint>();
+            var nodes = this.FindAll(index, Query.Ascending);
+
+            // get reference for pageID from all index nodes
+            foreach (var node in nodes)
+            {
+                pages.Add(node.Position.PageID);
+            }
+
+            // now delete all pages
+            foreach (var page in pages)
+            {
+                _pager.DeletePage(page);
+            }
+        }
+
         /// <summary>
         /// Get a node inside a page using PageAddress
         /// </summary>
@@ -253,211 +254,69 @@ namespace LiteDB
             return level;
         }
 
-        #region First/Last value
+        #region Find
 
-        public IndexNode FindFirst(CollectionIndex index)
+        public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var start = this.GetNode(index.HeadNode);
-            return this.GetNode(start.Next[0]);
-        }
+            var cur = this.GetNode(order >= 0 ? index.HeadNode : index.TailNode);
 
-        public IndexNode FindLast(CollectionIndex index)
-        {
-            var start = this.GetNode(index.TailNode);
-            return this.GetNode(start.Prev[0]);
-        }
-
-        #endregion
-
-        #region Find index nodes
-
-        /// <summary>
-        /// Return all nodes. Can returns in asc or desc order as index storaged
-        /// </summary>
-        public IEnumerable<IndexNode> FindAll(CollectionIndex index, bool asc)
-        {
-            var cur = this.GetNode(asc ? index.HeadNode : index.TailNode);
-
-            while (!cur.NextPrev(0, asc).IsEmpty)
+            while (!cur.NextPrev(0, order).IsEmpty)
             {
-                cur = this.GetNode(cur.NextPrev(0, asc));
+                cur = this.GetNode(cur.NextPrev(0, order));
 
-                // empty datablock is head/tail
-                if (!cur.DataBlock.IsEmpty)
-                {
-                    yield return cur;
-                }
+                // stop if node is head/tail
+                if (cur.IsHeadTail) yield break;
+
+                yield return cur;
             }
         }
 
         /// <summary>
-        /// Find first indexNode that match with value - if not found, can return first greater (used for greaterThan/Between)
+        /// Find first node that index match with value. If not found but sibling = true, returns near node (only non-unique index)
         /// </summary>
-        public IndexNode FindOne(CollectionIndex index, BsonValue value, bool greater = false)
+        public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
-            // if value is string, normalize
+            // normalize value using index options (case, accents, ...)
             value.Normalize(index.Options);
 
-            var cur = this.GetNode(index.HeadNode);
+            var cur = this.GetNode(order == 1 ? index.HeadNode : index.TailNode);
 
-            for (int i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
-                for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
+                for (; cur.NextPrev(i, order).IsEmpty == false; cur = this.GetNode(cur.NextPrev(i, order)))
                 {
-                    var next = this.GetNode(cur.Next[i]);
+                    var next = this.GetNode(cur.NextPrev(i, order));
                     var diff = next.Value.CompareTo(value);
 
-                    if (diff == 1 && (i > 0 || !greater)) break;
-                    if (diff == 1 && i == 0 && greater)
+                    if (diff == order && (i > 0 || !sibling)) break;
+                    if (diff == order && i == 0 && sibling)
                     {
-                        if (!next.DataBlock.IsEmpty)
-                        {
-                            return next;
-                        }
+                        return next.IsHeadTail ? null : next;
                     }
 
                     // if equals, test for duplicates - go back to first occurs on duplicate values
                     if (diff == 0)
                     {
+                        // if unique index has no duplicates - just return node
+                        if (index.Options.Unique) return next;
+
                         var last = next;
+
                         while (next.Value.CompareTo(value) == 0)
                         {
                             last = next;
-                            if (index.HeadNode.Equals(next.Prev[0])) break;
-                            next = this.GetNode(next.Prev[0]);
+                            next = this.GetNode(next.NextPrev(0, order * -1));
+                            if (next.IsHeadTail) break;
                         }
-                        if (!last.DataBlock.IsEmpty)
-                        {
-                            return last;
-                        }
+                        // if order is ASC, returns first occurence of index value
+                        // if order is DESC, returns last occurence of index value
+
+                        return last;
                     }
                 }
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Find all indexNodes that match with value
-        /// </summary>
-        public IEnumerable<IndexNode> FindEquals(CollectionIndex index, BsonValue value)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, value);
-
-            if (node == null) yield break;
-
-            yield return node;
-
-            // navigate using next[0] do next node - if equals, returns
-            while (!node.Next[0].IsEmpty && ((node = this.GetNode(node.Next[0])).Value.CompareTo(value) == 0))
-            {
-                if (!node.DataBlock.IsEmpty)
-                {
-                    yield return node;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Find nodes between start and end and (inclusive)
-        /// </summary>
-        public IEnumerable<IndexNode> FindBetween(CollectionIndex index, BsonValue start, BsonValue end)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, start, true);
-
-            // if end value - start value was normilized on FindOne method
-            end.Normalize(index.Options);
-
-            // navigate using next[0] do next node - if less or equals returns
-            while (node != null)
-            {
-                var diff = node.Value.CompareTo(end);
-
-                if (diff <= 0) yield return node;
-
-                node = this.GetNode(node.Next[0]);
-            }
-        }
-
-        /// <summary>
-        /// Find nodes startswith a string
-        /// </summary>
-        public IEnumerable<IndexNode> FindStarstWith(CollectionIndex index, BsonValue text)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, text, true);
-            var str = text.AsString;
-
-            // navigate using next[0] do next node - if less or equals returns
-            while (node != null)
-            {
-                var value = node.Value.AsString;
-
-                // value will not be null because null occurs before string (bsontype sort order)
-                if (value.StartsWith(str, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (!node.DataBlock.IsEmpty)
-                    {
-                        yield return node;
-                    }
-                }
-                else
-                {
-                    break; // if not more startswith, stop scanning
-                }
-
-                node = this.GetNode(node.Next[0]);
-            }
-        }
-
-        /// <summary>
-        /// Find all nodes less than value (can be inclusive) 
-        /// </summary>
-        public IEnumerable<IndexNode> FindLessThan(CollectionIndex index, BsonValue value, bool includeValue = false)
-        {
-            // normalize string value
-            value.Normalize(index.Options);
-
-            foreach (var node in this.FindAll(index))
-            {
-                var diff = node.Value.CompareTo(value);
-
-                if (diff == 1 || (!includeValue && diff == 0)) break;
-
-                if (!node.DataBlock.IsEmpty)
-                {
-                    yield return node;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Find all indexNodes that are greater/equals than value
-        /// </summary>
-        public IEnumerable<IndexNode> FindGreaterThan(CollectionIndex index, BsonValue value, bool includeValue = false)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, value, true);
-
-            if (node == null) yield break;
-
-            // move until next is last
-            while (node != null)
-            {
-                var diff = node.Value.CompareTo(value);
-
-                if (diff == 1 || (includeValue && diff == 0))
-                {
-                    if (!node.DataBlock.IsEmpty)
-                    {
-                        yield return node;
-                    }
-                }
-
-                node = this.GetNode(node.Next[0]);
-            }
         }
 
         #endregion
