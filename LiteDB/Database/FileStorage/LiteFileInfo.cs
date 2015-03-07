@@ -124,7 +124,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileStream OpenRead()
         {
-            if (_db == null) throw new LiteException("This FileEntry instance don't have reference to database");
+            if (_db == null) throw new LiteException("This FileStream instance don't have reference to database");
 
             return new LiteFileStream(_db, this);
         }
@@ -134,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
-            if (_db == null) throw new LiteException("This FileEntry instance don't have reference to database");
+            if (_db == null) throw new LiteException("This FileStream instance don't have reference to database");
 
             using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
             {

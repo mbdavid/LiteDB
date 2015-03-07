@@ -156,6 +156,9 @@ namespace LiteDB
         /// </summary>
         public bool DropIndex(string field)
         {
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (field == "_id") throw new LiteException("_id index can't be droped");
+
             // start transaction
             this.Database.Transaction.Begin();
 
@@ -170,14 +173,8 @@ namespace LiteDB
                     return false;
                 }
 
-                // search for index reference - do not delelte "_id" index
+                // search for index reference
                 var index = col.GetIndex(field);
-
-                if (index == null || field.Equals("_id", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    this.Database.Transaction.Abort();
-                    return false;
-                }
 
                 // delete all data pages + indexes pages
                 this.Database.Indexer.DropIndex(index);
