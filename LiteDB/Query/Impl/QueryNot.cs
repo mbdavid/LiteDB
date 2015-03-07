@@ -20,8 +20,9 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            throw new NotImplementedException();
-            // indexer.FindAll(index).Where(x => x.Value.CompareTo(this.Value) != 0);
+            _value.Normalize(index.Options);
+
+            return indexer.FindAll(index, _order).Where(x => x.Value.CompareTo(_value) != 0);
         }
     }
 }
