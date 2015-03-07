@@ -11,8 +11,6 @@ namespace LiteDB
     /// </summary>
     public abstract class Query
     {
-        internal Func<string, CollectionIndex> FindIndexAttribute = null;
-
         public string Field { get; private set; }
 
         internal Query(string field)
@@ -93,7 +91,7 @@ namespace LiteDB
         /// </summary>
         public static Query Between(string field, BsonValue start, BsonValue end)
         {
-            return new QueryBetween(field, start, end);
+            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null);
         }
 
         /// <summary>
@@ -103,7 +101,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value");
 
-            return new QueryStartsWith(field ?? BsonValue.Null, value ?? BsonValue.Null);
+            return new QueryStartsWith(field, value ?? BsonValue.Null);
         }
 
         /// <summary>
