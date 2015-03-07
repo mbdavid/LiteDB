@@ -64,6 +64,7 @@ namespace LiteDB
             var dict = new Dictionary<string, PropertyMapper>();
             var id = GetIdProperty(type);
             var ignore = typeof(BsonIgnoreAttribute);
+            var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -88,10 +89,13 @@ namespace LiteDB
 
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
-                // check if property has [BsonField]
+                // check if property has [BsonField] with a custom field name
                 var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
 
                 if (field != null) name = field.Name;
+
+                // check if property has [BsonId] to get with was setted AutoId = true
+                var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
 
                 // checks if this proerty has [BsonIndex]
                 var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
@@ -99,6 +103,7 @@ namespace LiteDB
                 // create a property mapper
                 var p = new PropertyMapper
                 { 
+                    AutoId = autoId == null ? false : autoId.AutoId,
                     FieldName = name, 
                     PropertyName = prop.Name, 
                     PropertyType = prop.PropertyType,

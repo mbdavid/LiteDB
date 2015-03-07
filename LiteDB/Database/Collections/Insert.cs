@@ -15,11 +15,16 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
+            this.Database.Mapper.SetAutoId(document, new LiteCollection<BsonDocument>(this.Database, this.Name));
+
             var doc = this.Database.Mapper.ToDocument(document);
 
             var id = doc["_id"];
 
-            if (id.IsNull) throw new LiteException("Document Id can't be null");
+            if (id.IsNull) //throw new LiteException("Document Id can't be null");
+            {
+                id = doc["_id"] = Guid.NewGuid();
+            }
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);

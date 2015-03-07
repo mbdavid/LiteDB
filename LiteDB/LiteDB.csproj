@@ -43,10 +43,10 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Database\Collections\DbRef.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Include.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Drop.cs" />
-    <Compile Include="Database\Collections\LiteCollection.InsertBulk.cs" />
+    <Compile Include="Database\Tools\DbRef.cs" />
+    <Compile Include="Database\Collections\Include.cs" />
+    <Compile Include="Database\Collections\Drop.cs" />
+    <Compile Include="Database\Collections\InsertBulk.cs" />
     <Compile Include="Database\Tools\RunCommand.cs" />
     <Compile Include="Database\Tools\UserVersion.cs" />
     <Compile Include="Database\Tools\GetDatabaseInfo.cs" />
@@ -68,16 +68,12 @@
     <Compile Include="Serializer\Mapper\BsonIgnoreAttribute.cs" />
     <Compile Include="Serializer\Mapper\BsonIdAttribute.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Delete.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Index.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Find.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Insert.cs" />
-    <Compile Include="Database\Collections\LiteCollection.Update.cs" />
+    <Compile Include="Database\Collections\Delete.cs" />
+    <Compile Include="Database\Collections\Index.cs" />
+    <Compile Include="Database\Collections\Find.cs" />
+    <Compile Include="Database\Collections\Insert.cs" />
+    <Compile Include="Database\Collections\Update.cs" />
     <Compile Include="Database\FileStorage\LiteFileStream.cs" />
-    <Compile Include="Database\FileStorage\LiteFileStorage.Find.cs" />
-    <Compile Include="Database\FileStorage\LiteFileStorage.Delete.cs" />
-    <Compile Include="Database\FileStorage\LiteFileStorage.Download.cs" />
-    <Compile Include="Database\FileStorage\LiteFileStorage.Upload.cs" />
     <Compile Include="Database\FileStorage\LiteFileInfo.cs" />
     <Compile Include="Database\FileStorage\LiteFileStorage.cs" />
     <Compile Include="Query\Query.cs" />
@@ -95,6 +91,7 @@
     <Compile Include="Serializer\Mapper\BsonMapper.Deserialize.cs" />
     <Compile Include="Serializer\Mapper\BsonFieldAttribute.cs" />
     <Compile Include="Serializer\Mapper\BsonIndexAttribute.cs" />
+    <Compile Include="Serializer\Mapper\AutoId.cs" />
     <Compile Include="Serializer\Mapper\PropertyMapper.cs" />
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />

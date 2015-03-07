@@ -16,6 +16,7 @@ namespace LiteDB
     /// </summary>
     internal class PropertyMapper
     {
+        public bool AutoId { get; set; }
         public string PropertyName { get; set; }
         public Type PropertyType { get; set; }
         public string FieldName { get; set; }

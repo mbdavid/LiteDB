@@ -38,6 +38,11 @@ namespace LiteDB
         private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
 
         /// <summary>
+        /// Map for autoId type based functions
+        /// </summary>
+        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
+
+        /// <summary>
         /// A resolver name property
         /// </summary>
         public Func<string, string> ResolvePropertyName;
@@ -71,6 +76,22 @@ namespace LiteDB
                 deserialize: (bson) => new Uri(bson.AsString)
             );
 
+            // register AutoId for Guid and Int32
+            this.RegisterAutoId<Guid>
+            (
+                isEmpty: (v) => v == Guid.Empty,
+                newId: (c) => Guid.NewGuid()
+            );
+
+            this.RegisterAutoId<Int32>
+            (
+                isEmpty: (v) => v == 0, 
+                newId: (c) => 
+                { 
+                    var max = c.Max(); 
+                    return max.IsMaxValue ? 1 : (max + 1); 
+                }
+            );
         }
 
         /// <summary>
@@ -79,12 +100,56 @@ namespace LiteDB
         public static BsonMapper Global = new BsonMapper();
 
         /// <summary>
-        /// Register a custom type
+        /// Register a custom type serializer/deserialize function
         /// </summary>
         public void RegisterType<T>(Func<T, BsonValue> serialize, Func<BsonValue, T> deserialize)
         {
             _customSerializer[typeof(T)] = (o) => serialize((T)o);
             _customDeserializer[typeof(T)] = (b) => (T)deserialize(b);
+        }
+
+        /// <summary>
+        /// Register a custom Auto Id generator function for a type
+        /// </summary>
+        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
+        {
+            _autoId[typeof(T)] = new AutoId
+            {
+                IsEmpty = (o) => isEmpty((T)o),
+                NewId = (c) => (T)newId(c)
+            };
+        }
+
+        /// <summary>
+        /// Set new Id in poco class if this class was decorated with [BsonId(true)]
+        /// </summary>
+        public void SetAutoId(object poco, LiteCollection<BsonDocument> col)
+        {
+            // if object is BsonDocument, there is no AutoId
+            if (poco is BsonDocument) return;
+
+            // get fields mapper
+            var mapper = this.GetPropertyMapper(poco.GetType());
+
+            // it's not best way because is scan all properties - but Id propably is first field :)
+            var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+            // if not id or no autoId = true
+            if (id == null || id.AutoId == false) return;
+
+            AutoId autoId;
+
+            if (_autoId.TryGetValue(id.PropertyType, out autoId))
+            {
+                var value = id.Getter(poco);
+
+                if (value == null || autoId.IsEmpty(value) == true)
+                {
+                    var newId = autoId.NewId(col);
+
+                    id.Setter(poco, newId);
+                }
+            }
         }
 
         #region Predefinded Property Resolvers

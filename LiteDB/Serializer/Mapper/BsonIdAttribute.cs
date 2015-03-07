@@ -14,5 +14,15 @@ namespace LiteDB
     /// </summary>
     public class BsonIdAttribute : Attribute
     {
+        public bool AutoId { get; private set; }
+
+        public BsonIdAttribute()
+        {
+        }
+
+        public BsonIdAttribute(bool autoId)
+        {
+            this.AutoId = autoId;
+        }
     }
 }
