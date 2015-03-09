@@ -17,10 +17,19 @@ namespace LiteDB
     {
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
+        /// <summary>
+        /// Represent a Null bson type
+        /// </summary>
         public static readonly BsonValue Null = new BsonValue();
 
+        /// <summary>
+        /// Represent a MinValue bson type
+        /// </summary>
         public static readonly BsonValue MinValue = new BsonValue { Type = BsonType.MinValue, RawValue = "-oo" };
 
+        /// <summary>
+        /// Represent a MaxValue bson type
+        /// </summary>
         public static readonly BsonValue MaxValue = new BsonValue { Type = BsonType.MaxValue, RawValue = "+oo" };
 
         /// <summary>
@@ -29,7 +38,7 @@ namespace LiteDB
         public BsonType Type { get; private set; }
 
         /// <summary>
-        /// Gets .NET value object
+        /// Get internal .NET value object
         /// </summary>
         public virtual object RawValue { get; private set; }
 
@@ -40,6 +49,7 @@ namespace LiteDB
             this.Type = BsonType.Null;
             this.RawValue = null;
         }
+
         public BsonValue(Int32 value)
         {
             this.Type = BsonType.Int32;
@@ -140,6 +150,7 @@ namespace LiteDB
                 this.Type = v.Type;
                 this.RawValue = v.RawValue;
             }
+
             else throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
         }
 
@@ -487,7 +498,7 @@ namespace LiteDB
                 case BsonType.Boolean: return ((Boolean)this.RawValue).CompareTo((Boolean)other.RawValue);
                 case BsonType.DateTime: return ((DateTime)this.RawValue).CompareTo((DateTime)other.RawValue);
 
-                default: return 0; // never happend
+                default: throw new NotImplementedException();
             }
         }
 
@@ -498,18 +509,44 @@ namespace LiteDB
 
         #endregion
 
-        #region Operators == !=
+        #region Operators
+
+        public static bool operator ==(BsonValue lhs, BsonValue rhs)
+        {
+            if (object.ReferenceEquals(lhs, null)) return object.ReferenceEquals(rhs, null);
+            if (object.ReferenceEquals(rhs, null)) return false; // don't check type because sometimes different types can be ==
+
+            return lhs.Equals(rhs);
+        }
 
         public static bool operator !=(BsonValue lhs, BsonValue rhs)
         {
             return !(lhs == rhs);
         }
 
-        public static bool operator ==(BsonValue lhs, BsonValue rhs)
+        public static bool operator >=(BsonValue lhs, BsonValue rhs)
         {
-            if (object.ReferenceEquals(lhs, null)) return object.ReferenceEquals(rhs, null);
-            if (object.ReferenceEquals(rhs, null)) return false; // don't check type because sometimes different types can be ==
-            return lhs.CompareTo(rhs) == 0; // some subclasses override OperatorEqualsImplementation
+            return lhs.CompareTo(rhs) >= 0;
+        }
+
+        public static bool operator >(BsonValue lhs, BsonValue rhs)
+        {
+            return lhs.CompareTo(rhs) > 0;
+        }
+
+        public static bool operator <(BsonValue lhs, BsonValue rhs)
+        {
+            return lhs.CompareTo(rhs) < 0;
+        }
+
+        public static bool operator <=(BsonValue lhs, BsonValue rhs)
+        {
+            return lhs.CompareTo(rhs) <= 0;
+        }
+
+        public static bool operator !=(BsonValue lhs, BsonValue rhs)
+        {
+            return !(lhs == rhs);
         }
 
         public override bool Equals(object obj)
@@ -530,7 +567,7 @@ namespace LiteDB
         #region GetBytesLength, Normalize
 
         /// <summary>
-        /// Returns how many bytes this BsonValue will use to persist in a binary stream - Used on index node only
+        /// Returns how many bytes this BsonValue will use to persist in index writes
         /// </summary>
         internal ushort GetBytesCount()
         {

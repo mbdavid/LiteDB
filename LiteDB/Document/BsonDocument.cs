@@ -49,10 +49,6 @@ namespace LiteDB
             }
         }
 
-        #region Mapper/Bson/Json
-
-        #endregion
-
         #region Methods
 
         /// <summary>
@@ -110,7 +106,13 @@ namespace LiteDB
         internal bool IsValidFieldName(string field)
         {
             // test if keywords
-            if (field == "$date" || field == "$guid" || field == "$numberLong" || field == "$binary")
+            if (field == "$date" || 
+                field == "$guid" || 
+                field == "$numberLong" ||
+                field == "$binary" ||
+                field == "$oid" ||
+                field == "$maxValue" ||
+                field == "$minValue")
             {
                 return false;
             }
@@ -170,7 +172,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set value to a path - supports dotted path like: Customer.Address.Street - Fluent API
+        /// Set value to a path - supports dotted path like: Customer.Address.Street - Fluent API (returns same BsonDocument)
         /// </summary>
         public BsonDocument Set(string path, BsonValue value)
         {

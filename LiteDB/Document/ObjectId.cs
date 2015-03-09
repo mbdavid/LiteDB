@@ -16,10 +16,13 @@ using System.Threading;
 namespace LiteDB
 {
     /// <summary>
-    /// Represent a 12 bytes unique value
+    /// Represent a 12-bytes BSON type used in document Id
     /// </summary>
     public class ObjectId : IComparable<ObjectId>, IEquatable<ObjectId>
     {
+        /// <summary>
+        /// A zero 12-bytes ObjectId
+        /// </summary>
         public static readonly ObjectId Empty = new ObjectId();
 
         #region Properties
@@ -189,9 +192,8 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Represent ObjectId as byte array
+        /// Represent ObjectId as 12 bytes array
         /// </summary>
-        /// <returns></returns>
         public byte[] ToByteArray()
         {
             var bytes = new byte[12];
@@ -223,6 +225,9 @@ namespace LiteDB
 
         public static bool operator ==(ObjectId lhs, ObjectId rhs)
         {
+            if (object.ReferenceEquals(lhs, null)) return object.ReferenceEquals(rhs, null);
+            if (object.ReferenceEquals(rhs, null)) return false; // don't check type because sometimes different types can be ==
+
             return lhs.Equals(rhs);
         }
 
