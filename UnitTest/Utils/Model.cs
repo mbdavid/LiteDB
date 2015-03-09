@@ -10,7 +10,7 @@ namespace UnitTest
 {
     public class Customer
     {
-        public Guid CustomerId { get; set; }
+        public ObjectId CustomerId { get; set; }
 
         [BsonIndex(true)]
         public string Name { get; set; }
@@ -24,7 +24,7 @@ namespace UnitTest
 
     public class Order
     {
-        [BsonId]
+        [BsonId(true)]
         public int OrderKey { get; set; }
 
         public DateTime Date { get; set; }

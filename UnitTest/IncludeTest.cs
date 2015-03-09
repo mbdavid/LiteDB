@@ -21,13 +21,12 @@ namespace UnitTest
 
                 var customer1 = new Customer
                 {
-                    CustomerId = Guid.NewGuid(),
+                    CustomerId = ObjectId.NewObjectId(),
                     Name = "Mauricio"
                 };
 
                 var order1 = new Order
                 { 
-                    OrderKey = 1,
                     Date = DateTime.Now,
                     Customer = new DbRef<Customer>(customers, customer1.CustomerId)
                 };

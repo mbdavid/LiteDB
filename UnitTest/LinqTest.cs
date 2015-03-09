@@ -18,10 +18,10 @@ namespace UnitTest
 
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var c1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio", CreationDate = new DateTime(2015, 1, 1) };
-                var c2 = new Customer { CustomerId = Guid.NewGuid(), Name = "Malafaia", CreationDate = new DateTime(2015, 1, 1) };
-                var c3 = new Customer { CustomerId = Guid.NewGuid(), Name = "Chris", CreationDate = new DateTime(2000, 1, 1) };
-                var c4 = new Customer { CustomerId = Guid.NewGuid(), Name = "Juliane", CreationDate = new DateTime(2011, 8, 11) };
+                var c1 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Mauricio", CreationDate = new DateTime(2015, 1, 1) };
+                var c2 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Malafaia", CreationDate = new DateTime(2015, 1, 1) };
+                var c3 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Chris", CreationDate = new DateTime(2000, 1, 1) };
+                var c4 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Juliane", CreationDate = new DateTime(2011, 8, 11) };
 
                 var col = db.GetCollection<Customer>("Customer");
 

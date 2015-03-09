@@ -57,7 +57,7 @@ namespace LiteDB
         #region Ctor
 
         /// <summary>
-        /// Initializes a new instance of the ObjectId class.
+        /// Initializes a new empty instance of the ObjectId class.
         /// </summary>
         public ObjectId()
         {
@@ -68,7 +68,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Initializes a new instance of the ObjectId class.
+        /// Initializes a new instance of the ObjectId class from ObjectId vars.
         /// </summary>
         public ObjectId(int timestamp, int machine, short pid, int increment)
         {
@@ -79,7 +79,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Initializes a new instance of ObjectId.
+        /// Initializes a new instance of ObjectId class from another ObjectId.
         /// </summary>
         public ObjectId(ObjectId from)
         {
@@ -98,7 +98,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Initializes a new instance of the ObjectId class.
+        /// Initializes a new instance of the ObjectId class from byte array.
         /// </summary>
         public ObjectId(byte[] bytes)
         {
@@ -112,7 +112,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert hexa value string in byte array
+        /// Convert hex value string in byte array
         /// </summary>
         private static byte[] FromHex(string value)
         {
@@ -221,16 +221,6 @@ namespace LiteDB
 
         #region Operators
 
-        public static bool operator <(ObjectId lhs, ObjectId rhs)
-        {
-            return lhs.CompareTo(rhs) < 0;
-        }
-
-        public static bool operator <=(ObjectId lhs, ObjectId rhs)
-        {
-            return lhs.CompareTo(rhs) <= 0;
-        }
-
         public static bool operator ==(ObjectId lhs, ObjectId rhs)
         {
             return lhs.Equals(rhs);
@@ -249,6 +239,16 @@ namespace LiteDB
         public static bool operator >(ObjectId lhs, ObjectId rhs)
         {
             return lhs.CompareTo(rhs) > 0;
+        }
+
+        public static bool operator <(ObjectId lhs, ObjectId rhs)
+        {
+            return lhs.CompareTo(rhs) < 0;
+        }
+
+        public static bool operator <=(ObjectId lhs, ObjectId rhs)
+        {
+            return lhs.CompareTo(rhs) <= 0;
         }
 
         #endregion
@@ -299,6 +299,5 @@ namespace LiteDB
         }
 
         #endregion
-
     }
 }

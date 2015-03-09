@@ -21,14 +21,14 @@ namespace UnitTest
             {
                 Debug.Print("Initializing version");
 
-                this.Customers.Insert(new Customer { CustomerId = Guid.NewGuid(), Name = "First" });
+                this.Customers.Insert(new Customer { CustomerId = ObjectId.NewObjectId(), Name = "First" });
 
             }
             else if (newVersion == 2)
             {
                 Debug.Print("Updating to vesion 2");
 
-                this.Customers.Insert(new Customer { CustomerId = Guid.NewGuid(), Name = "Second" });
+                this.Customers.Insert(new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Second" });
                 this.Customers.EnsureIndex("Name");
             }
         }

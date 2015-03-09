@@ -168,16 +168,22 @@ namespace LiteDB
 
         #region Execute Query
 
-        // used for execute in results (AND/OR)
+        /// <summary>
+        /// Abstract method that must be implement for query objects
+        /// </summary>
         internal abstract IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index);
 
+        /// <summary>
+        /// Find witch index will be used and run Execute method
+        /// </summary>
         internal virtual IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)
             where T : new()
         {
             // get collection page - no collection, no results
             var col = collection.GetCollectionPage(false);
 
-            if (col == null) yield break;
+            // no collection just returns an empty list of indexnode
+            if (col == null) return new List<IndexNode>();
 
             // get index
             var index = col.GetIndex(this.Field);
@@ -199,12 +205,7 @@ namespace LiteDB
             if (index == null) throw new LiteException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
 
             // execute query to get all IndexNodes
-            var nodes = this.Execute(collection.Database.Indexer, index);
-
-            foreach (var node in nodes)
-            {
-                yield return node;
-            }
+            return this.Execute(collection.Database.Indexer, index);
         }
 
         #endregion
