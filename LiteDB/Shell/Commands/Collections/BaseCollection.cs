@@ -23,8 +23,11 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"db\.\w+\." + command);
         }
 
-        public void ReadSkipLimit(StringScanner s, ref int? skip, ref int? limit)
+        public KeyValuePair<int, int> ReadSkipLimit(StringScanner s)
         {
+            var skip = 0;
+            var limit = 0;
+
             if (s.Match(@"\s*skip\s+\d+"))
             {
                 skip = Convert.ToInt32(s.Scan(@"\s*skip\s+(\d+)\s*", 1));
@@ -40,6 +43,8 @@ namespace LiteDB.Shell.Commands
             {
                 skip = Convert.ToInt32(s.Scan(@"\s*skip\s+(\d+)\s*", 1));
             }
+
+            return new KeyValuePair<int, int>(skip, limit);
         }
 
         public Query ReadQuery(StringScanner s)

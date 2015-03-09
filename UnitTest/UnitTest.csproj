@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="BsonTest.cs" />
     <Compile Include="AutoIdTest.cs" />
+    <Compile Include="ObjectIdTest.cs" />
     <Compile Include="MapperTest.cs" />
     <Compile Include="PerfTest.cs" />
     <Compile Include="StressTest.cs" />

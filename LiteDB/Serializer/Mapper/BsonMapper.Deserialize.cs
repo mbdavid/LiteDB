@@ -40,6 +40,7 @@ namespace LiteDB
             typeof(Guid),
             typeof(DateTime),
             typeof(Byte[]),
+            typeof(ObjectId),
             typeof(Double)
         };
 

@@ -154,10 +154,11 @@ namespace LiteDB
 
             switch (key)
             {
-                case "$date": val = new BsonValue(DateTime.Parse(value).ToLocalTime()); break;
-                case "$guid": val = new BsonValue(new Guid(value)); break;
-                case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
                 case "$binary": val = new BsonValue(Convert.FromBase64String(value)); break;
+                case "$oid": val = new BsonValue(new ObjectId(value)); break;
+                case "$guid": val = new BsonValue(new Guid(value)); break;
+                case "$date": val = new BsonValue(DateTime.Parse(value).ToLocalTime()); break;
+                case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
                 case "$minValue": val = BsonValue.MinValue; break;
                 case "$maxValue": val = BsonValue.MaxValue; break;
 

@@ -27,11 +27,12 @@ namespace LiteDB
         Array = 7,
 
         Binary = 8,
-        Guid = 9,
+        ObjectId = 9,
+        Guid = 10,
 
-        Boolean = 10,
-        DateTime = 11,
+        Boolean = 11,
+        DateTime = 12,
 
-        MaxValue = 12
+        MaxValue = 13
     }
 }

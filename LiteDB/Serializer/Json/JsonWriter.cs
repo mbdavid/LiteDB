@@ -61,11 +61,14 @@ namespace LiteDB
                     var bytes = (byte[])value.RawValue;
                     this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(bytes, 0, bytes.Length, Base64FormattingOptions.None) : "-- " + bytes.Length + " bytes --");
                     break;
-                case BsonType.DateTime:
-                    this.WriteExtendDataType("$date", ((DateTime)value.RawValue).ToUniversalTime().ToString("o"));
+                case BsonType.ObjectId:
+                    this.WriteExtendDataType("$oid", ((ObjectId)value.RawValue).ToString());
                     break;
                 case BsonType.Guid:
                     this.WriteExtendDataType("$guid", ((Guid)value.RawValue).ToString());
+                    break;
+                case BsonType.DateTime:
+                    this.WriteExtendDataType("$date", ((DateTime)value.RawValue).ToUniversalTime().ToString("o"));
                     break;
                 case BsonType.Int64:
                     this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString());

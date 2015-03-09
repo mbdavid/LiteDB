@@ -76,7 +76,13 @@ namespace LiteDB
                 deserialize: (bson) => new Uri(bson.AsString)
             );
 
-            // register AutoId for Guid and Int32
+            // register AutoId for ObjectId, Guid and Int32
+            this.RegisterAutoId<ObjectId>
+            (
+                isEmpty: (v) => v.Equals(ObjectId.Empty),
+                newId: (c) => ObjectId.NewObjectId()
+            );
+
             this.RegisterAutoId<Guid>
             (
                 isEmpty: (v) => v == Guid.Empty,

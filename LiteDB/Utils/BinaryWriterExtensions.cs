@@ -21,6 +21,11 @@ namespace LiteDB
             writer.Write(bytes);
         }
 
+        public static void Write(this BinaryWriter writer, ObjectId oid)
+        {
+            writer.Write(oid.ToByteArray());
+        }
+
         public static void Write(this BinaryWriter writer, Guid guid)
         {
             writer.Write(guid.ToByteArray());
@@ -58,6 +63,7 @@ namespace LiteDB
                 case BsonType.Array: new BsonWriter().WriteArray(writer, value.AsArray); break;
 
                 case BsonType.Binary: writer.Write((Byte[])value.RawValue); break;
+                case BsonType.ObjectId: writer.Write((ObjectId)value.RawValue); break;
                 case BsonType.Guid: writer.Write((Guid)value.RawValue); break;
 
                 case BsonType.Boolean: writer.Write((Boolean)value.RawValue); break;

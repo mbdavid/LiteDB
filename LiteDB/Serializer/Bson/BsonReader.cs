@@ -50,6 +50,10 @@ namespace LiteDB
                     case 0x04: return new Guid(bytes);
                 }
             }
+            else if (type == 0x07) // ObjectId
+            {
+                return new ObjectId(reader.ReadBytes(12));
+            }
             else if (type == 0x08) // Boolean
             {
                 return reader.ReadBoolean();

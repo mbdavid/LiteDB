@@ -50,6 +50,7 @@
     <Compile Include="Database\Tools\RunCommand.cs" />
     <Compile Include="Database\Tools\UserVersion.cs" />
     <Compile Include="Database\Tools\GetDatabaseInfo.cs" />
+    <Compile Include="Document\ObjectId.cs" />
     <Compile Include="Query\Impl\QueryMax.cs" />
     <Compile Include="Query\Impl\QueryMin.cs" />
     <Compile Include="Query\Impl\QueryGreater.cs" />

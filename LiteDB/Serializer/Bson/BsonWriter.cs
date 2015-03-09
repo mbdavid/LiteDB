@@ -57,6 +57,11 @@ namespace LiteDB
                     writer.Write((byte)0x04); // UUID
                     writer.Write(guid);
                     break;
+                case BsonType.ObjectId:
+                    writer.Write((byte)0x07);
+                    this.WriteCString(writer, key);
+                    writer.Write(((ObjectId)value.RawValue).ToByteArray());
+                    break;
                 case BsonType.Boolean:
                     writer.Write((byte)0x08);
                     this.WriteCString(writer, key);

@@ -82,6 +82,12 @@ namespace LiteDB
             this.RawValue = value;
         }
 
+        public BsonValue(ObjectId value)
+        {
+            this.Type = BsonType.ObjectId;
+            this.RawValue = value;
+        }
+
         public BsonValue(Guid value)
         {
             this.Type = BsonType.Guid;
@@ -122,6 +128,7 @@ namespace LiteDB
             else if (value is List<BsonValue>) this.Type = BsonType.Array;
 
             else if (value is Byte[]) this.Type = BsonType.Binary;
+            else if (value is ObjectId) this.Type = BsonType.ObjectId;
             else if (value is Guid) this.Type = BsonType.Guid;
 
             else if (value is Boolean) this.Type = BsonType.Boolean;
@@ -205,6 +212,11 @@ namespace LiteDB
             get { return this.Type == BsonType.DateTime ? (DateTime)this.RawValue : default(DateTime); }
         }
 
+        public ObjectId AsObjectId
+        {
+            get { return Type == BsonType.ObjectId ? (ObjectId)this.RawValue : default(ObjectId); }
+        }
+
         public Guid AsGuid
         {
             get { return Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
@@ -264,6 +276,11 @@ namespace LiteDB
             get { return this.Type == BsonType.String; }
         }
 
+        public bool IsObjectId
+        {
+            get { return this.Type == BsonType.ObjectId; }
+        }
+
         public bool IsGuid
         {
             get { return this.Type == BsonType.Guid; }
@@ -283,82 +300,6 @@ namespace LiteDB
         {
             get { return this.Type == BsonType.MaxValue; }
         }
-
-        #endregion
-
-        #region Methods for BsonDocument/BsonArray
-
-        //public BsonValue this[string name]
-        //{
-        //    get
-        //    {
-        //        var dict = this.RawValue as Dictionary<string, BsonValue>;
-
-        //        if (dict != null)
-        //        {
-        //            return dict.GetOrDefault(name, BsonValue.Null);
-        //        }
-        //        else
-        //        {
-        //            throw new LiteException("BsonValue is not a document");
-        //        }
-        //    }
-        //    set
-        //    {
-        //        var dict = this.RawValue as Dictionary<string, BsonValue>;
-
-        //        if (dict != null)
-        //        {
-        //            if (!BsonDocument.IsValidFieldName(name)) throw new ArgumentException(string.Format("Field name '{0}' is invalid pattern or reserved keyword", name));
-
-        //            dict[name] = value ?? BsonValue.Null;
-        //        }
-        //        else
-        //        {
-        //            throw new LiteException("BsonValue is not a document");
-        //        }
-        //    }
-        //}
-
-        //public BsonValue this[int index]
-        //{
-        //    get
-        //    {
-        //        var list = this.RawValue as List<BsonValue>;
-
-        //        if (list != null)
-        //        {
-        //            return list.ElementAt(index);
-        //        }
-        //        else
-        //        {
-        //            throw new LiteException("BsonValue is not an array");
-        //        }
-        //    }
-        //    set
-        //    {
-        //        var list = this.RawValue as List<BsonValue>;
-
-        //        if (list != null)
-        //        {
-        //            list[index] = value == null ? BsonValue.Null : value;
-        //        }
-        //        else
-        //        {
-        //            throw new LiteException("BsonValue is not an array");
-        //        }
-        //    }
-        //}
-
-        //public virtual void Add(BsonValue value)
-        //{
-        //    this.AsArray.Add(value);
-        //}
-
-        //public virtual BsonDocument Add(string key, BsonValue value)
-        //{
-        //    return this.AsDocument.Add(key, value);
-        //}
 
         #endregion
 
@@ -448,6 +389,18 @@ namespace LiteDB
             return new BsonValue { Type = BsonType.Binary, RawValue = value };
         }
 
+        // ObjectId
+        public static implicit operator ObjectId(BsonValue value)
+        {
+            return (ObjectId)value.RawValue;
+        }
+
+        // ObjectId
+        public static implicit operator BsonValue(ObjectId value)
+        {
+            return new BsonValue { Type = BsonType.ObjectId, RawValue = value };
+        }
+
         // Guid
         public static implicit operator Guid(BsonValue value)
         {
@@ -528,6 +481,7 @@ namespace LiteDB
                 case BsonType.Array: return this.AsArray.CompareTo(other);
 
                 case BsonType.Binary: return ((Byte[])this.RawValue).BinaryCompareTo((Byte[])other.RawValue);
+                case BsonType.ObjectId: return ((ObjectId)this.RawValue).CompareTo((ObjectId)other.RawValue);
                 case BsonType.Guid: return ((Guid)this.RawValue).CompareTo((Guid)other.RawValue);
 
                 case BsonType.Boolean: return ((Boolean)this.RawValue).CompareTo((Boolean)other.RawValue);
@@ -596,6 +550,7 @@ namespace LiteDB
                 case BsonType.String: length = Encoding.UTF8.GetByteCount((string)this.RawValue); break;
 
                 case BsonType.Binary: length = ((Byte[])this.RawValue).Length; break;
+                case BsonType.ObjectId: length = 12; break;
                 case BsonType.Guid: length = 16; break;
 
                 case BsonType.Boolean: length = 1; break;

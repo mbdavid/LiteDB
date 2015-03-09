@@ -14,11 +14,16 @@ namespace LiteDB
         /// <summary>
         /// Find documents inside a collection using Query object. Must have indexes in query expression 
         /// </summary>
-        public IEnumerable<T> Find(Query query)
+        public IEnumerable<T> Find(Query query, int skip = 0, int limit = 0)
         {
             if (query == null) throw new ArgumentNullException("query");
 
             var nodes = query.Run<T>(this);
+
+            // skip/limit results direct in index nodes - before deserialize objects
+            if (skip > 0) nodes = nodes.Skip(skip);
+
+            if (limit > 0) nodes = nodes.Take(limit);
 
             foreach (var node in nodes)
             {

@@ -19,6 +19,11 @@ namespace LiteDB
             return new Guid(reader.ReadBytes(16));
         }
 
+        public static ObjectId ReadObjectId(this BinaryReader reader)
+        {
+            return new ObjectId(reader.ReadBytes(12));
+        }
+
         public static DateTime ReadDateTime(this BinaryReader reader)
         {
             return new DateTime(reader.ReadInt64());
@@ -47,6 +52,7 @@ namespace LiteDB
                 case BsonType.Array: return new BsonReader().ReadArray(reader);
 
                 case BsonType.Binary: return reader.ReadBytes(length);
+                case BsonType.ObjectId: return reader.ReadObjectId();
                 case BsonType.Guid: return reader.ReadGuid();
 
                 case BsonType.Boolean: return reader.ReadBoolean();

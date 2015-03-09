@@ -23,7 +23,7 @@ namespace LiteDB
 
             if (id.IsNull) //throw new LiteException("Document Id can't be null");
             {
-                id = doc["_id"] = Guid.NewGuid();
+                id = doc["_id"] = ObjectId.NewObjectId();
             }
 
             // serialize object
