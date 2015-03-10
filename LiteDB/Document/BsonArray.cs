@@ -45,7 +45,7 @@ namespace LiteDB
             this.AddRange<BsonDocument>(items);
         }
 
-        public void AddRange<T>(IEnumerable<T> array)
+        public virtual void AddRange<T>(IEnumerable<T> array)
             where T : BsonValue
         {
             if (array == null) throw new ArgumentNullException("array");
@@ -56,7 +56,7 @@ namespace LiteDB
             }
         }
 
-        public BsonValue this[int index]
+        public virtual BsonValue this[int index]
         {
             get
             {
@@ -68,19 +68,19 @@ namespace LiteDB
             }
         }
 
-        public BsonArray Add(BsonValue value)
+        public virtual BsonArray Add(BsonValue value)
         {
             this.RawValue.Add(value ?? BsonValue.Null);
 
             return this;
         }
 
-        public void Remove(int index)
+        public virtual void Remove(int index)
         {
             this.RawValue.RemoveAt(index);
         }
 
-        public int Count
+        public virtual int Count
         {
             get
             {
@@ -96,7 +96,7 @@ namespace LiteDB
             }
         }
 
-        public IEnumerator<BsonValue> GetEnumerator()
+        public virtual IEnumerator<BsonValue> GetEnumerator()
         {
             foreach (var value in this.RawValue)
             {

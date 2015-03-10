@@ -26,10 +26,10 @@ namespace LiteDB
         public DbRef(string collection, BsonValue id)
         {
             if (string.IsNullOrEmpty(collection)) throw new ArgumentNullException("collection");
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+            if (id == null || id.IsNull || id.IsMinValue || id.IsMaxValue) throw new ArgumentNullException("id");
 
             this.Collection = collection;
-            this.Id = id ?? BsonValue.Null;
+            this.Id = id;
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace LiteDB
         public DbRef(LiteCollection<T> collection, BsonValue id)
         {
             if (collection == null) throw new ArgumentNullException("collection");
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+            if (id == null || id.IsNull || id.IsMinValue || id.IsMaxValue) throw new ArgumentNullException("id");
 
             this.Collection = collection.Name;
             this.Id = id;

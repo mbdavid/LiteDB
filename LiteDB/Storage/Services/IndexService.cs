@@ -15,7 +15,7 @@ namespace LiteDB
         /// <summary>
         /// Max size of a index entry - usde for string, binary, array and documents
         /// </summary>
-        public const int MAX_INDEX_LENGTH = 255;
+        public const int MAX_INDEX_LENGTH = 512;
 
         private PageService _pager;
         private CacheService _cache;

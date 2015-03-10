@@ -19,12 +19,16 @@ namespace LiteDB
 
             var doc = this.Database.Mapper.ToDocument(document);
 
-            var id = doc["_id"];
+            BsonValue id;
 
-            if (id.IsNull) //throw new LiteException("Document Id can't be null");
+            // add ObjectId to _id if _id not found
+            if (!doc.RawValue.TryGetValue("_id", out id))
             {
                 id = doc["_id"] = ObjectId.NewObjectId();
             }
+
+            // test if _id is a valid type
+            if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw new LiteException("_id field has an invalid data type (null, minValue or maxValue)");
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
@@ -71,20 +75,24 @@ namespace LiteDB
         /// <summary>
         /// Insert an array of new documents to this collection. Document Id must be a new value in collection
         /// </summary>
-        public virtual void Insert(IEnumerable<T> docs)
+        public virtual int Insert(IEnumerable<T> docs)
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
             this.Database.Transaction.Begin();
+            var count = 0;
 
             try
             {
                 foreach (var doc in docs)
                 {
                     this.Insert(doc);
+                    count++;
                 }
 
                 this.Database.Transaction.Commit();
+
+                return count;
             }
             catch
             {

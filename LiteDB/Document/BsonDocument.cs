@@ -94,15 +94,7 @@ namespace LiteDB
         /// </summary>
         public bool ContainsKey(string name)
         {
-            return this.ContainsKey(name);
-        }
-
-        /// <summary>
-        /// Check if this object has a specific key
-        /// </summary>
-        public bool HasKey(string key)
-        {
-            return this.RawValue.ContainsKey(key);
+            return this.RawValue.ContainsKey(name);
         }
 
         /// <summary>
