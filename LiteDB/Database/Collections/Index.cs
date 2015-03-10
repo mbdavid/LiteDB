@@ -20,6 +20,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
             if (options == null) throw new ArgumentNullException("options");
+            if (field == "_id") return false; // always exists
 
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new LiteException("Invalid field format.");
 

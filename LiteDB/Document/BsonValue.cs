@@ -544,11 +544,6 @@ namespace LiteDB
             return lhs.CompareTo(rhs) <= 0;
         }
 
-        public static bool operator !=(BsonValue lhs, BsonValue rhs)
-        {
-            return !(lhs == rhs);
-        }
-
         public override bool Equals(object obj)
         {
             return this.Equals(new BsonValue(obj));
