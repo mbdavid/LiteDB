@@ -61,9 +61,22 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all object keys
+        /// Returns all object keys with _id in first order
         /// </summary>
-        public string[] Keys { get { return this.RawValue.Keys.ToArray(); } }
+        public IEnumerable<string> Keys
+        { 
+            get 
+            { 
+                var keys = this.RawValue.Keys;
+
+                if (keys.Contains("_id")) yield return "_id";
+
+                foreach (var key in keys.Where(x => x != "_id"))
+                {
+                    yield return key;
+                }
+            } 
+        }
 
         /// <summary>
         /// Returns how many fields this object contains
@@ -222,11 +235,11 @@ namespace LiteDB
             // if types are diferent, returns sort type order
             if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
 
-            var thisKeys = this.Keys;
+            var thisKeys = this.Keys.ToArray();
             var thisLength = thisKeys.Length;
 
             var otherDoc = other.AsDocument;
-            var otherKeys = otherDoc.Keys;
+            var otherKeys = otherDoc.Keys.ToArray();
             var otherLength = otherKeys.Length;
 
             var result = 0;

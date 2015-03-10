@@ -84,7 +84,8 @@ namespace LiteDB
 
         private void WriteObject(BsonDocument obj)
         {
-            var hasData = obj.Keys.Length > 0;
+            var length = obj.Keys.Count();
+            var hasData = length > 0;
 
             this.WriteStartBlock("{", hasData);
 
@@ -92,7 +93,7 @@ namespace LiteDB
 
             foreach (var key in obj.Keys)
             {
-                this.WriteKeyValue(key, obj[key], index++ < obj.Keys.Length - 1);
+                this.WriteKeyValue(key, obj[key], index++ < length - 1);
             }
 
             this.WriteEndBlock("}", hasData);
@@ -111,7 +112,7 @@ namespace LiteDB
                 // do not do this tests if is not pretty format - to better performance
                 if (this.Pretty == true)
                 {
-                    if (!((item.IsDocument && item.AsDocument.Keys.Length > 0) || (item.IsArray && item.AsArray.Count > 0)))
+                    if (!((item.IsDocument && item.AsDocument.Keys.Count() > 0) || (item.IsArray && item.AsArray.Count > 0)))
                     {
                         this.WriteIndent();
                     }
@@ -202,7 +203,7 @@ namespace LiteDB
             {
                 _writer.Write(' ');
 
-                if ((value.IsDocument && value.AsDocument.Keys.Length > 0) || (value.IsArray && value.AsArray.Count > 0))
+                if ((value.IsDocument && value.AsDocument.Keys.Count() > 0) || (value.IsArray && value.AsArray.Count > 0))
                 {
                     this.WriteNewLine();
                 }
