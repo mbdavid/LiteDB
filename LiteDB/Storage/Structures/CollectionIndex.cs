@@ -9,7 +9,7 @@ namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public static Regex IndexPattern = new Regex(@"^[-$\w]+(\.[-$\w]+)*$");
+        public static Regex IndexPattern = new Regex(@"^\w[\w-]*(\.[\w-]+)*$");
 
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations

@@ -19,18 +19,20 @@ namespace LiteDB.Shell.Commands
         {
             var temp = Path.GetTempPath() + "LiteDB.Shell.txt";
 
-            File.WriteAllText(temp, input.Last.Replace("\n", Environment.NewLine));
+            // remove "ed" command from history
+            input.History.RemoveAt(input.History.Count - 1);
+
+            var last = input.History.Count > 0 ? input.History[input.History.Count - 1] : "";
+
+            File.WriteAllText(temp, last.Replace("\n", Environment.NewLine));
 
             Process.Start("notepad.exe", temp).WaitForExit();
 
             var text = File.ReadAllText(temp);
 
-            if (text == input.Last) return;
+            if (text == last) return;
 
-            foreach (var line in text.Split('\n'))
-            {
-                input.Queue.Enqueue(line);
-            }
+            input.Queue.Enqueue(text);
         }
     }
 }

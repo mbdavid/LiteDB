@@ -10,7 +10,7 @@ namespace LiteDB.Shell
     public class InputCommand
     {
         public Queue<string> Queue { get; set; }
-        public string Last { get; set; }
+        public List<string> History { get; set; }
         public Stopwatch Timer { get; set; }
 
         public Action<string> OnWrite { get; set; }
@@ -18,7 +18,7 @@ namespace LiteDB.Shell
         public InputCommand()
         {
             this.Queue = new Queue<string>();
-            this.Last = "";
+            this.History = new List<string>();
             this.Timer = new Stopwatch();
         }
 
@@ -51,7 +51,7 @@ namespace LiteDB.Shell
                     this.Write("| ");
 
                     var line = this.ReadLine();
-                    cmd += line;
+                    cmd += Environment.NewLine + line;
                 }
 
                 cmd = cmd.Substring(0, cmd.Length - 1);
@@ -59,7 +59,7 @@ namespace LiteDB.Shell
 
             cmd = cmd.Trim();
 
-            this.Last = cmd;
+            this.History.Add(cmd);
 
             if (this.Timer.IsRunning)
             {

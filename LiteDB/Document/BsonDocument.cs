@@ -43,7 +43,7 @@ namespace LiteDB
             }
             set
             {
-                if (!IsValidFieldName(name)) throw new ArgumentException(string.Format("Field '{0}' has an invalid name. Use only [a-Z0-9-_]", name));
+                if (!IsValidFieldName(name)) throw new ArgumentException(string.Format("Field '{0}' has an invalid name.", name));
 
                 this.RawValue[name] = value ?? BsonValue.Null;
             }
@@ -106,16 +106,22 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if field name is a valid string: only -_[a-z][A-Z]
+        /// Test if field name is a valid string: only \w+(\w-)*
         /// </summary>
         internal static bool IsValidFieldName(string field)
         {
+            if (string.IsNullOrEmpty(field)) return false;
+
             // do not use regex because is too slow
             for (var i = 0; i < field.Length; i++)
             {
                 var c = field[i];
 
-                if(char.IsLetterOrDigit(c) || c == '-' || c == '_')
+                if(char.IsLetterOrDigit(c) || c == '_')
+                {
+                    continue;
+                }
+                else if (c == '-' && i > 0)
                 {
                     continue;
                 }

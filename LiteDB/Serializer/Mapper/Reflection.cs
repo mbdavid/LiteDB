@@ -102,7 +102,7 @@ namespace LiteDB
                 var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, link DbRef
-                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw new LiteException(string.Format("Field '{0}' has an invalid name. Use only [a-Z0-9-_]", name));
+                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw new LiteException(string.Format("Field '{0}' has an invalid name.", name));
 
                 // create a property mapper
                 var p = new PropertyMapper
