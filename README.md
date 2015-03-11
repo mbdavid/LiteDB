@@ -4,7 +4,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 in a single DLL (less then 200kb)
+- 100% C# code for .NET 4 in a single DLL (less then 200kb)
 - Transaction control - ACID
 - Recovery in writing failure (journal mode)
 - Store POCO classes or BsonDocument
