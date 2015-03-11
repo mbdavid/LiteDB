@@ -55,7 +55,7 @@ namespace LiteDB
         /// <summary>
         /// Apply .Trim() in strings
         /// </summary>
-        public bool TrimString { get; set; }
+        public bool TrimWhitespace { get; set; }
 
         /// <summary>
         /// Convert EmptyString to Null
@@ -65,7 +65,7 @@ namespace LiteDB
         public BsonMapper()
         {
             this.SerializeNullValues = false;
-            this.TrimString = true;
+            this.TrimWhitespace = true;
             this.EmptyStringToNull = true;
             this.ResolvePropertyName = (s) => s;
 

@@ -40,6 +40,8 @@ namespace UnitTest
             i["Unit"] = 99;
             orderDoc["Items"].AsArray.Add(i);
 
+            orderDoc["InitArray"] = new BsonArray { "Item1", "Item 2" };
+
             //// serialize both and get indexKey for each one
             //var bytesObject = BsonSerializer.Serialize(orderObject);
             //var keyObject = new IndexKey(BsonSerializer.GetIdValue(orderObject));

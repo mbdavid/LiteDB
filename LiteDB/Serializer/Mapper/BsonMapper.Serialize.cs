@@ -49,7 +49,7 @@ namespace LiteDB
             // test string - mapper has some special options
             else if (obj is String)
             {
-                var str = this.TrimString ? (obj as String).Trim() : (String)obj;
+                var str = this.TrimWhitespace ? (obj as String).Trim() : (String)obj;
 
                 if (this.EmptyStringToNull && str.Length == 0)
                 {
