@@ -137,6 +137,7 @@ namespace LiteDB
         {
             var o = new BsonDocument();
             var mapper = this.GetPropertyMapper(type);
+            var dict = o.RawValue;
 
             foreach (var prop in mapper.Values)
             {
@@ -145,7 +146,7 @@ namespace LiteDB
 
                 if (value == null && this.SerializeNullValues == false) continue;
 
-                o.RawValue[prop.FieldName] = this.Serialize(value, depth);
+                dict[prop.FieldName] = this.Serialize(value, depth);
             }
 
             return o;

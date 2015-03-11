@@ -68,6 +68,7 @@ namespace LiteDB
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var isInternal = type.Assembly.Equals(typeof(LiteDatabase).Assembly);
 
             foreach (var prop in props)
             {
@@ -99,6 +100,9 @@ namespace LiteDB
 
                 // checks if this proerty has [BsonIndex]
                 var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
+
+                // test if field name is OK (avoid to check in all instances) - do not test internal classes, link DbRef
+                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw new LiteException(string.Format("Field '{0}' has an invalid name. Use only [a-Z0-9-_]", name));
 
                 // create a property mapper
                 var p = new PropertyMapper

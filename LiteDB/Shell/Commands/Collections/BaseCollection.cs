@@ -95,6 +95,5 @@ namespace LiteDB.Shell.Commands
                 default: throw new ApplicationException("Invalid query operator");
             }
         }
-
     }
 }

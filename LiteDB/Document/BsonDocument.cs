@@ -43,7 +43,7 @@ namespace LiteDB
             }
             set
             {
-                if (!this.IsValidFieldName(name)) throw new ArgumentException(string.Format("Field name '{0}' is invalid pattern or reserved keyword", name));
+                if (!IsValidFieldName(name)) throw new ArgumentException(string.Format("Field '{0}' has an invalid name. Use only [a-Z0-9-_]", name));
 
                 this.RawValue[name] = value ?? BsonValue.Null;
             }
@@ -106,28 +106,16 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if field name is a valid string: only $-_[a-z][A-Z]
+        /// Test if field name is a valid string: only -_[a-z][A-Z]
         /// </summary>
-        internal bool IsValidFieldName(string field)
+        internal static bool IsValidFieldName(string field)
         {
-            // test if keywords
-            if (field == "$date" || 
-                field == "$guid" || 
-                field == "$numberLong" ||
-                field == "$binary" ||
-                field == "$oid" ||
-                field == "$maxValue" ||
-                field == "$minValue")
-            {
-                return false;
-            }
-
             // do not use regex because is too slow
             for (var i = 0; i < field.Length; i++)
             {
                 var c = field[i];
 
-                if(char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == '$')
+                if(char.IsLetterOrDigit(c) || c == '-' || c == '_')
                 {
                     continue;
                 }
