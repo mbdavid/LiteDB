@@ -14,14 +14,13 @@ See below a simple comparation sheet between document database store and SQL dat
 |Document field        |Table Field |
 |`_id` field           |Primary Key |
 |Index                 |Table Index |
-|----------------------|------------|
 
 
 ## Document Structure
 
 Documents in LiteDB are multiples key-value pairs. See below a JSON document
 
-```
+```JS
 {
     _id: 1,
     name: { first: "John", last: "Doe" },
@@ -63,7 +62,7 @@ Document fields:
 
 `BsonDocument` class are LiteDB implementation for documents.
 
-```
+```C#
 var customer = new BsonDocument();
 customer["_id"] = ObjectId.NewObjectId();
 customer["Name"] = "John Doe";
@@ -77,9 +76,9 @@ customer["IsAdmin"] = new BsonValue(true);
 - `BsonValue` has implicit constructor to all supported .NET data types
 - `BsonDocument` class are used to hold only documents
 - `BsonArray` class are used to hold only arrays. Array items can be any BSON value
-- `BsonValue` has `RawValue` that returns .NET object instance.
+- `BsonValue` has `RawValue` property that returns internal .NET object instance.
 
-```
+```C#
 // Testing BSON value data type
 if(customer["Name"].IsString) { ... }
 
@@ -94,28 +93,28 @@ LiteDB use a subset of BSON data types. See all supported LiteDB BSON data types
 
 |BSON Type |.NET type                                                   |
 |----------|------------------------------------------------------------|
-|`MinValue`|-                                                           |
-|`Null`    |Any .NET object with `null` value                           |
-|`Int32`   |`System.Int32`                                              |
-|`Int64`   |`System.Int64`                                              |
-|`Double`  |`System.Double`                                             |
-|`String`  |`System.String`                                             |
-|`Document`|`System.Collection.Generic.Dictionary<string, BsonValue>`   |
-|`Array`   |`System.Collection.Generic.List<BsonValue>`                 |
-|`Binary`  |`System.Byte[]`                                             |
-|`ObjectId`|`LiteDB.ObjectId`                                           |
-|`Guid`    |`System.Guid`                                               |
-|`Boolean` |`System.Boolean`                                            |
-|`DateTime`|`System.DateTime`                                           |
-|`MaxValue`|-                                                           |
+|MinValue  |-                                                           |
+|Null      |Any .NET object with `null` value                           |
+|Int32     |`System.Int32`                                              |
+|Int64     |`System.Int64`                                              |
+|Double    |`System.Double`                                             |
+|String    |`System.String`                                             |
+|Document  |`System.Collection.Generic.Dictionary<string, BsonValue>`   |
+|Array     |`System.Collection.Generic.List<BsonValue>`                 |
+|Binary    |`System.Byte[]`                                             |
+|ObjectId  |`LiteDB.ObjectId`                                           |
+|Guid      |`System.Guid`                                               |
+|Boolean   |`System.Boolean`                                            |
+|DateTime  |`System.DateTime`                                           |
+|MaxValue  |-                                                           |
 
 To use .NET data types you need `BsonMapper` class.
 
-## Using POCO class to strong typed document
+## Using POCO classes
 
-LiteDB supports POCO class as strong types documents. When you get `LiteCollection` instance from `LiteDatabase` you can set `<T>` type. This type will be your document type. If this `<T>` was difernt thant `BsonDocument`, LiteDB internal maps you class to `BsonDocument`. To do this, LiteDB uses `BsonMapper`:
+LiteDB supports POCO class as strong types documents. When you get `LiteCollection` instance from `LiteDatabase.GetCollection<T>` you can set `<T>` type. This type will be your document type. If this `<T>` was difernt thant `BsonDocument`, LiteDB internal maps you class to `BsonDocument`. To do this, LiteDB uses **`BsonMapper`**:
 
-```
+```C#
 // Simple strong type document
 public class Customer
 {
@@ -128,7 +127,7 @@ public class Customer
 
 var typedCustomerCollection = db.GetCollection<Customer>("customer");
 
-var schemelessCollection = db.GetCollection<BsonDocument>("customer");
+var schemelessCollection = db.GetCollection("customer"); // <T> is BsonDocument
 ```
 
 `BsonMapper` convert each property class in a document field folling this rules:
@@ -146,25 +145,30 @@ var schemelessCollection = db.GetCollection<BsonDocument>("customer");
 
 Basic .NET data type mapper:
 
-|.NET Data Type       |BSON Data Type|
-|---------------------|--------------|
-|Int16, UInt16, Byte  |Int32         |
-|UInt32, UInt64       |Int64         |
-|Single, Decimal      |Double        |
-|Char, Enum           |String        |
-|IList<T>             |Array         |
-|IDictionary<K,T>     |Document      |
+|.NET Data Type            |BSON Data Type|
+|--------------------------|--------------|
+|`Int16`, `UInt16`, `Byte` |Int32         |
+|`UInt32` , `UInt64`       |Int64         |
+|`Single`, `Decimal`       |Double        |
+|`Char`, `Enum`            |String        |
+|`IList<T>`                |Array         |
+|`IDictionary<K,T>`        |Document      |
 
-- `Nullable<T>` values are accepted. If value is `Null`, BSON data type is `Null`, otherwise, BSON value will be .NET then underlying type.
-- For `IDictionary<K, T>`, `K` must be `String` or simple data type. 
+- `Nullable<T>` values are accepted. If value is `null`, BSON data type is Null, otherwise, BSON value will be .NET then underlying type.
+- For `IDictionary<K, T>`, `K` key must be `String` or simple data type (convertable using `Convert.ToString(..)`). 
 
-`BsonMapper` support some options:
-- `SerializeNullValues` (default: false) - If class property has a `Null` do not map in document result.
-- `TrimWhitespace` (default: true) - Trim string properties before map to document
-- `EmptyStringToNull` (default: true) - Empty string conver to `Null`
-- `ResolvePropertyName` (default: (s) => s) - Document field name are equal to class property name. Can be use a custom rule to convert names. `BsonMapper` offer 2 predefined functions: `UseCamelCase()` and `UseLowerCaseDelimiter("_")`.
+`BsonMapper` support some options
 
-```
+|Name                   |Default |Description                                                |
+|-----------------------|--------|-----------------------------------------------------------|
+|`SerializeNullValues`  |false   |If class property is `null` do not map in document result  |
+|`TrimWhitespace`       |true    |Trim string properties before map to document              |
+|`EmptyStringToNull`    |true    |Empty string conver to `null`                              |
+|`ResolvePropertyName`  |(s) => s|A function to map property name to document field name     |
+
+`BsonMapper` offers 2 predefined functions to resolve property name: `UseCamelCase()` and `UseLowerCaseDelimiter("_")`.
+
+```C#
 BsonMapper.Global.UseLowerCaseDelimiter("_");
 
 public class Customer
@@ -179,7 +183,7 @@ var john = doc["first_name"];
     
 - You can register your own map function, using `RegisterType<T>` instance method.
 
-```
+```C#
 BsonMapper.Global.RegisterType<Uri>
 (
     serialize: (uri) => uri.AbsoluteUri,
@@ -193,13 +197,13 @@ BsonMapper.Global.RegisterType<Uri>
 
 |.NET data type  |New Value                   |
 |----------------|----------------------------|
-|ObjectId        |ObjectId.NewObjectId()      |
-|Guid            |Guid.NewGuid()              |
-|Int32           |Sequence value stating in 1 |
+|`ObjectId`      |`ObjectId.NewObjectId()`    |
+|`Guid`          |`Guid.NewGuid()`            |
+|`Int32`         |Sequence value stating in 1 |
 
 To register a new type auto-id, use `RegisterAutoId<T>`
 
-```
+```C#
 BsonMapper.Global.RegisterAutoId<Int64>
 (
     isEmpty: (v) => v == 0,
@@ -217,7 +221,7 @@ public class Calendar
     
 `BsonMapper` support index definition direct on property using `[BsonIndex]` attribute. You can define index options like, `Unique` or `IgnoreCase`. This is useful to avoid always run `col.EnsureIndex("field")` before run a query.
 
-```
+```C#
 public class Customer
 {
     public int Id { get; set; }
@@ -230,12 +234,15 @@ public class Customer
 }
 ```
 
-`IndexOptions` defaults are:
-- `Unique`: false
-- `IgnoreCase`: true
-- `RemoveAccents`: true
-- `TrimWhitespace`: true
-- `EmptyStringToNull`: true
+`IndexOptions` class has this settings:
+
+|Name                 |Default|Description                                       |
+|---------------------|-------|--------------------------------------------------|
+|`Unique`             |false  |Do not allow duplicates values in index           |
+|`IgnoreCase`         |true   |Store string on index in lowercase                |
+|`RemoveAccents`      |true   |Store string on index removing accents            |
+|`TrimWhitespace`     |true   |Store string on index removing trimming spaces    |
+|`EmptyStringToNull`  |true   |If string is empty, convert to `Null`             |
 
 To get better performance, `[BsonIndex]` checks only if index exists but do not check if you are changing options. To change an index option in a existing index you must run `EnsureIndex` with new index options. This method drop index and create a new one with new options.
 
