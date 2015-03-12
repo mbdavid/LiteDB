@@ -15,6 +15,51 @@ See below a simple comparation sheet between document database store and SQL dat
 |`_id` field           |Primary Key |
 |Index                 |Table Index |
 
+## BSON data types
+
+LiteDB use a subset of [BSON data types](bsonspec.org/spec.html). See all supported LiteDB BSON data types and .NET equivalent.
+
+|BSON Type |.NET type                                                   |
+|----------|------------------------------------------------------------|
+|MinValue  |-                                                           |
+|Null      |Any .NET object with `null` value                           |
+|Int32     |`System.Int32`                                              |
+|Int64     |`System.Int64`                                              |
+|Double    |`System.Double`                                             |
+|String    |`System.String`                                             |
+|Document  |`System.Collection.Generic.Dictionary<string, BsonValue>`   |
+|Array     |`System.Collection.Generic.List<BsonValue>`                 |
+|Binary    |`System.Byte[]`                                             |
+|ObjectId  |`LiteDB.ObjectId`                                           |
+|Guid      |`System.Guid`                                               |
+|Boolean   |`System.Boolean`                                            |
+|DateTime  |`System.DateTime`                                           |
+|MaxValue  |-                                                           |
+
+### ObjectId
+
+`ObjectId` is a 12 bytes BSON type:
+
+- `Timestamp`: Value representing the seconds since the Unix epoch (4 bytes)
+- `Machine`: Machine identifier (3 bytes)  
+- `Pid`: Process id (2 bytes)
+- `Increment`: A counter, starting with a random value (3 bytes)
+
+In LiteDB, documents stored in a collection require a unique `_id` field that acts as a primary key. Because `ObjectIds` are small, most likely unique, and fast to generate, LiteDB uses `ObjectIds` as the default value for the `_id` field if the `_id` field is not specified.
+
+Unlike Guid data type, ObjectId are a sequencial number, so it's a better solution on indexing. ObjectId use hexa numbers to be represented in string
+
+```C#
+
+var id = ObjectId.NewObjectId();
+
+// You can get creation datetime from an ObjectId
+var date = id.CreationTime;
+
+// ObjectId is represented in hex value
+Debug.Print(id);
+"507h096e210a18719ea877a2"
+```
 
 ## Document Structure
 
@@ -88,25 +133,6 @@ string str = customer["Name"].AsString;
 // Casting RawValue to .NET type
 string str = (string)customer["Name"].RawValue;
 ```
-
-LiteDB use a subset of BSON data types. See all supported LiteDB BSON data types and .NET equivalent.
-
-|BSON Type |.NET type                                                   |
-|----------|------------------------------------------------------------|
-|MinValue  |-                                                           |
-|Null      |Any .NET object with `null` value                           |
-|Int32     |`System.Int32`                                              |
-|Int64     |`System.Int64`                                              |
-|Double    |`System.Double`                                             |
-|String    |`System.String`                                             |
-|Document  |`System.Collection.Generic.Dictionary<string, BsonValue>`   |
-|Array     |`System.Collection.Generic.List<BsonValue>`                 |
-|Binary    |`System.Byte[]`                                             |
-|ObjectId  |`LiteDB.ObjectId`                                           |
-|Guid      |`System.Guid`                                               |
-|Boolean   |`System.Boolean`                                            |
-|DateTime  |`System.DateTime`                                           |
-|MaxValue  |-                                                           |
 
 To use .NET data types you need `BsonMapper` class.
 
@@ -279,6 +305,13 @@ var jsonString = JsonSerialize.Serialize(doc, pretty, includeBinaryData);
 ```
 
 `JsonSerialize` also supports `TextReader` and `TextWriter` to read/write direct from a file or `Stream`.
+
+===========================================================================================================
+
+# Collection
+
+Documents are storage in Collections. Collection
+
 
 ===========================================================================================================
 
