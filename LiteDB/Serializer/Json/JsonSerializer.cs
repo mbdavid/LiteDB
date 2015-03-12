@@ -45,7 +45,7 @@ namespace LiteDB
         #region Deserialize
 
         /// <summary>
-        /// Convert a Json string into a BsonValue
+        /// Deserialize a Json string into a BsonValue
         /// </summary>
         public static BsonValue Deserialize(string json)
         {
@@ -60,7 +60,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert a Json string into a BsonValue
+        /// Deserialize a Json TextReader into a BsonValue
         /// </summary>
         public static BsonValue Deserialize(TextReader reader)
         {
@@ -84,7 +84,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Deserialize a json array as an IEnumerable of BsonValue
+        /// Deserialize a json array as an IEnumerable of BsonValue reading on demand TextReader
         /// </summary>
         public static IEnumerable<BsonValue> DeserializeArray(TextReader reader)
         {

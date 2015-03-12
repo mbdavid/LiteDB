@@ -15,7 +15,7 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            this.Database.Mapper.SetAutoId(document, new LiteCollection<BsonDocument>(this.Database, this.Name));
+            this.Database.Mapper.SetAutoId(document, this.GetBsonCollection());
 
             var doc = this.Database.Mapper.ToDocument(document);
 

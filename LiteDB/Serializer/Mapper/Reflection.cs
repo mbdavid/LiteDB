@@ -107,7 +107,7 @@ namespace LiteDB
                 // create a property mapper
                 var p = new PropertyMapper
                 { 
-                    AutoId = autoId == null ? false : autoId.AutoId,
+                    AutoId = autoId == null ? true : autoId.AutoId,
                     FieldName = name, 
                     PropertyName = prop.Name, 
                     PropertyType = prop.PropertyType,

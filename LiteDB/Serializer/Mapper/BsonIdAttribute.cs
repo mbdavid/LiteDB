@@ -18,6 +18,7 @@ namespace LiteDB
 
         public BsonIdAttribute()
         {
+            this.AutoId = true;
         }
 
         public BsonIdAttribute(bool autoId)

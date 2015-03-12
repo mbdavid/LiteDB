@@ -69,5 +69,17 @@ namespace LiteDB
 
             return this.Database.Pager.GetPage<CollectionPage>(_pageID);
         }
+
+        /// <summary>
+        /// Returns a new instance of this collection but using BsonDocument as T - Copy _pageID to avoid new collection page search
+        /// </summary>
+        internal LiteCollection<BsonDocument> GetBsonCollection()
+        {
+            var col = new LiteCollection<BsonDocument>(this.Database, this.Name);
+
+            col._pageID = _pageID;
+
+            return col;
+        }
     }
 }
