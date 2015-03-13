@@ -22,6 +22,8 @@ namespace UnitTest
             doc["MyNull"] = null;
             doc["EmptyObj"] = new BsonDocument();
             doc["EmptyString"] = "";
+            doc["maxDate"] = DateTime.MaxValue;
+            doc["minDate"] = DateTime.MinValue;
             doc.Set("Customer.Address.Street", "Av. Cacapava");
 
 
@@ -60,6 +62,9 @@ namespace UnitTest
             Assert.AreEqual(o["CustomerId"].AsGuid, d["CustomerId"].AsGuid);
             Assert.AreEqual(o["MyNull"].RawValue, d["MyNull"].RawValue);
             Assert.AreEqual(o["EmptyString"].AsString, d["EmptyString"].AsString);
+
+            Assert.AreEqual(d["maxDate"].AsDateTime, DateTime.MaxValue);
+            Assert.AreEqual(d["minDate"].AsDateTime, DateTime.MinValue);
 
             Assert.AreEqual(o["Items"].AsArray.Count, d["Items"].AsArray.Count);
             Assert.AreEqual(o["Items"].AsArray[0].AsDocument["Unit"].AsDouble, d["Items"].AsArray[0].AsDocument["Unit"].AsDouble);

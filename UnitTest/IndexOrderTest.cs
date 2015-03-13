@@ -36,8 +36,8 @@ namespace UnitTest
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
-                Assert.AreEqual("ABCDE", asc);
-                Assert.AreEqual("EDCBA", desc);
+                Assert.AreEqual(asc, "ABCDE");
+                Assert.AreEqual(desc, "EDCBA");
             }
         }
     }

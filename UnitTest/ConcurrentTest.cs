@@ -12,19 +12,13 @@ namespace UnitTest
     [TestClass]
     public class ConcurrentTest
     {
+        private Random _rnd = new Random();
+
         [TestMethod]
         public void Concurrent_Test()
         {
-            // The most important test:
-            // - Create 3 task read/write operations in same file.
-            // - Insert, update, delete same documents
-            // - Insert big files
-            // - Delete all documents
-            // - Insert a big file (use all pages)
-            // - Read this big file and test md5
             var file = DB.Path();
-            var rnd = new Random(DateTime.Now.Second);
-            var N = 100;
+            var N = 300;
 
             var a = new LiteDatabase(file);
             var b = new LiteDatabase(file);
@@ -51,7 +45,11 @@ namespace UnitTest
 
                 while (i <= N)
                 {
-                    var success = col.Update(this.CreateDoc(i, "update value"));
+                    var doc = this.CreateDoc(i, "update value");
+                    doc["date"] = new DateTime(2015, 1, 1);
+                    doc["value"] = null;
+
+                    var success = col.Update(doc);
                     if (success) i++;
                 }
             });
@@ -72,12 +70,16 @@ namespace UnitTest
                 }
             });
 
-            // Task D -> Upload 20 files
+            // Task D -> Upload 40 files + delete 20
             var td = Task.Factory.StartNew(() =>
             {
+                for (var i = 1; i <= 40; i++)
+                {
+                    d.FileStorage.Upload("f" + i, this.CreateMemoryFile(1024 * 512));
+                }
                 for (var i = 1; i <= 20; i++)
                 {
-                    d.FileStorage.Upload("f" + i, this.CreateMemoryFile(1024 * 1024 * 2));
+                    d.FileStorage.Delete("f" + i);
                 }
             });
 
@@ -94,10 +96,12 @@ namespace UnitTest
                 var col = db.GetCollection("col1");
                 var doc = col.FindById(1);
 
-                Assert.AreEqual("update value", doc["name"].AsString);
-                Assert.AreEqual(1, col.Count());
+                Assert.AreEqual(doc["name"].AsString, "update value");
+                Assert.AreEqual(doc["date"].AsDateTime, new DateTime(2015, 1, 1));
+                Assert.AreEqual(doc["value"].IsNull, true);
+                Assert.AreEqual(col.Count(), 1);
 
-                Assert.AreEqual(20, db.FileStorage.FindAll().Count());
+                Assert.AreEqual(db.FileStorage.FindAll().Count(), 20);
             }
         }
 
@@ -106,6 +110,9 @@ namespace UnitTest
             var doc = new BsonDocument();
             doc["_id"] = id;
             doc["name"] = name;
+            doc["desc"] = DB.LoremIpsum(10, 10, 2, 2, 2);
+            doc["date"] = DateTime.Now.AddDays(_rnd.Next(300));
+            doc["value"] = _rnd.NextDouble() * 5000;
 
             return doc;
         }
