@@ -13,7 +13,8 @@ namespace UnitTest
 
     public class MyClass
     {
-        public int Id { get; set; }
+        [BsonId(false)]
+        public int MyId { get; set; }
         [BsonField("MY-STRING")]
         public string MyString { get; set; }
         public Guid MyGuid { get; set; }
@@ -21,8 +22,11 @@ namespace UnitTest
         public DateTime? MyDateTimeNullable { get; set; }
         public int? MyIntNullable { get; set; }
         public MyEnum MyEnumProp { get; set; }
-        //public char MyChar { get; set; }
+        public char MyChar { get; set; }
         public byte MyByte { get; set; }
+        public decimal MyDecimal { get; set; }
+
+        [BsonIndex(true)]
         public Uri MyUri { get; set; }
 
         // do not serialize this properties
@@ -51,7 +55,7 @@ namespace UnitTest
         {
             var c = new MyClass
             {
-                Id = 123,
+                MyId = 123,
                 MyString = "John",
                 MyGuid = Guid.NewGuid(),
                 MyDateTime = DateTime.Now,
@@ -64,9 +68,10 @@ namespace UnitTest
                 MyDict = new Dictionary<int,string>(),
                 MyStringArray = new string[] { "One", "Two" },
                 MyEnumProp = MyEnum.Second,
-                //MyChar = 'Y',
+                MyChar = 'Y',
                 MyUri = new Uri("http://www.numeria.com.br"),
-                MyByte = 255
+                MyByte = 255,
+                MyDecimal = 19.9m
             };
 
             c.MyStringList.Add("String-1");
@@ -84,104 +89,37 @@ namespace UnitTest
         [TestMethod]
         public void Mapper_Test()
         {
-            var o = CreateModel();
             var mapper = new BsonMapper();
-            mapper.UseLowerCaseDelimiter();
 
-            var doc = mapper.ToDocument(o);
+            mapper.UseLowerCaseDelimiter('_');
+
+            var obj = CreateModel();
+            var doc = mapper.ToDocument(obj);
+            var nobj = mapper.ToObject<MyClass>(doc);
 
             var json = JsonSerializer.Serialize(doc, true);
 
-            Debug.Print(json);
+            // compare object to document
+            Assert.AreEqual(doc["_id"].AsInt32, obj.MyId);
+            Assert.AreEqual(doc["MY-STRING"].AsString, obj.MyString);
+            Assert.AreEqual(doc["my_guid"].AsGuid, obj.MyGuid);
 
-            var n = mapper.ToObject<MyClass>(doc);
+            // compare 2 objects
+            Assert.AreEqual(obj.MyId, nobj.MyId);
+            Assert.AreEqual(obj.MyString, nobj.MyString);
+            Assert.AreEqual(obj.MyGuid, nobj.MyGuid);
+            Assert.AreEqual(obj.MyDateTime, nobj.MyDateTime);
+            Assert.AreEqual(obj.MyDateTimeNullable, nobj.MyDateTimeNullable);
+            Assert.AreEqual(obj.MyIntNullable, nobj.MyIntNullable);
+            Assert.AreEqual(obj.MyEnumProp, nobj.MyEnumProp);
+            Assert.AreEqual(obj.MyChar, nobj.MyChar);
+            Assert.AreEqual(obj.MyByte, nobj.MyByte);
+            Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
+            Assert.AreEqual(obj.MyUri, nobj.MyUri);
 
-            Assert.AreEqual(doc["_id"], 123);
-            //Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
-
+            Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
+            Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);
+            Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
         }
-
-        [TestMethod]
-        public void MapperPerf_Test()
-        {
-            var model = CreateModel();
-            var mapper = new BsonMapper();
-            mapper.UseLowerCaseDelimiter();
-            var size = 100000;
-
-            // Cache before
-            var doc = mapper.ToDocument(model);
-            var bytesBson = BsonSerializer.Serialize(doc);
-            //var bytesJson = fastBinaryJSON.BJSON.ToBJSON(model);
-
-
-            Debug.Print("--------------------------");
-
-            var sm = Stopwatch.StartNew();
-
-            // .NET Class to BsonDocument
-            for (var i = 0; i < size; i++)
-            {
-                mapper.ToDocument(model);
-            }
-
-            sm.Stop();
-
-            Debug.Print(".NET Class to BsonDocument = " + sm.ElapsedMilliseconds);
-
-            sm.Restart();
-
-            for (var i = 0; i < size; i++)
-            {
-                BsonSerializer.Serialize(doc);
-            }
-
-            Debug.Print("BsonDocument to BsonBytes = " + sm.ElapsedMilliseconds);
-
-            //sm.Restart();
-
-            //for (var i = 0; i < size; i++)
-            //{
-            //    fastBinaryJSON.BJSON.ToBJSON(model);
-            //}
-
-            //Debug.Print("fastBinaryJson (mapper+serialize) = " + sm.ElapsedMilliseconds);
-
-            Debug.Print("=====================");
-
-            sm.Restart();
-
-            // BsonDocument to .NET class
-            for (var i = 0; i < size; i++)
-            {
-                mapper.ToObject<MyClass>(doc);
-            }
-
-            sm.Stop();
-
-            Debug.Print("BsonDocument to .NET Class = " + sm.ElapsedMilliseconds);
-
-            sm.Restart();
-
-            for (var i = 0; i < size; i++)
-            {
-                BsonSerializer.Deserialize(bytesBson);
-            }
-
-            Debug.Print("BsonBytes to BsonDocument = " + sm.ElapsedMilliseconds);
-
-
-            sm.Restart();
-
-            //for (var i = 0; i < size; i++)
-            //{
-            //    fastBinaryJSON.BJSON.ToObject<MyClass>(bytesJson);
-            //}
-
-            //Debug.Print("fastBinaryJson (mapper+deserialize) = " + sm.ElapsedMilliseconds);
-
-        }
-
-
     }
 }

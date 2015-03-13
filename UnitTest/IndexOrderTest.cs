@@ -9,10 +9,10 @@ using System.Diagnostics;
 namespace UnitTest
 {
     [TestClass]
-    public class FindOrderTest
+    public class IndexOrderTest
     {
         [TestMethod]
-        public void Find_Order()
+        public void Index_Order()
         {
             using (var db = new LiteDatabase(DB.Path()))
             {
@@ -26,17 +26,18 @@ namespace UnitTest
 
                 col.EnsureIndex("text");
 
-                var asc = col.Find(Query.All("text"));
-                var result = "";
+                var asc = string.Join("",
+                    col.Find(Query.GTE("text", "A", Query.Ascending))
+                    .Select(x => x["text"].AsString)
+                    .ToArray());
 
-                foreach (var d in asc)
-                {
-                    result += d["text"].AsString;
-                }
+                var desc = string.Join("",
+                    col.Find(Query.GTE("text", "A", Query.Descending))
+                    .Select(x => x["text"].AsString)
+                    .ToArray());
 
-                Assert.AreEqual("ABCDE", result);
-
-
+                Assert.AreEqual("ABCDE", asc);
+                Assert.AreEqual("EDCBA", desc);
             }
         }
     }

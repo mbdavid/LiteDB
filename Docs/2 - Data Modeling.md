@@ -1,8 +1,8 @@
 # Data Modeling
 
-LiteDB is a document database store. Documents are schemaless data strucutre storage in BSON data format (BSON are Binary JSON).
+LiteDB is a document database store. Documents are schemaless data strucutre stored in BSON data format (BSON are Binary JSON).
 
-Documents are storage in collections. Each collection can handle any document structure. However, it's a good pratice that all documents in same collection has a similar data structure.
+Each document are in one collections. Each collection can handle any document structure. However, it's a good pratice that all documents in same collection has a similar data structure.
 
 See below a simple comparation sheet between document database store and SQL database.
 
@@ -17,7 +17,7 @@ See below a simple comparation sheet between document database store and SQL dat
 
 ## BSON data types
 
-LiteDB use a subset of [BSON data types](bsonspec.org/spec.html). See all supported LiteDB BSON data types and .NET equivalent.
+LiteDB use a subset of [BSON data types](http://bsonspec.org/spec.html). See all supported LiteDB BSON data types and .NET equivalent.
 
 |BSON Type |.NET type                                                   |
 |----------|------------------------------------------------------------|
@@ -310,8 +310,25 @@ var jsonString = JsonSerialize.Serialize(doc, pretty, includeBinaryData);
 
 # Collection
 
-Documents are storage in Collections. Collection
+Documents are stored in collections. Collection is a way to organize your common documents, like tables in SQL databases. LiteDB has many method to insert, update, delete and find documents in collection.
 
+When you have strong typed document, you can use strong typed collections. It's ease to be use and auto-cast documents type.
+
+```C#
+var customers = db.GetCollection<Customer>("collectionName");
+
+customers.Insert(customer)
+
+Customer c = customer.FindBydId(123)
+```
+
+## Using DbRef<T> and Include
+
+Document database has no joins between documents. When you are modeling, you can embeded referen document (desnormalizing your model) or create a refence to another document.
+
+```C#
+
+```
 
 ===========================================================================================================
 
@@ -390,67 +407,45 @@ using(var stream = file.OpenRead())
 var files = db.FileStoage.Find("$/photos/2014/");
 ```
 
+
 ===========================================================================================================
-Documents (concepts)
-- compare store to sql (table/rows/fields)
-- concepts about document store
-    - document structure
-    - References
-    - Embedded Data (denormalized )
-- concepts about collections
-- example json document
-- primary key - id field (not-null/max/min) + multi-field PK
 
-BsonDocument (impl)
+# Repository pattern
 
-`BsonDocument` class are the LiteDB document implementation.
+LiteDB architeture is ideal to work in repository pattern data access. You can write a class that inheriths `LiteDatabase` and add your collections as properties:
 
-`BsonValue` implement any BSON value data type, like Null, String, Document or Array.
+```C#
+public class MyDB : LiteDatabase
+{
+    public MyDB()
+        : this (@"C:\Temp\mydatabase.db")
+    {
+    }
+    
+    private LiteCollection<Customer> _customers;
+    
+    public LiteCollection<Customer> Customers
+    {
+        get { return _customers ?? (_customers = this.GetCollection<Customer>("customers")); } 
+    }
+    
+    private LiteCollection<Order> _orders;
+    
+    public LiteCollection<Order> Orders
+    {
+        get { return _orders ?? (_orders = this.GetCollection<Order>("orders")); } 
+    }
+    
+}
 
-Documents are collection of key-value items. Keys are string datatype and has unique name per document (no duplicate are alowed). Values can be:
+// later...
 
-- Get/Set methods
-- BsonTypes <> .net types
-- BsonValue ctor
-- Is/As methods
-- Operators
-- ObjectId class
-
-Bson
-- link to bsonorg
-- talk about subset only
-- data type order
-
-Json
-- basic concecpt about json
-- extended format for bson
-- JsonReader/JsonWriter + JsonSerializer
-
-POCO
-- how write poco class
-- properties - nofield
-- id order 
-- DbRef
-- attributes
-    - bsonignore
-    - bsonid + autoinc
-    - bsonfield
-    - bsonindex
-
-BsonMapper
-- glogal reference + db ref + static cache
-- rules
-- options
-- register custom type
-- register AutoId
-- static Create method
-
-Collections
-- methods api
-- implement T (new())
-
-File Storage
-- how works
-- files e chunks collections
-- id pattern - how store
-- api
+using(var db = new MyDB())
+{
+    var cust = new Customer { Id = 123, Name = "John Doe" };
+    
+    db.Customers.Insert(cust);
+    
+    db.Customers.Delete(123);
+}
+```

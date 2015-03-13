@@ -8,6 +8,12 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
+    public class CustomerLinq
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
     [TestClass]
     public class LinqTest
     {
@@ -18,39 +24,34 @@ namespace UnitTest
 
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var c1 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Mauricio", CreationDate = new DateTime(2015, 1, 1) };
-                var c2 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Malafaia", CreationDate = new DateTime(2015, 1, 1) };
-                var c3 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Chris", CreationDate = new DateTime(2000, 1, 1) };
-                var c4 = new Customer { CustomerId = ObjectId.NewObjectId(), Name = "Juliane", CreationDate = new DateTime(2011, 8, 11) };
+                var c1 = new CustomerLinq { Id = 1, Name = "Mauricio" };
+                var c2 = new CustomerLinq { Id = 2, Name = "Malafaia" };
+                var c3 = new CustomerLinq { Id = 3, Name = "Chris" };
+                var c4 = new CustomerLinq { Id = 4, Name = "Juliane" };
 
-                var col = db.GetCollection<Customer>("Customer");
+                var col = db.GetCollection<CustomerLinq>("Customer");
 
-                // col.EnsureIndex(x => x.Name, true); // try BsonIndex
+                col.EnsureIndex(x => x.Name, true);
 
-                col.EnsureIndex(x => x.CreationDate);
+                col.Insert(new CustomerLinq[] { c1, c2, c3, c4 });
 
-                col.Insert(new Customer[] { c1, c2, c3, c4 });
+                // == !=
+                Assert.AreEqual(1, col.Count(x => x.Id == 1));
+                Assert.AreEqual(3, col.Count(x => x.Id != 1));
 
-                var past = -30;
-
-                // simple
-                Assert.AreEqual(1, col.Count(x => x.CustomerId == c1.CustomerId));
-                Assert.AreEqual(3, col.Count(x => x.CustomerId != c1.CustomerId));
-
-                Assert.AreEqual(1, col.Count(x => x.Name == "Chris"));
-                Assert.AreEqual(2, col.Count(x => x.CreationDate == new DateTime(2015, 1, 1)));
+                // methods
                 Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
-                Assert.AreEqual(4, col.Count(x => x.CreationDate >= DateTime.Now.AddYears(past)));
-                Assert.AreEqual(c3.CustomerId, col.FindOne(x => x.CreationDate <= new DateTime(2000, 1, 1)).CustomerId);
-                Assert.AreEqual("Chris", col.FindOne(x => x.Name != "Mauricio").Name);
-
                 Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
 
+                // > >= < <=
+                Assert.AreEqual(1, col.Count(x => x.Id > 3));
+                Assert.AreEqual(1, col.Count(x => x.Id >= 4));
+                Assert.AreEqual(1, col.Count(x => x.Id < 2));
+                Assert.AreEqual(1, col.Count(x => x.Id <= 1));
+
                 // and/or
-                Assert.AreEqual(1, col.Count(x => x.CreationDate == new DateTime(2015, 1, 1) && x.Name.StartsWith("Mal")));
-                Assert.AreEqual(2, 
-                    col.Count(x => x.CreationDate == new DateTime(2015, 1, 1) && 
-                        (x.Name.StartsWith("Mal") || x.Name == "Mauricio")));
+                Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "MAURICIO"));
+                Assert.AreEqual(2, col.Count(x => x.Name == "malafaia" || x.Name == "MAURICIO"));
             }
         }
     }

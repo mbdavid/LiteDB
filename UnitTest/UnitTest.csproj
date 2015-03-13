@@ -57,19 +57,14 @@
     <Compile Include="AutoIdTest.cs" />
     <Compile Include="ObjectIdTest.cs" />
     <Compile Include="MapperTest.cs" />
-    <Compile Include="PerfTest.cs" />
-    <Compile Include="StressTest.cs" />
+    <Compile Include="ConcurrentTest.cs" />
     <Compile Include="JsonTest.cs" />
     <Compile Include="LinqTest.cs" />
     <Compile Include="IncludeTest.cs" />
     <Compile Include="Utils\DB.cs" />
     <Compile Include="VersionTest.cs" />
-    <Compile Include="FindOrderTest.cs" />
-    <Compile Include="DebugTest.cs" />
-    <Compile Include="DocumentTest.cs" />
-    <Compile Include="PageTest.cs" />
+    <Compile Include="IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\Model.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">

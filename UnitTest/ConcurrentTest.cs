@@ -10,12 +10,11 @@ using System.Threading.Tasks;
 namespace UnitTest
 {
     [TestClass]
-    public class StressTest
+    public class ConcurrentTest
     {
-        //[TestMethod]
-        public void Stress_Test()
+        [TestMethod]
+        public void Concurrent_Test()
         {
-
             // The most important test:
             // - Create 3 task read/write operations in same file.
             // - Insert, update, delete same documents
@@ -23,7 +22,7 @@ namespace UnitTest
             // - Delete all documents
             // - Insert a big file (use all pages)
             // - Read this big file and test md5
-            var file = DB.Path(true, "stress.db");
+            var file = DB.Path();
             var rnd = new Random(DateTime.Now.Second);
             var N = 100;
 
@@ -36,9 +35,11 @@ namespace UnitTest
             var ta = Task.Factory.StartNew(() =>
             {
                 var col = a.GetCollection("col1");
+                col.EnsureIndex("name");
+
                 for (var i = 1; i <= N; i++)
                 {
-                    col.Insert(CreateDoc(i, "My String Guided " + Guid.NewGuid().ToString("n")));
+                    col.Insert(this.CreateDoc(i, "My String"));
                 }
             });
 
@@ -48,62 +49,72 @@ namespace UnitTest
                 var col = b.GetCollection("col1");
                 var i = 1;
 
-                while (i < N)
+                while (i <= N)
                 {
-                    //Task.Delay(rnd.Next(100, 500));
-                    var success = col.Update(CreateDoc(i, "update value"));
+                    var success = col.Update(this.CreateDoc(i, "update value"));
                     if (success) i++;
                 }
             });
 
-            //// TasK C -> Delete 99 documents (keep only _id = 1)
-            //var tc = Task.Factory.StartNew(() =>
-            //{
-            //    var col = c.GetCollection("col1");
-            //    var i = 2;
+            // TasK C -> Delete 99 documents (keep only _id = 1)
+            var tc = Task.Factory.StartNew(() =>
+            {
+                var col = c.GetCollection("col1");
+                var i = 2;
 
-            //    while (i < N)
-            //    {
-            //        Task.Delay(rnd.Next(100, 500));
-            //        var success = col.Delete(i);
-            //        if (success) i++;
-            //    }
-            //});
+                while (i <= N)
+                {
+                    if(col.Exists(Query.And(Query.EQ("_id", i), Query.EQ("name", "update value"))))
+                    {
+                        var success = col.Delete(i);
+                        if (success) i++;
+                    }
+                }
+            });
 
             // Task D -> Upload 20 files
+            var td = Task.Factory.StartNew(() =>
+            {
+                for (var i = 1; i <= 20; i++)
+                {
+                    d.FileStorage.Upload("f" + i, this.CreateMemoryFile(1024 * 1024 * 2));
+                }
+            });
 
             // Now, test data
-            Task.WaitAll(ta, tb); //, tb, tc);
-
-            using (var db = new LiteDatabase(file))
-            {
-                var col = db.GetCollection("col1");
-                Assert.AreEqual(1, col.Count());
-                var doc = col.FindById(1);
-                Assert.AreEqual("update value", doc["Name"].AsString);
-            }
-
+            Task.WaitAll(ta, tb, tc, td);
 
             a.Dispose();
             b.Dispose();
             c.Dispose();
+            d.Dispose();
 
+            using (var db = new LiteDatabase(file))
+            {
+                var col = db.GetCollection("col1");
+                var doc = col.FindById(1);
+
+                Assert.AreEqual("update value", doc["name"].AsString);
+                Assert.AreEqual(1, col.Count());
+
+                Assert.AreEqual(20, db.FileStorage.FindAll().Count());
+            }
         }
 
         private BsonDocument CreateDoc(int id, string name)
         {
             var doc = new BsonDocument();
             doc["_id"] = id;
-            doc["Name"] = name;
+            doc["name"] = name;
 
             return doc;
         }
 
-        private byte[] CreateMemoryFile(int size)
+        private MemoryStream CreateMemoryFile(int size)
         {
             var buffer = new byte[size];
 
-            return buffer;
+            return new MemoryStream(buffer);
         }
     }
 }

@@ -50,7 +50,7 @@ namespace UnitTest
 
             var json = JsonSerializer.Serialize(o);
 
-            var d = BsonSerializer.Deserialize(bson).AsDocument;
+            var d = BsonSerializer.Deserialize(bson);
 
             Assert.AreEqual(d["_id"], 123);
             Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
