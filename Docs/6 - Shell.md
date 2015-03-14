@@ -1,2 +1,0 @@
-- shell in database class
-- command references
