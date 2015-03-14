@@ -35,10 +35,7 @@ namespace UnitTest
             var joid = JsonSerializer.Serialize(c1, true);
             var jc1 = JsonSerializer.Deserialize(joid).AsObjectId;
 
-
-
             Assert.AreEqual(c1, jc1);
-
         }
     }
 }

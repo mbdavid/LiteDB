@@ -8,24 +8,18 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
-    public class CustomerInclude
+    public class Order
     {
         public ObjectId Id { get; set; }
 
-        [BsonIndex(true)]
-        public string Name { get; set; }
-
-        public DateTime CreationDate { get; set; }
+        public DbRef<Customer> Customer { get; set; }
     }
 
-    public class OrderInclude
+    public class Customer
     {
-        [BsonId]
-        public int OrderKey { get; set; }
+        public ObjectId Id { get; set; }
 
-        public DateTime Date { get; set; }
-
-        public DbRef<CustomerInclude> Customer { get; set; }
+        public string Name { get; set; }
     }
 
     [TestClass]
@@ -36,27 +30,23 @@ namespace UnitTest
         {
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var customers = db.GetCollection<CustomerInclude>("customers");
-                var orders = db.GetCollection<OrderInclude>("orders");
+                var customers = db.GetCollection<Customer>("customers");
+                var orders = db.GetCollection<Order>("orders");
 
-                var customer = new CustomerInclude
+                var customer = new Customer
                 {
-                    Id = ObjectId.NewObjectId(),
-                    Name = "Mauricio"
+                    Name = "John Doe"
                 };
 
-                var order = new OrderInclude
-                {
-                    Date = DateTime.Now,
-                    Customer = new DbRef<CustomerInclude>(customers, customer.Id)
-                };
-
-                db.BeginTrans();
-
+                // insert and set customer.Id
                 customers.Insert(customer);
-                orders.Insert(order);
 
-                db.Commit();
+                var order = new Order
+                {
+                    Customer = new DbRef<Customer>(customers, customer.Id)
+                };
+
+                orders.Insert(order);
 
                 var query = orders
                     .Include((x) => x.Customer.Fetch(db))

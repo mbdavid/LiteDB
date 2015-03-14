@@ -108,6 +108,7 @@ namespace UnitTest
         private BsonDocument CreateDoc(int id, string name)
         {
             var doc = new BsonDocument();
+
             doc["_id"] = id;
             doc["name"] = name;
             doc["desc"] = DB.LoremIpsum(10, 10, 2, 2, 2);

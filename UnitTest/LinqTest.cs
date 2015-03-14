@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
-    public class CustomerLinq
+    public class User
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -24,16 +24,16 @@ namespace UnitTest
 
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var c1 = new CustomerLinq { Id = 1, Name = "Mauricio" };
-                var c2 = new CustomerLinq { Id = 2, Name = "Malafaia" };
-                var c3 = new CustomerLinq { Id = 3, Name = "Chris" };
-                var c4 = new CustomerLinq { Id = 4, Name = "Juliane" };
+                var c1 = new User { Id = 1, Name = "Mauricio" };
+                var c2 = new User { Id = 2, Name = "Malafaia" };
+                var c3 = new User { Id = 3, Name = "Chris" };
+                var c4 = new User { Id = 4, Name = "Juliane" };
 
-                var col = db.GetCollection<CustomerLinq>("Customer");
+                var col = db.GetCollection<User>("Customer");
 
                 col.EnsureIndex(x => x.Name, true);
 
-                col.Insert(new CustomerLinq[] { c1, c2, c3, c4 });
+                col.Insert(new User[] { c1, c2, c3, c4 });
 
                 // == !=
                 Assert.AreEqual(col.Count(x => x.Id == 1), 1);

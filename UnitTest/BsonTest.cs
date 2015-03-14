@@ -26,7 +26,6 @@ namespace UnitTest
             doc["minDate"] = DateTime.MinValue;
             doc.Set("Customer.Address.Street", "Av. Cacapava");
 
-
             doc["Items"] = new BsonArray();
 
             doc["Items"].AsArray.Add(new BsonDocument());
@@ -38,7 +37,6 @@ namespace UnitTest
             doc["Items"].AsArray.Add(null);
             doc["Items"].AsArray.Add(true);
             doc["Items"].AsArray.Add(DateTime.Now);
-
 
             return doc;
         }
@@ -69,8 +67,6 @@ namespace UnitTest
             Assert.AreEqual(o["Items"].AsArray.Count, d["Items"].AsArray.Count);
             Assert.AreEqual(o["Items"].AsArray[0].AsDocument["Unit"].AsDouble, d["Items"].AsArray[0].AsDocument["Unit"].AsDouble);
             Assert.AreEqual(o["Items"].AsArray[4].AsDateTime.ToString(), d["Items"].AsArray[4].AsDateTime.ToString());
-
-
         }
     }
 }

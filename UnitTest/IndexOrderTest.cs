@@ -18,11 +18,11 @@ namespace UnitTest
             {
                 var col = db.GetCollection<BsonDocument>("order");
 
-                col.Insert(new BsonDocument().Add("_id", 1).Add("text", "D"));
-                col.Insert(new BsonDocument().Add("_id", 2).Add("text", "A"));
-                col.Insert(new BsonDocument().Add("_id", 3).Add("text", "E"));
-                col.Insert(new BsonDocument().Add("_id", 4).Add("text", "C"));
-                col.Insert(new BsonDocument().Add("_id", 5).Add("text", "B"));
+                col.Insert(new BsonDocument().Add("text", "D"));
+                col.Insert(new BsonDocument().Add("text", "A"));
+                col.Insert(new BsonDocument().Add("text", "E"));
+                col.Insert(new BsonDocument().Add("text", "C"));
+                col.Insert(new BsonDocument().Add("text", "B"));
 
                 col.EnsureIndex("text");
 

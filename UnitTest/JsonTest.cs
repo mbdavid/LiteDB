@@ -52,8 +52,6 @@ namespace UnitTest
             Assert.AreEqual(d["Items"].AsArray.Count, o["Items"].AsArray.Count);
             Assert.AreEqual(d["_id"], 123);
             Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
-
-
         }
     }
 }

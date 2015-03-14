@@ -44,9 +44,7 @@ namespace UnitTest
         public string[] MyStringArray { get; set; }
         public List<string> MyStringList { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
-
     }
-
 
     [TestClass]
     public class MapperTest
