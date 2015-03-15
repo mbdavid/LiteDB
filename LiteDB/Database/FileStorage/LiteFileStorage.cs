@@ -101,15 +101,13 @@ namespace LiteDB
         /// </summary>
         public void Download(string id, Stream stream)
         {
-            if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
             if (stream == null) throw new ArgumentNullException("stream");
 
-            using (var s = this.OpenRead(id))
-            {
-                if (s == null) throw new LiteException("File not found");
+            var file = this.FindById(id);
 
-                s.CopyTo(stream);
-            }
+            if (file == null) throw new LiteException("File not found");
+
+            file.CopyTo(stream);
         }
 
         /// <summary>
@@ -151,7 +149,7 @@ namespace LiteDB
 
             if (doc == null) return null;
 
-            return new LiteFileInfo(Database, doc);
+            return new LiteFileInfo(this.Database, doc);
         }
 
         /// <summary>

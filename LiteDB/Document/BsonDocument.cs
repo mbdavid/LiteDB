@@ -163,7 +163,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    return null;
+                    return BsonValue.Null;
                 }
             }
 
@@ -203,7 +203,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    return null;
+                    return this;
                 }
             }
 

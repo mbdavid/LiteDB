@@ -26,7 +26,7 @@ namespace LiteDB.Shell.Commands
             {
                 col.Insert(new BsonDocument(value.AsDocument));
 
-                return 1;
+                return BsonValue.Null;
             }
         }
     }

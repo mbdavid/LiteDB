@@ -101,7 +101,10 @@ namespace LiteDB
                 // checks if this proerty has [BsonIndex]
                 var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
-                // test if field name is OK (avoid to check in all instances) - do not test internal classes, link DbRef
+                // if is _id field, do not accept index definition
+                if (name == "_id") index = null;
+
+                // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
                 if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw new LiteException(string.Format("Field '{0}' has an invalid name.", name));
 
                 // create a property mapper

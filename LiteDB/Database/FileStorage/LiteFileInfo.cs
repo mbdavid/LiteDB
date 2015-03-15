@@ -141,5 +141,16 @@ namespace LiteDB
                 this.OpenRead().CopyTo(file);
             }
         }
+
+        /// <summary>
+        /// Copy file content to another stream
+        /// </summary>
+        public void CopyTo(Stream stream)
+        {
+            using (var reader = this.OpenRead())
+            {
+                reader.CopyTo(stream);
+            }
+        }
     }
 }
