@@ -27,12 +27,11 @@ namespace LiteDB
 
         private IEnumerable<IndexNode> AscOrder(IndexService indexer, CollectionIndex index)
         {
-            // normailize string (because are not using Find method)
-            _value.Normalize(index.Options);
+            var value = _value.Normalize(index.Options);
 
             foreach (var node in indexer.FindAll(index, Query.Ascending))
             {
-                var diff = node.Value.CompareTo(_value);
+                var diff = node.Value.CompareTo(value);
 
                 if (diff == 1 || (!_equals && diff == 0)) break;
 
@@ -45,14 +44,15 @@ namespace LiteDB
         private IEnumerable<IndexNode> DescOrder(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
-            var node = indexer.Find(index, _value, true, Query.Descending);
+            var value = _value.Normalize(index.Options);
+            var node = indexer.Find(index, value, true, Query.Descending);
 
             if (node == null) yield break;
 
             // move until next is last
             while (node != null)
             {
-                var diff = node.Value.CompareTo(_value);
+                var diff = node.Value.CompareTo(value);
 
                 if (diff == -1 || (_equals && diff == 0))
                 {

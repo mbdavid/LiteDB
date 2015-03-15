@@ -76,17 +76,15 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue value)
         {
-            return this.AddNode(index, value, this.FlipCoin());
+            // call AddNode normalizing value
+            return this.AddNode(index, value.Normalize(index.Options), this.FlipCoin());
         }
 
         /// <summary>
         /// Insert a new node index inside a index. Use skip list
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, BsonValue value, byte level)
+        private IndexNode AddNode(CollectionIndex index, BsonValue value, byte level)
         {
-            // if value is string, normalize
-            value.Normalize(index.Options);
-
             // creating a new index node 
             var node = new IndexNode(level)
             { 
@@ -276,9 +274,6 @@ namespace LiteDB
         /// </summary>
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
-            // normalize value using index options (case, accents, ...)
-            value.Normalize(index.Options);
-
             var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
             for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)

@@ -620,15 +620,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Normalize a string value using IndexOptions (ignore case, trim, empty->null, remove accents)
+        /// Normalize a string value using IndexOptions and returns a new BsonValue - if is not a string, returns some BsonValue instance
         /// </summary>
-        internal void Normalize(IndexOptions options)
+        internal BsonValue Normalize(IndexOptions options)
         {
             // if not string, do nothing
-            if (this.Type != BsonType.String) return;
+            if (this.Type != BsonType.String) return this;
 
             // removing whitespaces
-            var text = ((String)RawValue);
+            var text = (String)RawValue;
 
             if (options.TrimWhitespace) text = text.Trim();
             if (options.IgnoreCase) text = text.ToLower();
@@ -636,15 +636,12 @@ namespace LiteDB
             // convert emptystring to null
             if (text.Length == 0 && options.EmptyStringToNull)
             {
-                this.Type = BsonType.Null;
-                this.RawValue = null;
-                return;
+                return BsonValue.Null;
             }
 
             if (!options.RemoveAccents)
             {
-                this.RawValue = text;
-                return;
+                return text;
             }
 
             // removing accents
@@ -661,7 +658,7 @@ namespace LiteDB
                 }
             }
 
-            this.RawValue = sb.ToString();
+            return sb.ToString();
         }
 
         #endregion

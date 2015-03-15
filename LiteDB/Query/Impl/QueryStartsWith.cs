@@ -19,16 +19,17 @@ namespace LiteDB
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
-            var node = indexer.Find(index, _value, true, Query.Ascending);
-            var str = _value.AsString;
+            var value = _value.Normalize(index.Options);
+            var node = indexer.Find(index, value, true, Query.Ascending);
+            var str = value.AsString;
 
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var value = node.Value.AsString;
+                var valueString = node.Value.AsString;
 
                 // value will not be null because null occurs before string (bsontype sort order)
-                if (value.StartsWith(str, StringComparison.InvariantCultureIgnoreCase))
+                if (valueString.StartsWith(str, StringComparison.InvariantCultureIgnoreCase))
                 {
                     if (!node.DataBlock.IsEmpty)
                     {

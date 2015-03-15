@@ -20,19 +20,19 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
+            var start = _start.Normalize(index.Options);
+            var end = _end.Normalize(index.Options);
+
             // define order
-            var order = _start.CompareTo(_end) <= 0 ? Query.Ascending : Query.Descending;
+            var order = start.CompareTo(end) <= 0 ? Query.Ascending : Query.Descending;
 
             // find first indexNode
-            var node = indexer.Find(index, _start, true, order);
-
-            // if end value - start value was normilized on Find method
-            _end.Normalize(index.Options);
+            var node = indexer.Find(index, start, true, order);
 
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var diff = node.Value.CompareTo(_end);
+                var diff = node.Value.CompareTo(end);
 
                 if (diff == 0 || diff != order)
                 {
