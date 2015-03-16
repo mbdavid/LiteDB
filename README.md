@@ -79,3 +79,14 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 - Small web applications
 - One database **per account/user** data store
 - Few concurrency write users operations
+
+
+## Changelog
+
+Details changes for each release are documented in the [release notes](https://github.com/mbdavid/LiteDB/releases).
+
+## License
+
+[MIT](http://opensource.org/licenses/MIT)
+
+Copyright (c) 2015 - Maurício David

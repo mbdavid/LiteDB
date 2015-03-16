@@ -12,6 +12,13 @@ namespace UnitTest
     {
         public int Id { get; set; }
         public string Name { get; set; }
+
+        public UserDomain Domain { get; set; }
+    }
+
+    public class UserDomain
+    {
+        public string DomainName { get; set; }
     }
 
     [TestClass]
@@ -24,9 +31,9 @@ namespace UnitTest
 
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var c1 = new User { Id = 1, Name = "Mauricio" };
-                var c2 = new User { Id = 2, Name = "Malafaia" };
-                var c3 = new User { Id = 3, Name = "Chris" };
+                var c1 = new User { Id = 1, Name = "Mauricio", Domain = new UserDomain { DomainName = "Numeria" } };
+                var c2 = new User { Id = 2, Name = "Malafaia", Domain = new UserDomain { DomainName = "Numeria" } };
+                var c3 = new User { Id = 3, Name = "Chris", Domain = new UserDomain { DomainName = "Numeria" } };
                 var c4 = new User { Id = 4, Name = "Juliane" };
 
                 var col = db.GetCollection<User>("Customer");
@@ -34,6 +41,8 @@ namespace UnitTest
                 col.EnsureIndex(x => x.Name, true);
 
                 col.Insert(new User[] { c1, c2, c3, c4 });
+
+                Assert.AreEqual(col.Count(x => x.Domain.DomainName == "Numeria"), 3);
 
                 // == !=
                 Assert.AreEqual(col.Count(x => x.Id == 1), 1);

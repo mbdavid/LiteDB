@@ -109,7 +109,17 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value");
 
-            return new QueryStartsWith(field, value ?? BsonValue.Null);
+            return new QueryStartsWith(field, value);
+        }
+
+        /// <summary>
+        /// Returns all documents that contains value (CONTAINS)
+        /// </summary>
+        public static Query Contains(string field, string value)
+        {
+            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value");
+
+            return new QueryContains(field, value);
         }
 
         /// <summary>

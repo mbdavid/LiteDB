@@ -83,7 +83,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> db.<collection>.rename <newCollectionName>", "Rename a collection");
                 d.WriteHelp("> db.<collection>.min <field>", "Returns min/first value from collection using index field");
                 d.WriteHelp("> db.<collection>.max <field>", "Returns max/last value from collection using index field");
-                d.WriteHelp("<filter> = <field> [=|>|>=|<|<=|!=|like|between] <jsonValue>", "Filter query syntax");
+                d.WriteHelp("<filter> = <field> [=|>|>=|<|<=|!=|like|contains|in|between] <jsonValue>", "Filter query syntax");
                 d.WriteHelp("<filter> = (<filter> [and|or] <filter> [and|or] ...)", "Multi queries syntax");
                 d.WriteHelp("<jsonDoc> = {_id: ... , key: value, key1: value1 }", "Represent a json (extended version) for a BsonDocument. See special data types");
                 d.WriteHelp("Json Date", "{ mydate: { $date :\"2015-01-01T23:59:59Z\"} }");

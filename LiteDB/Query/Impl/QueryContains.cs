@@ -7,13 +7,13 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Not is an Index Scan operation
+    /// Contains query do not work with index, only full scan
     /// </summary>
-    internal class QueryNot : Query
+    internal class QueryContains : Query
     {
         private BsonValue _value;
 
-        public QueryNot(string field, BsonValue value)
+        public QueryContains(string field, BsonValue value)
             : base(field)
         {
             _value = value;
@@ -21,14 +21,18 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
-            var value = _value.Normalize(index.Options);
+            this.ExecuteMode = QueryExecuteMode.FullScan;
 
-            return indexer.FindAll(index, Query.Ascending).Where(x => x.Value.CompareTo(value) != 0);
+            return indexer.FindAll(index, Query.Ascending);
         }
 
         internal override bool ExecuteFullScan(BsonDocument doc)
         {
-            return doc.Get(this.Field).CompareTo(_value) != 0;
+            var val = doc.Get(this.Field);
+
+            if(!val.IsString) return false;
+
+            return val.AsString.Contains(_value.AsString);
         }
     }
 }

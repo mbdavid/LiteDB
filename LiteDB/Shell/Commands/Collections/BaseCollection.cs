@@ -78,7 +78,7 @@ namespace LiteDB.Shell.Commands
         private Query ReadOneQuery(StringScanner s)
         {
             var field = s.Scan(this.FieldPattern).Trim();
-            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between)");
+            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between|contains)");
             var value = JsonSerializer.Deserialize(s);
 
             switch (oper)
@@ -92,6 +92,7 @@ namespace LiteDB.Shell.Commands
                 case "like": return Query.StartsWith(field, value);
                 case "in": return Query.In(field, value.AsArray);
                 case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
+                case "contains": return Query.Contains(field, value);
                 default: throw new ApplicationException("Invalid query operator");
             }
         }

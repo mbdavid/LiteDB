@@ -127,6 +127,7 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
+            //TODO: implement full-scan count/exists
             return query.Run<T>(this).Count();
         }
 

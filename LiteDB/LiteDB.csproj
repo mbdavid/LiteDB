@@ -52,6 +52,7 @@
     <Compile Include="Database\Tools\GetDatabaseInfo.cs" />
     <Compile Include="Document\LazyBsonArray.cs" />
     <Compile Include="Document\ObjectId.cs" />
+    <Compile Include="Query\Impl\QueryContains.cs" />
     <Compile Include="Query\Impl\QueryGreater.cs" />
     <Compile Include="Query\Impl\QueryOr.cs" />
     <Compile Include="Query\Linq\QueryVisitor.cs" />

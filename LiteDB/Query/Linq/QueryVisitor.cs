@@ -72,6 +72,13 @@ namespace LiteDB
 
                     return Query.StartsWith(this.VisitMember(met.Object), value);
                 }
+                // Contains
+                else if (method == "Contains")
+                {
+                    var value = this.VisitValue(met.Arguments[0]);
+
+                    return Query.Contains(this.VisitMember(met.Object), value);
+                }
                 // Equals
                 else if (method == "Equals")
                 {
@@ -104,10 +111,20 @@ namespace LiteDB
 
         private string VisitMember(Expression expr)
         {
-            var member = expr as MemberExpression;
-            var propInfo = member.Member as PropertyInfo;
+            // quick and dirty solution to support x.Name.SubName
+            // http://stackoverflow.com/questions/671968/retrieving-property-name-from-lambda-expression
 
-            return this.GetBsonField(propInfo);
+            var asString = expr.ToString(); // gives you: "o => o.Whatever"
+            var firstDelim = asString.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
+
+            return firstDelim < 0
+                ? asString
+                : asString.Substring(firstDelim + 1).TrimEnd(')');
+
+            //var member = expr as MemberExpression;
+            //var propInfo = member.Member as PropertyInfo;
+            //
+            //return this.GetBsonField(propInfo);
         }
 
         private BsonValue VisitValue(Expression expr)

@@ -6,6 +6,9 @@ using System.Text;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// All is an Index Scan operation
+    /// </summary>
     internal class QueryAll : Query
     {
         private int _order;

@@ -47,7 +47,11 @@ namespace LiteDB
 
         internal override bool ExecuteFullScan(BsonDocument doc)
         {
-            return doc.Get(this.Field).AsString.StartsWith(_value.AsString);
+            var val = doc.Get(this.Field);
+
+            if(!val.IsString) return false;
+
+            return val.AsString.StartsWith(_value.AsString);
         }
     }
 }
