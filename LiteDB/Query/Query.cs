@@ -6,12 +6,20 @@ using System.Text;
 
 namespace LiteDB
 {
+    internal enum QueryExecuteMode { IndexSeek, FullScan }
+
     /// <summary>
-    /// Class helper to create query using indexes in database. All methods are statics
+    /// Class helper to create query using indexes in database. All methods are statics.
+    /// Queries can be executed in 3 ways: Index Seek (fast), Index Scan (good), Full Scan (slow)
     /// </summary>
     public abstract class Query
     {
         public string Field { get; private set; }
+
+        /// <summary>
+        /// Indicate that query need to run under full scan (there is not index)
+        /// </summary>
+        internal QueryExecuteMode ExecuteMode { get; set; }
 
         internal Query(string field)
         {
@@ -57,33 +65,33 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that value are less than value (&lt;)
         /// </summary>
-        public static Query LT(string field, BsonValue value, int order = Ascending)
+        public static Query LT(string field, BsonValue value)
         {
-            return new QueryLess(field, value ?? BsonValue.Null, false, order);
+            return new QueryLess(field, value ?? BsonValue.Null, false);
         }
 
         /// <summary>
         /// Returns all documents that value are less than or equals value (&lt;=)
         /// </summary>
-        public static Query LTE(string field, BsonValue value, int order = Ascending)
+        public static Query LTE(string field, BsonValue value)
         {
-            return new QueryLess(field, value ?? BsonValue.Null, true, order);
+            return new QueryLess(field, value ?? BsonValue.Null, true);
         }
 
         /// <summary>
         /// Returns all document that value are greater than value (&gt;)
         /// </summary>
-        public static Query GT(string field, BsonValue value, int order = Ascending)
+        public static Query GT(string field, BsonValue value)
         {
-            return new QueryGreater(field, value ?? BsonValue.Null, false, order);
+            return new QueryGreater(field, value ?? BsonValue.Null, false);
         }
 
         /// <summary>
         /// Returns all documents that value are greater than or equals value (&gt;=)
         /// </summary>
-        public static Query GTE(string field, BsonValue value, int order = Ascending)
+        public static Query GTE(string field, BsonValue value)
         {
-            return new QueryGreater(field, value ?? BsonValue.Null, true, order);
+            return new QueryGreater(field, value ?? BsonValue.Null, true);
         }
 
         /// <summary>
@@ -107,9 +115,9 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that are not equals to value
         /// </summary>
-        public static Query Not(string field, BsonValue value, int order = Ascending)
+        public static Query Not(string field, BsonValue value)
         {
-            return new QueryNot(field, value ?? BsonValue.Null, order);
+            return new QueryNot(field, value ?? BsonValue.Null);
         }
 
         /// <summary>
@@ -133,22 +141,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns the document with min index value
-        /// </summary>
-        public static Query Min(string field)
-        {
-            return new QueryMin(field);
-        }
-
-        /// <summary>
-        /// Returns the document with max index value
-        /// </summary>
-        public static Query Max(string field)
-        {
-            return new QueryMax(field);
-        }
-
-        /// <summary>
         /// Returns document that exists in BOTH queries results (Intersect).
         /// </summary>
         public static Query And(Query left, Query right)
@@ -169,9 +161,15 @@ namespace LiteDB
         #region Execute Query
 
         /// <summary>
-        /// Abstract method that must be implement for query objects
+        /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
         /// </summary>
-        internal abstract IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index);
+        internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
+
+        /// <summary>
+        /// Abstract method that must implement full scan - will be called for each document and need
+        /// returns true if condition was satisfied
+        /// </summary>
+        internal abstract bool ExecuteFullScan(BsonDocument doc);
 
         /// <summary>
         /// Find witch index will be used and run Execute method
@@ -202,10 +200,20 @@ namespace LiteDB
                 }
             }
 
-            if (index == null) throw new LiteException(string.Format("Index '{0}.{1}' not found. Use EnsureIndex to create a new index.", col.CollectionName, this.Field));
+            if (index == null)
+            {
+                this.ExecuteMode = QueryExecuteMode.FullScan;
 
-            // execute query to get all IndexNodes
-            return this.Execute(collection.Database.Indexer, index);
+                // if there is no index, returns all index nodes - will be used Full Scan
+                return collection.Database.Indexer.FindAll(col.PK, Query.Ascending);
+            }
+            else
+            {
+                this.ExecuteMode = QueryExecuteMode.IndexSeek;
+
+                // execute query to get all IndexNodes
+                return this.ExecuteIndex(collection.Database.Indexer, index);
+            }
         }
 
         #endregion

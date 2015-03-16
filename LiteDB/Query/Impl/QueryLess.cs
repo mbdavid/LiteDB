@@ -10,22 +10,15 @@ namespace LiteDB
     {
         private BsonValue _value;
         private bool _equals;
-        private int _order;
 
-        public QueryLess(string field, BsonValue value, bool equals, int order)
+        public QueryLess(string field, BsonValue value, bool equals)
             : base(field)
         {
             _value = value;
             _equals = equals;
-            _order = order;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
-        {
-            return _order == Query.Ascending ? this.AscOrder(indexer, index) : this.DescOrder(indexer, index);
-        }
-
-        private IEnumerable<IndexNode> AscOrder(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             var value = _value.Normalize(index.Options);
 
@@ -41,28 +34,9 @@ namespace LiteDB
             }
         }
 
-        private IEnumerable<IndexNode> DescOrder(IndexService indexer, CollectionIndex index)
+        internal override bool ExecuteFullScan(BsonDocument doc)
         {
-            // find first indexNode
-            var value = _value.Normalize(index.Options);
-            var node = indexer.Find(index, value, true, Query.Descending);
-
-            if (node == null) yield break;
-
-            // move until next is last
-            while (node != null)
-            {
-                var diff = node.Value.CompareTo(value);
-
-                if (diff == -1 || (_equals && diff == 0))
-                {
-                    if (node.IsHeadTail) yield break;
-
-                    yield return node;
-                }
-
-                node = indexer.GetNode(node.Prev[0]);
-            }
+            return doc.Get(this.Field).CompareTo(_value) <= (_equals ? 0 : -1);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace LiteDB.Shell.Commands
         public KeyValuePair<int, int> ReadSkipLimit(StringScanner s)
         {
             var skip = 0;
-            var limit = 0;
+            var limit = int.MaxValue;
 
             if (s.Match(@"\s*skip\s+\d+"))
             {

@@ -18,7 +18,7 @@ namespace LiteDB
             _end = end;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             var start = _start.Normalize(index.Options);
             var end = _end.Normalize(index.Options);
@@ -45,6 +45,13 @@ namespace LiteDB
 
                 node = indexer.GetNode(node.NextPrev(0, order));
             }
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            var val = doc.Get(this.Field);
+
+            return val.CompareTo(_start) >= 0 && val.CompareTo(_end) <= 0;
         }
     }
 }

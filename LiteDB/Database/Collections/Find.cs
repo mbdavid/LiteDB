@@ -14,22 +14,37 @@ namespace LiteDB
         /// <summary>
         /// Find documents inside a collection using Query object. Must have indexes in query expression 
         /// </summary>
-        public IEnumerable<T> Find(Query query, int skip = 0, int limit = 0)
+        public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
         {
             if (query == null) throw new ArgumentNullException("query");
 
             var nodes = query.Run<T>(this);
 
-            // skip/limit results direct in index nodes - before deserialize objects
-            if (skip > 0) nodes = nodes.Skip(skip);
+            // if query run on index, lets skip/take with linq-to-object
+            if (query.ExecuteMode == QueryExecuteMode.IndexSeek)
+            {
+                if (skip > 0) nodes = nodes.Skip(skip);
 
-            if (limit > 0) nodes = nodes.Take(limit);
+                if (limit != int.MaxValue) nodes = nodes.Take(limit);
+            }
 
             foreach (var node in nodes)
             {
                 var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
                 var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                // if need run in full scan, execute full scan and test return
+                if (query.ExecuteMode == QueryExecuteMode.FullScan)
+                {
+                    // execute query condition here - if false, do not add on final results
+                    if(query.ExecuteFullScan(doc) == false) continue;
+
+                    // implement skip/limit before on full search - no linq
+                    if (--skip >= 0) continue;
+
+                    if (--limit <= -1) yield break;
+                }
 
                 // get object from BsonDocument
                 var obj = this.Database.Mapper.ToObject<T>(doc);
@@ -152,9 +167,17 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            var node = Query.Min(field).Run(this).SingleOrDefault();
+            var col = this.GetCollectionPage(false);
 
-            return node == null ? BsonValue.MinValue : node.Value;
+            if(col == null) return BsonValue.MaxValue;
+
+            var index = col.GetIndex(field);
+            var head = this.Database.Indexer.GetNode(index.HeadNode);
+            var next = this.Database.Indexer.GetNode(head.Next[0]);
+
+            if (next.IsHeadTail) return BsonValue.MaxValue;
+
+            return next.Value;
         }
 
         /// <summary>
@@ -182,9 +205,17 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            var node = Query.Max(field).Run(this).SingleOrDefault();
+            var col = this.GetCollectionPage(false);
 
-            return node == null ? BsonValue.MaxValue : node.Value;
+            if (col == null) return BsonValue.MinValue;
+
+            var index = col.GetIndex(field);
+            var tail = this.Database.Indexer.GetNode(index.TailNode);
+            var prev = this.Database.Indexer.GetNode(tail.Prev[0]);
+
+            if (prev.IsHeadTail) return BsonValue.MinValue;
+
+            return prev.Value;
         }
 
         /// <summary>

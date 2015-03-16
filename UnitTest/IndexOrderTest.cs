@@ -27,12 +27,12 @@ namespace UnitTest
                 col.EnsureIndex("text");
 
                 var asc = string.Join("",
-                    col.Find(Query.GTE("text", "A", Query.Ascending))
+                    col.Find(Query.All("text", Query.Ascending))
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
                 var desc = string.Join("",
-                    col.Find(Query.GTE("text", "A", Query.Descending))
+                    col.Find(Query.All("text", Query.Descending))
                     .Select(x => x["text"].AsString)
                     .ToArray());
 

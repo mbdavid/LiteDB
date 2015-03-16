@@ -6,23 +6,27 @@ using System.Text;
 
 namespace LiteDB
 {
+    // "Not" is a Index Scan operation
     internal class QueryNot : Query
     {
         private BsonValue _value;
-        private int _order;
 
-        public QueryNot(string field, BsonValue value, int order)
+        public QueryNot(string field, BsonValue value)
             : base(field)
         {
             _value = value;
-            _order = order;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             var value = _value.Normalize(index.Options);
 
-            return indexer.FindAll(index, _order).Where(x => x.Value.CompareTo(value) != 0);
+            return indexer.FindAll(index, Query.Ascending).Where(x => x.Value.CompareTo(value) != 0);
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return doc.Get(this.Field).CompareTo(_value) != 0;
         }
     }
 }

@@ -25,18 +25,9 @@ namespace LiteDB.Shell.Commands
             {
                 var id = this.ReadId(s);
 
-                if (id.EndsWith("*") || id.EndsWith("%"))
-                {
-                    var files = db.FileStorage.Find(id.Substring(0, id.Length - 1)).Select(x => x.AsDocument);
+                var files = db.FileStorage.Find(id).Select(x => x.AsDocument);
 
-                    return new BsonArray(files);
-                }
-                else
-                {
-                    var file = db.FileStorage.FindById(id);
-
-                    return file != null ? file.AsDocument : BsonValue.Null;
-                }
+                return new BsonArray(files);
             }
         }
     }

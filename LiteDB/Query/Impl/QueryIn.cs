@@ -16,15 +16,29 @@ namespace LiteDB
             _values = values;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             foreach (var value in _values.Distinct())
             {
-                foreach (var node in Query.EQ(this.Field, value).Execute(indexer, index))
+                foreach (var node in Query.EQ(this.Field, value).ExecuteIndex(indexer, index))
                 {
                     yield return node;
                 }
             }
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            var val = doc.Get(this.Field);
+
+            foreach (var value in _values.Distinct())
+            {
+                var diff = val.CompareTo(value);
+
+                if (diff == 0) return true;
+            }
+
+            return false;
         }
     }
 }

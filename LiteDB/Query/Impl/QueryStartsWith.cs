@@ -16,7 +16,7 @@ namespace LiteDB
             _value = value;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
             var value = _value.Normalize(index.Options);
@@ -29,7 +29,7 @@ namespace LiteDB
                 var valueString = node.Value.AsString;
 
                 // value will not be null because null occurs before string (bsontype sort order)
-                if (valueString.StartsWith(str, StringComparison.InvariantCultureIgnoreCase))
+                if (valueString.StartsWith(str))
                 {
                     if (!node.DataBlock.IsEmpty)
                     {
@@ -43,6 +43,11 @@ namespace LiteDB
 
                 node = indexer.GetNode(node.Next[0]);
             }
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return doc.Get(this.Field).AsString.StartsWith(_value.AsString);
         }
     }
 }

@@ -16,9 +16,14 @@ namespace LiteDB
             _order = order;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             return indexer.FindAll(index, _order);
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return true;
         }
     }
 }
