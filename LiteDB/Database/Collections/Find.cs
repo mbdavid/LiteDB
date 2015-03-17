@@ -127,8 +127,24 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            //TODO: implement full-scan count/exists
-            return query.Run<T>(this).Count();
+            var nodes = query.Run<T>(this);
+
+            // if query execute with index, just returns nodes
+            if (query.ExecuteMode == QueryExecuteMode.IndexSeek) return nodes.Count();
+
+            var count = 0;
+
+            // execute full scan
+            foreach (var node in nodes)
+            {
+                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
+
+                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                if (query.ExecuteFullScan(doc)) count++;
+            }
+
+            return count;
         }
 
         /// <summary>
@@ -146,7 +162,22 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            return query.Run<T>(this).FirstOrDefault() != null;
+            var nodes = query.Run<T>(this);
+
+            // if query execute with index, just returns nodes
+            if (query.ExecuteMode == QueryExecuteMode.IndexSeek) return nodes.FirstOrDefault() != null;
+
+            // execute full scan
+            foreach (var node in nodes)
+            {
+                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
+
+                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                if (query.ExecuteFullScan(doc)) return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -42,25 +42,27 @@ namespace UnitTest
 
                 col.Insert(new User[] { c1, c2, c3, c4 });
 
-                Assert.AreEqual(col.Count(x => x.Domain.DomainName == "Numeria"), 3);
+                // sub-class
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
 
                 // == !=
-                Assert.AreEqual(col.Count(x => x.Id == 1), 1);
-                Assert.AreEqual(col.Count(x => x.Id != 1), 3);
+                Assert.AreEqual(1, col.Count(x => x.Id == 1));
+                Assert.AreEqual(3, col.Count(x => x.Id != 1));
 
                 // methods
-                Assert.AreEqual(col.Count(x => x.Name.StartsWith("mal")), 1);
-                Assert.AreEqual(col.Count(x => x.Name.Equals("Mauricio")), 1);
+                Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
+                Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
+                Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
 
                 // > >= < <=
-                Assert.AreEqual(col.Count(x => x.Id > 3), 1);
-                Assert.AreEqual(col.Count(x => x.Id >= 4), 1);
-                Assert.AreEqual(col.Count(x => x.Id < 2), 1);
-                Assert.AreEqual(col.Count(x => x.Id <= 1), 1);
+                Assert.AreEqual(1, col.Count(x => x.Id > 3));
+                Assert.AreEqual(1, col.Count(x => x.Id >= 4));
+                Assert.AreEqual(1, col.Count(x => x.Id < 2));
+                Assert.AreEqual(1, col.Count(x => x.Id <= 1));
 
                 // and/or
-                Assert.AreEqual(col.Count(x => x.Id > 0 && x.Name == "MAURICIO"), 1);
-                Assert.AreEqual(col.Count(x => x.Name == "malafaia" || x.Name == "MAURICIO"), 2);
+                Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "MAURICIO"));
+                Assert.AreEqual(2, col.Count(x => x.Name == "malafaia" || x.Name == "MAURICIO"));
             }
         }
     }
