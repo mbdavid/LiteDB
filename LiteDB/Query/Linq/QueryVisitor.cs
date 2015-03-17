@@ -114,17 +114,12 @@ namespace LiteDB
             // quick and dirty solution to support x.Name.SubName
             // http://stackoverflow.com/questions/671968/retrieving-property-name-from-lambda-expression
 
-            var asString = expr.ToString(); // gives you: "o => o.Whatever"
-            var firstDelim = asString.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
+            var str = expr.ToString(); // gives you: "o => o.Whatever"
+            var firstDelim = str.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
+            
+            var property = firstDelim < 0 ? str : str.Substring(firstDelim + 1).TrimEnd(')');
 
-            return firstDelim < 0
-                ? asString
-                : asString.Substring(firstDelim + 1).TrimEnd(')');
-
-            //var member = expr as MemberExpression;
-            //var propInfo = member.Member as PropertyInfo;
-            //
-            //return this.GetBsonField(propInfo);
+            return this.GetBsonField(property);
         }
 
         private BsonValue VisitValue(Expression expr)
@@ -157,30 +152,51 @@ namespace LiteDB
                 throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", expr.ToString()));
             }
 
-            return this.GetBsonField(member.Member as PropertyInfo);
+            return this.GetBsonField(((PropertyInfo)member.Member).Name);
         }
 
         /// <summary>
         /// Get a bson string field based on class PropertyInfo using BsonMapper class
+        /// Support Name1.Name2 dotted notation
         /// </summary>
-        private string GetBsonField(PropertyInfo propInfo)
+        private string GetBsonField(string property)
         {
-            if (propInfo == null)
+            var parts = property.Split('.');
+            Type propType;
+
+            if (parts.Length == 1) return this.GetTypeField(_type, property, out propType);
+
+            var fields = new string[parts.Length];
+            var type = _type;
+
+            for (var i = 0; i < fields.Length; i++)
             {
-                throw new ArgumentException("Expression is not a property.");
+                fields[i] = this.GetTypeField(type, parts[i], out propType);
+
+                type = propType;
             }
 
+            return string.Join(".", fields);
+        }
+
+        /// <summary>
+        /// Get a field name passing mapper type and returns property type
+        /// </summary>
+        private string GetTypeField(Type type, string property, out Type propertyType)
+        {
             // lets get mapping bettwen .NET class and BsonDocument
-            var map = _mapper.GetPropertyMapper(_type);
+            var map = _mapper.GetPropertyMapper(type);
             PropertyMapper prop;
 
-            if (map.TryGetValue(propInfo.Name, out prop))
+            if (map.TryGetValue(property, out prop))
             {
+                propertyType = prop.PropertyType;
+
                 return prop.FieldName;
             }
             else
             {
-                throw new LiteException(string.Format("Property '{0}' was not mapped into BsonDocument", propInfo.Name));
+                throw new LiteException(string.Format("Property '{0}' was not mapped into BsonDocument", property));
             }
         }
     }
