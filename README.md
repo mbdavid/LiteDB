@@ -7,11 +7,11 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - 100% C# code for .NET 4 in a single DLL (less then 200kb)
 - Transaction control - ACID
 - Recovery in writing failure (journal mode)
-- Store POCO classes or BsonDocument
+- Store POCO classes or `BsonDocument`
 - Store files and stream data (like GridFS in MongoDB)
 - Single data file storage (like SQLite)
 - Index document fields for fast search (up to 16 indexes per collection)
-- Inital LINQ support for queries
+- LINQ support for queries
 - Shell command line - [try this online version](http://litedb.azurewebsites.net/)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
@@ -22,7 +22,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 ## Documentation
 
-Visit [Wiki](https://github.com/mbdavid/LiteDB/wiki) for full LiteDB Documentation
+Visit [Wiki for full documentation](https://github.com/mbdavid/LiteDB/wiki)
 
 ## Download
 
@@ -56,7 +56,7 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
         IsActive = true
     };
 	
-	// Insert new customer document (Id will be auto-increment generate)
+	// Insert new customer document (Id will be auto-incremented)
 	col.Insert(customer);
 	
 	// Update a document inside a collection
