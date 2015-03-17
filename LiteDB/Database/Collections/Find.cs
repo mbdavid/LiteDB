@@ -61,9 +61,9 @@ namespace LiteDB
         /// <summary>
         /// Find documents inside a collection using Linq expression. Must have indexes in linq expression 
         /// </summary>
-        public IEnumerable<T> Find(Expression<Func<T, bool>> predicate)
+        public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue)
         {
-            return this.Find(_visitor.Visit(predicate));
+            return this.Find(_visitor.Visit(predicate), skip, limit);
         }
 
         #endregion
