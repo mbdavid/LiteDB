@@ -68,7 +68,7 @@ namespace LiteDB
 
             this.Data = new DataService(this.Disk, this.Cache, this.Pager);
 
-            this.Collections = new CollectionService(this.Pager, this.Indexer, this.Data);
+            this.Collections = new CollectionService(this.Cache, this.Pager, this.Indexer, this.Data);
 
             this.UpdateDatabaseVersion();
         }

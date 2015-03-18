@@ -38,12 +38,18 @@ namespace LiteDB
         /// </summary>
         public int UserVersion { get; set; }
 
+        /// <summary>
+        /// Get/Set the first collection pageID
+        /// </summary>
+        public uint FirstCollectionPageID { get; set; }
+
         public HeaderPage()
             : base()
         {
             this.PageID = 0;
             this.PageType = LiteDB.PageType.Header;
             this.FreeEmptyPageID = uint.MaxValue;
+            this.FirstCollectionPageID = uint.MaxValue;
             this.ChangeID = 0;
             this.LastPageID = 0;
             this.UserVersion = 0;
@@ -74,6 +80,7 @@ namespace LiteDB
 
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
+            this.FirstCollectionPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.UserVersion = reader.ReadInt32();
         }
@@ -84,6 +91,7 @@ namespace LiteDB
             writer.Write(FILE_VERSION);
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
+            writer.Write(this.FirstCollectionPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.UserVersion);
         }

@@ -17,6 +17,8 @@ namespace LiteDB.Shell.Commands
         {
             var cols = db.GetCollectionNames().OrderBy(x => x).ToArray();
 
+            if (cols.Length == 0) return BsonValue.Null;
+
             return string.Join(Environment.NewLine, cols);
         }
     }

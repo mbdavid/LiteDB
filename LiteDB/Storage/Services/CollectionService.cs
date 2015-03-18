@@ -9,12 +9,14 @@ namespace LiteDB
 {
     internal class CollectionService
     {
+        private CacheService _cache;
         private PageService _pager;
         private IndexService _indexer;
         private DataService _data;
 
-        public CollectionService(PageService pager, IndexService indexer, DataService data)
+        public CollectionService(CacheService cache, PageService pager, IndexService indexer, DataService data)
         {
+            _cache = cache;
             _pager = pager;
             _indexer = indexer;
             _data = data;
@@ -27,7 +29,9 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
 
-            var pages = _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
+            if (_cache.Header.FirstCollectionPageID == uint.MaxValue) return null;
+
+            var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
             var col = pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
@@ -42,19 +46,33 @@ namespace LiteDB
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
             if(!CollectionPage.NamePattern.IsMatch(name)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
 
-            var pages = _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
+            CollectionPage col;
 
-            if (pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase)) != null)
+            // first page
+            if (_cache.Header.FirstCollectionPageID == uint.MaxValue)
             {
-                throw new ArgumentException("Collection name already exists (names are case unsensitive)");
-            }
+                col = _pager.NewPage<CollectionPage>();
 
-            if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
+                _cache.Header.FirstCollectionPageID = col.PageID;
+
+                _cache.Header.IsDirty = true;
+            }
+            else
             {
-                throw new LiteException("This database exceded max collections: " + CollectionPage.MAX_COLLECTIONS);
-            }
+                var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
-            var col = _pager.NewPage<CollectionPage>(pages.Last());
+                if (pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase)) != null)
+                {
+                    throw new ArgumentException("Collection name already exists (names are case unsensitive)");
+                }
+
+                if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
+                {
+                    throw new LiteException("This database exceded max collections: " + CollectionPage.MAX_COLLECTIONS);
+                }
+
+                col = _pager.NewPage<CollectionPage>(pages.Last());
+            }
 
             col.CollectionName = name;
             col.IsDirty = true;
@@ -73,7 +91,14 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            return _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
+            if (_cache.Header.FirstCollectionPageID == uint.MaxValue)
+            {
+                return new List<CollectionPage>();
+            }
+            else
+            {
+                return _pager.GetSeqPages<CollectionPage>(1);
+            }
         }
 
         /// <summary>
@@ -130,6 +155,13 @@ namespace LiteDB
                 var next = _pager.GetPage<BasePage>(col.NextPageID);
                 next.PrevPageID = col.PrevPageID;
                 next.IsDirty = true;
+            }
+
+            // delete first collection page
+            if (col.PageID == _cache.Header.FirstCollectionPageID)
+            {
+                _cache.Header.FirstCollectionPageID = col.NextPageID;
+                _cache.Header.IsDirty = true;
             }
 
             _pager.DeletePage(col.PageID, false);

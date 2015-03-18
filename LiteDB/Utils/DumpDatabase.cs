@@ -156,11 +156,12 @@ namespace LiteDB
 
         public static void Dump(this HeaderPage page, StringBuilder sb)
         {
-            sb.AppendFormat("Change: {0}, Version: {1}, FreeEmptyPageID: {2}, LastPageID: {3}",
+            sb.AppendFormat("Change: {0}, Version: {1}, FreeEmptyPageID: {2}, LastPageID: {3}, ColID: {4}",
                 page.ChangeID,
                 page.UserVersion,
                 page.FreeEmptyPageID.Dump(),
-                page.LastPageID.Dump());
+                page.LastPageID.Dump(),
+                page.FirstCollectionPageID);
         }
 
         public static void Dump(this IndexPage page, StringBuilder sb)
