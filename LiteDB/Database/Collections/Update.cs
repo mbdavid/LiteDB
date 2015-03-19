@@ -20,8 +20,27 @@ namespace LiteDB
 
             var id = doc["_id"];
 
-            if (id.IsNull) throw new LiteException("Document Id can't be null");
+            if (id.IsNull) throw new LiteException("Document _id can't be null");
 
+            return this.UpdateDoc(id, doc);
+        }
+
+        /// <summary>
+        /// Update a document in this collection. Returns false if not found document in collection
+        /// </summary>
+        public virtual bool Update(BsonValue id, T document)
+        {
+            if (document == null) throw new ArgumentNullException("document");
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+
+            // get BsonDocument from object
+            var doc = this.Database.Mapper.ToDocument(document);
+
+            return this.UpdateDoc(id, doc);
+        }
+
+        private bool UpdateDoc(BsonValue id, BsonDocument doc)
+        {
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
 
