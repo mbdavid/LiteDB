@@ -9,9 +9,9 @@ namespace LiteDB
     public partial class LiteCollection<T>
     {
         /// <summary>
-        /// Insert a new document to this collection. Document Id must be a new value in collection
+        /// Insert a new document to this collection. Document Id must be a new value in collection - Returns document Id
         /// </summary>
-        public virtual void Insert(T document)
+        public virtual BsonValue Insert(T document)
         {
             if (document == null) throw new ArgumentNullException("document");
 
@@ -64,6 +64,8 @@ namespace LiteDB
                 }
 
                 this.Database.Transaction.Commit();
+
+                return id;
             }
             catch
             {
