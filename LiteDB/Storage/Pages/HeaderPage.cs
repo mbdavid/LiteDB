@@ -39,9 +39,9 @@ namespace LiteDB
         public int UserVersion { get; set; }
 
         /// <summary>
-        /// Get/Set the first collection pageID
+        /// Get/Set the first collection pageID (used as Field to be passed as reference)
         /// </summary>
-        public uint FirstCollectionPageID { get; set; }
+        public uint FirstCollectionPageID;
 
         public HeaderPage()
             : base()

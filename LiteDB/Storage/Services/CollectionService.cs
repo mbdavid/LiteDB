@@ -46,33 +46,18 @@ namespace LiteDB
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
             if(!CollectionPage.NamePattern.IsMatch(name)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
 
-            CollectionPage col;
+            // test collection limit
+            var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
-            // first page
-            if (_cache.Header.FirstCollectionPageID == uint.MaxValue)
+            if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
             {
-                col = _pager.NewPage<CollectionPage>();
-
-                _cache.Header.FirstCollectionPageID = col.PageID;
-
-                _cache.Header.IsDirty = true;
+                throw new LiteException("This database exceded max collections: " + CollectionPage.MAX_COLLECTIONS);
             }
-            else
-            {
-                var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
-                if (pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase)) != null)
-                {
-                    throw new ArgumentException("Collection name already exists (names are case unsensitive)");
-                }
+            var col = _pager.NewPage<CollectionPage>();
 
-                if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
-                {
-                    throw new LiteException("This database exceded max collections: " + CollectionPage.MAX_COLLECTIONS);
-                }
-
-                col = _pager.NewPage<CollectionPage>(pages.Last());
-            }
+            // add page in collection list
+            _pager.AddOrRemoveToFreeList(true, col, _cache.Header, ref _cache.Header.FirstCollectionPageID);
 
             col.CollectionName = name;
             col.IsDirty = true;
@@ -91,14 +76,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            if (_cache.Header.FirstCollectionPageID == uint.MaxValue)
-            {
-                return new List<CollectionPage>();
-            }
-            else
-            {
-                return _pager.GetSeqPages<CollectionPage>(1);
-            }
+            return _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
         }
 
         /// <summary>
@@ -142,27 +120,8 @@ namespace LiteDB
                 _pager.DeletePage(pageID);
             }
 
-            // ajust collection page pointers
-            if (col.PrevPageID != uint.MaxValue)
-            {
-                var prev = _pager.GetPage<BasePage>(col.PrevPageID);
-                prev.NextPageID = col.NextPageID;
-                prev.IsDirty = true;
-            }
-
-            if (col.NextPageID != uint.MaxValue)
-            {
-                var next = _pager.GetPage<BasePage>(col.NextPageID);
-                next.PrevPageID = col.PrevPageID;
-                next.IsDirty = true;
-            }
-
-            // delete first collection page
-            if (col.PageID == _cache.Header.FirstCollectionPageID)
-            {
-                _cache.Header.FirstCollectionPageID = col.NextPageID;
-                _cache.Header.IsDirty = true;
-            }
+            // remove page from collection list
+            _pager.AddOrRemoveToFreeList(false, col, _cache.Header, ref _cache.Header.FirstCollectionPageID);
 
             _pager.DeletePage(col.PageID, false);
         }

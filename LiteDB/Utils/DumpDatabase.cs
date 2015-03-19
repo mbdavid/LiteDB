@@ -161,7 +161,7 @@ namespace LiteDB
                 page.UserVersion,
                 page.FreeEmptyPageID.Dump(),
                 page.LastPageID.Dump(),
-                page.FirstCollectionPageID);
+                page.FirstCollectionPageID.Dump());
         }
 
         public static void Dump(this IndexPage page, StringBuilder sb)
