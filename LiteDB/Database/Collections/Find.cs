@@ -201,13 +201,13 @@ namespace LiteDB
 
             var col = this.GetCollectionPage(false);
 
-            if(col == null) return BsonValue.MaxValue;
+            if(col == null) return BsonValue.MinValue;
 
             var index = col.GetIndex(field);
             var head = this.Database.Indexer.GetNode(index.HeadNode);
             var next = this.Database.Indexer.GetNode(head.Next[0]);
 
-            if (next.IsHeadTail) return BsonValue.MaxValue;
+            if (next.IsHeadTail) return BsonValue.MinValue;
 
             return next.Value;
         }
@@ -239,13 +239,13 @@ namespace LiteDB
 
             var col = this.GetCollectionPage(false);
 
-            if (col == null) return BsonValue.MinValue;
+            if (col == null) return BsonValue.MaxValue;
 
             var index = col.GetIndex(field);
             var tail = this.Database.Indexer.GetNode(index.TailNode);
             var prev = this.Database.Indexer.GetNode(tail.Prev[0]);
 
-            if (prev.IsHeadTail) return BsonValue.MinValue;
+            if (prev.IsHeadTail) return BsonValue.MaxValue;
 
             return prev.Value;
         }
