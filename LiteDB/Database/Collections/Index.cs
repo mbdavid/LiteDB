@@ -148,7 +148,7 @@ namespace LiteDB
                 yield return new BsonDocument()
                     .Add("slot", index.Slot)
                     .Add("field", index.Field)
-                    .Add("options", this.Database.Mapper.Create(index.Options));
+                    .Add("options", this.Database.Mapper.Serialize(index.Options));
             }
         }
 

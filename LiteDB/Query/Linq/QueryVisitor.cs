@@ -129,7 +129,7 @@ namespace LiteDB
             {
                 var value = (expr as ConstantExpression).Value;
 
-                return _mapper.Create(value);
+                return _mapper.Serialize(value);
             }
 
             // execute expression
@@ -137,7 +137,7 @@ namespace LiteDB
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
             var getter = getterLambda.Compile();
 
-            return _mapper.Create(getter());
+            return _mapper.Serialize(getter());
         }
 
         /// <summary>

@@ -28,6 +28,18 @@ namespace LiteDB
             return (T)this.Deserialize(type, doc);
         }
 
+        /// <summary>
+        /// Deserialize an BsonValue to .NET object typed in T
+        /// </summary>
+        public T Deserialize<T>(BsonValue value)
+        {
+            if (value == null) return default(T);
+
+            var result = this.Deserialize(typeof(T), value);
+
+            return (T)result;
+        }
+
         #region Basic direct .NET convert types
 
         // direct bson types
