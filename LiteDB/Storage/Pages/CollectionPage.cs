@@ -14,7 +14,7 @@ namespace LiteDB
     {
         public const int MAX_COLLECTIONS = 256;
 
-        public static Regex NamePattern = new Regex(@"^\w{1,30}$");
+        public static Regex NamePattern = new Regex(@"^[\w-]{1,30}$");
 
         /// <summary>
         /// Name of collection

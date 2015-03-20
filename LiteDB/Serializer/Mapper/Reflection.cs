@@ -10,7 +10,7 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Class that converts POCO class to/from BsonDocument
+    /// Helper class to get entity properties and map as BsonValue
     /// </summary>
     internal class Reflection
     {

@@ -13,7 +13,7 @@ namespace LiteDB
     public partial class BsonMapper
     {
         /// <summary>
-        /// Deserialize a BsonDocument to POCO class
+        /// Deserialize a BsonDocument to entity class
         /// </summary>
         public T ToObject<T>(BsonDocument doc)
             where T : new()

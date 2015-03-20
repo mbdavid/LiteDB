@@ -13,16 +13,16 @@ namespace LiteDB
     public partial class BsonMapper
     {
         /// <summary>
-        /// Serialize a POCO class to BsonDocument
+        /// Serialize a entity class to BsonDocument
         /// </summary>
-        public BsonDocument ToDocument(object poco)
+        public BsonDocument ToDocument(object entity)
         {
-            if (poco == null) throw new ArgumentNullException("obj");
+            if (entity == null) throw new ArgumentNullException("entity");
 
             // if object is BsonDocument, just return them
-            if (poco is BsonDocument) return (BsonDocument)poco;
+            if (entity is BsonDocument) return (BsonDocument)entity;
 
-            return this.Serialize(poco, 0).AsDocument;
+            return this.Serialize(entity, 0).AsDocument;
         }
 
         /// <summary>

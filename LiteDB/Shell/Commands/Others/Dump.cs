@@ -25,7 +25,7 @@ namespace LiteDB.Shell.Commands
             }
             else
             {
-                var col = s.Scan(@"\w+");
+                var col = s.Scan(@"[\w-]+");
                 var field = s.Scan(@"\s+\w+").Trim();
 
                 result = DumpDatabase.Index(db, col, field);

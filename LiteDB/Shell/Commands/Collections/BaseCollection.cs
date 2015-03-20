@@ -15,12 +15,12 @@ namespace LiteDB.Shell.Commands
         /// </summary>
         public LiteCollection<BsonDocument> ReadCollection(LiteDatabase db, StringScanner s)
         {
-            return db.GetCollection(s.Scan(@"db\.(\w+)\.\w+\s*", 1));
+            return db.GetCollection(s.Scan(@"db\.([\w-]+)\.\w+\s*", 1));
         }
 
         public bool IsCollectionCommand(StringScanner s, string command)
         {
-            return s.Match(@"db\.\w+\." + command);
+            return s.Match(@"db\.[\w-]+\." + command);
         }
 
         public KeyValuePair<int, int> ReadSkipLimit(StringScanner s)

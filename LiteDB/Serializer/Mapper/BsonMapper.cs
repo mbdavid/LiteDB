@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 namespace LiteDB
 {
     /// <summary>
-    /// Class that converts POCO class to/from BsonDocument
+    /// Class that converts your entity class to/from BsonDocument
     /// If you prefer use a new instance of BsonMapper (not Global), be sure cache this instance for better performance 
     /// Serialization rules:
     ///     - Classes must be "public" with a public constructor (without parameters)
@@ -127,15 +127,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set new Id in poco class if this class was decorated with [BsonId(true)]
+        /// Set new Id in entity class
         /// </summary>
-        public void SetAutoId(object poco, LiteCollection<BsonDocument> col)
+        public void SetAutoId(object entity, LiteCollection<BsonDocument> col)
         {
             // if object is BsonDocument, there is no AutoId
-            if (poco is BsonDocument) return;
+            if (entity is BsonDocument) return;
 
             // get fields mapper
-            var mapper = this.GetPropertyMapper(poco.GetType());
+            var mapper = this.GetPropertyMapper(entity.GetType());
 
             // it's not best way because is scan all properties - but Id propably is first field :)
             var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
@@ -147,13 +147,13 @@ namespace LiteDB
 
             if (_autoId.TryGetValue(id.PropertyType, out autoId))
             {
-                var value = id.Getter(poco);
+                var value = id.Getter(entity);
 
                 if (value == null || autoId.IsEmpty(value) == true)
                 {
                     var newId = autoId.NewId(col);
 
-                    id.Setter(poco, newId);
+                    id.Setter(entity, newId);
                 }
             }
         }

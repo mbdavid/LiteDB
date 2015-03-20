@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
             var col = this.ReadCollection(db, s);
-            var newName = s.Scan(@"\w+");
+            var newName = s.Scan(@"[\w-]+");
 
             return db.RenameCollection(col.Name, newName);
         }

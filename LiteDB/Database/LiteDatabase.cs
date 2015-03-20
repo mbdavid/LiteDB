@@ -78,7 +78,7 @@ namespace LiteDB
         #region Collections
 
         /// <summary>
-        /// Get a collection using a strong typed POCO class. If collection does not exits, create a new one.
+        /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<T> GetCollection<T>(string name)

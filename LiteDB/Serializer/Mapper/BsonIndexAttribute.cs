@@ -10,7 +10,7 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Add an index in this property. Used in POCO classes
+    /// Add an index in this entity property.
     /// </summary>
     public class BsonIndexAttribute : Attribute
     {
