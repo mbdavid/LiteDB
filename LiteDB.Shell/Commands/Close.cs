@@ -15,7 +15,7 @@ namespace LiteDB.Shell.Commands
 
         public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
         {
-            if (shell.Database == null) throw new LiteException("No database");
+            if (shell.Database == null) throw LiteException.NoDatabase();
 
             shell.Database.Dispose();
 

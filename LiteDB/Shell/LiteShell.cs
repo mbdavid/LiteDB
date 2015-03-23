@@ -41,14 +41,14 @@ namespace LiteDB.Shell
                 {
                     if (this.Database == null)
                     {
-                        throw new LiteException("No database. Use `open <filename>` to open/create database"); 
+                        throw LiteException.NoDatabase(); 
                     }
 
                     return cmd.Execute(this.Database, s);
                 }
             }
 
-            throw new LiteException("Command ´" + command + "´ is not a valid command");
+            throw LiteException.InvalidCommand(command);
         }
     }
 }

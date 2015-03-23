@@ -182,7 +182,7 @@ namespace LiteDB
         internal abstract bool ExecuteFullScan(BsonDocument doc);
 
         /// <summary>
-        /// Find witch index will be used and run Execute method
+        /// Find witch index will be used and run Execute method - define ExecuteMode here
         /// </summary>
         internal virtual IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)
             where T : new()

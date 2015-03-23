@@ -44,14 +44,14 @@ namespace LiteDB
         public CollectionPage Add(string name)
         {
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if(!CollectionPage.NamePattern.IsMatch(name)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
+            if(!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("CollectionName", name);
 
             // test collection limit
             var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
             if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
             {
-                throw new LiteException("This database exceded max collections: " + CollectionPage.MAX_COLLECTIONS);
+                throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS);
             }
 
             var col = _pager.NewPage<CollectionPage>();

@@ -20,7 +20,7 @@ namespace LiteDB
 
             var id = doc["_id"];
 
-            if (id.IsNull) throw new LiteException("Document _id can't be null");
+            if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
 
             return this.UpdateDoc(id, doc);
         }
@@ -79,7 +79,7 @@ namespace LiteDB
                     var node = this.Database.Indexer.GetNode(dataBlock.IndexRef[index.Slot]);
 
                     // check if my index node was changed
-                    if (node.Value.CompareTo(key) != 0)
+                    if (node.Key.CompareTo(key) != 0)
                     {
                         // remove old index node
                         this.Database.Indexer.Delete(index, node.Position);

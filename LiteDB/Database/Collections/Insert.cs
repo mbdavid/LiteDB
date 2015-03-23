@@ -28,7 +28,7 @@ namespace LiteDB
             }
 
             // test if _id is a valid type
-            if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw new LiteException("_id field has an invalid data type (null, minValue or maxValue)");
+            if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);

@@ -32,7 +32,7 @@ namespace LiteDB
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var diff = node.Value.CompareTo(end);
+                var diff = node.Key.CompareTo(end);
 
                 if (diff == 0 || diff != order)
                 {

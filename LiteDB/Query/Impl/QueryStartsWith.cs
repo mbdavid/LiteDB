@@ -26,7 +26,7 @@ namespace LiteDB
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var valueString = node.Value.AsString;
+                var valueString = node.Key.AsString;
 
                 // value will not be null because null occurs before string (bsontype sort order)
                 if (valueString.StartsWith(str))

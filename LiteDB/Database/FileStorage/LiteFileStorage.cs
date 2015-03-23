@@ -33,8 +33,7 @@ namespace LiteDB
             if (stream == null) throw new ArgumentNullException("stream");
 
             // no transaction allowed
-            if (this.Database.Transaction.IsInTransaction)
-                throw new LiteException("Files can´t be used inside a transaction.");
+            if (this.Database.Transaction.IsInTransaction) throw LiteException.InvalidTransaction();
 
             file.UploadDate = DateTime.Now;
 
@@ -105,7 +104,7 @@ namespace LiteDB
 
             var file = this.FindById(id);
 
-            if (file == null) throw new LiteException("File not found");
+            if (file == null) throw LiteException.FileNotFound(id);
 
             file.CopyTo(stream);
         }
@@ -194,8 +193,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            if (this.Database.Transaction.IsInTransaction)
-                throw new LiteException("Files can't be used inside a transaction.");
+            if (this.Database.Transaction.IsInTransaction) throw LiteException.InvalidTransaction();
 
             // remove file reference in _files
             var d = this.Files.Delete(id);

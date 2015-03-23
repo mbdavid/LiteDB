@@ -41,7 +41,7 @@ namespace LiteDB
 
         public LiteFileInfo(string id, string filename)
         {
-            if (!IdPattern.IsMatch(id)) throw new LiteException("Invalid file id format.");
+            if (!IdPattern.IsMatch(id)) throw LiteException.InvalidFormat("FileId", id);
 
             this.Id = id;
             this.Filename = Path.GetFileName(filename);
@@ -124,7 +124,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileStream OpenRead()
         {
-            if (_db == null) throw new LiteException("This FileStream instance don't have reference to database");
+            if (_db == null) throw LiteException.NoDatabase();
 
             return new LiteFileStream(_db, this);
         }
@@ -134,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
-            if (_db == null) throw new LiteException("This FileStream instance don't have reference to database");
+            if (_db == null) throw LiteException.NoDatabase();
 
             using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
             {

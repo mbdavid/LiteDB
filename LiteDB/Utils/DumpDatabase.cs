@@ -73,7 +73,7 @@ namespace LiteDB
                 var page = db.Pager.GetPage<IndexPage>(cur.PageID);
                 var node = page.Nodes[cur.Index];
 
-                sbs[0].Append((Limit(node.Value.ToString(), size)).PadBoth(1 + (2 * size)));
+                sbs[0].Append((Limit(node.Key.ToString(), size)).PadBoth(1 + (2 * size)));
 
                 for (var i = 0; i < IndexNode.MAX_LEVEL_LENGTH; i++)
                 {
@@ -87,13 +87,13 @@ namespace LiteDB
                         {
                             var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
                             var pnode = pprev.Nodes[node.Prev[i].Index];
-                            p = pnode.Value.ToString();
+                            p = pnode.Key.ToString();
                         }
                         if (!node.Next[i].IsEmpty)
                         {
                             var pnext = db.Pager.GetPage<IndexPage>(node.Next[i].PageID);
                             var pnode = pnext.Nodes[node.Next[i].Index];
-                            n = pnode.Value.ToString();
+                            n = pnode.Key.ToString();
                         }
                     }
 
@@ -170,7 +170,7 @@ namespace LiteDB
             {
                 sb.AppendFormat("[{0}] Key: {1}, Data: {2} / ",
                     node.Position.Index,
-                    node.Value.Dump(),
+                    node.Key.Dump(),
                     node.DataBlock.Dump());
             }
         }

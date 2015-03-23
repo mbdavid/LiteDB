@@ -209,7 +209,7 @@ namespace LiteDB
 
             if (next.IsHeadTail) return BsonValue.MinValue;
 
-            return next.Value;
+            return next.Key;
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace LiteDB
 
             if (prev.IsHeadTail) return BsonValue.MaxValue;
 
-            return prev.Value;
+            return prev.Key;
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace LiteDB.Shell.Commands
             }
             else if(_writer == null)
             {
-                if (shell.Database == null) throw new LiteException("No database");
+                if (shell.Database == null) throw LiteException.NoDatabase();
 
                 var dbfilename = shell.Database.ConnectionString.Filename;
                 var path = Path.Combine(Path.GetDirectoryName(dbfilename),

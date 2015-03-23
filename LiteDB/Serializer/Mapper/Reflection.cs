@@ -42,7 +42,7 @@ namespace LiteDB
                 {
                     if (!prop.CanRead || !prop.CanWrite)
                     {
-                        throw new LiteException(prop.Name + " property must have public get; set;");
+                        throw LiteException.PropertyReadWrite(prop);
                     }
 
                     return prop;
@@ -105,7 +105,7 @@ namespace LiteDB
                 if (name == "_id") index = null;
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw new LiteException(string.Format("Field '{0}' has an invalid name.", name));
+                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw LiteException.InvalidFormat(prop.Name, name);
 
                 // create a property mapper
                 var p = new PropertyMapper
@@ -172,8 +172,7 @@ namespace LiteDB
             }
             catch (Exception)
             {
-                throw new LiteException(string.Format("Failed to create instance for type '{0}' from assembly '{1}'. Checks if this class has a public non parameter constructor",
-                    type.FullName, type.AssemblyQualifiedName));
+                throw LiteException.InvalidCtor(type);
             }
         }
 

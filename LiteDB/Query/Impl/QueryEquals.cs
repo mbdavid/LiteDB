@@ -28,7 +28,7 @@ namespace LiteDB
             if (index.Options.Unique == false)
             {
                 // navigate using next[0] do next node - if equals, returns
-                while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Value.CompareTo(value) == 0))
+                while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(value) == 0))
                 {
                     if (node.IsHeadTail) yield break;
 

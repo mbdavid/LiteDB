@@ -228,7 +228,7 @@ namespace LiteDB
                 }
             }
 
-            throw new ApplicationException("Connection timeout. Datafile has locked for too long.");
+            throw LiteException.LockTimeout(_connectionString.Timeout);
         }
 
         #endregion

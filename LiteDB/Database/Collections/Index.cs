@@ -22,7 +22,7 @@ namespace LiteDB
             if (options == null) throw new ArgumentNullException("options");
             if (field == "_id") return false; // always exists
 
-            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new LiteException("Invalid field format.");
+            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw LiteException.InvalidFormat("IndexField", field);
 
             // do not create collection at this point
             var col = this.GetCollectionPage(false);
@@ -158,7 +158,7 @@ namespace LiteDB
         public bool DropIndex(string field)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
-            if (field == "_id") throw new LiteException("_id index can't be droped");
+            if (field == "_id") throw LiteException.IndexDropId();
 
             // start transaction
             this.Database.Transaction.Begin();

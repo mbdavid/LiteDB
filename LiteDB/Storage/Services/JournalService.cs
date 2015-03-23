@@ -118,7 +118,7 @@ namespace LiteDB
                     System.Threading.Thread.Sleep(250);
                 }
 
-                throw new LiteException("There is a jounal file. Please reopen database");
+                throw LiteException.JournalFileFound(journal);
             }
             else
             {

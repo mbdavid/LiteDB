@@ -89,7 +89,7 @@ namespace LiteDB
                 return BsonValue.MaxValue;
             }
 
-            throw new LiteException("Bson type not supported");
+            throw new NotSupportedException("BSON type not supported");
         }
 
         public BsonDocument ReadDocument(BinaryReader reader)

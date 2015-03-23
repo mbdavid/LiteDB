@@ -26,7 +26,7 @@ namespace LiteDB
 
             if (file.Length == 0)
             {
-                throw new LiteException("This file has no content or is corrupted");
+                throw LiteException.FileCorrupted(file);
             }
 
             _positionInChunk = 0;

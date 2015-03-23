@@ -72,11 +72,11 @@ namespace LiteDB
         {
             var info = reader.ReadString();
 
-            if (info != HEADER_INFO)
-                throw new LiteException("This file is not a LiteDB datafile");
+            if (info != HEADER_INFO) throw LiteException.InvalidDatabase(reader.BaseStream);
 
-            if (reader.ReadByte() != FILE_VERSION)
-                throw new LiteException("Invalid LiteDB datafile version");
+            var ver = reader.ReadByte();
+
+            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(reader.BaseStream, ver);
 
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();

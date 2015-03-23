@@ -24,7 +24,7 @@ namespace LiteDB
 
             foreach (var node in indexer.FindAll(index, Query.Ascending))
             {
-                var diff = node.Value.CompareTo(value);
+                var diff = node.Key.CompareTo(value);
 
                 if (diff == 1 || (!_equals && diff == 0)) break;
 

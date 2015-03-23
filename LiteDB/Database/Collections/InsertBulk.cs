@@ -15,7 +15,7 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
             if (buffer < 100) throw new ArgumentException("buffer must be bigger than 100");
-            if (this.Database.Transaction.IsInTransaction) throw new LiteException("InsertBulk doesn't supports transaction.");
+            if (this.Database.Transaction.IsInTransaction) throw LiteException.InvalidTransaction();
 
             var enumerator = docs.GetEnumerator();
             var count = 0;

@@ -38,14 +38,14 @@ namespace LiteDB
         public PageAddress[] Next { get; set; }
 
         /// <summary>
-        /// Length of Value - used for calculate Node size
+        /// Length of key - used for calculate Node size
         /// </summary>
-        public ushort ValueLength { get; set; }
+        public ushort KeyLength { get; set; }
 
         /// <summary>
         /// The object value that was indexed
         /// </summary>
-        public BsonValue Value { get; set; }
+        public BsonValue Key { get; set; }
 
         /// <summary>
         /// Reference for a datablock - the value
@@ -77,7 +77,7 @@ namespace LiteDB
             { 
                 return IndexNode.INDEX_NODE_FIXED_SIZE + 
                     (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
-                    this.ValueLength; // bytes count in BsonValue
+                    this.KeyLength; // bytes count in BsonValue
             }
         }
 

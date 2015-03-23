@@ -21,7 +21,7 @@ namespace LiteDB
         {
             if (this.TokenType != type)
             {
-                throw new LiteException("Unexpected json token: " + this.Token);
+                throw LiteException.UnexpectedToken(this.Token);
             }
         }
 
@@ -29,7 +29,7 @@ namespace LiteDB
         {
             if (this.TokenType != type1 && this.TokenType != type2)
             {
-                throw new LiteException("Unexpected json token: " + this.Token);
+                throw LiteException.UnexpectedToken(this.Token);
             }
         }
     }

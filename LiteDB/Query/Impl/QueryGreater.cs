@@ -29,7 +29,7 @@ namespace LiteDB
             // move until next is last
             while (node != null)
             {
-                var diff = node.Value.CompareTo(value);
+                var diff = node.Key.CompareTo(value);
 
                 if (diff == 1 || (_equals && diff == 0))
                 {

@@ -23,7 +23,7 @@ namespace LiteDB
         {
             var value = _value.Normalize(index.Options);
 
-            return indexer.FindAll(index, Query.Ascending).Where(x => x.Value.CompareTo(value) != 0);
+            return indexer.FindAll(index, Query.Ascending).Where(x => x.Key.CompareTo(value) != 0);
         }
 
         internal override bool ExecuteFullScan(BsonDocument doc)

@@ -196,7 +196,7 @@ namespace LiteDB
             }
             else
             {
-                throw new LiteException(string.Format("Property '{0}' was not mapped into BsonDocument", property));
+                throw LiteException.PropertyNotMapped(property);
             }
         }
     }

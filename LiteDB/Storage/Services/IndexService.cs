@@ -42,8 +42,8 @@ namespace LiteDB
             // create a empty node with full max level
             var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
             { 
-                Value = BsonValue.MinValue, 
-                ValueLength = BsonValue.MinValue.GetBytesCount(), 
+                Key = BsonValue.MinValue, 
+                KeyLength = BsonValue.MinValue.GetBytesCount(), 
                 Page = page,
                 Position = new PageAddress(page.PageID, 0)
             };
@@ -72,27 +72,27 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Insert a new node index inside a index. Use skip list
+        /// Insert a new node index inside an collection index. Flip coin to know level
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, BsonValue value)
+        public IndexNode AddNode(CollectionIndex index, BsonValue key)
         {
             // call AddNode normalizing value
-            return this.AddNode(index, value.Normalize(index.Options), this.FlipCoin());
+            return this.AddNode(index, key.Normalize(index.Options), this.FlipCoin());
         }
 
         /// <summary>
-        /// Insert a new node index inside a index. Use skip list
+        /// Insert a new node index inside an collection index.
         /// </summary>
-        private IndexNode AddNode(CollectionIndex index, BsonValue value, byte level)
+        private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level)
         {
             // creating a new index node 
             var node = new IndexNode(level)
             { 
-                Value = value, 
-                ValueLength = value.GetBytesCount()
+                Key = key, 
+                KeyLength = key.GetBytesCount()
             };
 
-            if (node.ValueLength > MAX_INDEX_LENGTH)
+            if (node.KeyLength > MAX_INDEX_LENGTH)
             {
                 throw LiteException.IndexKeyTooLong();
             }
@@ -119,10 +119,10 @@ namespace LiteDB
                 for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
                 {
                     // read next node to compare
-                    var diff = this.GetNode(cur.Next[i]).Value.CompareTo(value);
+                    var diff = this.GetNode(cur.Next[i]).Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
-                    if (diff == 0 && index.Options.Unique) throw new LiteException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
+                    if (diff == 0 && index.Options.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);
 
                     if (diff == 1) break;
                 }
@@ -281,7 +281,7 @@ namespace LiteDB
                 for (; cur.NextPrev(i, order).IsEmpty == false; cur = this.GetNode(cur.NextPrev(i, order)))
                 {
                     var next = this.GetNode(cur.NextPrev(i, order));
-                    var diff = next.Value.CompareTo(value);
+                    var diff = next.Key.CompareTo(value);
 
                     if (diff == order && (i > 0 || !sibling)) break;
                     if (diff == order && i == 0 && sibling)
@@ -310,7 +310,7 @@ namespace LiteDB
         {
             var last = cur;
 
-            while (cur.Value.CompareTo(value) == 0)
+            while (cur.Key.CompareTo(value) == 0)
             {
                 last = cur;
                 cur = this.GetNode(cur.NextPrev(0, order));
