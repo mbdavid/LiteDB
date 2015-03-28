@@ -45,7 +45,7 @@ public class Customer
 // Open database (or create if not exits)
 using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 {
-	// Get a collection (or create, if not exits)
+	// Get customer collection
 	var col = db.GetCollection<Customer>("customers");
 
     // Create your new customer instance

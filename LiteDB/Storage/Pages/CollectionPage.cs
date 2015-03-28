@@ -70,7 +70,6 @@ namespace LiteDB
                 index.Options.TrimWhitespace = reader.ReadBoolean();
                 index.Options.EmptyStringToNull = reader.ReadBoolean();
                 index.Options.RemoveAccents = reader.ReadBoolean();
-                //TODO: reserve more spaces?
             }
         }
 

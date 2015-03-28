@@ -30,7 +30,7 @@ namespace LiteDB
                 // navigate using next[0] do next node - if equals, returns
                 while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(value) == 0))
                 {
-                    if (node.IsHeadTail) yield break;
+                    if (node.IsHeadTail(index)) yield break;
 
                     yield return node;
                 }

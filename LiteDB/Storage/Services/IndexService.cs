@@ -263,7 +263,7 @@ namespace LiteDB
                 cur = this.GetNode(cur.NextPrev(0, order));
 
                 // stop if node is head/tail
-                if (cur.IsHeadTail) yield break;
+                if (cur.IsHeadTail(index)) yield break;
 
                 yield return cur;
             }
@@ -286,7 +286,7 @@ namespace LiteDB
                     if (diff == order && (i > 0 || !sibling)) break;
                     if (diff == order && i == 0 && sibling)
                     {
-                        return next.IsHeadTail ? null : next;
+                        return next.IsHeadTail(index) ? null : next;
                     }
 
                     // if equals, test for duplicates - go back to first occurs on duplicate values
@@ -295,7 +295,7 @@ namespace LiteDB
                         // if unique index has no duplicates - just return node
                         if (index.Options.Unique) return next;
 
-                        return this.FindBoundary(next, value, order * -1, i);
+                        return this.FindBoundary(index, next, value, order * -1, i);
                     }
                 }
             }
@@ -306,7 +306,7 @@ namespace LiteDB
         /// <summary>
         /// Go first/last occurence of this index value
         /// </summary>
-        private IndexNode FindBoundary(IndexNode cur, BsonValue value, int order, int level)
+        private IndexNode FindBoundary(CollectionIndex index, IndexNode cur, BsonValue value, int order, int level)
         {
             var last = cur;
 
@@ -314,7 +314,7 @@ namespace LiteDB
             {
                 last = cur;
                 cur = this.GetNode(cur.NextPrev(0, order));
-                if (cur.IsHeadTail) break;
+                if (cur.IsHeadTail(index)) break;
             }
 
             return last;

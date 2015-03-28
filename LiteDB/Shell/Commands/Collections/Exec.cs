@@ -29,7 +29,7 @@ namespace LiteDB.Shell.Commands
 
                 foreach (var doc in docs)
                 {
-                    code(doc["_id"].RawValue, doc, col, db);
+                    code(doc["_id"], doc, col, db);
                 }
 
                 db.Commit();
@@ -52,7 +52,7 @@ using LiteDB;
 
 public class Program {
     public static void DoWork(
-        object id, 
+        BsonValue id, 
         BsonDocument doc, 
         LiteCollection<BsonDocument> col, 
         LiteDatabase db) { [code] }
@@ -60,7 +60,7 @@ public class Program {
 
         public static Action<object, BsonDocument, LiteCollection<BsonDocument>, LiteDatabase> GetCode(StringScanner s)
         {
-            var str = s.Scan(@".*");
+            var str = s.Scan(@"[\s\S]*");
             var code = CODE_TEMPLATE.Replace("[code]", str);
             var provider = new CSharpCodeProvider();
             var parameters = new CompilerParameters();

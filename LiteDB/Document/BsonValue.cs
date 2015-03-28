@@ -225,12 +225,12 @@ namespace LiteDB
 
         public ObjectId AsObjectId
         {
-            get { return Type == BsonType.ObjectId ? (ObjectId)this.RawValue : default(ObjectId); }
+            get { return this.Type == BsonType.ObjectId ? (ObjectId)this.RawValue : default(ObjectId); }
         }
 
         public Guid AsGuid
         {
-            get { return Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
+            get { return this.Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
         }
 
         #endregion

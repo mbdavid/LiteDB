@@ -33,7 +33,7 @@ namespace LiteDB
 
                 if (diff == 1 || (_equals && diff == 0))
                 {
-                    if (node.IsHeadTail) yield break;
+                    if (node.IsHeadTail(index)) yield break;
 
                     yield return node;
                 }

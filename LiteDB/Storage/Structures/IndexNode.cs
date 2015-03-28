@@ -65,8 +65,15 @@ namespace LiteDB
             return order == Query.Ascending ? this.Next[index] : this.Prev[index];
         }
 
-        //TODO: implement a indicator that this node is head/tail - better if was compared with Head/Tail position?
-        public bool IsHeadTail { get { return this.DataBlock.IsEmpty; } }
+        /// <summary>
+        /// Returns if this node is header or tail from collection Index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public bool IsHeadTail(CollectionIndex index)
+        {
+            return this.Position.Equals(index.HeadNode) || this.Position.Equals(index.TailNode);
+        }
 
         /// <summary>
         /// Get the length size of this node in disk - not persistable
