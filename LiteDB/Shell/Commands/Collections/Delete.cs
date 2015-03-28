@@ -6,21 +6,19 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionDelete : BaseCollection, IShellCommand
+    internal class CollectionDelete : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "delete");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
             var query = this.ReadQuery(s);
 
-            display.WriteBson(col.Delete(query));
+            return col.Delete(query);
         }
     }
 }

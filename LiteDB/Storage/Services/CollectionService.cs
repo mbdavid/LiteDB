@@ -9,13 +9,17 @@ namespace LiteDB
 {
     internal class CollectionService
     {
+        private CacheService _cache;
         private PageService _pager;
         private IndexService _indexer;
+        private DataService _data;
 
-        public CollectionService(PageService pager, IndexService indexer)
+        public CollectionService(CacheService cache, PageService pager, IndexService indexer, DataService data)
         {
+            _cache = cache;
             _pager = pager;
             _indexer = indexer;
+            _data = data;
         }
 
         /// <summary>
@@ -25,7 +29,9 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
 
-            var pages = _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
+            if (_cache.Header.FirstCollectionPageID == uint.MaxValue) return null;
+
+            var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
             var col = pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
@@ -38,28 +44,29 @@ namespace LiteDB
         public CollectionPage Add(string name)
         {
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if(!Regex.IsMatch(name, CollectionPage.NAME_PATTERN)) throw new LiteException("Invalid collection name. Use only letters, numbers and _");
+            if(!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("CollectionName", name);
 
-            var pages = _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
-
-            if (pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase)) != null)
-            {
-                throw new ArgumentException("Collection name already exists (names are case unsensitive)");
-            }
+            // test collection limit
+            var pages = _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
 
             if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
-                throw new LiteException("This database exceded max collections: " + CollectionPage.MAX_COLLECTIONS);
+            {
+                throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS);
+            }
 
-            var col = _pager.NewPage<CollectionPage>(pages.Last());
+            var col = _pager.NewPage<CollectionPage>();
+
+            // add page in collection list
+            _pager.AddOrRemoveToFreeList(true, col, _cache.Header, ref _cache.Header.FirstCollectionPageID);
 
             col.CollectionName = name;
             col.IsDirty = true;
 
             // create PK index
-            var pk = _indexer.CreateIndex(col.PK);
+            var pk = _indexer.CreateIndex(col);
 
             pk.Field = "_id";
-            pk.Unique = true;
+            pk.Options = new IndexOptions { Unique = true };
 
             return col;
         }
@@ -69,35 +76,52 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            return _pager.GetSeqPages<CollectionPage>(1); // PageID 1 = Master Collection
+            return _pager.GetSeqPages<CollectionPage>(_cache.Header.FirstCollectionPageID);
         }
 
+        /// <summary>
+        /// Drop a collection - remove all data pages + indexes pages
+        /// </summary>
         public void Drop(CollectionPage col)
         {
-            // delete all index pages
-            for (byte i = 0; i < col.Indexes.Length; i++)
-            {
-                var index = col.Indexes[i];
+            // add all pages to delete
+            var pages = new HashSet<uint>();
 
-                if (!index.IsEmpty)
+            // search for all data page and index page
+            foreach (var index in col.GetIndexes(true))
+            {
+                // get all nodes from index
+                var nodes = _indexer.FindAll(index, Query.Ascending);
+
+                foreach (var node in nodes)
                 {
-                    _pager.DeletePage(index.HeadNode.PageID);
+                    // if is PK index, add dataPages
+                    if(index.Slot == 0)
+                    {
+                        pages.Add(node.DataBlock.PageID);
+
+                        // read datablock to check if there is any extended page
+                        var block = _data.Read(node.DataBlock, false);
+
+                        if (block.ExtendPageID != uint.MaxValue)
+                        {
+                            _pager.DeletePage(block.ExtendPageID, true);
+                        }
+                    }
+
+                    // add index page to delete list page
+                    pages.Add(node.Position.PageID);
                 }
             }
 
-            // ajust page pointers
-            if (col.PrevPageID != uint.MaxValue)
+            // and now, lets delete all this pages
+            foreach (var pageID in pages)
             {
-                var prev = _pager.GetPage<BasePage>(col.PrevPageID);
-                prev.NextPageID = col.NextPageID;
-                prev.IsDirty = true;
+                _pager.DeletePage(pageID);
             }
-            if (col.NextPageID != uint.MaxValue)
-            {
-                var next = _pager.GetPage<BasePage>(col.NextPageID);
-                next.PrevPageID = col.PrevPageID;
-                next.IsDirty = true;
-            }
+
+            // remove page from collection list
+            _pager.AddOrRemoveToFreeList(false, col, _cache.Header, ref _cache.Header.FirstCollectionPageID);
 
             _pager.DeletePage(col.PageID, false);
         }

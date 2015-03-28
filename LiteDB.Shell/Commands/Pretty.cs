@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Pretty : IShellCommand
+    internal class Pretty : ConsoleCommand
     {
-        public bool IsCommand(StringScanner s)
+        public override bool IsCommand(StringScanner s)
         {
             return s.Scan(@"pretty\s*").Length > 0;
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
         {
             display.Pretty = !(s.Scan(@"off\s*").Length > 0);
         }

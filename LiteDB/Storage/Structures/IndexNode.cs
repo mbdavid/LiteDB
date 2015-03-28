@@ -13,6 +13,8 @@ namespace LiteDB
     {
         public const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
                                                  1 + // Levels (byte)
+                                                 2 + // ValueLength (ushort)
+                                                 1 + // BsonType (byte)
                                                  PageAddress.SIZE; // DataBlock
 
         /// <summary>
@@ -36,9 +38,14 @@ namespace LiteDB
         public PageAddress[] Next { get; set; }
 
         /// <summary>
-        /// The object key that was indexed
+        /// Length of key - used for calculate Node size
         /// </summary>
-        public IndexKey Key { get; set; }
+        public ushort KeyLength { get; set; }
+
+        /// <summary>
+        /// The object value that was indexed
+        /// </summary>
+        public BsonValue Key { get; set; }
 
         /// <summary>
         /// Reference for a datablock - the value
@@ -51,6 +58,24 @@ namespace LiteDB
         public IndexPage Page { get; set; }
 
         /// <summary>
+        /// Returns Next (order == 1) OR Prev (order == -1)
+        /// </summary>
+        public PageAddress NextPrev(int index, int order)
+        {
+            return order == Query.Ascending ? this.Next[index] : this.Prev[index];
+        }
+
+        /// <summary>
+        /// Returns if this node is header or tail from collection Index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public bool IsHeadTail(CollectionIndex index)
+        {
+            return this.Position.Equals(index.HeadNode) || this.Position.Equals(index.TailNode);
+        }
+
+        /// <summary>
         /// Get the length size of this node in disk - not persistable
         /// </summary>
         public int Length
@@ -59,18 +84,18 @@ namespace LiteDB
             { 
                 return IndexNode.INDEX_NODE_FIXED_SIZE + 
                     (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
-                    Key.Length; // Key
+                    this.KeyLength; // bytes count in BsonValue
             }
         }
 
-        public IndexNode(byte length)
+        public IndexNode(byte level)
         {
             this.Position = PageAddress.Empty;
             this.DataBlock = PageAddress.Empty;
-            this.Prev = new PageAddress[length];
-            this.Next = new PageAddress[length];
+            this.Prev = new PageAddress[level];
+            this.Next = new PageAddress[level];
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < level; i++)
             {
                 this.Prev[i] = PageAddress.Empty;
                 this.Next[i] = PageAddress.Empty;

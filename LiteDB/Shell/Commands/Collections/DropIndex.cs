@@ -6,18 +6,19 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionDropIndex : BaseCollection, IShellCommand
+    internal class CollectionDropIndex : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "drop[iI]ndex");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
+            var col = this.ReadCollection(db, s);
+            var index = s.Scan(this.FieldPattern).Trim();
 
-            display.WriteBson(this.ReadCollection(db, s).DropIndex(s.Scan(@"\w+(.\w+)*").Trim()));
+            return col.DropIndex(index);
         }
     }
 }

@@ -12,6 +12,11 @@ namespace LiteDB
     /// </summary>
     internal class IndexService
     {
+        /// <summary>
+        /// Max size of a index entry - usde for string, binary, array and documents
+        /// </summary>
+        public const int MAX_INDEX_LENGTH = 512;
+
         private PageService _pager;
         private CacheService _cache;
 
@@ -26,24 +31,39 @@ namespace LiteDB
         /// <summary>
         /// Create a new index and returns head page address (skip list)
         /// </summary>
-        public CollectionIndex CreateIndex(CollectionIndex index)
+        public CollectionIndex CreateIndex(CollectionPage col)
         {
+            // get index slot
+            var index = col.GetFreeIndex();
+
             // get a new index page for first index page
             var page = _pager.NewPage<IndexPage>();
 
             // create a empty node with full max level
-            var node = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) { Key = new IndexKey(null), Page = page };
-
-            node.Position = new PageAddress(page.PageID, 0);
+            var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
+            { 
+                Key = BsonValue.MinValue, 
+                KeyLength = BsonValue.MinValue.GetBytesCount(), 
+                Page = page,
+                Position = new PageAddress(page.PageID, 0)
+            };
 
             // add as first node
-            page.Nodes.Add(node.Position.Index, node);
+            page.Nodes.Add(head.Position.Index, head);
+
+            // update freebytes + item count (for head)
+            page.UpdateItemCount();
 
             // add indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
 
-            // point the head node to this new node position
-            index.HeadNode = node.Position;
+            // point the head/tail node to this new node position
+            index.HeadNode = head.Position;
+
+            // insert tail node
+            var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH);
+
+            index.TailNode = tail.Position;
 
             index.Page.IsDirty = true;
             page.IsDirty = true;
@@ -52,17 +72,30 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Insert a new node index inside a index. Use skip list
+        /// Insert a new node index inside an collection index. Flip coin to know level
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, object value)
+        public IndexNode AddNode(CollectionIndex index, BsonValue key)
         {
-            // create persist value - used on key
-            var key = new IndexKey(value);
+            // call AddNode normalizing value
+            return this.AddNode(index, key.Normalize(index.Options), this.FlipCoin());
+        }
 
-            var level = this.FlipCoin();
-
+        /// <summary>
+        /// Insert a new node index inside an collection index.
+        /// </summary>
+        private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level)
+        {
             // creating a new index node 
-            var node = new IndexNode(level) { Key = key };
+            var node = new IndexNode(level)
+            { 
+                Key = key, 
+                KeyLength = key.GetBytesCount()
+            };
+
+            if (node.KeyLength > MAX_INDEX_LENGTH)
+            {
+                throw LiteException.IndexKeyTooLong();
+            }
 
             // get a free page to insert my index node
             var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
@@ -73,11 +106,14 @@ namespace LiteDB
             // add index node to page
             page.Nodes.Add(node.Position.Index, node);
 
+            // update freebytes + items count
+            page.UpdateItemCount();
+
             // now, let's link my index node on right place
             var cur = this.GetNode(index.HeadNode);
 
             // scan from top left
-            for (int i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
                 // for(; <while_not_this>; <do_this>) { ... }
                 for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
@@ -86,7 +122,7 @@ namespace LiteDB
                     var diff = this.GetNode(cur.Next[i]).Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
-                    if (diff == 0 && index.Unique) throw new LiteException(string.Format("Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", index.Field, value));
+                    if (diff == 0 && index.Options.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);
 
                     if (diff == 1) break;
                 }
@@ -115,7 +151,7 @@ namespace LiteDB
             }
 
             // add/remove indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
             page.IsDirty = true;
 
@@ -150,6 +186,9 @@ namespace LiteDB
 
             page.Nodes.Remove(node.Position.Index);
 
+            // update freebytes + items count
+            page.UpdateItemCount();
+
             // if there is no more nodes in this page, delete them
             if (page.Nodes.Count == 0)
             {
@@ -161,14 +200,36 @@ namespace LiteDB
             else
             {
                 // add or remove page from free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
+                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
             page.IsDirty = true;
         }
 
+
         /// <summary>
-        /// Get a node inside a page using PageAddress
+        /// Drop all indexes pages
+        /// </summary>
+        public void DropIndex(CollectionIndex index)
+        {
+            var pages = new HashSet<uint>();
+            var nodes = this.FindAll(index, Query.Ascending);
+
+            // get reference for pageID from all index nodes
+            foreach (var node in nodes)
+            {
+                pages.Add(node.Position.PageID);
+            }
+
+            // now delete all pages
+            foreach (var page in pages)
+            {
+                _pager.DeletePage(page);
+            }
+        }
+
+        /// <summary>
+        /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
         /// </summary>
         public IndexNode GetNode(PageAddress address)
         {
@@ -186,58 +247,55 @@ namespace LiteDB
             for (int R = _rand.Next(); (R & 1) == 1; R >>= 1)
             {
                 level++;
-                if (level == IndexNode.MAX_LEVEL_LENGTH - 1) break;
+                if (level == IndexNode.MAX_LEVEL_LENGTH) break;
             }
             return level;
         }
 
-        #region Find index nodes
+        #region Find
 
-        /// <summary>
-        /// Return all nodes
-        /// </summary>
-        public IEnumerable<IndexNode> FindAll(CollectionIndex index)
+        public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var cur = this.GetNode(index.HeadNode);
+            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
-            while (!cur.Next[0].IsEmpty)
+            while (!cur.NextPrev(0, order).IsEmpty)
             {
-                cur = this.GetNode(cur.Next[0]);
+                cur = this.GetNode(cur.NextPrev(0, order));
+
+                // stop if node is head/tail
+                if (cur.IsHeadTail(index)) yield break;
 
                 yield return cur;
             }
         }
 
         /// <summary>
-        /// Find first indexNode that match with value - if not found, can return first greater (used for greaterThan/Between)
+        /// Find first node that index match with value. If not found but sibling = true, returns near node (only non-unique index)
         /// </summary>
-        public IndexNode FindOne(CollectionIndex index, object value, bool greater = false)
+        public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
-            var cur = this.GetNode(index.HeadNode);
-            var key = new IndexKey(value);
+            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
-            for (int i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
-                for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
+                for (; cur.NextPrev(i, order).IsEmpty == false; cur = this.GetNode(cur.NextPrev(i, order)))
                 {
-                    var next = this.GetNode(cur.Next[i]);
-                    var diff = next.Key.CompareTo(key);
+                    var next = this.GetNode(cur.NextPrev(i, order));
+                    var diff = next.Key.CompareTo(value);
 
-                    if (diff == 1 && (i > 0 || !greater)) break;
-                    if (diff == 1 && i == 0 && greater) return next;
+                    if (diff == order && (i > 0 || !sibling)) break;
+                    if (diff == order && i == 0 && sibling)
+                    {
+                        return next.IsHeadTail(index) ? null : next;
+                    }
 
-                    // if equals, test for duplicates
+                    // if equals, test for duplicates - go back to first occurs on duplicate values
                     if (diff == 0)
                     {
-                        var last = next;
-                        while (next.Key.CompareTo(key) == 0)
-                        {
-                            last = next;
-                            if (index.HeadNode.Equals(next.Prev[0])) break;
-                            next = this.GetNode(next.Prev[0]);
-                        }
+                        // if unique index has no duplicates - just return node
+                        if (index.Options.Unique) return next;
 
-                        return last;
+                        return this.FindBoundary(index, next, value, order * -1, i);
                     }
                 }
             }
@@ -246,114 +304,20 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Find all indexNodes that match with value
+        /// Go first/last occurence of this index value
         /// </summary>
-        public IEnumerable<IndexNode> FindEquals(CollectionIndex index, object value)
+        private IndexNode FindBoundary(CollectionIndex index, IndexNode cur, BsonValue value, int order, int level)
         {
-            // find first indexNode
-            var node = this.FindOne(index, value);
+            var last = cur;
 
-            if (node == null) yield break;
-
-            yield return node;
-
-            var key = new IndexKey(value);
-
-            // navigate using next[0] do next node - if equals, returns
-            while (!node.Next[0].IsEmpty && ((node = this.GetNode(node.Next[0])).Key.CompareTo(key) == 0))
+            while (cur.Key.CompareTo(value) == 0)
             {
-                yield return node;
+                last = cur;
+                cur = this.GetNode(cur.NextPrev(0, order));
+                if (cur.IsHeadTail(index)) break;
             }
-        }
 
-        /// <summary>
-        /// Find nodes between start and end and (inclusive)
-        /// </summary>
-        public IEnumerable<IndexNode> FindBetween(CollectionIndex index, object start, object end)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, start, true);
-            var key = new IndexKey(end);
-
-            // navigate using next[0] do next node - if less or equals returns
-            while (node != null)
-            {
-                var diff = node.Key.CompareTo(key);
-
-                if (diff <= 0) yield return node;
-
-                node = this.GetNode(node.Next[0]);
-            }
-        }
-
-        /// <summary>
-        /// Find nodes startswith a string
-        /// </summary>
-        public IEnumerable<IndexNode> FindStarstWith(CollectionIndex index, string text)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, text, true);
-
-            // navigate using next[0] do next node - if less or equals returns
-            while (node != null)
-            {
-                var key = node.Key.ToString();
-
-                if (key.StartsWith(text, StringComparison.InvariantCultureIgnoreCase)) yield return node;
-
-                node = this.GetNode(node.Next[0]);
-            }
-        }
-
-        /// <summary>
-        /// Find all nodes less than value (can be inclusive) 
-        /// </summary>
-        public IEnumerable<IndexNode> FindLessThan(CollectionIndex index, object value, bool includeValue = false)
-        {
-            var key = new IndexKey(value);
-
-            foreach (var node in this.FindAll(index))
-            {
-                var diff = node.Key.CompareTo(key);
-
-                if (diff == 1 || (!includeValue && diff == 0)) break;
-
-                yield return node;
-            }
-        }
-
-        /// <summary>
-        /// Find all indexNodes that are greater/equals than value
-        /// </summary>
-        public IEnumerable<IndexNode> FindGreaterThan(CollectionIndex index, object value, bool includeValue = false)
-        {
-            // find first indexNode
-            var node = this.FindOne(index, value, true);
-
-            if (node == null) yield break;
-
-            var key = new IndexKey(value);
-
-            // move until next is last
-            while (node != null)
-            {
-                var diff = node.Key.CompareTo(key);
-
-                if (diff == 1 || (includeValue && diff == 0)) yield return node;
-
-                node = this.GetNode(node.Next[0]);
-            }
-        }
-
-        public IEnumerable<IndexNode> FindIn(CollectionIndex index, object[] values)
-        {
-            foreach (var value in values.Distinct())
-            {
-                foreach(var node in this.FindEquals(index, value))
-                {
-                    yield return node;
-                }
-            }
+            return last;
         }
 
         #endregion

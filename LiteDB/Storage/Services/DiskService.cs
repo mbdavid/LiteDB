@@ -36,9 +36,7 @@ namespace LiteDB
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    // creating header + master collection
-                    DiskService.WritePage(writer, new HeaderPage { PageID = 0, LastPageID = 1 });
-                    DiskService.WritePage(writer, new CollectionPage { PageID = 1, CollectionName = "_master" });
+                    DiskService.WritePage(writer, new HeaderPage());
                 }
             }
         }
@@ -230,7 +228,7 @@ namespace LiteDB
                 }
             }
 
-            throw new ApplicationException("Connection timeout. Datafile has locked for too long.");
+            throw LiteException.LockTimeout(_connectionString.Timeout);
         }
 
         #endregion

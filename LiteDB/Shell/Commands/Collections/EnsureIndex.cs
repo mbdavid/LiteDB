@@ -6,22 +6,33 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionEnsureIndex : BaseCollection, IShellCommand
+    internal class CollectionEnsureIndex : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "ensure[iI]ndex");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
-            var field = s.Scan(@"\w+(.\w+)*");
-            var unique = s.Scan(@"\s*unique$");
+            var field = s.Scan(this.FieldPattern).Trim();
+            var doc = JsonSerializer.Deserialize(s);
 
-            display.WriteBson(col.EnsureIndex(field, unique.Length > 0));
+            if (doc.IsNull)
+            {
+                return col.EnsureIndex(field, false);
+            }
+            else if (doc.IsBoolean)
+            {
+                return col.EnsureIndex(field, doc.AsBoolean);
+            }
+            else
+            {
+                var options = db.Mapper.ToObject<IndexOptions>(doc.AsDocument);
+
+                return col.EnsureIndex(field, options);
+            }
         }
     }
 }

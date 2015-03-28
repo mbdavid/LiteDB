@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public const string FIELD_PATTERN = @"^\w+(\.\w+)*$";
-        public const int FIELD_MAX_LENGTH = 30;
+        public static Regex IndexPattern = new Regex(@"^\w[\w-]*(\.[\w-]+)*$");
 
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations
@@ -17,19 +17,29 @@ namespace LiteDB
         public const int INDEX_PER_COLLECTION = 16;
 
         /// <summary>
+        /// Represent slot position on index array on dataBlock/collection indexes - non-persistable
+        /// </summary>
+        public int Slot { get; set; }
+
+        /// <summary>
         /// Field name
         /// </summary>
         public string Field { get; set; }
 
         /// <summary>
-        /// Unique keys?
+        /// Index options like unique and ignore case
         /// </summary>
-        public bool Unique { get; set; }
+        public IndexOptions Options { get; set; }
 
         /// <summary>
         /// Head page address for this index
         /// </summary>
         public PageAddress HeadNode { get; set; }
+
+        /// <summary>
+        /// A link pointer to tail node
+        /// </summary>
+        public PageAddress TailNode { get; set; }
 
         /// <summary>
         /// Get a reference for the free list index page - its private list per collection/index (must be a Field to be used as reference parameter)
@@ -51,8 +61,16 @@ namespace LiteDB
 
         public CollectionIndex()
         {
+            this.Clear();
+        }
+
+        /// <summary>
+        /// Clear all index information
+        /// </summary>
+        public void Clear()
+        {
             this.Field = string.Empty;
-            this.Unique = false;
+            this.Options = new IndexOptions();
             this.HeadNode = PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
         }

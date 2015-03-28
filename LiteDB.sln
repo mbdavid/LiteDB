@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Shell", "LiteDB.Shell\LiteDB.Shell.csproj", "{5C46B331-F4DC-469D-B370-532E67CBA808}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebShell", "WebShell\WebShell.csproj", "{D5C5126F-1D96-4543-A6CC-D323C2E53FC5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,10 +25,6 @@ Global
 		{5C46B331-F4DC-469D-B370-532E67CBA808}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C46B331-F4DC-469D-B370-532E67CBA808}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C46B331-F4DC-469D-B370-532E67CBA808}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D5C5126F-1D96-4543-A6CC-D323C2E53FC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D5C5126F-1D96-4543-A6CC-D323C2E53FC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D5C5126F-1D96-4543-A6CC-D323C2E53FC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D5C5126F-1D96-4543-A6CC-D323C2E53FC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

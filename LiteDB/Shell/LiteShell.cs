@@ -7,74 +7,48 @@ using System.Text;
 
 namespace LiteDB.Shell
 {
-    public class LiteShell : IDisposable
+    public class LiteShell
     {
-        private List<IShellCommand> _commands = new List<IShellCommand>();
+        public List<ILiteCommand> Commands { get; set; }
 
-        public LiteShell()
+        public LiteDatabase Database { get; set; }
+
+        public LiteShell(LiteDatabase db)
         {
-            this.Display = new Display();
-        }
+            this.Database = db;
+            this.Commands = new List<ILiteCommand>();
 
-        public LiteShell(LiteEngine db, StringBuilder sb, bool pretty = true)
-            : this()
-        {
-            this.Engine = db;
-
-            var writer = new StringWriter(sb);
-            this.Display.TextWriters.Add(writer);
-            this.Display.Pretty = pretty;
-            this.RegisterAll();
-        }
-
-        public LiteEngine Engine { get; set; }
-        public Display Display { get; set; }
-
-        /// <summary>
-        /// Register all commands: search for all classes that implements IShellCommand
-        /// </summary>
-        public void RegisterAll()
-        {
-            _commands = new List<IShellCommand>();
-
-            var type = typeof(IShellCommand);
+            var type = typeof(ILiteCommand);
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass);
 
             foreach (var t in types)
             {
-                _commands.Add((IShellCommand)Activator.CreateInstance(t));
+                this.Commands.Add((ILiteCommand)Activator.CreateInstance(t));
             }
         }
 
-        public void Register<T>()
-            where T : IShellCommand, new()
+        public BsonValue Run(string command)
         {
-            _commands.Add(new T());
-        }
-
-        public void Run(string command)
-        {
-            if (string.IsNullOrEmpty(command)) return;
+            if (string.IsNullOrEmpty(command)) return BsonValue.Null;
 
             var s = new StringScanner(command);
 
-            foreach (var cmd in _commands)
+            foreach (var cmd in this.Commands)
             {
                 if (cmd.IsCommand(s))
                 {
-                    cmd.Execute(this.Engine, s, this.Display);
-                    return;
+                    if (this.Database == null)
+                    {
+                        throw LiteException.NoDatabase(); 
+                    }
+
+                    return cmd.Execute(this.Database, s);
                 }
             }
 
-            throw new ApplicationException("Command ´" + command + "´ is not a valid command");
-        }
-
-        public void Dispose()
-        {
-            if (this.Engine != null) this.Engine.Dispose();
+            throw LiteException.InvalidCommand(command);
         }
     }
 }

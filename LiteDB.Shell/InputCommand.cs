@@ -9,25 +9,29 @@ namespace LiteDB.Shell
 {
     public class InputCommand
     {
-        private Queue<string> _queue;
-        private string _last = "";
-        private Stopwatch _timer = new Stopwatch();
+        public Queue<string> Queue { get; set; }
+        public List<string> History { get; set; }
+        public Stopwatch Timer { get; set; }
+
+        public Action<string> OnWrite { get; set; }
 
         public InputCommand()
         {
-            _queue = new Queue<string>();
+            this.Queue = new Queue<string>();
+            this.History = new List<string>();
+            this.Timer = new Stopwatch();
         }
 
         public string ReadCommand()
         {
-            if (_timer.IsRunning)
+            if (this.Timer.IsRunning)
             {
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Write(_timer.ElapsedMilliseconds.ToString("0000") + " ");
+                this.Write(this.Timer.ElapsedMilliseconds.ToString("0000") + " ");
             }
 
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("> ");
+            this.Write("> ");
 
             var cmd = this.ReadLine();
 
@@ -38,11 +42,16 @@ namespace LiteDB.Shell
 
                 while (!cmd.EndsWith("/"))
                 {
+                    if (this.Timer.IsRunning)
+                    {
+                        this.Write("     ");
+                    }
+
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write("| ");
+                    this.Write("| ");
 
                     var line = this.ReadLine();
-                    cmd += line;
+                    cmd += Environment.NewLine + line;
                 }
 
                 cmd = cmd.Substring(0, cmd.Length - 1);
@@ -50,28 +59,12 @@ namespace LiteDB.Shell
 
             cmd = cmd.Trim();
 
-            if (cmd == "ed")
-            {
-                this.OpenNotepad();
-                return null;
-            }
-            else if (cmd == "timer")
-            {
-                _timer.Start();
-                return null;
-            }
-            else if (cmd.StartsWith("run "))
-            {
-                this.RunCommand(cmd.Substring(4));
-                return null;
-            }
+            this.History.Add(cmd);
 
-            _last = cmd;
-
-            if (_timer.IsRunning)
+            if (this.Timer.IsRunning)
             {
-                _timer.Reset();
-                _timer.Start();
+                this.Timer.Reset();
+                this.Timer.Start();
             }
 
             return cmd.Trim();
@@ -84,43 +77,32 @@ namespace LiteDB.Shell
         {
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            if (_queue.Count > 0)
+            if (this.Queue.Count > 0)
             {
-                var cmd = _queue.Dequeue();
-                Console.WriteLine(cmd);
+                var cmd = this.Queue.Dequeue();
+                this.Write(cmd + Environment.NewLine);
                 return cmd;
             }
             else
             {
-                return Console.ReadLine();
+                var cmd = Console.ReadLine();
+
+                if (this.OnWrite != null)
+                {
+                    this.OnWrite(cmd + Environment.NewLine);
+                }
+
+                return cmd;
             }
         }
 
-        /// <summary>
-        /// Open notepad and add each line as a new command
-        /// </summary>
-        private void OpenNotepad()
+        private void Write(string text)
         {
-            var temp = Path.GetTempPath() + "LiteDB.Shell.txt";
+            Console.Write(text);
 
-            File.WriteAllText(temp, _last.Replace("\n", Environment.NewLine));
-
-            Process.Start("notepad.exe", temp).WaitForExit();
-
-            foreach (var line in File.ReadAllLines(temp))
+            if (this.OnWrite != null)
             {
-                _queue.Enqueue(line);
-            }
-        }
-
-        /// <summary>
-        /// Open a file and get each line as a new command
-        /// </summary>
-        private void RunCommand(string filename)
-        {
-            foreach (var line in File.ReadAllLines(filename.Trim()))
-            {
-                _queue.Enqueue(line);
+                this.OnWrite(text);
             }
         }
     }

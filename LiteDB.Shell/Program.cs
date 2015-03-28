@@ -11,25 +11,25 @@ namespace LiteDB.Shell
     {
         static void Main(string[] args)
         {
-            var shell = new LiteShell();
+            var shell = new LiteShell(null);
             var input = new InputCommand();
+            var display = new Display();
 
-            shell.RegisterAll();
-            shell.Display.TextWriters.Add(Console.Out);
+            display.TextWriters.Add(Console.Out);
 
             // show welcome message
-            shell.Display.WriteWelcome();
+            display.WriteWelcome();
 
             // if has a argument, its database file - try open
             if (args.Length > 0)
             {
                 try
                 {
-                    shell.Engine = new LiteEngine(args[0]);
+                    shell.Database = new LiteDatabase(args[0]);
                 }
                 catch (Exception ex)
                 {
-                    shell.Display.WriteError(ex.Message);
+                    display.WriteError(ex.Message);
                 }
             }
 
@@ -42,23 +42,18 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    if (cmd.StartsWith("open "))
-                    {
-                        if (shell.Engine != null)
-                        {
-                            shell.Engine.Dispose();
-                        }
+                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, shell, display, input);
 
-                        shell.Engine = new LiteEngine(cmd.Substring(5));
-                    }
-                    else
+                    if (isConsoleCommand == false)
                     {
-                        shell.Run(cmd);
+                        var result = shell.Run(cmd);
+
+                        display.WriteResult(result);
                     }
                 }
                 catch (Exception ex)
                 {
-                    shell.Display.WriteError(ex.Message);
+                    display.WriteError(ex.Message);
                 }
             }
         }

@@ -7,34 +7,24 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionBulk : BaseCollection, IShellCommand
+    internal class CollectionBulk : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "bulk");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
             var filename = s.Scan(@".*");
-            var json = File.ReadAllText(filename, Encoding.UTF8);
-            var docs = JsonEx.DeserializeArray<BsonDocument>(json);
-            var count = 0;
 
-            db.BeginTrans();
-
-            foreach (var doc in docs)
+            using (var sr = new StreamReader(filename, Encoding.UTF8))
             {
-                count++;
-                col.Insert(doc);
+                var docs = JsonSerializer.DeserializeArray(sr);
+
+                return col.InsertBulk(docs.Select(x => x.AsDocument));
             }
-
-            db.Commit();
-
-            display.WriteBson(count);
         }
     }
 }

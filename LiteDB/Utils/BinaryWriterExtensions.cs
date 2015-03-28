@@ -11,18 +11,19 @@ namespace LiteDB
     {
         public static void Write(this BinaryWriter writer, string text, int length)
         {
-            if (string.IsNullOrEmpty(text))
+            var bytes = Encoding.UTF8.GetBytes(text);
+
+            if (bytes.Length != length)
             {
-                writer.Write(new byte[length]);
-                return;
+                throw new ArgumentException("Invalid string length");
             }
 
-            var buffer = new byte[length];
-            var strbytes = Encoding.UTF8.GetBytes(text);
+            writer.Write(bytes);
+        }
 
-            Array.Copy(strbytes, buffer, length > strbytes.Length ? strbytes.Length : length);
-
-            writer.Write(buffer);
+        public static void Write(this BinaryWriter writer, ObjectId oid)
+        {
+            writer.Write(oid.ToByteArray());
         }
 
         public static void Write(this BinaryWriter writer, Guid guid)
@@ -41,38 +42,35 @@ namespace LiteDB
             writer.Write(address.Index);
         }
 
-        public static void Write(this BinaryWriter writer, IndexKey obj)
+        public static void WriteBsonValue(this BinaryWriter writer, BsonValue value, ushort length)
         {
-            writer.Write((byte)obj.Type);
+            writer.Write((byte)value.Type);
 
-            // int
-            if (obj.Type == IndexDataType.Byte) writer.Write((Byte)obj.Value);
-            else if (obj.Type == IndexDataType.Int16) writer.Write((Int16)obj.Value);
-            else if (obj.Type == IndexDataType.UInt16) writer.Write((UInt16)obj.Value);
-            else if (obj.Type == IndexDataType.Int32) writer.Write((Int32)obj.Value);
-            else if (obj.Type == IndexDataType.UInt32) writer.Write((UInt32)obj.Value);
-            else if (obj.Type == IndexDataType.Int64) writer.Write((Int64)obj.Value);
-            else if (obj.Type == IndexDataType.UInt64) writer.Write((UInt64)obj.Value);
-
-            // decimal
-            else if (obj.Type == IndexDataType.Single) writer.Write((Single)obj.Value);
-            else if (obj.Type == IndexDataType.Double) writer.Write((Double)obj.Value);
-            else if (obj.Type == IndexDataType.Decimal) writer.Write((Decimal)obj.Value);
-
-            // string
-            else if (obj.Type == IndexDataType.String)
+            switch(value.Type)
             {
-                var length = (byte)Encoding.UTF8.GetByteCount((String)obj.Value);
-                writer.Write(length);
-                writer.Write((String)obj.Value, length);
+                case BsonType.Null:
+                case BsonType.MinValue:
+                case BsonType.MaxValue:
+                    break;
+
+                case BsonType.Int32: writer.Write((Int32)value.RawValue); break;
+                case BsonType.Int64: writer.Write((Int64)value.RawValue); break;
+                case BsonType.Double: writer.Write((Double)value.RawValue); break;
+
+                case BsonType.String: writer.Write((String)value.RawValue, length); break;
+
+                case BsonType.Document: new BsonWriter().WriteDocument(writer, value.AsDocument); break;
+                case BsonType.Array: new BsonWriter().WriteArray(writer, value.AsArray); break;
+
+                case BsonType.Binary: writer.Write((Byte[])value.RawValue); break;
+                case BsonType.ObjectId: writer.Write((ObjectId)value.RawValue); break;
+                case BsonType.Guid: writer.Write((Guid)value.RawValue); break;
+
+                case BsonType.Boolean: writer.Write((Boolean)value.RawValue); break;
+                case BsonType.DateTime: writer.Write((DateTime)value.RawValue); break;
+
+                default: throw new NotImplementedException();
             }
-
-            // other
-            else if (obj.Type == IndexDataType.Boolean) writer.Write((Boolean)obj.Value);
-            else if (obj.Type == IndexDataType.DateTime) writer.Write((DateTime)obj.Value);
-            else if (obj.Type == IndexDataType.Guid) writer.Write((Guid)obj.Value);
-
-            // otherwise is null
         }
     }
 }

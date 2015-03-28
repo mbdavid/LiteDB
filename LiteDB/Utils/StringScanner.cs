@@ -6,11 +6,17 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// A StringScanner is state machine used in text parsers based on regular expressions
+    /// </summary>
     public class StringScanner
     {
         public string Source { get; private set; }
         public int Index { get; private set; }
 
+        /// <summary>
+        /// Initialize scanner with a string to be parsed
+        /// </summary>
         public StringScanner(string source)
         {
             this.Source = source;
@@ -22,19 +28,43 @@ namespace LiteDB
             return this.HasTerminated ? "<EOF>" : this.Source.Substring(this.Index);
         }
 
+        /// <summary>
+        /// Reset cursor position
+        /// </summary>
         public void Reset()
         {
             this.Index = 0;
         }
 
+        /// <summary>
+        /// Skip cursor position in string source
+        /// </summary>
+        public void Seek(int length)
+        {
+            this.Index += length;
+        }
+
+        /// <summary>
+        /// Indicate that cursor is EOF
+        /// </summary>
         public bool HasTerminated
         {
             get { return this.Index >= this.Source.Length; }
         }
 
+        /// <summary>
+        /// Scan in current cursor position for this patterns. If found, returns string and run with cursor
+        /// </summary>
         public string Scan(string pattern)
         {
-            var regex = new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.Scan(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace));
+        }
+
+        /// <summary>
+        /// Scan in current cursor position for this patterns. If found, returns string and run with cursor
+        /// </summary>
+        public string Scan(Regex regex)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
 
             if (match.Success)
@@ -53,7 +83,11 @@ namespace LiteDB
         /// </summary>
         public string Scan(string pattern, int group)
         {
-            var regex = new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.Scan(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace), group);
+        }
+
+        public string Scan(Regex regex, int group)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
 
             if (match.Success)
@@ -67,26 +101,19 @@ namespace LiteDB
             }
         }
 
-        public string ScanUntil(string pattern)
-        {
-            var regex = new Regex(pattern, RegexOptions.IgnorePatternWhitespace);
-            var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
-
-            if (match.Success)
-            {
-                this.Index += match.Value.Length;
-                return match.Value;
-            }
-            else
-            {
-                this.Index = this.Source.Length; // go to the end of string
-                return string.Empty;
-            }
-        }
-
+        /// <summary>
+        /// Match if pattern is true in current cursor position. Do not change cursor position
+        /// </summary>
         public bool Match(string pattern)
         {
-            var regex = new Regex((pattern.StartsWith("^") ? "": "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return this.Match(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace));
+        }
+
+        /// <summary>
+        /// Match if pattern is true in current cursor position. Do not change cursor position
+        /// </summary>
+        public bool Match(Regex regex)
+        {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
             return match.Success;
         }

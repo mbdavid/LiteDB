@@ -6,18 +6,18 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class Begin : IShellCommand
+    internal class Begin : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"begin(\s+trans)?$").Length > 0;
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             db.BeginTrans();
+
+            return BsonValue.Null;
         }
     }
 }

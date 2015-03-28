@@ -11,13 +11,17 @@ namespace LiteDB
         public static string ReadString(this BinaryReader reader, int size)
         {
             var bytes = reader.ReadBytes(size);
-            string str = Encoding.UTF8.GetString(bytes);
-            return str.Replace((char)0, ' ').Trim();
+            return Encoding.UTF8.GetString(bytes);
         }
 
         public static Guid ReadGuid(this BinaryReader reader)
         {
             return new Guid(reader.ReadBytes(16));
+        }
+
+        public static ObjectId ReadObjectId(this BinaryReader reader)
+        {
+            return new ObjectId(reader.ReadBytes(12));
         }
 
         public static DateTime ReadDateTime(this BinaryReader reader)
@@ -30,37 +34,32 @@ namespace LiteDB
             return new PageAddress(reader.ReadUInt32(), reader.ReadUInt16());
         }
 
-        public static IndexKey ReadIndexKey(this BinaryReader reader)
+        public static BsonValue ReadBsonValue(this BinaryReader reader, ushort length)
         {
-            var type = (IndexDataType)reader.ReadByte();
+            var type = (BsonType)reader.ReadByte();
 
             switch (type)
             {
-                case IndexDataType.Null: return new IndexKey(null);
+                case BsonType.Null: return BsonValue.Null;
 
-                // int
-                case IndexDataType.Byte: return new IndexKey(reader.ReadByte());
-                case IndexDataType.Int16: return new IndexKey(reader.ReadInt16());
-                case IndexDataType.UInt16: return new IndexKey(reader.ReadUInt16());
-                case IndexDataType.Int32: return new IndexKey(reader.ReadInt32());
-                case IndexDataType.UInt32: return new IndexKey(reader.ReadUInt32());
-                case IndexDataType.Int64: return new IndexKey(reader.ReadInt64());
-                case IndexDataType.UInt64: return new IndexKey(reader.ReadUInt64());
+                case BsonType.Int32: return reader.ReadInt32();
+                case BsonType.Int64: return reader.ReadInt64();
+                case BsonType.Double: return reader.ReadDouble();
 
-                // decimal
-                case IndexDataType.Single: return new IndexKey(reader.ReadSingle());
-                case IndexDataType.Double: return new IndexKey(reader.ReadDouble());
-                case IndexDataType.Decimal: return new IndexKey(reader.ReadDecimal());
+                case BsonType.String: return reader.ReadString(length);
 
-                // string
-                case IndexDataType.String:
-                    var l = reader.ReadByte();
-                    return new IndexKey(reader.ReadString(l));
+                case BsonType.Document: return new BsonReader().ReadDocument(reader);
+                case BsonType.Array: return new BsonReader().ReadArray(reader);
 
-                // others
-                case IndexDataType.Boolean: return new IndexKey(reader.ReadBoolean());
-                case IndexDataType.DateTime: return new IndexKey(reader.ReadDateTime());
-                case IndexDataType.Guid: return new IndexKey(reader.ReadGuid());
+                case BsonType.Binary: return reader.ReadBytes(length);
+                case BsonType.ObjectId: return reader.ReadObjectId();
+                case BsonType.Guid: return reader.ReadGuid();
+
+                case BsonType.Boolean: return reader.ReadBoolean();
+                case BsonType.DateTime: return reader.ReadDateTime();
+
+                case BsonType.MinValue: return BsonValue.MinValue;
+                case BsonType.MaxValue: return BsonValue.MaxValue;
             }
 
             throw new NotImplementedException();

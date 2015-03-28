@@ -2,88 +2,99 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
-    public class BaseCollection
+    internal class BaseCollection
     {
+        public Regex FieldPattern = new Regex(@"\w[\w-]*(\.[\w-]+)*\s*");
+
         /// <summary>
         /// Read collection name from db.(colname).(command)
         /// </summary>
-        public Collection<BsonDocument> ReadCollection(LiteEngine db, StringScanner s)
+        public LiteCollection<BsonDocument> ReadCollection(LiteDatabase db, StringScanner s)
         {
-            return db.GetCollection(s.Scan(@"db\.(\w+)\.\w+\s*", 1));
+            return db.GetCollection(s.Scan(@"db\.([\w-]+)\.\w+\s*", 1));
         }
 
         public bool IsCollectionCommand(StringScanner s, string command)
         {
-            return s.Match(@"db\.\w+\." + command);
+            return s.Match(@"db\.[\w-]+\." + command);
         }
 
-        public int ReadTop(StringScanner s)
+        public KeyValuePair<int, int> ReadSkipLimit(StringScanner s)
         {
-            if (s.Match(@"top\s+\d+\s*"))
+            var skip = 0;
+            var limit = int.MaxValue;
+
+            if (s.Match(@"\s*skip\s+\d+"))
             {
-                return Convert.ToInt32(s.Scan(@"top\s+(\d+)\s*", 1));
+                skip = Convert.ToInt32(s.Scan(@"\s*skip\s+(\d+)\s*", 1));
             }
 
-            return int.MaxValue;
+            if (s.Match(@"\s*limit\s+\d+"))
+            {
+                limit = Convert.ToInt32(s.Scan(@"\s*limit\s+(\d+)\s*", 1));
+            }
+
+            // skip can be before or after limit command
+            if (s.Match(@"\s*skip\s+\d+"))
+            {
+                skip = Convert.ToInt32(s.Scan(@"\s*skip\s+(\d+)\s*", 1));
+            }
+
+            return new KeyValuePair<int, int>(skip, limit);
         }
 
         public Query ReadQuery(StringScanner s)
         {
-            if (s.HasTerminated)
+            if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d"))
             {
                 return Query.All();
             }
-            else if(s.Scan(@"\(").Length > 0)
-            {
-                return this.ReadInlineQuery(s);
-            }
-            else
-            {
-                return this.ReadOneQuery(s);
-            }
+
+            return this.ReadInlineQuery(s);
         }
 
         private Query ReadInlineQuery(StringScanner s)
         {
             var left = this.ReadOneQuery(s);
 
-            if (s.Scan(@"\s*\)\s*").Length > 0)
+            if (s.Match(@"\s+(and|or)\s+") == false)
             {
                 return left;
             }
 
-            var oper = s.Scan(@"\s*(and|or)\s*").Trim();
+            var oper = s.Scan(@"\s+(and|or)\s+").Trim();
 
             if(oper.Length == 0) throw new ApplicationException("Invalid query operator");
 
             return oper == "and" ?
-                Query.AND(left, this.ReadInlineQuery(s)) :
-                Query.OR(left, this.ReadInlineQuery(s));
+                Query.And(left, this.ReadInlineQuery(s)) :
+                Query.Or(left, this.ReadInlineQuery(s));
         }
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = s.Scan(@"\w+(\.\w+)*\s*").Trim();
-            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between)");
-            var value = new JsonReader().ReadValue(s);
+            var field = s.Scan(this.FieldPattern).Trim();
+            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between|contains)");
+            var value = JsonSerializer.Deserialize(s);
 
             switch (oper)
             {
-                case "=": return Query.EQ(field, value.RawValue);
-                case "!=": return Query.Not(field, value.RawValue);
-                case ">": return Query.GT(field, value.RawValue);
-                case ">=": return Query.GTE(field, value.RawValue);
-                case "<": return Query.LT(field, value.RawValue);
-                case "<=": return Query.LTE(field, value.RawValue);
-                case "like": return Query.StartsWith(field, value.AsString);
-                case "in": return Query.In(field, value.AsArray.RawValue.ToArray());
-                case "between": return Query.Between(field, value.AsArray.RawValue[0], value.AsArray.RawValue[1]);
+                case "=": return Query.EQ(field, value);
+                case "!=": return Query.Not(field, value);
+                case ">": return Query.GT(field, value);
+                case ">=": return Query.GTE(field, value);
+                case "<": return Query.LT(field, value);
+                case "<=": return Query.LTE(field, value);
+                case "like": return Query.StartsWith(field, value);
+                case "in": return Query.In(field, value.AsArray);
+                case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
+                case "contains": return Query.Contains(field, value);
                 default: throw new ApplicationException("Invalid query operator");
             }
         }
-
     }
 }

@@ -8,17 +8,15 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    class CollectionExec : BaseCollection, IShellCommand
+    internal class CollectionExec : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "exec");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
             var query = s.Match("{") ? Query.All() : this.ReadQuery(s);
             var code = DynamicCode.GetCode(s);
@@ -31,12 +29,12 @@ namespace LiteDB.Shell.Commands
 
                 foreach (var doc in docs)
                 {
-                    code(doc["_id"].RawValue, doc, col, db);
+                    code(doc["_id"], doc, col, db);
                 }
 
                 db.Commit();
 
-                display.WriteBson(docs.Length);
+                return docs.Length;
             }
             catch (Exception ex)
             {
@@ -54,15 +52,15 @@ using LiteDB;
 
 public class Program {
     public static void DoWork(
-        object id, 
+        BsonValue id, 
         BsonDocument doc, 
-        Collection<BsonDocument> col, 
-        LiteEngine db) { [code] }
+        LiteCollection<BsonDocument> col, 
+        LiteDatabase db) { [code] }
 }";
 
-        public static Action<object, BsonDocument, Collection<BsonDocument>, LiteEngine> GetCode(StringScanner s)
+        public static Action<object, BsonDocument, LiteCollection<BsonDocument>, LiteDatabase> GetCode(StringScanner s)
         {
-            var str = s.Scan(@".*");
+            var str = s.Scan(@"[\s\S]*");
             var code = CODE_TEMPLATE.Replace("[code]", str);
             var provider = new CSharpCodeProvider();
             var parameters = new CompilerParameters();
@@ -87,7 +85,7 @@ public class Program {
             var program = assembly.GetType("Program");
             var method = program.GetMethod("DoWork");
 
-            return new Action<object, BsonDocument, Collection<BsonDocument>, LiteEngine>((id, doc, col, db) =>
+            return new Action<object, BsonDocument, LiteCollection<BsonDocument>, LiteDatabase>((id, doc, col, db) =>
             {
                 method.Invoke(null, new object[] { id, doc, col, db });
             });

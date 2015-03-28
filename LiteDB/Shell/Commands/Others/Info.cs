@@ -6,18 +6,16 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class Info : IShellCommand
+    internal class Info : ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"db\.info$");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
-            display.WriteBson(db.GetDatabaseInfo());
+            return db.GetDatabaseInfo();
         }
     }
 }

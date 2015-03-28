@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
-    public class VersionDB : LiteEngine
+    public class VersionDB : LiteDatabase
     {
         public VersionDB(string connectionString)
             : base(connectionString)
@@ -19,21 +19,21 @@ namespace UnitTest
         {
             if (newVersion == 1)
             {
-                Debug.Print("Initializing version");
+                var col = this.GetCollection("customer");
 
-                this.Customers.Insert(new Customer { CustomerId = Guid.NewGuid(), Name = "First" });
-
+                // add 1
+                col.Insert(new BsonDocument());
             }
             else if (newVersion == 2)
             {
-                Debug.Print("Updating to vesion 2");
+                var col = this.GetCollection("customer");
 
-                this.Customers.Insert(new Customer { CustomerId = Guid.NewGuid(), Name = "Second" });
-                this.Customers.EnsureIndex("Name");
+                // add more 3
+                col.Insert(new BsonDocument());
+                col.Insert(new BsonDocument());
+                col.Insert(new BsonDocument());
             }
         }
-
-        public Collection<Customer> Customers { get { return this.GetCollection<Customer>("curtomers"); } }
     }
 
     [TestClass]
@@ -42,19 +42,24 @@ namespace UnitTest
         [TestMethod]
         public void Version_Test()
         {
-            var cs1 = DB.Path(true, "test.db");
-            var cs2 = DB.Path(false, "test.db", "version=2");
+            var dbf = DB.Path();
+            var cs1 = "version=1; filename=" + dbf;
+            var cs2 = "version=2; filename=" + dbf;
 
             using (var db = new VersionDB(cs1))
             {
+                var col = db.GetCollection("customer");
+
                 // On initialize db, i insert a first row
-                Assert.AreEqual(1, db.Customers.Count());
+                Assert.AreEqual(1, col.Count());
             }
 
             using (var db = new VersionDB(cs2))
             {
+                var col = db.GetCollection("customer");
+
                 // And when update database to version 2, insert another
-                Assert.AreEqual(2, db.Customers.Count());
+                Assert.AreEqual(4, col.Count());
             }
         }
     }

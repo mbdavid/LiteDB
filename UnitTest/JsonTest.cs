@@ -15,25 +15,25 @@ namespace UnitTest
         {
             // create same object, but using BsonDocument
             var doc = new BsonDocument();
-            doc.Id = 123;
+            doc["_id"] = 123;
             doc["FirstString"] = "BEGIN this string \" has \" \t and this \f \n\r END";
             doc["CustomerId"] = Guid.NewGuid();
             doc["Date"] = new DateTime(2015, 1, 1);
             doc["MyNull"] = null;
             doc["Items"] = new BsonArray();
-            doc["MyObj"] = new BsonObject();
+            doc["MyObj"] = new BsonDocument();
             doc["EmptyString"] = "";
-            var obj = new BsonObject();
+            var obj = new BsonDocument();
             obj["Qtd"] = 3;
             obj["Description"] = "Big beer package";
-            obj["Unit"] = 1299.995m;
+            obj["Unit"] = 1299.995;
             doc["Items"].AsArray.Add(obj);
             doc["Items"].AsArray.Add("string-one");
             doc["Items"].AsArray.Add(null);
             doc["Items"].AsArray.Add(true);
             doc["Items"].AsArray.Add(DateTime.Now);
 
-            doc["MyObj"]["IsFirstId"] = true;
+            doc.Set("MyObj.IsFirstId", true);
 
             return doc;
         }
@@ -43,18 +43,15 @@ namespace UnitTest
         {
             var o = CreateDoc();
 
-            var json = JsonEx.Serialize(o, true);
+            var json = JsonSerializer.Serialize(o, true);
 
-            var d = JsonEx.Deserialize<BsonDocument>(json);
+            var d = JsonSerializer.Deserialize(json).AsDocument;
 
             Assert.AreEqual(d["Date"].AsDateTime, o["Date"].AsDateTime);
             Assert.AreEqual(d["CustomerId"].AsGuid, o["CustomerId"].AsGuid);
-            Assert.AreEqual(d["Items"].AsArray.Length, o["Items"].AsArray.Length);
-            Assert.AreEqual(d.Id, 123);
-            Assert.AreEqual(d["_id"].AsLong, o["_id"].AsLong);
-
-
+            Assert.AreEqual(d["Items"].AsArray.Count, o["Items"].AsArray.Count);
+            Assert.AreEqual(d["_id"], 123);
+            Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
         }
-
     }
 }

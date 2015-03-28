@@ -16,7 +16,7 @@ namespace LiteDB
         /// <summary>
         /// Datafile specification version
         /// </summary>
-        private const byte FILE_VERSION = 3;
+        private const byte FILE_VERSION = 4;
 
         /// <summary>
         /// Get/Set the changeID of data. When a client read pages, all pages are in the same version. But when OpenTransaction, we need validade that current changeID is the sabe that we have in cache
@@ -38,15 +38,22 @@ namespace LiteDB
         /// </summary>
         public int UserVersion { get; set; }
 
+        /// <summary>
+        /// Get/Set the first collection pageID (used as Field to be passed as reference)
+        /// </summary>
+        public uint FirstCollectionPageID;
+
         public HeaderPage()
             : base()
         {
             this.PageID = 0;
             this.PageType = LiteDB.PageType.Header;
             this.FreeEmptyPageID = uint.MaxValue;
+            this.FirstCollectionPageID = uint.MaxValue;
             this.ChangeID = 0;
             this.LastPageID = 0;
             this.UserVersion = 0;
+            this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
         }
 
@@ -63,26 +70,28 @@ namespace LiteDB
 
         public override void ReadContent(BinaryReader reader)
         {
-            var info = reader.ReadString(HEADER_INFO.Length);
+            var info = reader.ReadString();
 
-            if (info != HEADER_INFO)
-                throw new LiteException("This file is not a LiteDB datafile");
+            if (info != HEADER_INFO) throw LiteException.InvalidDatabase(reader.BaseStream);
 
-            if (reader.ReadByte() != FILE_VERSION)
-                throw new LiteException("Invalid LiteDB datafile version");
+            var ver = reader.ReadByte();
+
+            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(reader.BaseStream, ver);
 
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
+            this.FirstCollectionPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.UserVersion = reader.ReadInt32();
         }
 
         public override void WriteContent(BinaryWriter writer)
         {
-            writer.Write(HEADER_INFO, HEADER_INFO.Length);
+            writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
+            writer.Write(this.FirstCollectionPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.UserVersion);
         }

@@ -6,21 +6,28 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionInsert : BaseCollection, IShellCommand
+    internal class CollectionInsert : BaseCollection, ILiteCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "insert");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            if (db == null) throw new LiteException("No database");
-
             var col = this.ReadCollection(db, s);
-            var value = new JsonReader().ReadValue(s);
+            var value = JsonSerializer.Deserialize(s);
 
-            col.Insert(new BsonDocument(value));
+            if (value.IsArray)
+            {
+                return col.Insert(value.AsArray.RawValue.Select(x => x.AsDocument));
+            }
+            else
+            {
+                col.Insert(new BsonDocument(value.AsDocument));
+
+                return BsonValue.Null;
+            }
         }
     }
 }

@@ -11,34 +11,33 @@ namespace LiteDB
         /// <summary>
         /// If a Index Page has less that this free space, it's considered full page for new items.
         /// </summary>
-        public const int RESERVED_BYTES = 100;
+        public const int INDEX_RESERVED_BYTES = 100;
 
         public Dictionary<ushort, IndexNode> Nodes { get; set; }
-
-        /// <summary>
-        /// Bytes available in this page
-        /// </summary>
-        public override int FreeBytes
-        {
-            get { return PAGE_AVAILABLE_BYTES - this.Nodes.Sum(x => x.Value.Length); }
-        }
 
         public IndexPage()
             : base()
         {
-            this.PageType = LiteDB.PageType.Index;
+            this.PageType = PageType.Index;
             this.Nodes = new Dictionary<ushort, IndexNode>();
         }
 
-        protected override void UpdateItemCount()
-        {
-            this.ItemCount = this.Nodes.Count;
-        }
-
+        /// <summary>
+        /// Clear page content - nodes
+        /// </summary>
         public override void Clear()
         {
             base.Clear();
             this.Nodes = new Dictionary<ushort, IndexNode>();
+        }
+
+        /// <summary>
+        /// Update freebytes + items count
+        /// </summary>
+        public override void UpdateItemCount()
+        {
+            this.ItemCount = this.Nodes.Count;
+            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.Nodes.Sum(x => x.Value.Length);
         }
 
         public override void ReadContent(BinaryReader reader)
@@ -54,7 +53,8 @@ namespace LiteDB
 
                 node.Page = this;
                 node.Position = new PageAddress(this.PageID, index);
-                node.Key = reader.ReadIndexKey();
+                node.KeyLength = reader.ReadUInt16();
+                node.Key = reader.ReadBsonValue(node.KeyLength);
                 node.DataBlock = reader.ReadPageAddress();
 
                 for (var j = 0; j < node.Prev.Length; j++)
@@ -71,10 +71,11 @@ namespace LiteDB
         {
             foreach (var node in this.Nodes.Values)
             {
-                writer.Write(node.Position.Index); // Node Index on this page
-                writer.Write((byte)node.Prev.Length); // Level length
-                writer.Write(node.Key); // Key
-                writer.Write(node.DataBlock); // Data block reference
+                writer.Write(node.Position.Index); // node Index on this page
+                writer.Write((byte)node.Prev.Length); // level length
+                writer.Write(node.KeyLength); // valueLength
+                writer.WriteBsonValue(node.Key, node.KeyLength); // value
+                writer.Write(node.DataBlock); // data block reference
 
                 for (var j = 0; j < node.Prev.Length; j++)
                 {

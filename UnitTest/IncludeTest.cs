@@ -8,34 +8,54 @@ using System.Diagnostics;
 
 namespace UnitTest
 {
+    public class Order
+    {
+        public ObjectId Id { get; set; }
+
+        public DbRef<Customer> Customer { get; set; }
+    }
+
+    public class Customer
+    {
+        public ObjectId Id { get; set; }
+
+        public string Name { get; set; }
+    }
+
     [TestClass]
     public class IncludeTest
     {
         [TestMethod]
         public void Include_Test()
         {
-            using (var db = new LiteEngine(DB.Path()))
+            using (var db = new LiteDatabase(DB.Path()))
             {
-                var customer1 = new Customer { CustomerId = Guid.NewGuid(), Name = "Mauricio" };
-                var order1 = new Order { OrderKey = 1, Date = DateTime.Now, CustomerId = customer1.CustomerId };
-                var order2 = new Order { OrderKey = 2, Date = new DateTime(2000, 1, 1), CustomerId = customer1.CustomerId };
+                var customers = db.GetCollection<Customer>("customers");
+                var orders = db.GetCollection<Order>("orders");
 
-                var customers = db.GetCollection<Customer>("Customer");
-                var orders = db.GetCollection<Order>("Order");
+                var customer = new Customer
+                {
+                    Name = "John Doe"
+                };
 
-                customers.EnsureIndex(x => x.Name, true);
+                // insert and set customer.Id
+                customers.Insert(customer);
 
-                customers.Insert(customer1);
-                orders.Insert(order1);
-                orders.Insert(order2);
+                var order = new Order
+                {
+                    Customer = new DbRef<Customer>(customers, customer.Id)
+                };
+
+                orders.Insert(order);
 
                 var query = orders
-                    .Include((x) => x.Customer = customers.FindById(x.CustomerId))
-                    .All()
-                    .Select(x => new { x.OrderKey, Cust = x.Customer.Name, CustomerInstance = x.Customer })
+                    .Include((x) => x.Customer.Fetch(db))
+                    .FindAll()
+                    .Select(x => new { CustomerName = x.Customer.Item.Name })
                     .FirstOrDefault();
 
-                Assert.AreEqual(customer1.Name, query.Cust);
+                Assert.AreEqual(customer.Name, query.CustomerName);
+
             }
         }
     }

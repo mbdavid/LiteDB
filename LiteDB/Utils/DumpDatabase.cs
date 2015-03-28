@@ -12,7 +12,7 @@ namespace LiteDB
     /// </summary>
     internal class DumpDatabase
     {
-        public static string Pages(LiteEngine db, bool mem)
+        public static StringBuilder Pages(LiteDatabase db, bool mem)
         {
             var sb = new StringBuilder();
 
@@ -40,10 +40,10 @@ namespace LiteDB
                 sb.AppendLine();
             }
 
-            return sb.ToString();
+            return sb;
         }
 
-        private static T ReadPage<T>(LiteEngine db, uint pageID, bool mem)
+        private static T ReadPage<T>(LiteDatabase db, uint pageID, bool mem)
             where T : BasePage, new()
         {
             if (mem && pageID == 0) return (T)(object)db.Cache.Header;
@@ -51,13 +51,14 @@ namespace LiteDB
             return mem ? db.Pager.GetPage<T>(pageID) : db.Disk.ReadPage<T>(pageID);
         }
 
-        public static string Index(LiteEngine db, string collection, string field, int size = 5)
+        public static StringBuilder Index(LiteDatabase db, string collection, string field, int size = 5)
         {
             var sbs = new StringBuilder[IndexNode.MAX_LEVEL_LENGTH + 1];
-            var first = true;
+
             var col = db.GetCollection(collection).GetCollectionPage(false);
             if (col == null) throw new ArgumentException("Invalid collection name");
-            var index = col.Indexes.FirstOrDefault(x => x.Field == field);
+
+            var index = col.GetIndex(field);
             if (index == null) throw new ArgumentException("Invalid index field name");
 
             for (var i = 0; i < sbs.Length; i++)
@@ -72,37 +73,27 @@ namespace LiteDB
                 var page = db.Pager.GetPage<IndexPage>(cur.PageID);
                 var node = page.Nodes[cur.Index];
 
-                sbs[0].Append((first ? "HEAD" :
-                    node.Key.Value == null ? "null" : Limit(node.Key.Value.ToString(), size)).PadBoth(1 + (2 * size)));
-
-                first = false;
+                sbs[0].Append((Limit(node.Key.ToString(), size)).PadBoth(1 + (2 * size)));
 
                 for (var i = 0; i < IndexNode.MAX_LEVEL_LENGTH; i++)
                 {
                     var sb = sbs[i + 1];
-                    var p = "-";
-                    var n = "-";
+                    var p = " ";
+                    var n = " ";
 
                     if (i < node.Prev.Length)
                     {
                         if (!node.Prev[i].IsEmpty)
                         {
-                            if (node.Prev[i].Equals(index.HeadNode))
-                            {
-                                p = "<-H";
-                            }
-                            else
-                            {
-                                var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
-                                var pnode = pprev.Nodes[node.Prev[i].Index];
-                                p = pnode.Key.Value == null ? "null" : pnode.Key.Value.ToString();
-                            }
+                            var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
+                            var pnode = pprev.Nodes[node.Prev[i].Index];
+                            p = pnode.Key.ToString();
                         }
                         if (!node.Next[i].IsEmpty)
                         {
                             var pnext = db.Pager.GetPage<IndexPage>(node.Next[i].PageID);
                             var pnode = pnext.Nodes[node.Next[i].Index];
-                            n = pnode.Key.Value == null ? "null" : pnode.Key.Value.ToString();
+                            n = pnode.Key.ToString();
                         }
                     }
 
@@ -119,7 +110,7 @@ namespace LiteDB
                 s.AppendLine(sbs[i].ToString());
             }
 
-            return s.ToString();
+            return s;
         }
 
         private static string Limit(string text, int size)
@@ -149,9 +140,9 @@ namespace LiteDB
             return address.PageID.Dump() + ":" + address.Index.Dump();
         }
 
-        public static string Dump(this IndexKey value)
+        public static string Dump(this BsonValue value)
         {
-            return string.Format("{0}{1}{0}", value.Type == IndexDataType.String ? "'" : "", value.ToString());
+            return value.ToString();
         }
 
         public static void Dump(this BasePage page, StringBuilder sb)
@@ -165,11 +156,12 @@ namespace LiteDB
 
         public static void Dump(this HeaderPage page, StringBuilder sb)
         {
-            sb.AppendFormat("Change: {0}, Version: {1}, FreeEmptyPageID: {2}, LastPageID: {3}",
+            sb.AppendFormat("Change: {0}, Version: {1}, FreeEmptyPageID: {2}, LastPageID: {3}, ColID: {4}",
                 page.ChangeID,
                 page.UserVersion,
                 page.FreeEmptyPageID.Dump(),
-                page.LastPageID.Dump());
+                page.LastPageID.Dump(),
+                page.FirstCollectionPageID.Dump());
         }
 
         public static void Dump(this IndexPage page, StringBuilder sb)
@@ -190,19 +182,13 @@ namespace LiteDB
                 page.DocumentCount,
                 page.FreeDataPageID.Dump());
 
-            var idx = 0;
-
-            foreach (var i in page.Indexes)
+            foreach (var i in page.GetIndexes(true))
             {
-                if (i.IsEmpty) continue;
-
                 sb.AppendFormat("[{0}] Field: '{1}', Head: {2}, FreeIndexPageID: {3} / ",
-                    idx,
+                    i.Slot,
                     i.Field,
                     i.HeadNode.Dump(),
                     i.FreeIndexPageID.Dump());
-
-                idx++;
             }
         }
 

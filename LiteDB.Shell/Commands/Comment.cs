@@ -6,14 +6,14 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Comment : IShellCommand
+    internal class Comment : ConsoleCommand
     {
-        public bool IsCommand(StringScanner s)
+        public override bool IsCommand(StringScanner s)
         {
             return s.Match(@"--");
         }
 
-        public void Execute(LiteEngine db, StringScanner s, Display display)
+        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
         {
         }
     }

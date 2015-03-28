@@ -33,14 +33,16 @@ namespace LiteDB
 
         /// <summary>
         /// Define, in connection string, the user database version. When you increse this value
-        /// LiteEngine will run OnUpdate method for each new version. If defined, must be >= 1. Default: 1
+        /// LiteDatabase will run OnUpdate method for each new version. If defined, must be >= 1. Default: 1
         /// </summary>
         public int UserVersion { get; private set; }
 
         public ConnectionString(string connectionString)
         {
+            if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
+
             // If is only a name, get connectionString from App.config
-            if (Regex.IsMatch(connectionString, @"^\w+$"))
+            if (Regex.IsMatch(connectionString, @"^[\w-]+$"))
                 connectionString = ConfigurationManager.ConnectionStrings[connectionString].ConnectionString;
 
             // Create a dictionary from string name=value collection

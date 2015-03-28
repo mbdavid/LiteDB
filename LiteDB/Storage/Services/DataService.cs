@@ -22,16 +22,16 @@ namespace LiteDB
         /// <summary>
         /// Insert data inside a datapage. Returns dataPageID that idicates the first page
         /// </summary>
-        public DataBlock Insert(CollectionPage col, IndexKey key, byte[] data)
+        public DataBlock Insert(CollectionPage col, byte[] data)
         {
             // need to extend (data is bigger than 1 page)
-            var extend = (data.Length + key.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
+            var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
 
             // if extend, just search for a page with BLOCK_SIZE avaiable
-            var dataPage = _pager.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : key.Length + data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            var dataPage = _pager.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
-            var block = new DataBlock { Position = new PageAddress(dataPage.PageID, dataPage.DataBlocks.NextIndex()), Page = dataPage, Key = key };
+            var block = new DataBlock { Position = new PageAddress(dataPage.PageID, dataPage.DataBlocks.NextIndex()), Page = dataPage };
 
             // if extend, store all bytes on extended page.
             if (extend)
@@ -49,10 +49,13 @@ namespace LiteDB
             // add dataBlock to this page
             dataPage.DataBlocks.Add(block.Position.Index, block);
 
+            // update freebytes + items count
+            dataPage.UpdateItemCount();
+
             dataPage.IsDirty = true;
 
             // add/remove dataPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             col.DocumentCount++;
 
@@ -94,10 +97,10 @@ namespace LiteDB
             }
             else
             {
-                // If no extends, just update data block
+                // if no extends, just update data block
                 block.Data = data;
 
-                // If there was a extended bytes, delete
+                // if there was a extended bytes, delete
                 if (block.ExtendPageID != uint.MaxValue)
                 {
                     _pager.DeletePage(block.ExtendPageID, true);
@@ -105,8 +108,11 @@ namespace LiteDB
                 }
             }
 
-            // Add/Remove dataPage on freelist if has space AND its on/off free list
-            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            // updates freebytes + items count
+            dataPage.UpdateItemCount();
+
+            // add/remove dataPage on freelist if has space AND its on/off free list
+            _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             dataPage.IsDirty = true;
 
@@ -164,6 +170,9 @@ namespace LiteDB
             // delete block inside page
             page.DataBlocks.Remove(block.Position.Index);
 
+            // update freebytes + itemcount
+            page.UpdateItemCount();
+
             // if there is no more datablocks, lets delete the page
             if (page.DataBlocks.Count == 0)
             {
@@ -175,7 +184,7 @@ namespace LiteDB
             else
             {
                 // add or remove to free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > DataPage.RESERVED_BYTES, page, col, ref col.FreeDataPageID);
+                _pager.AddOrRemoveToFreeList(page.FreeBytes > DataPage.DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
             }
 
             col.DocumentCount--;
@@ -201,6 +210,9 @@ namespace LiteDB
                 page.Data = new byte[bytesToCopy];
 
                 Buffer.BlockCopy(data, offset, page.Data, 0, bytesToCopy);
+
+                // updates free bytes + items count
+                page.UpdateItemCount();
 
                 page.IsDirty = true;
 

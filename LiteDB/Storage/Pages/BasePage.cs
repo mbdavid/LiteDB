@@ -56,10 +56,11 @@ namespace LiteDB
         public int ItemCount { get; set; }
 
         /// <summary>
-        /// Must be overite for each page. Used to find a free page using only header search [used in FreeList]
+        /// Used to find a free page using only header search [used in FreeList]
         /// Its Int32 but writes in UInt16
+        /// Its updated when a page modify content length (add/remove items)
         /// </summary>
-        public virtual int FreeBytes { get; set; }
+        public int FreeBytes { get; set; }
 
         /// <summary>
         /// Indicate that this page is dirty (was modified) and must persist when commited [not-persistable]
@@ -71,16 +72,18 @@ namespace LiteDB
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
             this.PageType = LiteDB.PageType.Empty;
+            this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
         }
 
         /// <summary>
-        /// Used in all specific page to update ItemCount before write on disk
+        /// Every page must imeplement this ItemCount + FreeBytes
+        /// Must be called after Items are updates (insert/deletes) to keep variables ItemCount and FreeBytes synced
         /// </summary>
-        protected virtual void UpdateItemCount()
+        public virtual void UpdateItemCount()
         {
-            // must be implemented in all pages types
             this.ItemCount = 0;
+            this.FreeBytes = PAGE_AVAILABLE_BYTES;
         }
 
         /// <summary>
@@ -90,8 +93,9 @@ namespace LiteDB
         {
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
-            this.PageType = LiteDB.PageType.Empty;
+            this.PageType = PageType.Empty;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
+            this.ItemCount = 0;
         }
 
         /// <summary>
@@ -106,6 +110,7 @@ namespace LiteDB
             page.NextPageID = this.NextPageID;
             page.PageType = this.PageType;
             page.ItemCount = this.ItemCount;
+            page.FreeBytes = this.FreeBytes;
             page.IsDirty = this.IsDirty;
 
             return page;
@@ -129,7 +134,6 @@ namespace LiteDB
             writer.Write(this.PrevPageID);
             writer.Write(this.NextPageID);
             writer.Write((byte)this.PageType);
-            UpdateItemCount(); // updating ItemCount before save on disk
             writer.Write((UInt16)this.ItemCount);
             writer.Write((UInt16)this.FreeBytes);
         }

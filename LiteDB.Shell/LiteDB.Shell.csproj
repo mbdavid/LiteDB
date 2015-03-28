@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LiteDB.Shell</RootNamespace>
     <AssemblyName>LiteDB.Shell</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
@@ -29,7 +29,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -53,12 +53,19 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Version.cs" />
+    <Compile Include="Commands\Help.cs" />
+    <Compile Include="Commands\Open.cs" />
+    <Compile Include="Commands\Timer.cs" />
+    <Compile Include="Commands\Run.cs" />
+    <Compile Include="Commands\Ed.cs" />
+    <Compile Include="ConsoleCommand.cs" />
     <Compile Include="Commands\Close.cs" />
     <Compile Include="Commands\Comment.cs" />
-    <Compile Include="Commands\Help.cs" />
     <Compile Include="Commands\Pretty.cs" />
     <Compile Include="Commands\Quit.cs" />
     <Compile Include="Commands\Spool.cs" />
+    <Compile Include="Display.cs" />
     <Compile Include="InputCommand.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

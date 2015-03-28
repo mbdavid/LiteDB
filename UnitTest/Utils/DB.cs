@@ -10,18 +10,16 @@ namespace UnitTest
 {
     public class DB
     {
-        public static string Path(bool delete = true, string name = "test.db", string connStr = "")
+        public static string Path()
         {
             var path = System.IO.Path.GetFullPath(
                 System.IO.Directory.GetCurrentDirectory() + 
-                "../../../../TestResults/" + name);
+                "../../../../TestResults/test.db");
 
-            if(System.IO.File.Exists(path) && delete)
+            if(System.IO.File.Exists(path))
                 System.IO.File.Delete(path);
 
-            var connectionString = connStr.Length > 0 ?"filename=" + path + ";" + connStr : path;
-
-            return connectionString;
+            return path;
         }
 
         public static string LoremIpsum(int minWords, int maxWords,
