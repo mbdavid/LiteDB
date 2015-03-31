@@ -70,7 +70,9 @@ namespace LiteDB
                 case BsonType.DateTime:
                     writer.Write((byte)0x09);
                     this.WriteCString(writer, key);
-                    var utc = ((DateTime)value.RawValue).ToUniversalTime();
+                    var date = (DateTime)value.RawValue;
+                    // do not convert to UTC min/max date values - #19
+                    var utc =  (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUniversalTime();
                     var ts = utc - BsonValue.UnixEpoch;
                     writer.Write(Convert.ToInt64(ts.TotalMilliseconds));
                     break;
