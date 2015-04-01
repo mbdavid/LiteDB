@@ -58,8 +58,11 @@ namespace LiteDB
                     return false;
                 }
 
+                // normalize id before find
+                var value = id.Normalize(col.PK.Options);
+
                 // find indexNode from pk index
-                var indexNode = this.Database.Indexer.Find(col.PK, id, false, Query.Ascending);
+                var indexNode = this.Database.Indexer.Find(col.PK, value, false, Query.Ascending);
 
                 // if not found document, no updates
                 if (indexNode == null)

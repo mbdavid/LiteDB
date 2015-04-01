@@ -30,8 +30,11 @@ namespace LiteDB
                     return false;
                 }
 
+                // normalize id before find
+                var value = id.Normalize(col.PK.Options);
+
                 // find indexNode using PK index
-                var node = this.Database.Indexer.Find(col.PK, id, false, Query.Ascending);
+                var node = this.Database.Indexer.Find(col.PK, value, false, Query.Ascending);
 
                 // if not found, abort transaction and returns false
                 if (node == null)

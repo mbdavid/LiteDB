@@ -271,6 +271,7 @@ namespace LiteDB
 
         /// <summary>
         /// Find first node that index match with value. If not found but sibling = true, returns near node (only non-unique index)
+        /// Before find, value must be normalized
         /// </summary>
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
