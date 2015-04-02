@@ -14,10 +14,7 @@ namespace UnitTest
         {
             var path = System.IO.Path.GetFullPath(
                 System.IO.Directory.GetCurrentDirectory() + 
-                "../../../../TestResults/test.db");
-
-            if(System.IO.File.Exists(path))
-                System.IO.File.Delete(path);
+                string.Format("../../../../TestResults/test-{0}.db", Guid.NewGuid()));
 
             return path;
         }

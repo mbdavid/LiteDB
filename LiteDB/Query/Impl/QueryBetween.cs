@@ -47,9 +47,15 @@ namespace LiteDB
             }
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override void NormalizeValues(IndexOptions options)
         {
-            var val = doc.Get(this.Field);
+            _start = _start.Normalize(options);
+            _end = _end.Normalize(options);
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
+        {
+            var val = doc.Get(this.Field).Normalize(options);
 
             return val.CompareTo(_start) >= 0 && val.CompareTo(_end) <= 0;
         }

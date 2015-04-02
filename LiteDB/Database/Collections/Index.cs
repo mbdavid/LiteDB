@@ -177,6 +177,12 @@ namespace LiteDB
                 // search for index reference
                 var index = col.GetIndex(field);
 
+                if (index == null)
+                {
+                    this.Database.Transaction.Abort();
+                    return false;
+                }
+
                 // delete all data pages + indexes pages
                 this.Database.Indexer.DropIndex(index);
 

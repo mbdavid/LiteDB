@@ -33,7 +33,7 @@ namespace LiteDB
 
         internal CollectionService Collections { get; private set; }
 
-        public BsonMapper Mapper { get; private set; }
+        public BsonMapper Mapper { get; set; }
 
         /// <summary>
         /// Starts LiteDB database. Open database file or create a new one if not exits

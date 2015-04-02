@@ -23,9 +23,14 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override void NormalizeValues(IndexOptions options)
         {
-            return _left.ExecuteFullScan(doc) || _right.ExecuteFullScan(doc);
+            throw new NotSupportedException();
+        }
+
+        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
+        {
+            return _left.ExecuteFullScan(doc, options) || _right.ExecuteFullScan(doc, options);
         }
 
         internal override IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)

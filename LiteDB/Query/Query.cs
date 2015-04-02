@@ -176,10 +176,15 @@ namespace LiteDB
         internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
 
         /// <summary>
+        /// Abstract method to normalize values before run full scan
+        /// </summary>
+        internal abstract void NormalizeValues(IndexOptions options);
+
+        /// <summary>
         /// Abstract method that must implement full scan - will be called for each document and need
         /// returns true if condition was satisfied
         /// </summary>
-        internal abstract bool ExecuteFullScan(BsonDocument doc);
+        internal abstract bool ExecuteFullScan(BsonDocument doc, IndexOptions options);
 
         /// <summary>
         /// Find witch index will be used and run Execute method - define ExecuteMode here
@@ -213,6 +218,9 @@ namespace LiteDB
             if (index == null)
             {
                 this.ExecuteMode = QueryExecuteMode.FullScan;
+
+                // normalize query values before run full scan
+                this.NormalizeValues(new IndexOptions());
 
                 // if there is no index, returns all index nodes - will be used Full Scan
                 return collection.Database.Indexer.FindAll(col.PK, Query.Ascending);

@@ -59,5 +59,17 @@ namespace LiteDB
                 this.EmptyStringToNull == other.EmptyStringToNull &&
                 this.RemoveAccents == other.RemoveAccents;
         }
+
+        public IndexOptions Clone()
+        {
+            return new IndexOptions
+            {
+                Unique = this.Unique,
+                IgnoreCase = this.IgnoreCase,
+                TrimWhitespace = this.TrimWhitespace,
+                EmptyStringToNull = this.EmptyStringToNull,
+                RemoveAccents = this.RemoveAccents
+            };
+        }
     }
 }

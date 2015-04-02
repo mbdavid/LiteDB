@@ -38,7 +38,7 @@ namespace LiteDB
                 if (query.ExecuteMode == QueryExecuteMode.FullScan)
                 {
                     // execute query condition here - if false, do not add on final results
-                    if(query.ExecuteFullScan(doc) == false) continue;
+                    if(query.ExecuteFullScan(doc, new IndexOptions()) == false) continue;
 
                     // implement skip/limit before on full search - no linq
                     if (--skip >= 0) continue;
@@ -141,7 +141,7 @@ namespace LiteDB
 
                 var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
-                if (query.ExecuteFullScan(doc)) count++;
+                if (query.ExecuteFullScan(doc, new IndexOptions())) count++;
             }
 
             return count;
@@ -174,7 +174,7 @@ namespace LiteDB
 
                 var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
-                if (query.ExecuteFullScan(doc)) return true;
+                if (query.ExecuteFullScan(doc, new IndexOptions())) return true;
             }
 
             return false;
