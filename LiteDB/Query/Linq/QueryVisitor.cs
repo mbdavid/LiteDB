@@ -35,10 +35,19 @@ namespace LiteDB
                 var bin = expr as BinaryExpression;
                 return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right)); 
             }
+            else if (expr is MemberExpression && expr.Type == typeof(bool)) // x.Active
+            {
+                return Query.EQ(this.VisitMember(expr), new BsonValue(true));
+            }
             else if (expr.NodeType == ExpressionType.NotEqual) // !=
             {
                 var bin = expr as BinaryExpression;
                 return Query.Not(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+            }
+            else if (expr.NodeType == ExpressionType.Not) // !x.Active
+            {
+                var bin = expr as UnaryExpression;
+                return Query.EQ(this.VisitMember(bin), new BsonValue(false));
             }
             else if (expr.NodeType == ExpressionType.LessThan) // <
             {

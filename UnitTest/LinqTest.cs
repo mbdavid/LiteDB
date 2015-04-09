@@ -12,6 +12,7 @@ namespace UnitTest
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public bool Active { get; set; }
 
         public UserDomain Domain { get; set; }
     }
@@ -31,8 +32,8 @@ namespace UnitTest
 
             using (var db = new LiteDatabase(DB.Path()))
             {
-                var c1 = new User { Id = 1, Name = "Mauricio", Domain = new UserDomain { DomainName = "Numeria" } };
-                var c2 = new User { Id = 2, Name = "Malafaia", Domain = new UserDomain { DomainName = "Numeria" } };
+                var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" } };
+                var c2 = new User { Id = 2, Name = "Malafaia", Active = false, Domain = new UserDomain { DomainName = "Numeria" } };
                 var c3 = new User { Id = 3, Name = "Chris", Domain = new UserDomain { DomainName = "Numeria" } };
                 var c4 = new User { Id = 4, Name = "Juliane" };
 
@@ -48,6 +49,10 @@ namespace UnitTest
                 // == !=
                 Assert.AreEqual(1, col.Count(x => x.Id == 1));
                 Assert.AreEqual(3, col.Count(x => x.Id != 1));
+
+                // member booleans
+                Assert.AreEqual(3, col.Count(x => !x.Active));
+                Assert.AreEqual(1, col.Count(x => x.Active));
 
                 // methods
                 Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
