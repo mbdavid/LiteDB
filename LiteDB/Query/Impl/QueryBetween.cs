@@ -46,18 +46,5 @@ namespace LiteDB
                 node = indexer.GetNode(node.NextPrev(0, order));
             }
         }
-
-        internal override void NormalizeValues(IndexOptions options)
-        {
-            _start = _start.Normalize(options);
-            _end = _end.Normalize(options);
-        }
-
-        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
-        {
-            var val = doc.Get(this.Field).Normalize(options);
-
-            return val.CompareTo(_start) >= 0 && val.CompareTo(_end) <= 0;
-        }
     }
 }

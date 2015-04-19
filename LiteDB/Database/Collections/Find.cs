@@ -20,31 +20,15 @@ namespace LiteDB
 
             var nodes = query.Run<T>(this);
 
-            // if query run on index, lets skip/take with linq-to-object
-            if (query.ExecuteMode == QueryExecuteMode.IndexSeek)
-            {
-                if (skip > 0) nodes = nodes.Skip(skip);
+            if (skip > 0) nodes = nodes.Skip(skip);
 
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-            }
+            if (limit != int.MaxValue) nodes = nodes.Take(limit);
 
             foreach (var node in nodes)
             {
                 var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
                 var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
-                // if need run in full scan, execute full scan and test return
-                if (query.ExecuteMode == QueryExecuteMode.FullScan)
-                {
-                    // execute query condition here - if false, do not add on final results
-                    if(query.ExecuteFullScan(doc, new IndexOptions()) == false) continue;
-
-                    // implement skip/limit before on full search - no linq
-                    if (--skip >= 0) continue;
-
-                    if (--limit <= -1) yield break;
-                }
 
                 // get object from BsonDocument
                 var obj = this.Database.Mapper.ToObject<T>(doc);
@@ -129,22 +113,7 @@ namespace LiteDB
 
             var nodes = query.Run<T>(this);
 
-            // if query execute with index, just returns nodes
-            if (query.ExecuteMode == QueryExecuteMode.IndexSeek) return nodes.Count();
-
-            var count = 0;
-
-            // execute full scan
-            foreach (var node in nodes)
-            {
-                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
-
-                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
-                if (query.ExecuteFullScan(doc, new IndexOptions())) count++;
-            }
-
-            return count;
+            return nodes.Count();
         }
 
         /// <summary>
@@ -164,20 +133,7 @@ namespace LiteDB
 
             var nodes = query.Run<T>(this);
 
-            // if query execute with index, just returns nodes
-            if (query.ExecuteMode == QueryExecuteMode.IndexSeek) return nodes.FirstOrDefault() != null;
-
-            // execute full scan
-            foreach (var node in nodes)
-            {
-                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
-
-                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
-                if (query.ExecuteFullScan(doc, new IndexOptions())) return true;
-            }
-
-            return false;
+            return nodes.FirstOrDefault() != null;
         }
 
         /// <summary>

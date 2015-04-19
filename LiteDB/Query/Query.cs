@@ -6,20 +6,13 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal enum QueryExecuteMode { IndexSeek, FullScan }
-
     /// <summary>
     /// Class helper to create query using indexes in database. All methods are statics.
-    /// Queries can be executed in 3 ways: Index Seek (fast), Index Scan (good), Full Scan (slow)
+    /// Queries can be executed in 2 ways: Index Seek (fast), Index Scan (good)
     /// </summary>
     public abstract class Query
     {
         public string Field { get; private set; }
-
-        /// <summary>
-        /// Indicate that query need to run under full scan (there is not index)
-        /// </summary>
-        internal QueryExecuteMode ExecuteMode { get; set; }
 
         internal Query(string field)
         {
@@ -176,17 +169,6 @@ namespace LiteDB
         internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
 
         /// <summary>
-        /// Abstract method to normalize values before run full scan
-        /// </summary>
-        internal abstract void NormalizeValues(IndexOptions options);
-
-        /// <summary>
-        /// Abstract method that must implement full scan - will be called for each document and need
-        /// returns true if condition was satisfied
-        /// </summary>
-        internal abstract bool ExecuteFullScan(BsonDocument doc, IndexOptions options);
-
-        /// <summary>
         /// Find witch index will be used and run Execute method - define ExecuteMode here
         /// </summary>
         internal virtual IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)
@@ -206,7 +188,7 @@ namespace LiteDB
             {
                 var options = collection.Database.Mapper.GetIndexFromAttribute<T>(this.Field);
 
-                // create a new index
+                // create a new index using BsonIndex options
                 if (options != null)
                 {
                     collection.EnsureIndex(this.Field, options);
@@ -214,24 +196,16 @@ namespace LiteDB
                     index = col.GetIndex(this.Field);
                 }
             }
-
+            
             if (index == null)
             {
-                this.ExecuteMode = QueryExecuteMode.FullScan;
-
-                // normalize query values before run full scan
-                this.NormalizeValues(new IndexOptions());
-
-                // if there is no index, returns all index nodes - will be used Full Scan
-                return collection.Database.Indexer.FindAll(col.PK, Query.Ascending);
+                //TODO: implement auto-index? this should be an options? and default index options?
+                throw new NotImplementedException("Index `" + this.Field + "` not found on collection `" + collection.Name + "`");
+                //collection.EnsureIndex(this.Field);
             }
-            else
-            {
-                this.ExecuteMode = QueryExecuteMode.IndexSeek;
 
-                // execute query to get all IndexNodes
-                return this.ExecuteIndex(collection.Database.Indexer, index);
-            }
+            // execute query to get all IndexNodes
+            return this.ExecuteIndex(collection.Database.Indexer, index);
         }
 
         #endregion

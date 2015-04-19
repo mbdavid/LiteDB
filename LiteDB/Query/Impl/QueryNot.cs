@@ -25,17 +25,5 @@ namespace LiteDB
 
             return indexer.FindAll(index, Query.Ascending).Where(x => x.Key.CompareTo(value) != 0);
         }
-
-        internal override void NormalizeValues(IndexOptions options)
-        {
-            _value = _value.Normalize(options);
-        }
-
-        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
-        {
-            var val = doc.Get(this.Field).Normalize(options);
-
-            return val.CompareTo(_value) != 0;
-        }
     }
 }

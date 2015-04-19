@@ -21,23 +21,9 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
-            this.ExecuteMode = QueryExecuteMode.FullScan;
+            var v = _value.Normalize(index.Options);
 
-            return indexer.FindAll(index, Query.Ascending);
-        }
-
-        internal override void NormalizeValues(IndexOptions options)
-        {
-            _value = _value.Normalize(options);
-        }
-
-        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
-        {
-            var val = doc.Get(this.Field).Normalize(options);
-
-            if(!val.IsString) return false;
-
-            return val.AsString.Contains(_value.AsString);
+            return indexer.FindAll(index, Query.Ascending).Where(x => x.Key.AsString.Contains(v));
         }
     }
 }
