@@ -15,7 +15,7 @@ namespace UnitTest
     {
         public class ClassWithInterface {
             [BsonId]
-            public String name {get;set;}
+            public String name { get; set; }
 
             public MyInterface myInterface { get; set; }
         }
@@ -32,20 +32,23 @@ namespace UnitTest
         }
 
         public class Impl1 : MyInterface {
-            public String getName() {
+            public String getName() 
+            {
                 return "name1";
             }
         }
 
         public class Impl2 : MyInterface {
-            public String getName() {
+            public String getName() 
+            {
                 return "name2";
             }
         }
 
         public class ImplWithProperty : MyInterface {
             public String name { get; set; }
-            public String getName() {
+            public String getName() 
+            {
                 return name;
             }
         }
@@ -75,7 +78,8 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void WhenCreatingTwoImplementsShouldHaveDifferentMethods() {
+        public void WhenCreatingTwoImplementsShouldHaveDifferentMethods() 
+        {
             var mapper = new BsonMapper();
 
             ClassWithInterface objWithImpl1 = CreateModel(new Impl1());
@@ -88,7 +92,8 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void WhenCreatingImplementWithPropertyShouldKeepProperty() {
+        public void WhenCreatingImplementWithPropertyShouldKeepProperty() 
+        {
             var mapper = new BsonMapper();
 
             ClassWithInterface objWithImpl = CreateModel(new ImplWithProperty() { name = RANDOM_NAME});
@@ -98,7 +103,8 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void WhenCreatingClassWithListOfInterfaceShouldHaveAllImplements() {
+        public void WhenCreatingClassWithListOfInterfaceShouldHaveAllImplements() 
+        {
             var mapper = new BsonMapper();
 
             List<MyInterface> interfaces = new List<MyInterface>() {
@@ -109,7 +115,9 @@ namespace UnitTest
                 }
             };
 
-            ClassWithListInterface obj = new ClassWithListInterface(){ interfaces = interfaces};
+            ClassWithListInterface obj = new ClassWithListInterface() {
+                interfaces = interfaces
+            };
             ClassWithListInterface mappedObject = MapAndDemapObject(mapper, obj);
 
             Assert.AreEqual(obj.interfaces[0].getName(), mappedObject.interfaces[0].getName());
@@ -117,11 +125,13 @@ namespace UnitTest
             Assert.AreEqual(obj.interfaces[2].getName(), mappedObject.interfaces[2].getName());
         }
 
-        private ClassWithListInterface MapAndDemapObject(BsonMapper mapper, ClassWithListInterface obj) {
+        private ClassWithListInterface MapAndDemapObject(BsonMapper mapper, ClassWithListInterface obj) 
+        {
             return mapper.ToObject<ClassWithListInterface>(mapper.ToDocument(obj));
         }
 
-        private ClassWithInterface MapAndDemapObject(BsonMapper mapper, ClassWithInterface obj) {
+        private ClassWithInterface MapAndDemapObject(BsonMapper mapper, ClassWithInterface obj) 
+        {
             return mapper.ToObject<ClassWithInterface>(mapper.ToDocument(obj));
         }
     }

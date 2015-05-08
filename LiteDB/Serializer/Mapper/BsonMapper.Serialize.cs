@@ -138,8 +138,10 @@ namespace LiteDB
             var o = new BsonDocument();
             var mapper = this.GetPropertyMapper(type);
             var dict = o.RawValue;
+
             String assemblyName = type.Assembly.GetName().Name;
-            if (!assemblyName.StartsWith("System")) {
+            if (!assemblyName.StartsWith("System")) 
+            {
                 dict["_type"] = new BsonValue(type.FullName + ", " + type.Assembly.GetName().Name);
             }
 

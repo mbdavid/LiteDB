@@ -140,7 +140,8 @@ namespace LiteDB
 
                 this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
             }
-            else {
+            else 
+            {
 
                 // otherwise is plain object
                 this.DeserializeObject(type, o, value.AsDocument);
