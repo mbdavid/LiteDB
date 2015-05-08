@@ -56,6 +56,7 @@
     <Compile Include="BsonTest.cs" />
     <Compile Include="AutoIdTest.cs" />
     <Compile Include="FileStorageTest.cs" />
+    <Compile Include="MapperInterfaceTest.cs" />
     <Compile Include="ObjectIdTest.cs" />
     <Compile Include="MapperTest.cs" />
     <Compile Include="ConcurrentTest.cs" />
