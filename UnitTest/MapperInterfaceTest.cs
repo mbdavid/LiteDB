@@ -15,11 +15,9 @@ namespace UnitTest
     {
         public class ClassWithInterface {
             [BsonId]
-            public String name;
+            public String name {get;set;}
 
-            public MyInterface myInterface;
-
-            public ClassWithInterface() { }
+            public MyInterface myInterface { get; set; }
         }
 
         public interface MyInterface {
@@ -57,8 +55,6 @@ namespace UnitTest
             ClassWithInterface objWithImpl1 = CreateModel(new Impl1());
             BsonDocument doc = mapper.ToDocument(objWithImpl1);
             ClassWithInterface mappedObjectWithImpl1 = mapper.ToObject<ClassWithInterface>(doc);
-
-            var json = JsonSerializer.Serialize(doc, true);
 
             Assert.AreEqual(objWithImpl1.myInterface, mappedObjectWithImpl1.myInterface);
             Assert.AreEqual(objWithImpl1.myInterface.getName(), mappedObjectWithImpl1.myInterface.getName());
