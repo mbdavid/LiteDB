@@ -200,8 +200,10 @@ namespace LiteDB
             if (index == null)
             {
                 //TODO: implement auto-index? this should be an options? and default index options?
-                throw new NotImplementedException("Index `" + this.Field + "` not found on collection `" + collection.Name + "`");
-                //collection.EnsureIndex(this.Field);
+                //throw new NotImplementedException("Index `" + this.Field + "` not found on collection `" + collection.Name + "`");
+                collection.EnsureIndex(this.Field);
+
+                index = col.GetIndex(this.Field);
             }
 
             // execute query to get all IndexNodes
