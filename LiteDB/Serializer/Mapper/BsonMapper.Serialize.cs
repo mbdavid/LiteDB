@@ -139,6 +139,8 @@ namespace LiteDB
             var mapper = this.GetPropertyMapper(type);
             var dict = o.RawValue;
 
+            dict["_type"] = new BsonValue(type.AssemblyQualifiedName);
+
             foreach (var prop in mapper.Values)
             {
                 // get property value 

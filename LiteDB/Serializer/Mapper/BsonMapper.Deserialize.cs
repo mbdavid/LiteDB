@@ -75,6 +75,10 @@ namespace LiteDB
         {
             if (value.IsNull) return null;
 
+            if (value.AsDocument != null && value.AsDocument.ContainsKey("_type")) {
+                type = Type.GetType(value.AsDocument["_type"].AsString, true);
+            }
+
             // if is nullable, get underlying type
             if (Reflection.IsNullable(type))
             {
@@ -136,8 +140,9 @@ namespace LiteDB
 
                 this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
             }
-            else
+            else 
             {
+
                 // otherwise is plain object
                 this.DeserializeObject(type, o, value.AsDocument);
             }
