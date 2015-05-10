@@ -42,6 +42,7 @@ namespace UnitTest
         }
 
         public string fdb = DB.Path();
+        public Random rnd = new Random();
 
         [TestMethod]
         public void FileStorage_Concurrency()
@@ -75,7 +76,9 @@ namespace UnitTest
 
         public void TaskInsert()
         {
-            var file = new byte[30 * 1024 * 1025]; // 30MB
+            var file = new byte[1 * 1024 * 1025]; // 30MB
+
+            System.Threading.Thread.Sleep(rnd.Next(100));
 
             using (var db = new LiteDatabase(fdb))
             {

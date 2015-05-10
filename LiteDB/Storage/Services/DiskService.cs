@@ -53,7 +53,7 @@ namespace LiteDB
             var posStart = pageID * BasePage.PAGE_SIZE;
             var posEnd = posStart + BasePage.PAGE_SIZE;
 
-            this.TryExec(() =>
+            TryExec(_connectionString.Timeout, () =>
             {
                 // position cursor
                 if (stream.Position != posStart)
@@ -170,7 +170,7 @@ namespace LiteDB
         {
             var stream = this.GetWriter().BaseStream as FileStream;
 
-            this.TryExec(() =>
+            TryExec(_connectionString.Timeout, () =>
             {
                 // try to lock - if is in use, a exception will be throwed
                 stream.Lock(LOCK_POSITION, 1);
@@ -209,18 +209,22 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Try execute a block of code until timeout when IO lock exception occurs
+        /// Try execute a block of code until timeout when IO lock exception occurs OR access denind
         /// </summary>
-        public void TryExec(Action action)
+        public static void TryExec(TimeSpan timeout, Action action)
         {
-            var timeout = DateTime.Now.Add(_connectionString.Timeout);
+            var timer = DateTime.Now.Add(timeout);
 
-            while (DateTime.Now < timeout)
+            while (DateTime.Now < timer)
             {
                 try
                 {
                     action();
                     return;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    Thread.Sleep(250);
                 }
                 catch (IOException ex)
                 {
@@ -228,7 +232,7 @@ namespace LiteDB
                 }
             }
 
-            throw LiteException.LockTimeout(_connectionString.Timeout);
+            throw LiteException.LockTimeout(timeout);
         }
 
         #endregion

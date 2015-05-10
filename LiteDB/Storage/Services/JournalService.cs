@@ -32,11 +32,16 @@ namespace LiteDB
                 return;
             }
 
-            //TODO: must check errors here, in try create jounal file
+            FileStream journal = null;
 
-            // create journal file in EXCLUSIVE mode
-            using (var journal = new FileStream(_connectionString.JournalFilename, 
-                FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE))
+            // try create journal file in EXCLUSIVE mode
+            DiskService.TryExec(_connectionString.Timeout, () =>
+            {
+                journal = new FileStream(_connectionString.JournalFilename,
+                    FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+            });
+
+            try
             {
                 using (var writer = new BinaryWriter(journal))
                 {
@@ -67,6 +72,10 @@ namespace LiteDB
                 journal.Dispose();
 
                 File.Delete(_connectionString.JournalFilename);
+            }
+            catch
+            {
+                journal.Dispose();
             }
         }
 
