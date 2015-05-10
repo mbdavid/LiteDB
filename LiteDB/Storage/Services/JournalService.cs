@@ -32,17 +32,17 @@ namespace LiteDB
                 return;
             }
 
-            var journal = JournalService.GetJournalFilename(_connectionString, true);
+            //TODO: must check errors here, in try create jounal file
 
             // create journal file in EXCLUSIVE mode
-            using (var stream = new FileStream(journal, 
+            using (var journal = new FileStream(_connectionString.JournalFilename, 
                 FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE))
             {
-                using (var writer = new BinaryWriter(stream))
+                using (var writer = new BinaryWriter(journal))
                 {
                     // first, allocate all journal file
                     var total = (uint)_cache.GetDirtyPages().Count();
-                    stream.SetLength(total * BasePage.PAGE_SIZE);
+                    journal.SetLength(total * BasePage.PAGE_SIZE);
 
                     // write all dirty pages in sequence on journal file
                     foreach (var page in _cache.GetDirtyPages())
@@ -54,7 +54,7 @@ namespace LiteDB
                     writer.Flush();
 
                     // mark header as finish
-                    stream.Seek(FINISH_POSITION, SeekOrigin.Begin);
+                    journal.Seek(FINISH_POSITION, SeekOrigin.Begin);
 
                     writer.Write(true); // mark as TRUE
 
@@ -64,9 +64,9 @@ namespace LiteDB
                     action();
                 }
 
-                stream.Dispose();
+                journal.Dispose();
 
-                File.Delete(journal);
+                File.Delete(_connectionString.JournalFilename);
             }
         }
 
@@ -91,39 +91,6 @@ namespace LiteDB
 
             // write with zero non-used page
             writer.Write(new byte[posEnd - stream.Position]);
-        }
-
-        /// <summary>
-        /// Get a new journal file to write or check if exits one. If exists, test durint timeout - can be another process deleting
-        /// </summary>
-        public static string GetJournalFilename(ConnectionString connectionString, bool newFile)
-        {
-            var dir = Path.GetDirectoryName(connectionString.Filename);
-            var filename = Path.GetFileNameWithoutExtension(connectionString.Filename) + "-journal";
-            var ext = Path.GetExtension(connectionString.Filename);
-
-            var journal = Path.Combine(dir, filename + ext);
-
-            if (newFile)
-            {
-                var timeout = DateTime.Now.Add(connectionString.Timeout);
-
-                while (DateTime.Now < timeout)
-                {
-                    if (!File.Exists(journal))
-                    {
-                        return journal;
-                    }
-
-                    System.Threading.Thread.Sleep(250);
-                }
-
-                throw LiteException.JournalFileFound(journal);
-            }
-            else
-            {
-                return File.Exists(journal) ? journal : null;
-            }
         }
     }
 }

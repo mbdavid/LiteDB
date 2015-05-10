@@ -32,6 +32,11 @@ namespace LiteDB
         public bool JournalEnabled { get; private set; }
 
         /// <summary>
+        /// Jounal filename with full path
+        /// </summary>
+        internal string JournalFilename { get; private set; }
+
+        /// <summary>
         /// Define, in connection string, the user database version. When you increse this value
         /// LiteDatabase will run OnUpdate method for each new version. If defined, must be >= 1. Default: 1
         /// </summary>
@@ -65,6 +70,9 @@ namespace LiteDB
             this.Filename = Path.GetFullPath(this.GetValue<string>(values, "filename", ""));
             this.JournalEnabled = this.GetValue<bool>(values, "journal", true);
             this.UserVersion = this.GetValue<int>(values, "version", 1);
+            this.JournalFilename = Path.Combine(Path.GetDirectoryName(this.Filename), 
+                Path.GetFileNameWithoutExtension(this.Filename) + "-journal" + 
+                Path.GetExtension(this.Filename));
 
             // validade parameter values
             if (string.IsNullOrEmpty(Filename)) throw new ArgumentException("Missing FileName in ConnectionString");

@@ -101,17 +101,13 @@ namespace LiteDB
                                 // persist all dirty pages
                                 _cache.PersistDirtyPages();
 
-                                // unlock datafile
-                                _disk.UnLock();
                             //});
                         });
                     });
                 }
-                else
-                {
-                    // if not dirty pages, just unlock datafile
-                    _disk.UnLock();
-                }
+
+                // unlock datafile
+                _disk.UnLock();
 
                 _level = 0;
             }
