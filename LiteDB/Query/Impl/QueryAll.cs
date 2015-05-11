@@ -23,14 +23,5 @@ namespace LiteDB
         {
             return indexer.FindAll(index, _order);
         }
-
-        internal override void NormalizeValues(IndexOptions options)
-        {
-        }
-
-        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
-        {
-            return true;
-        }
     }
 }

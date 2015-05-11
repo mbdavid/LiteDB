@@ -26,31 +26,5 @@ namespace LiteDB
                 }
             }
         }
-
-        internal override void NormalizeValues(IndexOptions options)
-        {
-            var values = new List<BsonValue>();
-
-            foreach (var value in _values.Distinct())
-            {
-                values.Add(value.Normalize(options));
-            }
-
-            _values = values;
-        }
-
-        internal override bool ExecuteFullScan(BsonDocument doc, IndexOptions options)
-        {
-            var val = doc.Get(this.Field).Normalize(options);
-
-            foreach (var value in _values.Distinct())
-            {
-                var diff = val.CompareTo(value);
-
-                if (diff == 0) return true;
-            }
-
-            return false;
-        }
     }
 }
