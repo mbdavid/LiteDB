@@ -13,126 +13,61 @@ namespace UnitTest
     [TestClass]
     public class MapperInterfaceTest
     {
-        public class ClassWithInterface {
-            [BsonId]
-            public String name { get; set; }
-
-            public MyInterface myInterface { get; set; }
-        }
-
-        public class ClassWithListInterface {
-            [BsonId]
-            public String name { get; set; }
-
-            public List<MyInterface> interfaces { get; set; }
-        }
-
-        public interface MyInterface {
-            String getName();
-        }
-
-        public class Impl1 : MyInterface {
-            public String getName() 
-            {
-                return "name1";
-            }
-        }
-
-        public class Impl2 : MyInterface {
-            public String getName() 
-            {
-                return "name2";
-            }
-        }
-
-        public class ImplWithProperty : MyInterface {
-            public String name { get; set; }
-            public String getName() 
-            {
-                return name;
-            }
-        }
-
-        private ClassWithInterface CreateModel(MyInterface implementation)
+        public interface IMyInterface
         {
-            var c = new ClassWithInterface
-            {
-                name = "Test",
-                myInterface = implementation
-            };
-
-            return c;
+            string Name { get; set; }
         }
 
-        const string RANDOM_NAME = "NAME,WHATEVER";
-
-        [TestMethod]
-        public void WhenCreatingClassWithImplementationShouldGenerateSameImplementation()
+        public class MyClassImpl : IMyInterface
         {
-            var mapper = new BsonMapper();
+            public string Name { get; set; }
+        }
 
-            ClassWithInterface objWithImpl1 = CreateModel(new Impl1());
-            ClassWithInterface mappedObjectWithImpl1 = MapAndDemapObject(mapper, objWithImpl1);
+        // using property as Interface
+        public class MyClassWithInterface
+        {
+            public int Id { get; set; }
+            public IMyInterface Impl { get; set; }
+        }
 
-            Assert.AreEqual(objWithImpl1.myInterface.getName(), mappedObjectWithImpl1.myInterface.getName());
+        // using property as base class (object)
+        public class MyClassWithObject
+        {
+            public int Id { get; set; }
+            public object Impl { get; set; }
+        }
+
+        // using property as is
+        public class MyClassWithClassName
+        {
+            public int Id { get; set; }
+            public MyClassImpl Impl { get; set; }
         }
 
         [TestMethod]
-        public void WhenCreatingTwoImplementsShouldHaveDifferentMethods() 
+        public void MapInterfaces_Test()
         {
             var mapper = new BsonMapper();
 
-            ClassWithInterface objWithImpl1 = CreateModel(new Impl1());
-            ClassWithInterface mappedObjectWithImpl1 = MapAndDemapObject(mapper, objWithImpl1);
+            var c1 = new MyClassWithInterface { Id = 1, Impl = new MyClassImpl { Name = "John Doe" } };
+            var c2 = new MyClassWithObject { Id = 1, Impl = new MyClassImpl { Name = "John Doe" } };
+            var c3 = new MyClassWithClassName { Id = 1, Impl = new MyClassImpl { Name = "John Doe" } };
 
-            ClassWithInterface objWithImpl2 = CreateModel(new Impl2());
-            ClassWithInterface mappedObjectWithImpl2 = MapAndDemapObject(mapper, objWithImpl2);
+            var bson1 = mapper.ToDocument(c1); // add _type in Impl property
+            var bson2 = mapper.ToDocument(c2); // add _type in Impl property
+            var bson3 = mapper.ToDocument(c3); // do not add _type in Impl property
 
-            Assert.AreNotEqual(mappedObjectWithImpl1.myInterface.getName(), mappedObjectWithImpl2.myInterface.getName());
-        }
+            Assert.AreEqual("UnitTest.MapperInterfaceTest+MyClassImpl, UnitTest", bson1["Impl"].AsDocument["_type"].AsString);
+            Assert.AreEqual("UnitTest.MapperInterfaceTest+MyClassImpl, UnitTest", bson2["Impl"].AsDocument["_type"].AsString);
+            Assert.AreEqual(false, bson3["Impl"].AsDocument.ContainsKey("_type"));
 
-        [TestMethod]
-        public void WhenCreatingImplementWithPropertyShouldKeepProperty() 
-        {
-            var mapper = new BsonMapper();
+            var k1 = mapper.ToObject<MyClassWithInterface>(bson1);
+            var k2 = mapper.ToObject<MyClassWithObject>(bson2);
+            var k3 = mapper.ToObject<MyClassWithClassName>(bson3);
 
-            ClassWithInterface objWithImpl = CreateModel(new ImplWithProperty() { name = RANDOM_NAME});
-            ClassWithInterface mappedObjectWithImpl = MapAndDemapObject(mapper, objWithImpl);
-
-            Assert.AreEqual(RANDOM_NAME, mappedObjectWithImpl.myInterface.getName());
-        }
-
-        [TestMethod]
-        public void WhenCreatingClassWithListOfInterfaceShouldHaveAllImplements() 
-        {
-            var mapper = new BsonMapper();
-
-            List<MyInterface> interfaces = new List<MyInterface>() {
-                new Impl1(),
-                new Impl2(),
-                new ImplWithProperty() {
-                    name = RANDOM_NAME
-                }
-            };
-
-            ClassWithListInterface obj = new ClassWithListInterface() {
-                interfaces = interfaces
-            };
-            ClassWithListInterface mappedObject = MapAndDemapObject(mapper, obj);
-
-            Assert.AreEqual(obj.interfaces[0].getName(), mappedObject.interfaces[0].getName());
-            Assert.AreEqual(obj.interfaces[1].getName(), mappedObject.interfaces[1].getName());
-            Assert.AreEqual(obj.interfaces[2].getName(), mappedObject.interfaces[2].getName());
-        }
-
-        private ClassWithListInterface MapAndDemapObject(BsonMapper mapper, ClassWithListInterface obj) 
-        {
-            return mapper.ToObject<ClassWithListInterface>(mapper.ToDocument(obj));
-        }
-
-        private ClassWithInterface MapAndDemapObject(BsonMapper mapper, ClassWithInterface obj) 
-        {
-            return mapper.ToObject<ClassWithInterface>(mapper.ToDocument(obj));
+            Assert.AreEqual(c1.Impl.Name, k1.Impl.Name);
+            Assert.AreEqual((c2.Impl as MyClassImpl).Name, (k2.Impl as MyClassImpl).Name);
+            Assert.AreEqual(c3.Impl.Name, k3.Impl.Name);
         }
     }
 }

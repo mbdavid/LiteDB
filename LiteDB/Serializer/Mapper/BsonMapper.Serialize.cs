@@ -22,7 +22,7 @@ namespace LiteDB
             // if object is BsonDocument, just return them
             if (entity is BsonDocument) return (BsonDocument)entity;
 
-            return this.Serialize(entity, 0).AsDocument;
+            return this.Serialize(entity).AsDocument;
         }
 
         /// <summary>
@@ -30,18 +30,18 @@ namespace LiteDB
         /// </summary>
         public BsonValue Serialize(object obj)
         {
-            return this.Serialize(obj, 0);
+            return this.Serialize(obj, null, 0);
         }
 
-        private BsonValue Serialize(object obj, int depth)
+        private BsonValue Serialize(object obj, Type propertyType, int depth)
         {
             if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH);
 
             if (obj == null) return BsonValue.Null;
 
-            var type = obj.GetType();
-
             Func<object, BsonValue> custom;
+
+            var type = obj.GetType();
 
             // if is already a bson value
             if (obj is BsonValue) return new BsonValue((BsonValue)obj);
@@ -104,7 +104,7 @@ namespace LiteDB
             // otherwise treat as a plain object
             else
             {
-                return this.SerializeObject(type, obj, depth);
+                return this.SerializeObject(type, obj, propertyType, depth);
             }
         }
 
@@ -114,7 +114,7 @@ namespace LiteDB
 
             foreach (var item in array)
             {
-                arr.Add(this.Serialize(item, depth));
+                arr.Add(this.Serialize(item, null, depth));
             }
 
             return arr;
@@ -127,19 +127,24 @@ namespace LiteDB
             foreach (var key in dict.Keys)
             {
                 var value = dict[key];
-                o.RawValue[key.ToString()] = this.Serialize(value, depth);
+
+                o.RawValue[key.ToString()] = this.Serialize(value, null, depth);
             }
 
             return o;
         }
 
-        private BsonDocument SerializeObject(Type type, object obj, int depth)
+        private BsonDocument SerializeObject(Type type, object obj, Type propertyType, int depth)
         {
             var o = new BsonDocument();
             var mapper = this.GetPropertyMapper(type);
             var dict = o.RawValue;
 
-            dict["_type"] = new BsonValue(type.AssemblyQualifiedName);
+            // adding _type only where property Type is not same as object instance type
+            if (propertyType != null && type != propertyType)
+            {
+                dict["_type"] = new BsonValue(type.FullName + ", " + type.Assembly.GetName().Name);
+            }
 
             foreach (var prop in mapper.Values)
             {
@@ -148,7 +153,7 @@ namespace LiteDB
 
                 if (value == null && this.SerializeNullValues == false) continue;
 
-                dict[prop.FieldName] = this.Serialize(value, depth);
+                dict[prop.FieldName] = this.Serialize(value, prop.PropertyType, depth);
             }
 
             return o;

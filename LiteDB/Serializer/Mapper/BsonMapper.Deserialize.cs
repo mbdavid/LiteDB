@@ -75,8 +75,14 @@ namespace LiteDB
         {
             if (value.IsNull) return null;
 
-            if (value.AsDocument != null && value.AsDocument.ContainsKey("_type")) {
-                type = Type.GetType(value.AsDocument["_type"].AsString, true);
+            if (value.IsDocument)
+            {
+                BsonValue typeValue;
+
+                if (value.AsDocument.RawValue.TryGetValue("_type", out typeValue))
+                {
+                    type = Type.GetType(typeValue.AsString, true);
+                }
             }
 
             // if is nullable, get underlying type
