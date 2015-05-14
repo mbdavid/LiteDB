@@ -93,9 +93,11 @@ namespace UnitTest
                 MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255,
                 MyDecimal = 19.9m,
+
                 MyInterface = new MyImpl { Name = "John" },
                 MyListInterface = new List<IMyInterface>() { new MyImpl { Name = "John" } },
                 MyIListInterface = new List<IMyInterface>() { new MyImpl { Name = "John" } },
+
                 MyObjectString = "MyString",
                 MyObjectInt = 123,
                 MyObjectImpl = new MyImpl { Name = "John" },
@@ -128,10 +130,6 @@ namespace UnitTest
 
             var nobj = mapper.ToObject<MyClass>(doc);
 
-            return;
-
-
-
             // compare object to document
             Assert.AreEqual(doc["_id"].AsInt32, obj.MyId);
             Assert.AreEqual(doc["MY-STRING"].AsString, obj.MyString);
@@ -149,13 +147,25 @@ namespace UnitTest
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
-            Assert.AreEqual(obj.MyObjectString, nobj.MyObjectString);
-            Assert.AreEqual(obj.MyObjectInt, nobj.MyObjectInt);
 
-
+            // list
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);
             Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
+
+            // interfaces
+            Assert.AreEqual(obj.MyInterface.Name, nobj.MyInterface.Name);
+            Assert.AreEqual(obj.MyListInterface[0].Name, nobj.MyListInterface[0].Name);
+            Assert.AreEqual(obj.MyIListInterface[0].Name, nobj.MyIListInterface[0].Name);
+
+            // objects
+            Assert.AreEqual(obj.MyObjectString, nobj.MyObjectString);
+            Assert.AreEqual(obj.MyObjectInt, nobj.MyObjectInt);
+            Assert.AreEqual((obj.MyObjectImpl as MyImpl).Name, (nobj.MyObjectImpl as MyImpl).Name);
+            Assert.AreEqual(obj.MyObjectList[0], obj.MyObjectList[0]);
+            Assert.AreEqual(obj.MyObjectList[1], obj.MyObjectList[1]);
+            Assert.AreEqual(obj.MyObjectList[3], obj.MyObjectList[3]);
+
         }
     }
 }

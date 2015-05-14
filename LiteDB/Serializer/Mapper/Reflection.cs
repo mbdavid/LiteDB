@@ -153,6 +153,23 @@ namespace LiteDB
                         c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
                         _cacheCtor.Add(type, c);
                     }
+                    else if (type.IsInterface) // some know interfaces
+                    {
+                        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                        {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                        {
+                            var k = type.GetGenericArguments()[0];
+                            var v = type.GetGenericArguments()[1];
+                            return CreateInstance(GetGenericDictionaryOfType(k, v));
+                        }
+                        else
+                        {
+                            throw LiteException.InvalidCtor(type);
+                        }
+                    }
                     else // structs
                     {
                         var dynMethod = new DynamicMethod("_", typeof(object), null);
@@ -267,10 +284,10 @@ namespace LiteDB
             return listType.MakeGenericType(type);
         }
 
-        public static Type GetGenericDictionaryOfType(Type key, Type value)
+        public static Type GetGenericDictionaryOfType(Type k, Type v)
         {
             var listType = typeof(Dictionary<,>);
-            return listType.MakeGenericType(key,value);
+            return listType.MakeGenericType(k, v);
         }
 
         #endregion
