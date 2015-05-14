@@ -44,6 +44,29 @@ namespace UnitTest
         public string[] MyStringArray { get; set; }
         public List<string> MyStringList { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
+
+        // interfaces
+        public IMyInterface MyInterface { get; set; }
+        public List<IMyInterface> MyListInterface { get; set; }
+        public IList<IMyInterface> MyIListInterface { get; set; }
+
+        // objects
+        public object MyObjectString { get; set; }
+        public object MyObjectInt { get; set; }
+        public object MyObjectImpl { get; set; }
+        public List<object> MyObjectList { get; set; }
+
+
+    }
+
+    public interface IMyInterface
+    {
+        string Name { get; set; }
+    }
+
+    public class MyImpl : IMyInterface
+    {
+        public string Name { get; set; }
     }
 
     [TestClass]
@@ -63,13 +86,20 @@ namespace UnitTest
                 MyWriteOnly = "write-only",
                 MyInternalProperty = "internal-field",
                 MyNameValueCollection = new NameValueCollection(),
-                MyDict = new Dictionary<int,string>(),
+                MyDict = new Dictionary<int, string>(),
                 MyStringArray = new string[] { "One", "Two" },
                 MyEnumProp = MyEnum.Second,
                 MyChar = 'Y',
                 MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255,
-                MyDecimal = 19.9m
+                MyDecimal = 19.9m,
+                MyInterface = new MyImpl { Name = "John" },
+                MyListInterface = new List<IMyInterface>() { new MyImpl { Name = "John" } },
+                MyIListInterface = new List<IMyInterface>() { new MyImpl { Name = "John" } },
+                MyObjectString = "MyString",
+                MyObjectInt = 123,
+                MyObjectImpl = new MyImpl { Name = "John" },
+                MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") }
             };
 
             c.MyStringList.Add("String-1");
@@ -93,9 +123,14 @@ namespace UnitTest
 
             var obj = CreateModel();
             var doc = mapper.ToDocument(obj);
-            var nobj = mapper.ToObject<MyClass>(doc);
 
             var json = JsonSerializer.Serialize(doc, true);
+
+            var nobj = mapper.ToObject<MyClass>(doc);
+
+            return;
+
+
 
             // compare object to document
             Assert.AreEqual(doc["_id"].AsInt32, obj.MyId);
@@ -114,6 +149,9 @@ namespace UnitTest
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
+            Assert.AreEqual(obj.MyObjectString, nobj.MyObjectString);
+            Assert.AreEqual(obj.MyObjectInt, nobj.MyObjectInt);
+
 
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);

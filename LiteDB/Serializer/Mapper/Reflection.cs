@@ -261,6 +261,18 @@ namespace LiteDB
             return type.GetGenericArguments()[0];
         }
 
+        public static Type GetGenericListOfType(Type type)
+        {
+            var listType = typeof(List<>);
+            return listType.MakeGenericType(type);
+        }
+
+        public static Type GetGenericDictionaryOfType(Type key, Type value)
+        {
+            var listType = typeof(Dictionary<,>);
+            return listType.MakeGenericType(key,value);
+        }
+
         #endregion
     }
 }

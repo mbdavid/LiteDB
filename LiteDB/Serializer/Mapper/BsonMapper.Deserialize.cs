@@ -75,16 +75,6 @@ namespace LiteDB
         {
             if (value.IsNull) return null;
 
-            if (value.IsDocument)
-            {
-                BsonValue typeValue;
-
-                if (value.AsDocument.RawValue.TryGetValue("_type", out typeValue))
-                {
-                    type = Type.GetType(typeValue.AsString, true);
-                }
-            }
-
             // if is nullable, get underlying type
             if (Reflection.IsNullable(type))
             {
@@ -118,10 +108,6 @@ namespace LiteDB
             {
                 return Enum.Parse(type, value.AsString);
             }
-            else if (type.IsArray)
-            {
-                return this.DeserializeArray(type.GetElementType(), value.AsArray);
-            }
 
             // test if has a custom type implementation
             Func<BsonValue, object> custom;
@@ -131,29 +117,38 @@ namespace LiteDB
                 return custom(value);
             }
 
-            // create instance for object type
-            var o = Reflection.CreateInstance(type);
-
-            // check if type is a IList
-            if (o is IList && type.IsGenericType)
+            // if value is an array
+            if (value.IsArray)
             {
-                this.DeserializeList(Reflection.UnderlyingTypeOf(type), (IList)o, value.AsArray);
-            }
-            else if (o is IDictionary && type.IsGenericType)
-            {
-                var k = type.GetGenericArguments()[0];
-                var t = type.GetGenericArguments()[1];
+                // and if Type is an array
+                if (type.IsArray)
+                {
+                    return this.DeserializeArray(type.GetElementType(), value.AsArray);
+                }
+                // if type is IList<>
+                //else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                {
+                    return this.DeserializeList(type, value.AsArray);
+                }
 
-                this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
-            }
-            else 
-            {
-
-                // otherwise is plain object
-                this.DeserializeObject(type, o, value.AsDocument);
+                throw new NotSupportedException("BsonMapper `" + type.Name + "` not supported for array");
             }
 
-            return o;
+            // for last case, value is a document
+            else if(value.IsDocument)
+            {
+                var doc = value.AsDocument;
+
+                // if type is a dictionary, deserialize as a dict
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                {
+                    return this.DeserializeDictionary(type, doc);
+                }
+
+                return this.DeserializeObject(type, doc);
+            }
+
+            throw new NotSupportedException("Type " + type.Name + " not supported on BsonMapper");
         }
 
         private object DeserializeArray(Type type, BsonArray array)
@@ -169,27 +164,49 @@ namespace LiteDB
             return arr;
         }
 
-        private void DeserializeList(Type type, IList list, BsonArray value)
+        private object DeserializeList(Type type, BsonArray value)
         {
+            var itemType = Reflection.UnderlyingTypeOf(type);
+            var listType = Reflection.GetGenericListOfType(type);
+            var list = (IList)Reflection.CreateInstance(listType);
+
             foreach (var item in value)
             {
-                list.Add(this.Deserialize(type, item));
+                list.Add(this.Deserialize(itemType, item));
             }
+
+            return list;
         }
 
-        private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)
+        private object DeserializeDictionary(Type type, BsonDocument value)
         {
+            var K = type.GetGenericArguments()[0];
+            var V = type.GetGenericArguments()[1];
+            var dictType = Reflection.GetGenericDictionaryOfType(K, V);
+            var dict = (IDictionary)Reflection.CreateInstance(dictType);
+
             foreach (var key in value.Keys)
             {
                 var k = Convert.ChangeType(key, K);
-                var v = this.Deserialize(T, value[key]);
+                var v = this.Deserialize(V, value[key]);
 
                 dict.Add(k, v);
             }
+
+            return dict;
         }
 
-        private void DeserializeObject(Type type, object obj, BsonDocument value)
+        private object DeserializeObject(Type type, BsonDocument value)
         {
+            // if there is a _type in object, use the to create instance
+            BsonValue typeField;
+
+            if (value.RawValue.TryGetValue("_type", out typeField))
+            {
+                type = Type.GetType(typeField.AsString);
+            }
+
+            var obj = Reflection.CreateInstance(type);
             var props = this.GetPropertyMapper(type);
 
             foreach (var prop in props.Values)
@@ -204,6 +221,8 @@ namespace LiteDB
                     prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
                 }
             }
+
+            return obj;
         }
     }
 }

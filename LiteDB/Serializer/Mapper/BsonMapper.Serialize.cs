@@ -30,18 +30,18 @@ namespace LiteDB
         /// </summary>
         public BsonValue Serialize(object obj)
         {
-            return this.Serialize(obj, null, 0);
+            if (obj == null) return BsonValue.Null;
+
+            return this.Serialize(obj.GetType(), obj, 0);
         }
 
-        private BsonValue Serialize(object obj, Type propertyType, int depth)
+        private BsonValue Serialize(Type type, object obj, int depth)
         {
             if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH);
 
             if (obj == null) return BsonValue.Null;
 
             Func<object, BsonValue> custom;
-
-            var type = obj.GetType();
 
             // if is already a bson value
             if (obj is BsonValue) return new BsonValue((BsonValue)obj);
@@ -87,40 +87,44 @@ namespace LiteDB
                 return new BsonValue(obj.ToString());
             }
             // check if is a custom type
-            else if (_customSerializer.TryGetValue(type, out custom))
+            else if (_customSerializer.TryGetValue(type, out custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
             {
                 return custom(obj);
             }
             // check if is a list or array
             else if (obj is IList || type.IsArray)
             {
-                return this.SerializeArray(obj as IEnumerable, depth);
+                var itemType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+
+                return this.SerializeArray(itemType, obj as IEnumerable, depth);
             }
             // for dictionary
             else if (obj is IDictionary)
             {
-                return this.SerializeDictionary(obj as IDictionary, depth);
+                var itemType = type.GetGenericArguments()[1];
+
+                return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
             // otherwise treat as a plain object
             else
             {
-                return this.SerializeObject(type, obj, propertyType, depth);
+                return this.SerializeObject(type, obj, depth);
             }
         }
 
-        private BsonArray SerializeArray(IEnumerable array, int depth)
+        private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
         {
             var arr = new BsonArray();
 
             foreach (var item in array)
             {
-                arr.Add(this.Serialize(item, null, depth));
+                arr.Add(this.Serialize(type, item, depth));
             }
 
             return arr;
         }
 
-        private BsonDocument SerializeDictionary(IDictionary dict, int depth)
+        private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
         {
             var o = new BsonDocument();
 
@@ -128,22 +132,23 @@ namespace LiteDB
             {
                 var value = dict[key];
 
-                o.RawValue[key.ToString()] = this.Serialize(value, null, depth);
+                o.RawValue[key.ToString()] = this.Serialize(type, value, depth);
             }
 
             return o;
         }
 
-        private BsonDocument SerializeObject(Type type, object obj, Type propertyType, int depth)
+        private BsonDocument SerializeObject(Type type, object obj, int depth)
         {
             var o = new BsonDocument();
-            var mapper = this.GetPropertyMapper(type);
+            var t = obj.GetType();
+            var mapper = this.GetPropertyMapper(t);
             var dict = o.RawValue;
 
             // adding _type only where property Type is not same as object instance type
-            if (propertyType != null && type != propertyType)
+            if (type != t)
             {
-                dict["_type"] = new BsonValue(type.FullName + ", " + type.Assembly.GetName().Name);
+                dict["_type"] = new BsonValue(t.FullName + ", " + t.Assembly.GetName().Name);
             }
 
             foreach (var prop in mapper.Values)
@@ -153,7 +158,7 @@ namespace LiteDB
 
                 if (value == null && this.SerializeNullValues == false) continue;
 
-                dict[prop.FieldName] = this.Serialize(value, prop.PropertyType, depth);
+                dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
             }
 
             return o;
