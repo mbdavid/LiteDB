@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -74,6 +75,33 @@ namespace LiteDB
             (
                 serialize: (uri) => uri.AbsoluteUri,
                 deserialize: (bson) => new Uri(bson.AsString)
+            );
+
+            this.RegisterType<NameValueCollection>
+            (
+                serialize: (nv) =>
+                {
+                    var doc = new BsonDocument();
+
+                    foreach (var key in nv.AllKeys)
+                    {
+                        doc[key] = nv[key];
+                    }
+
+                    return doc;
+                },
+                deserialize: (bson) =>
+                {
+                    var nv = new NameValueCollection();
+                    var doc = bson.AsDocument;
+
+                    foreach (var key in doc.Keys)
+                    {
+                        nv[key] = doc[key].AsString;
+                    }
+
+                    return nv;
+                }
             );
 
             // register AutoId for ObjectId, Guid and Int32

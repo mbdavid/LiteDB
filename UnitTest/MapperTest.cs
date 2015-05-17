@@ -82,11 +82,11 @@ namespace UnitTest
                 MyDateTime = DateTime.Now,
                 MyIgnore = "IgnoreTHIS",
                 MyIntNullable = 999,
-                MyStringList = new List<string>(),
+                MyStringList = new List<string>() { "String-1", "String-2" },
                 MyWriteOnly = "write-only",
                 MyInternalProperty = "internal-field",
                 MyNameValueCollection = new NameValueCollection(),
-                MyDict = new Dictionary<int, string>(),
+                MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
                 MyStringArray = new string[] { "One", "Two" },
                 MyEnumProp = MyEnum.Second,
                 MyChar = 'Y',
@@ -104,14 +104,8 @@ namespace UnitTest
                 MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") }
             };
 
-            c.MyStringList.Add("String-1");
-            c.MyStringList.Add("String-2");
-
             c.MyNameValueCollection["key-1"] = "value-1";
             c.MyNameValueCollection["KeyNumber2"] = "value-2";
-
-            c.MyDict[1] = "Row 1";
-            c.MyDict[2] = "Row 2";
 
             return c;
         }
@@ -147,6 +141,9 @@ namespace UnitTest
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
+            Assert.AreEqual(obj.MyNameValueCollection["key-1"], nobj.MyNameValueCollection["key-1"]);
+            Assert.AreEqual(obj.MyNameValueCollection["KeyNumber2"], nobj.MyNameValueCollection["KeyNumber2"]);
+
 
             // list
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
