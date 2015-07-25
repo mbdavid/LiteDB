@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace LiteDB
@@ -16,7 +17,7 @@ namespace LiteDB
     {
         private delegate object CreateObject();
 
-        private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type,CreateObject>();
+        private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
 
         #region GetIdProperty
 
@@ -26,7 +27,7 @@ namespace LiteDB
         public static PropertyInfo GetIdProperty(Type type)
         {
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance),
+            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
                 x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
                 x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
@@ -67,11 +68,12 @@ namespace LiteDB
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
             var isInternal = type.Assembly.Equals(typeof(LiteDatabase).Assembly);
 
             foreach (var prop in props)
             {
+
                 // ignore indexer property
                 if (prop.GetIndexParameters().Length > 0) continue;
 
@@ -105,14 +107,14 @@ namespace LiteDB
                 if (name == "_id") index = null;
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw LiteException.InvalidFormat(prop.Name, name);
+                if (BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw LiteException.InvalidFormat(prop.Name, name);
 
                 // create a property mapper
                 var p = new PropertyMapper
-                { 
+                {
                     AutoId = autoId == null ? true : autoId.AutoId,
-                    FieldName = name, 
-                    PropertyName = prop.Name, 
+                    FieldName = name,
+                    PropertyName = prop.Name,
                     PropertyType = prop.PropertyType,
                     IndexOptions = index == null ? null : index.Options,
                     Getter = getter,
@@ -155,7 +157,7 @@ namespace LiteDB
                     }
                     else if (type.IsInterface) // some know interfaces
                     {
-                        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
                         {
                             return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                         }
@@ -195,10 +197,11 @@ namespace LiteDB
 
         private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo)
         {
-            var getMethod = propertyInfo.GetGetMethod();
+            var propAttr = typeof(BsonPropertyAttribute);
+            var getMethod = propertyInfo.IsDefined(propAttr, false) ? propertyInfo.GetGetMethod(true) : propertyInfo.GetGetMethod();
             if (getMethod == null) return null;
 
-            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type);
+            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type,true);
             var il = getter.GetILGenerator();
 
             if (!type.IsClass) // structs
@@ -228,10 +231,12 @@ namespace LiteDB
 
         private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo)
         {
-            var setMethod = propertyInfo.GetSetMethod();
+            var propAttr = typeof(BsonPropertyAttribute);
+            var setMethod = propertyInfo.IsDefined(propAttr, false) ? propertyInfo.GetSetMethod(true) : propertyInfo.GetSetMethod();
+
             if (setMethod == null) return null;
 
-            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) });
+            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) },true);
             var il = setter.GetILGenerator();
 
             if (!type.IsClass) // structs

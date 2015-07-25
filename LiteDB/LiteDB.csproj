@@ -65,6 +65,7 @@
     <Compile Include="Query\Impl\QueryAll.cs" />
     <Compile Include="Serializer\Json\JsonReader.cs" />
     <Compile Include="Serializer\Json\JsonTokenizer.cs" />
+    <Compile Include="Serializer\Mapper\BsonPropertyAttribute.cs" />
     <Compile Include="Serializer\Mapper\BsonIgnoreAttribute.cs" />
     <Compile Include="Serializer\Mapper\BsonIdAttribute.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
