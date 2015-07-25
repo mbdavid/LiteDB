@@ -156,7 +156,7 @@ namespace LiteDB
                 // get property value 
                 var value = prop.Getter(obj);
 
-                if (value == null && this.SerializeNullValues == false) continue;
+                if (value == null && this.SerializeNullValues == false && prop.FieldName != "_id") continue;
 
                 dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
             }

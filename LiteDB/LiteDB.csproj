@@ -43,6 +43,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Database\Collections\FindIndex.cs" />
     <Compile Include="Database\Tools\DbRef.cs" />
     <Compile Include="Database\Collections\Include.cs" />
     <Compile Include="Database\Collections\Drop.cs" />
