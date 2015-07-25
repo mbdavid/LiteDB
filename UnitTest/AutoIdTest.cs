@@ -26,6 +26,12 @@ namespace UnitTest
         public string Name { get; set; }
     }
 
+    public class EntityString
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
     [TestClass]
     public class AutoIdTest
     {
@@ -37,6 +43,7 @@ namespace UnitTest
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_guid = db.GetCollection<EntityGuid>("guid");
                 var cs_oid = db.GetCollection<EntityOid>("oid");
+                var cs_str = db.GetCollection<EntityString>("str");
 
                 // int32
                 var cint_1 = new EntityInt { Name = "Using Int 1" };
@@ -56,6 +63,8 @@ namespace UnitTest
                 var coid_1 = new EntityOid { Name = "ObjectId-1" };
                 var coid_2 = new EntityOid { Id = oid, Name = "ObjectId-2" };
 
+                // string - there is no AutoId for string
+                var cstr_1 = new EntityString { Name = "Object using String" };
 
                 cs_int.Insert(cint_1);
                 cs_int.Insert(cint_2);
@@ -67,6 +76,17 @@ namespace UnitTest
 
                 cs_oid.Insert(coid_1);
                 cs_oid.Insert(coid_2);
+
+                try
+                {
+                    cs_str.Insert(cstr_1);
+                    Assert.Fail();
+                }
+                catch (LiteException)
+                {
+                    // must fail because EntityString class has a defined Id 
+                    //   but has no value and no auto_id funtion - issue #43
+                }
 
                 // test for int
                 Assert.AreEqual(cint_1.Id, 1);

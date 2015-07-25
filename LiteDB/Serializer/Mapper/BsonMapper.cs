@@ -155,7 +155,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set new Id in entity class
+        /// Set new Id in entity class if entity needs one
         /// </summary>
         public void SetAutoId(object entity, LiteCollection<BsonDocument> col)
         {
