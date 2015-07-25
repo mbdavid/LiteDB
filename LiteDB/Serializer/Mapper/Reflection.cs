@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace LiteDB
@@ -16,7 +17,7 @@ namespace LiteDB
     {
         private delegate object CreateObject();
 
-        private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type,CreateObject>();
+        private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
 
         #region GetIdProperty
 
@@ -26,7 +27,7 @@ namespace LiteDB
         public static PropertyInfo GetIdProperty(Type type)
         {
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance),
+            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
                 x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
                 x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
@@ -67,11 +68,12 @@ namespace LiteDB
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
             var isInternal = type.Assembly.Equals(typeof(LiteDatabase).Assembly);
 
             foreach (var prop in props)
             {
+
                 // ignore indexer property
                 if (prop.GetIndexParameters().Length > 0) continue;
 
@@ -81,9 +83,11 @@ namespace LiteDB
                 // [BsonIgnore]
                 if (prop.IsDefined(ignore, false)) continue;
 
+                // check if property has [BsonField] 
+                var bsonField = prop.IsDefined(fieldAttr, false);
                 // create getter/setter IL function
-                var getter = CreateGetMethod(type, prop);
-                var setter = CreateSetMethod(type, prop);
+                var getter = CreateGetMethod(type, prop, bsonField);
+                var setter = CreateSetMethod(type, prop, bsonField);
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
@@ -91,10 +95,12 @@ namespace LiteDB
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
                 // check if property has [BsonField] with a custom field name
-                var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
-
-                if (field != null) name = field.Name;
-
+                if (bsonField)
+                {
+                    var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
+                    if (field != null && field.Name != null) name = field.Name;
+                }
+                
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
 
@@ -105,14 +111,14 @@ namespace LiteDB
                 if (name == "_id") index = null;
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if(BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw LiteException.InvalidFormat(prop.Name, name);
+                if (BsonDocument.IsValidFieldName(name) == false && isInternal == false) throw LiteException.InvalidFormat(prop.Name, name);
 
                 // create a property mapper
                 var p = new PropertyMapper
-                { 
+                {
                     AutoId = autoId == null ? true : autoId.AutoId,
-                    FieldName = name, 
-                    PropertyName = prop.Name, 
+                    FieldName = name,
+                    PropertyName = prop.Name,
                     PropertyType = prop.PropertyType,
                     IndexOptions = index == null ? null : index.Options,
                     Getter = getter,
@@ -155,7 +161,7 @@ namespace LiteDB
                     }
                     else if (type.IsInterface) // some know interfaces
                     {
-                        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
                         {
                             return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                         }
@@ -193,12 +199,13 @@ namespace LiteDB
             }
         }
 
-        private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo)
+        private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            var getMethod = propertyInfo.GetGetMethod();
+            //nonPublic: Indicates whether a non-public get accessor should be returned.
+            var getMethod = propertyInfo.GetGetMethod(nonPublic);
             if (getMethod == null) return null;
 
-            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type);
+            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type,true);
             var il = getter.GetILGenerator();
 
             if (!type.IsClass) // structs
@@ -226,12 +233,14 @@ namespace LiteDB
             return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
         }
 
-        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo)
+        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo,bool nonPublic)
         {
-            var setMethod = propertyInfo.GetSetMethod();
+            //nonPublic: Indicates whether a non-public set accessor should be returned.
+            var setMethod = propertyInfo.GetSetMethod(nonPublic);
+
             if (setMethod == null) return null;
 
-            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) });
+            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) },true);
             var il = setter.GetILGenerator();
 
             if (!type.IsClass) // structs

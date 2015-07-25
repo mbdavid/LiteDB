@@ -6,6 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Collections.Specialized;
+using System.Security;
 
 namespace UnitTest
 {
@@ -28,6 +29,10 @@ namespace UnitTest
 
         [BsonIndex(true)]
         public Uri MyUri { get; set; }
+
+        // serialize this properties
+        [BsonField]
+        internal string MyProperty { get; set; }
 
         // do not serialize this properties
         [BsonIgnore]
@@ -55,9 +60,9 @@ namespace UnitTest
         public object MyObjectInt { get; set; }
         public object MyObjectImpl { get; set; }
         public List<object> MyObjectList { get; set; }
-
-
     }
+
+
 
     public interface IMyInterface
     {
@@ -80,6 +85,7 @@ namespace UnitTest
                 MyString = "John",
                 MyGuid = Guid.NewGuid(),
                 MyDateTime = DateTime.Now,
+                MyProperty = "SerializeTHIS",
                 MyIgnore = "IgnoreTHIS",
                 MyIntNullable = 999,
                 MyStringList = new List<string>() { "String-1", "String-2" },
@@ -110,11 +116,11 @@ namespace UnitTest
             return c;
         }
 
+
         [TestMethod]
         public void Mapper_Test()
         {
             var mapper = new BsonMapper();
-
             mapper.UseLowerCaseDelimiter('_');
 
             var obj = CreateModel();
@@ -132,6 +138,7 @@ namespace UnitTest
             // compare 2 objects
             Assert.AreEqual(obj.MyId, nobj.MyId);
             Assert.AreEqual(obj.MyString, nobj.MyString);
+            Assert.AreEqual(obj.MyProperty, nobj.MyProperty);
             Assert.AreEqual(obj.MyGuid, nobj.MyGuid);
             Assert.AreEqual(obj.MyDateTime, nobj.MyDateTime);
             Assert.AreEqual(obj.MyDateTimeNullable, nobj.MyDateTimeNullable);
@@ -163,6 +170,8 @@ namespace UnitTest
             Assert.AreEqual(obj.MyObjectList[1], obj.MyObjectList[1]);
             Assert.AreEqual(obj.MyObjectList[3], obj.MyObjectList[3]);
 
+            Assert.AreEqual(nobj.MyInternalProperty, null);
         }
+
     }
 }

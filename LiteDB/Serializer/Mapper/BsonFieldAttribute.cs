@@ -20,5 +20,8 @@ namespace LiteDB
         {
             this.Name = name;
         }
+        public BsonFieldAttribute()
+        {
+        }
     }
 }
