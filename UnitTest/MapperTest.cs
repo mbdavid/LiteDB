@@ -31,7 +31,7 @@ namespace UnitTest
         public Uri MyUri { get; set; }
 
         // serialize this properties
-        [BsonProperty]
+        [BsonField]
         internal string MyProperty { get; set; }
 
         // do not serialize this properties
@@ -60,9 +60,9 @@ namespace UnitTest
         public object MyObjectInt { get; set; }
         public object MyObjectImpl { get; set; }
         public List<object> MyObjectList { get; set; }
-
-
     }
+
+
 
     public interface IMyInterface
     {
@@ -116,11 +116,11 @@ namespace UnitTest
             return c;
         }
 
+
         [TestMethod]
         public void Mapper_Test()
         {
             var mapper = new BsonMapper();
-
             mapper.UseLowerCaseDelimiter('_');
 
             var obj = CreateModel();
@@ -171,8 +171,7 @@ namespace UnitTest
             Assert.AreEqual(obj.MyObjectList[3], obj.MyObjectList[3]);
 
             Assert.AreEqual(nobj.MyInternalProperty, null);
-
-
         }
+
     }
 }

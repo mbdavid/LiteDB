@@ -83,9 +83,11 @@ namespace LiteDB
                 // [BsonIgnore]
                 if (prop.IsDefined(ignore, false)) continue;
 
+                // check if property has [BsonField] 
+                var bsonField = prop.IsDefined(fieldAttr, false);
                 // create getter/setter IL function
-                var getter = CreateGetMethod(type, prop);
-                var setter = CreateSetMethod(type, prop);
+                var getter = CreateGetMethod(type, prop, bsonField);
+                var setter = CreateSetMethod(type, prop, bsonField);
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
@@ -93,10 +95,12 @@ namespace LiteDB
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
                 // check if property has [BsonField] with a custom field name
-                var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
-
-                if (field != null) name = field.Name;
-
+                if (bsonField)
+                {
+                    var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
+                    if (field != null && field.Name != null) name = field.Name;
+                }
+                
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
 
@@ -195,10 +199,10 @@ namespace LiteDB
             }
         }
 
-        private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo)
+        private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            var propAttr = typeof(BsonPropertyAttribute);
-            var getMethod = propertyInfo.IsDefined(propAttr, false) ? propertyInfo.GetGetMethod(true) : propertyInfo.GetGetMethod();
+            //nonPublic: Indicates whether a non-public get accessor should be returned.
+            var getMethod = propertyInfo.GetGetMethod(nonPublic);
             if (getMethod == null) return null;
 
             var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type,true);
@@ -229,10 +233,10 @@ namespace LiteDB
             return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
         }
 
-        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo)
+        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo,bool nonPublic)
         {
-            var propAttr = typeof(BsonPropertyAttribute);
-            var setMethod = propertyInfo.IsDefined(propAttr, false) ? propertyInfo.GetSetMethod(true) : propertyInfo.GetSetMethod();
+            //nonPublic: Indicates whether a non-public set accessor should be returned.
+            var setMethod = propertyInfo.GetSetMethod(nonPublic);
 
             if (setMethod == null) return null;
 
