@@ -50,7 +50,7 @@ namespace LiteDB
             // create page instance and read from disk (read page header + content page)
             var page = new T();
             var stream = _reader.BaseStream;
-            var posStart = pageID * BasePage.PAGE_SIZE;
+            var posStart = (long)pageID * (long)BasePage.PAGE_SIZE;
             var posEnd = posStart + BasePage.PAGE_SIZE;
 
             TryExec(_connectionString.Timeout, () =>
@@ -103,7 +103,7 @@ namespace LiteDB
         public static void WritePage(BinaryWriter writer, BasePage page)
         {
             var stream = writer.BaseStream;
-            var posStart = page.PageID * BasePage.PAGE_SIZE;
+            var posStart = (long)page.PageID * (long)BasePage.PAGE_SIZE;
             var posEnd = posStart + BasePage.PAGE_SIZE;
 
             // position cursor
