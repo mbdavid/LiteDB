@@ -26,10 +26,23 @@ namespace LiteDB
         {
         }
 
-        public BsonIndexAttribute(IndexOptions options)
+        public BsonIndexAttribute(
+            bool unique = false, 
+            bool ignoreCase = true, 
+            bool trimWhiteSpace = true, 
+            bool emptyStringToNull = true, 
+            bool removeAccents = true)
+            : this(new IndexOptions {
+                Unique = unique,
+                IgnoreCase = ignoreCase,
+                TrimWhitespace = trimWhiteSpace,
+                EmptyStringToNull = emptyStringToNull,
+                RemoveAccents = removeAccents })
         {
-            if (options == null) throw new ArgumentNullException("options");
+        }
 
+        private BsonIndexAttribute(IndexOptions options)
+        {
             this.Options = options;
         }
     }

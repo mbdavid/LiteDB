@@ -25,6 +25,8 @@ namespace UnitTest
         public MyEnum MyEnumProp { get; set; }
         public char MyChar { get; set; }
         public byte MyByte { get; set; }
+
+        [BsonIndex(ignoreCase: true)]
         public decimal MyDecimal { get; set; }
 
         [BsonIndex(true)]
