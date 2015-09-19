@@ -28,6 +28,7 @@ namespace UnitTest
 
         [BsonIndex(ignoreCase: true)]
         public decimal MyDecimal { get; set; }
+        public decimal? MyDecimalNullable { get; set; }
 
         [BsonIndex(true)]
         public Uri MyUri { get; set; }
@@ -101,6 +102,7 @@ namespace UnitTest
                 MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255,
                 MyDecimal = 19.9m,
+                MyDecimalNullable = 25.5m,
 
                 MyInterface = new MyImpl { Name = "John" },
                 MyListInterface = new List<IMyInterface>() { new MyImpl { Name = "John" } },

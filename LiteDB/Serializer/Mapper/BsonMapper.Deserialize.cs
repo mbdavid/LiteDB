@@ -85,7 +85,7 @@ namespace LiteDB
             }
 
             // check if your type is already a BsonValue/BsonDocument/BsonArray
-            else if (type == typeof(BsonValue))
+            if (type == typeof(BsonValue))
             {
                 return new BsonValue(value);
             }
