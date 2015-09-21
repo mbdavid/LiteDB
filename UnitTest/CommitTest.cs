@@ -6,10 +6,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace UnitTest
 {
 	[TestClass]
-	public class FindAllTest
+	public class CommitTest
 	{
 		[TestMethod]
-		public void ActualizationOnFindAllTest()
+		public void ActualizationAfterCommitTest()
 		{
 			const string tableName = "users";
 			const int n = 100;
