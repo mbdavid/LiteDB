@@ -12,10 +12,10 @@ namespace LiteDB
     {
         private const int LOCK_POSITION = 0;
 
-        private ConnectionString _connectionString;
+				private readonly Lazy<BinaryWriter> _writer;
+				private ConnectionString _connectionString;
 
         private BinaryReader _reader;
-        private BinaryWriter _writer;
 
         public DiskService(ConnectionString connectionString)
         {
@@ -25,6 +25,7 @@ namespace LiteDB
             var stream = new FileStream(_connectionString.Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BasePage.PAGE_SIZE);
 
             _reader = new BinaryReader(stream);
+            _writer = new Lazy<BinaryWriter>(GetWriter);
         }
 
         /// <summary>
@@ -40,6 +41,11 @@ namespace LiteDB
                 }
             }
         }
+			
+		    /// <summary>
+        /// Get BinaryWriter
+        /// </summary>
+        public BinaryWriter Writer { get { return _writer.Value; } }
 
         /// <summary>
         /// Create a new Page instance and read data from disk
@@ -133,8 +139,7 @@ namespace LiteDB
         /// </summary>
         public void AllocateDiskSpace(long length)
         {
-            var writer = this.GetWriter();
-            var stream = writer.BaseStream as FileStream;
+            var stream = Writer.BaseStream as FileStream;
 
             if (length > stream.Length)
             {
@@ -143,22 +148,16 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get BinaryWriter
+        /// Create BinaryWriter
         /// </summary>
         private BinaryWriter GetWriter()
         {
-            // If no writer - re-open file in Write Mode
-            if (_writer == null)
-            {
-                _reader.Close(); // Close reader
+            _reader.Close(); // Close reader
 
-                var stream = new FileStream(_connectionString.Filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, BasePage.PAGE_SIZE);
+            var stream = new FileStream(_connectionString.Filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, BasePage.PAGE_SIZE);
 
-                _reader = new BinaryReader(stream);
-                _writer = new BinaryWriter(stream);
-            }
-
-            return _writer;
+            _reader = new BinaryReader(stream);
+            return new BinaryWriter(stream);
         }
 
         #region Lock/Unlock functions
@@ -168,7 +167,7 @@ namespace LiteDB
         /// </summary>
         public void Lock()
         {
-            var stream = this.GetWriter().BaseStream as FileStream;
+            var stream = this.Writer.BaseStream as FileStream;
 
             TryExec(_connectionString.Timeout, () =>
             {
@@ -183,14 +182,14 @@ namespace LiteDB
         /// </summary>
         public void UnLock()
         {
-            var stream = this.GetWriter().BaseStream as FileStream;
+            var stream = this.Writer.BaseStream as FileStream;
 
             stream.Unlock(LOCK_POSITION, 1);
         }
 
         public void Flush()
         {
-            this.GetWriter().BaseStream.Flush();
+            this.Writer.BaseStream.Flush();
         }
 
         /// <summary>
@@ -198,7 +197,7 @@ namespace LiteDB
         /// </summary>
         public void ProtectWriteFile(Action action)
         {
-            var stream = this.GetWriter().BaseStream as FileStream;
+            var stream = this.Writer.BaseStream as FileStream;
             var fileLength = stream.Length;
 
             stream.Lock(LOCK_POSITION + 1, fileLength);
@@ -241,9 +240,9 @@ namespace LiteDB
         {
             _reader.Close();
 
-            if (_writer != null)
+            if (_writer.IsValueCreated)
             {
-                _writer.Close();
+                _writer.Value.Close();
             }
         }
     }
