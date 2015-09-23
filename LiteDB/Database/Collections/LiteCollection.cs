@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,8 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteCollection<T>
-        where T : new()
+    public partial class LiteCollection<T> : IEnumerable<T> where T : new()
     {
         private uint _pageID;
         private List<Action<T>> _includes;
@@ -81,5 +81,15 @@ namespace LiteDB
 
             return col;
         }
+
+	    public IEnumerator<T> GetEnumerator()
+	    {
+		    return FindAll().GetEnumerator();
+	    }
+
+	    IEnumerator IEnumerable.GetEnumerator()
+	    {
+		    return GetEnumerator();
+	    }
     }
 }
