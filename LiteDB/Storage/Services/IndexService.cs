@@ -235,7 +235,7 @@ namespace LiteDB
         {
             if (address.IsEmpty) return null;
             var page = _pager.GetPage<IndexPage>(address.PageID);
-            return page.Nodes[address.Index];
+            return page.Nodes.GetOrDefault(address.Index, null);// page.Nodes[address.Index];
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace LiteDB
                 cur = this.GetNode(cur.NextPrev(0, order));
 
                 // stop if node is head/tail
-                if (cur.IsHeadTail(index)) yield break;
+                if (cur == null || cur.IsHeadTail(index)) yield break;
 
                 yield return cur;
             }
