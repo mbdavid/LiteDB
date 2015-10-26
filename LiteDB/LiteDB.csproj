@@ -37,6 +37,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>LiteDB.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -157,6 +163,9 @@
     <Compile Include="Utils\DictionaryExtensions.cs" />
     <Compile Include="Utils\LiteException.cs" />
     <Compile Include="Utils\StringScanner.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LiteDB.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
