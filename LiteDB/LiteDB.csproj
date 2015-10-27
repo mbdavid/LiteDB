@@ -41,7 +41,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>LiteDB.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -165,7 +165,7 @@
     <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="LiteDB.pfx" />
+    <None Include="LiteDB.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
