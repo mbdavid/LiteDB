@@ -53,6 +53,12 @@ namespace LiteDB
 
             TryExec(() => 
             {
+                // position cursor
+                if (_stream.Position != posStart)
+                {
+                    _stream.Seek(posStart, SeekOrigin.Begin);
+                }
+
                 // read page header
                 page.ReadHeader(_reader);
 
