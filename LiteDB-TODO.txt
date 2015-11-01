@@ -1,7 +1,12 @@
 # LiteDB v.2 - TODO
 
+- Implementer SortDictionaryMRU
 - Implementar tamanho do BsonDocument
 - Implementar ByteReader/Writer
+
+- Remover transacao
+- Implementar cache de 2 repos
+
 - Converter page read/write para ByteR/W
 - Converter BsonSerializer para Byte R/W
 - Converter on-demand a serializacao no insert/update 
