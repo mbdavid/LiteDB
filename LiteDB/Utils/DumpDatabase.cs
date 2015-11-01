@@ -18,7 +18,7 @@ namespace LiteDB
 
             sb.AppendLine("Dump - " + (mem ? "Cache/Disk" : "Only Disk"));
 
-            for (uint i = 0; i <= db.Cache.Header.LastPageID; i++)
+            for (uint i = 0; i <= db.Pager.GetPage<HeaderPage>(0).LastPageID; i++)
             {
                 var p = ReadPage<BasePage>(db, i, mem);
 
@@ -46,7 +46,7 @@ namespace LiteDB
         private static T ReadPage<T>(LiteDatabase db, uint pageID, bool mem)
             where T : BasePage, new()
         {
-            if (mem && pageID == 0) return (T)(object)db.Cache.Header;
+            if (mem && pageID == 0) return (T)(object)db.Cache.GetPage<HeaderPage>(0);
 
             return mem ? db.Pager.GetPage<T>(pageID) : db.Disk.ReadPage<T>(pageID);
         }

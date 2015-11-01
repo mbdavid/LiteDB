@@ -30,9 +30,7 @@ namespace LiteDB.Shell.Commands
             {
                 if (shell.Database == null) throw LiteException.NoDatabase();
 
-                var dbfilename = shell.Database.ConnectionString.Filename;
-                var path = Path.Combine(Path.GetDirectoryName(dbfilename),
-                    string.Format("{0}-spool-{1:yyyy-MM-dd-HH-mm}.txt", Path.GetFileNameWithoutExtension(dbfilename), DateTime.Now));
+                var path = Path.GetFullPath(string.Format("LiteDB-spool-{1:yyyy-MM-dd-HH-mm}.txt", DateTime.Now));
 
                 _writer = File.CreateText(path);
 

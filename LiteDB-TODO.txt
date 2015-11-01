@@ -1,0 +1,7 @@
+# LiteDB v.2 - TODO
+
+- Implementar tamanho do BsonDocument
+- Implementar ByteReader/Writer
+- Converter page read/write para ByteR/W
+- Converter BsonSerializer para Byte R/W
+- Converter on-demand a serializacao no insert/update 

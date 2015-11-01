@@ -105,7 +105,6 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> db.info", "Get database informations");
                 d.WriteHelp("> dump", "Display dump database information");
             }
         }
