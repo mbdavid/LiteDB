@@ -20,7 +20,9 @@ namespace LiteDB
 
             for (uint i = 0; i <= db.Pager.GetPage<HeaderPage>(0).LastPageID; i++)
             {
-                var p = ReadPage<BasePage>(db, i, mem);
+                var p = i == 0 ? 
+                    ReadPage<HeaderPage>(db, i, mem) :
+                    ReadPage<BasePage>(db, i, mem);
 
                 sb.AppendFormat("{0} <{1},{2}> [{3}] {4}{5} | ",
                     p.PageID.Dump(),
@@ -30,7 +32,6 @@ namespace LiteDB
                     p.FreeBytes.ToString("0000"),
                     p.IsDirty ? "d" : " ");
 
-                if (p.PageType == PageType.Header) p = ReadPage<HeaderPage>(db, i, mem);
                 if (p.PageType == PageType.Collection) p = ReadPage<CollectionPage>(db, i, mem);
                 if (p.PageType == PageType.Data) p = ReadPage<DataPage>(db, i, mem);
                 if (p.PageType == PageType.Extend) p = ReadPage<ExtendPage>(db, i, mem);
@@ -156,9 +157,8 @@ namespace LiteDB
 
         public static void Dump(this HeaderPage page, StringBuilder sb)
         {
-            sb.AppendFormat("Change: {0}, Version: {1}, FreeEmptyPageID: {2}, LastPageID: {3}, ColID: {4}",
+            sb.AppendFormat("Change: {0}, FreeEmptyPageID: {1}, LastPageID: {2}, ColID: {3}",
                 page.ChangeID,
-                page.UserVersion,
                 page.FreeEmptyPageID.Dump(),
                 page.LastPageID.Dump(),
                 page.FirstCollectionPageID.Dump());

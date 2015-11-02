@@ -34,11 +34,6 @@ namespace LiteDB
         public uint LastPageID { get; set; }
 
         /// <summary>
-        /// Get/Set a user version of database file
-        /// </summary>
-        public int UserVersion { get; set; }
-
-        /// <summary>
         /// Get/Set the first collection pageID (used as Field to be passed as reference)
         /// </summary>
         public uint FirstCollectionPageID;
@@ -66,7 +61,6 @@ namespace LiteDB
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.FirstCollectionPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
-            this.UserVersion = reader.ReadInt32();
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase(reader.BaseStream);
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(reader.BaseStream, ver);
@@ -80,7 +74,6 @@ namespace LiteDB
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.FirstCollectionPageID);
             writer.Write(this.LastPageID);
-            writer.Write(this.UserVersion);
         }
 
         #endregion
