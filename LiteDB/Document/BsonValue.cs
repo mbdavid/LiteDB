@@ -164,7 +164,10 @@ namespace LiteDB
             {
                 if (this.IsArray)
                 {
-                    return new BsonArray((List<BsonValue>)this.RawValue);
+                    var array = new BsonArray((List<BsonValue>)this.RawValue);
+                    array.Length = this.Length;
+
+                    return array;
                 }
                 else
                 {
@@ -179,7 +182,10 @@ namespace LiteDB
             {
                 if (this.IsDocument)
                 {
-                    return new BsonDocument((Dictionary<string, BsonValue>)this.RawValue);
+                    var doc = new BsonDocument((Dictionary<string, BsonValue>)this.RawValue);
+                    doc.Length = this.Length;
+
+                    return doc;
                 }
                 else
                 {
@@ -559,64 +565,68 @@ namespace LiteDB
 
         #endregion
 
-        #region GetBytesLength, Normalize
+        #region GetBytesCount, Normalize
+
+        internal int? Length = null;
 
         /// <summary>
         /// Returns how many bytes this BsonValue will use to persist in index writes
         /// </summary>
-        internal ushort GetBytesCount()
+        public int GetBytesCount(bool recalc)
         {
-            var length = 0;
+            if (recalc == false && this.Length.HasValue) return this.Length.Value;
 
             switch (this.Type)
             {
                 case BsonType.Null:
                 case BsonType.MinValue:
                 case BsonType.MaxValue:
-                    length = 0; break;
+                    this.Length = 0; break;
 
-                case BsonType.Int32: length = 4; break;
-                case BsonType.Int64: length = 8; break;
-                case BsonType.Double: length = 8; break;
+                case BsonType.Int32: this.Length = 4; break;
+                case BsonType.Int64: this.Length = 8; break;
+                case BsonType.Double: this.Length = 8; break;
 
-                case BsonType.String: length = Encoding.UTF8.GetByteCount((string)this.RawValue); break;
+                case BsonType.String: this.Length = Encoding.UTF8.GetByteCount((string)this.RawValue); break;
 
-                case BsonType.Binary: length = ((Byte[])this.RawValue).Length; break;
-                case BsonType.ObjectId: length = 12; break;
-                case BsonType.Guid: length = 16; break;
+                case BsonType.Binary: this.Length = ((Byte[])this.RawValue).Length; break;
+                case BsonType.ObjectId: this.Length = 12; break;
+                case BsonType.Guid: this.Length = 16; break;
 
-                case BsonType.Boolean: length = 1; break;
-                case BsonType.DateTime: length = 8; break;
+                case BsonType.Boolean: this.Length = 1; break;
+                case BsonType.DateTime: this.Length = 8; break;
 
-                // for Array/Document use BsonWriter
+                // for Array/Document calculate from elements
                 case BsonType.Array:
-                    using(var ma = new MemoryStream())
+                    var array = (List<BsonValue>)this.RawValue;
+                    this.Length = 5; // header + footer
+                    for (var i = 0; i < array.Count; i++)
                     {
-                        using (var w = new BinaryWriter(ma))
-                        {
-                            new BsonWriter()
-                                .WriteArray(w, this.AsArray);
-
-                            length = (int)ma.Position;
-                        }
+                        this.Length += this.GetBytesCountElement(i.ToString(), array[i] ?? BsonValue.Null, recalc);
                     }
                     break;
                 case BsonType.Document:
-                    using(var md = new MemoryStream())
+                    var doc = (Dictionary<string, BsonValue>)this.RawValue;
+                    this.Length = 5; // header + footer
+                    foreach (var key in doc.Keys)
                     {
-                        using (var w = new BinaryWriter(md))
-                        {
-                            new BsonWriter()
-                                .WriteDocument(w, this.AsDocument);
-
-                            length = (int)md.Position;
-                        }
+                        this.Length += this.GetBytesCountElement(key, doc[key] ?? BsonValue.Null, recalc);
                     }
                     break;
             }
 
-            // limits in ushort.MaxValue (store in 2 bytes only)
-            return (ushort)Math.Min(length, ushort.MaxValue);
+            return this.Length.Value;
+        }
+
+        private int GetBytesCountElement(string key, BsonValue value, bool recalc)
+        {
+            return 
+                1 + // element type
+                Encoding.UTF8.GetByteCount(key) + // CString
+                1 + // CString 0x00
+                value.GetBytesCount(recalc) +
+                (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0) // bytes.Length + 0x??
+                ;
         }
 
         /// <summary>

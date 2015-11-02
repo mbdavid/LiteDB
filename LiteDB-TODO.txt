@@ -10,3 +10,9 @@
 - Converter page read/write para ByteR/W
 - Converter BsonSerializer para Byte R/W
 - Converter on-demand a serializacao no insert/update 
+
+## A pensar:
+
+- Voltar user/version
+- Voltar string connection
+- A implementacaos dos multiplos discos ser apenas interna

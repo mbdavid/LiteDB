@@ -7,16 +7,24 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class BsonWriter
+    internal class BsonWriter2
     {
-        public void Serialize(Stream stream, BsonDocument value)
+        /// <summary>
+        /// Write a bson document
+        /// </summary>
+        public void WriteDocument(ByteWriter writer, BsonDocument doc)
         {
-            var writer = new BinaryWriter(stream);
+            writer.Write(doc.GetBytesCount(false));
 
-            this.WriteDocument(writer, value);
+            foreach (var key in doc.Keys)
+            {
+                this.WriteElement(writer, key, doc[key] ?? BsonValue.Null);
+            }
+
+            writer.Write((byte)0x00);
         }
 
-        private void WriteElement(BinaryWriter writer, string key, BsonValue value)
+        private void WriteElement(ByteWriter writer, string key, BsonValue value)
         {
             // cast RawValue to avoid one if on As<Type>
             switch (value.Type)
@@ -101,44 +109,19 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Write a bson document
-        /// </summary>
-        internal void WriteDocument(BinaryWriter writer, BsonDocument doc)
+        private void WriteArray(ByteWriter writer, BsonArray array)
         {
-            using (var mem = new MemoryStream())
+            writer.Write(array.GetBytesCount(false));
+
+            for (var i = 0; i < array.Count; i++)
             {
-                var w = new BinaryWriter(mem);
-
-                foreach (var key in doc.Keys)
-                {
-                    this.WriteElement(w, key, doc[key] ?? BsonValue.Null);
-                }
-
-                writer.Write((Int32)mem.Position + 4);
-                writer.Write(mem.GetBuffer(), 0, (int)mem.Position);
-                writer.Write((byte)0x00);
+                this.WriteElement(writer, i.ToString(), array[i] ?? BsonValue.Null);
             }
+
+            writer.Write((byte)0x00);
         }
 
-        internal void WriteArray(BinaryWriter writer, BsonArray arr)
-        {
-            using (var mem = new MemoryStream())
-            {
-                var w = new BinaryWriter(mem);
-
-                for (var i = 0; i < arr.Count; i++)
-                {
-                    this.WriteElement(w, i.ToString(), arr[i] ?? BsonValue.Null);
-                }
-
-                writer.Write((Int32)mem.Position + 4);
-                writer.Write(mem.GetBuffer(), 0, (int)mem.Position);
-                writer.Write((byte)0x00);
-            }
-        }
-
-        private void WriteString(BinaryWriter writer, string s)
+        private void WriteString(ByteWriter writer, string s)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
             writer.Write(bytes.Length + 1);
@@ -146,7 +129,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        private void WriteCString(BinaryWriter writer, string s)
+        private void WriteCString(ByteWriter writer, string s)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
             writer.Write(bytes);

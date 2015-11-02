@@ -21,7 +21,7 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Debug\LiteDB.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
@@ -52,6 +52,9 @@
   <ItemGroup>
     <Compile Include="Core\Collections\FindIndex.cs" />
     <Compile Include="DataStructure\Disks\IDiskService.cs" />
+    <Compile Include="Serializer\Bson2\BsonReader2.cs" />
+    <Compile Include="Serializer\Bson2\BsonSerializer2.cs" />
+    <Compile Include="Serializer\Bson2\BsonWriter2.cs" />
     <Compile Include="Serializer\Mapper\DbRef.cs" />
     <Compile Include="Core\Collections\Include.cs" />
     <Compile Include="Core\Collections\Drop.cs" />
@@ -144,6 +147,7 @@
     <Compile Include="DataStructure\Services\PageService.cs" />
     <Compile Include="DataStructure\Disks\FileDiskService.cs" />
     <Compile Include="DataStructure\Services\TransactionService.cs" />
+    <Compile Include="Utils\ByteWriter.cs" />
     <Compile Include="Utils\BinaryReaderExtensions.cs" />
     <Compile Include="Utils\BinaryWriterExtensions.cs" />
     <Compile Include="Core\LiteDatabase.cs" />

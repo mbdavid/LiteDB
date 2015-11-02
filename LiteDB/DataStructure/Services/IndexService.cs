@@ -41,7 +41,7 @@ namespace LiteDB
             var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
             { 
                 Key = BsonValue.MinValue, 
-                KeyLength = BsonValue.MinValue.GetBytesCount(), 
+                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false), 
                 Page = page,
                 Position = new PageAddress(page.PageID, 0)
             };
@@ -87,7 +87,7 @@ namespace LiteDB
             var node = new IndexNode(level)
             { 
                 Key = key, 
-                KeyLength = key.GetBytesCount()
+                KeyLength = (ushort)key.GetBytesCount(false)
             };
 
             if (node.KeyLength > MAX_INDEX_LENGTH)

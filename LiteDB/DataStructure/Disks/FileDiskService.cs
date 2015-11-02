@@ -11,6 +11,7 @@ namespace LiteDB
     internal class FileDiskService : IDiskService
     {
         private const int LOCK_POSITION = 0;
+
         private FileStream _stream;
         private BinaryReader _reader;
         private BinaryWriter _writer;
