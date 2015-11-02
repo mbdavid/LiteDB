@@ -15,29 +15,22 @@ namespace LiteDB
     /// </summary>
     public class BsonSerializer2
     {
-        public static byte[] Serialize(BsonDocument value)
+        public static byte[] Serialize(BsonDocument doc)
         {
-            if (value == null) throw new ArgumentNullException("value");
+            if (doc == null) throw new ArgumentNullException("doc");
 
-            var count = value.GetBytesCount(true);
-            var writer = new ByteWriter(count);
-            var bson = new BsonWriter2();
+            var writer = new BsonWriter2();
 
-            bson.WriteDocument(writer, value);
-
-            return writer.Buffer;
+            return writer.Serialize(doc);
         }
 
         public static BsonDocument Deserialize(byte[] bson)
         {
             if (bson == null || bson.Length == 0) throw new ArgumentNullException("bson");
 
-            using (var mem = new MemoryStream(bson))
-            {
-                var reader = new BsonReader();
+            var reader = new BsonReader2();
 
-                return reader.Deserialize(mem);
-            }
+            return reader.Deserialize(bson);
         }
     }
 }

@@ -7,8 +7,24 @@ using System.Text;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// Internal class to serialize a BsonDocument to BSON data format (byte[])
+    /// </summary>
     internal class BsonWriter2
     {
+        /// <summary>
+        /// Main method - serialize document. Uses ByteWriter
+        /// </summary>
+        public byte[] Serialize(BsonDocument doc)
+        {
+            var count = doc.GetBytesCount(true);
+            var writer = new ByteWriter(count);
+
+            this.WriteDocument(writer, doc);
+
+            return writer.Buffer;
+        }
+
         /// <summary>
         /// Write a bson document
         /// </summary>
@@ -19,6 +35,18 @@ namespace LiteDB
             foreach (var key in doc.Keys)
             {
                 this.WriteElement(writer, key, doc[key] ?? BsonValue.Null);
+            }
+
+            writer.Write((byte)0x00);
+        }
+
+        private void WriteArray(ByteWriter writer, BsonArray array)
+        {
+            writer.Write(array.GetBytesCount(false));
+
+            for (var i = 0; i < array.Count; i++)
+            {
+                this.WriteElement(writer, i.ToString(), array[i] ?? BsonValue.Null);
             }
 
             writer.Write((byte)0x00);
@@ -107,18 +135,6 @@ namespace LiteDB
                     this.WriteCString(writer, key);
                     break;
             }
-        }
-
-        private void WriteArray(ByteWriter writer, BsonArray array)
-        {
-            writer.Write(array.GetBytesCount(false));
-
-            for (var i = 0; i < array.Count; i++)
-            {
-                this.WriteElement(writer, i.ToString(), array[i] ?? BsonValue.Null);
-            }
-
-            writer.Write((byte)0x00);
         }
 
         private void WriteString(ByteWriter writer, string s)

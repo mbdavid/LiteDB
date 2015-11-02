@@ -16,3 +16,12 @@
 - Voltar user/version
 - Voltar string connection
 - A implementacaos dos multiplos discos ser apenas interna
+
+var w = new ByteWriter();
+
+w.OnGetBytes((pos) => new byte[4000])
+
+
+Time to convert  1975687
+Time to copy       77554
+

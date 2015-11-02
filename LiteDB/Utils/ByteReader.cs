@@ -9,137 +9,120 @@ namespace LiteDB
     public unsafe class ByteReader
     {
         private byte[] _buffer;
-        private int _index;
+        private int _pos;
+
+        public int Position { get { return _pos; } }
 
         public ByteReader(byte[] buffer)
         {
             _buffer = buffer;
-            _index = 0;
+            _pos = 0;
         }
 
-        public void Write(byte value)
+        #region Native data types
+
+        public Byte ReadByte()
         {
-            _buffer[_index] = value;
+            var value = _buffer[_pos];
 
-            _index++;
+            _pos++;
+
+            return value;
         }
 
-        public void Write(bool value)
+        public Boolean ReadBoolean()
         {
-            _buffer[_index] = value ? (byte)1 : (byte)1;
+            var value = _buffer[_pos];
 
-            _index++;
+            _pos++;
+
+            return value == 0 ? false : true;
         }
 
-        public void Write(ushort value)
+        public UInt16 ReadUInt16()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-
-            _index += 2;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 2;
+                return *(((UInt16*)numRef));
+            }
         }
 
-        public void Write(uint value)
+        public UInt32 ReadUInt32()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-            _buffer[_index + 2] = pi[2];
-            _buffer[_index + 3] = pi[3];
-
-            _index += 4;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 4;
+                return *(((UInt32*)numRef));
+            }
         }
 
-        public void Write(ulong value)
+        public UInt64 ReadUInt64()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-            _buffer[_index + 2] = pi[2];
-            _buffer[_index + 3] = pi[3];
-            _buffer[_index + 4] = pi[4];
-            _buffer[_index + 5] = pi[5];
-            _buffer[_index + 6] = pi[6];
-            _buffer[_index + 7] = pi[7];
-
-            _index += 8;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 8;
+                return *(((UInt64*)numRef));
+            }
         }
 
-        public void Write(short value)
+        public Int16 ReadInt16()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-
-            _index += 2;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 2;
+                return *(((Int16*)numRef));
+            }
         }
 
-        public void Write(int value)
+        public Int32 ReadInt32()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-            _buffer[_index + 2] = pi[2];
-            _buffer[_index + 3] = pi[3];
-
-            _index += 4;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 4;
+                return *(((Int32*)numRef));
+            }
         }
 
-        public void Write(long value)
+        public Int64 ReadInt64()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-            _buffer[_index + 2] = pi[2];
-            _buffer[_index + 3] = pi[3];
-            _buffer[_index + 4] = pi[4];
-            _buffer[_index + 5] = pi[5];
-            _buffer[_index + 6] = pi[6];
-            _buffer[_index + 7] = pi[7];
-
-            _index += 8;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 8;
+                return *(((Int64*)numRef));
+            }
         }
 
-        public void Write(float value)
+        public Single ReadSingle()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-            _buffer[_index + 2] = pi[2];
-            _buffer[_index + 3] = pi[3];
-
-            _index += 4;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 4;
+                return *(((Single*)numRef));
+            }
         }
 
-        public void Write(double value)
+        public Double ReadDouble()
         {
-            byte* pi = (byte*)&value;
-
-            _buffer[_index + 0] = pi[0];
-            _buffer[_index + 1] = pi[1];
-            _buffer[_index + 2] = pi[2];
-            _buffer[_index + 3] = pi[3];
-            _buffer[_index + 4] = pi[4];
-            _buffer[_index + 5] = pi[5];
-            _buffer[_index + 6] = pi[6];
-            _buffer[_index + 7] = pi[7];
-
-            _index += 8;
+            fixed (byte* numRef = &(_buffer[_pos]))
+            {
+                _pos += 8;
+                return *(((Double*)numRef));
+            }
         }
 
-        public void Write(byte[] value)
+        public Byte[] ReadBytes(int count)
         {
-            System.Buffer.BlockCopy(value, 0, _buffer, _index, value.Length);
+            var buffer = new byte[count];
 
-            _index += value.Length;
+            System.Buffer.BlockCopy(_buffer, _pos, buffer, 0, count);
+
+            _pos += count;
+
+            return buffer;
         }
+
+        #endregion
+
     }
 }

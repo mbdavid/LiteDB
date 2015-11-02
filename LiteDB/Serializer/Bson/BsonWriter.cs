@@ -115,7 +115,7 @@ namespace LiteDB
                     this.WriteElement(w, key, doc[key] ?? BsonValue.Null);
                 }
 
-                writer.Write((Int32)mem.Position + 4);
+                writer.Write((Int32)mem.Position);
                 writer.Write(mem.GetBuffer(), 0, (int)mem.Position);
                 writer.Write((byte)0x00);
             }
@@ -132,7 +132,7 @@ namespace LiteDB
                     this.WriteElement(w, i.ToString(), arr[i] ?? BsonValue.Null);
                 }
 
-                writer.Write((Int32)mem.Position + 4);
+                writer.Write((Int32)mem.Position);
                 writer.Write(mem.GetBuffer(), 0, (int)mem.Position);
                 writer.Write((byte)0x00);
             }
