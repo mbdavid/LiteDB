@@ -55,7 +55,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadContent(BinaryReader reader)
+        public override void ReadContent(ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
@@ -75,7 +75,7 @@ namespace LiteDB
             }
         }
 
-        public override void WriteContent(BinaryWriter writer)
+        public override void WriteContent(ByteWriter writer)
         {
             writer.Write(this.CollectionName);
             writer.Write(this.FreeDataPageID);

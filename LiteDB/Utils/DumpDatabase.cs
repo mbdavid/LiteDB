@@ -49,7 +49,16 @@ namespace LiteDB
         {
             if (mem && pageID == 0) return (T)(object)db.Cache.GetPage<HeaderPage>(0);
 
-            return mem ? db.Pager.GetPage<T>(pageID) : db.Disk.ReadPage<T>(pageID);
+            if(mem)
+            {
+                return db.Pager.GetPage<T>(pageID);
+            }
+            else
+            {
+                var page = new T();
+                page.ReadPage(db.Disk.ReadPage(pageID));
+                return page;
+            }
         }
 
         public static StringBuilder Index(LiteDatabase db, string collection, string field, int size = 5)

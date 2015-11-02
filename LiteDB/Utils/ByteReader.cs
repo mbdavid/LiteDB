@@ -6,7 +6,7 @@ using System.IO;
 
 namespace LiteDB
 {
-    public unsafe class ByteReader
+    internal unsafe class ByteReader
     {
         private byte[] _buffer;
         private int _pos;
@@ -120,6 +120,74 @@ namespace LiteDB
             _pos += count;
 
             return buffer;
+        }
+
+        #endregion
+
+        #region Extended types
+
+        public string ReadString()
+        {
+            var length = this.ReadInt32();
+            var bytes = this.ReadBytes(length);
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        public string ReadString(int length)
+        {
+            var bytes = this.ReadBytes(length);
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        public DateTime ReadDateTime()
+        {
+            return new DateTime(this.ReadInt64());
+        }
+
+        public Guid ReadGuid()
+        {
+            return new Guid(this.ReadBytes(16));
+        }
+
+        public ObjectId ReadObjectId()
+        {
+            return new ObjectId(this.ReadBytes(12));
+        }
+
+        public PageAddress ReadPageAddress()
+        {
+            return new PageAddress(this.ReadUInt32(), this.ReadUInt16());
+        }
+
+        public BsonValue ReadBsonValue(ushort length)
+        {
+            var type = (BsonType)this.ReadByte();
+
+            switch (type)
+            {
+                case BsonType.Null: return BsonValue.Null;
+
+                case BsonType.Int32: return this.ReadInt32();
+                case BsonType.Int64: return this.ReadInt64();
+                case BsonType.Double: return this.ReadDouble();
+
+                case BsonType.String: return this.ReadString(length);
+
+                //case BsonType.Document: return new BsonReader().ReadDocument(reader);
+                //case BsonType.Array: return new BsonReader().ReadArray(reader);
+
+                case BsonType.Binary: return this.ReadBytes(length);
+                case BsonType.ObjectId: return this.ReadObjectId();
+                case BsonType.Guid: return this.ReadGuid();
+
+                case BsonType.Boolean: return this.ReadBoolean();
+                case BsonType.DateTime: return this.ReadDateTime();
+
+                case BsonType.MinValue: return BsonValue.MinValue;
+                case BsonType.MaxValue: return BsonValue.MaxValue;
+            }
+
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -47,14 +47,12 @@ namespace LiteDB
             return new LiteException(103, "File '{0}' has no content or is corrupted", file.Id);
         }
 
-        public static LiteException InvalidDatabase(Stream stream)
+        public static LiteException InvalidDatabase()
         {
-            var filename = stream is FileStream ? ((FileStream)stream).Name : "Stream";
-
-            return new LiteException(104, "'{0}' is not a LiteDB database", filename);
+            return new LiteException(104, "Datafile is not a LiteDB database");
         }
 
-        public static LiteException InvalidDatabaseVersion(Stream stream, int version)
+        public static LiteException InvalidDatabaseVersion(int version)
         {
             return new LiteException(105, "Invalid database version: {0}", version);
         }

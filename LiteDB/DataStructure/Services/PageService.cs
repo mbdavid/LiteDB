@@ -28,8 +28,10 @@ namespace LiteDB
 
             if (page == null)
             {
-                page = _disk.ReadPage<T>(pageID);
+                page = new T();
 
+                page.ReadPage(_disk.ReadPage(pageID));
+                    
                 _cache.AddPage(page);
             }
 

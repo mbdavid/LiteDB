@@ -118,7 +118,7 @@ namespace LiteDB
 
         #region Read/Write page
 
-        public virtual void ReadHeader(BinaryReader reader)
+        public virtual void ReadHeader(ByteReader reader)
         {
             this.PageID = reader.ReadUInt32();
             this.PrevPageID = reader.ReadUInt32();
@@ -128,7 +128,7 @@ namespace LiteDB
             this.FreeBytes = reader.ReadUInt16();
         }
 
-        public virtual void WriteHeader(BinaryWriter writer)
+        public virtual void WriteHeader(ByteWriter writer)
         {
             writer.Write(this.PageID);
             writer.Write(this.PrevPageID);
@@ -138,12 +138,38 @@ namespace LiteDB
             writer.Write((UInt16)this.FreeBytes);
         }
 
-        public virtual void ReadContent(BinaryReader reader)
+        public virtual void ReadContent(ByteReader reader)
         {
         }
 
-        public virtual void WriteContent(BinaryWriter writer)
+        public virtual void WriteContent(ByteWriter writer)
         {
+        }
+
+        public void ReadPage(byte[] buffer)
+        {
+            var reader = new ByteReader(buffer);
+
+            this.ReadHeader(reader);
+
+            if (this.PageType != LiteDB.PageType.Empty)
+            {
+                this.ReadContent(reader);
+            }
+        }
+
+        public byte[] WritePage()
+        {
+            var writer = new ByteWriter(BasePage.PAGE_SIZE);
+
+            WriteHeader(writer);
+
+            if (this.PageType != LiteDB.PageType.Empty)
+            {
+                WriteContent(writer);
+            }
+
+            return writer.Buffer;
         }
 
         #endregion

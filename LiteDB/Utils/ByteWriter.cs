@@ -6,7 +6,7 @@ using System.IO;
 
 namespace LiteDB
 {
-    public unsafe class ByteWriter
+    internal unsafe class ByteWriter
     {
         private byte[] _buffer;
         private int _pos;
@@ -152,6 +152,76 @@ namespace LiteDB
             System.Buffer.BlockCopy(value, 0, _buffer, _pos, value.Length);
 
             _pos += value.Length;
+        }
+
+        #endregion
+
+        #region Extended types
+
+        public void Write(string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            this.Write(bytes.Length);
+            this.Write(bytes);
+        }
+
+        public void Write(string value, int length)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            if (bytes.Length != length) throw new ArgumentException("Invalid string length");
+            this.Write(bytes);
+        }
+
+        public void Write(DateTime value)
+        {
+            this.Write(value.Ticks);
+        }
+
+        public void Write(Guid value)
+        {
+            this.Write(value.ToByteArray());
+        }
+
+        public void Write(ObjectId value)
+        {
+            this.Write(value.ToByteArray());
+        }
+
+        public void Write(PageAddress value)
+        {
+            this.Write(value.PageID);
+            this.Write(value.Index);
+        }
+
+        public void WriteBsonValue(BsonValue value, ushort length)
+        {
+            this.Write((byte)value.Type);
+
+            switch (value.Type)
+            {
+                case BsonType.Null:
+                case BsonType.MinValue:
+                case BsonType.MaxValue:
+                    break;
+
+                case BsonType.Int32: this.Write((Int32)value.RawValue); break;
+                case BsonType.Int64: this.Write((Int64)value.RawValue); break;
+                case BsonType.Double: this.Write((Double)value.RawValue); break;
+
+                case BsonType.String: this.Write((String)value.RawValue, length); break;
+
+                //case BsonType.Document: new BsonWriter().WriteDocument(writer, value.AsDocument); break;
+                //case BsonType.Array: new BsonWriter().WriteArray(writer, value.AsArray); break;
+
+                case BsonType.Binary: this.Write((Byte[])value.RawValue); break;
+                case BsonType.ObjectId: this.Write((ObjectId)value.RawValue); break;
+                case BsonType.Guid: this.Write((Guid)value.RawValue); break;
+
+                case BsonType.Boolean: this.Write((Boolean)value.RawValue); break;
+                case BsonType.DateTime: this.Write((DateTime)value.RawValue); break;
+
+                default: throw new NotImplementedException();
+            }
         }
 
         #endregion

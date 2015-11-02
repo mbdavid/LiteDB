@@ -53,23 +53,23 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadHeader(BinaryReader reader)
+        public override void ReadHeader(ByteReader reader)
         {
             this.ChangeID = reader.ReadUInt16();
-            var info = reader.ReadString(HEADER_INFO.Length);
+            var info = reader.ReadString();
             var ver = reader.ReadByte();
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.FirstCollectionPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
 
-            if (info != HEADER_INFO) throw LiteException.InvalidDatabase(reader.BaseStream);
-            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(reader.BaseStream, ver);
+            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
+            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
         }
 
-        public override void WriteHeader(BinaryWriter writer)
+        public override void WriteHeader(ByteWriter writer)
         {
             writer.Write(this.ChangeID);
-            writer.Write(HEADER_INFO, HEADER_INFO.Length);
+            writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.FirstCollectionPageID);

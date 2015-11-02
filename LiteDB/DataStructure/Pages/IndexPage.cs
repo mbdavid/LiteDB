@@ -42,7 +42,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadContent(BinaryReader reader)
+        public override void ReadContent(ByteReader reader)
         {
             this.Nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
@@ -69,7 +69,7 @@ namespace LiteDB
             }            
         }
 
-        public override void WriteContent(BinaryWriter writer)
+        public override void WriteContent(ByteWriter writer)
         {
             foreach (var node in this.Nodes.Values)
             {

@@ -44,12 +44,12 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadContent(BinaryReader reader)
+        public override void ReadContent(ByteReader reader)
         {
             this.Data = reader.ReadBytes(this.ItemCount);
         }
 
-        public override void WriteContent(BinaryWriter writer)
+        public override void WriteContent(ByteWriter writer)
         {
             writer.Write(this.Data);
         }

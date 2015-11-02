@@ -13,7 +13,7 @@ namespace LiteDB
         void Initialize();
         void Lock();
         void Unlock();
-        T ReadPage<T>(uint pageID) where T : BasePage, new();
-        void WritePages(IEnumerable<BasePage> pages);
+        byte[] ReadPage(uint pageID);
+        void WritePage(uint pageID, byte[] buffer);
     }
 }

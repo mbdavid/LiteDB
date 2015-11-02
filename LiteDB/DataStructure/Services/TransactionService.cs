@@ -77,9 +77,12 @@ namespace LiteDB
 
                     header.IsDirty = true;
 
-                    _disk.WritePages(_cache.GetDirtyPages());
+                    foreach(var page in _cache.GetDirtyPages())
+                    {
+                        _disk.WritePage(page.PageID, page.WritePage());
 
-                    _cache.Clear();
+                        page.IsDirty = false;
+                    }
                 }
 
                 // unlock datafile
@@ -120,7 +123,10 @@ namespace LiteDB
             if (cache == null) return;
 
             // get header page from DISK to check changeID
-            var header = _disk.ReadPage<HeaderPage>(0);
+            var header = new HeaderPage();
+
+            //TODO: better approch - get only first bytes instaned all (IDisk.GetChangeID)
+            header.ReadPage(_disk.ReadPage(0));
 
             // if changeID was changed, file was changed by another process
             if (cache.ChangeID != header.ChangeID)
