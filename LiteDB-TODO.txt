@@ -1,27 +1,19 @@
 # LiteDB v.2 - TODO
 
 - Implementer SortDictionaryMRU
-- Implementar tamanho do BsonDocument
-- Implementar ByteReader/Writer
+- Revisar BsonArray.Length não faz cache
 
-- Remover transacao
+- Remover/Revisar transacao - Locks
 - Implementar cache de 2 repos
+- Substituir BsonSerializer pela versao 2
+- Remover BinaryReader/WriterExtentensions
+- Implementar StreamDiskService()
+- Otimizar GetChangeID() no IDiskService
 
-- Converter page read/write para ByteR/W
-- Converter BsonSerializer para Byte R/W
-- Converter on-demand a serializacao no insert/update 
 
 ## A pensar:
 
-- Voltar user/version
-- Voltar string connection
-- A implementacaos dos multiplos discos ser apenas interna
-
-var w = new ByteWriter();
-
-w.OnGetBytes((pos) => new byte[4000])
-
-
-Time to convert  1975687
-Time to copy       77554
-
+- Voltar user/version??
+- Voltar string connection??
+- A implementacaos dos multiplos IDiskService ser apenas interna??
+- Sistema de Disk mais complexo (suporte a Journal/Recovery no FileDisk)
