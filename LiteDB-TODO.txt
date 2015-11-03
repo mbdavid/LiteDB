@@ -1,80 +1,49 @@
 ﻿# LiteDB v.2 - TODO
 
-- Remover escrita ta header page no filedisk
 - BasePage.OriginalBuffer
-- BasePage.MRU
-- pager.SetDirty(page) antes de alterar
-
-- Implementer SortDictionaryMRU
 - Revisar BsonArray.Length não faz cache
-
 - Remover/Revisar transacao - Locks
-- Implementar cache de 2 repos
-- Substituir BsonSerializer pela versao 2
-- Remover BinaryReader/WriterExtentensions
 - Implementar StreamDiskService()
-- Otimizar GetChangeID() no IDiskService
 - Thread Safe
+- InitialSize para FileDiskService
+- Remove auto-register do shell
+
 
 ## Cache
 
-Otimizar a cache:
+Para saber qual caminho seguir em relação a cache, acho que precisa fazer branchs para testar:
 
-- Ter uma cache exclusiva para Header (só 1)
-- Ter uma cache exclusiva para as Collecitons (são poucas e muito usadas)
-- As demais (Indice, Data, Extend) pode ser por ordem circular
-- Cache exclusiva, não circular, para paginas dirty (indice/data/extend)
+1) A "dev" como está: usa cache sem limites
+2) Não usa cache nenhuma para leitura, apenas para dirty pages
+3) Usa cache para salvar com limitador de tamanho. Vai gravando em disco conforme vai ficando dirty (grava a cada X paginas sujas)
+
+Preciso criar uma banchmark para testar os mais diversos tipos de situação:
+
+a) Criação de um banco grande de 1 unica coleção
+b) Criação de um banco grande de 100 coleções diferentes
+c) Criação de indice
+d) Leitura de todos os registros
+e) Leitura conforme indice (retorno poucos registros)
+
+> Para cada teste, deve usar documento grande/complexo e documento pequeno/simples
+> Avaliar tempo/consumo total de memória
+> Aproveitar os testes para fazer PAGE_SIZE de 8K tb
+
+?? Remover escrita ta header page no filedisk
+?? pager.SetDirty(page) antes de alterar
+?? Implementer SortDictionaryMRU
+?? Implementar cache de 2 repos
 
 ## A pensar:
 
-- Voltar user/version??
-- Voltar string connection??
-- A implementacaos dos multiplos IDiskService ser apenas interna??
-- Sistema de Disk mais complexo (suporte a Journal/Recovery no FileDisk)
-- Folder: "src", "test", "nuget"
+- Voltar UserVersion??
+- Solução de Migrations (protected?)
+    db.Migrations.Add(new Migration1());
+- DefaultIndexOptions? Ou sem default - não cria indice automaticamente - ou full search?
+- Folder root: "src", "test", "nuget"
+- Encrypt datafile (EncryptDiskService : FileDiskService)
+
 - Como implementar pro DNX
+- Mapeador/Configuration estilo EF
+    db.Configuration.Add(new CredorConfiguration())
 
-
-BasePage {
-	long MRU;
-}
-
-class MruCache {
-
-	SortedDictionary<uint, BasePage> _cache;
-	SortedDictionary<uint, BasePage> _dirty;
-	int limit = 100;
-	int rem = 10;
-	
-	void Add() {
-		page.MRU = DateTime.Now.Tricks; // ou lock(inc)
-		_dirty[page.PageID] = page;
-		RemoveOlds();
-	}
-	
-	BasePage Get(pageID) {
-		var page = _cache[pageID];
-		page.MRU = DateTime.Now.Ticks; // ou lock(inc)
-	}
-	
-	void AddDirtyPage(page) {
-		page.IsDirty;
-		_dirty[page.PageID] = page;
-	}
-	
-	void ClearDirty() {
-		// _copy _dirty -> _cache
-	}
-	
-	void Clear() {
-		// _cache & _dirty
-	}
-	
-	void RemoveOlds() {
-		if(_cache.Count() > limit) {
-			// linq retornas IDs
-			_cache.remove(arrayIDs)
-		}
-	}
-
-}
