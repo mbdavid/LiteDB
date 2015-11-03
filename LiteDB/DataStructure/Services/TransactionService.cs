@@ -77,12 +77,16 @@ namespace LiteDB
 
                     header.IsDirty = true;
 
+                    _disk.StartWrite();
+
                     foreach(var page in _cache.GetDirtyPages())
                     {
                         _disk.WritePage(page.PageID, page.WritePage());
 
                         page.IsDirty = false;
                     }
+
+                    _disk.EndWrite();
                 }
 
                 // unlock datafile

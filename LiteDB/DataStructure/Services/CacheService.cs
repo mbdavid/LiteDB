@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,14 @@ namespace LiteDB
     /// </summary>
     internal class CacheService : IDisposable
     {
-        // a very simple dictionary for pages cache and track
+        // cache use a circular structure to avoid consume too many memory
+        private const int CACHE_LIMIT = 200; // ~200MB
+        private const int CACHE_CLEAR = 20;
+
+        private uint _mru = 0;
+        private object _mru_lock = new object();
+
+        // single cache structure
         private SortedDictionary<uint, BasePage> _cache;
 
         public CacheService()
@@ -36,6 +44,8 @@ namespace LiteDB
                 return null;
             }
 
+            this.SetMRU(page);
+
             return (T)page;
         }
 
@@ -44,7 +54,11 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page)
         {
+            this.SetMRU(page);
+
             _cache[page.PageID] = page;
+
+            this.RemoveLowerMRU();
         }
 
         /// <summary>
@@ -52,6 +66,7 @@ namespace LiteDB
         /// </summary>
         public void Clear()
         {
+            _mru = 0;
             _cache.Clear();
         }
 
@@ -69,8 +84,65 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Set a new MRU to page
+        /// </summary>
+        private void SetMRU(BasePage page)
+        {
+            if(page == null) return;
+
+            // if header or collection set most higher value to never clear
+            if(page.PageType == PageType.Header || page.PageType == PageType.Collection)
+            {
+                page.MRU = uint.MaxValue - page.PageID;
+            }
+            else
+            {
+                // get next mru value
+                lock(_mru_lock)
+                {
+                    page.MRU = ++_mru;
+                }
+            }
+        }
+
+        private Stopwatch _select = new Stopwatch();
+        private Stopwatch _count = new Stopwatch();
+
+        private void RemoveLowerMRU()
+        {
+            _count.Start();
+            var count = _cache.Count();
+            _count.Stop();
+
+            Console.WriteLine("CACHE_COUNT: " + count);
+
+            // check if I have too many pages in cache
+            if(count > CACHE_LIMIT)
+            {
+                // lets clear some non-dirty pages
+                //TODO: test performance
+                _select.Start();
+                var delete = _cache
+                    .Where(x => x.Value.IsDirty == false)
+                    .OrderBy(x => x.Value.MRU)
+                    .Take(CACHE_CLEAR)
+                    .Select(x => x.Key)
+                    .ToArray();
+                _select.Stop();
+
+                foreach(var pageID in delete)
+                {
+                    _cache.Remove(pageID);
+                }
+            }
+        }
+
         public void Dispose()
         {
+            Console.WriteLine("Total em cache             : " + _cache.Count());
+            Console.WriteLine("Tempo total para contar    : " + _count.ElapsedMilliseconds);
+            Console.WriteLine("Tempo total para selecionar: " + _select.ElapsedMilliseconds);
             this.Clear();
         }
     }

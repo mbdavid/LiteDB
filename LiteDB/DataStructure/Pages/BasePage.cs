@@ -67,6 +67,16 @@ namespace LiteDB
         /// </summary>
         public bool IsDirty { get; set; }
 
+        /// <summary>
+        /// Used in cache system to manager circular cache (CacheService only will use) [not-persistable]
+        /// </summary>
+        public uint MRU { get; set; }
+
+        /// <summary>
+        /// This is the data when read first from disk - used to journal operations (IDiskService only will use)
+        /// </summary>
+        //TODO public byte[] OriginalBuffer { get; private set; }
+
         public BasePage()
         {
             this.PrevPageID = uint.MaxValue;

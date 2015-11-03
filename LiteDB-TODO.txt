@@ -1,8 +1,7 @@
-# LiteDB v.2 - TODO
+﻿# LiteDB v.2 - TODO
 
 - BasePage.OriginalBuffer
 - BasePage.MRU
-- LiteDatabase.Timeout
 - pager.SetDirty(page) antes de alterar
 
 - Implementer SortDictionaryMRU
@@ -16,6 +15,14 @@
 - Otimizar GetChangeID() no IDiskService
 - Thread Safe
 
+## Cache
+
+Otimizar a cache:
+
+- Ter uma cache exclusiva para Header (só 1)
+- Ter uma cache exclusiva para as Collecitons (são poucas e muito usadas)
+- As demais (Indice, Data, Extend) pode ser por ordem circular
+- Cache exclusiva, não circular, para paginas dirty (indice/data/extend)
 
 ## A pensar:
 
