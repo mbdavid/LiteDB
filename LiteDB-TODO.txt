@@ -9,6 +9,7 @@
 - Remover BinaryReader/WriterExtentensions
 - Implementar StreamDiskService()
 - Otimizar GetChangeID() no IDiskService
+- Thread Safe
 
 
 ## A pensar:
@@ -17,3 +18,50 @@
 - Voltar string connection??
 - A implementacaos dos multiplos IDiskService ser apenas interna??
 - Sistema de Disk mais complexo (suporte a Journal/Recovery no FileDisk)
+- Folder: "src", "test", "nuget"
+- Como implementar pro DNX
+
+
+BasePage {
+	long MRU;
+}
+
+class MruCache {
+
+	SortedDictionary<uint, BasePage> _cache;
+	SortedDictionary<uint, BasePage> _dirty;
+	int limit = 100;
+	int rem = 10;
+	
+	void Add() {
+		page.MRU = DateTime.Now.Tricks; // ou lock(inc)
+		_dirty[page.PageID] = page;
+		RemoveOlds();
+	}
+	
+	BasePage Get(pageID) {
+		var page = _cache[pageID];
+		page.MRU = DateTime.Now.Ticks; // ou lock(inc)
+	}
+	
+	void AddDirtyPage(page) {
+		page.IsDirty;
+		_dirty[page.PageID] = page;
+	}
+	
+	void ClearDirty() {
+		// _copy _dirty -> _cache
+	}
+	
+	void Clear() {
+		// _cache & _dirty
+	}
+	
+	void RemoveOlds() {
+		if(_cache.Count() > limit) {
+			// linq retornas IDs
+			_cache.remove(arrayIDs)
+		}
+	}
+
+}
