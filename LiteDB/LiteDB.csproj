@@ -149,8 +149,6 @@
     <Compile Include="DataStructure\Services\TransactionService.cs" />
     <Compile Include="Utils\ByteReader.cs" />
     <Compile Include="Utils\ByteWriter.cs" />
-    <Compile Include="Utils\BinaryReaderExtensions.cs" />
-    <Compile Include="Utils\BinaryWriterExtensions.cs" />
     <Compile Include="Core\LiteDatabase.cs" />
     <Compile Include="DataStructure\Pages\BasePage.cs" />
     <Compile Include="DataStructure\Pages\HeaderPage.cs" />
