@@ -14,12 +14,16 @@ namespace LiteDB
 
         private FileStream _stream;
         private string _filename;
+        private TimeSpan _timeout;
+        private bool _journal;
 
         private byte[] _buffer = new byte[BasePage.PAGE_SIZE];
 
-        public FileDiskService(string filename)
+        public FileDiskService(string filename, bool journal, TimeSpan timeout)
         {
             _filename = filename;
+            _journal = journal;
+            _timeout = timeout;
         }
         
         /// <summary>
@@ -50,6 +54,18 @@ namespace LiteDB
         public void Unlock()
         {
             _stream.Unlock(LOCK_POSITION, 1);
+        }
+
+
+        /// <summary>
+        /// Read first 2 bytes from datafile - contains changeID (avoid to read all header page)
+        /// </summary>
+        public ushort GetChangeID()
+        {
+            var bytes = new byte[2];
+            _stream.Seek(0, SeekOrigin.End);
+            _stream.Read(bytes, 0, 2);
+            return BitConverter.ToUInt16(bytes, 0);
         }
 
         /// <summary>
@@ -97,6 +113,18 @@ namespace LiteDB
             _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
         }
 
+        public void ChangePage(uint pageID, byte[] original)
+        {
+        }
+
+        public void StartWrite()
+        {
+        }
+
+        public void EndWrite()
+        {
+        }
+
         public void Dispose()
         {
             if(_stream != null)
@@ -108,10 +136,9 @@ namespace LiteDB
         /// <summary>
         /// Try run an operation over datafile - keep tring if locked
         /// </summary>
-        private static void TryExec(Action action)
+        private void TryExec(Action action)
         {
-            var timeout = new TimeSpan(0, 1, 0);
-            var timer = DateTime.Now.Add(timeout);
+            var timer = DateTime.Now.Add(_timeout);
 
             while (DateTime.Now < timer)
             {
@@ -130,7 +157,7 @@ namespace LiteDB
                 }
             }
 
-            throw LiteException.LockTimeout(timeout);
+            throw LiteException.LockTimeout(_timeout);
         }
     }
 }

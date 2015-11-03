@@ -8,12 +8,16 @@ using System.Threading;
 
 namespace LiteDB
 {
-    internal interface IDiskService : IDisposable
+    public interface IDiskService : IDisposable
     {
         void Initialize();
         void Lock();
         void Unlock();
         byte[] ReadPage(uint pageID);
+        void ChangePage(uint pageID, byte[] original);
+        ushort GetChangeID();
+        void StartWrite();
         void WritePage(uint pageID, byte[] buffer);
+        void EndWrite();
     }
 }

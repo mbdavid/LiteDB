@@ -110,7 +110,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// This method must be called before read operation to avoid dirty reads.
+        /// This method must be called before read/write operation to avoid dirty reads.
         /// It's occurs when my cache contains pages that was changed in another process
         /// </summary>
         public void AvoidDirtyRead()
@@ -122,17 +122,13 @@ namespace LiteDB
 
             if (cache == null) return;
 
-            // get header page from DISK to check changeID
-            var header = new HeaderPage();
+            // read change direct from disk
+            var change = _disk.GetChangeID();
 
-            //TODO: better approch - get only first bytes instaned all (IDisk.GetChangeID)
-            header.ReadPage(_disk.ReadPage(0));
-
-            // if changeID was changed, file was changed by another process
-            if (cache.ChangeID != header.ChangeID)
+            // if changeID was changed, file was changed by another process - clear all cache
+            if (cache.ChangeID != change)
             {
                 _cache.Clear();
-                _cache.AddPage(header);
             }
         }
     }

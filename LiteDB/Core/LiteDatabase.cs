@@ -28,18 +28,49 @@ namespace LiteDB
 
         internal CollectionService Collections { get; private set; }
 
-        public BsonMapper Mapper { get; set; }
+        public BsonMapper Mapper { get; private set; }
+
+        public TimeSpan Timeout { get; private set; }
+
+        private LiteDatabase()
+        {
+            this.Timeout = new TimeSpan(0, 1, 0);
+            this.Mapper = BsonMapper.Global;
+        }
 
         /// <summary>
-        /// Starts LiteDB database. Open database file or create a new one if not exits
+        /// Starts LiteDB database using a connectionString
         /// </summary>
-        public LiteDatabase(string filename)
+        public LiteDatabase(string connectionString)
+            : this()
         {
-            this.Disk = new FileDiskService(filename);
+            var connStr = new ConnectionString(connectionString);
 
+            this.Timeout = connStr.GetValue<TimeSpan>("timeout", this.Timeout);
+
+            var filename = connStr.GetValue<string>("filename", "");
+            var journal = connStr.GetValue<bool>("journal", true);
+
+            this.Disk = new FileDiskService(filename, journal, this.Timeout);
+
+            this.Initialize();
+        }
+
+        /// <summary>
+        /// Starts LiteDB database using full parameters
+        /// </summary>
+        public LiteDatabase(IDiskService diskService, BsonMapper mapper)
+        {
+            this.Disk = diskService;
+            this.Mapper = mapper;
+        }
+
+        /// <summary>
+        /// Initialize database engine - starts all services and open datafile
+        /// </summary>
+        private void Initialize()
+        {
             this.Disk.Initialize();
-
-            this.Mapper = BsonMapper.Global;
 
             this.Cache = new CacheService();
 
