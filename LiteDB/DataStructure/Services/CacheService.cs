@@ -15,11 +15,14 @@ namespace LiteDB
     internal class CacheService : IDisposable
     {
         // cache use a circular structure to avoid consume too many memory
-        private const int CACHE_LIMIT = 200; // ~200MB
-        private const int CACHE_CLEAR = 20;
+        private const int CACHE_LIMIT = 10000; // ~80MB
+        private const int CACHE_CLEAR = 1000;
 
         private uint _mru = 0;
         private object _mru_lock = new object();
+
+        private int _hit = 0;
+        private int _get = 0;
 
         // single cache structure
         private SortedDictionary<uint, BasePage> _cache;
@@ -45,6 +48,9 @@ namespace LiteDB
             }
 
             this.SetMRU(page);
+
+            if(page != null) _hit++;
+            _get++;
 
             return (T)page;
         }
@@ -109,13 +115,11 @@ namespace LiteDB
         private Stopwatch _select = new Stopwatch();
         private Stopwatch _count = new Stopwatch();
 
-        private void RemoveLowerMRU()
+        public void RemoveLowerMRU()
         {
             _count.Start();
             var count = _cache.Count();
             _count.Stop();
-
-            Console.WriteLine("CACHE_COUNT: " + count);
 
             // check if I have too many pages in cache
             if(count > CACHE_LIMIT)
@@ -140,6 +144,8 @@ namespace LiteDB
 
         public void Dispose()
         {
+            Console.WriteLine("Total em GET               : " + _get);
+            Console.WriteLine("Total em HIT               : " + _hit);
             Console.WriteLine("Total em cache             : " + _cache.Count());
             Console.WriteLine("Tempo total para contar    : " + _count.ElapsedMilliseconds);
             Console.WriteLine("Tempo total para selecionar: " + _select.ElapsedMilliseconds);

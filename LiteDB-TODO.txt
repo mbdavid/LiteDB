@@ -1,5 +1,6 @@
 ﻿# LiteDB v.2 - TODO
 
+- Remover escrita ta header page no filedisk
 - BasePage.OriginalBuffer
 - BasePage.MRU
 - pager.SetDirty(page) antes de alterar

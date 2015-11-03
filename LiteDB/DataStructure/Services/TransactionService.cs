@@ -87,6 +87,8 @@ namespace LiteDB
                     }
 
                     _disk.EndWrite();
+
+                    _cache.RemoveLowerMRU();
                 }
 
                 // unlock datafile
