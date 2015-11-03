@@ -1,5 +1,10 @@
 # LiteDB v.2 - TODO
 
+- BasePage.OriginalBuffer
+- BasePage.MRU
+- LiteDatabase.Timeout
+- pager.SetDirty(page) antes de alterar
+
 - Implementer SortDictionaryMRU
 - Revisar BsonArray.Length não faz cache
 
