@@ -96,7 +96,7 @@ namespace LiteDB
                         // point my dataBlock
                         dataBlock.IndexRef[index.Slot] = newNode.Position;
 
-                        dataBlock.Page.IsDirty = true;
+                        this.Database.Pager.SetDirty(dataBlock.Page);
                     }
                 }
 

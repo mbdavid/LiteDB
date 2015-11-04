@@ -84,7 +84,7 @@ namespace LiteDB
                     newNode.DataBlock = dataBlock.Position;
 
                     // mark datablock page as dirty
-                    dataBlock.Page.IsDirty = true;
+                    this.Database.Pager.SetDirty(dataBlock.Page);
                 }
 
                 this.Database.Transaction.Commit();
@@ -190,7 +190,7 @@ namespace LiteDB
                 index.Clear();
 
                 // save collection page
-                col.IsDirty = true;
+                this.Database.Pager.SetDirty(col);
 
                 this.Database.Transaction.Commit();
 

@@ -9,6 +9,11 @@ namespace LiteDB
     internal class HeaderPage : BasePage
     {
         /// <summary>
+        /// ChangeID in file position
+        /// </summary>
+        public const int CHANGE_ID_POSITION = 49;
+
+        /// <summary>
         /// Header info the validate that datafile is a LiteDB file
         /// </summary>
         private const string HEADER_INFO = "** This is a LiteDB file **";
@@ -53,11 +58,11 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadHeader(ByteReader reader)
+        public override void ReadContent(ByteReader reader)
         {
-            this.ChangeID = reader.ReadUInt16();
             var info = reader.ReadString();
             var ver = reader.ReadByte();
+            this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.FirstCollectionPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
@@ -66,11 +71,11 @@ namespace LiteDB
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
         }
 
-        public override void WriteHeader(ByteWriter writer)
+        public override void WriteContent(ByteWriter writer)
         {
-            writer.Write(this.ChangeID);
             writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);
+            writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.FirstCollectionPageID);
             writer.Write(this.LastPageID);

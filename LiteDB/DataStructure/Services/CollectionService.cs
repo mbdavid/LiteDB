@@ -58,7 +58,7 @@ namespace LiteDB
             _pager.AddOrRemoveToFreeList(true, col, _pager.Header, ref _pager.Header.FirstCollectionPageID);
 
             col.CollectionName = name;
-            col.IsDirty = true;
+            _pager.SetDirty(col);
 
             // create PK index
             var pk = _indexer.CreateIndex(col);

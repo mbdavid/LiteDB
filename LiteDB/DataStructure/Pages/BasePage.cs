@@ -68,14 +68,9 @@ namespace LiteDB
         public bool IsDirty { get; set; }
 
         /// <summary>
-        /// Used in cache system to manager circular cache (CacheService only will use) [not-persistable]
-        /// </summary>
-        public uint MRU { get; set; }
-
-        /// <summary>
         /// This is the data when read first from disk - used to journal operations (IDiskService only will use)
         /// </summary>
-        //TODO public byte[] OriginalBuffer { get; private set; }
+        public byte[] DiskData { get; private set; }
 
         public BasePage()
         {
@@ -106,6 +101,7 @@ namespace LiteDB
             this.PageType = PageType.Empty;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.ItemCount = 0;
+            this.DiskData = new byte[0];
         }
 
         /// <summary>
@@ -166,6 +162,8 @@ namespace LiteDB
             {
                 this.ReadContent(reader);
             }
+
+            //this.DiskData = buffer;
         }
 
         public byte[] WritePage()

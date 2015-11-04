@@ -48,14 +48,14 @@ namespace LiteDB
             // update freebytes + items count
             dataPage.UpdateItemCount();
 
-            dataPage.IsDirty = true;
+            _pager.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             col.DocumentCount++;
 
-            col.IsDirty = true;
+            _pager.SetDirty(col);
 
             return block;
         }
@@ -110,7 +110,7 @@ namespace LiteDB
             // add/remove dataPage on freelist if has space AND its on/off free list
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
-            dataPage.IsDirty = true;
+            _pager.SetDirty(dataPage);
 
             return block;
         }
@@ -185,8 +185,8 @@ namespace LiteDB
 
             col.DocumentCount--;
 
-            col.IsDirty = true;
-            page.IsDirty = true;
+            _pager.SetDirty(col);
+            _pager.SetDirty(page);
 
             return block;
         }
@@ -210,7 +210,7 @@ namespace LiteDB
                 // updates free bytes + items count
                 page.UpdateItemCount();
 
-                page.IsDirty = true;
+                _pager.SetDirty(page);
 
                 bytesLeft -= bytesToCopy;
                 offset += bytesToCopy;

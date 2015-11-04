@@ -10,12 +10,16 @@ namespace LiteDB
 {
     internal class FileDiskService : IDiskService
     {
+        /// <summary>
+        /// Lock data file position
+        /// </summary>
         private const int LOCK_POSITION = 0;
 
         private FileStream _stream;
         private string _filename;
         private TimeSpan _timeout;
         private bool _journal;
+        //private bool _readonly;
 
         private byte[] _buffer = new byte[BasePage.PAGE_SIZE];
 
@@ -27,17 +31,15 @@ namespace LiteDB
         }
         
         /// <summary>
-        /// Open datafile - if not exits, create a new one
+        /// Open datafile - returns true if new
         /// </summary>
-        public void Initialize()
+        public bool Initialize()
         {
-            // open file as readOnly - if we need use Write, re-open in Write Mode
-            _stream = new FileStream(_filename, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite, BasePage.PAGE_SIZE);
+            // open data file
+            _stream = new FileStream(_filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, BasePage.PAGE_SIZE);
 
-            if (_stream.Length == 0)
-            {
-                this.WritePage(0, new HeaderPage().WritePage());
-            }
+            // returns true if new file
+            return _stream.Length == 0;
         }
 
         /// <summary>
@@ -45,7 +47,9 @@ namespace LiteDB
         /// </summary>
         public void Lock()
         {
-            TryExec(() => _stream.Lock(LOCK_POSITION, 1));
+            TryExec(() => 
+                _stream.Lock(LOCK_POSITION, 1)
+            );
         }
 
         /// <summary>
@@ -56,14 +60,13 @@ namespace LiteDB
             _stream.Unlock(LOCK_POSITION, 1);
         }
 
-
         /// <summary>
         /// Read first 2 bytes from datafile - contains changeID (avoid to read all header page)
         /// </summary>
         public ushort GetChangeID()
         {
             var bytes = new byte[2];
-            _stream.Seek(0, SeekOrigin.End);
+            _stream.Seek(HeaderPage.CHANGE_ID_POSITION, SeekOrigin.Begin);
             _stream.Read(bytes, 0, 2);
             return BitConverter.ToUInt16(bytes, 0);
         }
@@ -96,12 +99,6 @@ namespace LiteDB
         /// </summary>
         public void WritePage(uint pageID, byte[] buffer)
         {
-            if(_stream.CanWrite == false)
-            {
-                _stream.Dispose();
-                _stream = new FileStream(_filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, BasePage.PAGE_SIZE);
-            }
-
             var position = (long)pageID * (long)BasePage.PAGE_SIZE;
 
             // position cursor
@@ -113,16 +110,24 @@ namespace LiteDB
             _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
         }
 
+        private void TryRecovery()
+        {
+            // se tiver journal, faz recovery
+        }
+
         public void ChangePage(uint pageID, byte[] original)
         {
+            // grava o journal-file
         }
 
         public void StartWrite()
         {
+            // comita o journal file
         }
 
         public void EndWrite()
         {
+            // remove journal file
         }
 
         public void Dispose()

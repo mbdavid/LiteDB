@@ -1,5 +1,6 @@
 ﻿# LiteDB v.2 - TODO
 
+- Journal
 - BasePage.OriginalBuffer
 - Revisar BsonArray.Length não faz cache
 - Remover/Revisar transacao - Locks

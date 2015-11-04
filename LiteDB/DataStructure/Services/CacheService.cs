@@ -14,22 +14,14 @@ namespace LiteDB
     /// </summary>
     internal class CacheService : IDisposable
     {
-        // cache use a circular structure to avoid consume too many memory
-        private const int CACHE_LIMIT = 10000; // ~80MB
-        private const int CACHE_CLEAR = 1000;
-
-        private uint _mru = 0;
-        private object _mru_lock = new object();
-
-        private int _hit = 0;
-        private int _get = 0;
-
         // single cache structure
         private SortedDictionary<uint, BasePage> _cache;
+        private SortedDictionary<uint, BasePage> _dirty;
 
         public CacheService()
         {
             _cache = new SortedDictionary<uint, BasePage>();
+            _dirty = new SortedDictionary<uint, BasePage>();
         }
 
         /// <summary>
@@ -47,24 +39,28 @@ namespace LiteDB
                 return null;
             }
 
-            this.SetMRU(page);
-
-            if(page != null) _hit++;
-            _get++;
-
             return (T)page;
         }
 
         /// <summary>
         /// Add a page to cache. if this page is in cache, override (except if is basePage - in this case, copy header)
+        /// If set is dirty, add in a second list
         /// </summary>
-        public void AddPage(BasePage page)
+        public void AddPage(BasePage page, bool dirty = false)
         {
-            this.SetMRU(page);
+            // do not cache extend page - never will be reused
+            if (page.PageType != PageType.Extend)
+            {
+                _cache[page.PageID] = page;
+            }
 
-            _cache[page.PageID] = page;
-
-            this.RemoveLowerMRU();
+            // page is dirty? add in a special list too and mark as dirty (all type of pages)
+            if (dirty && !page.IsDirty)
+            {
+                page.IsDirty = true;
+                _dirty[page.PageID] = page;
+                //TODO: dispara metodo de pagina alterada
+            }
         }
 
         /// <summary>
@@ -72,11 +68,25 @@ namespace LiteDB
         /// </summary>
         public void Clear()
         {
-            _mru = 0;
+            _dirty.Clear();
             _cache.Clear();
         }
 
-        public bool HasDirtyPages { get { return this.GetDirtyPages().FirstOrDefault() != null; } }
+        /// <summary>
+        /// Clear dirty cache only
+        /// </summary>
+        public void ClearDirty()
+        {
+            // clear page and clear special list (will keep in _cache list)
+            foreach(var page in _dirty.Values)
+            {
+                page.IsDirty = false;
+            }
+
+            _dirty.Clear();
+        }
+
+        public bool HasDirtyPages { get { return _dirty.Count() > 0; } }
 
         /// <summary>
         /// Returns all dirty pages including header page (for better write performance, get all pages in PageID increase order)
@@ -84,71 +94,14 @@ namespace LiteDB
         public IEnumerable<BasePage> GetDirtyPages()
         {
             // now returns all pages in sequence
-            foreach (var page in _cache.Values.Where(x => x.IsDirty))
+            foreach (var page in _dirty.Values)
             {
                 yield return page;
             }
         }
 
-        /// <summary>
-        /// Set a new MRU to page
-        /// </summary>
-        private void SetMRU(BasePage page)
-        {
-            if(page == null) return;
-
-            // if header or collection set most higher value to never clear
-            if(page.PageType == PageType.Header || page.PageType == PageType.Collection)
-            {
-                page.MRU = uint.MaxValue - page.PageID;
-            }
-            else
-            {
-                // get next mru value
-                lock(_mru_lock)
-                {
-                    page.MRU = ++_mru;
-                }
-            }
-        }
-
-        private Stopwatch _select = new Stopwatch();
-        private Stopwatch _count = new Stopwatch();
-
-        public void RemoveLowerMRU()
-        {
-            _count.Start();
-            var count = _cache.Count();
-            _count.Stop();
-
-            // check if I have too many pages in cache
-            if(count > CACHE_LIMIT)
-            {
-                // lets clear some non-dirty pages
-                //TODO: test performance
-                _select.Start();
-                var delete = _cache
-                    .Where(x => x.Value.IsDirty == false)
-                    .OrderBy(x => x.Value.MRU)
-                    .Take(CACHE_CLEAR)
-                    .Select(x => x.Key)
-                    .ToArray();
-                _select.Stop();
-
-                foreach(var pageID in delete)
-                {
-                    _cache.Remove(pageID);
-                }
-            }
-        }
-
         public void Dispose()
         {
-            Console.WriteLine("Total em GET               : " + _get);
-            Console.WriteLine("Total em HIT               : " + _hit);
-            Console.WriteLine("Total em cache             : " + _cache.Count());
-            Console.WriteLine("Tempo total para contar    : " + _count.ElapsedMilliseconds);
-            Console.WriteLine("Tempo total para selecionar: " + _select.ElapsedMilliseconds);
             this.Clear();
         }
     }

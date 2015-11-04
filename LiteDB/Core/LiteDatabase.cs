@@ -70,7 +70,12 @@ namespace LiteDB
         /// </summary>
         private void Initialize()
         {
-            this.Disk.Initialize();
+            var isNew = this.Disk.Initialize();
+
+            if(isNew)
+            {
+                this.Disk.WritePage(0, new HeaderPage().WritePage());
+            }
 
             this.Cache = new CacheService();
 
@@ -154,7 +159,7 @@ namespace LiteDB
                 }
 
                 col.CollectionName = newName;
-                col.IsDirty = true;
+                this.Pager.SetDirty(col);
 
                 this.Transaction.Commit();
             }

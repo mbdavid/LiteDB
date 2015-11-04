@@ -63,8 +63,8 @@ namespace LiteDB
 
             index.TailNode = tail.Position;
 
-            index.Page.IsDirty = true;
-            page.IsDirty = true;
+            _pager.SetDirty(index.Page);
+            _pager.SetDirty(page);
 
             return index;
         }
@@ -141,17 +141,17 @@ namespace LiteDB
                     {
                         next.Prev[i] = node.Position;
 
-                        next.Page.IsDirty = true;
+                        _pager.SetDirty(next.Page);
                     }
 
-                    cur.Page.IsDirty = true;
+                    _pager.SetDirty(cur.Page);
                 }
             }
 
             // add/remove indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
-            page.IsDirty = true;
+            _pager.SetDirty(page);
 
             return node;
         }
@@ -173,12 +173,12 @@ namespace LiteDB
                 if (prev != null)
                 {
                     prev.Next[i] = node.Next[i];
-                    prev.Page.IsDirty = true;
+                    _pager.SetDirty(prev.Page);
                 }
                 if (next != null)
                 {
                     next.Prev[i] = node.Prev[i];
-                    next.Page.IsDirty = true;
+                    _pager.SetDirty(next.Page);
                 }
             }
 
@@ -201,7 +201,7 @@ namespace LiteDB
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
-            page.IsDirty = true;
+            _pager.SetDirty(page);
         }
 
 

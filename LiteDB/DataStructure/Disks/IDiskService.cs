@@ -10,14 +10,18 @@ namespace LiteDB
 {
     public interface IDiskService : IDisposable
     {
-        void Initialize();
+        bool Initialize();
+
         void Lock();
         void Unlock();
+
+        void ChangePage(uint pageID, byte[] original); // WriteJournal()
+        void StartWrite(); // EndJournal
+        void EndWrite(); // DeleteJournal()
+
         byte[] ReadPage(uint pageID);
-        void ChangePage(uint pageID, byte[] original);
-        ushort GetChangeID();
-        void StartWrite();
         void WritePage(uint pageID, byte[] buffer);
-        void EndWrite();
+
+        ushort GetChangeID();
     }
 }

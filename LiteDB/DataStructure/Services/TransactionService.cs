@@ -20,6 +20,8 @@ namespace LiteDB
         {
             _disk = disk;
             _cache = cache;
+
+            // _cache.OnPageChange((page) => _disk.PageChange(page.PageID, page.OriginalBuffer);
         }
 
         public bool IsInTransaction { get { return _level > 0; } }
@@ -41,7 +43,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Abort a transaction is used when begin and has no changes yet - no writes, no checks
+        /// Abort a transaction is used when begin and has no changes yet - no writes, no checks (it's simple than rollback)
         /// </summary>
         public void Abort()
         {
@@ -75,20 +77,19 @@ namespace LiteDB
                     // increase file changeID (back to 0 when overflow)
                     header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
 
-                    header.IsDirty = true;
+                    _cache.AddPage(header, true);
 
                     _disk.StartWrite();
 
                     foreach(var page in _cache.GetDirtyPages())
                     {
+                        Console.WriteLine("save dirty page " + page.PageID);
                         _disk.WritePage(page.PageID, page.WritePage());
-
-                        page.IsDirty = false;
                     }
 
                     _disk.EndWrite();
 
-                    _cache.RemoveLowerMRU();
+                    _cache.ClearDirty();
                 }
 
                 // unlock datafile
@@ -108,6 +109,9 @@ namespace LiteDB
 
             // clear all pages from memory
             _cache.Clear(); 
+
+            // tell disk service there is no more writes
+            _disk.EndWrite();
 
             // unlock datafile
             _disk.Unlock();
