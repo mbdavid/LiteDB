@@ -47,7 +47,7 @@ namespace LiteDB
                 }
                 catch
                 {
-                    this.Database.Rollback();
+                    this.Database.Transaction.Rollback();
                     throw;
                 }
             }

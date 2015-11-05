@@ -88,8 +88,6 @@ namespace LiteDB
                         _disk.WritePage(page.PageID, page.WritePage());
                     }
 
-                    throw new Exception("erro corrompe file");
-
                     // delete journal file - datafile is consist here
                     _disk.DeleteJournal();
 

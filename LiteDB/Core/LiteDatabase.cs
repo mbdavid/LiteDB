@@ -188,36 +188,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Transaction
-
-        /// <summary>
-        /// Starts a new transaction. After this command, all write operations will be first in memory and will persist on disk
-        /// only when call Commit() method. If any error occurs, a Rollback() method will run.
-        /// </summary>
-        public void BeginTrans()
-        {
-            this.Transaction.Begin();
-        }
-
-        /// <summary>
-        /// Persist all changes on disk. Always use this method to finish your changes on database
-        /// </summary>
-        public void Commit()
-        {
-            this.Transaction.Commit();
-        }
-
-        /// <summary>
-        /// Cancel all write operations and keep datafile as is before BeginTrans() called.
-        /// Rollback are implicit on a database operation error, so you do not need call for database errors (only on business rules).
-        /// </summary>
-        public void Rollback()
-        {
-            this.Transaction.Rollback();
-        }
-
-        #endregion
-
         #region Shell
 
         private LiteShell _shell = null;

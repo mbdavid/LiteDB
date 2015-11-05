@@ -25,20 +25,20 @@ namespace LiteDB.Shell.Commands
 
             try
             {
-                db.BeginTrans();
+                db.Transaction.Begin();
 
                 foreach (var doc in docs)
                 {
                     code(doc["_id"], doc, col, db);
                 }
 
-                db.Commit();
+                db.Transaction.Commit();
 
                 return docs.Length;
             }
             catch (Exception ex)
             {
-                db.Rollback();
+                db.Transaction.Rollback();
                 throw ex;
             }
         }

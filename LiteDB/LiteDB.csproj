@@ -127,9 +127,6 @@
     <Compile Include="Shell\Commands\ILiteCommand.cs" />
     <Compile Include="Shell\Commands\Others\Dump.cs" />
     <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
-    <Compile Include="Shell\Commands\Transactions\Begin.cs" />
-    <Compile Include="Shell\Commands\Transactions\Commit.cs" />
-    <Compile Include="Shell\Commands\Transactions\Rollback.cs" />
     <Compile Include="Shell\LiteShell.cs" />
     <Compile Include="DataStructure\Pages\DataPage.cs" />
     <Compile Include="DataStructure\Pages\IndexPage.cs" />
