@@ -79,6 +79,7 @@ namespace LiteDB
             this.PageType = LiteDB.PageType.Empty;
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
+            this.DiskData = new byte[0];
         }
 
         /// <summary>
@@ -102,24 +103,6 @@ namespace LiteDB
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.ItemCount = 0;
             this.DiskData = new byte[0];
-        }
-
-        /// <summary>
-        /// Create a new espefic page, copy all header content
-        /// </summary>
-        public T CopyTo<T>()
-            where T : BasePage, new()
-        {
-            var page = new T();
-            page.PageID = this.PageID;
-            page.PrevPageID = this.PrevPageID;
-            page.NextPageID = this.NextPageID;
-            page.PageType = this.PageType;
-            page.ItemCount = this.ItemCount;
-            page.FreeBytes = this.FreeBytes;
-            page.IsDirty = this.IsDirty;
-
-            return page;
         }
 
         #region Read/Write page
@@ -163,7 +146,7 @@ namespace LiteDB
                 this.ReadContent(reader);
             }
 
-            //this.DiskData = buffer;
+            this.DiskData = buffer;
         }
 
         public byte[] WritePage()
@@ -176,6 +159,8 @@ namespace LiteDB
             {
                 WriteContent(writer);
             }
+
+            this.DiskData = writer.Buffer;
 
             return writer.Buffer;
         }

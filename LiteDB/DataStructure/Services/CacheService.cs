@@ -18,6 +18,8 @@ namespace LiteDB
         private SortedDictionary<uint, BasePage> _cache;
         private SortedDictionary<uint, BasePage> _dirty;
 
+        public Action<BasePage> MarkAsDirtyAction = (page) => { };
+
         public CacheService()
         {
             _cache = new SortedDictionary<uint, BasePage>();
@@ -59,21 +61,31 @@ namespace LiteDB
             {
                 page.IsDirty = true;
                 _dirty[page.PageID] = page;
-                //TODO: dispara metodo de pagina alterada
+
+                // if page is new (not exits on datafile), there is no journal for them
+                if(page.DiskData.Length > 0)
+                {
+                    // call action passing dirty page - used for journal file writes 
+                    MarkAsDirtyAction(page);
+                }
             }
         }
 
         /// <summary>
-        /// Empty cache and header page
+        /// Empty cache and dirty pages - returns true if has dirty pages
         /// </summary>
-        public void Clear()
+        public bool Clear()
         {
+            var hasDirty = _dirty.Count > 0;
+
             _dirty.Clear();
             _cache.Clear();
+
+            return hasDirty;
         }
 
         /// <summary>
-        /// Clear dirty cache only
+        /// Set all pages as clear and remove them from dirty list
         /// </summary>
         public void ClearDirty()
         {

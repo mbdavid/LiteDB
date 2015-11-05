@@ -20,8 +20,7 @@ namespace LiteDB
         {
             _disk = disk;
             _cache = cache;
-
-            // _cache.OnPageChange((page) => _disk.PageChange(page.PageID, page.OriginalBuffer);
+            _cache.MarkAsDirtyAction = (page) => _disk.WriteJournal(page.PageID, page.DiskData);
         }
 
         public bool IsInTransaction { get { return _level > 0; } }
@@ -79,16 +78,22 @@ namespace LiteDB
 
                     _cache.AddPage(header, true);
 
-                    _disk.StartWrite();
+                    // commit journal file - it will be used if write operation fails
+                    _disk.CommitJournal();
 
+                    // write all dirty pages in data file
                     foreach(var page in _cache.GetDirtyPages())
                     {
                         Console.WriteLine("save dirty page " + page.PageID);
                         _disk.WritePage(page.PageID, page.WritePage());
                     }
 
-                    _disk.EndWrite();
+                    throw new Exception("erro corrompe file");
 
+                    // delete journal file - datafile is consist here
+                    _disk.DeleteJournal();
+
+                    // set all dirty pages as clear on cache
                     _cache.ClearDirty();
                 }
 
@@ -107,11 +112,12 @@ namespace LiteDB
         {
             if (_level == 0) return;
 
-            // clear all pages from memory
-            _cache.Clear(); 
-
-            // tell disk service there is no more writes
-            _disk.EndWrite();
+            // clear all pages from memory (return true if has dirty pages on cache)
+            if(_cache.Clear())
+            {
+                // if has dirty page, has journal file - delete it (is not valid)
+                //_disk.DeleteJournal();
+            }
 
             // unlock datafile
             _disk.Unlock();

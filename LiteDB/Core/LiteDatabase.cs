@@ -30,11 +30,8 @@ namespace LiteDB
 
         public BsonMapper Mapper { get; private set; }
 
-        public TimeSpan Timeout { get; private set; }
-
         private LiteDatabase()
         {
-            this.Timeout = new TimeSpan(0, 1, 0);
             this.Mapper = BsonMapper.Global;
         }
 
@@ -44,14 +41,17 @@ namespace LiteDB
         public LiteDatabase(string connectionString)
             : this()
         {
-            var connStr = new ConnectionString(connectionString);
+            var str = new ConnectionString(connectionString);
 
-            this.Timeout = connStr.GetValue<TimeSpan>("timeout", this.Timeout);
+            var filename = str.GetValue<string>("filename", "");
+            var journal = str.GetValue<bool>("journal", true);
+            var timeout = str.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
+            var readOnly = str.GetValue<bool>("readonly", false);
+            var password = str.GetValue<string>("password", null);
 
-            var filename = connStr.GetValue<string>("filename", "");
-            var journal = connStr.GetValue<bool>("journal", true);
+            if(string.IsNullOrWhiteSpace(filename)) throw new ArgumentNullException("filename");
 
-            this.Disk = new FileDiskService(filename, journal, this.Timeout);
+            this.Disk = new FileDiskService(filename, journal, timeout, readOnly, password);
 
             this.Initialize();
         }

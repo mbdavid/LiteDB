@@ -17,37 +17,56 @@ namespace LiteDB
 
         private FileStream _stream;
         private string _filename;
+
+        private FileStream _journal;
+        private string _journalFilename;
+        private bool _journalEnabled;
+
         private TimeSpan _timeout;
-        private bool _journal;
-        //private bool _readonly;
+        private bool _readonly;
+        private string _password;
 
         private byte[] _buffer = new byte[BasePage.PAGE_SIZE];
 
-        public FileDiskService(string filename, bool journal, TimeSpan timeout)
+        public FileDiskService(string filename, bool journalEnabled, TimeSpan timeout, bool readOnly, string password)
         {
             _filename = filename;
-            _journal = journal;
             _timeout = timeout;
+            _readonly = readOnly;
+            _password = password;
+
+            _journalEnabled = _readonly ? false : journalEnabled; // readonly? no journal
+            _journalFilename = Path.Combine(Path.GetDirectoryName(_filename),
+                Path.GetFileNameWithoutExtension(_filename) + "-journal" +
+                Path.GetExtension(_filename));
         }
-        
+
         /// <summary>
         /// Open datafile - returns true if new
         /// </summary>
         public bool Initialize()
         {
-            // open data file
-            _stream = new FileStream(_filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, BasePage.PAGE_SIZE);
+            // open data file (r/w or r)
+            _stream = new FileStream(_filename, 
+                _readonly ? FileMode.Open : FileMode.OpenOrCreate, 
+                _readonly ? FileAccess.Read : FileAccess.ReadWrite, 
+                _readonly ? FileShare.Read : FileShare.ReadWrite, 
+                BasePage.PAGE_SIZE);
+
+            this.TryRecovery();
 
             // returns true if new file
             return _stream.Length == 0;
         }
+
+        #region Lock/Unlock
 
         /// <summary>
         /// Lock datafile agains other process read/write
         /// </summary>
         public void Lock()
         {
-            TryExec(() => 
+            this.TryExec(() => 
                 _stream.Lock(LOCK_POSITION, 1)
             );
         }
@@ -59,6 +78,10 @@ namespace LiteDB
         {
             _stream.Unlock(LOCK_POSITION, 1);
         }
+
+        #endregion
+
+        #region Read/Write
 
         /// <summary>
         /// Read first 2 bytes from datafile - contains changeID (avoid to read all header page)
@@ -78,7 +101,7 @@ namespace LiteDB
         {
             var position = (long)pageID * (long)BasePage.PAGE_SIZE;
 
-            TryExec(() => 
+            this.TryExec(() => 
             {
                 // position cursor
                 if (_stream.Position != position)
@@ -110,24 +133,49 @@ namespace LiteDB
             _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
         }
 
-        private void TryRecovery()
+        #endregion
+
+        #region Journal file
+
+        public void WriteJournal(uint pageID, byte[] data)
         {
-            // se tiver journal, faz recovery
+            if(_journalEnabled == false) return;
+
+            // open journal file if not used yet
+            if(_journal == null)
+            {
+                // open journal file in EXCLUSIVE mode
+                this.TryExec(() =>
+                {
+                    _journal = new FileStream(_journalFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                });
+            }
+
+            //TODO: avisa q esta gerando
+            Console.WriteLine("journal write " + pageID);
+
+            // just write original bytes in order that are changed
+            _journal.Write(data, 0, BasePage.PAGE_SIZE);
         }
 
-        public void ChangePage(uint pageID, byte[] original)
+        public void CommitJournal()
         {
-            // grava o journal-file
+            if (_journalEnabled == false) return;
+
+            // flush all journal file data to disk
+            _journal.Flush();
         }
 
-        public void StartWrite()
+        public void DeleteJournal()
         {
-            // comita o journal file
-        }
-
-        public void EndWrite()
-        {
+            if (_journalEnabled == false) return;
             // remove journal file
+
+            // close journal stream and delete file
+            _journal.Dispose();
+            _journal = null;
+
+            File.Delete(_journalFilename);
         }
 
         public void Dispose()
@@ -137,6 +185,60 @@ namespace LiteDB
                 _stream.Dispose();
             }
         }
+
+        #endregion
+
+        #region Recovery datafile
+
+        private void TryRecovery()
+        {
+            // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
+            this.OpenExclusiveFile(_journalFilename, (journal) =>
+            {
+                this.Recovery(journal);
+
+                //TODO: valida se precisa ser feito recovery (FINISH)
+
+                // close stream for delete file
+                journal.Close();
+
+                File.Delete(_journalFilename);
+            });
+        }
+
+        private void Recovery(FileStream journal)
+        {
+            var fileSize = _stream.Length;
+            var buffer = new byte[BasePage.PAGE_SIZE];
+
+            while (journal.Position < journal.Length)
+            {
+                // read page bytes from journal file
+                journal.Read(buffer, 0, BasePage.PAGE_SIZE);
+
+                // read pageID (first 4 bytes)
+                var pageID = BitConverter.ToUInt32(buffer, 0);
+
+                // if header, read all byte (to get original filesize)
+                if(pageID == 0)
+                {
+                    var header = new HeaderPage();
+                    header.ReadPage(buffer);
+                    fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
+                }
+
+                // write in stream
+                _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);
+                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+            }
+
+            // redim filesize if grow more than original before rollback
+            _stream.SetLength(fileSize);
+        }
+
+        #endregion
+
+        #region Utils
 
         /// <summary>
         /// Try run an operation over datafile - keep tring if locked
@@ -164,5 +266,27 @@ namespace LiteDB
 
             throw LiteException.LockTimeout(_timeout);
         }
+
+        private void OpenExclusiveFile(string filename, Action<FileStream> success)
+        {
+            // check if is using by another process, if not, call fn passing stream opened
+            try
+            {
+                using (var stream = File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                {
+                    success(stream);
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                // do nothing - no journal, no recovery
+            }
+            catch (IOException ex)
+            {
+                ex.WaitIfLocked(0);
+            }
+        }
+
+        #endregion
     }
 }

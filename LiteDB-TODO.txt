@@ -1,12 +1,14 @@
 ﻿# LiteDB v.2 - TODO
 
-- Journal
-- BasePage.OriginalBuffer
+- Revisar transação - Remover possibilidade
+    - Rollback continua existindo? Ou só commit? O que fazer quando ocorre erro na transacao (journal)
+    
+- Toda operação do LiteDB agora é atomica (sem transacao)    
+- Queria que o IDiskService não tivesse informações sobre Journal/Recovery
+
 - Revisar BsonArray.Length não faz cache
-- Remover/Revisar transacao - Locks
 - Implementar StreamDiskService()
 - Thread Safe
-- InitialSize para FileDiskService
 - Remove auto-register do shell
 
 
