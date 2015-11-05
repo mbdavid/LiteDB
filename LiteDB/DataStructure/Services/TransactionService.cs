@@ -76,6 +76,7 @@ namespace LiteDB
                     // increase file changeID (back to 0 when overflow)
                     header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
 
+                    // add header page as dirty to cache
                     _cache.AddPage(header, true);
 
                     // commit journal file - it will be used if write operation fails
@@ -114,7 +115,7 @@ namespace LiteDB
             if(_cache.Clear())
             {
                 // if has dirty page, has journal file - delete it (is not valid)
-                //_disk.DeleteJournal();
+                _disk.DeleteJournal();
             }
 
             // unlock datafile
