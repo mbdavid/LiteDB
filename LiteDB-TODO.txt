@@ -10,6 +10,8 @@
 - Implementar StreamDiskService()
 - Thread Safe
 - Remove auto-register do shell
+- Fazer db.Debbuger? Com opção de Verbose, opções de avaliação de timing de performance...
+    db.Debugger.TextWriters = Stream();
 
 
 ## Cache
