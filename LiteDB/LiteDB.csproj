@@ -52,9 +52,9 @@
   <ItemGroup>
     <Compile Include="Core\Collections\FindIndex.cs" />
     <Compile Include="DataStructure\Disks\IDiskService.cs" />
-    <Compile Include="Serializer\Bson2\BsonReader2.cs" />
-    <Compile Include="Serializer\Bson2\BsonSerializer2.cs" />
-    <Compile Include="Serializer\Bson2\BsonWriter2.cs" />
+    <Compile Include="Serializer\Bson\BsonReader.cs" />
+    <Compile Include="Serializer\Bson\BsonSerializer.cs" />
+    <Compile Include="Serializer\Bson\BsonWriter.cs" />
     <Compile Include="Serializer\Mapper\DbRef.cs" />
     <Compile Include="Core\Collections\Include.cs" />
     <Compile Include="Core\Collections\Drop.cs" />
@@ -90,9 +90,6 @@
     <Compile Include="Document\BsonType.cs" />
     <Compile Include="Document\BsonArray.cs" />
     <Compile Include="Document\BsonDocument.cs" />
-    <Compile Include="Serializer\Bson\BsonSerializer.cs" />
-    <Compile Include="Serializer\Bson\BsonWriter.cs" />
-    <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Json\JsonSerializer.cs" />
     <Compile Include="Serializer\Json\JsonWriter.cs" />
     <Compile Include="Serializer\Mapper\BsonMapper.cs" />

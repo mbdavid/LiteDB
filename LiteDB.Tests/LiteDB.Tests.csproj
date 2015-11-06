@@ -56,7 +56,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="BsonPerfTest.cs" />
     <Compile Include="BsonTest.cs" />
     <Compile Include="AutoIdTest.cs" />
     <Compile Include="DropCollectionTest.cs" />

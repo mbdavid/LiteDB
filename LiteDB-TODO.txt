@@ -2,7 +2,8 @@
 
 - Revisar transação - Remover possibilidade
     - Rollback continua existindo? Ou só commit? O que fazer quando ocorre erro na transacao (journal)
-    
+
+- Revisar auto-id de Int32 (q usa collection)    
 - Toda operação do LiteDB agora é atomica (sem transacao)    
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 
