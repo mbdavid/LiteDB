@@ -59,7 +59,6 @@
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />
     <Compile Include="Serializer\Mapper\EntityBuilder.cs" />
-    <Compile Include="Serializer\Mapper\DbRef.cs" />
     <Compile Include="Core\Collections\Include.cs" />
     <Compile Include="Core\Collections\Drop.cs" />
     <Compile Include="Core\Collections\InsertBulk.cs" />

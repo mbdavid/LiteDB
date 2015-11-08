@@ -238,9 +238,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Search for [BsonIndex] in PropertyMapper. If not found, returns null
+        /// Search for [BsonIndex]/Entity.Index() in PropertyMapper. If not found, returns null
         /// </summary>
-        internal IndexOptions GetIndexFromAttribute<T>(string field)
+        internal IndexOptions GetIndexFromMapper<T>(string field)
         {
             var props = this.GetPropertyMapper(typeof(T));
 

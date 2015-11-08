@@ -158,7 +158,15 @@ namespace LiteDB
 
                 if (value == null && this.SerializeNullValues == false && prop.FieldName != "_id") continue;
 
-                dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
+                // if prop has a custom serialization, use it
+                if (prop.Serialize != null)
+                {
+                    dict[prop.FieldName] = prop.Serialize(value);
+                }
+                else
+                {
+                    dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
+                }
             }
 
             return o;

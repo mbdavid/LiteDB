@@ -166,7 +166,7 @@ namespace LiteDB
             // if index not found, lets check if type T has [BsonIndex]
             if (index == null && typeof(T) != typeof(BsonDocument))
             {
-                var options = this.Database.Mapper.GetIndexFromAttribute<T>(field);
+                var options = this.Database.Mapper.GetIndexFromMapper<T>(field);
 
                 // create a new index using BsonIndex options
                 if (options != null)

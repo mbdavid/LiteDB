@@ -219,7 +219,15 @@ namespace LiteDB
 
                 if (!val.IsNull)
                 {
-                    prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                    // check if has a custom deserialize function
+                    if(prop.Deserialize != null)
+                    {
+                        prop.Setter(obj, prop.Deserialize(val));
+                    }
+                    else
+                    {
+                        prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                    }
                 }
             }
         }

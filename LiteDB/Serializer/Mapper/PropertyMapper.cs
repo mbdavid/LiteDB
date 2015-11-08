@@ -23,6 +23,10 @@ namespace LiteDB
         public GenericGetter Getter { get; set; }
         public GenericSetter Setter { get; set; }
 
+        // used when a property has a custom serialization/deserialization (like DbRef)
+        public Func<object, BsonValue> Serialize { get; set; }
+        public Func<BsonValue, object> Deserialize { get; set; }
+
         // if this field has a [BsonIndex] store indexoptions
         public IndexOptions IndexOptions { get; set; }
     }

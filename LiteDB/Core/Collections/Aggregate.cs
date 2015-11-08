@@ -123,7 +123,7 @@ namespace LiteDB
 
             var index = this.GetOrCreateIndex(field);
 
-            if (index == null) return BsonValue.MinValue;
+            if (index == null) return BsonValue.MaxValue;
 
             var tail = this.Database.Indexer.GetNode(index.TailNode);
             var prev = this.Database.Indexer.GetNode(tail.Prev[0]);

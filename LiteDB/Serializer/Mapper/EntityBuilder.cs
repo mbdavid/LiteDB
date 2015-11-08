@@ -14,7 +14,6 @@ namespace LiteDB
     /// <summary>
     /// Helper class to modify your entity mapping to document. Can be used instead attribute decorates
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class EntityBuilder<T>
     {
         private Dictionary<string, PropertyMapper> _mapper;
@@ -75,6 +74,45 @@ namespace LiteDB
             if (_mapper.TryGetValue(this.GetProperty(property), out prop))
             {
                 prop.IndexOptions = new IndexOptions { Unique = unique };
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Define a subdocument (or a list of) as a reference
+        /// </summary>
+        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collectionName)
+        {
+            PropertyMapper prop;
+
+            if (_mapper.TryGetValue(this.GetProperty(property), out prop))
+            {
+                prop.Serialize = (v) =>
+                {
+                    //TODO: nao devo pegar a versao global
+                    var mapper = BsonMapper.Global.GetPropertyMapper(v.GetType());
+
+                    var idfield = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+                    var id = idfield.Getter(v);
+
+                    return new BsonDocument().Add("$id", new BsonValue(id)).Add("$ref", collectionName);
+                };
+
+                prop.Deserialize = (b) =>
+                {
+                    var mapper = BsonMapper.Global.GetPropertyMapper(typeof(K));
+
+                    var idfield = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+                    var instance = Reflection.CreateInstance(typeof(K));
+
+                    idfield.Setter(instance, b.AsDocument["$id"].RawValue);
+
+                    return instance;
+                };
+
             }
 
             return this;

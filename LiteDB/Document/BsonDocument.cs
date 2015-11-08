@@ -117,7 +117,7 @@ namespace LiteDB
             {
                 var c = field[i];
 
-                if(char.IsLetterOrDigit(c) || c == '_')
+                if(char.IsLetterOrDigit(c) || c == '_' || c == '$')
                 {
                     continue;
                 }

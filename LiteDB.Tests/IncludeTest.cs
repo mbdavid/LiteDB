@@ -11,15 +11,21 @@ namespace UnitTest
     public class Order
     {
         public ObjectId Id { get; set; }
-
-        public DbRef<Customer> Customer { get; set; }
+        public Customer Customer { get; set; }
+        public List<Product> Products { get; set; }
     }
 
     public class Customer
     {
-        public ObjectId Id { get; set; }
-
+        public int Id { get; set; }
         public string Name { get; set; }
+    }
+
+    public class Product
+    {
+        public int ProductId { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
     }
 
     [TestClass]
@@ -31,30 +37,39 @@ namespace UnitTest
             using (var db = new LiteDatabase(DB.Path()))
             {
                 var customers = db.GetCollection<Customer>("customers");
+                var products = db.GetCollection<Product>("products");
                 var orders = db.GetCollection<Order>("orders");
 
-                var customer = new Customer
-                {
-                    Name = "John Doe"
-                };
+                db.Mapper.Entity<Order>()
+                    //.DbRef(x => x.Products, "products")
+                    .DbRef(x => x.Customer, "customers");
 
-                // insert and set customer.Id
+                var customer = new Customer { Name = "John Doe" };
+
+                var product1 = new Product { Name = "TV", Price = 800 };
+                var product2 = new Product { Name = "DVD", Price = 200 };
+
+                // insert ref documents
                 customers.Insert(customer);
+                products.Insert(new Product[] { product1, product2 });
 
                 var order = new Order
                 {
-                    Customer = new DbRef<Customer>(customers, customer.Id)
+                    Customer = customer,
+                    Products = new List<Product>() { product1, product2 }
                 };
+
+                var orderJson = JsonSerializer.Serialize(db.Mapper.ToDocument(order), true);
+
+                var nOrder = db.Mapper.Deserialize<Order>(JsonSerializer.Deserialize(orderJson));
 
                 orders.Insert(order);
 
                 var query = orders
-                    .Include((x) => x.Customer.Fetch(db))
+                    //.Include((x) => x.Customer.Fetch(db))
                     .FindAll()
-                    .Select(x => new { CustomerName = x.Customer.Item.Name })
                     .FirstOrDefault();
 
-                Assert.AreEqual(customer.Name, query.CustomerName);
 
             }
         }
