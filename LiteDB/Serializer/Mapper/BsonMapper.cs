@@ -194,6 +194,16 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Map your entity class to BsonDocument using fluent API
+        /// </summary>
+        public EntityBuilder<T> Entity<T>()
+        {
+            var mapper = this.GetPropertyMapper(typeof(T));
+
+            return new EntityBuilder<T>(mapper);
+        }
+
         #region Predefinded Property Resolvers
 
         public void UseCamelCase()

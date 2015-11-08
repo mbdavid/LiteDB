@@ -65,8 +65,6 @@ namespace UnitTest
         public List<object> MyObjectList { get; set; }
     }
 
-
-
     public interface IMyInterface
     {
         string Name { get; set; }
@@ -75,6 +73,14 @@ namespace UnitTest
     public class MyImpl : IMyInterface
     {
         public string Name { get; set; }
+    }
+
+    public class MyFluentEntity
+    {
+        public int MyPrimaryPk { get; set; }
+        public string CustomName { get; set; }
+        public bool DoNotIncludeMe { get; set; }
+        public DateTime MyDateIndexed { get; set; }
     }
 
     [TestClass]
@@ -177,5 +183,30 @@ namespace UnitTest
             Assert.AreEqual(nobj.MyInternalProperty, null);
         }
 
+
+        [TestMethod]
+        public void MapperEntityBuilder_Test()
+        {
+            var mapper = new BsonMapper();
+
+            var obj = new MyFluentEntity { MyPrimaryPk = 1, CustomName = "John", DoNotIncludeMe = true, MyDateIndexed = DateTime.Now };
+
+            mapper.Entity<MyFluentEntity>()
+                .Key(x => x.MyPrimaryPk)
+                .Map(x => x.CustomName, "custom_field_name")
+                .Ignore(x => x.DoNotIncludeMe)
+                .Index(x => x.MyDateIndexed, true);
+
+            var doc = mapper.ToDocument(obj);
+
+            var json = JsonSerializer.Serialize(doc, true);
+
+            var nobj = mapper.ToObject<MyFluentEntity>(doc);
+
+            // compare object to document
+            Assert.AreEqual(doc["_id"].AsInt32, obj.MyPrimaryPk);
+            Assert.AreEqual(doc["custom_field_name"].AsString, obj.CustomName);
+            Assert.AreNotEqual(doc["DoNotIncludeMe"].AsBoolean, obj.DoNotIncludeMe);
+        }
     }
 }

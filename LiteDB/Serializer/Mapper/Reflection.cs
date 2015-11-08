@@ -73,7 +73,6 @@ namespace LiteDB
 
             foreach (var prop in props)
             {
-
                 // ignore indexer property
                 if (prop.GetIndexParameters().Length > 0) continue;
 
@@ -85,6 +84,7 @@ namespace LiteDB
 
                 // check if property has [BsonField] 
                 var bsonField = prop.IsDefined(fieldAttr, false);
+
                 // create getter/setter IL function
                 var getter = CreateGetMethod(type, prop, bsonField);
                 var setter = CreateSetMethod(type, prop, bsonField);
