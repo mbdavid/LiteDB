@@ -169,41 +169,16 @@ namespace LiteDB
         internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
 
         /// <summary>
-        /// Find witch index will be used and run Execute method - define ExecuteMode here
+        /// Find witch index will be used and run Execute method
         /// </summary>
         internal virtual IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)
             where T : new()
         {
-            // get collection page - no collection, no results
-            var col = collection.GetCollectionPage(false);
+            // get or create new index for Field
+            var index = collection.GetOrCreateIndex(this.Field);
 
             // no collection just returns an empty list of indexnode
-            if (col == null) return new List<IndexNode>();
-
-            // get index
-            var index = col.GetIndex(this.Field);
-
-            // if index not found, lets check if type T has [BsonIndex]
-            if (index == null && typeof(T) != typeof(BsonDocument))
-            {
-                var options = collection.Database.Mapper.GetIndexFromAttribute<T>(this.Field);
-
-                // create a new index using BsonIndex options
-                if (options != null)
-                {
-                    collection.EnsureIndex(this.Field, options);
-
-                    index = col.GetIndex(this.Field);
-                }
-            }
-            
-            // if no index, let's auto create an index with default index options
-            if (index == null)
-            {
-                collection.EnsureIndex(this.Field);
-
-                index = col.GetIndex(this.Field);
-            }
+            if (index == null) return new List<IndexNode>();
 
             // execute query to get all IndexNodes
             return this.ExecuteIndex(collection.Database.Indexer, index);

@@ -152,6 +152,43 @@ namespace LiteDB
             }
         }
 
+        internal CollectionIndex GetOrCreateIndex(string field)
+        {
+            // get collection page that contains all indexes
+            var col = this.GetCollectionPage(false);
+
+            // no collection, no index
+            if(col == null) return null;
+
+            // get index
+            var index = col.GetIndex(field);
+
+            // if index not found, lets check if type T has [BsonIndex]
+            if (index == null && typeof(T) != typeof(BsonDocument))
+            {
+                var options = this.Database.Mapper.GetIndexFromAttribute<T>(field);
+
+                // create a new index using BsonIndex options
+                if (options != null)
+                {
+                    this.EnsureIndex(field, options);
+
+                    index = col.GetIndex(field);
+                }
+            }
+
+            // if no index, let's auto create an index with default index options
+            if (index == null)
+            {
+                this.EnsureIndex(field);
+
+                index = col.GetIndex(field);
+            }
+
+            return index;
+        }
+
+
         /// <summary>
         /// Drop index and release slot for another index
         /// </summary>

@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Update a document in this collection. Returns false if not found document in collection
         /// </summary>
-        public virtual bool Update(T document)
+        public bool Update(T document)
         {
             if (document == null) throw new ArgumentNullException("document");
 
@@ -28,7 +28,7 @@ namespace LiteDB
         /// <summary>
         /// Update a document in this collection. Returns false if not found document in collection
         /// </summary>
-        public virtual bool Update(BsonValue id, T document)
+        public bool Update(BsonValue id, T document)
         {
             if (document == null) throw new ArgumentNullException("document");
             if (id == null || id.IsNull) throw new ArgumentNullException("id");

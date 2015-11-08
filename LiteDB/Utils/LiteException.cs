@@ -87,14 +87,19 @@ namespace LiteDB
             return new LiteException(111, "Index key must be less than {0} bytes", IndexService.MAX_INDEX_LENGTH);
         }
 
+        public static LiteException IndexNotFound(string name)
+        {
+            return new LiteException(112, "Index not found on '{0}'", name);
+        }
+
         public static LiteException LockTimeout(TimeSpan ts)
         {
-            return new LiteException(112, "Timeout. Database is locked for more than {0}", ts.ToString());
+            return new LiteException(120, "Timeout. Database is locked for more than {0}", ts.ToString());
         }
 
         public static LiteException InvalidCommand(string command)
         {
-            return new LiteException(113, "Command '{0}' is not a valid shell command", command);
+            return new LiteException(121, "Command '{0}' is not a valid shell command", command);
         }
 
         #endregion

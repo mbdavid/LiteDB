@@ -15,29 +15,33 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            // set an id value if document object needs
-            this.Database.Mapper.SetAutoId(document, this.GetBsonCollection());
-
-            var doc = this.Database.Mapper.ToDocument(document);
-
-            BsonValue id;
-
-            // add ObjectId to _id if _id not found
-            if (!doc.RawValue.TryGetValue("_id", out id))
-            {
-                id = doc["_id"] = ObjectId.NewObjectId();
-            }
-
-            // test if _id is a valid type
-            if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
-
-            // serialize object
-            var bytes = BsonSerializer.Serialize(doc);
-
             this.Database.Transaction.Begin();
 
             try
             {
+                // set an id value if document object needs
+                this.Database.Mapper.SetAutoId(document, this.GetBsonCollection());
+
+                var doc = this.Database.Mapper.ToDocument(document);
+
+                BsonValue id;
+
+                // add ObjectId to _id if _id not found
+                if (!doc.RawValue.TryGetValue("_id", out id))
+                {
+                    id = doc["_id"] = ObjectId.NewObjectId();
+                }
+
+                // test if _id is a valid type
+                if (id.IsNull || id.IsMinValue || id.IsMaxValue)
+                {
+                    this.Database.Transaction.Abort();
+                    throw LiteException.InvalidDataType("_id", id);
+                }
+
+                // serialize object
+                var bytes = BsonSerializer.Serialize(doc);
+
                 var col = this.GetCollectionPage(true);
 
                 // storage in data pages - returns dataBlock address

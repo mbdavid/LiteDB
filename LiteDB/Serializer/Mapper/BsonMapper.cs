@@ -70,6 +70,8 @@ namespace LiteDB
             this.EmptyStringToNull = true;
             this.ResolvePropertyName = (s) => s;
 
+            #region Register CustomTypes
+
             // register custom types
             this.RegisterType<Uri>
             (
@@ -104,6 +106,10 @@ namespace LiteDB
                 }
             );
 
+            #endregion
+
+            #region Register custom AutoId functions
+
             // register AutoId for ObjectId, Guid and Int32
             this.RegisterAutoId<ObjectId>
             (
@@ -126,6 +132,8 @@ namespace LiteDB
                     return max.IsMaxValue ? 1 : (max + 1); 
                 }
             );
+
+            #endregion
         }
 
         /// <summary>

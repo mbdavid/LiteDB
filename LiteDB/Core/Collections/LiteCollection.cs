@@ -71,7 +71,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns a new instance of this collection but using BsonDocument as T - Copy _pageID to avoid new collection page search
+        /// Returns a new instance of this collection but using BsonDocument insted T - Copy _pageID to avoid new collection page search
         /// </summary>
         internal LiteCollection<BsonDocument> GetBsonCollection()
         {

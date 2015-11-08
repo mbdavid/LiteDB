@@ -146,30 +146,7 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
         {
-            this.Transaction.Begin();
-
-            try
-            {
-                var col = this.Collections.Get(oldName);
-
-                if (col == null || this.CollectionExists(newName))
-                {
-                    this.Transaction.Abort();
-                    return false;
-                }
-
-                col.CollectionName = newName;
-                this.Pager.SetDirty(col);
-
-                this.Transaction.Commit();
-            }
-            catch
-            {
-                this.Transaction.Rollback();
-                throw;
-            }
-
-            return true;
+            return this.GetCollection(oldName).Rename(newName);
         }
 
         #endregion
