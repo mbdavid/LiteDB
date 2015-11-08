@@ -13,6 +13,8 @@ namespace UnitTest
         public ObjectId Id { get; set; }
         public Customer Customer { get; set; }
         public List<Product> Products { get; set; }
+        public Product[] ProductArray { get; set; }
+        public ICollection<Product> ProductColl { get; set; }
     }
 
     public class Customer
@@ -41,7 +43,9 @@ namespace UnitTest
                 var orders = db.GetCollection<Order>("orders");
 
                 db.Mapper.Entity<Order>()
-                    //.DbRef(x => x.Products, "products")
+                    .DbRef(x => x.Products, "products")
+                    .DbRef(x => x.ProductArray, "products")
+                    .DbRef(x => x.ProductColl, "products")
                     .DbRef(x => x.Customer, "customers");
 
                 var customer = new Customer { Name = "John Doe" };
@@ -56,7 +60,9 @@ namespace UnitTest
                 var order = new Order
                 {
                     Customer = customer,
-                    Products = new List<Product>() { product1, product2 }
+                    Products = new List<Product>() { product1, product2 },
+                    ProductArray = new Product[] { product1 },
+                    ProductColl = new List<Product>() { product2 }
                 };
 
                 var orderJson = JsonSerializer.Serialize(db.Mapper.ToDocument(order), true);
@@ -66,10 +72,11 @@ namespace UnitTest
                 orders.Insert(order);
 
                 var query = orders
-                    //.Include((x) => x.Customer.Fetch(db))
+                    .Include(x => x.Customer)
                     .FindAll()
                     .FirstOrDefault();
 
+                var customerName = query.Customer.Name;
 
             }
         }

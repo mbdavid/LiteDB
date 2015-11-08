@@ -16,11 +16,13 @@ namespace LiteDB
     /// </summary>
     public class EntityBuilder<T>
     {
-        private Dictionary<string, PropertyMapper> _mapper;
+        private BsonMapper _mapper;
+        private Dictionary<string, PropertyMapper> _prop;
 
-        internal EntityBuilder(Dictionary<string, PropertyMapper> mapper)
+        internal EntityBuilder(BsonMapper mapper)
         {
             _mapper = mapper;
+            _prop = mapper.GetPropertyMapper(typeof(T));
         }
 
         /// <summary>
@@ -28,9 +30,10 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Ignore<K>(Expression<Func<T, K>> property)
         {
-            _mapper.Remove(this.GetProperty(property));
-
-            return this;
+            return this.GetProperty(property, (p) =>
+            {
+                _prop.Remove(p.PropertyName);
+            });
         }
 
         /// <summary>
@@ -38,14 +41,10 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Map<K>(Expression<Func<T, K>> property, string field)
         {
-            PropertyMapper prop;
-
-            if (_mapper.TryGetValue(this.GetProperty(property), out prop))
+            return this.GetProperty(property, (p) =>
             {
-                prop.FieldName = field;
-            }
-
-            return this;
+                p.FieldName = field;
+            });
         }
 
         /// <summary>
@@ -53,15 +52,11 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Key<K>(Expression<Func<T, K>> property, bool autoId = true)
         {
-            PropertyMapper prop;
-
-            if(_mapper.TryGetValue(this.GetProperty(property), out prop))
+            return this.GetProperty(property, (p) =>
             {
-                prop.FieldName = "_id";
-                prop.AutoId = autoId;
-            }
-
-            return this;
+                p.FieldName = "_id";
+                p.AutoId = autoId;
+            });
         }
 
         /// <summary>
@@ -69,53 +64,10 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, bool unique = false)
         {
-            PropertyMapper prop;
-
-            if (_mapper.TryGetValue(this.GetProperty(property), out prop))
+            return this.GetProperty(property, (p) =>
             {
-                prop.IndexOptions = new IndexOptions { Unique = unique };
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Define a subdocument (or a list of) as a reference
-        /// </summary>
-        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collectionName)
-        {
-            PropertyMapper prop;
-
-            if (_mapper.TryGetValue(this.GetProperty(property), out prop))
-            {
-                prop.Serialize = (v) =>
-                {
-                    //TODO: nao devo pegar a versao global
-                    var mapper = BsonMapper.Global.GetPropertyMapper(v.GetType());
-
-                    var idfield = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
-
-                    var id = idfield.Getter(v);
-
-                    return new BsonDocument().Add("$id", new BsonValue(id)).Add("$ref", collectionName);
-                };
-
-                prop.Deserialize = (b) =>
-                {
-                    var mapper = BsonMapper.Global.GetPropertyMapper(typeof(K));
-
-                    var idfield = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
-
-                    var instance = Reflection.CreateInstance(typeof(K));
-
-                    idfield.Setter(instance, b.AsDocument["$id"].RawValue);
-
-                    return instance;
-                };
-
-            }
-
-            return this;
+                p.IndexOptions = new IndexOptions { Unique = unique };
+            });
         }
 
         /// <summary>
@@ -123,20 +75,131 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, IndexOptions options)
         {
-            PropertyMapper prop;
-
-            if (_mapper.TryGetValue(this.GetProperty(property), out prop))
+            return this.GetProperty(property, (p) =>
             {
-                prop.IndexOptions = options;
-            }
-
-            return this;
+                p.IndexOptions = options;
+            });
         }
+
+        #region DbRef
+
+        /// <summary>
+        /// Define a subdocument (or a list of) as a reference
+        /// </summary>
+        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collectionName)
+        {
+            return this.GetProperty(property, (p) =>
+            {
+                var typeK = typeof(K);
+
+                p.CollectionRef = collectionName;
+
+                if (Reflection.IsList(typeK))
+                {
+                    var itemType = typeK.IsArray ? typeK.GetElementType() : Reflection.UnderlyingTypeOf(typeK);
+                    var mapper = _mapper.GetPropertyMapper(itemType);
+
+                    RegisterDbRefList(p, collectionName, typeK, itemType, mapper);
+                }
+                else
+                {
+                    var mapper = _mapper.GetPropertyMapper(typeK);
+
+                    RegisterDbRef(p, collectionName, typeK, mapper);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only 
+        /// </summary>
+        internal static void RegisterDbRef(PropertyMapper p, string collectionName, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
+        {
+            p.Serialize = (obj) =>
+            {
+                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+                var id = idField.Getter(obj);
+
+                return new BsonDocument()
+                    .Add("$id", new BsonValue(id))
+                    .Add("$ref", collectionName);
+            };
+
+            p.Deserialize = (bson) =>
+            {
+                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+                var instance = Reflection.CreateInstance(itemType);
+
+                idField.Setter(instance, bson.AsDocument["$id"].RawValue);
+
+                return instance;
+            };
+        }
+
+        /// <summary>
+        /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only 
+        /// </summary>
+        internal static void RegisterDbRefList(PropertyMapper p, string collectionName, Type listType, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
+        {
+            p.Serialize = (list) =>
+            {
+                var result = new BsonArray();
+                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+                foreach (var item in (IEnumerable)list)
+                {
+                    result.Add(new BsonDocument()
+                        .Add("$id", new BsonValue(idField.Getter(item)))
+                        .Add("$ref", collectionName));
+                }
+
+                return result;
+            };
+
+            p.Deserialize = (bson) =>
+            {
+                var array = bson.AsArray;
+                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+                // test if is an native array or a IList implementation
+                if (listType.IsArray)
+                {
+                    var arr = Array.CreateInstance(itemType, array.Count);
+                    var idx = 0;
+
+                    foreach (var item in array)
+                    {
+                        var obj = Reflection.CreateInstance(itemType);
+                        idField.Setter(obj, item.AsDocument["$id"].RawValue);
+                        arr.SetValue(obj, idx++);
+                    }
+
+                    return arr;
+                }
+                else
+                {
+                    var list = (IList)Reflection.CreateInstance(listType);
+
+                    foreach (var item in array)
+                    {
+                        var obj = Reflection.CreateInstance(itemType);
+                        idField.Setter(obj, item.AsDocument["$id"].RawValue);
+                        list.Add(obj);
+                    }
+
+                    return list;
+                }
+            };
+        }
+
+        #endregion
 
         /// <summary>
         /// Get a property based on a expression. Eg.: 'x => x.UserId' return string "UserId"
         /// </summary>
-        private string GetProperty<TK, K>(Expression<Func<TK, K>> expr)
+        private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> expr, Action<PropertyMapper> action)
         {
             var member = expr.Body as MemberExpression;
 
@@ -145,7 +208,11 @@ namespace LiteDB
                 throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", expr.ToString()));
             }
 
-            return ((PropertyInfo)member.Member).Name;
+            var prop = _prop[((PropertyInfo)member.Member).Name];
+
+            action(prop);
+
+            return this;
         }
     }
 }

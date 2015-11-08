@@ -26,6 +26,7 @@ namespace LiteDB
         // used when a property has a custom serialization/deserialization (like DbRef)
         public Func<object, BsonValue> Serialize { get; set; }
         public Func<BsonValue, object> Deserialize { get; set; }
+        public string CollectionRef { get; set; }
 
         // if this field has a [BsonIndex] store indexoptions
         public IndexOptions IndexOptions { get; set; }

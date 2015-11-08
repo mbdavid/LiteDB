@@ -165,6 +165,14 @@ namespace LiteDB
                         {
                             return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                         }
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
+                        {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                        {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
                         else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         {
                             var k = type.GetGenericArguments()[0];
@@ -297,6 +305,28 @@ namespace LiteDB
         {
             var listType = typeof(Dictionary<,>);
             return listType.MakeGenericType(k, v);
+        }
+
+        /// <summary>
+        /// Returns true if Type is any kind of Array/IList/ICollection/....
+        /// </summary>
+        public static bool IsList(Type type)
+        {
+            if(type.IsArray) return true;
+
+            foreach (Type @interface in type.GetInterfaces())
+            {
+                if (@interface.IsGenericType)
+                {
+                    if (@interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    {
+                        // if needed, you can also return the type used as generic argument
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         #endregion

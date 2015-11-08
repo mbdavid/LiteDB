@@ -199,9 +199,7 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Entity<T>()
         {
-            var mapper = this.GetPropertyMapper(typeof(T));
-
-            return new EntityBuilder<T>(mapper);
+            return new EntityBuilder<T>(this);
         }
 
         #region Predefinded Property Resolvers
