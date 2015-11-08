@@ -16,7 +16,8 @@
     db.Debbuger.Counters["Abc"].Times | Count
 
 - Adicionar as operacoes do banco para um servico - manter no Collection apenas as chamadas + Linq conv + API
-    - DocumentService (_docsrv) * Insert/Update/Delete/EnsureIndex/Find
+    - DocumentService (_docsrv) * Insert/Update/Delete/Find
+    - EnsureIndex/Find
         - Não contempla transacao
         - 
    

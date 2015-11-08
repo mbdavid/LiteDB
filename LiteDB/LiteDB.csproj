@@ -54,6 +54,7 @@
     <Compile Include="Core\Collections\Rename.cs" />
     <Compile Include="Core\Collections\FindAndModify.cs" />
     <Compile Include="DataStructure\Disks\IDiskService.cs" />
+    <Compile Include="DataStructure\Services\DocumentService.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />

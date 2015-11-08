@@ -61,6 +61,7 @@ namespace LiteDB
             {
                 page.IsDirty = true;
                 _dirty[page.PageID] = page;
+                _cache[page.PageID] = page;
 
                 // if page is new (not exits on datafile), there is no journal for them
                 if(page.DiskData.Length > 0)
@@ -72,7 +73,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Empty cache and dirty pages - returns true if has dirty pages
+        /// Empty cache and dirty pages - returns true if had dirty pages
         /// </summary>
         public bool Clear()
         {
@@ -89,7 +90,6 @@ namespace LiteDB
         /// </summary>
         public void ClearDirty()
         {
-            // clear page and clear special list (will keep in _cache list)
             foreach(var page in _dirty.Values)
             {
                 page.IsDirty = false;

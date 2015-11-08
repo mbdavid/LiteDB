@@ -26,8 +26,6 @@ namespace LiteDB
         private bool _readonly;
         private string _password;
 
-        private byte[] _buffer = new byte[BasePage.PAGE_SIZE];
-
         public FileDiskService(string filename, bool journalEnabled, TimeSpan timeout, bool readOnly, string password)
         {
             _filename = filename;
@@ -99,6 +97,7 @@ namespace LiteDB
         /// </summary>
         public byte[] ReadPage(uint pageID)
         {
+            var buffer = new byte[BasePage.PAGE_SIZE];
             var position = (long)pageID * (long)BasePage.PAGE_SIZE;
 
             this.TryExec(() => 
@@ -110,11 +109,11 @@ namespace LiteDB
                 }
 
                 // read bytes from data file
-                _stream.Read(_buffer, 0, BasePage.PAGE_SIZE); 
+                _stream.Read(buffer, 0, BasePage.PAGE_SIZE); 
 
             });
 
-            return _buffer;
+            return buffer;
         }
 
         /// <summary>
@@ -169,12 +168,12 @@ namespace LiteDB
         public void DeleteJournal()
         {
             if (_journalEnabled == false) return;
-            // remove journal file
 
             // close journal stream and delete file
             _journal.Dispose();
             _journal = null;
 
+            // remove journal file
             File.Delete(_journalFilename);
         }
 
@@ -226,6 +225,8 @@ namespace LiteDB
                     header.ReadPage(buffer);
                     fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
                 }
+
+                Console.WriteLine("recovery " + pageID);
 
                 // write in stream
                 _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);

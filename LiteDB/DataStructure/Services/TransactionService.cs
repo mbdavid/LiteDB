@@ -83,9 +83,9 @@ namespace LiteDB
                     _disk.CommitJournal();
 
                     // write all dirty pages in data file
-                    foreach(var page in _cache.GetDirtyPages())
+                    foreach (var page in _cache.GetDirtyPages())
                     {
-                        Console.WriteLine("save dirty page " + page.PageID);
+                        Console.WriteLine("save page " + page.PageID);
                         _disk.WritePage(page.PageID, page.WritePage());
                     }
 
