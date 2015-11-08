@@ -10,7 +10,7 @@ namespace LiteDB
         where T : new()
     {
         private uint _pageID;
-        private List<Action<T>> _includes;
+        private List<Action<BsonDocument>> _includes;
         private QueryVisitor<T> _visitor;
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace LiteDB
             this.Database = db;
             _pageID = uint.MaxValue;
             _visitor = new QueryVisitor<T>(db.Mapper);
-            _includes = new List<Action<T>>();
+            _includes = new List<Action<BsonDocument>>();
         }
 
         /// <summary>

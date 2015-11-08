@@ -161,7 +161,7 @@ namespace LiteDB
                 // if prop has a custom serialization, use it
                 if (prop.Serialize != null)
                 {
-                    dict[prop.FieldName] = prop.Serialize(value);
+                    dict[prop.FieldName] = prop.Serialize(value, this);
                 }
                 else
                 {

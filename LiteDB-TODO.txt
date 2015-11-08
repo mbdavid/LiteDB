@@ -1,15 +1,16 @@
 ﻿# LiteDB v.2 - TODO
 
 - Revisar transação - Remover possibilidade
-    - Rollback continua existindo? Ou só commit? O que fazer quando ocorre erro na transacao (journal)
+    - A transacao deve ficar sempre na operacao mais externa
+    
+- Thread Safe
+    
 
-- Revisar auto-id de Int32 (q usa collection)    
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 - FindAndModify(Query, Action<T>)
 
 - Revisar BsonArray.Length não faz cache
 - Implementar StreamDiskService()
-- Thread Safe
 - Remove auto-register do shell
 - Fazer db.Debbuger? Com opção de Verbose, opções de avaliação de timing de performance...
     db.Debugger.TextWriters = Stream();
@@ -19,9 +20,24 @@
     - DocumentService (_docsrv) * Insert/Update/Delete/Find
     - EnsureIndex/Find
         - Não contempla transacao
-        - 
-   
-A gestão da transacao deve ser feita sempre no metodo mais externo (begin/commit/roll/avoidDrty)   
+
+## DbRef
+
+- Implementar DbRefAttribute
+- Revisar codigos - estão muito confusos os nomes e falta documentacao (é complexo e cheio de reflection)
+- Implementar sub-document
+- Deveria funcionar para <K>, IList<K>, K[], Dictionary<T, K> sem muita gambi
+
+
+        
+{
+    _id: 1,
+    address: {
+        street: "jacipuia",
+        country: { $id: "br", $ref="countries" }
+    }
+}
+
 
 ## Cache
 

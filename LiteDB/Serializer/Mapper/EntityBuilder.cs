@@ -90,22 +90,20 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                var typeK = typeof(K);
+                var typeRef = typeof(K);
 
-                p.CollectionRef = collectionName;
-
-                if (Reflection.IsList(typeK))
+                if (Reflection.IsList(typeRef))
                 {
-                    var itemType = typeK.IsArray ? typeK.GetElementType() : Reflection.UnderlyingTypeOf(typeK);
+                    var itemType = typeRef.IsArray ? typeRef.GetElementType() : Reflection.UnderlyingTypeOf(typeRef);
                     var mapper = _mapper.GetPropertyMapper(itemType);
 
-                    RegisterDbRefList(p, collectionName, typeK, itemType, mapper);
+                    RegisterDbRefList(p, collectionName, typeRef, itemType, mapper);
                 }
                 else
                 {
-                    var mapper = _mapper.GetPropertyMapper(typeK);
+                    var mapper = _mapper.GetPropertyMapper(typeRef);
 
-                    RegisterDbRef(p, collectionName, typeK, mapper);
+                    RegisterDbRef(p, collectionName, typeRef, mapper);
                 }
             });
         }
@@ -115,7 +113,7 @@ namespace LiteDB
         /// </summary>
         internal static void RegisterDbRef(PropertyMapper p, string collectionName, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
         {
-            p.Serialize = (obj) =>
+            p.Serialize = (obj, m) =>
             {
                 var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
 
@@ -126,15 +124,14 @@ namespace LiteDB
                     .Add("$ref", collectionName);
             };
 
-            p.Deserialize = (bson) =>
+            p.Deserialize = (bson, m) =>
             {
-                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+                var idRef = bson.AsDocument["$id"];
 
-                var instance = Reflection.CreateInstance(itemType);
-
-                idField.Setter(instance, bson.AsDocument["$id"].RawValue);
-
-                return instance;
+                return m.Deserialize(itemType, 
+                    idRef.IsNull ?
+                    bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
+                    new BsonDocument().Add("_id", idRef)); // if has $id, deserialize object using only _id object
             };
         }
 
@@ -143,7 +140,7 @@ namespace LiteDB
         /// </summary>
         internal static void RegisterDbRefList(PropertyMapper p, string collectionName, Type listType, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
         {
-            p.Serialize = (list) =>
+            p.Serialize = (list, m) =>
             {
                 var result = new BsonArray();
                 var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
@@ -158,38 +155,30 @@ namespace LiteDB
                 return result;
             };
 
-            p.Deserialize = (bson) =>
+            p.Deserialize = (bson, m) =>
             {
                 var array = bson.AsArray;
-                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
 
-                // test if is an native array or a IList implementation
-                if (listType.IsArray)
+                if(array.Count == 0) return m.Deserialize(listType, array);
+
+                var hasIdRef = array[0].AsDocument["$id"].IsNull;
+
+                if(hasIdRef)
                 {
-                    var arr = Array.CreateInstance(itemType, array.Count);
-                    var idx = 0;
-
-                    foreach (var item in array)
-                    {
-                        var obj = Reflection.CreateInstance(itemType);
-                        idField.Setter(obj, item.AsDocument["$id"].RawValue);
-                        arr.SetValue(obj, idx++);
-                    }
-
-                    return arr;
+                    // if no $id, deserialize as full (was loaded via Include)
+                    return m.Deserialize(listType, array);
                 }
                 else
                 {
-                    var list = (IList)Reflection.CreateInstance(listType);
+                    // copy array changing $id to _id
+                    var arr = new BsonArray();
 
-                    foreach (var item in array)
+                    foreach(var item in array)
                     {
-                        var obj = Reflection.CreateInstance(itemType);
-                        idField.Setter(obj, item.AsDocument["$id"].RawValue);
-                        list.Add(obj);
+                        arr.Add(new BsonDocument().Add("_id", item.AsDocument["$id"]));
                     }
 
-                    return list;
+                    return m.Deserialize(listType, arr);
                 }
             };
         }

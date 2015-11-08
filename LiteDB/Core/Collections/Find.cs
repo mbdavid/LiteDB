@@ -32,13 +32,14 @@ namespace LiteDB
 
                 var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
-                // get object from BsonDocument
-                var obj = this.Database.Mapper.ToObject<T>(doc);
-
+                // executing all includes in BsonDocument
                 foreach (var action in _includes)
                 {
-                    action(obj);
+                    action(doc);
                 }
+
+                // get object from BsonDocument
+                var obj = this.Database.Mapper.ToObject<T>(doc);
 
                 yield return obj;
             }

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace LiteDB
@@ -17,23 +19,49 @@ namespace LiteDB
         {
             if (dbref == null) throw new ArgumentNullException("dbref");
 
-            var col = new LiteCollection<T>(this.Database, Name);
+            var member = dbref.Body as MemberExpression;
+            if (member == null) throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", dbref.ToString()));
+            var propName = ((PropertyInfo)member.Member).Name;
 
-            col._pageID = _pageID;
-            col._includes.AddRange(_includes);
-
-            var mapper = this.Database.Mapper.GetPropertyMapper(typeof(T));
-            var prop = mapper[""];
-
-            Action<T> action = (o) =>
+            Action<BsonDocument> action = (bson) =>
             {
+                var prop = bson.Get(propName);
 
+                if(prop.IsNull) return;
+
+                // if property value is an array, populate all values
+                if(prop.IsArray)
+                {
+                    var array = prop.AsArray;
+                    if(array.Count == 0) return;
+
+                    // all doc refs in an array must be same collection, lets take first only
+                    var col = this.Database.GetCollection(array[0].AsDocument["$ref"]);
+
+                    for(var i = 0; i < array.Count; i++)
+                    {
+                        var obj = col.FindById(array[i].AsDocument["$id"]);
+                        array[i] = obj;
+                    }
+                }
+                else
+                {
+                    // for BsonDocument, get property value e update with full object refence
+                    var doc = prop.AsDocument;
+                    var col = this.Database.GetCollection(doc["$ref"]);
+                    var obj = col.FindById(doc["$id"]);
+                    bson.Set(propName, obj);
+                }
             };
 
+            // cloning this collection and adding this include
+            var newcol = new LiteCollection<T>(this.Database, Name);
 
-            //col._includes.Add(action);
+            newcol._pageID = _pageID;
+            newcol._includes.AddRange(_includes);
+            newcol._includes.Add(action);
 
-            return col;
+            return newcol;
         }
     }
 }

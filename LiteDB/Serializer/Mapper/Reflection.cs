@@ -131,6 +131,11 @@ namespace LiteDB
             return dict;
         }
 
+        internal static bool IsList(object typeK)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region IL Code

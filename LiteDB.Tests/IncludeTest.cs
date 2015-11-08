@@ -12,9 +12,13 @@ namespace UnitTest
     {
         public ObjectId Id { get; set; }
         public Customer Customer { get; set; }
+        public Customer CustomerNull { get; set; }
+
         public List<Product> Products { get; set; }
         public Product[] ProductArray { get; set; }
         public ICollection<Product> ProductColl { get; set; }
+        public List<Product> ProductEmpty { get; set; }
+        public List<Product> ProductsNull { get; set; }
     }
 
     public class Customer
@@ -46,7 +50,10 @@ namespace UnitTest
                     .DbRef(x => x.Products, "products")
                     .DbRef(x => x.ProductArray, "products")
                     .DbRef(x => x.ProductColl, "products")
-                    .DbRef(x => x.Customer, "customers");
+                    .DbRef(x => x.ProductEmpty, "products")
+                    .DbRef(x => x.ProductsNull, "products")
+                    .DbRef(x => x.Customer, "customers")
+                    .DbRef(x => x.CustomerNull, "customers");
 
                 var customer = new Customer { Name = "John Doe" };
 
@@ -60,9 +67,12 @@ namespace UnitTest
                 var order = new Order
                 {
                     Customer = customer,
+                    CustomerNull = null,
                     Products = new List<Product>() { product1, product2 },
                     ProductArray = new Product[] { product1 },
-                    ProductColl = new List<Product>() { product2 }
+                    ProductColl = new List<Product>() { product2 },
+                    ProductEmpty = new List<Product>(),
+                    ProductsNull = null
                 };
 
                 var orderJson = JsonSerializer.Serialize(db.Mapper.ToDocument(order), true);
@@ -73,6 +83,11 @@ namespace UnitTest
 
                 var query = orders
                     .Include(x => x.Customer)
+                    .Include(x => x.CustomerNull)
+                    .Include(x => x.Products)
+                    .Include(x => x.ProductArray)
+                    .Include(x => x.ProductColl)
+                    .Include(x => x.ProductsNull)
                     .FindAll()
                     .FirstOrDefault();
 
