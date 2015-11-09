@@ -9,14 +9,14 @@ namespace LiteDB.Shell
 {
     public class LiteShell
     {
-        public List<ILiteCommand> Commands { get; set; }
+        public Dictionary<string, ILiteCommand> Commands { get; set; }
 
         public LiteDatabase Database { get; set; }
 
         public LiteShell(LiteDatabase db)
         {
             this.Database = db;
-            this.Commands = new List<ILiteCommand>();
+            this.Commands = new Dictionary<string, ILiteCommand>();
 
             var type = typeof(ILiteCommand);
             var types = AppDomain.CurrentDomain.GetAssemblies()
@@ -25,7 +25,8 @@ namespace LiteDB.Shell
 
             foreach (var t in types)
             {
-                this.Commands.Add((ILiteCommand)Activator.CreateInstance(t));
+                var cmd = (ILiteCommand)Activator.CreateInstance(t);
+                this.Commands.Add(t.Name, cmd);
             }
         }
 
@@ -37,14 +38,14 @@ namespace LiteDB.Shell
 
             foreach (var cmd in this.Commands)
             {
-                if (cmd.IsCommand(s))
+                if (cmd.Value.IsCommand(s))
                 {
                     if (this.Database == null)
                     {
                         throw LiteException.NoDatabase(); 
                     }
 
-                    return cmd.Execute(this.Database, s);
+                    return cmd.Value.Execute(this.Database, s);
                 }
             }
 

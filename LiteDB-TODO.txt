@@ -4,16 +4,12 @@
     - A transacao deve ficar sempre na operacao mais externa
 - Thread Safe
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
-- FindAndModify(Query, Action<T>)
 - Revisar BsonArray.Length não faz cache
 - Implementar StreamDiskService()
 - Implementar ctor new LiteDatabase(Stream)
-- Remove auto-register do shell
 - Fazer db.Debbuger? Com opção de Verbose, opções de avaliação de timing de performance...
     db.Debugger.TextWriters = Stream();
     db.Debbuger.Counters["Abc"].Times | Count
-    
-- Ta lendo paginas repetidas (para BasePage e depois para Data|IndexPage)
 
 ## Cache
 
@@ -39,16 +35,6 @@ e) Leitura conforme indice (retorno poucos registros)
 ?? pager.SetDirty(page) antes de alterar
 ?? Implementer SortDictionaryMRU
 ?? Implementar cache de 2 repos
-
-## Mapping
-
-db.Mapper.Entity<Usuario>()
-    .HasKey(x => x.IdUsuario)
-    .Property(x => x.NoUsuario, "nome_usuario")
-    .Property(x => x.CdUsuario, "codigo_usuario", (x) => x.CdUsuario, (bson) => bson)
-    .Property(Expression<T>, FieldName, Func<T, Bson> serialize, Func<Bson, T> deserialize)
-    .Ignore(x => x.FgAtivo)
-    .Index(x => x.NoUsuario)
 
 ## DbRef
 
