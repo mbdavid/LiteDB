@@ -9,12 +9,12 @@ namespace LiteDB
     internal class HeaderPage : BasePage
     {
         /// <summary>
-        /// ChangeID in file position
+        /// ChangeID in file position (can be calc?)
         /// </summary>
-        public const int CHANGE_ID_POSITION = 49;
+        public const int CHANGE_ID_POSITION = 52;
 
         /// <summary>
-        /// Header info the validate that datafile is a LiteDB file
+        /// Header info the validate that datafile is a LiteDB file (27 bytes)
         /// </summary>
         private const string HEADER_INFO = "** This is a LiteDB file **";
 

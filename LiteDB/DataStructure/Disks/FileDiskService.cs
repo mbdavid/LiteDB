@@ -16,7 +16,7 @@ namespace LiteDB
         private const int LOCK_POSITION = 0;
 
         /// <summary>
-        /// Position on disk to write a mark to know when journal is finish and valid
+        /// Position on disk to write a mark to know when journal is finish and valid (byte 19 is free header area)
         /// </summary>
         private const int JOURNAL_FINISH_POSITION = 19;
 

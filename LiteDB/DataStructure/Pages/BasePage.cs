@@ -18,7 +18,7 @@ namespace LiteDB
         public const int PAGE_SIZE = 4096;
 
         /// <summary>
-        /// This size is used bytes in header pages 17 bytes (+3 free)
+        /// This size is used bytes in header pages 17 bytes (+3 free) = 20 bytes
         /// </summary>
         public const int PAGE_HEADER_SIZE = 20;
 
@@ -103,6 +103,39 @@ namespace LiteDB
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.ItemCount = 0;
             this.DiskData = new byte[0];
+        }
+
+        /// <summary>
+        /// Convert a BasePage to a specific page keeping same page header vars and re-loading disk content
+        /// </summary>
+        public T CopyTo<T>()
+            where T : BasePage, new()
+        {
+            if (this.DiskData.Length == 0) throw new SystemException("No diskdata in this page");
+
+            var page = new T();
+            page.PageID = this.PageID;
+            page.PrevPageID = this.PrevPageID;
+            page.NextPageID = this.NextPageID;
+            // page.PageType = this.PageType;
+            page.ItemCount = this.ItemCount;
+            page.FreeBytes = this.FreeBytes;
+            page.IsDirty = this.IsDirty;
+            page.DiskData = new byte[BasePage.PAGE_SIZE];
+
+            Buffer.BlockCopy(this.DiskData, 0, page.DiskData, 0, BasePage.PAGE_SIZE);
+
+            var reader = new ByteReader(this.DiskData);
+
+            // skip header - i copyed from "this" instance (including possible changes)
+            reader.ReadBytes(BasePage.PAGE_HEADER_SIZE);
+
+            if (page.PageType != LiteDB.PageType.Empty)
+            {
+                this.ReadContent(reader);
+            }
+
+            return page;
         }
 
         #region Read/Write page

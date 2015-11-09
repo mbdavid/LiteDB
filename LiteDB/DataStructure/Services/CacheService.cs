@@ -31,14 +31,23 @@ namespace LiteDB
         /// If T is more specific than page that I have in cache, returns null (eg. Page 2 is BasePage in cache and this method call for IndexPage PageId 2)
         /// </summary>
         public T GetPage<T>(uint pageID)
-            where T : BasePage
+            where T : BasePage, new()
         {
             var page = _cache.GetOrDefault(pageID, null);
 
             // if a need a specific page but has a BasePage, returns null
             if (page != null && page.GetType() == typeof(BasePage) && typeof(T) != typeof(BasePage))
             {
-                return null;
+                if(page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
+
+                var specificPage = new T();
+
+                specificPage.ReadPage(page.DiskData);
+                
+                _cache[pageID] = specificPage;
+                
+                return specificPage;
+                //return null;
             }
 
             return (T)page;

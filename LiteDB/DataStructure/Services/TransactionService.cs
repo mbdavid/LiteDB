@@ -143,6 +143,8 @@ namespace LiteDB
             // if changeID was changed, file was changed by another process - clear all cache
             if (cache.ChangeID != change)
             {
+                Console.WriteLine("Datafile changed, clear cache");
+
                 _cache.Clear();
             }
         }
