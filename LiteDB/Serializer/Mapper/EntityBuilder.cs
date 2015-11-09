@@ -190,14 +190,9 @@ namespace LiteDB
         /// </summary>
         private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> expr, Action<PropertyMapper> action)
         {
-            var member = expr.Body as MemberExpression;
+            var prop = _prop[expr.GetPath()];
 
-            if (member == null)
-            {
-                throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", expr.ToString()));
-            }
-
-            var prop = _prop[((PropertyInfo)member.Member).Name];
+            if(prop == null) throw new ArgumentNullException(expr.GetPath());
 
             action(prop);
 

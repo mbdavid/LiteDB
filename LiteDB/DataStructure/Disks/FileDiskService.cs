@@ -15,6 +15,11 @@ namespace LiteDB
         /// </summary>
         private const int LOCK_POSITION = 0;
 
+        /// <summary>
+        /// Position on disk to write a mark to know when journal is finish and valid
+        /// </summary>
+        private const int JOURNAL_FINISH_POSITION = 19;
+
         private FileStream _stream;
         private string _filename;
 
@@ -51,10 +56,15 @@ namespace LiteDB
                 _readonly ? FileShare.Read : FileShare.ReadWrite, 
                 BasePage.PAGE_SIZE);
 
-            this.TryRecovery();
-
-            // returns true if new file
-            return _stream.Length == 0;
+            if(_stream.Length == 0)
+            {
+                return true;
+            }
+            else
+            {
+                this.TryRecovery();
+                return false;
+            }
         }
 
         #region Lock/Unlock
@@ -150,7 +160,6 @@ namespace LiteDB
                 });
             }
 
-            //TODO: avisa q esta gerando
             Console.WriteLine("journal write " + pageID);
 
             // just write original bytes in order that are changed
@@ -160,6 +169,10 @@ namespace LiteDB
         public void CommitJournal()
         {
             if (_journalEnabled == false) return;
+
+            // write a mark (byte 1) to know when journal is finish
+            // after that, if found a non-exclusive-open journal file, must be recovery
+            _journal.WriteByte(JOURNAL_FINISH_POSITION, 1);
 
             // flush all journal file data to disk
             _journal.Flush();
@@ -194,9 +207,13 @@ namespace LiteDB
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
             {
-                this.Recovery(journal);
+                var finish = journal.ReadByte(JOURNAL_FINISH_POSITION);
 
-                //TODO: valida se precisa ser feito recovery (FINISH)
+                // test if journal was finish
+                if(finish == 1)
+                {
+                    this.Recovery(journal);
+                }
 
                 // close stream for delete file
                 journal.Close();

@@ -19,13 +19,11 @@ namespace LiteDB
         {
             if (dbref == null) throw new ArgumentNullException("dbref");
 
-            var member = dbref.Body as MemberExpression;
-            if (member == null) throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", dbref.ToString()));
-            var propName = ((PropertyInfo)member.Member).Name;
+            var propPath = dbref.GetPath();
 
             Action<BsonDocument> action = (bson) =>
             {
-                var prop = bson.Get(propName);
+                var prop = bson.Get(propPath);
 
                 if(prop.IsNull) return;
 
@@ -50,7 +48,7 @@ namespace LiteDB
                     var doc = prop.AsDocument;
                     var col = this.Database.GetCollection(doc["$ref"]);
                     var obj = col.FindById(doc["$id"]);
-                    bson.Set(propName, obj);
+                    bson.Set(propPath, obj);
                 }
             };
 

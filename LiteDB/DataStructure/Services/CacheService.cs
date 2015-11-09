@@ -51,7 +51,7 @@ namespace LiteDB
         public void AddPage(BasePage page, bool dirty = false)
         {
             // do not cache extend page - never will be reused
-            if (page.PageType != PageType.Extend)
+            //if (page.PageType != PageType.Extend)
             {
                 _cache[page.PageID] = page;
             }

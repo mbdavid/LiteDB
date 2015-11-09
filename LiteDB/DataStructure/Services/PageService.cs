@@ -34,7 +34,7 @@ namespace LiteDB
 
                 page.ReadPage(buffer);
 
-                Console.WriteLine("read " + pageID);
+                Console.WriteLine("read " + pageID + " (" + typeof(T).Name + ")");
                     
                 _cache.AddPage(page);
             }

@@ -144,6 +144,8 @@
     <Compile Include="DataStructure\Services\PageService.cs" />
     <Compile Include="DataStructure\Disks\FileDiskService.cs" />
     <Compile Include="DataStructure\Services\TransactionService.cs" />
+    <Compile Include="Utils\ExpressionExtensions.cs" />
+    <Compile Include="Utils\StreamExtensions.cs" />
     <Compile Include="Utils\ByteReader.cs" />
     <Compile Include="Utils\ByteWriter.cs" />
     <Compile Include="Core\LiteDatabase.cs" />
