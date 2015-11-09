@@ -72,6 +72,17 @@ db.Mapper.Entity<Usuario>()
     - DocumentService (_docsrv) * Insert/Update/Delete/Find
     - EnsureIndex/Find
         - Não contempla transacao
+        
+## Para versão 2
+
+- Criar site simples, bacana, estilos:
+    http://pouchdb.com/ 
+    vuejs.org https://github.com/vuejs/vuejs.org
+    https://hexo.io/ (esse é bem simples e acho q atende bem)
+- Fazer o web shell na mesma pagina (nem q seja via iframe)
+- Colocar documentação neste site
+- Logotipo + Nome
+- Atualizar codeproject
 
 ================================================================================================================
 ================================================================================================================
