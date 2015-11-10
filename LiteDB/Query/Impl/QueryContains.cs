@@ -23,7 +23,9 @@ namespace LiteDB
         {
             var v = _value.Normalize(index.Options);
 
-            return indexer.FindAll(index, Query.Ascending).Where(x => x.Key.AsString.Contains(v));
+            return indexer
+                .FindAll(index, Query.Ascending)
+                .Where(x => x.Key.IsString && x.Key.AsString.Contains(v));
         }
     }
 }
