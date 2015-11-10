@@ -210,8 +210,8 @@ namespace LiteDB
 
                 case BsonType.String: this.Write((String)value.RawValue, length); break;
 
-                //case BsonType.Document: new BsonWriter().WriteDocument(writer, value.AsDocument); break;
-                //case BsonType.Array: new BsonWriter().WriteArray(writer, value.AsArray); break;
+                case BsonType.Document: new BsonWriter().WriteDocument(this, value.AsDocument); break;
+                case BsonType.Array: new BsonWriter().WriteArray(this, value.AsArray); break;
 
                 case BsonType.Binary: this.Write((Byte[])value.RawValue); break;
                 case BsonType.ObjectId: this.Write((ObjectId)value.RawValue); break;

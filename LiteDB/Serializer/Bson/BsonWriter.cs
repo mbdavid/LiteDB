@@ -40,7 +40,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        private void WriteArray(ByteWriter writer, BsonArray array)
+        public void WriteArray(ByteWriter writer, BsonArray array)
         {
             writer.Write(array.GetBytesCount(false));
 

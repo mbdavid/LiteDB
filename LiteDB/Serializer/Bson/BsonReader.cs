@@ -24,7 +24,7 @@ namespace LiteDB
         /// <summary>
         /// Read a BsonDocument from reader
         /// </summary>
-        private BsonDocument ReadDocument(ByteReader reader)
+        public BsonDocument ReadDocument(ByteReader reader)
         {
             var length = reader.ReadInt32();
             var end = reader.Position + length - 5;
@@ -45,7 +45,7 @@ namespace LiteDB
         /// <summary>
         /// Read an BsonArray from reader
         /// </summary>
-        private BsonArray ReadArray(ByteReader reader)
+        public BsonArray ReadArray(ByteReader reader)
         {
             var length = reader.ReadInt32();
             var end = reader.Position + length - 5;

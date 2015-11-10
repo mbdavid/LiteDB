@@ -83,17 +83,20 @@ namespace LiteDB
         /// </summary>
         private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level)
         {
+            // calc key size
+            var keyLength = key.GetBytesCount(false);
+
+            if (keyLength > MAX_INDEX_LENGTH)
+            {
+                throw LiteException.IndexKeyTooLong();
+            }
+
             // creating a new index node 
             var node = new IndexNode(level)
             { 
                 Key = key, 
-                KeyLength = (ushort)key.GetBytesCount(false)
+                KeyLength = (ushort)keyLength
             };
-
-            if (node.KeyLength > MAX_INDEX_LENGTH)
-            {
-                throw LiteException.IndexKeyTooLong();
-            }
 
             // get a free page to insert my index node
             var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
