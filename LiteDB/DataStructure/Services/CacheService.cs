@@ -47,7 +47,6 @@ namespace LiteDB
                 _cache[pageID] = specificPage;
                 
                 return specificPage;
-                //return null;
             }
 
             return (T)page;

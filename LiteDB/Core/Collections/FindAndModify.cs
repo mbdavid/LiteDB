@@ -26,6 +26,8 @@ namespace LiteDB
                 foreach(var doc in docs)
                 {
                     action(doc);
+
+                    this.Update(doc);
                 }
 
                 this.Database.Transaction.Commit();

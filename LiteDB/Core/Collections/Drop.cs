@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Drop a collection deleting all documents and indexes
         /// </summary>
-        public virtual bool Drop()
+        public bool Drop()
         {
             // start transaction
             this.Database.Transaction.Begin();

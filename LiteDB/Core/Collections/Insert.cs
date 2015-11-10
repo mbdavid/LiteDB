@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Insert a new document to this collection. Document Id must be a new value in collection - Returns document Id
         /// </summary>
-        public virtual BsonValue Insert(T document)
+        public BsonValue Insert(T document)
         {
             if (document == null) throw new ArgumentNullException("document");
 

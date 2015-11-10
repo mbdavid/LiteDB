@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class LiteCollection<T>
+    public sealed partial class LiteCollection<T>
         where T : new()
     {
         private uint _pageID;

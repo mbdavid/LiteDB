@@ -16,7 +16,7 @@ namespace LiteDB
         /// </summary>
         /// <param name="field">Document field name (case sensitive)</param>
         /// <param name="options">All index options</param>
-        public virtual bool EnsureIndex(string field, IndexOptions options)
+        public bool EnsureIndex(string field, IndexOptions options)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
             if (options == null) throw new ArgumentNullException("options");
@@ -104,7 +104,7 @@ namespace LiteDB
         /// </summary>
         /// <param name="field">Document field name (case sensitive)</param>
         /// <param name="unique">All index options</param>
-        public virtual bool EnsureIndex(string field, bool unique = false)
+        public bool EnsureIndex(string field, bool unique = false)
         {
             return this.EnsureIndex(field, new IndexOptions { Unique = unique });
         }
@@ -114,7 +114,7 @@ namespace LiteDB
         /// </summary>
         /// <param name="property">Property linq expression</param>
         /// <param name="unique">Create a unique values index?</param>
-        public virtual bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false)
+        public bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false)
         {
             var field = _visitor.GetBsonField(property);
 
@@ -126,7 +126,7 @@ namespace LiteDB
         /// </summary>
         /// <param name="property">Property linq expression</param>
         /// <param name="options">Use all indexes options</param>
-        public virtual bool EnsureIndex<K>(Expression<Func<T, K>> property, IndexOptions options)
+        public bool EnsureIndex<K>(Expression<Func<T, K>> property, IndexOptions options)
         {
             var field = _visitor.GetBsonField(property);
 

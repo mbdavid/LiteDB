@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Remove an document in collection using Document Id - returns false if not found document
         /// </summary>
-        public virtual bool Delete(BsonValue id)
+        public bool Delete(BsonValue id)
         {
             if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
@@ -59,7 +59,7 @@ namespace LiteDB
         /// <summary>
         /// Remove all document based on a Query object. Returns removed document counts
         /// </summary>
-        public virtual int Delete(Query query)
+        public int Delete(Query query)
         {
             // start transaction
             this.Database.Transaction.Begin();
@@ -107,12 +107,12 @@ namespace LiteDB
         /// <summary>
         /// Remove all document based on a LINQ query. Returns removed document counts
         /// </summary>
-        public virtual int Delete(Expression<Func<T, bool>> predicate)
+        public int Delete(Expression<Func<T, bool>> predicate)
         {
             return this.Delete(_visitor.Visit(predicate));
         }
 
-        internal virtual void Delete(CollectionPage col, IndexNode node)
+        internal void Delete(CollectionPage col, IndexNode node)
         {
             // read dataBlock 
             var dataBlock = this.Database.Data.Read(node.DataBlock, false);
