@@ -41,6 +41,7 @@ namespace LiteDB
                     }
                     else
                     {
+                        // index already exists and are the same options
                         return false;
                     }
                 }
@@ -51,7 +52,7 @@ namespace LiteDB
 
             try
             {
-                // if not collection yet, create a new now
+                // if not exists collection yet, create a new now
                 if (col == null)
                 {
                     col = this.Database.Collections.Add(this.Name);
@@ -65,7 +66,7 @@ namespace LiteDB
                 index.Options = options;
 
                 // read all objects (read from PK index)
-                foreach (var node in new QueryAll("_id", 1).Run(this))
+                foreach (var node in new QueryAll("_id", Query.Ascending).Run(this))
                 {
                     var dataBlock = this.Database.Data.Read(node.DataBlock, true);
 
