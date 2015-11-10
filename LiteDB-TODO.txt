@@ -11,6 +11,18 @@
     db.Debugger.TextWriters = Stream();
     db.Debbuger.Counters["Abc"].Times | Count
 
+## Debbuger
+
+db.Debug.Write((s) => Console.Write(s));
+db.Debug.Counters.Enabled = true;
+db.Debug.Counters.DiskReader
+db.Debug.Counters.DiskWriter
+db.Debug.Counters.BsonSerialize
+db.Debug.Counters.BsonDeserialize
+db.Debug.Counters.JournalWrite
+
+
+
 ## Cache
 
 Para saber qual caminho seguir em relação a cache, acho que precisa fazer branchs para testar:
