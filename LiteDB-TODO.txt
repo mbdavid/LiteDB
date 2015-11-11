@@ -8,6 +8,7 @@
     - Somente os metodos externos devem ter AvoidDirtyRead
     - E transacao? Fica aonde? No Externo, sempre. No interno não
     - `lock` pode ter inner lock do mesmo objeto na mesma thread
+    - A BeginTrans() deve ser aberto antes de fazer consultas no banco - para garantir o AvoidDirtyRead
     - O "lock" deve estar por fora do BeginTrans()
             lock(this.Database)
             {
@@ -33,9 +34,6 @@
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache
     
-- FindAndModify (UpdateQuery) deve colocar os objetos em memoria e atualizar depois de rodar todos os Actions pra nao ter problema
-    do cara alterar durante a execuao? Se for o caso acho que posso apenas rodar no foreach(var doc in docs.ToArray())
-
     
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 - Revisar BsonArray.Length não faz cache
@@ -44,6 +42,8 @@
 - Fazer db.Debbuger? Com opção de Verbose, opções de avaliação de timing de performance...
     db.Debugger.TextWriters = Stream();
     db.Debbuger.Counters["Abc"].Times | Count
+    
+- Remover conferencia de opções de um indice - se quiser q drop e recria com outras opções    
 
 ## Debbuger
 
@@ -115,6 +115,41 @@ e) Leitura conforme indice (retorno poucos registros)
 - Colocar documentação neste site
 - Logotipo + Nome
 - Atualizar codeproject
+
+## Vamos fazer??? Vai ser legal e meio insano - quem sabe em uma outra branch?
+
+LiteEngine
+    - Só trabalha com BsonDocument
+    - Query sem Linq (só bsonDocument)
+    - Totalmente interna
+    - Só faz o minimo de acesso a engine
+    - Cuida das transacoes, locks?! A pensar
+    - Inclui a query
+    - A solução final pode não ficar tão eficiente quando que temos hoje, mas acho que há uma melhora na redução de bugs
+
+LiteEngine(IDiskService) {
+    // AllServices
+    
+    Insert(colName, myDocInBson) : id
+    Update(colName, myId, myDocInBson): bool
+    Delete(colName, query) : int
+    Query(colName, query) : IEnumerable<BsonDocument>
+    Min\Max\Count\Exists(colName, query)
+    EnsureIndex(colName, fieldName) : bool
+    DropIndex(colName, fieldName) : bool
+    RenameCollection(colName, newName) : bool
+    
+    GetIndexes(colName) ? para que? só se for pro Shell?!
+   
+}
+
+## Modulos
+- Engine
+    - QueryEngine
+- Mapper
+- Outros: Linq, shell, fileStorage
+- API
+
 
 ================================================================================================================
 ================================================================================================================

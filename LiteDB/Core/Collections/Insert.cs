@@ -21,11 +21,11 @@ namespace LiteDB
 
                 try
                 {
-                    var result = this.InsertDocument(document);
+                    var id = this.InsertDocument(document);
 
                     this.Database.Transaction.Commit();
 
-                    return result;
+                    return id;
                 }
                 catch
                 {
@@ -69,7 +69,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Internal implementation of Insert a document - no trans, no locks
+        /// Internal implementation of Insert a document. Returns document _id - no trans, no locks
         /// </summary>
         private BsonValue InsertDocument(T document)
         {

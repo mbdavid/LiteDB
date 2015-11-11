@@ -53,7 +53,7 @@ namespace LiteDB
             };
 
             // cloning this collection and adding this include
-            var newcol = new LiteCollection<T>(this.Database, Name);
+            var newcol = new LiteCollection<T>(this.Database, this.Name);
 
             newcol._pageID = _pageID;
             newcol._includes.AddRange(_includes);
