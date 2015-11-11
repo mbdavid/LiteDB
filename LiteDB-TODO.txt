@@ -124,8 +124,9 @@ LiteEngine
     - Totalmente interna
     - Só faz o minimo de acesso a engine
     - Cuida das transacoes, locks?! A pensar
-    - Inclui a query
-    - A solução final pode não ficar tão eficiente quando que temos hoje, mas acho que há uma melhora na redução de bugs
+    - Inclui a QueryEngine
+    - A solução final pode não ficar tão eficiente quando que temos hoje, mas acho que há uma melhora na redução de bugs e complexidade
+    - Não pode ter estado (begintrans/commit) - a execução de um metodo deve sempre ser igual a outra
 
 LiteEngine(IDiskService) {
     // AllServices
@@ -147,7 +148,8 @@ LiteEngine(IDiskService) {
 - Engine
     - QueryEngine
 - Mapper
-- Outros: Linq, shell, fileStorage
+- Utils
+    - Linq, shell, fileStorage, fts
 - API
 
 
