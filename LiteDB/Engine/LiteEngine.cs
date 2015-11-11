@@ -61,6 +61,12 @@ namespace LiteDB
         {
             uint pageID;
 
+            // read if data file was changed by another process - if changed, reset my collection pageId cache
+            if(_transaction.AvoidDirtyRead())
+            {
+                _collectionPages = new Dictionary<string, uint>();
+            }
+
             // check if pageID is in my dictionary
             if(_collectionPages.TryGetValue(name, out pageID))
             {

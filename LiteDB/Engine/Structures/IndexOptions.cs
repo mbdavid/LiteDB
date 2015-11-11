@@ -15,31 +15,26 @@ namespace LiteDB
         /// <summary>
         /// Unique keys?
         /// </summary>
-        [BsonField("unique")]
         public bool Unique { get; set; }
 
         /// <summary>
         /// Ignore case? (convert all strings to lowercase)
         /// </summary>
-        [BsonField("ignoreCase")]
         public bool IgnoreCase { get; set; }
 
         /// <summary>
         /// Remove all whitespace on start/end string?
         /// </summary>
-        [BsonField("trimWhitespace")]
         public bool TrimWhitespace { get; set; }
 
         /// <summary>
         /// Convert all empty string to null?
         /// </summary>
-        [BsonField("emptyStringToNull")]
         public bool EmptyStringToNull { get; set; }
 
         /// <summary>
         /// Removing accents on string?
         /// </summary>
-        [BsonField("removeAccents")]
         public bool RemoveAccents { get; set; }
 
         public IndexOptions()

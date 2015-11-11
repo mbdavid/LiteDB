@@ -9,19 +9,66 @@ namespace LiteDB
 {
     internal partial class LiteEngine : IDisposable
     {
+        /// <summary>
+        /// Returns all collection inside datafile
+        /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            return null;
+            _transaction.AvoidDirtyRead();
+
+            return _collections.GetAll().Select(x => x.CollectionName);
         }
 
+        /// <summary>
+        /// Drop collection including all documents, indexes and extended pages
+        /// </summary>
         public bool DropCollection(string colName)
         {
+            // get collection page
+            var col = this.GetCollectionPage(colName, false);
+
+            if(col == null) return false;
+
+            _collections.Drop(col);
+
             return true;
         }
 
+        /// <summary>
+        /// Rename a collection
+        /// </summary>
         public bool RenameCollection(string colName, string newName)
         {
-            return true;
+            lock(_locker)
+            try
+            {
+                _transaction.Begin();
+
+                // get my collection - no col, no rename
+                var col = GetCollectionPage(colName, false);
+
+                if(col == null)
+                {
+                    _transaction.Commit();
+                    return false;
+                }
+
+                // change collection name and save
+                col.CollectionName = newName;
+                _pager.SetDirty(col);
+
+                // remove from collection cache
+                _collectionPages.Remove(colName);
+
+                _transaction.Commit();
+
+                return true;
+            }
+            catch
+            {
+                _transaction.Rollback();
+                throw;
+            }
         }
     }
 }

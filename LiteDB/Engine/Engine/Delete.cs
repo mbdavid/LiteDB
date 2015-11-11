@@ -14,6 +14,7 @@ namespace LiteDB
         /// </summary>
         public int DeleteDocuments(string colName, Query query)
         {
+            lock(_locker)
             try
             {
                 // start new transaction

@@ -13,8 +13,6 @@ namespace LiteDB
         {
             lock(_locker)
             {
-                _transaction.AvoidDirtyRead();
-
                 // get my collection page
                 var col = this.GetCollectionPage(colName, false);
 

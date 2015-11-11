@@ -2,6 +2,7 @@
 
 - Revisar help do Shell - saiu varias coisas
 - Mapper de indice está fora do ar
+- No metodos do engine, a primeria coisa q faco é o GetCollecionPage()/BeginTrans? Usar avoid lá dentro?
 - Thread Safe
     - Deve ter metodos internos para fazer a operacao SEM lock nos metodos private
     - Somente os metodos externos devem ter LOCK

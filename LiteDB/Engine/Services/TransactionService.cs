@@ -29,8 +29,6 @@ namespace LiteDB
         {
             if(_trans == true) throw new SystemException("Begin transaction");
 
-            this.AvoidDirtyRead();
-
             // lock (or try to) datafile
             _disk.Lock();
 
@@ -98,16 +96,16 @@ namespace LiteDB
         /// This method must be called before read/write operation to avoid dirty reads.
         /// It's occurs when my cache contains pages that was changed in another process
         /// </summary>
-        public void AvoidDirtyRead()
+        public bool AvoidDirtyRead()
         {
             lock (_disk)
             {
                 // if is in transaction pages are not dirty (begin trans was checked)
-                if (_trans == true) return;
+                if (_trans == true) return false;
 
                 var cache = _cache.GetPage<HeaderPage>(0);
 
-                if (cache == null) return;
+                if (cache == null) return false;
 
                 // read change direct from disk
                 var change = _disk.GetChangeID();
@@ -117,7 +115,10 @@ namespace LiteDB
                 {
                     //Console.WriteLine("Datafile changed, clear cache");
                     _cache.Clear();
+                    return true;
                 }
+
+                return false;
             }
         }
     }
