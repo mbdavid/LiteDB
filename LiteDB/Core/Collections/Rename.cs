@@ -22,7 +22,7 @@ namespace LiteDB
 
                 if (col == null)
                 {
-                    this.Database.Transaction.Abort();
+                    this.Database.Transaction.Commit();
                     return false;
                 }
 

@@ -3,6 +3,40 @@
 - Revisar transação - Remover possibilidade
     - A transacao deve ficar sempre na operacao mais externa
 - Thread Safe
+    - Deve ter metodos internos para fazer a operacao SEM lock nos metodos private
+    - Somente os metodos externos devem ter LOCK
+    - Somente os metodos externos devem ter AvoidDirtyRead
+    - E transacao? Fica aonde? No Externo, sempre. No interno não
+    - `lock` pode ter inner lock do mesmo objeto na mesma thread
+    - O "lock" deve estar por fora do BeginTrans()
+            lock(this.Database)
+            {
+                this.Database.Transaction.Begin();
+
+                try
+                {
+                    var result = this.UpdateDocument(id, doc);
+
+                    this.Database.Transaction.Commit();
+
+                    return result;
+                }
+                catch
+                {
+                    this.Database.Transaction.Rollback();
+                    throw;
+                }
+            }
+    - Mesmo comandos de QUERY devem ter LOCK por causa do uso da CACHE (ou faço lock na cache?)            
+
+    - Insert/Update/Delete/EnsureIndex/DropIndex/Rename
+    - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
+    - Avaliar uso do ConcurrentDictionary na cache
+    
+- FindAndModify (UpdateQuery) deve colocar os objetos em memoria e atualizar depois de rodar todos os Actions pra nao ter problema
+    do cara alterar durante a execuao? Se for o caso acho que posso apenas rodar no foreach(var doc in docs.ToArray())
+
+    
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 - Revisar BsonArray.Length não faz cache
 - Implementar StreamDiskService()

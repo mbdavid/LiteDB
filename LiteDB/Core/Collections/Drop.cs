@@ -13,33 +13,36 @@ namespace LiteDB
         /// </summary>
         public bool Drop()
         {
-            // start transaction
-            this.Database.Transaction.Begin();
-
-            try
+            lock(_locker)
             {
-                var col = this.GetCollectionPage(false);
+                // start transaction
+                this.Database.Transaction.Begin();
 
-                // if collection not exists, no drop
-                if (col == null)
+                try
                 {
-                    this.Database.Transaction.Abort();
-                    return false;
+                    var col = this.GetCollectionPage(false);
+
+                    // if collection not exists, no drop
+                    if (col == null)
+                    {
+                        this.Database.Transaction.Commit();
+                        return false;
+                    }
+
+                    // delete all data pages + indexes pages
+                    this.Database.Collections.Drop(col);
+
+                    _pageID = uint.MaxValue;
+
+                    this.Database.Transaction.Commit();
+
+                    return true;
                 }
-
-                // delete all data pages + indexes pages
-                this.Database.Collections.Drop(col);
-
-                _pageID = uint.MaxValue;
-
-                this.Database.Transaction.Commit();
-
-                return true;
-            }
-            catch
-            {
-                this.Database.Transaction.Rollback();
-                throw;
+                catch
+                {
+                    this.Database.Transaction.Rollback();
+                    throw;
+                }
             }
         }
     }

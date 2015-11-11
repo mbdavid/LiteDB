@@ -10,97 +10,30 @@ namespace LiteDB
     public partial class LiteCollection<T>
     {
         /// <summary>
-        /// Remove an document in collection using Document Id - returns false if not found document
-        /// </summary>
-        public bool Delete(BsonValue id)
-        {
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
-
-            // start transaction
-            this.Database.Transaction.Begin();
-
-            try
-            {
-                var col = this.GetCollectionPage(false);
-
-                // if collection not exists, document do not exists too
-                if (col == null)
-                {
-                    this.Database.Transaction.Abort();
-                    return false;
-                }
-
-                // normalize id before find
-                var value = id.Normalize(col.PK.Options);
-
-                // find indexNode using PK index
-                var node = this.Database.Indexer.Find(col.PK, value, false, Query.Ascending);
-
-                // if not found, abort transaction and returns false
-                if (node == null)
-                {
-                    this.Database.Transaction.Abort();
-                    return false;
-                }
-
-                this.Delete(col, node);
-
-                this.Database.Transaction.Commit();
-
-                return true;
-            }
-            catch
-            {
-                this.Database.Transaction.Rollback();
-                throw;
-            }
-        }
-
-        /// <summary>
         /// Remove all document based on a Query object. Returns removed document counts
         /// </summary>
         public int Delete(Query query)
         {
-            // start transaction
-            this.Database.Transaction.Begin();
+            if(query == null) throw new ArgumentNullException("query");
 
-            try
+            lock(_locker)
             {
-                var col = this.GetCollectionPage(false);
+                // start transaction
+                this.Database.Transaction.Begin();
 
-                // no collection, no document - abort trans
-                if (col == null)
+                try
                 {
-                    this.Database.Transaction.Abort();
-                    return 0;
+                    var count = this.DeleteDocuments(query);
+
+                    this.Database.Transaction.Commit();
+
+                    return count;
                 }
-
-                var count = 0;
-
-                // find nodes
-                var nodes = query.Run<T>(this);
-
-                foreach (var node in nodes)
+                catch (Exception ex)
                 {
-                    this.Delete(col, node);
-                    count++;
+                    this.Database.Transaction.Rollback();
+                    throw ex;
                 }
-
-                // no deletes, just abort transaction (no writes)
-                if (count == 0)
-                {
-                    this.Database.Transaction.Abort();
-                    return 0;
-                }
-
-                this.Database.Transaction.Commit();
-
-                return count;
-            }
-            catch (Exception ex)
-            {
-                this.Database.Transaction.Rollback();
-                throw ex;
             }
         }
 
@@ -112,19 +45,49 @@ namespace LiteDB
             return this.Delete(_visitor.Visit(predicate));
         }
 
-        internal void Delete(CollectionPage col, IndexNode node)
+        /// <summary>
+        /// Remove an document in collection using Document Id - returns false if not found document
+        /// </summary>
+        public bool Delete(BsonValue id)
         {
-            // read dataBlock 
-            var dataBlock = this.Database.Data.Read(node.DataBlock, false);
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
-            // lets remove all indexes that point to this in dataBlock
-            foreach (var index in col.GetIndexes(true))
+            return this.Delete(Query.EQ("_id", id)) > 0;
+        }
+
+        /// <summary>
+        /// Internal implementation to delete a document - no trans, no locks
+        /// </summary>
+        internal int DeleteDocuments(Query query)
+        {
+            var col = this.GetCollectionPage(false);
+
+            // no collection, no document - abort trans
+            if (col == null) return 0;
+
+            var count = 0;
+
+            // find nodes
+            var nodes = query.Run<T>(this);
+
+            foreach (var node in nodes)
             {
-                this.Database.Indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
+                // read dataBlock 
+                var dataBlock = this.Database.Data.Read(node.DataBlock, false);
+
+                // lets remove all indexes that point to this in dataBlock
+                foreach (var index in col.GetIndexes(true))
+                {
+                    this.Database.Indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
+                }
+
+                // remove object data
+                this.Database.Data.Delete(col, node.DataBlock);
+
+                count++;
             }
 
-            // remove object data
-            this.Database.Data.Delete(col, node.DataBlock);
+            return count;
         }
     }
 }

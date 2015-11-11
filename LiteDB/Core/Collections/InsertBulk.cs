@@ -15,40 +15,41 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
             if (buffer < 100) throw new ArgumentException("buffer must be bigger than 100");
-            if (this.Database.Transaction.IsInTransaction) throw LiteException.InvalidTransaction();
 
             var enumerator = docs.GetEnumerator();
             var count = 0;
 
-            while (true)
+            lock(_locker)
             {
-                var buff = buffer;
-
-                this.Database.Transaction.Begin();
-
-                try
+                while (true)
                 {
-                    var more = true;
+                    var buff = buffer;
 
-                    while (buff > 0 && (more = enumerator.MoveNext()))
+                    this.Database.Transaction.Begin();
+
+                    try
                     {
-                        this.Insert(enumerator.Current);
-                        buff--;
-                        count++;
+                        var more = true;
+
+                        while (buff > 0 && (more = enumerator.MoveNext()))
+                        {
+                            this.InsertDocument(enumerator.Current);
+                            buff--;
+                            count++;
+                        }
+
+                        this.Database.Transaction.Commit();
+
+                        if (more == false)
+                        {
+                            return count;
+                        }
                     }
-
-                    this.Database.Transaction.Commit();
-                    this.Database.Cache.Clear();
-
-                    if (more == false)
+                    catch
                     {
-                        return count;
+                        this.Database.Transaction.Rollback();
+                        throw;
                     }
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
                 }
             }
         }

@@ -119,8 +119,7 @@ namespace LiteDB
                 }
 
                 // read bytes from data file
-                _stream.Read(buffer, 0, BasePage.PAGE_SIZE); 
-
+                _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
             });
 
             return buffer;
@@ -160,7 +159,7 @@ namespace LiteDB
                 });
             }
 
-            Console.WriteLine("journal write " + pageID);
+            //Console.WriteLine("journal write " + pageID);
 
             // just write original bytes in order that are changed
             _journal.Write(data, 0, BasePage.PAGE_SIZE);
@@ -243,7 +242,7 @@ namespace LiteDB
                     fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
                 }
 
-                Console.WriteLine("recovery " + pageID);
+                //Console.WriteLine("recovery " + pageID);
 
                 // write in stream
                 _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);

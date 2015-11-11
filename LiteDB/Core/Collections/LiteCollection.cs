@@ -13,6 +13,9 @@ namespace LiteDB
         private List<Action<BsonDocument>> _includes;
         private QueryVisitor<T> _visitor;
 
+        // Use a locker object (LiteDatabase) to thread safe
+        private object _locker;
+
         /// <summary>
         /// Get collection name
         /// </summary>
@@ -30,6 +33,7 @@ namespace LiteDB
             _pageID = uint.MaxValue;
             _visitor = new QueryVisitor<T>(db.Mapper);
             _includes = new List<Action<BsonDocument>>();
+            _locker = db;
         }
 
         /// <summary>
@@ -37,13 +41,6 @@ namespace LiteDB
         /// </summary>
         internal CollectionPage GetCollectionPage(bool addIfNotExits)
         {
-            // when a operation is read-only, request collection page without add new one
-            // use this moment to check if data file was changed (if in transaction, do nothing)
-            if (addIfNotExits == false)
-            {
-                this.Database.Transaction.AvoidDirtyRead();
-            }
-
             // _pageID never change, even if data file was changed
             if (_pageID == uint.MaxValue)
             {

@@ -14,7 +14,7 @@ namespace LiteDB
     /// </summary>
     internal class CacheService : IDisposable
     {
-        // single cache structure
+        // single cache structure - use Sort dictionary for get pages in order (fast to store in sequence on disk)
         private SortedDictionary<uint, BasePage> _cache;
         private SortedDictionary<uint, BasePage> _dirty;
 
@@ -44,7 +44,10 @@ namespace LiteDB
 
                 specificPage.ReadPage(page.DiskData);
                 
-                _cache[pageID] = specificPage;
+                lock(_cache)
+                {
+                    _cache[pageID] = specificPage;
+                }
                 
                 return specificPage;
             }
@@ -58,24 +61,27 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page, bool dirty = false)
         {
-            // do not cache extend page - never will be reused
-            if (page.PageType != PageType.Extend)
+            lock(_cache)
             {
-                _cache[page.PageID] = page;
-            }
-
-            // page is dirty? add in a special list too and mark as dirty (all type of pages)
-            if (dirty && !page.IsDirty)
-            {
-                page.IsDirty = true;
-                _dirty[page.PageID] = page;
-                _cache[page.PageID] = page;
-
-                // if page is new (not exits on datafile), there is no journal for them
-                if(page.DiskData.Length > 0)
+                // do not cache extend page - never will be reused
+                if (page.PageType != PageType.Extend)
                 {
-                    // call action passing dirty page - used for journal file writes 
-                    MarkAsDirtyAction(page);
+                    _cache[page.PageID] = page;
+                }
+
+                // page is dirty? add in a special list too and mark as dirty (all type of pages)
+                if (dirty && !page.IsDirty)
+                {
+                    page.IsDirty = true;
+                    _dirty[page.PageID] = page;
+                    _cache[page.PageID] = page;
+
+                    // if page is new (not exits on datafile), there is no journal for them
+                    if(page.DiskData.Length > 0)
+                    {
+                        // call action passing dirty page - used for journal file writes 
+                        MarkAsDirtyAction(page);
+                    }
                 }
             }
         }
@@ -87,8 +93,11 @@ namespace LiteDB
         {
             var hasDirty = _dirty.Count > 0;
 
-            _dirty.Clear();
-            _cache.Clear();
+            lock(_cache)
+            {
+                _dirty.Clear();
+                _cache.Clear();
+            }
 
             return hasDirty;
         }
@@ -98,12 +107,21 @@ namespace LiteDB
         /// </summary>
         public void ClearDirty()
         {
-            foreach(var page in _dirty.Values)
+            lock(_cache)
             {
-                page.IsDirty = false;
-            }
+                foreach(var page in _dirty.Values)
+                {
+                    page.IsDirty = false;
 
-            _dirty.Clear();
+                    // remove all non-header-collection pages (this can be optional in future)
+                    if (page.PageType != PageType.Header && page.PageType != PageType.Collection)
+                    {
+                        _cache.Remove(page.PageID);
+                    }
+                }
+
+                _dirty.Clear();
+            }
         }
 
         public bool HasDirtyPages { get { return _dirty.Count() > 0; } }

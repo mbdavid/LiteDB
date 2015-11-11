@@ -30,18 +30,24 @@ namespace LiteDB
             {
                 page = new T();
 
-                var buffer = _disk.ReadPage(pageID);
+                lock(_disk)
+                {
+                    var buffer = _disk.ReadPage(pageID);
 
-                page.ReadPage(buffer);
+                    page.ReadPage(buffer);
 
-                Console.WriteLine("read " + pageID + " (" + typeof(T).Name + ")");
+                    //Console.WriteLine("read " + pageID + " (" + typeof(T).Name + ")");
                     
-                _cache.AddPage(page);
+                    _cache.AddPage(page);
+                }
             }
 
             return page;
         }
 
+        /// <summary>
+        /// Add a page to cache and mark them as dirty too.
+        /// </summary>
         public void SetDirty(BasePage page)
         {
             _cache.AddPage(page, true);

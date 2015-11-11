@@ -24,79 +24,82 @@ namespace LiteDB
 
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw LiteException.InvalidFormat("IndexField", field);
 
-            // do not create collection at this point
-            var col = this.GetCollectionPage(false);
-
-            if (col != null)
+            lock (_locker)
             {
-                // check if index already exists but has diferent options
-                var existsIndex = col.GetIndex(field);
+                // do not create collection at this point
+                var col = this.GetCollectionPage(false);
 
-                if (existsIndex != null)
+                if (col != null)
                 {
-                    if(!options.Equals(existsIndex.Options))
+                    // check if index already exists but has diferent options
+                    var existsIndex = col.GetIndex(field);
+
+                    if (existsIndex != null)
                     {
-                        // drop index and create another
-                        this.DropIndex(field);
+                        if(!options.Equals(existsIndex.Options))
+                        {
+                            // drop index and create another
+                            this.DropIndex(field);
+                        }
+                        else
+                        {
+                            // index already exists and are the same options
+                            return false;
+                        }
                     }
-                    else
+                };
+
+                // start transaction
+                this.Database.Transaction.Begin();
+
+                try
+                {
+                    // if not exists collection yet, create a new now
+                    if (col == null)
                     {
-                        // index already exists and are the same options
-                        return false;
+                        col = this.Database.Collections.Add(this.Name);
+                        _pageID = col.PageID;
                     }
+
+                    // create index head
+                    var index = this.Database.Indexer.CreateIndex(col);
+
+                    index.Field = field;
+                    index.Options = options;
+
+                    // read all objects (read from PK index)
+                    foreach (var node in new QueryAll("_id", Query.Ascending).Run(this))
+                    {
+                        var dataBlock = this.Database.Data.Read(node.DataBlock, true);
+
+                        // read object
+                        var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                        // adding index
+                        var key = doc.Get(field);
+
+                        var newNode = this.Database.Indexer.AddNode(index, key);
+
+                        // adding this new index Node to indexRef
+                        dataBlock.IndexRef[index.Slot] = newNode.Position;
+
+                        // link index node to datablock
+                        newNode.DataBlock = dataBlock.Position;
+
+                        // mark datablock page as dirty
+                        this.Database.Pager.SetDirty(dataBlock.Page);
+                    }
+
+                    this.Database.Transaction.Commit();
+
+                    return true;
                 }
-            };
-
-            // start transaction
-            this.Database.Transaction.Begin();
-
-            try
-            {
-                // if not exists collection yet, create a new now
-                if (col == null)
+                catch
                 {
-                    col = this.Database.Collections.Add(this.Name);
-                    _pageID = col.PageID;
+                    this.Database.Transaction.Rollback();
+                    throw;
                 }
-
-                // create index head
-                var index = this.Database.Indexer.CreateIndex(col);
-
-                index.Field = field;
-                index.Options = options;
-
-                // read all objects (read from PK index)
-                foreach (var node in new QueryAll("_id", Query.Ascending).Run(this))
-                {
-                    var dataBlock = this.Database.Data.Read(node.DataBlock, true);
-
-                    // read object
-                    var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
-                    // adding index
-                    var key = doc.Get(field);
-
-                    var newNode = this.Database.Indexer.AddNode(index, key);
-
-                    // adding this new index Node to indexRef
-                    dataBlock.IndexRef[index.Slot] = newNode.Position;
-
-                    // link index node to datablock
-                    newNode.DataBlock = dataBlock.Position;
-
-                    // mark datablock page as dirty
-                    this.Database.Pager.SetDirty(dataBlock.Page);
-                }
-
-                this.Database.Transaction.Commit();
             }
-            catch
-            {
-                this.Database.Transaction.Rollback();
-                throw;
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -189,7 +192,6 @@ namespace LiteDB
             return index;
         }
 
-
         /// <summary>
         /// Drop index and release slot for another index
         /// </summary>
@@ -198,46 +200,49 @@ namespace LiteDB
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
             if (field == "_id") throw LiteException.IndexDropId();
 
-            // start transaction
-            this.Database.Transaction.Begin();
-
-            try
+            lock(_locker)
             {
-                var col = this.GetCollectionPage(false);
+                // start transaction
+                this.Database.Transaction.Begin();
 
-                // if collection not exists, no drop
-                if (col == null)
+                try
                 {
-                    this.Database.Transaction.Abort();
-                    return false;
+                    var col = this.GetCollectionPage(false);
+
+                    // if collection not exists, no drop
+                    if (col == null)
+                    {
+                        this.Database.Transaction.Commit();
+                        return false;
+                    }
+
+                    // search for index reference
+                    var index = col.GetIndex(field);
+
+                    if (index == null)
+                    {
+                        this.Database.Transaction.Commit();
+                        return false;
+                    }
+
+                    // delete all data pages + indexes pages
+                    this.Database.Indexer.DropIndex(index);
+
+                    // clear index reference
+                    index.Clear();
+
+                    // save collection page
+                    this.Database.Pager.SetDirty(col);
+
+                    this.Database.Transaction.Commit();
+
+                    return true;
                 }
-
-                // search for index reference
-                var index = col.GetIndex(field);
-
-                if (index == null)
+                catch
                 {
-                    this.Database.Transaction.Abort();
-                    return false;
+                    this.Database.Transaction.Rollback();
+                    throw;
                 }
-
-                // delete all data pages + indexes pages
-                this.Database.Indexer.DropIndex(index);
-
-                // clear index reference
-                index.Clear();
-
-                // save collection page
-                this.Database.Pager.SetDirty(col);
-
-                this.Database.Transaction.Commit();
-
-                return true;
-            }
-            catch
-            {
-                this.Database.Transaction.Rollback();
-                throw;
             }
         }
     }

@@ -32,9 +32,6 @@ namespace LiteDB
             if (file == null) throw new ArgumentNullException("id");
             if (stream == null) throw new ArgumentNullException("stream");
 
-            // no transaction allowed
-            if (this.Database.Transaction.IsInTransaction) throw LiteException.InvalidTransaction();
-
             file.UploadDate = DateTime.Now;
 
             // insert file in _files collections with 0 file length
@@ -189,8 +186,6 @@ namespace LiteDB
         public bool Delete(string id)
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
-
-            if (this.Database.Transaction.IsInTransaction) throw LiteException.InvalidTransaction();
 
             // remove file reference in _files
             var d = this.Files.Delete(id);
