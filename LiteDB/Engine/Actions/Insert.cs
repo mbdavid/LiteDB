@@ -14,14 +14,9 @@ namespace LiteDB
         /// </summary>
         public int InsertDocuments(string colName, IEnumerable<BsonDocument> docs)
         {
-            lock(_locker)
-            try
+            return this.Transaction<int>(colName, true, (col) =>
             {
-                // start transaction
-                _transaction.Begin();
-
                 var count = 0;
-                var col = this.GetCollectionPage(colName, true);
 
                 foreach (var doc in docs)
                 {
@@ -36,7 +31,6 @@ namespace LiteDB
                     // test if _id is a valid type
                     if (id.IsNull || id.IsMinValue || id.IsMaxValue)
                     {
-                        _transaction.Rollback();
                         throw LiteException.InvalidDataType("_id", id);
                     }
 
@@ -70,15 +64,8 @@ namespace LiteDB
                     count++;
                 }
 
-                _transaction.Commit();
-
-                return count;
-            }
-            catch
-            {
-                _transaction.Rollback();
-                throw;
-            }
+                return count++;
+            });
         }
     }
 }

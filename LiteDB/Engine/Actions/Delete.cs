@@ -14,20 +14,10 @@ namespace LiteDB
         /// </summary>
         public int DeleteDocuments(string colName, Query query)
         {
-            lock(_locker)
-            try
+            return this.Transaction<int>(colName, false, (col) =>
             {
-                // start new transaction
-                _transaction.Begin();
-
-                var col = this.GetCollectionPage(colName, false);
-
                 // no collection, no document - abort trans
-                if (col == null)
-                {
-                    _transaction.Commit();
-                    return 0;
-                }
+                if (col == null) return 0;
 
                 var count = 0;
 
@@ -51,15 +41,8 @@ namespace LiteDB
                     count++;
                 }
 
-                _transaction.Commit();
-
                 return count;
-            }
-            catch
-            {
-                _transaction.Rollback();
-                throw;
-            }
+            });
         }
     }
 }

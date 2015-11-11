@@ -14,21 +14,10 @@ namespace LiteDB
         /// </summary>
         public bool EnsureIndex(string colName, string field, IndexOptions options)
         {
-            lock (_locker)
-            try
+            return this.Transaction<bool>(colName, true, (col) =>
             {
-                // start transaction
-                _transaction.Begin();
-
-                // do not create collection at this point
-                var col = this.GetCollectionPage(colName, true);
-
                 // check if index already exists
-                if (col.GetIndex(field) != null)
-                {
-                    _transaction.Commit();
-                    return false;
-                }
+                if (col.GetIndex(field) != null) return false;
 
                 // create index head
                 var index = _indexer.CreateIndex(col);
@@ -59,15 +48,39 @@ namespace LiteDB
                     _pager.SetDirty(dataBlock.Page);
                 }
 
-                _transaction.Commit();
+                return true;
+            });
+        }
+
+        /// <summary>
+        /// Drop an index from a collection
+        /// </summary>
+        public bool DropIndex(string colName, string field)
+        {
+            if (field == "_id") throw LiteException.IndexDropId();
+
+            return this.Transaction<bool>(colName, false, (col) =>
+            {
+                // no collection, no index
+                if (col == null) return false;
+
+                // search for index reference
+                var index = col.GetIndex(field);
+
+                // no index, no drop
+                if (index == null) return false;
+
+                // delete all data pages + indexes pages
+                _indexer.DropIndex(index);
+
+                // clear index reference
+                index.Clear();
+
+                // save collection page
+                _pager.SetDirty(col);
 
                 return true;
-            }
-            catch
-            {
-                _transaction.Rollback();
-                throw;
-            }
+            });
         }
 
         /// <summary>
@@ -89,55 +102,6 @@ namespace LiteDB
                     .Add("removeAccents", index.Options.RemoveAccents)
                     .Add("trimWhitespace", index.Options.TrimWhitespace)
                     .Add("emptyStringToNull", index.Options.EmptyStringToNull);
-            }
-        }
-
-        public bool DropIndex(string colName, string field)
-        {
-            if (field == "_id") throw LiteException.IndexDropId();
-
-            lock (_locker)
-            try
-            {
-                // start transaction
-                _transaction.Begin();
-
-                var col = this.GetCollectionPage(colName, false);
-
-                // no collection, no index
-                if (col == null)
-                {
-                    _transaction.Commit();
-                    return false;
-                }
-
-                // search for index reference
-                var index = col.GetIndex(field);
-
-                // no index, no drop
-                if (index == null)
-                {
-                    _transaction.Commit();
-                    return false;
-                }
-
-                // delete all data pages + indexes pages
-                _indexer.DropIndex(index);
-
-                // clear index reference
-                index.Clear();
-
-                // save collection page
-                _pager.SetDirty(col);
-
-                _transaction.Commit();
-
-                return true;
-            }
-            catch
-            {
-                _transaction.Rollback();
-                throw;
             }
         }
     }

@@ -14,20 +14,12 @@ namespace LiteDB
         /// </summary>
         public int UpdateDocuments(string colName, IEnumerable<BsonDocument> docs)
         {
-            lock (_locker)
-            try
+            return this.Transaction<int>(colName, false, (col) =>
             {
-                _transaction.Begin();
-
                 var count = 0;
-                var col = this.GetCollectionPage(colName, false);
 
                 // if no collection, no updates
-                if (col == null)
-                {
-                    _transaction.Commit();
-                    return 0;
-                }
+                if (col == null) return 0;
 
                 foreach (var doc in docs)
                 {
@@ -75,15 +67,8 @@ namespace LiteDB
                     count++;
                 }
 
-                _transaction.Commit();
-
                 return count;
-            }
-            catch
-            {
-                _transaction.Rollback();
-                throw;
-            }
+            });
         }
     }
 }

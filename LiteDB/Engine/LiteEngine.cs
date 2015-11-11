@@ -57,7 +57,7 @@ namespace LiteDB
         /// <summary>
         /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
         /// </summary>
-        internal CollectionPage GetCollectionPage(string name, bool addIfNotExits)
+        private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
         {
             uint pageID;
 
@@ -91,6 +91,31 @@ namespace LiteDB
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Encapsulate all transaction commands in same data structure
+        /// </summary>
+        private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
+        {
+            lock(_locker)
+            try
+            {
+                _transaction.Begin();
+
+                var col = this.GetCollectionPage(colName, addIfNotExists);
+
+                var result = action(col);
+
+                _transaction.Commit();
+
+                return result;
+            }
+            catch
+            {
+                _transaction.Rollback();
+                throw;
+            }
         }
 
         public void Dispose()

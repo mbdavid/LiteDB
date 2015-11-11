@@ -39,19 +39,9 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string colName, string newName)
         {
-            lock(_locker)
-            try
+            return this.Transaction<bool>(colName, false, (col) =>
             {
-                _transaction.Begin();
-
-                // get my collection - no col, no rename
-                var col = GetCollectionPage(colName, false);
-
-                if(col == null)
-                {
-                    _transaction.Commit();
-                    return false;
-                }
+                if(col == null) return false;
 
                 // change collection name and save
                 col.CollectionName = newName;
@@ -60,15 +50,8 @@ namespace LiteDB
                 // remove from collection cache
                 _collectionPages.Remove(colName);
 
-                _transaction.Commit();
-
                 return true;
-            }
-            catch
-            {
-                _transaction.Rollback();
-                throw;
-            }
+            });
         }
     }
 }

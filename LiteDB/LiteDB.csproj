@@ -52,13 +52,13 @@
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
     <Compile Include="Engine\Disks\IDiskService.cs" />
-    <Compile Include="Engine\Engine\Delete.cs" />
-    <Compile Include="Engine\Engine\Find.cs" />
-    <Compile Include="Engine\Engine\Index.cs" />
-    <Compile Include="Engine\Engine\Collection.cs" />
-    <Compile Include="Engine\Engine\Aggregate.cs" />
-    <Compile Include="Engine\Engine\Update.cs" />
-    <Compile Include="Engine\Engine\Insert.cs" />
+    <Compile Include="Engine\Actions\Delete.cs" />
+    <Compile Include="Engine\Actions\Find.cs" />
+    <Compile Include="Engine\Actions\Index.cs" />
+    <Compile Include="Engine\Actions\Collection.cs" />
+    <Compile Include="Engine\Actions\Aggregate.cs" />
+    <Compile Include="Engine\Actions\Update.cs" />
+    <Compile Include="Engine\Actions\Insert.cs" />
     <Compile Include="Engine\LiteEngine.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />

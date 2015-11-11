@@ -19,18 +19,18 @@ namespace LiteDB
         {
             if (dbref == null) throw new ArgumentNullException("dbref");
 
-            var propPath = dbref.GetPath();
+            var path = dbref.GetPath();
 
             Action<BsonDocument> action = (bson) =>
             {
-                var prop = bson.Get(propPath);
+                var value = bson.Get(path);
 
-                if(prop.IsNull) return;
+                if(value.IsNull) return;
 
                 // if property value is an array, populate all values
-                if(prop.IsArray)
+                if(value.IsArray)
                 {
-                    var array = prop.AsArray;
+                    var array = value.AsArray;
                     if(array.Count == 0) return;
 
                     // all doc refs in an array must be same collection, lets take first only
@@ -45,10 +45,10 @@ namespace LiteDB
                 else
                 {
                     // for BsonDocument, get property value e update with full object refence
-                    var doc = prop.AsDocument;
+                    var doc = value.AsDocument;
                     var col = new LiteCollection<BsonDocument>(doc["$ref"], _engine, _mapper);
                     var obj = col.FindById(doc["$id"]);
-                    bson.Set(propPath, obj);
+                    bson.Set(path, obj);
                 }
             };
 

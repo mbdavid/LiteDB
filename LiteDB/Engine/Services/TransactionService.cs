@@ -27,7 +27,7 @@ namespace LiteDB
         /// </summary>
         public void Begin()
         {
-            if(_trans == true) throw new SystemException("Begin transaction");
+            if(_trans == true) throw new SystemException("Begin transaction already exists");
 
             // lock (or try to) datafile
             _disk.Lock();
@@ -40,7 +40,7 @@ namespace LiteDB
         /// </summary>
         public void Commit()
         {
-            if (_trans == false) throw new SystemException("Commit transaction");
+            if (_trans == false) throw new SystemException("No begin transaction");
 
             if (_cache.HasDirtyPages)
             {
