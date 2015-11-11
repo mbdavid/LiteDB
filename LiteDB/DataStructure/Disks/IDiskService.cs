@@ -16,7 +16,7 @@ namespace LiteDB
         void Unlock();
 
         void WriteJournal(uint pageID, byte[] original);
-        void CommitJournal();
+        void CommitJournal(long fileSize);
         void DeleteJournal();
 
         byte[] ReadPage(uint pageID);

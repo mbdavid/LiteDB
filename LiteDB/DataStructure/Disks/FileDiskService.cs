@@ -165,7 +165,7 @@ namespace LiteDB
             _journal.Write(data, 0, BasePage.PAGE_SIZE);
         }
 
-        public void CommitJournal()
+        public void CommitJournal(long fileSize)
         {
             if (_journalEnabled == false) return;
 
@@ -175,6 +175,9 @@ namespace LiteDB
 
             // flush all journal file data to disk
             _journal.Flush();
+
+            // fileSize parameter tell me final size of data file - helpful to extend first datafile
+            _stream.SetLength(fileSize);
         }
 
         public void DeleteJournal()
@@ -225,6 +228,8 @@ namespace LiteDB
         {
             var fileSize = _stream.Length;
             var buffer = new byte[BasePage.PAGE_SIZE];
+
+            journal.Seek(0, SeekOrigin.Begin);
 
             while (journal.Position < journal.Length)
             {

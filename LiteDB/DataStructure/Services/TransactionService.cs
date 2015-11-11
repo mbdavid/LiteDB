@@ -55,13 +55,18 @@ namespace LiteDB
                 _cache.AddPage(header, true);
 
                 // commit journal file - it will be used if write operation fails
-                _disk.CommitJournal();
+                _disk.CommitJournal((header.LastPageID + 1) * BasePage.PAGE_SIZE);
 
                 // write all dirty pages in data file
                 foreach (var page in _cache.GetDirtyPages())
                 {
                     //Console.WriteLine("save page " + page.PageID);
                     _disk.WritePage(page.PageID, page.WritePage());
+
+                    if(page.PageID == 800)
+                    {
+                        Console.WriteLine("parar");
+                    }
                 }
 
                 // delete journal file - datafile is consist here
