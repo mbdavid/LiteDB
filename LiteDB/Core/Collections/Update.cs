@@ -19,11 +19,7 @@ namespace LiteDB
             // get BsonDocument from object
             var doc = _mapper.ToDocument(document);
 
-            var id = doc["_id"];
-
-            if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
-
-            return _engine.UpdateDocument(_name, id, doc);
+            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }) > 0;
         }
 
         /// <summary>
@@ -37,7 +33,10 @@ namespace LiteDB
             // get BsonDocument from object
             var doc = _mapper.ToDocument(document);
 
-            return _engine.UpdateDocument(_name, id, doc);
+            // set document _id using id parameter
+            doc["_id"] = id;
+
+            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }) > 0;
         }
 
         /// <summary>
@@ -58,11 +57,8 @@ namespace LiteDB
                 // get BsonDocument from object
                 var bson = _mapper.ToDocument(doc);
 
-                var id = bson["_id"];
-
-                if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
-
-                count += _engine.UpdateDocument(_name, id, bson) ? 1 : 0;
+                throw new NotImplementedException();
+                //count += _engine.UpdateDocuments(_name, id, bson) ? 1 : 0;
             }
 
             return count;

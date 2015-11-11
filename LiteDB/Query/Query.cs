@@ -171,10 +171,13 @@ namespace LiteDB
         /// <summary>
         /// Find witch index will be used and run Execute method
         /// </summary>
-        internal virtual IEnumerable<IndexNode> Run(IndexService indexer, CollectionIndex index)
+        internal virtual IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
-            // no collection just returns an empty list of indexnode
-            if (index == null) return new List<IndexNode>();
+            // get index for this query
+            var index = col.GetIndex(this.Field);
+
+            // no index? throw an exception
+            if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
 
             // execute query to get all IndexNodes
             return this.ExecuteIndex(indexer, index);

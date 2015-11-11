@@ -25,7 +25,7 @@ namespace UnitTest
                 {
                     var col = db.GetCollection("col1");
 
-                    col.InsertBulk(GetDocs());
+                    col.Insert(GetDocs());
                 }
             }
         }

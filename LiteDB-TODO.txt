@@ -1,6 +1,7 @@
 ﻿# LiteDB v.2 - TODO
 
 - Revisar help do Shell - saiu varias coisas
+- Mapper de indice está fora do ar
 - Thread Safe
     - Deve ter metodos internos para fazer a operacao SEM lock nos metodos private
     - Somente os metodos externos devem ter LOCK

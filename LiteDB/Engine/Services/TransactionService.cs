@@ -62,11 +62,6 @@ namespace LiteDB
                 {
                     //Console.WriteLine("save page " + page.PageID);
                     _disk.WritePage(page.PageID, page.WritePage());
-
-                    if(page.PageID == 800)
-                    {
-                        Console.WriteLine("parar");
-                    }
                 }
 
                 // delete journal file - datafile is consist here
@@ -84,7 +79,7 @@ namespace LiteDB
 
         public void Rollback()
         {
-            if (_trans == false) throw new SystemException("Rollback transaction");
+            if (_trans == false) return;
 
             // clear all pages from memory (return true if has dirty pages on cache)
             if (_cache.Clear())

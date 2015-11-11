@@ -29,6 +29,10 @@ namespace LiteDB
 
         private CollectionService _collections;
 
+        private Dictionary<string, uint> _collectionPages = new Dictionary<string, uint>();
+
+        private object _locker = new object();
+
         public LiteEngine(IDiskService disk)
         {
             _disk = disk;
@@ -50,74 +54,37 @@ namespace LiteDB
 
         #endregion
 
-        public BsonValue InsertDocument(string col, BsonDocument doc)
+        /// <summary>
+        /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
+        /// </summary>
+        internal CollectionPage GetCollectionPage(string name, bool addIfNotExits)
         {
+            uint pageID;
+
+            // check if pageID is in my dictionary
+            if(_collectionPages.TryGetValue(name, out pageID))
+            {
+                return _pager.GetPage<CollectionPage>(pageID);
+            }
+            else 
+            {
+                // search my page on collection service
+                var col = _collections.Get(name);
+
+                if(col == null && addIfNotExits)
+                {
+                    col = _collections.Add(name);
+                }
+
+                if(col != null)
+                {
+                    _collectionPages.Add(name, col.PageID);
+
+                    return _pager.GetPage<CollectionPage>(col.PageID);
+                }
+            }
+
             return null;
-        }
-
-        public bool UpdateDocument(string col, BsonValue id, BsonDocument doc)
-        {
-            return true;
-        }
-
-        public int DeleteDocuments(string col, Query query)
-        {
-            return 0;
-        }
-
-        public IEnumerable<BsonDocument> Find(string col, Query query, int skip = 0, int limit = int.MaxValue)
-        {
-            return null;
-        }
-
-        public BsonValue Min(string colName, string field)
-        {
-            return true;
-        }
-
-        public BsonValue Max(string colName, string field)
-        {
-            return true;
-        }
-
-        public int Count(string colName, Query query)
-        {
-            return 0;
-        }
-
-        public bool Exists(string colName, Query query)
-        {
-            return true;
-        }
-
-        public bool EnsureIndex(string col, string field, IndexOptions options)
-        {
-            return true;
-        }
-
-        public IEnumerable<BsonDocument> GetIndexes(string colName)
-        {
-            return null;
-        }
-
-        public bool DropIndex(string colName, string field)
-        {
-            return true;
-        }
-
-        public IEnumerable<string> GetCollectionNames()
-        {
-            return null;
-        }
-
-        public bool DropCollection(string colName)
-        {
-            return true;
-        }
-
-        public bool RenameCollection(string colName, string newName)
-        {
-            return true;
         }
 
         public void Dispose()

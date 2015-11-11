@@ -52,13 +52,19 @@
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
     <Compile Include="Engine\Disks\IDiskService.cs" />
+    <Compile Include="Engine\Engine\Delete.cs" />
+    <Compile Include="Engine\Engine\Find.cs" />
+    <Compile Include="Engine\Engine\Index.cs" />
+    <Compile Include="Engine\Engine\Collection.cs" />
+    <Compile Include="Engine\Engine\Aggregate.cs" />
+    <Compile Include="Engine\Engine\Update.cs" />
+    <Compile Include="Engine\Engine\Insert.cs" />
     <Compile Include="Engine\LiteEngine.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />
     <Compile Include="Serializer\Mapper\EntityBuilder.cs" />
     <Compile Include="Core\Collections\Include.cs" />
-    <Compile Include="Core\Collections\InsertBulk.cs" />
     <Compile Include="Document\ObjectId.cs" />
     <Compile Include="Query\Impl\QueryContains.cs" />
     <Compile Include="Query\Impl\QueryGreater.cs" />
