@@ -2,6 +2,7 @@
 
 - Revisar help do Shell - saiu varias coisas
 - Mapper de indice está fora do ar
+- A criação de indice esta sempre como Unique
 - No metodos do engine, a primeria coisa q faco é o GetCollecionPage()/BeginTrans? Usar avoid lá dentro?
 - Thread Safe
     - Deve ter metodos internos para fazer a operacao SEM lock nos metodos private
@@ -34,6 +35,7 @@
     - Insert/Update/Delete/EnsureIndex/DropIndex/Rename
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache
+    
     
     
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
