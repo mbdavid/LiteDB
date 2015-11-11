@@ -23,10 +23,10 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override IEnumerable<IndexNode> Run<T>(LiteCollection<T> collection)
+        internal override IEnumerable<IndexNode> Run(IndexService indexer, CollectionIndex index)
         {
-            var left = _left.Run(collection);
-            var right = _right.Run(collection);
+            var left = _left.Run(indexer, index);
+            var right = _right.Run(indexer, index);
 
             return left.Intersect(right, new IndexNodeComparer());
         }

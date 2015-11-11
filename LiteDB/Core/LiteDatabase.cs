@@ -12,34 +12,16 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
-        #region Properties + Ctor
+        private LiteEngine _engine;
 
-        internal CacheService Cache { get; private set; }
+        private BsonMapper _mapper;
 
-        internal IDiskService Disk { get; private set; }
-
-        internal PageService Pager { get; private set; }
-
-        internal TransactionService Transaction { get; private set; }
-
-        internal IndexService Indexer { get; private set; }
-
-        internal DataService Data { get; private set; }
-
-        internal CollectionService Collections { get; private set; }
-
-        public BsonMapper Mapper { get; private set; }
-
-        private LiteDatabase()
-        {
-            this.Mapper = BsonMapper.Global;
-        }
+        public BsonMapper Mapper { get { return _mapper; } }
 
         /// <summary>
         /// Starts LiteDB database using a connectionString
         /// </summary>
         public LiteDatabase(string connectionString)
-            : this()
         {
             var str = new ConnectionString(connectionString);
 
@@ -51,9 +33,9 @@ namespace LiteDB
 
             if(string.IsNullOrWhiteSpace(filename)) throw new ArgumentNullException("filename");
 
-            this.Disk = new FileDiskService(filename, journal, timeout, readOnly, password);
-
-            this.Initialize();
+            // initialize engine creating a new FileDiskService for data access
+            _engine = new LiteEngine(new FileDiskService(filename, journal, timeout, readOnly, password));
+            _mapper = BsonMapper.Global;
         }
 
         /// <summary>
@@ -61,36 +43,9 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(IDiskService diskService, BsonMapper mapper)
         {
-            this.Disk = diskService;
-            this.Mapper = mapper;
+            _engine = new LiteEngine(diskService);
+            _mapper = mapper;
         }
-
-        /// <summary>
-        /// Initialize database engine - starts all services and open datafile
-        /// </summary>
-        private void Initialize()
-        {
-            var isNew = this.Disk.Initialize();
-
-            if(isNew)
-            {
-                this.Disk.WritePage(0, new HeaderPage().WritePage());
-            }
-
-            this.Cache = new CacheService();
-
-            this.Pager = new PageService(this.Disk, this.Cache);
-
-            this.Indexer = new IndexService(this.Pager);
-
-            this.Data = new DataService(this.Pager);
-
-            this.Collections = new CollectionService(this.Pager, this.Indexer, this.Data);
-
-            this.Transaction = new TransactionService(this.Disk, this.Cache);
-        }
-
-        #endregion
 
         #region Collections
 
@@ -101,7 +56,7 @@ namespace LiteDB
         public LiteCollection<T> GetCollection<T>(string name)
             where T : new()
         {
-            return new LiteCollection<T>(this, name);
+            return new LiteCollection<T>(name, _engine, _mapper);
         }
 
         /// <summary>
@@ -110,7 +65,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            return new LiteCollection<BsonDocument>(this, name);
+            return new LiteCollection<BsonDocument>(name, _engine, _mapper);
         }
 
         /// <summary>
@@ -118,9 +73,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            this.Transaction.AvoidDirtyRead();
-
-            return this.Collections.GetAll().Select(x => x.CollectionName);
+            return _engine.GetCollectionNames();
         }
 
         /// <summary>
@@ -128,9 +81,7 @@ namespace LiteDB
         /// </summary>
         public bool CollectionExists(string name)
         {
-            this.Transaction.AvoidDirtyRead();
-
-            return this.Collections.Get(name) != null;
+            return _engine.GetCollectionNames().Contains(name);
         }
 
         /// <summary>
@@ -138,7 +89,7 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string name)
         {
-            return this.GetCollection(name).Drop();
+            return _engine.DropCollection(name);
         }
 
         /// <summary>
@@ -146,7 +97,7 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
         {
-            return this.GetCollection(oldName).Rename(newName);
+            return _engine.RenameCollection(oldName, newName);
         }
 
         #endregion
@@ -185,8 +136,7 @@ namespace LiteDB
 
         public void Dispose()
         {
-            this.Disk.Dispose();
-            this.Cache.Dispose();
+            _engine.Dispose();
         }
     }
 }

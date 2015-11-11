@@ -1,7 +1,6 @@
 ﻿# LiteDB v.2 - TODO
 
-- Revisar transação - Remover possibilidade
-    - A transacao deve ficar sempre na operacao mais externa
+- Revisar help do Shell - saiu varias coisas
 - Thread Safe
     - Deve ter metodos internos para fazer a operacao SEM lock nos metodos private
     - Somente os metodos externos devem ter LOCK
@@ -134,7 +133,7 @@ LiteEngine(IDiskService) {
     Insert(colName, myDocInBson) : id
     Update(colName, myId, myDocInBson): bool
     Delete(colName, query) : int
-    Query(colName, query) : IEnumerable<BsonDocument>
+    Find(colName, query) : IEnumerable<BsonDocument>
     Min\Max\Count\Exists(colName, query)
     EnsureIndex(colName, fieldName) : bool
     DropIndex(colName, fieldName) : bool

@@ -17,7 +17,7 @@ namespace LiteDB.Shell.Commands
         {
             var col = this.ReadCollection(db, s);
 
-            return col.Drop();
+            return db.DropCollection(col.Name);
         }
     }
 }

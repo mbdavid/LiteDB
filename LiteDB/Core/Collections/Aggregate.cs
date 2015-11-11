@@ -16,13 +16,7 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            this.Database.Transaction.AvoidDirtyRead();
-
-            var col = this.GetCollectionPage(false);
-
-            if (col == null) return 0;
-
-            return Convert.ToInt32(col.DocumentCount);
+            return _engine.Count(_name, null);
         }
 
         /// <summary>
@@ -32,11 +26,7 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            this.Database.Transaction.AvoidDirtyRead();
-
-            var nodes = query.Run<T>(this);
-
-            return nodes.Count();
+            return _engine.Count(_name, query);
         }
 
         /// <summary>
@@ -44,6 +34,8 @@ namespace LiteDB
         /// </summary>
         public int Count(Expression<Func<T, bool>> predicate)
         {
+            if (predicate == null) throw new ArgumentNullException("predicate");
+
             return this.Count(_visitor.Visit(predicate));
         }
 
@@ -54,11 +46,7 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            this.Database.Transaction.AvoidDirtyRead();
-
-            var nodes = query.Run<T>(this);
-
-            return nodes.FirstOrDefault() != null;
+            return _engine.Exists(_name, query);
         }
 
         /// <summary>
@@ -66,6 +54,8 @@ namespace LiteDB
         /// </summary>
         public bool Exists(Expression<Func<T, bool>> predicate)
         {
+            if (predicate == null) throw new ArgumentNullException("predicate");
+
             return this.Exists(_visitor.Visit(predicate));
         }
 
@@ -80,18 +70,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            this.Database.Transaction.AvoidDirtyRead();
-
-            var index = this.GetOrCreateIndex(field);
-
-            if (index == null) return BsonValue.MinValue;
-
-            var head = this.Database.Indexer.GetNode(index.HeadNode);
-            var next = this.Database.Indexer.GetNode(head.Next[0]);
-
-            if (next.IsHeadTail(index)) return BsonValue.MinValue;
-
-            return next.Key;
+            return _engine.Min(_name, field);
         }
 
         /// <summary>
@@ -107,6 +86,8 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min<K>(Expression<Func<T, K>> property)
         {
+            if (property == null) throw new ArgumentNullException("property");
+
             var field = _visitor.GetBsonField(property);
 
             return this.Min(field);
@@ -119,18 +100,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            this.Database.Transaction.AvoidDirtyRead();
-
-            var index = this.GetOrCreateIndex(field);
-
-            if (index == null) return BsonValue.MaxValue;
-
-            var tail = this.Database.Indexer.GetNode(index.TailNode);
-            var prev = this.Database.Indexer.GetNode(tail.Prev[0]);
-
-            if (prev.IsHeadTail(index)) return BsonValue.MaxValue;
-
-            return prev.Key;
+            return _engine.Max(_name, field);
         }
 
         /// <summary>
@@ -146,6 +116,8 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max<K>(Expression<Func<T, K>> property)
         {
+            if (property == null) throw new ArgumentNullException("property");
+
             var field = _visitor.GetBsonField(property);
 
             return this.Max(field);

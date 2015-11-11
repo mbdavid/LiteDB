@@ -17,30 +17,13 @@ namespace LiteDB
             if (document == null) throw new ArgumentNullException("document");
 
             // get BsonDocument from object
-            var doc = this.Database.Mapper.ToDocument(document);
+            var doc = _mapper.ToDocument(document);
 
             var id = doc["_id"];
 
             if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
 
-            lock(_locker)
-            {
-                this.Database.Transaction.Begin();
-
-                try
-                {
-                    var result = this.UpdateDocument(id, doc);
-
-                    this.Database.Transaction.Commit();
-
-                    return result;
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
-                }
-            }
+            return _engine.UpdateDocument(_name, id, doc);
         }
 
         /// <summary>
@@ -52,26 +35,9 @@ namespace LiteDB
             if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
             // get BsonDocument from object
-            var doc = this.Database.Mapper.ToDocument(document);
+            var doc = _mapper.ToDocument(document);
 
-            lock (_locker)
-            {
-                this.Database.Transaction.Begin();
-
-                try
-                {
-                    var result = this.UpdateDocument(id, doc);
-
-                    this.Database.Transaction.Commit();
-
-                    return result;
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
-                }
-            }
+            return _engine.UpdateDocument(_name, id, doc);
         }
 
         /// <summary>
@@ -82,39 +48,24 @@ namespace LiteDB
             if (query == null) throw new ArgumentNullException("query");
             if (action == null) throw new ArgumentNullException("action");
 
-            lock(_locker)
+            var docs = this.Find(query).ToArray(); // used to avoid changes during Action<T>
+            var count = 0;
+
+            foreach (var doc in docs)
             {
-                this.Database.Transaction.Begin();
+                action(doc);
 
-                try
-                {
-                    var docs = this.Find(query).ToArray(); // used to avoid changes during Action<T>
-                    var count = 0;
+                // get BsonDocument from object
+                var bson = _mapper.ToDocument(doc);
 
-                    foreach (var doc in docs)
-                    {
-                        action(doc);
+                var id = bson["_id"];
 
-                        // get BsonDocument from object
-                        var bson = this.Database.Mapper.ToDocument(doc);
+                if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
 
-                        var id = bson["_id"];
-
-                        if (id.IsNull || id.IsMinValue || id.IsMaxValue) throw LiteException.InvalidDataType("_id", id);
-
-                        count += this.UpdateDocument(id, bson) ? 1 : 0;
-                    }
-
-                    this.Database.Transaction.Commit();
-
-                    return count;
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
-                }
+                count += _engine.UpdateDocument(_name, id, bson) ? 1 : 0;
             }
+
+            return count;
         }
 
         /// <summary>
@@ -123,60 +74,6 @@ namespace LiteDB
         public void Update(Expression<Func<T, bool>> predicate, Action<T> action)
         {
             this.Update(_visitor.Visit(predicate), action);
-        }
-
-        /// <summary>
-        /// Internal implementation of Update a document (no lock, no transaction)
-        /// </summary>
-        private bool UpdateDocument(BsonValue id, BsonDocument doc)
-        {
-            // serialize object
-            var bytes = BsonSerializer.Serialize(doc);
-
-            var col = this.GetCollectionPage(false);
-
-            // if no collection, no updates
-            if (col == null) return false;
-
-            // normalize id before find
-            var value = id.Normalize(col.PK.Options);
-
-            // find indexNode from pk index
-            var indexNode = this.Database.Indexer.Find(col.PK, value, false, Query.Ascending);
-
-            // if not found document, no updates
-            if (indexNode == null) return false;
-
-            // update data storage
-            var dataBlock = this.Database.Data.Update(col, indexNode.DataBlock, bytes);
-
-            // delete/insert indexes - do not touch on PK
-            foreach (var index in col.GetIndexes(false))
-            {
-                var key = doc.Get(index.Field);
-
-                var node = this.Database.Indexer.GetNode(dataBlock.IndexRef[index.Slot]);
-
-                // check if my index node was changed
-                if (node.Key.CompareTo(key) != 0)
-                {
-                    // remove old index node
-                    this.Database.Indexer.Delete(index, node.Position);
-
-                    // and add a new one
-                    var newNode = this.Database.Indexer.AddNode(index, key);
-
-                    // point my index to data object
-                    newNode.DataBlock = dataBlock.Position;
-
-                    // point my dataBlock
-                    dataBlock.IndexRef[index.Slot] = newNode.Position;
-
-                    this.Database.Pager.SetDirty(dataBlock.Page);
-                }
-            }
-
-            return true;
         }
     }
 }

@@ -18,20 +18,10 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            this.Database.Transaction.AvoidDirtyRead();
+            var docs = _engine.Find(_name, query, skip, limit);
 
-            var nodes = query.Run<T>(this);
-
-            if (skip > 0) nodes = nodes.Skip(skip);
-
-            if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-            foreach (var node in nodes)
+            foreach (var doc in docs)
             {
-                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
-
-                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
                 // executing all includes in BsonDocument
                 foreach (var action in _includes)
                 {
@@ -39,7 +29,7 @@ namespace LiteDB
                 }
 
                 // get object from BsonDocument
-                var obj = this.Database.Mapper.ToObject<T>(doc);
+                var obj = _mapper.ToObject<T>(doc);
 
                 yield return obj;
             }

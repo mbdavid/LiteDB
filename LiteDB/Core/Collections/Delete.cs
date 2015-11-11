@@ -16,25 +16,7 @@ namespace LiteDB
         {
             if(query == null) throw new ArgumentNullException("query");
 
-            lock(_locker)
-            {
-                // start transaction
-                this.Database.Transaction.Begin();
-
-                try
-                {
-                    var count = this.DeleteDocuments(query);
-
-                    this.Database.Transaction.Commit();
-
-                    return count;
-                }
-                catch (Exception ex)
-                {
-                    this.Database.Transaction.Rollback();
-                    throw ex;
-                }
-            }
+            return _engine.DeleteDocuments(_name, query);
         }
 
         /// <summary>
@@ -53,41 +35,6 @@ namespace LiteDB
             if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
             return this.Delete(Query.EQ("_id", id)) > 0;
-        }
-
-        /// <summary>
-        /// Internal implementation to delete a document - no trans, no locks
-        /// </summary>
-        internal int DeleteDocuments(Query query)
-        {
-            var col = this.GetCollectionPage(false);
-
-            // no collection, no document - abort trans
-            if (col == null) return 0;
-
-            var count = 0;
-
-            // find nodes
-            var nodes = query.Run<T>(this);
-
-            foreach (var node in nodes)
-            {
-                // read dataBlock 
-                var dataBlock = this.Database.Data.Read(node.DataBlock, false);
-
-                // lets remove all indexes that point to this in dataBlock
-                foreach (var index in col.GetIndexes(true))
-                {
-                    this.Database.Indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
-                }
-
-                // remove object data
-                this.Database.Data.Delete(col, node.DataBlock);
-
-                count++;
-            }
-
-            return count;
         }
     }
 }

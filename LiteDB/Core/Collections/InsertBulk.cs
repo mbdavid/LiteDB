@@ -19,37 +19,22 @@ namespace LiteDB
             var enumerator = docs.GetEnumerator();
             var count = 0;
 
-            lock(_locker)
+            while (true)
             {
-                while (true)
+                var buff = buffer;
+
+                var more = true;
+
+                while (buff > 0 && (more = enumerator.MoveNext()))
                 {
-                    var buff = buffer;
+                    this.Insert(enumerator.Current);
+                    buff--;
+                    count++;
+                }
 
-                    this.Database.Transaction.Begin();
-
-                    try
-                    {
-                        var more = true;
-
-                        while (buff > 0 && (more = enumerator.MoveNext()))
-                        {
-                            this.InsertDocument(enumerator.Current);
-                            buff--;
-                            count++;
-                        }
-
-                        this.Database.Transaction.Commit();
-
-                        if (more == false)
-                        {
-                            return count;
-                        }
-                    }
-                    catch
-                    {
-                        this.Database.Transaction.Rollback();
-                        throw;
-                    }
+                if (more == false)
+                {
+                    return count;
                 }
             }
         }
