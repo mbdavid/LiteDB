@@ -2,15 +2,9 @@
 
 - Revisar help do Shell - saiu varias coisas
 - Mapper de indice está fora do ar
-- A criação de indice esta sempre como Unique
-- No metodos do engine, a primeria coisa q faco é o GetCollecionPage()/BeginTrans? Usar avoid lá dentro?
+- FileStorage deveria usar metodos do LiteEngine (DbEngine)
+- Implementar novamente o BulkInsert
 - Thread Safe
-    - Deve ter metodos internos para fazer a operacao SEM lock nos metodos private
-    - Somente os metodos externos devem ter LOCK
-    - Somente os metodos externos devem ter AvoidDirtyRead
-    - E transacao? Fica aonde? No Externo, sempre. No interno não
-    - `lock` pode ter inner lock do mesmo objeto na mesma thread
-    - A BeginTrans() deve ser aberto antes de fazer consultas no banco - para garantir o AvoidDirtyRead
     - O "lock" deve estar por fora do BeginTrans()
             lock(this.Database)
             {
@@ -32,7 +26,6 @@
             }
     - Mesmo comandos de QUERY devem ter LOCK por causa do uso da CACHE (ou faço lock na cache?)            
 
-    - Insert/Update/Delete/EnsureIndex/DropIndex/Rename
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache
     
