@@ -2,35 +2,11 @@
 
 - Revisar help do Shell - saiu varias coisas
 - Mapper de indice está fora do ar
-- FileStorage deveria usar metodos do LiteEngine (DbEngine)
 - Implementar novamente o BulkInsert
 - Thread Safe
-    - O "lock" deve estar por fora do BeginTrans()
-            lock(this.Database)
-            {
-                this.Database.Transaction.Begin();
-
-                try
-                {
-                    var result = this.UpdateDocument(id, doc);
-
-                    this.Database.Transaction.Commit();
-
-                    return result;
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
-                }
-            }
     - Mesmo comandos de QUERY devem ter LOCK por causa do uso da CACHE (ou faço lock na cache?)            
-
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache
-    
-    
-    
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 - Revisar BsonArray.Length não faz cache
 - Implementar StreamDiskService()
@@ -112,37 +88,10 @@ e) Leitura conforme indice (retorno poucos registros)
 - Logotipo + Nome
 - Atualizar codeproject
 
-## Vamos fazer??? Vai ser legal e meio insano - quem sabe em uma outra branch?
-
-LiteEngine
-    - Só trabalha com BsonDocument
-    - Query sem Linq (só bsonDocument)
-    - Totalmente interna
-    - Só faz o minimo de acesso a engine
-    - Cuida das transacoes, locks?! A pensar
-    - Inclui a QueryEngine
-    - A solução final pode não ficar tão eficiente quando que temos hoje, mas acho que há uma melhora na redução de bugs e complexidade
-    - Não pode ter estado (begintrans/commit) - a execução de um metodo deve sempre ser igual a outra
-
-LiteEngine(IDiskService) {
-    // AllServices
-    
-    Insert(colName, myDocInBson) : id
-    Update(colName, myId, myDocInBson): bool
-    Delete(colName, query) : int
-    Find(colName, query) : IEnumerable<BsonDocument>
-    Min\Max\Count\Exists(colName, query)
-    EnsureIndex(colName, fieldName) : bool
-    DropIndex(colName, fieldName) : bool
-    RenameCollection(colName, newName) : bool
-    
-    GetIndexes(colName) ? para que? só se for pro Shell?!
-   
-}
-
-## Modulos
-- Engine
-    - QueryEngine
+## Modulos do LiteDB
+- Core
+- DbEngine
+- QueryEngine
 - Mapper
 - Utils
     - Linq, shell, fileStorage, fts

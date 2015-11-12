@@ -42,7 +42,7 @@ namespace LiteDB
                 _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk });
             }
 
-            // update fileLength to confirm full file length stored in disk
+            // update fileLength/chunks to confirm full file length stored in disk
             _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
 
             return file;

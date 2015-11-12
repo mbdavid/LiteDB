@@ -29,6 +29,7 @@ namespace LiteDB
         public string Filename { get; set; }
         public string MimeType { get; set; }
         public long Length { get; private set; }
+        public int Chunks { get; private set; }
         public DateTime UploadDate { get; internal set; }
         public BsonDocument Metadata { get; set; }
 
@@ -47,6 +48,7 @@ namespace LiteDB
             this.Filename = Path.GetFileName(filename);
             this.MimeType = MimeTypeConverter.GetMimeType(this.Filename);
             this.Length = 0;
+            this.Chunks = 0;
             this.UploadDate = DateTime.Now;
             this.Metadata = new BsonDocument();
         }
@@ -59,6 +61,7 @@ namespace LiteDB
             this.Filename = doc["filename"].AsString;
             this.MimeType = doc["mimeType"].AsString;
             this.Length = doc["length"].AsInt64;
+            this.Chunks = doc["chunks"].AsInt32;
             this.UploadDate = doc["uploadDate"].AsDateTime;
             this.Metadata = doc["metadata"].AsDocument;
         }
@@ -73,6 +76,7 @@ namespace LiteDB
                 doc["filename"] = this.Filename;
                 doc["mimeType"] = this.MimeType;
                 doc["length"] = this.Length;
+                doc["chunks"] = this.Chunks;
                 doc["uploadDate"] = this.UploadDate;
                 doc["metadata"] = this.Metadata ?? new BsonDocument();
 
@@ -89,6 +93,7 @@ namespace LiteDB
             while ((read = stream.Read(buffer, 0, LiteFileInfo.CHUNK_SIZE)) > 0)
             {
                 this.Length += (long)read;
+                this.Chunks++;
 
                 var chunk = new BsonDocument();
 
