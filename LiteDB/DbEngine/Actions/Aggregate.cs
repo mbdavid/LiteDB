@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class LiteEngine : IDisposable
+    internal partial class DbEngine : IDisposable
     {
         /// <summary>
         /// Returns first value from an index (first is min value)

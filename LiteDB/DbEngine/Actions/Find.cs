@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class LiteEngine : IDisposable
+    internal partial class DbEngine : IDisposable
     {
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {

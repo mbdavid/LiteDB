@@ -11,7 +11,7 @@ namespace LiteDB
     /// A internal class that take care of all engine data structure access - it´s basic implementation of a NoSql database
     /// Its isolated from complete solution - works on low level only
     /// </summary>
-    internal partial class LiteEngine : IDisposable
+    internal partial class DbEngine : IDisposable
     {
         #region Services instances
 
@@ -33,7 +33,7 @@ namespace LiteDB
 
         private object _locker = new object();
 
-        public LiteEngine(IDiskService disk)
+        public DbEngine(IDiskService disk)
         {
             _disk = disk;
 

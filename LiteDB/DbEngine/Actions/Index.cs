@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class LiteEngine : IDisposable
+    internal partial class DbEngine : IDisposable
     {
         /// <summary>
         /// Create a new index (or do nothing if already exisits) to a collection/field

@@ -11,15 +11,14 @@ namespace LiteDB
     /// </summary>
     public partial class LiteFileStorage
     {
-        public LiteCollection<BsonDocument> Files { get; private set; }
-        public LiteCollection<BsonDocument> Chunks { get; private set; }
-        public LiteDatabase Database { get; private set; }
+        internal const string FILES = "_files";
+        internal const string CHUNKS = "_chunks";
 
-        internal LiteFileStorage(LiteDatabase db)
+        private DbEngine _engine;
+
+        internal LiteFileStorage(DbEngine engine)
         {
-            this.Database = db;
-            this.Files = this.Database.GetCollection("_files");
-            this.Chunks = this.Database.GetCollection("_chunks");
+            _engine = engine;
         }
 
         #region Upload
@@ -35,16 +34,16 @@ namespace LiteDB
             file.UploadDate = DateTime.Now;
 
             // insert file in _files collections with 0 file length
-            this.Files.Insert(file.AsDocument);
+            _engine.InsertDocuments(FILES, new BsonDocument[] { file.AsDocument });
 
             // for each chunk, insert as a chunk document
             foreach (var chunk in file.CreateChunks(stream))
             {
-                this.Chunks.Insert(chunk);
+                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk });
             }
 
             // update fileLength to confirm full file length stored in disk
-            this.Files.Update(file.AsDocument);
+            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
 
             return file;
         }
@@ -81,7 +80,7 @@ namespace LiteDB
             var file = this.FindById(id);
             if (file == null) return false;
             file.Metadata = metadata;
-            this.Files.Update(file.AsDocument);
+            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
             return true;
         }
 
@@ -110,7 +109,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            var doc = this.Files.FindById(id);
+            var doc = _engine.Find(FILES, Query.EQ("_id", id)).FirstOrDefault();
 
             if (doc == null) return null;
 
@@ -124,7 +123,7 @@ namespace LiteDB
         {
             if (entry == null) throw new ArgumentNullException("entry");
 
-            return new LiteFileStream(this.Database, entry);
+            return new LiteFileStream(_engine, entry);
         }
 
         #endregion
@@ -138,11 +137,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            var doc = this.Files.FindById(id);
+            var doc = _engine.Find(FILES, Query.EQ("_id", id)).FirstOrDefault();
 
             if (doc == null) return null;
 
-            return new LiteFileInfo(this.Database, doc);
+            return new LiteFileInfo(_engine, doc);
         }
 
         /// <summary>
@@ -150,13 +149,15 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<LiteFileInfo> Find(string startsWith)
         {
-            var result = string.IsNullOrEmpty(startsWith) ?
-                this.Files.Find(Query.All()) :
-                this.Files.Find(Query.StartsWith("_id", startsWith));
+            var query = string.IsNullOrEmpty(startsWith) ?
+                Query.All() :
+                Query.StartsWith("_id", startsWith);
 
-            foreach (var doc in result)
+            var docs = _engine.Find(FILES, query);
+
+            foreach (var doc in docs)
             {
-                yield return new LiteFileInfo(this.Database, doc);
+                yield return new LiteFileInfo(_engine, doc);
             }
         }
 
@@ -165,7 +166,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string id)
         {
-            return this.Files.Exists(Query.EQ("_id", id));
+            return _engine.Exists(FILES, Query.EQ("_id", id));
         }
 
         /// <summary>
@@ -188,18 +189,18 @@ namespace LiteDB
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
             // remove file reference in _files
-            var d = this.Files.Delete(id);
+            var d = _engine.DeleteDocuments(FILES, Query.EQ("_id", id));
 
             // if not found, just return false
-            if (d == false) return false;
+            if (d == 0) return false;
 
             var index = 0;
 
             while (true)
             {
-                var del = Chunks.Delete(LiteFileInfo.GetChunckId(id, index++));
+                var del = _engine.DeleteDocuments(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)));
 
-                if (del == false) break;
+                if (del == 0) break;
             }
 
             return true;

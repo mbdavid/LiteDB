@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class LiteEngine : IDisposable
+    internal partial class DbEngine : IDisposable
     {
         /// <summary>
         /// Implement update command to a document inside a collection

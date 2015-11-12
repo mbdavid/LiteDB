@@ -38,7 +38,7 @@ namespace LiteDB
             // if a need a specific page but has a BasePage, returns null
             if (page != null && page.GetType() == typeof(BasePage) && typeof(T) != typeof(BasePage))
             {
-                if(page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
+                //if(page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
 
                 var specificPage = new T();
 

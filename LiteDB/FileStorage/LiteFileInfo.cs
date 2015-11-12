@@ -32,7 +32,7 @@ namespace LiteDB
         public DateTime UploadDate { get; internal set; }
         public BsonDocument Metadata { get; set; }
 
-        private LiteDatabase _db;
+        private DbEngine _engine;
 
         public LiteFileInfo(string id)
             : this(id, id)
@@ -51,9 +51,9 @@ namespace LiteDB
             this.Metadata = new BsonDocument();
         }
 
-        internal LiteFileInfo(LiteDatabase db, BsonDocument doc)
+        internal LiteFileInfo(DbEngine engine, BsonDocument doc)
         {
-            _db = db;
+            _engine = engine;
 
             this.Id = doc["_id"].AsString;
             this.Filename = doc["filename"].AsString;
@@ -97,7 +97,7 @@ namespace LiteDB
                 if (read != CHUNK_SIZE)
                 {
                     var bytes = new byte[read];
-                    Array.Copy(buffer, bytes, read);
+                    Buffer.BlockCopy(buffer, 0, bytes, 0, read);
                     chunk["data"] = bytes;
                 }
                 else
@@ -124,9 +124,9 @@ namespace LiteDB
         /// </summary>
         public LiteFileStream OpenRead()
         {
-            if (_db == null) throw LiteException.NoDatabase();
+            if (_engine == null) throw LiteException.NoDatabase();
 
-            return new LiteFileStream(_db, this);
+            return new LiteFileStream(_engine, this);
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
-            if (_db == null) throw LiteException.NoDatabase();
+            if (_engine == null) throw LiteException.NoDatabase();
 
             using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
             {

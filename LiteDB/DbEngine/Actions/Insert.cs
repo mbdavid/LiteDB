@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class LiteEngine : IDisposable
+    internal partial class DbEngine : IDisposable
     {
         /// <summary>
         /// Implements insert documents in a collection

@@ -12,7 +12,7 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
-        private LiteEngine _engine;
+        private DbEngine _engine;
 
         private BsonMapper _mapper;
 
@@ -34,7 +34,7 @@ namespace LiteDB
             if(string.IsNullOrWhiteSpace(filename)) throw new ArgumentNullException("filename");
 
             // initialize engine creating a new FileDiskService for data access
-            _engine = new LiteEngine(new FileDiskService(filename, journal, timeout, readOnly, password));
+            _engine = new DbEngine(new FileDiskService(filename, journal, timeout, readOnly, password));
             _mapper = BsonMapper.Global;
         }
 
@@ -43,7 +43,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(IDiskService diskService, BsonMapper mapper)
         {
-            _engine = new LiteEngine(diskService);
+            _engine = new DbEngine(diskService);
             _mapper = mapper;
         }
 
@@ -111,7 +111,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileStorage FileStorage
         {
-            get { return _fs ?? (_fs = new LiteFileStorage(this)); }
+            get { return _fs ?? (_fs = new LiteFileStorage(_engine)); }
         }
 
         #endregion
