@@ -40,16 +40,17 @@ namespace LiteDB
             {
                 //if(page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
 
-                var specificPage = new T();
-
-                specificPage.ReadPage(page.DiskData);
-                
-                lock(_cache)
-                {
-                    _cache[pageID] = specificPage;
-                }
-                
-                return specificPage;
+                //var specificPage = new T();
+                //
+                //specificPage.ReadPage(page.DiskData);
+                //
+                //lock(_cache)
+                //{
+                //    _cache[pageID] = specificPage;
+                //}
+                //
+                //return specificPage;
+                return null;
             }
 
             return (T)page;
@@ -64,7 +65,7 @@ namespace LiteDB
             lock(_cache)
             {
                 // do not cache extend page - never will be reused
-                if (page.PageType != PageType.Extend)
+                //if (page.PageType != PageType.Extend)
                 {
                     _cache[page.PageID] = page;
                 }
@@ -74,7 +75,7 @@ namespace LiteDB
                 {
                     page.IsDirty = true;
                     _dirty[page.PageID] = page;
-                    _cache[page.PageID] = page;
+                    //_cache[page.PageID] = page;
 
                     // if page is new (not exits on datafile), there is no journal for them
                     if(page.DiskData.Length > 0)
@@ -114,12 +115,14 @@ namespace LiteDB
                     page.IsDirty = false;
 
                     // remove all non-header-collection pages (this can be optional in future)
-                    if (page.PageType != PageType.Header && page.PageType != PageType.Collection)
+                    //if (page.PageType != PageType.Header && page.PageType != PageType.Collection)
+                    if (page.PageType == PageType.Extend)
                     {
                         _cache.Remove(page.PageID);
                     }
                 }
 
+                //_cache.Clear();
                 _dirty.Clear();
             }
         }
