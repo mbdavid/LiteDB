@@ -36,7 +36,7 @@ namespace LiteDB
 
                     page.ReadPage(buffer);
 
-                    //Console.WriteLine("read " + pageID + " (" + typeof(T).Name + ")");
+                    Console.WriteLine("read disk " + pageID + " (" + typeof(T).Name + ")");
                     
                     _cache.AddPage(page);
                 }
@@ -50,7 +50,7 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
-            _cache.AddPage(page, true);
+            _cache.SetPageDirty(page);
         }
 
         public HeaderPage Header { get { return this.GetPage<HeaderPage>(0); } }
@@ -125,6 +125,8 @@ namespace LiteDB
             {
                 // update page to mark as completly empty page
                 page.Clear();
+
+                // mark page as dirty
                 this.SetDirty(page);
 
                 // add to empty free list

@@ -102,7 +102,7 @@ namespace LiteDB
             this.PageType = PageType.Empty;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.ItemCount = 0;
-            this.DiskData = new byte[0];
+            this.DiskData = new byte[BasePage.PAGE_SIZE];
         }
 
         /// <summary>
@@ -140,6 +140,42 @@ namespace LiteDB
 
         #region Read/Write page
 
+        /// <summary>
+        /// Read a page from byte array
+        /// </summary>
+        public void ReadPage(byte[] buffer)
+        {
+            var reader = new ByteReader(buffer);
+
+            this.ReadHeader(reader);
+
+            if (this.PageType != LiteDB.PageType.Empty)
+            {
+                this.ReadContent(reader);
+            }
+
+            this.DiskData = buffer;
+        }
+
+        /// <summary>
+        /// Write a page to byte array
+        /// </summary>
+        public byte[] WritePage()
+        {
+            var writer = new ByteWriter(BasePage.PAGE_SIZE);
+
+            this.WriteHeader(writer);
+
+            if (this.PageType != LiteDB.PageType.Empty)
+            {
+                this.WriteContent(writer);
+            }
+
+            this.DiskData = writer.Buffer;
+
+            return writer.Buffer;
+        }
+
         public virtual void ReadHeader(ByteReader reader)
         {
             this.PageID = reader.ReadUInt32();
@@ -168,36 +204,6 @@ namespace LiteDB
 
         public virtual void WriteContent(ByteWriter writer)
         {
-        }
-
-        public void ReadPage(byte[] buffer)
-        {
-            var reader = new ByteReader(buffer);
-
-            this.ReadHeader(reader);
-
-            if (this.PageType != LiteDB.PageType.Empty)
-            {
-                this.ReadContent(reader);
-            }
-
-            this.DiskData = buffer;
-        }
-
-        public byte[] WritePage()
-        {
-            var writer = new ByteWriter(BasePage.PAGE_SIZE);
-
-            WriteHeader(writer);
-
-            if (this.PageType != LiteDB.PageType.Empty)
-            {
-                WriteContent(writer);
-            }
-
-            this.DiskData = writer.Buffer;
-
-            return writer.Buffer;
         }
 
         #endregion

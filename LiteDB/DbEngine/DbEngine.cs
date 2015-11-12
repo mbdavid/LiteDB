@@ -49,7 +49,7 @@ namespace LiteDB
             _indexer = new IndexService(_pager);
             _data = new DataService(_pager);
             _collections = new CollectionService(_pager, _indexer, _data);
-            _transaction = new TransactionService(_disk, _cache);
+            _transaction = new TransactionService(_disk, _pager, _cache);
         }
 
         #endregion

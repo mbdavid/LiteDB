@@ -24,14 +24,14 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string colName)
         {
-            // get collection page
-            var col = this.GetCollectionPage(colName, false);
+            return this.Transaction<bool>(colName, false, (col) =>
+            {
+                if(col == null) return false;
 
-            if(col == null) return false;
+                _collections.Drop(col);
 
-            _collections.Drop(col);
-
-            return true;
+                return true;
+            });
         }
 
         /// <summary>

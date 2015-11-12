@@ -38,19 +38,21 @@ namespace LiteDB
             // if a need a specific page but has a BasePage, returns null
             if (page != null && page.GetType() == typeof(BasePage) && typeof(T) != typeof(BasePage))
             {
-                //if(page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
-
-                //var specificPage = new T();
-                //
-                //specificPage.ReadPage(page.DiskData);
-                //
-                //lock(_cache)
-                //{
-                //    _cache[pageID] = specificPage;
-                //}
-                //
-                //return specificPage;
                 return null;
+
+                if (page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
+
+                var specificPage = new T();
+                
+                specificPage.ReadPage(page.DiskData);
+                
+                lock(_cache)
+                {
+                    _cache[pageID] = specificPage;
+                }
+                
+                return specificPage;
+                //return null;
             }
 
             return (T)page;
@@ -60,7 +62,7 @@ namespace LiteDB
         /// Add a page to cache. if this page is in cache, override (except if is basePage - in this case, copy header)
         /// If set is dirty, add in a second list
         /// </summary>
-        public void AddPage(BasePage page, bool dirty = false)
+        public void AddPage(BasePage page)
         {
             lock(_cache)
             {
@@ -69,20 +71,30 @@ namespace LiteDB
                 {
                     _cache[page.PageID] = page;
                 }
+            }
+        }
 
-                // page is dirty? add in a special list too and mark as dirty (all type of pages)
-                if (dirty && !page.IsDirty)
+        /// <summary>
+        /// Add a page as dirty page
+        /// </summary>
+        public void SetPageDirty(BasePage page)
+        {
+            _cache[page.PageID] = page;
+
+            // if page already dirty, do nothing
+            if (page.IsDirty) return;
+
+            lock(_dirty)
+            {
+                // mark as dirty and add to dirty list
+                page.IsDirty = true;
+                _dirty[page.PageID] = page;
+
+                // if page is new (not exits on datafile), there is no journal for them
+                if (page.DiskData.Length > 0)
                 {
-                    page.IsDirty = true;
-                    _dirty[page.PageID] = page;
-                    //_cache[page.PageID] = page;
-
-                    // if page is new (not exits on datafile), there is no journal for them
-                    if(page.DiskData.Length > 0)
-                    {
-                        // call action passing dirty page - used for journal file writes 
-                        MarkAsDirtyAction(page);
-                    }
+                    // call action passing dirty page - used for journal file writes 
+                    MarkAsDirtyAction(page);
                 }
             }
         }
@@ -115,14 +127,16 @@ namespace LiteDB
                     page.IsDirty = false;
 
                     // remove all non-header-collection pages (this can be optional in future)
-                    //if (page.PageType != PageType.Header && page.PageType != PageType.Collection)
-                    if (page.PageType == PageType.Extend)
+                    if (page.PageType == PageType.Extend || 
+                        page.PageType == PageType.Empty || 
+                        page.PageType == PageType.Index || 
+                        page.PageType == PageType.Data)
                     {
                         _cache.Remove(page.PageID);
                     }
                 }
 
-                //_cache.Clear();
+                _cache.Clear();
                 _dirty.Clear();
             }
         }

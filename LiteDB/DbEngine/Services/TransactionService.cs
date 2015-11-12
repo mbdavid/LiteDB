@@ -12,12 +12,14 @@ namespace LiteDB
     internal class TransactionService
     {
         private IDiskService _disk;
+        private PageService _pager;
         private CacheService _cache;
         private bool _trans = false;
 
-        internal TransactionService(IDiskService disk, CacheService cache)
+        internal TransactionService(IDiskService disk, PageService pager, CacheService cache)
         {
             _disk = disk;
+            _pager = pager;
             _cache = cache;
             _cache.MarkAsDirtyAction = (page) => _disk.WriteJournal(page.PageID, page.DiskData);
         }
@@ -44,13 +46,13 @@ namespace LiteDB
 
             if (_cache.HasDirtyPages)
             {
-                var header = _cache.GetPage<HeaderPage>(0);
+                var header = _pager.GetPage<HeaderPage>(0);
 
                 // increase file changeID (back to 0 when overflow)
                 header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
 
                 // add header page as dirty to cache
-                _cache.AddPage(header, true);
+                _pager.SetDirty(header);
 
                 // commit journal file - it will be used if write operation fails
                 _disk.CommitJournal((header.LastPageID + 1) * BasePage.PAGE_SIZE);
