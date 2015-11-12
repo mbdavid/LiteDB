@@ -159,7 +159,7 @@ namespace LiteDB
                 });
             }
 
-            //Console.WriteLine("journal write " + pageID);
+            Console.WriteLine("journal write " + pageID);
 
             // just write original bytes in order that are changed
             _journal.Write(data, 0, BasePage.PAGE_SIZE);
@@ -169,12 +169,15 @@ namespace LiteDB
         {
             if (_journalEnabled == false) return;
 
-            // write a mark (byte 1) to know when journal is finish
-            // after that, if found a non-exclusive-open journal file, must be recovery
-            _journal.WriteByte(JOURNAL_FINISH_POSITION, 1);
+            if(_journal != null)
+            {
+                // write a mark (byte 1) to know when journal is finish
+                // after that, if found a non-exclusive-open journal file, must be recovery
+                _journal.WriteByte(JOURNAL_FINISH_POSITION, 1);
 
-            // flush all journal file data to disk
-            _journal.Flush();
+                // flush all journal file data to disk
+                _journal.Flush();
+            }
 
             // fileSize parameter tell me final size of data file - helpful to extend first datafile
             _stream.SetLength(fileSize);
@@ -184,12 +187,15 @@ namespace LiteDB
         {
             if (_journalEnabled == false) return;
 
-            // close journal stream and delete file
-            _journal.Dispose();
-            _journal = null;
+            if(_journal != null)
+            {
+                // close journal stream and delete file
+                _journal.Dispose();
+                _journal = null;
 
-            // remove journal file
-            File.Delete(_journalFilename);
+                // remove journal file
+                File.Delete(_journalFilename);
+            }
         }
 
         public void Dispose()
@@ -242,12 +248,12 @@ namespace LiteDB
                 // if header, read all byte (to get original filesize)
                 if(pageID == 0)
                 {
-                    var header = new HeaderPage();
-                    header.ReadPage(buffer);
+                    var header = (HeaderPage)BasePage.ReadPage(buffer);
+
                     fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
                 }
 
-                //Console.WriteLine("recovery " + pageID);
+                Console.WriteLine("recovery " + pageID);
 
                 // write in stream
                 _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);

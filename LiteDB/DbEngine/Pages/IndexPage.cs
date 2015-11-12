@@ -9,25 +9,20 @@ namespace LiteDB
     internal class IndexPage : BasePage
     {
         /// <summary>
+        /// Page type = Index
+        /// </summary>
+        public override PageType PageType { get { return PageType.Index; } }
+
+        /// <summary>
         /// If a Index Page has less that this free space, it's considered full page for new items.
         /// </summary>
         public const int INDEX_RESERVED_BYTES = 100;
 
         public Dictionary<ushort, IndexNode> Nodes { get; set; }
 
-        public IndexPage()
-            : base()
+        public IndexPage(uint pageID)
+            : base(pageID)
         {
-            this.PageType = PageType.Index;
-            this.Nodes = new Dictionary<ushort, IndexNode>();
-        }
-
-        /// <summary>
-        /// Clear page content - nodes
-        /// </summary>
-        public override void Clear()
-        {
-            base.Clear();
             this.Nodes = new Dictionary<ushort, IndexNode>();
         }
 
@@ -42,7 +37,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ByteReader reader)
         {
             this.Nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
@@ -69,7 +64,7 @@ namespace LiteDB
             }            
         }
 
-        public override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ByteWriter writer)
         {
             foreach (var node in this.Nodes.Values)
             {

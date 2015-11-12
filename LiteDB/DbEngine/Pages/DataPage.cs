@@ -12,6 +12,11 @@ namespace LiteDB
     internal class DataPage : BasePage
     {
         /// <summary>
+        /// Page type = Extend
+        /// </summary>
+        public override PageType PageType { get { return PageType.Data; } }
+
+        /// <summary>
         /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 50% PAGE_AVAILABLE_BYTES
         /// This value is used for minimize 
         /// </summary>
@@ -22,19 +27,9 @@ namespace LiteDB
         /// </summary>
         public Dictionary<ushort, DataBlock> DataBlocks { get; set; }
 
-        public DataPage()
-            : base()
+        public DataPage(uint pageID)
+            : base(pageID)
         {
-            this.PageType = PageType.Data;
-            this.DataBlocks = new Dictionary<ushort, DataBlock>();
-        }
-
-        /// <summary>
-        /// Clear page content - dataBlocks
-        /// </summary>
-        public override void Clear()
-        {
-            base.Clear();
             this.DataBlocks = new Dictionary<ushort, DataBlock>();
         }
 
@@ -49,7 +44,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ByteReader reader)
         {
             this.DataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
 
@@ -73,7 +68,7 @@ namespace LiteDB
             }
         }
 
-        public override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ByteWriter writer)
         {
             foreach (var block in this.DataBlocks.Values)
             {

@@ -8,7 +8,7 @@ namespace LiteDB
 {
     internal enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 
-    internal class BasePage
+    internal abstract class BasePage
     {
         #region Page Constants
 
@@ -45,9 +45,9 @@ namespace LiteDB
         public uint NextPageID { get; set; }
 
         /// <summary>
-        /// Indicate the page type [1 byte]
+        /// Indicate the page type [1 byte] - Must be implemented for each page type
         /// </summary>
-        public PageType PageType { get; set; }
+        public abstract PageType PageType { get; }
 
         /// <summary>
         /// Used for all pages to count itens inside this page(bytes, nodes, blocks, ...)
@@ -72,11 +72,11 @@ namespace LiteDB
         /// </summary>
         public byte[] DiskData { get; private set; }
 
-        public BasePage()
+        public BasePage(uint pageID)
         {
+            this.PageID = pageID;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
-            this.PageType = LiteDB.PageType.Empty;
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.DiskData = new byte[0];
@@ -86,75 +86,61 @@ namespace LiteDB
         /// Every page must imeplement this ItemCount + FreeBytes
         /// Must be called after Items are updates (insert/deletes) to keep variables ItemCount and FreeBytes synced
         /// </summary>
-        public virtual void UpdateItemCount()
-        {
-            this.ItemCount = 0;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES;
-        }
-
-        /// <summary>
-        /// Clear page content (using when delete a page)
-        /// </summary>
-        public virtual void Clear()
-        {
-            this.PrevPageID = uint.MaxValue;
-            this.NextPageID = uint.MaxValue;
-            this.PageType = PageType.Empty;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES;
-            this.ItemCount = 0;
-            this.DiskData = new byte[BasePage.PAGE_SIZE];
-        }
-
-        /// <summary>
-        /// Convert a BasePage to a specific page keeping same page header vars and re-loading disk content
-        /// </summary>
-        public T CopyTo<T>()
-            where T : BasePage, new()
-        {
-            if (this.DiskData.Length == 0) throw new SystemException("No diskdata in this page");
-
-            var page = new T();
-            page.PageID = this.PageID;
-            page.PrevPageID = this.PrevPageID;
-            page.NextPageID = this.NextPageID;
-            // page.PageType = this.PageType;
-            page.ItemCount = this.ItemCount;
-            page.FreeBytes = this.FreeBytes;
-            page.IsDirty = this.IsDirty;
-            page.DiskData = new byte[BasePage.PAGE_SIZE];
-
-            Buffer.BlockCopy(this.DiskData, 0, page.DiskData, 0, BasePage.PAGE_SIZE);
-
-            var reader = new ByteReader(this.DiskData);
-
-            // skip header - i copyed from "this" instance (including possible changes)
-            reader.ReadBytes(BasePage.PAGE_HEADER_SIZE);
-
-            if (page.PageType != LiteDB.PageType.Empty)
-            {
-                this.ReadContent(reader);
-            }
-
-            return page;
-        }
+        public abstract void UpdateItemCount();
 
         #region Read/Write page
 
         /// <summary>
-        /// Read a page from byte array
+        /// Create a new instance of page based on T type
         /// </summary>
-        public void ReadPage(byte[] buffer)
+        public static T CreateInstance<T>(uint pageID)
+            where T : BasePage
+        {
+            var type = typeof(T);
+
+            // why I need cast to BasePage before cast to T?? if you know, please tell me :)
+            if (type == typeof(HeaderPage)) return (T)(BasePage)(new HeaderPage());
+            if (type == typeof(CollectionPage)) return (T)(BasePage)(new CollectionPage(pageID));
+            if (type == typeof(IndexPage)) return (T)(BasePage)(new IndexPage(pageID));
+            if (type == typeof(DataPage)) return (T)(BasePage)(new DataPage(pageID));
+            if (type == typeof(ExtendPage)) return (T)(BasePage)(new ExtendPage(pageID));
+            if (type == typeof(EmptyPage)) return (T)(BasePage)(new EmptyPage(pageID));
+
+            throw new SystemException("Invalid base page type T");
+        }
+
+        /// <summary>
+        /// Create a new instance of page based on PageType
+        /// </summary>
+        public static BasePage CreateInstance(uint pageID, PageType pageType)
+        {
+            switch (pageType)
+            {
+                case PageType.Header: return new HeaderPage();
+                case PageType.Collection: return new CollectionPage(pageID);
+                case PageType.Index: return new IndexPage(pageID);
+                case PageType.Data: return new DataPage(pageID);
+                case PageType.Extend: return new ExtendPage(pageID);
+                case PageType.Empty: return new EmptyPage(pageID);
+                default: throw new SystemException("Invalid pageType");
+            }
+        }
+
+        /// <summary>
+        /// Read a page with correct instance page object
+        /// </summary>
+        public static BasePage ReadPage(byte[] buffer)
         {
             var reader = new ByteReader(buffer);
 
-            this.ReadHeader(reader);
+            var pageID = reader.ReadUInt32();
+            var pageType = (PageType)reader.ReadByte();
+            var page = CreateInstance(pageID, pageType);
 
-            if (this.PageType != LiteDB.PageType.Empty)
-            {
-                this.ReadContent(reader);
-            }
+            page.ReadHeader(reader);
+            page.ReadContent(reader);
 
-            this.DiskData = buffer;
+            return page;
         }
 
         /// <summary>
@@ -176,35 +162,34 @@ namespace LiteDB
             return writer.Buffer;
         }
 
-        public virtual void ReadHeader(ByteReader reader)
+        private void ReadHeader(ByteReader reader)
         {
-            this.PageID = reader.ReadUInt32();
+            // first 5 bytes (pageID + pageType) was readed before class create
+            // this.PageID
+            // this.PageType
+
             this.PrevPageID = reader.ReadUInt32();
             this.NextPageID = reader.ReadUInt32();
-            this.PageType = (PageType)reader.ReadByte();
             this.ItemCount = reader.ReadUInt16();
             this.FreeBytes = reader.ReadUInt16();
             reader.ReadBytes(3); // reserved 3 bytes
         }
 
-        public virtual void WriteHeader(ByteWriter writer)
+        private void WriteHeader(ByteWriter writer)
         {
             writer.Write(this.PageID);
+            writer.Write((byte)this.PageType);
+
             writer.Write(this.PrevPageID);
             writer.Write(this.NextPageID);
-            writer.Write((byte)this.PageType);
             writer.Write((UInt16)this.ItemCount);
             writer.Write((UInt16)this.FreeBytes);
             writer.Write(new byte[3]); // reserved 3 bytes
         }
 
-        public virtual void ReadContent(ByteReader reader)
-        {
-        }
+        protected abstract void ReadContent(ByteReader reader);
 
-        public virtual void WriteContent(ByteWriter writer)
-        {
-        }
+        protected abstract void WriteContent(ByteWriter writer);
 
         #endregion
     }

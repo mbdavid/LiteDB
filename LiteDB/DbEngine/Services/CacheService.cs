@@ -27,47 +27,23 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a page inside cache system. Returns null if page not existis. 
-        /// If T is more specific than page that I have in cache, returns null (eg. Page 2 is BasePage in cache and this method call for IndexPage PageId 2)
+        /// Get a page in my cache, first check if is in my dirty list. If not, check in my cache list. Returns null if not found
         /// </summary>
         public T GetPage<T>(uint pageID)
-            where T : BasePage, new()
+            where T : BasePage
         {
-            var page = _cache.GetOrDefault(pageID, null);
-
-            // if a need a specific page but has a BasePage, returns null
-            if (page != null && page.GetType() == typeof(BasePage) && typeof(T) != typeof(BasePage))
-            {
-                return null;
-
-                if (page.IsDirty) throw new SystemException("Can convert page - page is dirty?");
-
-                var specificPage = new T();
-                
-                specificPage.ReadPage(page.DiskData);
-                
-                lock(_cache)
-                {
-                    _cache[pageID] = specificPage;
-                }
-                
-                return specificPage;
-                //return null;
-            }
-
-            return (T)page;
+            return (T)_dirty.GetOrDefault(pageID, null) ?? (T)_cache.GetOrDefault(pageID, null);
         }
 
         /// <summary>
-        /// Add a page to cache. if this page is in cache, override (except if is basePage - in this case, copy header)
-        /// If set is dirty, add in a second list
+        /// Add a page to cache. if this page is in cache, override
         /// </summary>
         public void AddPage(BasePage page)
         {
             lock(_cache)
             {
                 // do not cache extend page - never will be reused
-                //if (page.PageType != PageType.Extend)
+                if (page.PageType != PageType.Extend)
                 {
                     _cache[page.PageID] = page;
                 }
@@ -79,16 +55,21 @@ namespace LiteDB
         /// </summary>
         public void SetPageDirty(BasePage page)
         {
-            _cache[page.PageID] = page;
-
-            // if page already dirty, do nothing
-            if (page.IsDirty) return;
-
             lock(_dirty)
             {
-                // mark as dirty and add to dirty list
-                page.IsDirty = true;
+                // add page to my dirty list + cache list
+                //_cache[page.PageID] = page;
                 _dirty[page.PageID] = page;
+
+                if(page.PageID == 0 && page.PageType != PageType.Header)
+                {
+                    Console.WriteLine("wait");
+                }
+
+                // if page already dirty
+                if (page.IsDirty) return;
+
+                page.IsDirty = true;
 
                 // if page is new (not exits on datafile), there is no journal for them
                 if (page.DiskData.Length > 0)
@@ -122,11 +103,11 @@ namespace LiteDB
         {
             lock(_cache)
             {
-                foreach(var page in _dirty.Values)
+                foreach (var page in _dirty.Values)
                 {
                     page.IsDirty = false;
 
-                    // remove all non-header-collection pages (this can be optional in future)
+                    // remove all non-header/collection pages (this can be optional in future)
                     if (page.PageType == PageType.Extend || 
                         page.PageType == PageType.Empty || 
                         page.PageType == PageType.Index || 

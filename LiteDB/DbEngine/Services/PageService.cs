@@ -22,21 +22,25 @@ namespace LiteDB
         /// Get a page from cache or from disk (and put on cache)
         /// </summary>
         public T GetPage<T>(uint pageID)
-            where T : BasePage, new()
+            where T : BasePage
         {
+            if(pageID == uint.MaxValue)
+            {
+                Console.Write("wait");
+            }
+
+
             var page = _cache.GetPage<T>(pageID);
 
             if (page == null)
             {
-                page = new T();
-
                 lock(_disk)
                 {
                     var buffer = _disk.ReadPage(pageID);
 
-                    page.ReadPage(buffer);
+                    page = (T)BasePage.ReadPage(buffer);
 
-                    Console.WriteLine("read disk " + pageID + " (" + typeof(T).Name + ")");
+                    Console.WriteLine("read page " + pageID + " (" + page.PageType + ")");
                     
                     _cache.AddPage(page);
                 }
@@ -53,13 +57,11 @@ namespace LiteDB
             _cache.SetPageDirty(page);
         }
 
-        public HeaderPage Header { get { return this.GetPage<HeaderPage>(0); } }
-
         /// <summary>
         /// Read all sequences pages from a start pageID (using NextPageID) 
         /// </summary>
         public IEnumerable<T> GetSeqPages<T>(uint firstPageID)
-            where T : BasePage, new()
+            where T : BasePage
         {
             var pageID = firstPageID;
 
@@ -77,24 +79,27 @@ namespace LiteDB
         /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile) 
         /// </summary>
         public T NewPage<T>(BasePage prevPage = null)
-            where T : BasePage, new()
+            where T : BasePage
         {
-            var page = new T();
+            var header = this.GetPage<HeaderPage>(0);
+            var pageID = (uint)0;
 
             // try get page from Empty free list
-            if(this.Header.FreeEmptyPageID != uint.MaxValue)
+            if(header.FreeEmptyPageID != uint.MaxValue)
             {
-                var free = this.GetPage<BasePage>(this.Header.FreeEmptyPageID);
+                var free = this.GetPage<BasePage>(header.FreeEmptyPageID);
 
                 // remove page from empty list
-                this.AddOrRemoveToFreeList(false, free, this.Header, ref this.Header.FreeEmptyPageID);
+                this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
 
-                page.PageID = free.PageID;
+                pageID = free.PageID;
             }
             else
             {
-                page.PageID = ++this.Header.LastPageID;
+                pageID = ++header.LastPageID;
             }
+
+            var page = BasePage.CreateInstance<T>(pageID);
 
             // if there a page before, just fix NextPageID pointer
             if (prevPage != null)
@@ -106,9 +111,7 @@ namespace LiteDB
 
             // mark header and this new page as dirty, and then add to cache
             this.SetDirty(page);
-            this.SetDirty(this.Header);
-
-            _cache.AddPage(page);
+            this.SetDirty(header);
 
             return page;
         }
@@ -118,19 +121,23 @@ namespace LiteDB
         /// </summary>
         public void DeletePage(uint pageID, bool addSequence = false)
         {
+            // get all pages in sequence or a single one
             var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { this.GetPage<BasePage>(pageID) };
 
-            // Adding all pages to FreeList
+            // get my header page
+            var header = this.GetPage<HeaderPage>(0);
+
+            // adding all pages to FreeList
             foreach (var page in pages)
             {
-                // update page to mark as completly empty page
-                page.Clear();
+                // create a new empty page based on a normal page
+                var empty = new EmptyPage(page.PageID);
 
                 // mark page as dirty
-                this.SetDirty(page);
+                this.SetDirty(empty);
 
                 // add to empty free list
-                this.AddOrRemoveToFreeList(true, page, this.Header, ref this.Header.FreeEmptyPageID);
+                this.AddOrRemoveToFreeList(true, empty, header, ref header.FreeEmptyPageID);
             }
         }
 
@@ -138,7 +145,7 @@ namespace LiteDB
         /// Returns a page that contains space enouth to data to insert new object - if not exits, create a new Page
         /// </summary>
         public T GetFreePage<T>(uint startPageID, int size)
-            where T : BasePage, new()
+            where T : BasePage
         {
             if(startPageID != uint.MaxValue)
             {

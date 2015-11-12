@@ -60,6 +60,7 @@
     <Compile Include="DbEngine\Actions\Update.cs" />
     <Compile Include="DbEngine\Actions\Insert.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
+    <Compile Include="DbEngine\Pages\EmptyPage.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />

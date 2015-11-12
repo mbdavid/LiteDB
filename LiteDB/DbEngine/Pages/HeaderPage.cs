@@ -9,6 +9,11 @@ namespace LiteDB
     internal class HeaderPage : BasePage
     {
         /// <summary>
+        /// Page type = Header
+        /// </summary>
+        public override PageType PageType { get { return PageType.Header; } }
+
+        /// <summary>
         /// ChangeID in file position (can be calc?)
         /// </summary>
         public const int CHANGE_ID_POSITION = 52;
@@ -44,10 +49,8 @@ namespace LiteDB
         public uint FirstCollectionPageID;
 
         public HeaderPage()
-            : base()
+            : base(0)
         {
-            this.PageID = 0;
-            this.PageType = PageType.Header;
             this.FreeEmptyPageID = uint.MaxValue;
             this.FirstCollectionPageID = uint.MaxValue;
             this.ChangeID = 0;
@@ -56,9 +59,18 @@ namespace LiteDB
             this.FreeBytes = 0; // no free bytes on header
         }
 
+        /// <summary>
+        /// Update freebytes + items count
+        /// </summary>
+        public override void UpdateItemCount()
+        {
+            this.ItemCount = 1; // fixed for header
+            this.FreeBytes = 0; // no free bytes on header
+        }
+
         #region Read/Write pages
 
-        public override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ByteReader reader)
         {
             var info = reader.ReadString();
             var ver = reader.ReadByte();
@@ -71,7 +83,7 @@ namespace LiteDB
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
         }
 
-        public override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ByteWriter writer)
         {
             writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);

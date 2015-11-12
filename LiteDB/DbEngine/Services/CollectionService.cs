@@ -27,9 +27,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
 
-            if (_pager.Header.FirstCollectionPageID == uint.MaxValue) return null;
+            var header = _pager.GetPage<HeaderPage>(0);
 
-            var pages = _pager.GetSeqPages<CollectionPage>(_pager.Header.FirstCollectionPageID);
+            if (header.FirstCollectionPageID == uint.MaxValue) return null;
+
+            var pages = _pager.GetSeqPages<CollectionPage>(header.FirstCollectionPageID);
 
             var col = pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
@@ -44,8 +46,10 @@ namespace LiteDB
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
             if(!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("CollectionName", name);
 
+            var header = _pager.GetPage<HeaderPage>(0);
+
             // test collection limit
-            var pages = _pager.GetSeqPages<CollectionPage>(_pager.Header.FirstCollectionPageID);
+            var pages = _pager.GetSeqPages<CollectionPage>(header.FirstCollectionPageID);
 
             if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
             {
@@ -55,7 +59,7 @@ namespace LiteDB
             var col = _pager.NewPage<CollectionPage>();
 
             // add page in collection list
-            _pager.AddOrRemoveToFreeList(true, col, _pager.Header, ref _pager.Header.FirstCollectionPageID);
+            _pager.AddOrRemoveToFreeList(true, col, header, ref header.FirstCollectionPageID);
 
             col.CollectionName = name;
             _pager.SetDirty(col);
@@ -74,7 +78,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            return _pager.GetSeqPages<CollectionPage>(_pager.Header.FirstCollectionPageID);
+            return _pager.GetSeqPages<CollectionPage>(_pager.GetPage<HeaderPage>(0).FirstCollectionPageID);
         }
 
         /// <summary>
@@ -118,8 +122,10 @@ namespace LiteDB
                 _pager.DeletePage(pageID);
             }
 
+            var header = _pager.GetPage<HeaderPage>(0);
+
             // remove page from collection list
-            _pager.AddOrRemoveToFreeList(false, col, _pager.Header, ref _pager.Header.FirstCollectionPageID);
+            _pager.AddOrRemoveToFreeList(false, col, header, ref header.FirstCollectionPageID);
 
             _pager.DeletePage(col.PageID, false);
         }

@@ -17,6 +17,11 @@ namespace LiteDB
         public static Regex NamePattern = new Regex(@"^[\w-]{1,30}$");
 
         /// <summary>
+        /// Page type = Collection
+        /// </summary>
+        public override PageType PageType { get { return PageType.Collection; } }
+
+        /// <summary>
         /// Name of collection
         /// </summary>
         public string CollectionName { get; set; }
@@ -37,10 +42,9 @@ namespace LiteDB
         /// </summary>
         public CollectionIndex[] Indexes { get; set; }
 
-        public CollectionPage()
-            : base()
+        public CollectionPage(uint pageID)
+            : base(pageID)
         {
-            this.PageType = PageType.Collection;
             this.FreeDataPageID = uint.MaxValue;
             this.DocumentCount = 0;
             this.ItemCount = 1; // fixed for CollectionPage
@@ -53,9 +57,18 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Update freebytes + items count
+        /// </summary>
+        public override void UpdateItemCount()
+        {
+            this.ItemCount = 1; // fixed for CollectionPage
+            this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
+        }
+
         #region Read/Write pages
 
-        public override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
@@ -75,7 +88,7 @@ namespace LiteDB
             }
         }
 
-        public override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ByteWriter writer)
         {
             writer.Write(this.CollectionName);
             writer.Write(this.FreeDataPageID);
