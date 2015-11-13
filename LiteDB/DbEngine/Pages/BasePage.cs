@@ -70,7 +70,7 @@ namespace LiteDB
         /// <summary>
         /// This is the data when read first from disk - used to journal operations (IDiskService only will use)
         /// </summary>
-        public byte[] DiskData { get; protected set; }
+        public byte[] DiskData { get; set; }
 
         public BasePage(uint pageID)
         {
@@ -127,20 +127,25 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read a page with correct instance page object
+        /// Read a page with correct instance page object. Checks for pageType
         /// </summary>
-        public static BasePage ReadPage(byte[] buffer)
+        public static T ReadPage<T>(byte[] buffer)
+            where T : BasePage
         {
             var reader = new ByteReader(buffer);
 
             var pageID = reader.ReadUInt32();
             var pageType = (PageType)reader.ReadByte();
-            var page = CreateInstance(pageID, pageType);
+
+            // checks if page is empty and required a specific page
+            var page = pageType == PageType.Empty && typeof(T) != typeof(BasePage) ?
+                CreateInstance<T>(pageID) : // create using T
+                CreateInstance(pageID, pageType); // creating using pageType inside disk
 
             page.ReadHeader(reader);
             page.ReadContent(reader);
 
-            return page;
+            return (T)(BasePage)page;
         }
 
         /// <summary>

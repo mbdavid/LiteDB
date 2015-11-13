@@ -1,34 +1,23 @@
 ﻿# LiteDB v.2 - TODO
 
 - Revisar help do Shell - saiu varias coisas
-- Mapper de indice está fora do ar - "indexesDef" => IDictionary<string, IndexOptions> passar no methodo Find
 - Implementar novamente o BulkInsert
-- Thread Safe
+- Thread Safe/Process Safe
     - Thread safe no BsonMapper static methods (Reflection)
+    - Lock total de read.
     - Mesmo comandos de QUERY devem ter LOCK por causa do uso da CACHE (ou faço lock na cache?)            
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 - Revisar BsonArray.Length não faz cache
-- Implementar StreamDiskService()
-- Implementar ctor new LiteDatabase(Stream)
+- Implementar StreamDiskService() + Implementar ctor new LiteDatabase(Stream)
 - Fazer db.Debbuger? Com opção de Verbose, opções de avaliação de timing de performance...
-    db.Debugger.TextWriters = Stream();
-    db.Debbuger.Counters["Abc"].Times | Count
-    
-- Remover conferencia de opções de um indice - se quiser q drop e recria com outras opções    
-
-## Debbuger
-
-db.Debug.Write((s) => Console.Write(s));
-db.Debug.Counters.Enabled = true;
-db.Debug.Counters.DiskReader
-db.Debug.Counters.DiskWriter
-db.Debug.Counters.BsonSerialize
-db.Debug.Counters.BsonDeserialize
-db.Debug.Counters.JournalWrite
-
-
+    db.Debugger.Write() = Stream();
+    db.Debbgger.DiskRead | DiskWrite | Serialize | Deserialize | Command (maior)
+        (Counter { Count, TimeElipsed, Start(), Stop(), Reset() })
+    db.Debugger.Enabled = false;
+- Implementar FindAndModify/UpdateQuery
+- O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()    
 
 ## Cache
 

@@ -20,13 +20,13 @@ namespace LiteDB
             sb.AppendLine("=============");
             sb.AppendLine();
 
-            var header = (HeaderPage)BasePage.ReadPage(_disk.ReadPage(0));
+            var header = BasePage.ReadPage<HeaderPage>(_disk.ReadPage(0));
 
             for (uint i = startPage; i <= endPage; i++)
             {
                 if(i > header.LastPageID) break;
 
-                var p = BasePage.ReadPage(_disk.ReadPage(i));
+                var p = BasePage.ReadPage<BasePage>(_disk.ReadPage(i));
 
                 sb.AppendFormat("{0} <{1},{2}> [{3}] {4}{5} | ",
                     p.PageID.Dump(),

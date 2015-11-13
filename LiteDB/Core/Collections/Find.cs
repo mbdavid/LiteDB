@@ -18,7 +18,24 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var docs = _engine.Find(_name, query, skip, limit);
+            IEnumerable<BsonDocument> docs;
+
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
+            {
+                try
+                {
+                    docs = _engine.Find(_name, query, skip, limit);
+                    break;
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
 
             foreach (var doc in docs)
             {

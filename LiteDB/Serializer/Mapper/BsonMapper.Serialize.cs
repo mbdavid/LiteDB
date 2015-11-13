@@ -92,9 +92,11 @@ namespace LiteDB
                 return custom(obj);
             }
             // check if is a list or array
-            else if (obj is IList || type.IsArray)
+            else if (obj is IEnumerable)
             {
-                var itemType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+                var itemType = type.IsArray ? 
+                    type.GetElementType() :  
+                    (type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object));
 
                 return this.SerializeArray(itemType, obj as IEnumerable, depth);
             }
@@ -105,7 +107,7 @@ namespace LiteDB
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
-            // otherwise treat as a plain object
+            // otherwise serialize as a plain object
             else
             {
                 return this.SerializeObject(type, obj, depth);

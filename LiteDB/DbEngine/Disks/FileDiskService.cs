@@ -243,7 +243,7 @@ namespace LiteDB
                 // if header, read all byte (to get original filesize)
                 if(pageID == 0)
                 {
-                    var header = (HeaderPage)BasePage.ReadPage(buffer);
+                    var header = BasePage.ReadPage<HeaderPage>(buffer);
 
                     fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
                 }

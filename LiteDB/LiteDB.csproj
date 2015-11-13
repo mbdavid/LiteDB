@@ -149,6 +149,7 @@
     <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Services\TransactionService.cs" />
     <Compile Include="Utils\ExpressionExtensions.cs" />
+    <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\StreamExtensions.cs" />
     <Compile Include="Utils\ByteReader.cs" />
     <Compile Include="Utils\ByteWriter.cs" />

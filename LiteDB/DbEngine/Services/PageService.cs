@@ -32,8 +32,8 @@ namespace LiteDB
                 {
                     var buffer = _disk.ReadPage(pageID);
 
-                    page = (T)BasePage.ReadPage(buffer);
-                    
+                    page = BasePage.ReadPage<T>(buffer);
+
                     _cache.AddPage(page);
                 }
             }
