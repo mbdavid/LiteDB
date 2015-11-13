@@ -60,9 +60,6 @@ namespace LiteDB
                 // write all dirty pages in data file
                 foreach (var page in _cache.GetDirtyPages())
                 {
-                    page.UpdateItemCount();
-
-                    Console.WriteLine("write page " + page.PageID + " (" + page.PageType + ")");
                     _disk.WritePage(page.PageID, page.WritePage());
                 }
 
@@ -117,7 +114,6 @@ namespace LiteDB
                 // if changeID was changed, file was changed by another process - clear all cache
                 if (cache.ChangeID != change)
                 {
-                    Console.WriteLine("Datafile changed, clear cache");
                     _cache.Clear();
                     return true;
                 }

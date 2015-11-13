@@ -24,11 +24,6 @@ namespace LiteDB
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
-            if(pageID == uint.MaxValue)
-            {
-                Console.Write("wait");
-            }
-
             var page = _cache.GetPage<T>(pageID);
 
             if (page == null)
@@ -38,8 +33,6 @@ namespace LiteDB
                     var buffer = _disk.ReadPage(pageID);
 
                     page = (T)BasePage.ReadPage(buffer);
-
-                    Console.WriteLine("read page " + pageID + " (" + page.PageType + ")");
                     
                     _cache.AddPage(page);
                 }
