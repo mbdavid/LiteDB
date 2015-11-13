@@ -136,9 +136,9 @@ namespace LiteDB
 
         #region Dump
 
-        internal string DumpPages()
+        internal string DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
         {
-            return _engine.DumpPages().ToString();
+            return _engine.DumpPages(startPage, endPage).ToString();
         }
 
         internal string DumpIndex(string colName, string field)

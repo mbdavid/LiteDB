@@ -1,9 +1,10 @@
 ﻿# LiteDB v.2 - TODO
 
 - Revisar help do Shell - saiu varias coisas
-- Mapper de indice está fora do ar
+- Mapper de indice está fora do ar - "indexesDef" => IDictionary<string, IndexOptions> passar no methodo Find
 - Implementar novamente o BulkInsert
 - Thread Safe
+    - Thread safe no BsonMapper static methods (Reflection)
     - Mesmo comandos de QUERY devem ter LOCK por causa do uso da CACHE (ou faço lock na cache?)            
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache

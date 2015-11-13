@@ -57,17 +57,10 @@ namespace LiteDB
         {
             lock(_dirty)
             {
-                // add page to my dirty list + cache list
-                //_cache[page.PageID] = page;
-                _dirty[page.PageID] = page;
-
-                if(page.PageID == 0 && page.PageType != PageType.Header)
-                {
-                    Console.WriteLine("wait");
-                }
-
-                // if page already dirty
+                // if page already dirty do nothing, not even add in _dirty dictionary (page type can be changed when delete a page)
                 if (page.IsDirty) return;
+
+                _dirty[page.PageID] = page;
 
                 page.IsDirty = true;
 
@@ -117,7 +110,6 @@ namespace LiteDB
                     }
                 }
 
-                _cache.Clear();
                 _dirty.Clear();
             }
         }

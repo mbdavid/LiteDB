@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Dump all pages into a string - debug purpose only
         /// </summary>
-        public StringBuilder DumpPages()
+        public StringBuilder DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
         {
             var sb = new StringBuilder();
 
@@ -20,10 +20,13 @@ namespace LiteDB
             sb.AppendLine("=============");
             sb.AppendLine();
 
-            for (uint i = 0; i <= _pager.GetPage<HeaderPage>(0).LastPageID; i++)
+            var header = (HeaderPage)BasePage.ReadPage(_disk.ReadPage(0));
+
+            for (uint i = startPage; i <= endPage; i++)
             {
-                var buffer = _disk.ReadPage(i);
-                var p = BasePage.ReadPage(buffer);
+                if(i > header.LastPageID) break;
+
+                var p = BasePage.ReadPage(_disk.ReadPage(i));
 
                 sb.AppendFormat("{0} <{1},{2}> [{3}] {4}{5} | ",
                     p.PageID.Dump(),
