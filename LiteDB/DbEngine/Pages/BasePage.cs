@@ -35,6 +35,11 @@ namespace LiteDB
         public uint PageID { get; set; }
 
         /// <summary>
+        /// Indicate the page type [1 byte] - Must be implemented for each page type
+        /// </summary>
+        public abstract PageType PageType { get; }
+
+        /// <summary>
         /// Represent the previous page. Used for page-sequences - MaxValue represent that has NO previous page [4 bytes]
         /// </summary>
         public uint PrevPageID { get; set; }
@@ -45,18 +50,13 @@ namespace LiteDB
         public uint NextPageID { get; set; }
 
         /// <summary>
-        /// Indicate the page type [1 byte] - Must be implemented for each page type
-        /// </summary>
-        public abstract PageType PageType { get; }
-
-        /// <summary>
-        /// Used for all pages to count itens inside this page(bytes, nodes, blocks, ...)
+        /// Used for all pages to count itens inside this page(bytes, nodes, blocks, ...) [2 bytes]
         /// Its Int32 but writes in UInt16
         /// </summary>
         public int ItemCount { get; set; }
 
         /// <summary>
-        /// Used to find a free page using only header search [used in FreeList]
+        /// Used to find a free page using only header search [used in FreeList] [2 bytes]
         /// Its Int32 but writes in UInt16
         /// Its updated when a page modify content length (add/remove items)
         /// </summary>

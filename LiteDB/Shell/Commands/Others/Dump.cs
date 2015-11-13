@@ -15,23 +15,17 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            var result = new StringBuilder();
+            if (s.HasTerminated)
+            {
+                return db.DumpPages();
+            }
+            else
+            {
+                var col = s.Scan(@"[\w-]+");
+                var field = s.Scan(@"\s+\w+").Trim();
 
-            //if (s.HasTerminated || s.Match("mem$"))
-            //{
-            //    var mem = s.Match("mem$");
-
-            //    result = DumpDatabase.Pages(db, mem);
-            //}
-            //else
-            //{
-            //    var col = s.Scan(@"[\w-]+");
-            //    var field = s.Scan(@"\s+\w+").Trim();
-
-            //    result = DumpDatabase.Index(db, col, field);
-            //}
-
-            return result.ToString();
+                return db.DumpIndex(col, field);
+            }
         }
     }
 }

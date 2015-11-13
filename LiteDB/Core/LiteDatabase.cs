@@ -134,6 +134,20 @@ namespace LiteDB
 
         #endregion
 
+        #region Dump
+
+        internal string DumpPages()
+        {
+            return _engine.DumpPages().ToString();
+        }
+
+        internal string DumpIndex(string colName, string field)
+        {
+            return _engine.DumpIndex(colName, field).ToString();
+        }
+
+        #endregion
+
         public void Dispose()
         {
             _engine.Dispose();

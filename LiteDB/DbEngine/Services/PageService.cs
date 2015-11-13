@@ -29,7 +29,6 @@ namespace LiteDB
                 Console.Write("wait");
             }
 
-
             var page = _cache.GetPage<T>(pageID);
 
             if (page == null)

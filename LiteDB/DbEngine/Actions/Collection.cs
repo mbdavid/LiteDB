@@ -45,10 +45,8 @@ namespace LiteDB
 
                 // change collection name and save
                 col.CollectionName = newName;
-                _pager.SetDirty(col);
 
-                // remove from collection cache
-                _collectionPages.Remove(colName);
+                _pager.SetDirty(col);
 
                 return true;
             });

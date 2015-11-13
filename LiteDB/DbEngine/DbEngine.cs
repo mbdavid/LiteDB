@@ -29,8 +29,6 @@ namespace LiteDB
 
         private CollectionService _collections;
 
-        private Dictionary<string, uint> _collectionPages = new Dictionary<string, uint>();
-
         private object _locker = new object();
 
         public DbEngine(IDiskService disk)
@@ -59,38 +57,15 @@ namespace LiteDB
         /// </summary>
         private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
         {
-            uint pageID;
+            // search my page on collection service
+            var col = _collections.Get(name);
 
-            // read if data file was changed by another process - if changed, reset my collection pageId cache
-            if(_transaction.AvoidDirtyRead())
+            if(col == null && addIfNotExits)
             {
-                _collectionPages = new Dictionary<string, uint>();
+                col = _collections.Add(name);
             }
 
-            // check if pageID is in my dictionary
-            if(_collectionPages.TryGetValue(name, out pageID))
-            {
-                return _pager.GetPage<CollectionPage>(pageID);
-            }
-            else 
-            {
-                // search my page on collection service
-                var col = _collections.Get(name);
-
-                if(col == null && addIfNotExits)
-                {
-                    col = _collections.Add(name);
-                }
-
-                if(col != null)
-                {
-                    _collectionPages.Add(name, col.PageID);
-
-                    return _pager.GetPage<CollectionPage>(col.PageID);
-                }
-            }
-
-            return null;
+            return col;
         }
 
         /// <summary>

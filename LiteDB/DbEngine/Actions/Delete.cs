@@ -22,7 +22,7 @@ namespace LiteDB
                 var count = 0;
 
                 // find nodes
-                var nodes = query.Run(col, _indexer);
+                var nodes = query.Run(col, _indexer).ToArray();
 
                 foreach (var node in nodes)
                 {
