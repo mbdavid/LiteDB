@@ -130,7 +130,7 @@ namespace LiteDB
             foreach (var page in pages)
             {
                 // create a new empty page based on a normal page
-                var empty = new EmptyPage(page.PageID);
+                var empty = new EmptyPage(page);
 
                 // mark page as dirty
                 this.SetDirty(empty);

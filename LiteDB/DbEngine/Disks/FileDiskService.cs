@@ -11,17 +11,13 @@ namespace LiteDB
     internal class FileDiskService : IDiskService
     {
         /// <summary>
-        /// Lock data file position
-        /// </summary>
-        private const int LOCK_POSITION = 0;
-
-        /// <summary>
         /// Position on disk to write a mark to know when journal is finish and valid (byte 19 is free header area)
         /// </summary>
         private const int JOURNAL_FINISH_POSITION = 19;
 
         private FileStream _stream;
         private string _filename;
+        private long _lockLength;
 
         private FileStream _journal;
         private string _journalFilename;
@@ -74,9 +70,10 @@ namespace LiteDB
         /// </summary>
         public void Lock()
         {
-            this.TryExec(() => 
-                _stream.Lock(LOCK_POSITION, 1)
-            );
+            this.TryExec(() => {
+                _lockLength = _stream.Length;
+                _stream.Lock(0, _lockLength);
+            });
         }
 
         /// <summary>
@@ -84,7 +81,7 @@ namespace LiteDB
         /// </summary>
         public void Unlock()
         {
-            _stream.Unlock(LOCK_POSITION, 1);
+            _stream.Unlock(0, _lockLength);
         }
 
         #endregion

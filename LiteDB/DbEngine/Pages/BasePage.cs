@@ -70,7 +70,7 @@ namespace LiteDB
         /// <summary>
         /// This is the data when read first from disk - used to journal operations (IDiskService only will use)
         /// </summary>
-        public byte[] DiskData { get; private set; }
+        public byte[] DiskData { get; protected set; }
 
         public BasePage(uint pageID)
         {
