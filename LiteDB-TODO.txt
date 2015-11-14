@@ -1,9 +1,5 @@
 ﻿# LiteDB v.2 - TODO
 
-- Revisar toda questao das paginas/cache
-> db.col1.insert {a:1}
-> db.col.ensureindex a
-
 - Revisar help do Shell - saiu varias coisas
 - Implementar novamente o BulkInsert
 - Thread Safe/Process Safe
@@ -22,6 +18,7 @@
     db.Debugger.Enabled = false;
 - Implementar FindAndModify/UpdateQuery
 - O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()    
+- Que tal ter a possibilidade utilizar serializacao de terceiros (via JSON.NET)?
 
 ## Cache
 

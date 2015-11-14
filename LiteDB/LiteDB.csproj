@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
+    <Compile Include="Core\Collections\InsertBulk.cs" />
     <Compile Include="DbEngine\Actions\Dump.cs" />
     <Compile Include="DbEngine\Disks\IDiskService.cs" />
     <Compile Include="DbEngine\Actions\Delete.cs" />

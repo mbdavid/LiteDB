@@ -65,6 +65,8 @@ namespace LiteDB
 
             if (col == null) return 0;
 
+            if (query == null) return (int)col.DocumentCount;
+
             // run query in this collection
             var nodes = query.Run(col, _indexer);
 
