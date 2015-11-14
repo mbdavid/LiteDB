@@ -34,17 +34,13 @@ namespace LiteDB
                 _cache.AddPage(page);
             }
 
+#if DEBUG
             // if page is empty, convert to T
             if(page.PageType == PageType.Empty && typeof(T) != typeof(BasePage))
             {
-                page = ((EmptyPage)page).ConvertTo<T>();
-
-                // add to cache again (with new type)
-                _cache.AddPage(page);
-
-                // if convert a dirty page, set new page as dirty too
-                if(page.IsDirty) this.SetDirty(page);
+                throw new SystemException("Pager.GetPage<T>() never shuld happend");
             }
+#endif
 
             return (T)page;
         }
