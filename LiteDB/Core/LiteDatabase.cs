@@ -38,6 +38,13 @@ namespace LiteDB
             _mapper = BsonMapper.Global;
         }
 
+        public LiteDatabase(Stream stream)
+        {
+            // initialize engine using StreamDisk
+            _engine = new DbEngine(new StreamDiskService(stream));
+            _mapper = BsonMapper.Global;
+        }
+
         /// <summary>
         /// Starts LiteDB database using full parameters
         /// </summary>

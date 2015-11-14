@@ -40,7 +40,7 @@ namespace UnitTest
         [TestMethod]
         public void Include_Test()
         {
-            using (var db = new LiteDatabase(DB.Path()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var customers = db.GetCollection<Customer>("customers");
                 var products = db.GetCollection<Product>("products");

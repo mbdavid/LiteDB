@@ -91,21 +91,21 @@ namespace LiteDB
             {
                 return custom(obj);
             }
-            // check if is a list or array
-            else if (obj is IEnumerable)
-            {
-                var itemType = type.IsArray ? 
-                    type.GetElementType() :  
-                    (type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object));
-
-                return this.SerializeArray(itemType, obj as IEnumerable, depth);
-            }
             // for dictionary
             else if (obj is IDictionary)
             {
                 var itemType = type.GetGenericArguments()[1];
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
+            }
+            // check if is a list or array
+            else if (obj is IEnumerable)
+            {
+                var itemType = type.IsArray ?
+                    type.GetElementType() :
+                    (type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object));
+
+                return this.SerializeArray(itemType, obj as IEnumerable, depth);
             }
             // otherwise serialize as a plain object
             else

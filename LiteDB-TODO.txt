@@ -1,24 +1,26 @@
 ﻿# LiteDB v.2 - TODO
 
+- Implementar StreamDiskService() + Implementar ctor new LiteDatabase(Stream)
+- Unit Teste devem sempre usar MemoryStream() (exceto concorrencia e/ou algo especifico pra disco)
+
+- Implementar FindAndModify/UpdateQuery
+- Que tal ter a possibilidade utilizar serializacao de terceiros (via JSON.NET)? IBsonMapper?
+
+
 - Revisar help do Shell - saiu varias coisas
-- Implementar novamente o BulkInsert
 - Thread Safe/Process Safe
     - Thread safe no BsonMapper static methods (Reflection)
     - Lock total de read.
     - Mesmo comandos de QUERY devem ter LOCK por causa do uso da CACHE (ou faço lock na cache?)            
     - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
     - Avaliar uso do ConcurrentDictionary na cache
-- Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 - Revisar BsonArray.Length não faz cache
-- Implementar StreamDiskService() + Implementar ctor new LiteDatabase(Stream)
 - Fazer db.Debbuger? Com opção de Verbose, opções de avaliação de timing de performance...
     db.Debugger.Write() = Stream();
     db.Debbgger.DiskRead | DiskWrite | Serialize | Deserialize | Command (maior)
         (Counter { Count, TimeElipsed, Start(), Stop(), Reset() })
     db.Debugger.Enabled = false;
-- Implementar FindAndModify/UpdateQuery
 - O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()    
-- Que tal ter a possibilidade utilizar serializacao de terceiros (via JSON.NET)?
 
 ## Cache
 
@@ -58,6 +60,7 @@ e) Leitura conforme indice (retorno poucos registros)
 - DefaultIndexOptions? Ou sem default - não cria indice automaticamente - ou full search?
 - Folder root: "src", "test", "nuget"
 - Encrypt datafile (EncryptDiskService : FileDiskService)
+- Queria que o IDiskService não tivesse informações sobre Journal/Recovery
 
 - Como implementar pro DNX
 - Mapeador/Configuration estilo EF

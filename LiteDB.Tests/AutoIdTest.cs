@@ -38,7 +38,7 @@ namespace UnitTest
         [TestMethod]
         public void AutoId_Test()
         {
-            using (var db = new LiteDatabase(DB.Path()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_guid = db.GetCollection<EntityGuid>("guid");
