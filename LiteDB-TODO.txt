@@ -1,11 +1,10 @@
 ﻿# LiteDB v.2 - TODO
 
-- Implementar StreamDiskService() + Implementar ctor new LiteDatabase(Stream)
-- Unit Teste devem sempre usar MemoryStream() (exceto concorrencia e/ou algo especifico pra disco)
-
 - Implementar FindAndModify/UpdateQuery
-- Que tal ter a possibilidade utilizar serializacao de terceiros (via JSON.NET)? IBsonMapper?
+- O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()    
+- Debbuger? Acho importante no teste da cache
 
+- Unit Teste devem sempre usar MemoryStream() (exceto concorrencia e/ou algo especifico pra disco)
 
 - Revisar help do Shell - saiu varias coisas
 - Thread Safe/Process Safe
@@ -20,7 +19,6 @@
     db.Debbgger.DiskRead | DiskWrite | Serialize | Deserialize | Command (maior)
         (Counter { Count, TimeElipsed, Start(), Stop(), Reset() })
     db.Debugger.Enabled = false;
-- O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()    
 
 ## Cache
 
@@ -61,6 +59,7 @@ e) Leitura conforme indice (retorno poucos registros)
 - Folder root: "src", "test", "nuget"
 - Encrypt datafile (EncryptDiskService : FileDiskService)
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
+- Que tal ter a possibilidade utilizar serializacao de terceiros (via JSON.NET)? IBsonMapper?
 
 - Como implementar pro DNX
 - Mapeador/Configuration estilo EF
@@ -90,6 +89,27 @@ e) Leitura conforme indice (retorno poucos registros)
 - Utils
     - Linq, shell, fileStorage, fts
 - API
+
+db.Logger.Level = None, Error, Info, Verbose;
+db.Logger.Output = Console.Out;
+
+db.Logger.Error(ex, "text");
+db.Logger.Info("text", arg0, arg1);
+db.Logger.Verbose("text", arg0, arg1);
+
+<timestamp> <severity> <component> [<context>] <message>
+2014-11-03T18:28:32.450-0500 I NETWORK [initandlisten] waiting for connections on port 27017
+
+Components:
+ACCESS
+COMMAND
+CONTROL
+INDEX
+QUERY
+STORAGE
+JOURNAL
+
+
 
 
 ================================================================================================================

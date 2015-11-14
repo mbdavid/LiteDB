@@ -34,7 +34,7 @@ namespace LiteDB
                     if(array.Count == 0) return;
 
                     // all doc refs in an array must be same collection, lets take first only
-                    var col = new LiteCollection<BsonDocument>(array[0].AsDocument["$ref"], _engine, _mapper);
+                    var col = new LiteCollection<BsonDocument>(array[0].AsDocument["$ref"], _engine, _mapper, _log);
 
                     for(var i = 0; i < array.Count; i++)
                     {
@@ -46,14 +46,14 @@ namespace LiteDB
                 {
                     // for BsonDocument, get property value e update with full object refence
                     var doc = value.AsDocument;
-                    var col = new LiteCollection<BsonDocument>(doc["$ref"], _engine, _mapper);
+                    var col = new LiteCollection<BsonDocument>(doc["$ref"], _engine, _mapper, _log);
                     var obj = col.FindById(doc["$id"]);
                     bson.Set(path, obj);
                 }
             };
 
             // cloning this collection and adding this include
-            var newcol = new LiteCollection<T>(_name, _engine, _mapper);
+            var newcol = new LiteCollection<T>(_name, _engine, _mapper, _log);
 
             newcol._includes.AddRange(_includes);
             newcol._includes.Add(action);

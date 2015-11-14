@@ -16,7 +16,11 @@ namespace LiteDB
 
         private BsonMapper _mapper;
 
+        private Logger _log = new Logger();
+
         public BsonMapper Mapper { get { return _mapper; } }
+
+        public Logger Log { get { return _log; } }
 
         /// <summary>
         /// Starts LiteDB database using a connectionString
@@ -34,7 +38,7 @@ namespace LiteDB
             if(string.IsNullOrWhiteSpace(filename)) throw new ArgumentNullException("filename");
 
             // initialize engine creating a new FileDiskService for data access
-            _engine = new DbEngine(new FileDiskService(filename, journal, timeout, readOnly, password));
+            _engine = new DbEngine(new FileDiskService(filename, journal, timeout, readOnly, password, _log));
             _mapper = BsonMapper.Global;
         }
 
@@ -63,7 +67,7 @@ namespace LiteDB
         public LiteCollection<T> GetCollection<T>(string name)
             where T : new()
         {
-            return new LiteCollection<T>(name, _engine, _mapper);
+            return new LiteCollection<T>(name, _engine, _mapper, _log);
         }
 
         /// <summary>
@@ -72,7 +76,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            return new LiteCollection<BsonDocument>(name, _engine, _mapper);
+            return new LiteCollection<BsonDocument>(name, _engine, _mapper, _log);
         }
 
         /// <summary>

@@ -23,16 +23,18 @@ namespace LiteDB
         private string _journalFilename;
         private bool _journalEnabled;
 
+        private Logger _log;
         private TimeSpan _timeout;
         private bool _readonly;
         private string _password;
 
-        public FileDiskService(string filename, bool journalEnabled, TimeSpan timeout, bool readOnly, string password)
+        public FileDiskService(string filename, bool journalEnabled, TimeSpan timeout, bool readOnly, string password, Logger logger)
         {
             _filename = filename;
             _timeout = timeout;
             _readonly = readOnly;
             _password = password;
+            _log = logger;
 
             _journalEnabled = _readonly ? false : journalEnabled; // readonly? no journal
             _journalFilename = Path.Combine(Path.GetDirectoryName(_filename),
@@ -54,6 +56,8 @@ namespace LiteDB
 
             if(_stream.Length == 0)
             {
+                _log.Debug(Logger.DISK, "initialize new datafile");
+
                 return true;
             }
             else
@@ -73,6 +77,7 @@ namespace LiteDB
             this.TryExec(() => {
                 _lockLength = _stream.Length;
                 _stream.Lock(0, _lockLength);
+                _log.Debug(Logger.DISK, "lock datafile");
             });
         }
 
@@ -82,6 +87,7 @@ namespace LiteDB
         public void Unlock()
         {
             _stream.Unlock(0, _lockLength);
+            _log.Debug(Logger.DISK, "unlock datafile");
         }
 
         #endregion
@@ -119,6 +125,8 @@ namespace LiteDB
                 _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
             });
 
+            _log.Debug(Logger.DISK, "read page #{0:0000}", pageID);
+
             return buffer;
         }
 
@@ -136,6 +144,8 @@ namespace LiteDB
             }
 
             _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+
+            _log.Debug(Logger.DISK, "write page #{0:0000}", pageID);
         }
 
         #endregion
@@ -156,6 +166,8 @@ namespace LiteDB
                 });
             }
 
+            _log.Debug(Logger.JOURNAL, "write page #{0:0000}", pageID);
+
             // just write original bytes in order that are changed
             _journal.Write(data, 0, BasePage.PAGE_SIZE);
         }
@@ -174,6 +186,8 @@ namespace LiteDB
                 _journal.Flush();
             }
 
+            _log.Debug(Logger.JOURNAL, "journal file commited");
+
             // fileSize parameter tell me final size of data file - helpful to extend first datafile
             _stream.SetLength(fileSize);
         }
@@ -190,6 +204,8 @@ namespace LiteDB
 
                 // remove journal file
                 File.Delete(_journalFilename);
+
+                _log.Debug(Logger.JOURNAL, "journal file deleted");
             }
         }
 
@@ -212,6 +228,8 @@ namespace LiteDB
             {
                 var finish = journal.ReadByte(JOURNAL_FINISH_POSITION);
 
+                _log.Debug(Logger.RECOVERY, "detected journal file");
+
                 // test if journal was finish
                 if(finish == 1)
                 {
@@ -222,6 +240,8 @@ namespace LiteDB
                 journal.Close();
 
                 File.Delete(_journalFilename);
+
+                _log.Debug(Logger.RECOVERY, "journal file deleted - datafile is recoreved");
             });
         }
 
@@ -251,7 +271,11 @@ namespace LiteDB
                 // write in stream
                 _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);
                 _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+
+                _log.Debug(Logger.RECOVERY, "recovering page #{0:0000}", pageID);
             }
+
+            _log.Debug(Logger.RECOVERY, "resize datafile to {0}", fileSize);
 
             // redim filesize if grow more than original before rollback
             _stream.SetLength(fileSize);
@@ -285,6 +309,8 @@ namespace LiteDB
                 }
             }
 
+            _log.Error(Logger.DISK, "timeout disk access");
+
             throw LiteException.LockTimeout(_timeout);
         }
 
@@ -300,7 +326,7 @@ namespace LiteDB
             }
             catch (FileNotFoundException)
             {
-                // do nothing - no journal, no recovery
+                // do nothing - no journal file, no recovery
             }
             catch (IOException ex)
             {

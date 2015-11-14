@@ -15,11 +15,13 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper));
+            _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
 
             var doc = _mapper.ToDocument(document);
 
             _engine.InsertDocuments(_name, new BsonDocument[] { doc });
+
+            _log.Debug("COMMAND", "inserted document _id = {0}", doc["_id"]);
 
             return doc["_id"];
         }
@@ -37,15 +39,15 @@ namespace LiteDB
         /// <summary>
         /// Convert each T document in a BsonDocument, setting autoId for each one
         /// </summary>
-        /// <param name="docs"></param>
-        /// <returns></returns>
         private IEnumerable<BsonDocument> GetBsonDocs(IEnumerable<T> docs)
         {
             foreach (var document in docs)
             {
-                _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper));
+                _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
 
                 var doc = _mapper.ToDocument(document);
+
+                _log.Debug("COMMAND", "inserted document _id = {0}", doc["_id"]);
 
                 yield return doc;
             }
