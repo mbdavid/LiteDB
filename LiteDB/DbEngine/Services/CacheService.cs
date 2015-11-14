@@ -14,7 +14,7 @@ namespace LiteDB
     /// </summary>
     internal class CacheService : IDisposable
     {
-        // single cache structure - use Sort dictionary for get pages in order (fast to store in sequence on disk)
+        // double cache structure - use Sort dictionary for get pages in order (fast to store in sequence on disk)
         private SortedDictionary<uint, BasePage> _cache;
         private SortedDictionary<uint, BasePage> _dirty;
 
@@ -29,10 +29,10 @@ namespace LiteDB
         /// <summary>
         /// Get a page in my cache, first check if is in my dirty list. If not, check in my cache list. Returns null if not found
         /// </summary>
-        public T GetPage<T>(uint pageID)
-            where T : BasePage
+        public BasePage GetPage(uint pageID)
         {
-            return (T)_dirty.GetOrDefault(pageID, null) ?? (T)_cache.GetOrDefault(pageID, null);
+            // check for in dirty list - if not found, check in cache list
+            return _dirty.GetOrDefault(pageID, null) ?? _cache.GetOrDefault(pageID, null);
         }
 
         /// <summary>
@@ -57,10 +57,9 @@ namespace LiteDB
         {
             lock(_dirty)
             {
-                // if page already dirty do nothing, not even add in _dirty dictionary (page type can be changed when delete a page)
-                if (page.IsDirty) return;
-
                 _dirty[page.PageID] = page;
+
+                if (page.IsDirty) return;
 
                 page.IsDirty = true;
 
@@ -96,20 +95,21 @@ namespace LiteDB
         {
             lock(_cache)
             {
-                foreach (var page in _dirty.Values)
-                {
-                    page.IsDirty = false;
+                //foreach (var page in _dirty.Values)
+                //{
+                //    page.IsDirty = false;
 
-                    // remove all non-header/collection pages (this can be optional in future)
-                    if (page.PageType == PageType.Extend || 
-                        page.PageType == PageType.Empty || 
-                        page.PageType == PageType.Index || 
-                        page.PageType == PageType.Data)
-                    {
-                        _cache.Remove(page.PageID);
-                    }
-                }
+                //    // remove all non-header/collection pages (this can be optional in future)
+                //    if (page.PageType == PageType.Extend || 
+                //        page.PageType == PageType.Empty || 
+                //        page.PageType == PageType.Index || 
+                //        page.PageType == PageType.Data)
+                //    {
+                //        _cache.Remove(page.PageID);
+                //    }
+                //}
 
+                _cache.Clear();
                 _dirty.Clear();
             }
         }

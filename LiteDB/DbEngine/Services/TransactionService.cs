@@ -104,7 +104,7 @@ namespace LiteDB
                 // if is in transaction pages are not dirty (begin trans was checked)
                 if (_trans == true) return false;
 
-                var cache = _cache.GetPage<HeaderPage>(0);
+                var cache = (HeaderPage)_cache.GetPage(0);
 
                 if (cache == null) return false;
 

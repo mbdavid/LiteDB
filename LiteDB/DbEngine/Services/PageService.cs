@@ -24,21 +24,29 @@ namespace LiteDB
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
-            var page = _cache.GetPage<T>(pageID);
+            var page = _cache.GetPage(pageID);
 
+            // is not on cache? load from disk
             if (page == null)
             {
-                lock(_disk)
-                {
-                    var buffer = _disk.ReadPage(pageID);
-
-                    page = BasePage.ReadPage<T>(buffer);
-
-                    _cache.AddPage(page);
-                }
+                var buffer = _disk.ReadPage(pageID);
+                page = BasePage.ReadPage(buffer);
+                _cache.AddPage(page);
             }
 
-            return page;
+            // if page is empty, convert to T
+            if(page.PageType == PageType.Empty && typeof(T) != typeof(BasePage))
+            {
+                page = ((EmptyPage)page).ConvertTo<T>();
+
+                // add to cache again (with new type)
+                _cache.AddPage(page);
+
+                // if convert a dirty page, set new page as dirty too
+                if(page.IsDirty) this.SetDirty(page);
+            }
+
+            return (T)page;
         }
 
         /// <summary>
@@ -110,6 +118,8 @@ namespace LiteDB
 
         /// <summary>
         /// Delete an page using pageID - transform them in Empty Page and add to EmptyPageList
+        /// If you delete a page, you can using same old instance of page - page will be converter to EmptyPage
+        /// If need deleted page, use GetPage again
         /// </summary>
         public void DeletePage(uint pageID, bool addSequence = false)
         {
@@ -157,6 +167,8 @@ namespace LiteDB
             // if not has space on first page, there is no page with space (pages are ordered), create a new one
             return this.NewPage<T>();
         }
+
+        #region Add Or Remove do empty list
 
         /// <summary>
         /// Add or Remove a page in a sequence
@@ -295,5 +307,7 @@ namespace LiteDB
             this.RemoveToFreeList(page, startPage, ref fieldPageID);
             this.AddToFreeList(page, startPage, ref fieldPageID);
         }
+
+        #endregion
     }
 }

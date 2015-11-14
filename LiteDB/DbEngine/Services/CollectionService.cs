@@ -114,6 +114,10 @@ namespace LiteDB
                     // add index page to delete list page
                     pages.Add(node.Position.PageID);
                 }
+
+                // remove head+tail nodes in all indexes
+                pages.Add(index.HeadNode.PageID);
+                pages.Add(index.TailNode.PageID);
             }
 
             // and now, lets delete all this pages
@@ -127,7 +131,7 @@ namespace LiteDB
             // remove page from collection list
             _pager.AddOrRemoveToFreeList(false, col, header, ref header.FirstCollectionPageID);
 
-            _pager.DeletePage(col.PageID, false);
+            _pager.DeletePage(col.PageID);
         }
     }
 }

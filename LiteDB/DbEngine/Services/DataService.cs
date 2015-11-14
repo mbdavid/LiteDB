@@ -175,18 +175,19 @@ namespace LiteDB
                 // first, remove from free list
                 _pager.AddOrRemoveToFreeList(false, page, col, ref col.FreeDataPageID);
 
-                _pager.DeletePage(page.PageID, false);
+                _pager.DeletePage(page.PageID);
             }
             else
             {
                 // add or remove to free list
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > DataPage.DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
+
+                _pager.SetDirty(page);
             }
 
             col.DocumentCount--;
 
             _pager.SetDirty(col);
-            _pager.SetDirty(page);
 
             return block;
         }

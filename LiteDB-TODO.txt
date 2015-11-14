@@ -1,5 +1,9 @@
 ﻿# LiteDB v.2 - TODO
 
+- Revisar toda questao das paginas/cache
+> db.col1.insert {a:1}
+> db.col.ensureindex a
+
 - Revisar help do Shell - saiu varias coisas
 - Implementar novamente o BulkInsert
 - Thread Safe/Process Safe

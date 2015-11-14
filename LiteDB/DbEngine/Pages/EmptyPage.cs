@@ -43,6 +43,26 @@ namespace LiteDB
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
         }
 
+        public T ConvertTo<T>()
+            where T : BasePage
+        {
+            var copy = BasePage.CreateInstance<T>(this.PageID);
+
+            copy.NextPageID = this.NextPageID;
+            copy.PrevPageID = this.PrevPageID;
+            copy.IsDirty = this.IsDirty;
+
+            if (this.DiskData.Length > 0)
+            {
+                this.DiskData = new byte[BasePage.PAGE_SIZE];
+                Buffer.BlockCopy(this.DiskData, 0, copy.DiskData, 0, BasePage.PAGE_SIZE);
+            }
+
+            copy.UpdateItemCount();
+
+            return copy;
+        }
+
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)

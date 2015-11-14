@@ -129,23 +129,19 @@ namespace LiteDB
         /// <summary>
         /// Read a page with correct instance page object. Checks for pageType
         /// </summary>
-        public static T ReadPage<T>(byte[] buffer)
-            where T : BasePage
+        public static BasePage ReadPage(byte[] buffer)
         {
             var reader = new ByteReader(buffer);
 
             var pageID = reader.ReadUInt32();
             var pageType = (PageType)reader.ReadByte();
 
-            // checks if page is empty and required a specific page
-            var page = pageType == PageType.Empty && typeof(T) != typeof(BasePage) ?
-                CreateInstance<T>(pageID) : // create using T
-                CreateInstance(pageID, pageType); // creating using pageType inside disk
+            var page = CreateInstance(pageID, pageType);
 
             page.ReadHeader(reader);
             page.ReadContent(reader);
 
-            return (T)(BasePage)page;
+            return page;
         }
 
         /// <summary>

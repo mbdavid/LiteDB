@@ -195,15 +195,15 @@ namespace LiteDB
                 // first, remove from free list
                 _pager.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
 
-                _pager.DeletePage(page.PageID, false);
+                _pager.DeletePage(page.PageID);
             }
             else
             {
                 // add or remove page from free list
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
-            }
 
-            _pager.SetDirty(page);
+                _pager.SetDirty(page);
+            }
         }
 
 
@@ -222,9 +222,9 @@ namespace LiteDB
             }
 
             // now delete all pages
-            foreach (var page in pages)
+            foreach (var pageID in pages)
             {
-                _pager.DeletePage(page);
+                _pager.DeletePage(pageID);
             }
         }
 
