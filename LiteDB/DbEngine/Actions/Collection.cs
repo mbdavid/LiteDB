@@ -28,6 +28,8 @@ namespace LiteDB
             {
                 if(col == null) return false;
 
+                _log.Write(Logger.COMMAND, "drop collection {0}", colName);
+
                 _collections.Drop(col);
 
                 return true;
@@ -42,6 +44,8 @@ namespace LiteDB
             return this.Transaction<bool>(colName, false, (col) =>
             {
                 if(col == null) return false;
+
+                _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", colName, newName);
 
                 // change collection name and save
                 col.CollectionName = newName;

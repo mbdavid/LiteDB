@@ -34,6 +34,8 @@ namespace LiteDB
                         throw LiteException.InvalidDataType("_id", id);
                     }
 
+                    _log.Write(Logger.COMMAND, "insert document on '{0}' :: _id = {1}", colName, id);
+
                     // serialize object
                     var bytes = BsonSerializer.Serialize(doc);
 

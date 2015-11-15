@@ -18,15 +18,12 @@ namespace LiteDB
         private SortedDictionary<uint, BasePage> _cache;
         private SortedDictionary<uint, BasePage> _dirty;
 
-        private Logger _log;
-
         public Action<BasePage> MarkAsDirtyAction = (page) => { };
 
-        public CacheService(Logger log)
+        public CacheService()
         {
             _cache = new SortedDictionary<uint, BasePage>();
             _dirty = new SortedDictionary<uint, BasePage>();
-            _log = log;
         }
 
         /// <summary>
@@ -35,14 +32,7 @@ namespace LiteDB
         public BasePage GetPage(uint pageID)
         {
             // check for in dirty list - if not found, check in cache list
-            var page = _dirty.GetOrDefault(pageID, null) ?? _cache.GetOrDefault(pageID, null);
-
-            if (page != null)
-            {
-                _log.Debug(Logger.CACHE, "get page #{0:0000} ({1})", page.PageID, page.PageType);
-            }
-
-            return page;
+            return _dirty.GetOrDefault(pageID, null) ?? _cache.GetOrDefault(pageID, null);
         }
 
         /// <summary>
@@ -94,8 +84,6 @@ namespace LiteDB
                 _dirty.Clear();
                 _cache.Clear();
             }
-
-            _log.Debug(Logger.CACHE, "clear cache ({0} dirty pages)", _dirty.Count);
 
             return hasDirty;
         }

@@ -19,6 +19,8 @@ namespace LiteDB
                 // check if index already exists
                 if (col.GetIndex(field) != null) return false;
 
+                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", colName, field, options.Unique);
+
                 // create index head
                 var index = _indexer.CreateIndex(col);
 
@@ -69,6 +71,8 @@ namespace LiteDB
 
                 // no index, no drop
                 if (index == null) return false;
+
+                _log.Write(Logger.COMMAND, "drop index on '{0}' :: '{1}'", colName, field);
 
                 // delete all data pages + indexes pages
                 _indexer.DropIndex(index);

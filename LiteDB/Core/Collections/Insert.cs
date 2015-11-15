@@ -21,8 +21,6 @@ namespace LiteDB
 
             _engine.InsertDocuments(_name, new BsonDocument[] { doc });
 
-            _log.Debug(Logger.COMMAND, "inserted document _id = {0}", doc["_id"]);
-
             return doc["_id"];
         }
 
@@ -46,8 +44,6 @@ namespace LiteDB
                 _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
 
                 var doc = _mapper.ToDocument(document);
-
-                _log.Debug(Logger.COMMAND, "inserted document _id = {0}", doc["_id"]);
 
                 yield return doc;
             }

@@ -29,6 +29,8 @@ namespace LiteDB
             // for each document, read data and deserialize as document
             foreach (var node in nodes)
             {
+                _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
+
                 var dataBlock = _data.Read(node.DataBlock, true);
 
                 var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;

@@ -36,7 +36,6 @@ namespace LiteDB
         public DbEngine(IDiskService disk, Logger log)
         {
             _log = log;
-
             _disk = disk;
 
             var isNew = _disk.Initialize();
@@ -46,7 +45,7 @@ namespace LiteDB
                 _disk.WritePage(0, new HeaderPage().WritePage());
             }
 
-            _cache = new CacheService(_log);
+            _cache = new CacheService();
             _pager = new PageService(_disk, _cache);
             _indexer = new IndexService(_pager);
             _data = new DataService(_pager);
@@ -66,6 +65,8 @@ namespace LiteDB
 
             if(col == null && addIfNotExits)
             {
+                _log.Write(Logger.COMMAND, "create new collection '{0}'", name);
+
                 col = _collections.Add(name);
             }
 
@@ -90,8 +91,9 @@ namespace LiteDB
 
                 return result;
             }
-            catch
+            catch(Exception ex)
             {
+                _log.Write(Logger.ERROR, "rollback transaction :: {0}", ex.Message);
                 _transaction.Rollback();
                 throw;
             }

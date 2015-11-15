@@ -26,6 +26,8 @@ namespace LiteDB
 
                 foreach (var node in nodes)
                 {
+                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
+
                     // read dataBlock (do not read all extend pages, i will not use)
                     var dataBlock = _data.Read(node.DataBlock, false);
 

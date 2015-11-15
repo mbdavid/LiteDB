@@ -3,6 +3,8 @@
 - Implementar FindAndModify/UpdateQuery
 - O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()    
 - Debbuger? Acho importante no teste da cache
+- LazyLoad para engine
+- Remover todos que encontrar String.Format (concatena na mão)
 
 - Unit Teste devem sempre usar MemoryStream() (exceto concorrencia e/ou algo especifico pra disco)
 
@@ -100,7 +102,25 @@ db.Logger.Verbose("text", arg0, arg1);
 <timestamp> <severity> <component> [<context>] <message>
 2014-11-03T18:28:32.450-0500 I NETWORK [initandlisten] waiting for connections on port 27017
 
-Components:
+Level	Description
+F	Fatal
+E	Error
+W	Warning
+I	Informational, for Verbosity Level of 0
+D	Debug, for All Verbosity Levels > 0
+
+LEVEL
+    - NONE
+    - ERROR
+    - RECOVERY
+    - COMMAND
+    - QUERY
+    - INDEX
+    - JOURNAL
+    - DISK
+    - CACHE
+    - FULL
+
 ACCESS
 COMMAND
 CONTROL

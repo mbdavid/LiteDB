@@ -26,6 +26,8 @@ namespace LiteDB
                     // normalize id before find
                     var id = doc["_id"].Normalize(col.PK.Options);
 
+                    _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = ", colName, id);
+
                     // find indexNode from pk index
                     var indexNode = _indexer.Find(col.PK, id, false, Query.Ascending);
 
