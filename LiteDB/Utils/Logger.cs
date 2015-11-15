@@ -28,7 +28,10 @@ namespace LiteDB
         /// </summary>
         public byte Level { get; set; }
 
-        public Action<string> WriteLine = (text) =>
+        /// <summary>
+        /// Output function to write log - default is log in console
+        /// </summary>
+        public Action<string> Output = (text) =>
         {
             Console.ForegroundColor = ConsoleColor.DarkGreen;
             Console.WriteLine(text);
@@ -39,10 +42,9 @@ namespace LiteDB
             this.Level = NONE;
         }
 
-        public void Reset()
-        {
-        }
-
+        /// <summary>
+        /// Write log text to output using inside a component (statics const of Logger)
+        /// </summary>
         public void Write(byte component, string message, params object[] args)
         {
             if((component & this.Level) == 0) return;
@@ -56,10 +58,9 @@ namespace LiteDB
                 component == JOURNAL ? "JOURNAL" :
                 component == DISK ? "DISK" : "QUERY";
 
-            var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + "[" + comp + "] " + text;
+            var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + " [" + comp + "] " + text;
 
-            WriteLine(msg);
+            this.Output(msg);
         }
-
     }
 }

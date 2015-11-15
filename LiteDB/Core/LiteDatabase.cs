@@ -12,7 +12,7 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
-        private DbEngine _engine;
+        private Lazy<DbEngine> _engine;
 
         private BsonMapper _mapper;
 
@@ -23,20 +23,25 @@ namespace LiteDB
         public Logger Log { get { return _log; } }
 
         /// <summary>
-        /// Starts LiteDB database using a connectionString
+        /// Starts LiteDB database using a connectionString for filesystem database
         /// </summary>
         public LiteDatabase(string connectionString)
         {
-            // initialize engine creating a new FileDiskService for data access
-            _engine = new DbEngine(new FileDiskService(connectionString, _log), _log);
             _mapper = BsonMapper.Global;
+            _engine = new Lazy<DbEngine>(
+                () => new DbEngine(new FileDiskService(connectionString, _log), _log), 
+                false);
         }
 
+        /// <summary>
+        /// Initialize database using any read/write Stream (like MemoryStream)
+        /// </summary>
         public LiteDatabase(Stream stream)
         {
-            // initialize engine using StreamDisk
-            _engine = new DbEngine(new StreamDiskService(stream), _log);
             _mapper = BsonMapper.Global;
+            _engine = new Lazy<DbEngine>(
+                () => new DbEngine(new StreamDiskService(stream), _log),
+                false);
         }
 
         /// <summary>
@@ -44,8 +49,10 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(IDiskService diskService, BsonMapper mapper)
         {
-            _engine = new DbEngine(diskService, _log);
             _mapper = mapper;
+            _engine = new Lazy<DbEngine>(
+                () => new DbEngine(diskService, _log),
+                false);
         }
 
         #region Collections
@@ -57,7 +64,7 @@ namespace LiteDB
         public LiteCollection<T> GetCollection<T>(string name)
             where T : new()
         {
-            return new LiteCollection<T>(name, _engine, _mapper, _log);
+            return new LiteCollection<T>(name, _engine.Value, _mapper, _log);
         }
 
         /// <summary>
@@ -66,7 +73,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            return new LiteCollection<BsonDocument>(name, _engine, _mapper, _log);
+            return new LiteCollection<BsonDocument>(name, _engine.Value, _mapper, _log);
         }
 
         /// <summary>
@@ -74,7 +81,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            return _engine.GetCollectionNames();
+            return _engine.Value.GetCollectionNames();
         }
 
         /// <summary>
@@ -82,7 +89,7 @@ namespace LiteDB
         /// </summary>
         public bool CollectionExists(string name)
         {
-            return _engine.GetCollectionNames().Contains(name);
+            return _engine.Value.GetCollectionNames().Contains(name);
         }
 
         /// <summary>
@@ -90,7 +97,7 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string name)
         {
-            return _engine.DropCollection(name);
+            return _engine.Value.DropCollection(name);
         }
 
         /// <summary>
@@ -98,7 +105,7 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
         {
-            return _engine.RenameCollection(oldName, newName);
+            return _engine.Value.RenameCollection(oldName, newName);
         }
 
         #endregion
@@ -112,7 +119,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileStorage FileStorage
         {
-            get { return _fs ?? (_fs = new LiteFileStorage(_engine)); }
+            get { return _fs ?? (_fs = new LiteFileStorage(_engine.Value)); }
         }
 
         #endregion
@@ -139,19 +146,19 @@ namespace LiteDB
 
         internal string DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
         {
-            return _engine.DumpPages(startPage, endPage).ToString();
+            return _engine.Value.DumpPages(startPage, endPage).ToString();
         }
 
         internal string DumpIndex(string colName, string field)
         {
-            return _engine.DumpIndex(colName, field).ToString();
+            return _engine.Value.DumpIndex(colName, field).ToString();
         }
 
         #endregion
 
         public void Dispose()
         {
-            _engine.Dispose();
+            if(_engine.IsValueCreated) _engine.Value.Dispose();
         }
     }
 }

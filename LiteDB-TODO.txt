@@ -1,15 +1,13 @@
 ﻿# LiteDB v.2 - TODO
 
 - LazyLoad para engine
-- Implementar FindAndModify/UpdateQuery
-- Debbuger? TextWriters para poder fazer log pra aquivo de forma mais elegante. Como implementar cor? Fazer igual ao shell?
 - O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()   
 - Revisar help do Shell - saiu varias coisas
+- FileLimit and Initial Size
 - Revisar BsonArray.Length não faz cache
 - Implementar DbRefAttribute
 - ThreadSafe
 - Unit tests
-
 
 ## Thread Safe / Process Safe
 - Thread safe no BsonMapper static methods (Reflection)
@@ -43,6 +41,18 @@
 - Mapeador/Configuration estilo EF
     db.Configuration.Add(new CredorConfiguration())
 
+## V2 Features
+- New DbEngine
+- IDiskService
+- New DbRef
+- Entity<> mapper
+- ThreadSafe
+- New lock read/write
+- Debugger
+- Better journal : restore before crash 
+- ACID per document/collections
+- Lazy load
+* ByteArray, DbEngine, abstract BasePage
         
 ## Para versão 2
 

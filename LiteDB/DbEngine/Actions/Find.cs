@@ -9,6 +9,9 @@ namespace LiteDB
 {
     internal partial class DbEngine : IDisposable
     {
+        /// <summary>
+        /// Find for documents in a collection using Query definition
+        /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
             // get my collection page
