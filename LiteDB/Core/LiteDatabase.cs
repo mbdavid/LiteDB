@@ -41,14 +41,14 @@ namespace LiteDB
             _log.Level = log;
 
             // initialize engine creating a new FileDiskService for data access
-            _engine = new DbEngine(new FileDiskService(filename, journal, timeout, readOnly, password, _log));
+            _engine = new DbEngine(new FileDiskService(filename, journal, timeout, readOnly, password, _log), _log);
             _mapper = BsonMapper.Global;
         }
 
         public LiteDatabase(Stream stream)
         {
             // initialize engine using StreamDisk
-            _engine = new DbEngine(new StreamDiskService(stream));
+            _engine = new DbEngine(new StreamDiskService(stream), _log);
             _mapper = BsonMapper.Global;
         }
 
@@ -57,7 +57,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(IDiskService diskService, BsonMapper mapper)
         {
-            _engine = new DbEngine(diskService);
+            _engine = new DbEngine(diskService, _log);
             _mapper = mapper;
         }
 

@@ -15,6 +15,8 @@ namespace LiteDB
     {
         #region Services instances
 
+        private Logger _log;
+
         private CacheService _cache;
 
         private IDiskService _disk;
@@ -31,8 +33,10 @@ namespace LiteDB
 
         private object _locker = new object();
 
-        public DbEngine(IDiskService disk)
+        public DbEngine(IDiskService disk, Logger log)
         {
+            _log = log;
+
             _disk = disk;
 
             var isNew = _disk.Initialize();
@@ -42,7 +46,7 @@ namespace LiteDB
                 _disk.WritePage(0, new HeaderPage().WritePage());
             }
 
-            _cache = new CacheService();
+            _cache = new CacheService(_log);
             _pager = new PageService(_disk, _cache);
             _indexer = new IndexService(_pager);
             _data = new DataService(_pager);

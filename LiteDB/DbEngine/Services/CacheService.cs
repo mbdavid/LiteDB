@@ -18,12 +18,15 @@ namespace LiteDB
         private SortedDictionary<uint, BasePage> _cache;
         private SortedDictionary<uint, BasePage> _dirty;
 
+        private Logger _log;
+
         public Action<BasePage> MarkAsDirtyAction = (page) => { };
 
-        public CacheService()
+        public CacheService(Logger log)
         {
             _cache = new SortedDictionary<uint, BasePage>();
             _dirty = new SortedDictionary<uint, BasePage>();
+            _log = log;
         }
 
         /// <summary>
@@ -32,7 +35,14 @@ namespace LiteDB
         public BasePage GetPage(uint pageID)
         {
             // check for in dirty list - if not found, check in cache list
-            return _dirty.GetOrDefault(pageID, null) ?? _cache.GetOrDefault(pageID, null);
+            var page = _dirty.GetOrDefault(pageID, null) ?? _cache.GetOrDefault(pageID, null);
+
+            if (page != null)
+            {
+                _log.Debug(Logger.CACHE, "get page #{0:0000} ({1})", page.PageID, page.PageType);
+            }
+
+            return page;
         }
 
         /// <summary>
@@ -85,33 +95,9 @@ namespace LiteDB
                 _cache.Clear();
             }
 
+            _log.Debug(Logger.CACHE, "clear cache ({0} dirty pages)", _dirty.Count);
+
             return hasDirty;
-        }
-
-        /// <summary>
-        /// Set all pages as clear and remove them from dirty list
-        /// </summary>
-        public void ClearDirty()
-        {
-            lock(_cache)
-            {
-                //foreach (var page in _dirty.Values)
-                //{
-                //    page.IsDirty = false;
-
-                //    // remove all non-header/collection pages (this can be optional in future)
-                //    if (page.PageType == PageType.Extend || 
-                //        page.PageType == PageType.Empty || 
-                //        page.PageType == PageType.Index || 
-                //        page.PageType == PageType.Data)
-                //    {
-                //        _cache.Remove(page.PageID);
-                //    }
-                //}
-
-                _cache.Clear();
-                _dirty.Clear();
-            }
         }
 
         public bool HasDirtyPages { get { return _dirty.Count() > 0; } }

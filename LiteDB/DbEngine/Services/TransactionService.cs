@@ -67,7 +67,7 @@ namespace LiteDB
                 _disk.DeleteJournal();
 
                 // set all dirty pages as clear on cache
-                _cache.ClearDirty();
+                _cache.Clear();
             }
 
             // unlock datafile
