@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -13,7 +14,7 @@ namespace UnitTest
         [TestMethod]
         public void DropCollection_Test()
         {
-            using (var db = new LiteDatabase(DB.Path()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 Assert.IsFalse(db.CollectionExists("customerCollection"));
                 var collection = db.GetCollection<Customer>("customerCollection");

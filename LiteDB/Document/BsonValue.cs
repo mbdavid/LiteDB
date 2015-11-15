@@ -625,8 +625,7 @@ namespace LiteDB
                 Encoding.UTF8.GetByteCount(key) + // CString
                 1 + // CString 0x00
                 value.GetBytesCount(recalc) +
-                (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0) // bytes.Length + 0x??
-                ;
+                (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
         }
 
         /// <summary>

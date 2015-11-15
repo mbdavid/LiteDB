@@ -7,22 +7,26 @@ using System.Text;
 
 namespace LiteDB
 {
-    /// <summary>
-    /// A debugger class to show how pages are storaged. Used to debug pages in shell/tests
-    /// </summary>
-    internal class DumpDatabase
+    internal partial class DbEngine : IDisposable
     {
-        public static StringBuilder Pages(LiteDatabase db, bool mem)
+        /// <summary>
+        /// Dump all pages into a string - debug purpose only
+        /// </summary>
+        public StringBuilder DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("Dump - " + (mem ? "Cache/Disk" : "Only Disk"));
+            sb.AppendLine("Dump database");
+            sb.AppendLine("=============");
+            sb.AppendLine();
 
-            for (uint i = 0; i <= db.Pager.GetPage<HeaderPage>(0).LastPageID; i++)
+            var header = (HeaderPage)BasePage.ReadPage(_disk.ReadPage(0));
+
+            for (uint i = startPage; i <= endPage; i++)
             {
-                var p = i == 0 ? 
-                    ReadPage<HeaderPage>(db, i, mem) :
-                    ReadPage<BasePage>(db, i, mem);
+                if(i > header.LastPageID) break;
+
+                var p = BasePage.ReadPage(_disk.ReadPage(i));
 
                 sb.AppendFormat("{0} <{1},{2}> [{3}] {4}{5} | ",
                     p.PageID.Dump(),
@@ -32,11 +36,6 @@ namespace LiteDB
                     p.FreeBytes.ToString("0000"),
                     p.IsDirty ? "d" : " ");
 
-                if (p.PageType == PageType.Collection) p = ReadPage<CollectionPage>(db, i, mem);
-                if (p.PageType == PageType.Data) p = ReadPage<DataPage>(db, i, mem);
-                if (p.PageType == PageType.Extend) p = ReadPage<ExtendPage>(db, i, mem);
-                if (p.PageType == PageType.Index) p = ReadPage<IndexPage>(db, i, mem);
-
                 p.Dump(sb);
                 sb.AppendLine();
             }
@@ -44,28 +43,14 @@ namespace LiteDB
             return sb;
         }
 
-        private static T ReadPage<T>(LiteDatabase db, uint pageID, bool mem)
-            where T : BasePage, new()
-        {
-            if (mem && pageID == 0) return (T)(object)db.Cache.GetPage<HeaderPage>(0);
-
-            if(mem)
-            {
-                return db.Pager.GetPage<T>(pageID);
-            }
-            else
-            {
-                var page = new T();
-                page.ReadPage(db.Disk.ReadPage(pageID));
-                return page;
-            }
-        }
-
-        public static StringBuilder Index(LiteDatabase db, string collection, string field, int size = 5)
+        /// <summary>
+        /// Dump skip list to a human reable format - debug purpose only
+        /// </summary>
+        public StringBuilder DumpIndex(string colName, string field, int size = 5)
         {
             var sbs = new StringBuilder[IndexNode.MAX_LEVEL_LENGTH + 1];
 
-            var col = db.GetCollection(collection).GetCollectionPage(false);
+            var col = this.GetCollectionPage(colName, false);
             if (col == null) throw new ArgumentException("Invalid collection name");
 
             var index = col.GetIndex(field);
@@ -80,7 +65,7 @@ namespace LiteDB
 
             while (!cur.IsEmpty)
             {
-                var page = db.Pager.GetPage<IndexPage>(cur.PageID);
+                var page = _pager.GetPage<IndexPage>(cur.PageID);
                 var node = page.Nodes[cur.Index];
 
                 sbs[0].Append((Limit(node.Key.ToString(), size)).PadBoth(1 + (2 * size)));
@@ -95,13 +80,13 @@ namespace LiteDB
                     {
                         if (!node.Prev[i].IsEmpty)
                         {
-                            var pprev = db.Pager.GetPage<IndexPage>(node.Prev[i].PageID);
+                            var pprev = _pager.GetPage<IndexPage>(node.Prev[i].PageID);
                             var pnode = pprev.Nodes[node.Prev[i].Index];
                             p = pnode.Key.ToString();
                         }
                         if (!node.Next[i].IsEmpty)
                         {
-                            var pnext = db.Pager.GetPage<IndexPage>(node.Next[i].PageID);
+                            var pnext = _pager.GetPage<IndexPage>(node.Next[i].PageID);
                             var pnode = pnext.Nodes[node.Next[i].Index];
                             n = pnode.Key.ToString();
                         }
@@ -114,6 +99,9 @@ namespace LiteDB
             }
 
             var s = new StringBuilder();
+            s.AppendFormat("Dump index {0}.{1}\n", col, field);
+            s.AppendLine("==============================");
+            s.AppendLine();
 
             for (var i = sbs.Length - 1; i >= 0; i--)
             {
@@ -128,7 +116,6 @@ namespace LiteDB
             if (string.IsNullOrEmpty(text)) return "";
             return text.Length > size ? text.Substring(0, size) : text;
         }
-
     }
 
     #region Dump Extensions
@@ -162,6 +149,7 @@ namespace LiteDB
             if (page is IndexPage) Dump((IndexPage)page, sb);
             if (page is DataPage) Dump((DataPage)page, sb);
             if (page is ExtendPage) Dump((ExtendPage)page, sb);
+            if (page is EmptyPage) Dump((EmptyPage)page, sb);
         }
 
         public static void Dump(this HeaderPage page, StringBuilder sb)
@@ -215,6 +203,11 @@ namespace LiteDB
         public static void Dump(this ExtendPage page, StringBuilder sb)
         {
             sb.AppendFormat("BytesUsed: {0}", page.Data.Length);
+        }
+
+        public static void Dump(this EmptyPage page, StringBuilder sb)
+        {
+            sb.AppendFormat("(empty)");
         }
 
         public static string PadBoth(this string str, int length)

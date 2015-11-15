@@ -21,7 +21,7 @@ namespace LiteDB.Shell.Commands
 
             if (doc.IsNull)
             {
-                return col.EnsureIndex(field, false);
+                return col.EnsureIndex(field);
             }
             else if (doc.IsBoolean)
             {

@@ -112,14 +112,23 @@ namespace LiteDB
             // now, let's link my index node on right place
             var cur = this.GetNode(index.HeadNode);
 
+            // using as cache last
+            IndexNode cache = null;
+
             // scan from top left
             for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
+                // get cache for last node 
+                cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+
                 // for(; <while_not_this>; <do_this>) { ... }
-                for (; cur.Next[i].IsEmpty == false; cur = this.GetNode(cur.Next[i]))
+                for (; cur.Next[i].IsEmpty == false; cur = cache)
                 {
+                    // get cache for last node 
+                    cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+
                     // read next node to compare
-                    var diff = this.GetNode(cur.Next[i]).Key.CompareTo(key);
+                    var diff = cache.Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
                     if (diff == 0 && index.Options.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);
@@ -195,15 +204,15 @@ namespace LiteDB
                 // first, remove from free list
                 _pager.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
 
-                _pager.DeletePage(page.PageID, false);
+                _pager.DeletePage(page.PageID);
             }
             else
             {
                 // add or remove page from free list
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
-            }
 
-            _pager.SetDirty(page);
+                _pager.SetDirty(page);
+            }
         }
 
 
@@ -222,9 +231,9 @@ namespace LiteDB
             }
 
             // now delete all pages
-            foreach (var page in pages)
+            foreach (var pageID in pages)
             {
-                _pager.DeletePage(page);
+                _pager.DeletePage(pageID);
             }
         }
 

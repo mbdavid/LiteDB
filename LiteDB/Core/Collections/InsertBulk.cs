@@ -14,43 +14,25 @@ namespace LiteDB
         public int InsertBulk(IEnumerable<T> docs, int buffer = 32768)
         {
             if (docs == null) throw new ArgumentNullException("docs");
-            if (buffer < 100) throw new ArgumentException("buffer must be bigger than 100");
+            if (buffer <= 1) throw new ArgumentException("buffer must be bigger than 1");
 
-            var enumerator = docs.GetEnumerator();
             var count = 0;
 
-            lock(_locker)
+            while (true)
             {
-                while (true)
+                // get a slice of documents of docs
+                var slice = docs.Skip(count).Take(buffer);
+
+                // insert this docs
+                var included = this.Insert(slice);
+
+                // if included less than buffer, there is no more to insert
+                if (included < buffer)
                 {
-                    var buff = buffer;
-
-                    this.Database.Transaction.Begin();
-
-                    try
-                    {
-                        var more = true;
-
-                        while (buff > 0 && (more = enumerator.MoveNext()))
-                        {
-                            this.InsertDocument(enumerator.Current);
-                            buff--;
-                            count++;
-                        }
-
-                        this.Database.Transaction.Commit();
-
-                        if (more == false)
-                        {
-                            return count;
-                        }
-                    }
-                    catch
-                    {
-                        this.Database.Transaction.Rollback();
-                        throw;
-                    }
+                    return count + included;
                 }
+
+                count += included;
             }
         }
     }

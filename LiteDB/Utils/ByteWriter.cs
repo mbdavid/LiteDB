@@ -38,7 +38,7 @@ namespace LiteDB
 
         public void Write(Boolean value)
         {
-            _buffer[_pos] = value ? (byte)1 : (byte)1;
+            _buffer[_pos] = value ? (byte)1 : (byte)0;
 
             _pos++;
         }

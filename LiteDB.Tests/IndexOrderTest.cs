@@ -14,7 +14,7 @@ namespace UnitTest
         [TestMethod]
         public void Index_Order()
         {
-            using (var db = new LiteDatabase(DB.Path()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection<BsonDocument>("order");
 

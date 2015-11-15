@@ -29,10 +29,11 @@ namespace LiteDB
         public string Filename { get; set; }
         public string MimeType { get; set; }
         public long Length { get; private set; }
+        public int Chunks { get; private set; }
         public DateTime UploadDate { get; internal set; }
         public BsonDocument Metadata { get; set; }
 
-        private LiteDatabase _db;
+        private DbEngine _engine;
 
         public LiteFileInfo(string id)
             : this(id, id)
@@ -47,18 +48,20 @@ namespace LiteDB
             this.Filename = Path.GetFileName(filename);
             this.MimeType = MimeTypeConverter.GetMimeType(this.Filename);
             this.Length = 0;
+            this.Chunks = 0;
             this.UploadDate = DateTime.Now;
             this.Metadata = new BsonDocument();
         }
 
-        internal LiteFileInfo(LiteDatabase db, BsonDocument doc)
+        internal LiteFileInfo(DbEngine engine, BsonDocument doc)
         {
-            _db = db;
+            _engine = engine;
 
             this.Id = doc["_id"].AsString;
             this.Filename = doc["filename"].AsString;
             this.MimeType = doc["mimeType"].AsString;
             this.Length = doc["length"].AsInt64;
+            this.Chunks = doc["chunks"].AsInt32;
             this.UploadDate = doc["uploadDate"].AsDateTime;
             this.Metadata = doc["metadata"].AsDocument;
         }
@@ -73,6 +76,7 @@ namespace LiteDB
                 doc["filename"] = this.Filename;
                 doc["mimeType"] = this.MimeType;
                 doc["length"] = this.Length;
+                doc["chunks"] = this.Chunks;
                 doc["uploadDate"] = this.UploadDate;
                 doc["metadata"] = this.Metadata ?? new BsonDocument();
 
@@ -89,6 +93,7 @@ namespace LiteDB
             while ((read = stream.Read(buffer, 0, LiteFileInfo.CHUNK_SIZE)) > 0)
             {
                 this.Length += (long)read;
+                this.Chunks++;
 
                 var chunk = new BsonDocument();
 
@@ -97,7 +102,7 @@ namespace LiteDB
                 if (read != CHUNK_SIZE)
                 {
                     var bytes = new byte[read];
-                    Array.Copy(buffer, bytes, read);
+                    Buffer.BlockCopy(buffer, 0, bytes, 0, read);
                     chunk["data"] = bytes;
                 }
                 else
@@ -124,9 +129,9 @@ namespace LiteDB
         /// </summary>
         public LiteFileStream OpenRead()
         {
-            if (_db == null) throw LiteException.NoDatabase();
+            if (_engine == null) throw LiteException.NoDatabase();
 
-            return new LiteFileStream(_db, this);
+            return new LiteFileStream(_engine, this);
         }
 
         /// <summary>
@@ -134,7 +139,7 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
-            if (_db == null) throw LiteException.NoDatabase();
+            if (_engine == null) throw LiteException.NoDatabase();
 
             using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
             {

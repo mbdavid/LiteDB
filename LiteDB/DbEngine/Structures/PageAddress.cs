@@ -7,7 +7,7 @@ using System.Text;
 namespace LiteDB
 {
     /// <summary>
-    /// Represents a page adress inside a page structure - index could be byte offset position OR index in a list
+    /// Represents a page adress inside a page structure - index could be byte offset position OR index in a list (6 bytes)
     /// </summary>
     internal struct PageAddress
     {

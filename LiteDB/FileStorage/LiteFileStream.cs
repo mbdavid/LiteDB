@@ -9,7 +9,7 @@ namespace LiteDB
 {
     public class LiteFileStream : Stream
     {
-        private LiteDatabase _db;
+        private DbEngine _engine;
         private LiteFileInfo _file;
         private readonly long _streamLength = 0;
 
@@ -19,9 +19,9 @@ namespace LiteDB
         private byte[] _currentChunkData = null;
         private int _positionInChunk = 0;
 
-        internal LiteFileStream(LiteDatabase db, LiteFileInfo file)
+        internal LiteFileStream(DbEngine engine, LiteFileInfo file)
         {
-            _db = db;
+            _engine = engine;
             _file = file;
 
             if (file.Length == 0)
@@ -78,9 +78,9 @@ namespace LiteDB
         private byte[] GetChunkData(int index)
         {
             // check if there is no more chunks in this file
-            var chunks = _db.GetCollection("_chunks");
-
-            var chunk = chunks.FindById(LiteFileInfo.GetChunckId(_file.Id, index));
+            var chunk = _engine
+                .Find(LiteFileStorage.CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(_file.Id, index)))
+                .FirstOrDefault();
 
             // if chunk is null there is no more chunks
             return chunk == null ? null : chunk["data"].AsBinary;

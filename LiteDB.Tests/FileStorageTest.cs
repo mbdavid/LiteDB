@@ -19,7 +19,7 @@ namespace UnitTest
             // create a dump file
             File.WriteAllText("Core.dll", "FileCoreContent");
 
-            using (var db = new LiteDatabase(DB.Path()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 db.FileStorage.Upload("Core.dll", "Core.dll");
 

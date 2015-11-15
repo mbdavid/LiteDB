@@ -18,20 +18,27 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            this.Database.Transaction.AvoidDirtyRead();
+            IEnumerable<BsonDocument> docs;
 
-            var nodes = query.Run<T>(this);
-
-            if (skip > 0) nodes = nodes.Skip(skip);
-
-            if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-            foreach (var node in nodes)
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
             {
-                var dataBlock = this.Database.Data.Read(node.DataBlock, true);
+                try
+                {
+                    docs = _engine.Find(_name, query, skip, limit);
+                    break;
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
 
-                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
 
+            foreach (var doc in docs)
+            {
                 // executing all includes in BsonDocument
                 foreach (var action in _includes)
                 {
@@ -39,7 +46,7 @@ namespace LiteDB
                 }
 
                 // get object from BsonDocument
-                var obj = this.Database.Mapper.ToObject<T>(doc);
+                var obj = _mapper.ToObject<T>(doc);
 
                 yield return obj;
             }

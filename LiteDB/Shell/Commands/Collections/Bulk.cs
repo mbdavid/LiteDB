@@ -23,7 +23,7 @@ namespace LiteDB.Shell.Commands
             {
                 var docs = JsonSerializer.DeserializeArray(sr);
 
-                return col.InsertBulk(docs.Select(x => x.AsDocument));
+                return col.Insert(docs.Select(x => x.AsDocument));
             }
         }
     }

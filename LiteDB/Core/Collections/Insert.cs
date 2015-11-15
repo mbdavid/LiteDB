@@ -15,24 +15,13 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            lock (_locker)
-            {
-                this.Database.Transaction.Begin();
+            _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
 
-                try
-                {
-                    var id = this.InsertDocument(document);
+            var doc = _mapper.ToDocument(document);
 
-                    this.Database.Transaction.Commit();
+            _engine.InsertDocuments(_name, new BsonDocument[] { doc });
 
-                    return id;
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
-                }
-            }
+            return doc["_id"];
         }
 
         /// <summary>
@@ -42,86 +31,22 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            var count = 0;
-
-            lock (_locker)
-            {
-                this.Database.Transaction.Begin();
-
-                try
-                {
-                    foreach (var doc in docs)
-                    {
-                        this.InsertDocument(doc);
-                        count++;
-                    }
-
-                    this.Database.Transaction.Commit();
-
-                    return count;
-                }
-                catch
-                {
-                    this.Database.Transaction.Rollback();
-                    throw;
-                }
-            }
+            return _engine.InsertDocuments(_name, this.GetBsonDocs(docs));
         }
 
         /// <summary>
-        /// Internal implementation of Insert a document. Returns document _id - no trans, no locks
+        /// Convert each T document in a BsonDocument, setting autoId for each one
         /// </summary>
-        private BsonValue InsertDocument(T document)
+        private IEnumerable<BsonDocument> GetBsonDocs(IEnumerable<T> docs)
         {
-            // set an id value if document object needs
-            this.Database.Mapper.SetAutoId(document, this.GetBsonCollection());
-
-            var doc = this.Database.Mapper.ToDocument(document);
-
-            BsonValue id;
-
-            // add ObjectId to _id if _id not found
-            if (!doc.RawValue.TryGetValue("_id", out id))
+            foreach (var document in docs)
             {
-                id = doc["_id"] = ObjectId.NewObjectId();
+                _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
+
+                var doc = _mapper.ToDocument(document);
+
+                yield return doc;
             }
-
-            // test if _id is a valid type
-            if (id.IsNull || id.IsMinValue || id.IsMaxValue)
-            {
-                throw LiteException.InvalidDataType("_id", id);
-            }
-
-            // serialize object
-            var bytes = BsonSerializer.Serialize(doc);
-
-            var col = this.GetCollectionPage(true);
-
-            // storage in data pages - returns dataBlock address
-            var dataBlock = this.Database.Data.Insert(col, bytes);
-
-            // store id in a PK index [0 array]
-            var pk = this.Database.Indexer.AddNode(col.PK, id);
-
-            // do links between index <-> data block
-            pk.DataBlock = dataBlock.Position;
-            dataBlock.IndexRef[0] = pk.Position;
-
-            // for each index, insert new IndexNode
-            foreach (var index in col.GetIndexes(false))
-            {
-                var key = doc.Get(index.Field);
-
-                var node = this.Database.Indexer.AddNode(index, key);
-
-                // point my index to data object
-                node.DataBlock = dataBlock.Position;
-
-                // point my dataBlock
-                dataBlock.IndexRef[index.Slot] = node.Position;
-            }
-
-            return id;
         }
     }
 }

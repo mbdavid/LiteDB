@@ -32,11 +32,6 @@ namespace LiteDB
             return new LiteException(100, "There is no database");
         }
 
-        public static LiteException InvalidTransaction()
-        {
-            return new LiteException(101, "This operation doesn't support open transaction.");
-        }
-
         public static LiteException FileNotFound(string fileId)
         {
             return new LiteException(102, "File '{0}' not found", fileId);
@@ -87,9 +82,9 @@ namespace LiteDB
             return new LiteException(111, "Index key must be less than {0} bytes", IndexService.MAX_INDEX_LENGTH);
         }
 
-        public static LiteException IndexNotFound(string name)
+        public static LiteException IndexNotFound(string colName, string field)
         {
-            return new LiteException(112, "Index not found on '{0}'", name);
+            return new LiteException(112, "Index not found on '{0}.{1}'", colName, field);
         }
 
         public static LiteException LockTimeout(TimeSpan ts)
@@ -113,7 +108,7 @@ namespace LiteDB
 
         public static LiteException DocumentMaxDepth(int depth)
         {
-            return new LiteException(201, "Document has more than {0} nested documents. Check for circular references", depth);
+            return new LiteException(201, "Document has more than {0} nested documents. Check for circular references (use DbRef)", depth);
         }
 
         public static LiteException InvalidCtor(Type type)

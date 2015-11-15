@@ -13,23 +13,18 @@ namespace LiteDB
     internal class ExtendPage : BasePage
     {
         /// <summary>
+        /// Page type = Extend
+        /// </summary>
+        public override PageType PageType { get { return PageType.Extend; } }
+
+        /// <summary>
         /// Represent the part or full of the object - if this page has NextPageID the object is bigger than this page
         /// </summary>
         public Byte[] Data { get; set; }
 
-        public ExtendPage()
-            : base()
+        public ExtendPage(uint pageID)
+            : base(pageID)
         {
-            this.PageType = PageType.Extend;
-            this.Data = new byte[0];
-        }
-
-        /// <summary>
-        /// Clear page content - Data byte array
-        /// </summary>
-        public override void Clear()
-        {
-            base.Clear();
             this.Data = new byte[0];
         }
 
@@ -44,12 +39,12 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        public override void ReadContent(ByteReader reader)
+        protected override void ReadContent(ByteReader reader)
         {
             this.Data = reader.ReadBytes(this.ItemCount);
         }
 
-        public override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(ByteWriter writer)
         {
             writer.Write(this.Data);
         }

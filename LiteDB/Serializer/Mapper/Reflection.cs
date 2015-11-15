@@ -131,11 +131,6 @@ namespace LiteDB
             return dict;
         }
 
-        internal static bool IsList(object typeK)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region IL Code
@@ -310,6 +305,23 @@ namespace LiteDB
         {
             var listType = typeof(Dictionary<,>);
             return listType.MakeGenericType(k, v);
+        }
+
+        public static Type GetListItemType(object list)
+        {
+            var type = list.GetType();
+
+            if (type.IsArray) return type.GetElementType();
+
+            foreach (var i in type.GetInterfaces())
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    return i.GetGenericArguments()[0];
+                }
+            }
+
+            return typeof(object);
         }
 
         /// <summary>
