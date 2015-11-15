@@ -141,6 +141,8 @@ namespace LiteDB
             page.ReadHeader(reader);
             page.ReadContent(reader);
 
+            page.DiskData = buffer;
+
             return page;
         }
 

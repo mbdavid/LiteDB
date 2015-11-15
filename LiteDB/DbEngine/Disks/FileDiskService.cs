@@ -54,6 +54,8 @@ namespace LiteDB
                 _readonly ? FileShare.Read : FileShare.ReadWrite, 
                 BasePage.PAGE_SIZE);
 
+            _log.Debug(Logger.DISK, "open datafile '{0}', page size {1}", Path.GetFileName(_filename), BasePage.PAGE_SIZE);
+
             if(_stream.Length == 0)
             {
                 _log.Debug(Logger.DISK, "initialize new datafile");
@@ -163,13 +165,15 @@ namespace LiteDB
                 this.TryExec(() =>
                 {
                     _journal = new FileStream(_journalFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+
+                    _log.Debug(Logger.JOURNAL, "journal file created '{0}'", Path.GetFileName(_journalFilename));
                 });
             }
 
-            _log.Debug(Logger.JOURNAL, "write page #{0:0000}", pageID);
-
             // just write original bytes in order that are changed
             _journal.Write(data, 0, BasePage.PAGE_SIZE);
+
+            _log.Debug(Logger.JOURNAL, "write page #{0:0000}", pageID);
         }
 
         public void CommitJournal(long fileSize)
@@ -184,9 +188,9 @@ namespace LiteDB
 
                 // flush all journal file data to disk
                 _journal.Flush();
-            }
 
-            _log.Debug(Logger.JOURNAL, "journal file commited");
+                _log.Debug(Logger.JOURNAL, "journal file commited");
+            }
 
             // fileSize parameter tell me final size of data file - helpful to extend first datafile
             _stream.SetLength(fileSize);
@@ -228,7 +232,7 @@ namespace LiteDB
             {
                 var finish = journal.ReadByte(JOURNAL_FINISH_POSITION);
 
-                _log.Debug(Logger.RECOVERY, "detected journal file");
+                _log.Info(Logger.RECOVERY, "detected journal file");
 
                 // test if journal was finish
                 if(finish == 1)
@@ -241,7 +245,7 @@ namespace LiteDB
 
                 File.Delete(_journalFilename);
 
-                _log.Debug(Logger.RECOVERY, "journal file deleted - datafile is recoreved");
+                _log.Info(Logger.RECOVERY, "journal file deleted - datafile is recovered");
             });
         }
 
@@ -275,7 +279,7 @@ namespace LiteDB
                 _log.Debug(Logger.RECOVERY, "recovering page #{0:0000}", pageID);
             }
 
-            _log.Debug(Logger.RECOVERY, "resize datafile to {0}", fileSize);
+            _log.Info(Logger.RECOVERY, "resize datafile to {0}", fileSize);
 
             // redim filesize if grow more than original before rollback
             _stream.SetLength(fileSize);
@@ -309,7 +313,7 @@ namespace LiteDB
                 }
             }
 
-            _log.Error(Logger.DISK, "timeout disk access");
+            _log.Error(Logger.DISK, "timeout disk access after {0}", _timeout);
 
             throw LiteException.LockTimeout(_timeout);
         }

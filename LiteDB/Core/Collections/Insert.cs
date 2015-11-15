@@ -21,7 +21,7 @@ namespace LiteDB
 
             _engine.InsertDocuments(_name, new BsonDocument[] { doc });
 
-            _log.Debug("COMMAND", "inserted document _id = {0}", doc["_id"]);
+            _log.Debug(Logger.COMMAND, "inserted document _id = {0}", doc["_id"]);
 
             return doc["_id"];
         }
@@ -47,7 +47,7 @@ namespace LiteDB
 
                 var doc = _mapper.ToDocument(document);
 
-                _log.Debug("COMMAND", "inserted document _id = {0}", doc["_id"]);
+                _log.Debug(Logger.COMMAND, "inserted document _id = {0}", doc["_id"]);
 
                 yield return doc;
             }

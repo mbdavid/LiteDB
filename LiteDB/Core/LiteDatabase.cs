@@ -34,8 +34,11 @@ namespace LiteDB
             var timeout = str.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
             var readOnly = str.GetValue<bool>("readonly", false);
             var password = str.GetValue<string>("password", null);
+            var log = str.GetValue<byte>("log", 0);
 
             if(string.IsNullOrWhiteSpace(filename)) throw new ArgumentNullException("filename");
+
+            _log.Level = log;
 
             // initialize engine creating a new FileDiskService for data access
             _engine = new DbEngine(new FileDiskService(filename, journal, timeout, readOnly, password, _log));

@@ -13,44 +13,81 @@ namespace LiteDB
     /// </summary>
     public class Logger
     {
-        public const string DISK = "DISK";
-        public const string JOURNAL = "JOURNAL";
-        public const string RECOVERY = "RECOVERY";
-        public const string COMMAND = "COMMAND";
-        public const string INDEX = "INDEX";
-        public const string QUERY = "QUERY";
+        public const byte COMMAND = 2;
+        public const byte RECOVERY = 4;
+        public const byte QUERY = 8;
+        public const byte INDEX = 16;
+        public const byte JOURNAL = 32;
+        public const byte DISK = 64;
+        public const byte CACHE = 128;
+
+        public const byte ERROR = 1;
+        public const byte INFO  = 2;
+        public const byte DEBUG = 4;
+
+        public const byte NONE     = 0;
+        public const byte FULL     = 255;
 
         public Stopwatch DiskRead = new Stopwatch();
         public Stopwatch DiskWrite = new Stopwatch();
         public Stopwatch Serialize = new Stopwatch();
         public Stopwatch Deserialize = new Stopwatch();
 
-        public TextWriter Output = Console.Out;
+        public byte Component { get; set; }
+        public byte Level { get; set; }
 
-        public bool Enabled = false;
+        public Action<string> WriteLine = (text) =>
+        {
+            var aux = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine(text);
+            Console.ForegroundColor = aux;
+        };
+
+        public Logger()
+        {
+            this.Component = FULL;
+            this.Level = NONE;
+        }
 
         public void Reset()
         {
         }
 
-        internal void Debug(string category, string format, params object[] args)
+        internal void Error(byte component, string format, params object[] args)
         {
+            this.Write('E', component, string.Format(format, args));
         }
 
-        internal void Info(string category, string format, params object[] args)
+        internal void Info(byte component, string format, params object[] args)
         {
+            this.Write('I', component, string.Format(format, args));
         }
 
-        internal void Timer(string format, params object[] args)
+        internal void Debug(byte component, string format, params object[] args)
         {
+            this.Write('D', component, string.Format(format, args));
         }
 
-        internal void Error(string category, Exception ex, string caller)
+        internal void Write(char severity, byte component, string text)
         {
-        }
+            if((severity & this.Level) == 0 || (component & this.Component) == 0) return;
 
-        internal void Error(string category, string text)
-        {
+            var comp =
+                component == COMMAND ? "COMMAND" :
+                component == RECOVERY ? "RECOVERY" :
+                component == QUERY ? "QUERY" :
+                component == INDEX ? "INDEX" :
+                component == JOURNAL ? "JOURNAL" :
+                component == DISK ? "DISK" : "CACHE";
+
+            var msg = string.Format("{0:HH:mm:ss.ffff} {1} [{2}] {3}",
+                DateTime.Now,
+                severity,
+                comp,
+                text);
+
+            WriteLine(msg);
         }
 
     }
