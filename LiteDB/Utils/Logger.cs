@@ -11,7 +11,6 @@ namespace LiteDB
     /// <summary>
     /// A logger class to log all information about database. Used with levels. Level = 0 - 255 
     /// All log will be trigger before operation execute (better for log)
-    /// Do not use string.Format, it's too slow: http://stackoverflow.com/questions/16432/string-output-format-or-concat-in-c
     /// </summary>
     public class Logger
     {
