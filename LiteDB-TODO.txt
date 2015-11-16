@@ -8,6 +8,8 @@
 - Implementar DbRefAttribute
 - ThreadSafe
 - Unit tests
+- Colocar <BsonDocument> DbParams na header. _engine.GetParams(), _engine.SetParams(p) (limit 4k)
+
 
 ## Thread Safe / Process Safe
 - Thread safe no BsonMapper static methods (Reflection)

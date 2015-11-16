@@ -17,9 +17,12 @@ namespace LiteDB
             return this.Transaction<int>(colName, true, (col) =>
             {
                 var count = 0;
+                var s = new System.Diagnostics.Stopwatch();
 
                 foreach (var doc in docs)
                 {
+                    s.Start();
+
                     BsonValue id;
 
                     // add ObjectId to _id if _id not found
@@ -62,9 +65,11 @@ namespace LiteDB
                         // point my dataBlock
                         dataBlock.IndexRef[index.Slot] = node.Position;
                     }
-
+                    s.Stop();
                     count++;
                 }
+
+                Console.WriteLine("===>" + s.ElapsedMilliseconds);
 
                 return count++;
             });

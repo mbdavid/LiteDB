@@ -14,16 +14,16 @@ namespace LiteDB
     /// </summary>
     internal class CacheService : IDisposable
     {
-        // double cache structure - use Sort dictionary for get pages in order (fast to store in sequence on disk)
-        private SortedDictionary<uint, BasePage> _cache;
-        private SortedDictionary<uint, BasePage> _dirty;
+        // double cache structure - use normal dictionary for get pages in order
+        private Dictionary<uint, BasePage> _cache;
+        private Dictionary<uint, BasePage> _dirty;
 
         public Action<BasePage> MarkAsDirtyAction = (page) => { };
 
         public CacheService()
         {
-            _cache = new SortedDictionary<uint, BasePage>();
-            _dirty = new SortedDictionary<uint, BasePage>();
+            _cache = new Dictionary<uint, BasePage>();
+            _dirty = new Dictionary<uint, BasePage>();
         }
 
         /// <summary>
