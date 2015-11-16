@@ -32,6 +32,8 @@ namespace LiteDB
         private TimeSpan _timeout;
         private bool _readonly;
         private string _password;
+        private long _initialSize;
+        private long _limitSize;
 
         public FileDiskService(string connectionString, Logger log)
         {
@@ -42,9 +44,14 @@ namespace LiteDB
             _timeout = str.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
             _readonly = str.GetValue<bool>("readonly", false);
             _password = str.GetValue<string>("password", null);
+            _initialSize = str.GetFileSize("initial size", 0);
+            _limitSize = str.GetFileSize("limit size", 0);
             var level = str.GetValue<byte?>("log", null);
 
             if (string.IsNullOrWhiteSpace(_filename)) throw new ArgumentNullException("filename");
+            if (_initialSize > 0 && _initialSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("initial size too low");
+            if (_limitSize > 0 && _limitSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("limit size too low");
+            if (_initialSize > 0 && _limitSize > 0 && _initialSize > _limitSize) throw new ArgumentException("limit size less than initial size");
 
             // setup log + log-level
             _log = log;
@@ -73,6 +80,14 @@ namespace LiteDB
             if(_stream.Length == 0)
             {
                 _log.Write(Logger.DISK, "initialize new datafile");
+
+                // if has a initial size, reserve this space
+                if(_initialSize > 0)
+                {
+                    _log.Write(Logger.DISK, "initial datafile size {0}", _initialSize);
+
+                    _stream.SetLength(_initialSize);
+                }
 
                 return true;
             }
@@ -192,6 +207,9 @@ namespace LiteDB
 
         public void CommitJournal(long fileSize)
         {
+            // checks if new fileSize will exceed limit size
+            if(_limitSize > 0 && fileSize > _limitSize) throw LiteException.FileSizeExceeds(_limitSize);
+
             if (_journalEnabled == false) return;
 
             if(_journal != null)

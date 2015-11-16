@@ -93,7 +93,7 @@ namespace LiteDB
             }
             catch(Exception ex)
             {
-                _log.Write(Logger.ERROR, "rollback transaction :: {0}", ex.Message);
+                _log.Write(Logger.ERROR, "{0}", ex.Message);
                 _transaction.Rollback();
                 throw;
             }

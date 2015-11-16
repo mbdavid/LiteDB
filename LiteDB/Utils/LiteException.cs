@@ -52,6 +52,11 @@ namespace LiteDB
             return new LiteException(105, "Invalid database version: {0}", version);
         }
 
+        public static LiteException FileSizeExceeds(long limit)
+        {
+            return new LiteException(105, "Database size exceeds limit of {0}", ConnectionString.FormatFileSize(limit));
+        }
+
         public static LiteException CollectionLimitExceeded(int limit)
         {
             return new LiteException(106, "This database exceeded the maximum limit of collections: {0}", limit);
