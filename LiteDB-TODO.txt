@@ -1,7 +1,6 @@
 ﻿# LiteDB v.2 - TODO
 
 - Revisar help do Shell - saiu varias coisas
-- FileLimit and Initial Size
 - Revisar BsonArray.Length não faz cache
 - ThreadSafe
 - Unit tests
@@ -71,6 +70,7 @@
 - Colocar documentação neste site
 - Logotipo + Nome
 - Atualizar codeproject
+- Site: fazer versao mobile
 
 ## Modulos do LiteDB
 - Core

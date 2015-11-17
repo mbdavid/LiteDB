@@ -226,7 +226,7 @@ footer a:hover {
 }
 
 /* -- SHELL -- */
-.shell { background-color: #2A211C; padding: 20px; color: white; font-family: monospace; font-size: 14px; overflow-y: auto; overflow-x: auto; margin: 20px; height: 450px; }
+.shell { background-color: #2A211C; padding: 20px; color: white; font-family: monospace; font-size: 14px; overflow-y: auto; overflow-x: auto; margin: 20px; height: 500px; }
 .prompt { position: relative; padding-left: 15px; }
 .prompt:before { position: absolute; top: 0px; left: 0px; content: '>'; color: white; }
 .cursor { position: absolute; }

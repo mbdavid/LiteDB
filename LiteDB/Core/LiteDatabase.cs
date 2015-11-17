@@ -124,25 +124,15 @@ namespace LiteDB
 
         #endregion
 
-        #region Shell
-
-        private LiteShell _shell = null;
+        #region Utils
 
         /// <summary>
-        /// Run a shell command in current database. Returns a BsonValue as result
+        /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
         /// </summary>
-        public BsonValue RunCommand(string command)
+        public int Shrink()
         {
-            if (_shell == null)
-            {
-                _shell = new LiteShell(this);
-            }
-            return _shell.Run(command);
+            return _engine.Value.Shrink();
         }
-
-        #endregion
-
-        #region Dump
 
         internal string DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
         {
@@ -154,19 +144,11 @@ namespace LiteDB
             return _engine.Value.DumpIndex(colName, field).ToString();
         }
 
-        #endregion
-
-        /// <summary>
-        /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
-        /// </summary>
-        public int Shrink()
-        {
-            return _engine.Value.Shrink();
-        }
-
         public void Dispose()
         {
             if(_engine.IsValueCreated) _engine.Value.Dispose();
         }
+
+        #endregion
     }
 }
