@@ -5,54 +5,128 @@
 		<title>LiteDB :: A .NET embedded NoSQL database</title>
 		<meta name="description" content="LiteDB : LiteDB - A .NET NoSQL Document Store database in a single data file">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400,700" type="text/css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-		<link rel="stylesheet" href="assets/css/litedb.css" />
-		<link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+		<link rel="stylesheet" href="css/prism.css">
+        <link rel="stylesheet" href="css/litedb.css" />
 	</head>
 	<body>
-		<div style="background-color: #171F26; padding: 20px 0px;">
+    
+        <div class="github-fork-ribbon-wrapper right">
+            <div class="github-fork-ribbon">
+                <a href="https://github.com/mbdavid/litedb">Fork me on GitHub</a>
+            </div>
+        </div>
+    
+		<header>
 			<div class="container">
-				<div class="row">
-					<div class="col-md-3">
-						<img src="assets/images/logo_litedb.svg" style="width: 100px; height: auto;" />
-					</div>
-					<div class="col-md-9">
-						<ul class="nav-top pull-right">
-							<li><a href="#">DOCS</a></li>
-							<li><a href="#">TRY ONLINE</a></li>
-							<li><a href="#">DOWNLOAD</a></li>
-							<li><a href="#">GITHUB</a></li>
-						</ul>
-					</div>
-				</div>
+                <img src="img/logo_litedb.svg" class="logo" />
+                <ul class="nav">
+                    <li><a href="https://github.com/mbdavid/LiteDB/wiki">DOCS</a></li>
+                    <li><a href="http://litedb.azurewebsites.net/">TRY ONLINE</a></li>
+                    <li><a href="https://github.com/mbdavid/LiteDB/releases">DOWNLOAD</a></li>
+                </ul>
 			</div>
-		</div>
-		<div style="background-color: #171F26;  padding: 50px 0px 80px;">
-			<h1>A embedded NoSQL database for .NET</h1>
-			<h2>A open source database with zero configuration and 100% write in C#</h2>
+		</header>
+        
+		<div class="banner">
+			<h1>Embedded NoSQL database for .NET</h1>
+			<h2>An open source MongoDB-like database with zero configuration</h2>
 			<div class="install">
 				<span>> Install-Package LiteDB</span><a href="#"><i class="fa fa-arrow-right"></i></a>
 			</div>
-			<Br/>
-			<div style="text-align: center; ">
-			<iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=star&amp;count=true" class="social-share"></iframe>
-			<iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=fork&amp;count=true" class="social-share"></iframe>
+			<div class="social-buttons">
+                <iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=star&amp;count=true" class="social-share"></iframe>
+                <iframe src="http://ghbtns.com/github-btn.html?user=mbdavid&amp;repo=LiteDB&amp;type=fork&amp;count=true" class="social-share"></iframe>
 			</div>
 		</div>
+        
 		<div class="container">
-			<div class="row">
-				<div class="col-md-4">
-					Feature 1
-				</div>
-				<div class="col-md-4">
-					Feature 2
-				</div>
-				<div class="col-md-4">
-					Feature 3
-				</div>
-			</div>
+            <div class="feature">
+                <h1><i class="fa fa-check-square-o"></i>100% write in C#</h1>
+                <p>LiteDB is a single DLL (less than 200kb) installed via NuGet or with a simple copy.</p>
+            </div>
+            <div class="feature">
+                <h1><i class="fa fa-flash"></i>Free for everyone</h1>
+                <p>LiteDB is in MIT license and can be used for personal or comercial.</p>
+            </div>
+            <div class="feature">
+                <h1><i class="fa fa-cog"></i>And much more...</h1>
+                <ul>
+                    <li>Serverless NoSQL Document Store</li>
+                    <li>Simple API similar to MongoDB</li>
+                    <li>100% C# code for .NET 4 in a single DLL (less than 200kb)</li>
+                    <li>Transaction control - ACID</li>
+                    <li>Recovery in writing failure (journal mode)</li>
+                    <li>Store POCO classes or BsonDocument</li>
+                    <li>Store files and stream data (like GridFS in MongoDB)</li>
+                </ul>
+            </div>
 		</div>
+        
+        <div class="banner-title">
+            <div class="container">
+                Simple API<h2>Very similiar to MongoDB C# Official Driver</h2>
+            </div>
+        </div>
+        
+        <div class="container ex">
+        
+            <div class="examples">
+                <ul>
+                    <li class="active"><a href="#code-1"><i class="fa fa-cube"></i>Basic example</a></li>
+                    <li><a href="#code-1"><i class="fa fa-cube"></i>Store files</a></li>
+                    <li><a href="#code-1"><i class="fa fa-cube"></i>Custom entity mapping</a></li>
+                </ul>
+            </div>
+        
+        
+<pre class="language-csharp" id="code1"><code>// Create your POCO class
+public class Customer
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string[] Phones { get; set; }
+    public bool IsActive { get; set; }
+}
+
+// Open database (or create if not exits)
+using(var db = new LiteDatabase(@"MyData.db"))
+{
+    // Get customer collection
+    var customers = db.GetCollection&lt;Customer&gt;("customers");
+
+    // Create your new customer instance
+    var customer = new Customer
+    { 
+        Name = "John Doe", 
+        Phones = new string[] { "8000-0000", "9000-0000" }, 
+        IsActive = true
+    };
+
+    // Insert new customer document (Id will be auto-incremented)
+    customers.Insert(customer);
+
+    // Update a document inside a collection
+    customer.Name = "Joana Doe";
+
+    customers.Update(customer);
+
+    // Index document using a document property
+    customers.EnsureIndex(x => x.Name);
+
+    // Use Linq to query documents
+    var results = customers.Find(x => x.Name.StartsWith("Jo"));
+}</code></pre>
+
+        </div>
+        
+        <footer>
+            Developer with ♥ by Mauricio David - <a href="https://twitter.com/mbdavid">@mbdavid</a>
+        </footer>
+        
+        <script src="js/prism.js"></script>
 	</body>
 </html>
