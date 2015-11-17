@@ -26,7 +26,7 @@ $('.textbox').on('keyup', function (e) {
         idx = hist.length;
 
         //$.post('api.ashx', { db: db, cmd: text }).done(function (result) {
-        var result = "this tis a messagem from server"
+        var result = "Not implemented yet. Run on http://litedb.azurewebsites.net"
             var css = /^ERROR:\s/.test(result) ? 'error' : 'result';
             $prompt.before('<pre class="' + css + '">' + $('<div/>').text(result).html() + '</pre>');
             $prompt.show();

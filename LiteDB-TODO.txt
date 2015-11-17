@@ -1,18 +1,17 @@
 ﻿# LiteDB v.2 - TODO
 
-- LazyLoad para engine
-- O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()   
 - Revisar help do Shell - saiu varias coisas
 - FileLimit and Initial Size
 - Revisar BsonArray.Length não faz cache
-- Implementar DbRefAttribute
 - ThreadSafe
 - Unit tests
-- Colocar <BsonDocument> DbParams na header. _engine.GetParams(), _engine.SetParams(p) (limit 4k)
-- Review das exception (remover o q nao existe) - Passar o Logger por parametro no ctor do LiteExeption (e no rollback vai duplicar?)
-- New UserVersion
+- New UserVersion. this.UserVersions(1, (db) => { .. })
 - Shirink
 - Migration tool
+
+- Implementar DbRefAttribute
+- O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()   
+- Colocar <BsonDocument> DbParams na header. _engine.GetParams(), _engine.SetParams(p) (limit 4k)
 
 
 ## Thread Safe / Process Safe
@@ -59,6 +58,7 @@
 - ACID per document/collections
 - Lazy load
 * ByteArray, DbEngine, abstract BasePage
+- FileLimit and Initial Size
         
 ## Para versão 2
 

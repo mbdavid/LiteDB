@@ -25,7 +25,7 @@
                 <img src="img/logo_litedb.svg" class="logo" />
                 <ul class="nav">
                     <li><a href="https://github.com/mbdavid/LiteDB/wiki">DOCS</a></li>
-                    <li><a href="http://litedb.azurewebsites.net/">TRY ONLINE</a></li>
+                    <li><a href="javascript:;" id='clickshell'>TRY ONLINE</a></li>
                     <li><a href="https://github.com/mbdavid/LiteDB/releases">DOWNLOAD</a></li>
                 </ul>
 			</div>
@@ -240,6 +240,7 @@ using(var db = new LiteDatabase(@"MyData.db"))
                 $($(this).attr("data-code")).show();
                 if($(this).attr("data-code") == "#codeshell") setTimeout(function() { $(".textbox").focus(); }, 0);
             });
+            $("#clickshell").click(function() { $('[data-code="#codeshell"]').click(); });
         </script>
         <script src="js/shell.js"></script>
         <script>

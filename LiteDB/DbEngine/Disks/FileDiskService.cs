@@ -18,7 +18,7 @@ namespace LiteDB
         /// <summary>
         /// Position, on page, about page type
         /// </summary>
-        private const int PAGE_TYPE = 4;
+        private const int PAGE_TYPE_POSITION = 4;
 
         private FileStream _stream;
         private string _filename;
@@ -156,7 +156,7 @@ namespace LiteDB
                 _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
             });
 
-            _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE]);
+            _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             return buffer;
         }
@@ -168,7 +168,7 @@ namespace LiteDB
         {
             var position = (long)pageID * (long)BasePage.PAGE_SIZE;
 
-            _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE]);
+            _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             // position cursor
             if (_stream.Position != position)
@@ -199,7 +199,7 @@ namespace LiteDB
                 });
             }
 
-            _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE]);
+            _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             // just write original bytes in order that are changed
             _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
