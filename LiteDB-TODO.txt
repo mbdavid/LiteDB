@@ -6,7 +6,7 @@
 - ThreadSafe
 - Unit tests
 - New UserVersion. this.UserVersions(1, (db) => { .. })
-- Shirink
+- Shrink
 - Migration tool
 
 - Implementar DbRefAttribute

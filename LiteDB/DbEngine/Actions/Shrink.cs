@@ -12,11 +12,14 @@ namespace LiteDB
         /// <summary>
         /// Copy database do another disk
         /// </summary>
-        public int Shrink(IDiskService tempDisk)
+        public int Shrink()
         {
             // lock and clear cache - no changes during shrink
             _disk.Lock();
             _cache.Clear();
+
+            // create a temporary disk
+            var tempDisk = _disk.GetTempDisk();
 
             // get initial disk size
             var header = _pager.GetPage<HeaderPage>(0);
@@ -72,6 +75,9 @@ namespace LiteDB
 
             // unlock disk to continue
             _disk.Unlock();
+
+            // delete temporary disk
+            _disk.DeleteTempDisk();
 
             return diff;
         }

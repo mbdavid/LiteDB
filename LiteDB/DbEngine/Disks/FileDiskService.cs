@@ -24,6 +24,7 @@ namespace LiteDB
         private string _filename;
         private long _lockLength;
 
+        private string _tempFilename;
         private FileStream _journal;
         private string _journalFilename;
         private bool _journalEnabled;
@@ -48,6 +49,7 @@ namespace LiteDB
             _limitSize = str.GetFileSize("limit size", 0);
             var level = str.GetValue<byte?>("log", null);
 
+            // simple validations
             if (string.IsNullOrWhiteSpace(_filename)) throw new ArgumentNullException("filename");
             if (_initialSize > 0 && _initialSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("initial size too low");
             if (_limitSize > 0 && _limitSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("limit size too low");
@@ -58,9 +60,9 @@ namespace LiteDB
             if(level.HasValue) _log.Level = level.Value;
 
             _journalEnabled = _readonly ? false : journalEnabled; // readonly? no journal
-            _journalFilename = Path.Combine(Path.GetDirectoryName(_filename),
-                Path.GetFileNameWithoutExtension(_filename) + "-journal" +
-                Path.GetExtension(_filename));
+            _journalFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-journal" + Path.GetExtension(_filename));
+            _tempFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-temp" + Path.GetExtension(_filename));
+
         }
 
         /// <summary>
@@ -319,6 +321,24 @@ namespace LiteDB
 
             // redim filesize if grow more than original before rollback
             _stream.SetLength(fileSize);
+        }
+
+        #endregion
+
+        #region Temporary
+
+        public IDiskService GetTempDisk()
+        {
+            // if exists, delete first
+            this.DeleteTempDisk();
+
+            // no journal, no logger
+            return new FileDiskService("filename=" + _tempFilename + ";journal=false", new Logger());
+        }
+
+        public void DeleteTempDisk()
+        {
+            File.Delete(_tempFilename);
         }
 
         #endregion

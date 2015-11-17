@@ -120,5 +120,19 @@ namespace LiteDB
         }
 
         #endregion
+
+        #region Temporary
+
+        public IDiskService GetTempDisk()
+        {
+            return new StreamDiskService(new MemoryStream());
+        }
+
+        public void DeleteTempDisk()
+        {
+            // nothing to do
+        }
+
+        #endregion
     }
 }

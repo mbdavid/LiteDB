@@ -151,6 +151,7 @@
     <Compile Include="DbEngine\Services\PageService.cs" />
     <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Services\TransactionService.cs" />
+    <Compile Include="Shell\Commands\Others\Shrink.cs" />
     <Compile Include="Utils\ExpressionExtensions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\StreamExtensions.cs" />

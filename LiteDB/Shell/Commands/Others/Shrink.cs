@@ -16,7 +16,7 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            return (Int32)db.Shrink("shrink-tempdb-" + DateTime.Now.Millisecond + ".db");
+            return (Int32)db.Shrink();
         }
     }
 }

@@ -23,5 +23,8 @@ namespace LiteDB
         void WritePage(uint pageID, byte[] buffer);
 
         ushort GetChangeID();
+
+        IDiskService GetTempDisk();
+        void DeleteTempDisk();
     }
 }

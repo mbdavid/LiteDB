@@ -55,7 +55,6 @@
   <ItemGroup>
     <Compile Include="Commands\Debug.cs" />
     <Compile Include="Commands\Reset.cs" />
-    <Compile Include="Commands\Shrink.cs" />
     <Compile Include="Commands\Version.cs" />
     <Compile Include="Commands\Help.cs" />
     <Compile Include="Commands\Open.cs" />

@@ -157,31 +157,11 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced. Use an In-memory database as temporary area.
+        /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
         /// </summary>
         public int Shrink()
         {
-            return _engine.Value.Shrink(new StreamDiskService(new MemoryStream()));
-        }
-
-        /// <summary>
-        /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced. Use a temp file as temporary database
-        /// </summary>
-        public int Shrink(string tempFilename)
-        {
-            if (string.IsNullOrEmpty(tempFilename)) throw new ArgumentNullException("tempFilename");
-            if (File.Exists(tempFilename)) throw new ArgumentException("tempFilename already exists");
-
-            try
-            {
-                var diff = _engine.Value.Shrink(new FileDiskService("filename=" + tempFilename + ";journal=false", new Logger()));
-
-                return diff;
-            }
-            finally
-            {
-                File.Delete(tempFilename);
-            }
+            return _engine.Value.Shrink();
         }
 
         public void Dispose()
