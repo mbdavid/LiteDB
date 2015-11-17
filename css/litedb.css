@@ -12,9 +12,14 @@ header {
 
 .container {
     display: flex;
-    width: 1200px;
+    max-width: 1200px;
     justify-content: space-between;
     margin: 0px auto;
+}
+
+header .container {
+	max-width: 1100px;
+	flex: 1;
 }
 
 .logo {
