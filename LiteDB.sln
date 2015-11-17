@@ -9,28 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Shell", "LiteDB.Shel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Tests", "LiteDB.Tests\LiteDB.Tests.csproj", "{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "LiteDB.org", "LiteDB.org\", "{FA39B5CD-49DD-4057-8714-66F24AA1CFF5}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		ProjectReferences = "{e808051a-83b7-4fa9-b004-d064ea162b60}|LiteDB.dll;"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_50030"
-		Debug.AspNetCompiler.PhysicalPath = "LiteDB.org\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50030\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_50030"
-		Release.AspNetCompiler.PhysicalPath = "LiteDB.org\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50030\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "50030"
-		SlnRelativePath = "LiteDB.org\"
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,10 +27,6 @@ Global
 		{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA39B5CD-49DD-4057-8714-66F24AA1CFF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA39B5CD-49DD-4057-8714-66F24AA1CFF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA39B5CD-49DD-4057-8714-66F24AA1CFF5}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA39B5CD-49DD-4057-8714-66F24AA1CFF5}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
