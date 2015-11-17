@@ -1,0 +1,239 @@
+body {
+	font-family: Lato,Helvetica Neue,Helvetica,Arial,sans-serif;
+    margin: 0px;
+}
+
+header {
+    background-color: #171F26; 
+    padding: 0px 0px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    display: flex;
+    width: 1200px;
+    justify-content: space-between;
+    margin: 0px auto;
+}
+
+.logo {
+    width: 120px;
+    height: 50px;
+    margin: 10px 0px;
+}
+
+.nav {
+	font-weight: bold;
+	list-style: none;
+	color:#BCBEC0;
+    margin: 0px;
+    display: flex;
+}
+
+.nav li {
+	padding: 0px 5px;
+}
+
+.nav a {
+    display: block;
+	color:#BCBEC0;
+	font-weight: bold;
+	padding: 25px 15px;
+    text-decoration: none;
+	border-bottom: 3px solid transparent;
+}
+
+.nav a:hover {
+	text-decoration: none;
+	border-bottom-color: #BCBEC0;
+    background-color: rgba(0,0,0,.5)
+}
+
+/*--*/
+
+.banner {
+    background-color: #171F26; 
+    padding: 20px;
+}
+
+.banner h1 {
+	text-align: center;
+	color:#BCBEC0;
+    font-size: 40px;
+    line-height: 1.15;
+    margin: 0px;
+    padding: 80px 0px 20px;
+}
+
+.banner h2 {
+	text-align: center;
+	color:#BCBEC0;
+    font-size: 20px;
+    line-height: 1.15;
+    font-weight: 300;
+    margin: 0px;
+}
+
+.install {
+	text-align: center;
+    padding: 60px 0px;
+}
+
+.install span {
+	background-color: #283542;
+	color: #BCBEC0;
+	font-family: Courier New, Courier, monospace;
+	font-size: 14px;
+	padding: 15px;
+    display: inline-block;
+}
+
+.install a {
+	background-color: #0e83cd;
+	font-size: 14px;
+	padding: 15px;
+	color: white;
+    display: inline-block;
+    position: relative;
+    top: +1px;
+}
+
+.social-buttons {
+    text-align: center;
+}
+
+.social-share{
+	width: 100px !important;
+    height: 20px !important;
+    border: none;
+    overflow: hidden;
+    margin: 2px;
+}
+
+/* -- */
+
+.feature {
+    flex:1;
+    margin: 40px 30px 40px 0px;
+    padding: 0px;
+}
+.container .feature:last-child {
+    margin-right: 0px;
+}
+
+.feature h1 {
+    font-size: 28px;
+    color: #171F26;
+}
+
+.feature .fa {
+    margin: 0px 15px;
+    color: #171F26;
+    width: 20px;
+}
+
+.feature p {
+    margin: 0px 0px 0px 50px;
+    line-height: 1.5em;
+}
+
+.feature ul {
+    margin: 0px 0px 0px 10px;
+    line-height: 1.5em;
+}
+
+.feature-pack {
+    background-color: yellow;
+}
+
+/* -- */
+
+.banner-title {
+    background-color: #f3f3f3;
+    padding: 40px;
+    margin-bottom: 40px;
+    font-size: 36px;
+    color: #171F26;
+}
+
+.banner-title .container {
+    justify-content: flex-start;
+}
+
+.banner-title h2 {
+    display: inline-block;
+    font-size: 18px;
+    color: gray;
+    font-weight: 300;
+    margin-left: 30px;
+}
+/* -- */
+.examples {
+    flex: 1;
+    width: 200px;
+}
+.examples ul {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+.examples li {
+    padding: 20px 30px;
+}
+.examples li i {
+    margin-right: 10px;
+}
+.examples li.active {
+    background-color: #F5F2F0;
+    color: black;
+}
+.examples li.active a {
+    color: black;
+}
+.examples a {
+    color: #0e83cd;
+    text-decoration: none;
+}
+.examples a:hover {
+    text-decoration: underline;
+}
+
+.demo-box {
+    flex: 2;
+    margin: 0px !important;
+    background-color: #F5F2F0;
+}
+
+
+/* -- */
+footer {
+    text-align: center;
+    background-color: #171F26; 
+	color:#BCBEC0;
+    margin-top: 20px;
+    padding: 30px;
+}
+
+footer a {
+	color:#BCBEC0;
+    text-decoration: none;
+}
+
+footer a:hover {
+	color:#BCBEC0;
+    text-decoration: underline;
+}
+
+/* -- SHELL -- */
+.shell { background-color: #2A211C; padding: 20px; color: white; font-family: monospace; font-size: 14px; overflow-y: auto; overflow-x: auto; margin: 20px; height: 500px; }
+.prompt { position: relative; padding-left: 15px; }
+.prompt:before { position: absolute; top: 0px; left: 0px; content: '>'; color: white; }
+.cursor { position: absolute; }
+.textbox { width: 100%; border: 0px; background-color: transparent; color: white; outline: none; font-family: monospace; font-size: 14px; }
+.shell pre { margin: 5px 0px;}
+.welcome { color: #F6F080; }
+.result { color: cyan; }
+.error { color: #FF7D60; }
+.shell::-webkit-scrollbar { width: 8px; height: 8px; }
+.shell::-webkit-scrollbar-thumb { border-radius: 10px; background-color: #686868; }
