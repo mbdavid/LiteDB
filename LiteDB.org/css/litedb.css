@@ -94,6 +94,9 @@ header {
 	font-size: 14px;
 	padding: 15px;
 	color: white;
+    display: inline-block;
+    position: relative;
+    top: +1px;
 }
 
 .social-buttons {
@@ -196,9 +199,10 @@ header {
     text-decoration: underline;
 }
 
-pre {
+.demo-box {
     flex: 2;
     margin: 0px !important;
+    background-color: #F5F2F0;
 }
 
 
@@ -220,3 +224,16 @@ footer a:hover {
 	color:#BCBEC0;
     text-decoration: underline;
 }
+
+/* -- SHELL -- */
+.shell { background-color: #2A211C; padding: 20px; color: white; font-family: monospace; font-size: 14px; overflow-y: auto; overflow-x: auto; margin: 20px; height: 450px; }
+.prompt { position: relative; padding-left: 15px; }
+.prompt:before { position: absolute; top: 0px; left: 0px; content: '>'; color: white; }
+.cursor { position: absolute; }
+.textbox { width: 100%; border: 0px; background-color: transparent; color: white; outline: none; font-family: monospace; font-size: 14px; }
+.shell pre { margin: 5px 0px;}
+.welcome { color: #F6F080; }
+.result { color: cyan; }
+.error { color: #FF7D60; }
+.shell::-webkit-scrollbar { width: 8px; height: 8px; }
+.shell::-webkit-scrollbar-thumb { border-radius: 10px; background-color: #686868; }

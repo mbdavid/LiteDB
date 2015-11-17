@@ -10,6 +10,9 @@
 - Unit tests
 - Colocar <BsonDocument> DbParams na header. _engine.GetParams(), _engine.SetParams(p) (limit 4k)
 - Review das exception (remover o q nao existe) - Passar o Logger por parametro no ctor do LiteExeption (e no rollback vai duplicar?)
+- New UserVersion
+- Shirink
+- Migration tool
 
 
 ## Thread Safe / Process Safe
