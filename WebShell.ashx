@@ -17,7 +17,7 @@ public class WebShell : IHttpHandler
         var dbname = context.Request.Form["db"];
         var command = context.Request.Form["cmd"];
 
-        context.Response.AppendHeader("Access-Control-Allow-Origin", "litedb.org");
+        context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
         try
         {
