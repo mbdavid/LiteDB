@@ -34,12 +34,12 @@ namespace LiteDB
             file.UploadDate = DateTime.Now;
 
             // insert file in _files collections with 0 file length
-            _engine.InsertDocuments(FILES, new BsonDocument[] { file.AsDocument });
+            _engine.InsertDocuments(FILES, new BsonDocument[] { file.AsDocument }, 1);
 
             // for each chunk, insert as a chunk document
             foreach (var chunk in file.CreateChunks(stream))
             {
-                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk });
+                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk }, 1024);
             }
 
             // update fileLength/chunks to confirm full file length stored in disk

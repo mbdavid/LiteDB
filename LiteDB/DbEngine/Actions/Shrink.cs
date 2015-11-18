@@ -43,7 +43,8 @@ namespace LiteDB
                         var docs = _indexer.FindAll(col.PK, Query.Ascending);
 
                         tempEngine.InsertDocuments(col.CollectionName, 
-                            docs.Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock, true).Buffer)));
+                            docs.Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock, true).Buffer)),
+                            1024);
                     }
 
                     // get final header from temp engine

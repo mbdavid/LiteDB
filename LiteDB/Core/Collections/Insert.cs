@@ -8,6 +8,8 @@ namespace LiteDB
 {
     public partial class LiteCollection<T>
     {
+        public const int DOCUMENT_BUFFER_SIZE = 1024;
+
         /// <summary>
         /// Insert a new document to this collection. Document Id must be a new value in collection - Returns document Id
         /// </summary>
@@ -19,19 +21,19 @@ namespace LiteDB
 
             var doc = _mapper.ToDocument(document);
 
-            _engine.InsertDocuments(_name, new BsonDocument[] { doc });
+            _engine.InsertDocuments(_name, new BsonDocument[] { doc }, 1);
 
             return doc["_id"];
         }
 
         /// <summary>
-        /// Insert an array of new documents to this collection. Document Id must be a new value in collection
+        /// Insert an array of new documents to this collection. Document Id must be a new value in collection. Can be set buffer size to commit at each N documents
         /// </summary>
-        public int Insert(IEnumerable<T> docs)
+        public int Insert(IEnumerable<T> docs, int buffer = DOCUMENT_BUFFER_SIZE)
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            return _engine.InsertDocuments(_name, this.GetBsonDocs(docs));
+            return _engine.InsertDocuments(_name, this.GetBsonDocs(docs), buffer);
         }
 
         /// <summary>
