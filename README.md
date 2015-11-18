@@ -14,7 +14,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Single data file storage (like SQLite)
 - Index document fields for fast search (up to 16 indexes per collection)
 - LINQ support for queries
-- Shell command line - [try this online version](http://www.litedb.org/)
+- Shell command line - [try this online version](http://www.litedb.org/#shell)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
@@ -31,7 +31,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 ## Try online
 
-[Try LiteDB Web Shell](http://www.litedb.org/). For security reasons, in online version not all commands are available. Try offline version for full features tests.
+[Try LiteDB Web Shell](http://www.litedb.org/#shell). For security reasons, in online version not all commands are available. Try offline version for full features tests.
 
 ## Documentation
 
