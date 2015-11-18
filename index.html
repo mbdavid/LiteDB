@@ -25,7 +25,7 @@
                 <img src="img/logo_litedb.svg" class="logo" />
                 <ul class="nav">
                     <li><a href="https://github.com/mbdavid/LiteDB/wiki">DOCS</a></li>
-                    <li><a href="javascript:;" id='clickshell'>TRY ONLINE</a></li>
+                    <li><a href="#shell">TRY ONLINE</a></li>
                     <li><a href="https://github.com/mbdavid/LiteDB/releases">DOWNLOAD</a></li>
                 </ul>
 			</div>
@@ -91,7 +91,6 @@
                     <li><a href="javascript:;" data-code="#code3"><i class="fa fa-cube"></i>Fluent entity mapping</a></li>
                     <li><a href="javascript:;" data-code="#code4"><i class="fa fa-cube"></i>Stream as database</a></li>
                     <li><a href="javascript:;" data-code="#code5"><i class="fa fa-cube"></i>DbRef for cross references</a></li>
-                    <li><a href="javascript:;" data-code="#codeshell"><i class="fa fa-cube"></i>Try web shell online</a></li>
                 </ul>
             </div>
         
@@ -212,18 +211,26 @@ using(var db = new LiteDatabase(@"MyData.db"))
                     
 }</code></pre>
 
-            <div class="demo-box" style="display: none" id="codeshell">
+        </div>
+        
+        <div class="banner-title" style="margin-top: 30px">
+            <div class="container">
+                Try online shell<h2>A subset version of desktop console LiteDB shell</h2>
+            </div>
+        </div>
+
+        <div class="container">
+            <a class="demo-box" id="shellbox">
                 <div class="shell">
                     <div class="welcome">
-                        Welcome to LiteDB Web Shell - Version 2.0<br /><br />
+                        Welcome to LiteDB Web Shell - Version 2.0beta<br /><br />
                         Getting started with `help`<br /><br />
                     </div>
                     <div class="prompt">
                         <input type="textbox" class="textbox" autofocus spellcheck="false" />
                     </div>
                 </div>
-            </div>
-
+            </a>
         </div>
         
         <footer>
@@ -236,11 +243,9 @@ using(var db = new LiteDatabase(@"MyData.db"))
             $(".examples a").click(function() {
                 $(".examples li").removeClass("active");
                 $(this).parent().addClass("active");
-                $(".demo-box").hide();
+                $("pre.demo-box").hide();
                 $($(this).attr("data-code")).show();
-                if($(this).attr("data-code") == "#codeshell") setTimeout(function() { $(".textbox").focus(); }, 0);
             });
-            $("#clickshell").click(function() { $('[data-code="#codeshell"]').click(); });
         </script>
         <script src="js/shell.js"></script>
 		<script>
