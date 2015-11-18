@@ -56,22 +56,23 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="BulkTest.cs" />
-    <Compile Include="BsonTest.cs" />
-    <Compile Include="AutoIdTest.cs" />
-    <Compile Include="DropCollectionTest.cs" />
-    <Compile Include="FileStorageTest.cs" />
-    <Compile Include="BigFileTest.cs" />
-    <Compile Include="MapperInterfaceTest.cs" />
-    <Compile Include="BsonFieldTest.cs" />
-    <Compile Include="ObjectIdTest.cs" />
-    <Compile Include="MapperTest.cs" />
-    <Compile Include="ConcurrentTest.cs" />
-    <Compile Include="JsonTest.cs" />
-    <Compile Include="LinqTest.cs" />
-    <Compile Include="IncludeTest.cs" />
+    <Compile Include="Concurrency\ThreadSafeTest.cs" />
+    <Compile Include="Crud\BulkTest.cs" />
+    <Compile Include="Bson\BsonTest.cs" />
+    <Compile Include="Mapping\AutoIdTest.cs" />
+    <Compile Include="Crud\DropCollectionTest.cs" />
+    <Compile Include="Crud\FileStorageTest.cs" />
+    <Compile Include="Crud\BigFileTest.cs" />
+    <Compile Include="Mapping\MapperInterfaceTest.cs" />
+    <Compile Include="Mapping\BsonFieldTest.cs" />
+    <Compile Include="Bson\ObjectIdTest.cs" />
+    <Compile Include="Mapping\MapperTest.cs" />
+    <Compile Include="Concurrency\ConcurrentTest.cs" />
+    <Compile Include="Bson\JsonTest.cs" />
+    <Compile Include="Index\LinqTest.cs" />
+    <Compile Include="Mapping\IncludeTest.cs" />
     <Compile Include="Utils\DB.cs" />
-    <Compile Include="IndexOrderTest.cs" />
+    <Compile Include="Index\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

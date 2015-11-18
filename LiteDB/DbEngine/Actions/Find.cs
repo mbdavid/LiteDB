@@ -14,31 +14,34 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            // get my collection page
-            var col = this.GetCollectionPage(colName, false);
-
-            // no collection, no documents
-            if(col == null) yield break;
-
-            // get nodes from query executor to get all IndexNodes
-            var nodes = query.Run(col, _indexer);
-
-            // skip first N nodes
-            if (skip > 0) nodes = nodes.Skip(skip);
-
-            // limit in M nodes
-            if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-            // for each document, read data and deserialize as document
-            foreach (var node in nodes)
+            lock(_locker)
             {
-                _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
+                // get my collection page
+                var col = this.GetCollectionPage(colName, false);
 
-                var dataBlock = _data.Read(node.DataBlock, true);
+                // no collection, no documents
+                if(col == null) yield break;
 
-                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+                // get nodes from query executor to get all IndexNodes
+                var nodes = query.Run(col, _indexer);
 
-                yield return doc;
+                // skip first N nodes
+                if (skip > 0) nodes = nodes.Skip(skip);
+
+                // limit in M nodes
+                if (limit != int.MaxValue) nodes = nodes.Take(limit);
+
+                // for each document, read data and deserialize as document
+                foreach (var node in nodes)
+                {
+                    _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
+
+                    var dataBlock = _data.Read(node.DataBlock, true);
+
+                    var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+
+                    yield return doc;
+                }
             }
         }
     }

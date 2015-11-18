@@ -225,14 +225,17 @@ namespace LiteDB
         {
             Dictionary<string, PropertyMapper> props;
 
-            if (_mapper.TryGetValue(type, out props))
+            lock(_mapper)
             {
-                return props;
+                if (_mapper.TryGetValue(type, out props))
+                {
+                    return props;
+                }
+
+                _mapper[type] = Reflection.GetProperties(type, this.ResolvePropertyName);
+
+                return _mapper[type];
             }
-
-            _mapper[type] = Reflection.GetProperties(type, this.ResolvePropertyName);
-
-            return _mapper[type];
         }
 
         /// <summary>

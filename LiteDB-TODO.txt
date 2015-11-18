@@ -1,16 +1,28 @@
-﻿# LiteDB v.2 - TODO
-
+﻿## TODO para v2 BETA (até sexta)
 - Revisar help do Shell - saiu varias coisas
-- Revisar BsonArray.Length não faz cache
 - ThreadSafe
-- Unit tests
-- New UserVersion. this.UserVersions(1, (db) => { .. })
-- Shrink
-- Migration tool
+- Unit tests básicos
+- Test script todos os comandos
+- Merge para master
+- Folder root: "src", "test", "nuget"
+- Revisar site
 
-- Implementar DbRefAttribute
+## TODO para v2 RC (até 31/dez)
+- Atualizar documentação
+- Revisar site
 - O problema de Max do AutoInc - Que tal uma sequence na collection? NextId()   
 - Colocar <BsonDocument> DbParams na header. _engine.GetParams(), _engine.SetParams(p) (limit 4k)
+- Unit tests melhorados
+- Colocar documentação neste site
+- Migrar unit tests para XUnit ou outro q funcione no ASPNET5
+
+## TODO para v2.0 (até 31/jan)
+- Revisar BsonArray.Length não faz cache
+- New UserVersion. this.UserVersions(1, (db) => { .. })
+- Migration tool? Shell.Import/Export?
+- Implementar DbRefAttribute
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 ## Thread Safe / Process Safe
@@ -20,30 +32,13 @@
 - Revisar classes de servico/collection pra ver quais sao as variaveis de classe q mudam situacao (vide _cache)
 - Avaliar uso do ConcurrentDictionary na cache
 
-## Testes de Performance
-- Fazer um script grande para testar no shell
-- Focar no insert/delete/find?? FileStorage
-- Testar sempre como release
-- Sempre com journal?
-===> Opções de melhorias
-* Testar outros dicionarios na cache
-* Testar BitConvert ao inves de unsafe
-* PageSize 8K e 16K
+## FUTURE versions 2.x:
 
-## A pensar:
-
-- Voltar UserVersion??
-- Solução de Migrations (protected?)
-    db.Migrations.Add(new Migration1());
 - DefaultIndexOptions? Ou sem default - não cria indice automaticamente - ou full search?
-- Folder root: "src", "test", "nuget"
-- Encrypt datafile (EncryptDiskService : FileDiskService)
 - Queria que o IDiskService não tivesse informações sobre Journal/Recovery
+- Encrypt datafile (EncryptDiskService : FileDiskService)
 - Que tal ter a possibilidade utilizar serializacao de terceiros (via JSON.NET)? IBsonMapper?
-
-- Como implementar pro DNX
-- Mapeador/Configuration estilo EF
-    db.Configuration.Add(new CredorConfiguration())
+- PCL e ASPNET 5
 
 ## V2 Features
 - New DbEngine
@@ -58,25 +53,3 @@
 - Lazy load
 * ByteArray, DbEngine, abstract BasePage
 - FileLimit and Initial Size
-        
-## Para versão 2
-
-- Criar site simples, bacana, estilos:
-    novo site mongodb
-    http://pouchdb.com/ 
-    vuejs.org https://github.com/vuejs/vuejs.org
-    https://hexo.io/ (esse é bem simples e acho q atende bem)
-- Fazer o web shell na mesma pagina (nem q seja via iframe)
-- Colocar documentação neste site
-- Logotipo + Nome
-- Atualizar codeproject
-- Site: fazer versao mobile
-
-## Modulos do LiteDB
-- Core
-- DbEngine
-- QueryEngine
-- Mapper
-- Utils
-    - Linq, shell, fileStorage, fts
-- API

@@ -6,7 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     [TestClass]
     public class IndexOrderTest

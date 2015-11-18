@@ -7,24 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     public class DB
     {
-        // Delete Temp databases
-        //static DB()
-        //{
-        //    var dir = System.IO.Path.GetDirectoryName(Path());
-
-        //    foreach (var f in System.IO.Directory.GetFiles(dir, "*.db"))
-        //    {
-        //        System.IO.Directory.Delete(f);
-        //    }
-        //}
-
-
         // Get a unique database name in TestResults folder
-        public static string Path()
+        public static string RandomFilename()
         {
             var path = System.IO.Path.GetFullPath(
                 System.IO.Directory.GetCurrentDirectory() + 

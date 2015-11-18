@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     [TestClass]
     public class DropCollectionTest

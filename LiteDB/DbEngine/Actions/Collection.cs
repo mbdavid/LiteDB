@@ -14,9 +14,12 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            _transaction.AvoidDirtyRead();
+            lock(_locker)
+            {
+                _transaction.AvoidDirtyRead();
 
-            return _collections.GetAll().Select(x => x.CollectionName);
+                return _collections.GetAll().Select(x => x.CollectionName);
+            }
         }
 
         /// <summary>

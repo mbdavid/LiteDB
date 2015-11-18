@@ -40,13 +40,10 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page)
         {
-            lock(_cache)
+            // do not cache extend page - never will be reused
+            if (page.PageType != PageType.Extend)
             {
-                // do not cache extend page - never will be reused
-                if (page.PageType != PageType.Extend)
-                {
-                    _cache[page.PageID] = page;
-                }
+                _cache[page.PageID] = page;
             }
         }
 
@@ -55,20 +52,17 @@ namespace LiteDB
         /// </summary>
         public void SetPageDirty(BasePage page)
         {
-            lock(_dirty)
+            _dirty[page.PageID] = page;
+
+            if (page.IsDirty) return;
+
+            page.IsDirty = true;
+
+            // if page is new (not exits on datafile), there is no journal for them
+            if (page.DiskData.Length > 0)
             {
-                _dirty[page.PageID] = page;
-
-                if (page.IsDirty) return;
-
-                page.IsDirty = true;
-
-                // if page is new (not exits on datafile), there is no journal for them
-                if (page.DiskData.Length > 0)
-                {
-                    // call action passing dirty page - used for journal file writes 
-                    MarkAsDirtyAction(page);
-                }
+                // call action passing dirty page - used for journal file writes 
+                MarkAsDirtyAction(page);
             }
         }
 
@@ -79,11 +73,8 @@ namespace LiteDB
         {
             var hasDirty = _dirty.Count > 0;
 
-            lock(_cache)
-            {
-                _dirty.Clear();
-                _cache.Clear();
-            }
+            _dirty.Clear();
+            _cache.Clear();
 
             return hasDirty;
         }

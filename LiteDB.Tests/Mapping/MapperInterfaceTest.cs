@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Collections.Specialized;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
 
     [TestClass]
@@ -57,8 +57,8 @@ namespace UnitTest
             var bson2 = mapper.ToDocument(c2); // add _type in Impl property
             var bson3 = mapper.ToDocument(c3); // do not add _type in Impl property
 
-            Assert.AreEqual("UnitTest.MapperInterfaceTest+MyClassImpl, UnitTest", bson1["Impl"].AsDocument["_type"].AsString);
-            Assert.AreEqual("UnitTest.MapperInterfaceTest+MyClassImpl, UnitTest", bson2["Impl"].AsDocument["_type"].AsString);
+            Assert.AreEqual("LiteDB.Tests.MapperInterfaceTest+MyClassImpl, LiteDB.Tests", bson1["Impl"].AsDocument["_type"].AsString);
+            Assert.AreEqual("LiteDB.Tests.MapperInterfaceTest+MyClassImpl, LiteDB.Tests", bson2["Impl"].AsDocument["_type"].AsString);
             Assert.AreEqual(false, bson3["Impl"].AsDocument.ContainsKey("_type"));
 
             var k1 = mapper.ToObject<MyClassWithInterface>(bson1);

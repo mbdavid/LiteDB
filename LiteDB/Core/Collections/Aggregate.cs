@@ -16,6 +16,7 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
+            // do not use indexes - collections has DocumentCount property
             return _engine.Count(_name, null);
         }
 
@@ -26,7 +27,21 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            return _engine.Count(_name, query);
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
+            {
+                try
+                {
+                    return _engine.Count(_name, query);
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
         }
 
         /// <summary>
@@ -46,7 +61,21 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            return _engine.Exists(_name, query);
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
+            {
+                try
+                {
+                    return _engine.Exists(_name, query);
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
         }
 
         /// <summary>
@@ -70,7 +99,21 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            return _engine.Min(_name, field);
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
+            {
+                try
+                {
+                    return _engine.Min(_name, field);
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
         }
 
         /// <summary>
@@ -100,7 +143,21 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            return _engine.Max(_name, field);
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
+            {
+                try
+                {
+                    return _engine.Max(_name, field);
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
         }
 
         /// <summary>

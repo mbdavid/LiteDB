@@ -60,6 +60,9 @@ namespace LiteDB
         /// </summary>
         private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
         {
+            // before get a collection, avoid dirty reads
+            _transaction.AvoidDirtyRead();
+
             // search my page on collection service
             var col = _collections.Get(name);
 

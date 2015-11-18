@@ -29,12 +29,9 @@ namespace LiteDB
             // is not on cache? load from disk
             if (page == null)
             {
-                lock(_disk)
-                {
-                    var buffer = _disk.ReadPage(pageID);
-                    page = BasePage.ReadPage(buffer);
-                    _cache.AddPage(page);
-                }
+                var buffer = _disk.ReadPage(pageID);
+                page = BasePage.ReadPage(buffer);
+                _cache.AddPage(page);
             }
 
 #if DEBUG

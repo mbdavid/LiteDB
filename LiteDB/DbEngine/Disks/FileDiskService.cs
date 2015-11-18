@@ -133,8 +133,12 @@ namespace LiteDB
         public ushort GetChangeID()
         {
             var bytes = new byte[2];
-            _stream.Seek(HeaderPage.CHANGE_ID_POSITION, SeekOrigin.Begin);
-            _stream.Read(bytes, 0, 2);
+
+            this.TryExec(() => {
+                _stream.Seek(HeaderPage.CHANGE_ID_POSITION, SeekOrigin.Begin);
+                _stream.Read(bytes, 0, 2);
+            });
+
             return BitConverter.ToUInt16(bytes, 0);
         }
 
@@ -356,7 +360,10 @@ namespace LiteDB
             {
                 try
                 {
-                    action();
+                    lock(_stream)
+                    {
+                        action();
+                    }
                     return;
                 }
                 catch (UnauthorizedAccessException)

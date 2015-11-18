@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     [TestClass]
     public class JsonTest
@@ -45,13 +40,13 @@ namespace UnitTest
 
             var json = JsonSerializer.Serialize(o, true);
 
-            var d = JsonSerializer.Deserialize(json).AsDocument;
+            var doc = JsonSerializer.Deserialize(json).AsDocument;
 
-            Assert.AreEqual(d["Date"].AsDateTime, o["Date"].AsDateTime);
-            Assert.AreEqual(d["CustomerId"].AsGuid, o["CustomerId"].AsGuid);
-            Assert.AreEqual(d["Items"].AsArray.Count, o["Items"].AsArray.Count);
-            Assert.AreEqual(d["_id"], 123);
-            Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
+            Assert.AreEqual(o["Date"].AsDateTime, doc["Date"].AsDateTime);
+            Assert.AreEqual(o["CustomerId"].AsGuid, doc["CustomerId"].AsGuid);
+            Assert.AreEqual(o["Items"].AsArray.Count, doc["Items"].AsArray.Count);
+            Assert.AreEqual(123, doc["_id"].AsInt32);
+            Assert.AreEqual(o["_id"].AsInt64, doc["_id"].AsInt64);
         }
     }
 }

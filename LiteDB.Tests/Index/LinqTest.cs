@@ -6,7 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     public class User
     {
@@ -30,10 +30,10 @@ namespace UnitTest
         {
             LiteDB.BsonMapper.Global.UseLowerCaseDelimiter('_');
 
-            using (var db = new LiteDatabase(DB.Path()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" } };
-                var c2 = new User { Id = 2, Name = "Malafaia", Active = false, Domain = new UserDomain { DomainName = "Numeria" } };
+                var c2 = new User { Id = 2, Name = "Malatruco", Active = false, Domain = new UserDomain { DomainName = "Numeria" } };
                 var c3 = new User { Id = 3, Name = "Chris", Domain = new UserDomain { DomainName = "Numeria" } };
                 var c4 = new User { Id = 4, Name = "Juliane" };
 
@@ -67,7 +67,7 @@ namespace UnitTest
 
                 // and/or
                 Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "MAURICIO"));
-                Assert.AreEqual(2, col.Count(x => x.Name == "malafaia" || x.Name == "MAURICIO"));
+                Assert.AreEqual(2, col.Count(x => x.Name == "malatruco" || x.Name == "MAURICIO"));
             }
         }
     }

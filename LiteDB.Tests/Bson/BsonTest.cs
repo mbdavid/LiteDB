@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     [TestClass]
     public class BsonTest
@@ -24,7 +19,8 @@ namespace UnitTest
             doc["EmptyString"] = "";
             doc["maxDate"] = DateTime.MaxValue;
             doc["minDate"] = DateTime.MinValue;
-            doc.Set("Customer.Address.Street", "Av. Cacapava");
+
+            doc.Set("Customer.Address.Street", "Av. Caçapava, Nº 122");
 
             doc["Items"] = new BsonArray();
 
@@ -47,26 +43,27 @@ namespace UnitTest
             var o = CreateDoc();
 
             var bson = BsonSerializer.Serialize(o);
-
             var json = JsonSerializer.Serialize(o);
 
-            var d = BsonSerializer.Deserialize(bson);
+            var doc = BsonSerializer.Deserialize(bson);
 
-            Assert.AreEqual(d["_id"], 123);
-            Assert.AreEqual(d["_id"].AsInt64, o["_id"].AsInt64);
+            Assert.AreEqual(123, doc["_id"].AsInt32);
+            Assert.AreEqual(o["_id"].AsInt64, doc["_id"].AsInt64);
 
-            Assert.AreEqual(o["FirstString"].AsString, d["FirstString"].AsString);
-            Assert.AreEqual(o["Date"].AsDateTime.ToString(), d["Date"].AsDateTime.ToString());
-            Assert.AreEqual(o["CustomerId"].AsGuid, d["CustomerId"].AsGuid);
-            Assert.AreEqual(o["MyNull"].RawValue, d["MyNull"].RawValue);
-            Assert.AreEqual(o["EmptyString"].AsString, d["EmptyString"].AsString);
+            Assert.AreEqual("Av. Caçapava, Nº 122", doc.Get("Customer.Address.Street").AsString);
 
-            Assert.AreEqual(d["maxDate"].AsDateTime, DateTime.MaxValue);
-            Assert.AreEqual(d["minDate"].AsDateTime, DateTime.MinValue);
+            Assert.AreEqual(o["FirstString"].AsString, doc["FirstString"].AsString);
+            Assert.AreEqual(o["Date"].AsDateTime.ToString(), doc["Date"].AsDateTime.ToString());
+            Assert.AreEqual(o["CustomerId"].AsGuid, doc["CustomerId"].AsGuid);
+            Assert.AreEqual(o["MyNull"].RawValue, doc["MyNull"].RawValue);
+            Assert.AreEqual(o["EmptyString"].AsString, doc["EmptyString"].AsString);
 
-            Assert.AreEqual(o["Items"].AsArray.Count, d["Items"].AsArray.Count);
-            Assert.AreEqual(o["Items"].AsArray[0].AsDocument["Unit"].AsDouble, d["Items"].AsArray[0].AsDocument["Unit"].AsDouble);
-            Assert.AreEqual(o["Items"].AsArray[4].AsDateTime.ToString(), d["Items"].AsArray[4].AsDateTime.ToString());
+            Assert.AreEqual(DateTime.MaxValue, doc["maxDate"].AsDateTime);
+            Assert.AreEqual(DateTime.MinValue, doc["minDate"].AsDateTime);
+
+            Assert.AreEqual(o["Items"].AsArray.Count, doc["Items"].AsArray.Count);
+            Assert.AreEqual(o["Items"].AsArray[0].AsDocument["Unit"].AsDouble, doc["Items"].AsArray[0].AsDocument["Unit"].AsDouble);
+            Assert.AreEqual(o["Items"].AsArray[4].AsDateTime.ToString(), doc["Items"].AsArray[4].AsDateTime.ToString());
         }
     }
 }

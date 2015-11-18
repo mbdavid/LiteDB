@@ -2,7 +2,7 @@
 using LiteDB;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     public class MyBsonFieldTestClass
     {
@@ -122,10 +122,6 @@ namespace UnitTest
             Assert.AreEqual(obj.GetMyProtectedPropertyNamed(), nobj.GetMyProtectedPropertyNamed());
             Assert.AreEqual(obj.GetMyProtectedPropertySerializable(), nobj.GetMyProtectedPropertySerializable());
             Assert.AreEqual(nobj.GetMyProtectedPropertyNotSerializable(), null);
-
-            
-
-
         }
     }
 }

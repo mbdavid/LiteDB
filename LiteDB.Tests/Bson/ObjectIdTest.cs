@@ -1,12 +1,6 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     [TestClass]
     public class ObjectIdTest

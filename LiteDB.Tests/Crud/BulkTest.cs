@@ -4,9 +4,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using LiteDB;
 using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     [TestClass]
     public class BulkTest

@@ -14,72 +14,75 @@ namespace LiteDB
         /// </summary>
         public int Shrink()
         {
-            // lock and clear cache - no changes during shrink
-            _disk.Lock();
-            _cache.Clear();
-
-            // create a temporary disk
-            var tempDisk = _disk.GetTempDisk();
-
-            // get initial disk size
-            var header = _pager.GetPage<HeaderPage>(0);
-            var diff = 0;
-
-            // create temp engine instance to copy all documents
-            using (var tempEngine = new DbEngine(tempDisk, new Logger()))
+            lock(_locker)
             {
-                // read all collections 
-                foreach (var col in _collections.GetAll())
+                // lock and clear cache - no changes during shrink
+                _disk.Lock();
+                _cache.Clear();
+
+                // create a temporary disk
+                var tempDisk = _disk.GetTempDisk();
+
+                // get initial disk size
+                var header = _pager.GetPage<HeaderPage>(0);
+                var diff = 0;
+
+                // create temp engine instance to copy all documents
+                using (var tempEngine = new DbEngine(tempDisk, new Logger()))
                 {
-                    // first copy all indexes
-                    foreach(var index in col.GetIndexes(false))
+                    // read all collections 
+                    foreach (var col in _collections.GetAll())
                     {
-                        tempEngine.EnsureIndex(col.CollectionName, index.Field, index.Options);
+                        // first copy all indexes
+                        foreach(var index in col.GetIndexes(false))
+                        {
+                            tempEngine.EnsureIndex(col.CollectionName, index.Field, index.Options);
+                        }
+
+                        // then, read all documents and copy to new engine
+                        var docs = _indexer.FindAll(col.PK, Query.Ascending);
+
+                        tempEngine.InsertDocuments(col.CollectionName, 
+                            docs.Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock, true).Buffer)));
                     }
 
-                    // then, read all documents and copy to new engine
-                    var docs = _indexer.FindAll(col.PK, Query.Ascending);
+                    // get final header from temp engine
+                    var tempHeader = tempEngine._pager.GetPage<HeaderPage>(0);
 
-                    tempEngine.InsertDocuments(col.CollectionName, 
-                        docs.Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock, true).Buffer)));
+                    // copy info from initial header to final header
+                    tempHeader.ChangeID = header.ChangeID;
+                    tempHeader.UserVersion = header.UserVersion;
+
+                    // lets create journal file before re-write
+                    for (uint pageID = 0; pageID <= header.LastPageID; pageID++)
+                    {
+                        _disk.WriteJournal(pageID, _disk.ReadPage(pageID));
+                    }
+
+                    // commit journal + shrink data file
+                    _disk.CommitJournal((tempHeader.LastPageID + 1) * BasePage.PAGE_SIZE);
+
+                    // lets re-write all pages copying from new database
+                    for (uint pageID = 0; pageID <= tempHeader.LastPageID; pageID++)
+                    {
+                        _disk.WritePage(pageID, tempDisk.ReadPage(pageID));
+                    }
+
+                    // now delete journal
+                    _disk.DeleteJournal();
+
+                    // get diff from initial and final last pageID
+                    diff = (int)((header.LastPageID - tempHeader.LastPageID) * BasePage.PAGE_SIZE);
                 }
 
-                // get final header from temp engine
-                var tempHeader = tempEngine._pager.GetPage<HeaderPage>(0);
+                // unlock disk to continue
+                _disk.Unlock();
 
-                // copy info from initial header to final header
-                tempHeader.ChangeID = header.ChangeID;
-                tempHeader.UserVersion = header.UserVersion;
+                // delete temporary disk
+                _disk.DeleteTempDisk();
 
-                // lets create journal file before re-write
-                for (uint pageID = 0; pageID <= header.LastPageID; pageID++)
-                {
-                    _disk.WriteJournal(pageID, _disk.ReadPage(pageID));
-                }
-
-                // commit journal + shrink data file
-                _disk.CommitJournal((tempHeader.LastPageID + 1) * BasePage.PAGE_SIZE);
-
-                // lets re-write all pages copying from new database
-                for (uint pageID = 0; pageID <= tempHeader.LastPageID; pageID++)
-                {
-                    _disk.WritePage(pageID, tempDisk.ReadPage(pageID));
-                }
-
-                // now delete journal
-                _disk.DeleteJournal();
-
-                // get diff from initial and final last pageID
-                diff = (int)((header.LastPageID - tempHeader.LastPageID) * BasePage.PAGE_SIZE);
+                return diff;
             }
-
-            // unlock disk to continue
-            _disk.Unlock();
-
-            // delete temporary disk
-            _disk.DeleteTempDisk();
-
-            return diff;
         }
     }
 }

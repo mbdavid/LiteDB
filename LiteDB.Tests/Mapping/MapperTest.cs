@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Collections.Specialized;
 using System.Security;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     public enum MyEnum { First, Second }
 

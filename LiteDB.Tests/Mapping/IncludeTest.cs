@@ -6,7 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace UnitTest
+namespace LiteDB.Tests
 {
     public class Order
     {
@@ -91,7 +91,13 @@ namespace UnitTest
                     .FindAll()
                     .FirstOrDefault();
 
-                var customerName = query.Customer.Name;
+                Assert.AreEqual(customer.Name, query.Customer.Name);
+                Assert.AreEqual(product1.Price, query.Products[0].Price);
+                Assert.AreEqual(product2.Name, query.Products[1].Name);
+                Assert.AreEqual(product1.Name, query.ProductArray[0].Name);
+                Assert.AreEqual(product2.Price, query.ProductColl.ElementAt(0).Price);
+                Assert.AreEqual(null, query.ProductsNull);
+                Assert.AreEqual(0, query.ProductEmpty.Count);
 
             }
         }

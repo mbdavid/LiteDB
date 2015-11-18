@@ -99,27 +99,21 @@ namespace LiteDB
         /// </summary>
         public bool AvoidDirtyRead()
         {
-            lock (_disk)
+            var cache = (HeaderPage)_cache.GetPage(0);
+
+            if (cache == null) return false;
+
+            // read change direct from disk
+            var change = _disk.GetChangeID();
+
+            // if changeID was changed, file was changed by another process - clear all cache
+            if (cache.ChangeID != change)
             {
-                // if is in transaction pages are not dirty (begin trans was checked)
-                if (_trans == true) return false;
-
-                var cache = (HeaderPage)_cache.GetPage(0);
-
-                if (cache == null) return false;
-
-                // read change direct from disk
-                var change = _disk.GetChangeID();
-
-                // if changeID was changed, file was changed by another process - clear all cache
-                if (cache.ChangeID != change)
-                {
-                    _cache.Clear();
-                    return true;
-                }
-
-                return false;
+                _cache.Clear();
+                return true;
             }
+
+            return false;
         }
     }
 }
