@@ -21,6 +21,8 @@ namespace LiteDB.Shell.Commands
                 var start = s.Scan(@"\d*").Trim();
                 var end = s.Scan(@"\s*\d*").Trim();
 
+                if(start.Length > 0 && end.Length == 0) end = start;
+
                 return db.DumpPages(
                     start.Length == 0 ? 0 : Convert.ToUInt32(start),
                     end.Length == 0 ? uint.MaxValue : Convert.ToUInt32(end));
