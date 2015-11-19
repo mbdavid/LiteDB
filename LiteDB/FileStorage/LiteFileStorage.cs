@@ -13,6 +13,7 @@ namespace LiteDB
     {
         internal const string FILES = "_files";
         internal const string CHUNKS = "_chunks";
+        internal const int BUFFER_SIZE = 1024; // BsonDocument.MAX_DOCUMENT_SIZE / BasePage.PAGE_AVAILABLE_BYTES;
 
         private DbEngine _engine;
 
@@ -39,11 +40,11 @@ namespace LiteDB
             // for each chunk, insert as a chunk document
             foreach (var chunk in file.CreateChunks(stream))
             {
-                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk }, 1024);
+                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk }, BUFFER_SIZE);
             }
 
             // update fileLength/chunks to confirm full file length stored in disk
-            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
+            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument }, 1);
 
             return file;
         }
@@ -80,7 +81,7 @@ namespace LiteDB
             var file = this.FindById(id);
             if (file == null) return false;
             file.Metadata = metadata;
-            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
+            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument }, 1);
             return true;
         }
 
@@ -189,7 +190,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
             // remove file reference in _files
-            var d = _engine.DeleteDocuments(FILES, Query.EQ("_id", id));
+            var d = _engine.DeleteDocuments(FILES, Query.EQ("_id", id), 1);
 
             // if not found, just return false
             if (d == 0) return false;
@@ -198,7 +199,7 @@ namespace LiteDB
 
             while (true)
             {
-                var del = _engine.DeleteDocuments(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)));
+                var del = _engine.DeleteDocuments(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)), BUFFER_SIZE);
 
                 if (del == 0) break;
             }

@@ -44,15 +44,27 @@ namespace LiteDB
         {
             if (_trans == false) throw new SystemException("No begin transaction");
 
+            // save dirty pages
+            this.Save();
+
+            // unlock datafile
+            _disk.Unlock();
+
+            _trans = false;
+        }
+
+        /// <summary>
+        /// Save all dirty pages to disk - do not touch on lock disk
+        /// </summary>
+        public void Save()
+        {
             if (_cache.HasDirtyPages)
             {
-                var header = _pager.GetPage<HeaderPage>(0);
+                // get header and mark as dirty
+                var header = _pager.GetPage<HeaderPage>(0, true);
 
                 // increase file changeID (back to 0 when overflow)
                 header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
-
-                // add header page as dirty to cache
-                _pager.SetDirty(header);
 
                 // commit journal file - it will be used if write operation fails
                 _disk.CommitJournal((header.LastPageID + 1) * BasePage.PAGE_SIZE);
@@ -69,11 +81,6 @@ namespace LiteDB
                 // set all dirty pages as clear on cache
                 _cache.Clear();
             }
-
-            // unlock datafile
-            _disk.Unlock();
-
-            _trans = false;
         }
 
         public void Rollback()

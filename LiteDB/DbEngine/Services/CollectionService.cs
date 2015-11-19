@@ -46,23 +46,25 @@ namespace LiteDB
             if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
             if(!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("CollectionName", name);
 
-            var header = _pager.GetPage<HeaderPage>(0);
+            // get header marked as dirty because I will use header after (and NewPage can get another header instance)
+            var header = _pager.GetPage<HeaderPage>(0, true);
 
-            // test collection limit
-            var pages = _pager.GetSeqPages<CollectionPage>(header.FirstCollectionPageID);
-
-            if (pages.Count() >= CollectionPage.MAX_COLLECTIONS)
+            // check limit count
+            if (header.CollectionCount >= CollectionPage.MAX_COLLECTIONS)
             {
                 throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS);
             }
 
+            // increese collection
+            header.CollectionCount++;
+
+            // get new collection page (marked as dirty)
             var col = _pager.NewPage<CollectionPage>();
 
             // add page in collection list
             _pager.AddOrRemoveToFreeList(true, col, header, ref header.FirstCollectionPageID);
 
             col.CollectionName = name;
-            _pager.SetDirty(col);
 
             // create PK index
             var pk = _indexer.CreateIndex(col);
@@ -126,7 +128,10 @@ namespace LiteDB
                 _pager.DeletePage(pageID);
             }
 
-            var header = _pager.GetPage<HeaderPage>(0);
+            // get header and mark as dirty to decrese collection counter
+            var header = _pager.GetPage<HeaderPage>(0, true);
+
+            header.CollectionCount--;
 
             // remove page from collection list
             _pager.AddOrRemoveToFreeList(false, col, header, ref header.FirstCollectionPageID);

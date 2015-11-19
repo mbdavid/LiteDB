@@ -19,7 +19,7 @@ namespace LiteDB
             // get BsonDocument from object
             var doc = _mapper.ToDocument(document);
 
-            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }) > 0;
+            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }, 1) > 0;
         }
 
         /// <summary>
@@ -36,40 +36,17 @@ namespace LiteDB
             // set document _id using id parameter
             doc["_id"] = id;
 
-            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }) > 0;
+            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }, 1) > 0;
         }
 
         /// <summary>
-        /// Query documents and execute, for each document, action method. After action, update each document
+        /// Update all documents
         /// </summary>
-        public int Update(Query query, Action<T> action)
+        public int Update(IEnumerable<T> documents)
         {
-            if (query == null) throw new ArgumentNullException("query");
-            if (action == null) throw new ArgumentNullException("action");
+            if (documents == null) throw new ArgumentNullException("document");
 
-            var docs = this.Find(query).ToArray(); // used to avoid changes during Action<T>
-            var count = 0;
-
-            foreach (var doc in docs)
-            {
-                action(doc);
-
-                // get BsonDocument from object
-                var bson = _mapper.ToDocument(doc);
-
-                throw new NotImplementedException();
-                //count += _engine.UpdateDocuments(_name, id, bson) ? 1 : 0;
-            }
-
-            return count;
-        }
-
-        /// <summary>
-        /// Query documents and execute, for each document, action method. All data is locked during execution
-        /// </summary>
-        public void Update(Expression<Func<T, bool>> predicate, Action<T> action)
-        {
-            this.Update(_visitor.Visit(predicate), action);
+            return _engine.UpdateDocuments(_name, documents.Select(x => _mapper.ToDocument(x)), BUFFER_SIZE);
         }
     }
 }

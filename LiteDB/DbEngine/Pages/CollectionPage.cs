@@ -12,7 +12,7 @@ namespace LiteDB
     /// </summary>
     internal class CollectionPage : BasePage
     {
-        public const int MAX_COLLECTIONS = 256;
+        public const ushort MAX_COLLECTIONS = 256;
 
         public static Regex NamePattern = new Regex(@"^[\w-]{1,30}$");
 

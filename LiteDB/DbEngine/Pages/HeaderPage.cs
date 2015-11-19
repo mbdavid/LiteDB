@@ -49,6 +49,11 @@ namespace LiteDB
         public uint FirstCollectionPageID;
 
         /// <summary>
+        /// Get/Set count of collection in database
+        /// </summary>
+        public ushort CollectionCount { get; set; }
+
+        /// <summary>
         /// Get/Set a user version of database file
         /// </summary>
         public int UserVersion { get; set; }
@@ -62,6 +67,7 @@ namespace LiteDB
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
+            this.CollectionCount = 0;
             this.UserVersion = 0;
         }
 
@@ -84,6 +90,7 @@ namespace LiteDB
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.FirstCollectionPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
+            this.CollectionCount = reader.ReadUInt16();
             this.UserVersion = reader.ReadInt32();
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
@@ -98,6 +105,7 @@ namespace LiteDB
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.FirstCollectionPageID);
             writer.Write(this.LastPageID);
+            writer.Write(this.CollectionCount);
             writer.Write(this.UserVersion);
         }
 

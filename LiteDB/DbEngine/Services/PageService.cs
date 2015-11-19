@@ -21,7 +21,7 @@ namespace LiteDB
         /// <summary>
         /// Get a page from cache or from disk (and put on cache)
         /// </summary>
-        public T GetPage<T>(uint pageID)
+        public T GetPage<T>(uint pageID, bool setDirty = false)
             where T : BasePage
         {
             var page = _cache.GetPage(pageID);
@@ -41,12 +41,17 @@ namespace LiteDB
                 throw new SystemException("Pager.GetPage<T>() never shuld happend");
             }
 #endif
+            // set page as dirty if passing by param
+            if(setDirty)
+            {
+                this.SetDirty((T)page);
+            }
 
             return (T)page;
         }
 
         /// <summary>
-        /// Add a page to cache and mark them as dirty too.
+        /// Add a page to cache and mark them as dirty too. Must be marked as dirty BEFORE change page or just after create one
         /// </summary>
         public void SetDirty(BasePage page)
         {
@@ -73,15 +78,17 @@ namespace LiteDB
 
         /// <summary>
         /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile) 
+        /// Set as Dirty
         /// </summary>
         public T NewPage<T>(BasePage prevPage = null)
             where T : BasePage
         {
-            var header = this.GetPage<HeaderPage>(0);
+            // get header and mark as dirty
+            var header = this.GetPage<HeaderPage>(0, true);
             var pageID = (uint)0;
 
             // try get page from Empty free list
-            if(header.FreeEmptyPageID != uint.MaxValue)
+            if (header.FreeEmptyPageID != uint.MaxValue)
             {
                 var free = this.GetPage<BasePage>(header.FreeEmptyPageID);
 
@@ -97,17 +104,16 @@ namespace LiteDB
 
             var page = BasePage.CreateInstance<T>(pageID);
 
+            // mark new page as dirty as soon as possible
+            this.SetDirty(page);
+
             // if there a page before, just fix NextPageID pointer
             if (prevPage != null)
             {
+                this.SetDirty(prevPage);
                 page.PrevPageID = prevPage.PageID;
                 prevPage.NextPageID = page.PageID;
-                this.SetDirty(prevPage);
             }
-
-            // mark header and this new page as dirty, and then add to cache
-            this.SetDirty(page);
-            this.SetDirty(header);
 
             return page;
         }
@@ -116,6 +122,7 @@ namespace LiteDB
         /// Delete an page using pageID - transform them in Empty Page and add to EmptyPageList
         /// If you delete a page, you can using same old instance of page - page will be converter to EmptyPage
         /// If need deleted page, use GetPage again
+        /// [Set as Dirty]
         /// </summary>
         public void DeletePage(uint pageID, bool addSequence = false)
         {
@@ -141,6 +148,7 @@ namespace LiteDB
 
         /// <summary>
         /// Returns a page that contains space enouth to data to insert new object - if not exits, create a new Page
+        /// [Set as Dirty]
         /// </summary>
         public T GetFreePage<T>(uint startPageID, int size)
             where T : BasePage
@@ -148,7 +156,8 @@ namespace LiteDB
             if(startPageID != uint.MaxValue)
             {
                 // get the first page
-                var page = this.GetPage<BasePage>(startPageID);
+                //var page = this.GetPage<BasePage>(startPageID);
+                var page = this.GetPage<T>(startPageID);
 
                 // check if there space in this page
                 var free = page.FreeBytes;
@@ -156,7 +165,9 @@ namespace LiteDB
                 // first, test if there is space on this page
                 if (free >= size)
                 {
-                    return this.GetPage<T>(startPageID);
+                    //return this.GetPage<T>(startPageID);
+                    this.SetDirty(page);
+                    return page;
                 }
             }
 
@@ -168,6 +179,7 @@ namespace LiteDB
 
         /// <summary>
         /// Add or Remove a page in a sequence
+        /// [CAN set "page" and "startPage" as Dirty]
         /// </summary>
         /// <param name="add">Indicate that will add or remove from FreeList</param>
         /// <param name="page">Page to add or remove from FreeList</param>
@@ -207,6 +219,9 @@ namespace LiteDB
             var nextPageID = fieldPageID;
             BasePage next = null;
 
+            // base must be marked as dirty
+            this.SetDirty(page);
+
             // let's page in desc order
             while (nextPageID != uint.MaxValue)
             {
@@ -214,29 +229,28 @@ namespace LiteDB
 
                 if (free >= next.FreeBytes)
                 {
+                    // mark next page as dirty
+                    this.SetDirty(next);
+
                     // assume my page in place of next page
                     page.PrevPageID = next.PrevPageID;
                     page.NextPageID = next.PageID;
 
                     // link next page to my page
                     next.PrevPageID = page.PageID;
-                    this.SetDirty(next);
 
                     // my page is the new first page on list
                     if (page.PrevPageID == 0)
                     {
-                        fieldPageID = page.PageID;
                         this.SetDirty(startPage);
+                        fieldPageID = page.PageID;
                     }
                     else
                     {
-                        // if not the first, ajust links from previous page
-                        var prev = this.GetPage<BasePage>(page.PrevPageID);
+                        // if not the first, ajust links from previous page (set as dirty)
+                        var prev = this.GetPage<BasePage>(page.PrevPageID, true);
                         prev.NextPageID = page.PageID;
-                        this.SetDirty(prev);
                     }
-
-                    this.SetDirty(page);
 
                     return; // job done - exit
                 }
@@ -247,20 +261,20 @@ namespace LiteDB
             // empty list, be the first
             if (next == null)
             {
+                this.SetDirty(startPage);
+
                 // it's first page on list
                 page.PrevPageID = 0;
                 fieldPageID = page.PageID;
-                this.SetDirty(startPage);
             }
             else
             {
+                this.SetDirty(next);
+
                 // it's last position on list (next = last page on list)
                 page.PrevPageID = next.PageID;
                 next.NextPageID = page.PageID;
-                this.SetDirty(next);
             }
-
-            this.SetDirty(page);
         }
 
         /// <summary>
@@ -268,30 +282,30 @@ namespace LiteDB
         /// </summary>
         private void RemoveToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
         {
+            // mark page that will be removed as dirty
+            this.SetDirty(page);
+
             // this page is the first of list
             if (page.PrevPageID == 0)
             {
-                fieldPageID = page.NextPageID;
                 this.SetDirty(startPage);
+                fieldPageID = page.NextPageID;
             }
             else
             {
-                // if not the first, get previous page to remove NextPageId
-                var prevPage = this.GetPage<BasePage>(page.PrevPageID);
+                // if not the first, get previous page to remove NextPageId (set as dirty)
+                var prevPage = this.GetPage<BasePage>(page.PrevPageID, true);
                 prevPage.NextPageID = page.NextPageID;
-                this.SetDirty(prevPage);
             }
 
-            // if my page is not the last on sequence, ajust the last page
+            // if my page is not the last on sequence, ajust the last page (set as dirty)
             if (page.NextPageID != uint.MaxValue)
             {
-                var nextPage = this.GetPage<BasePage>(page.NextPageID);
+                var nextPage = this.GetPage<BasePage>(page.NextPageID, true);
                 nextPage.PrevPageID = page.PrevPageID;
-                this.SetDirty(nextPage);
             }
 
             page.PrevPageID = page.NextPageID = uint.MaxValue;
-            this.SetDirty(page);
         }
 
         /// <summary>

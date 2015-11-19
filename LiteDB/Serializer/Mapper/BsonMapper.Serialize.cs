@@ -28,7 +28,7 @@ namespace LiteDB
         /// <summary>
         /// Create a instance of a object convered in BsonValue object.
         /// </summary>
-        public BsonValue Serialize(object obj)
+        internal BsonValue Serialize(object obj)
         {
             if (obj == null) return BsonValue.Null;
 

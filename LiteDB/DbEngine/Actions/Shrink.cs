@@ -42,13 +42,14 @@ namespace LiteDB
                         // then, read all documents and copy to new engine
                         var docs = _indexer.FindAll(col.PK, Query.Ascending);
 
+
                         tempEngine.InsertDocuments(col.CollectionName, 
                             docs.Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock, true).Buffer)),
-                            1024);
+                            100);
                     }
 
                     // get final header from temp engine
-                    var tempHeader = tempEngine._pager.GetPage<HeaderPage>(0);
+                    var tempHeader = tempEngine._pager.GetPage<HeaderPage>(0, true);
 
                     // copy info from initial header to final header
                     tempHeader.ChangeID = header.ChangeID;
@@ -76,8 +77,9 @@ namespace LiteDB
                     diff = (int)((header.LastPageID - tempHeader.LastPageID) * BasePage.PAGE_SIZE);
                 }
 
-                // unlock disk to continue
+                // unlock disk and ckar cache to continue
                 _disk.Unlock();
+                _cache.Clear();
 
                 // delete temporary disk
                 _disk.DeleteTempDisk();

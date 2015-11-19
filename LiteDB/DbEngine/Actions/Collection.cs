@@ -50,10 +50,11 @@ namespace LiteDB
 
                 _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", colName, newName);
 
+                // set page as dirty before any change
+                _pager.SetDirty(col);
+
                 // change collection name and save
                 col.CollectionName = newName;
-
-                _pager.SetDirty(col);
 
                 return true;
             });

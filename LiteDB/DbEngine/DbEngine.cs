@@ -96,7 +96,62 @@ namespace LiteDB
             }
             catch(Exception ex)
             {
-                _log.Write(Logger.ERROR, "{0}", ex.Message);
+                _log.Write(Logger.ERROR, ex.Message);
+                _transaction.Rollback();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Encapsulate all transaction commands in same data structure with a loop operation with foreach item. Keep all items in same lock and commit in every N buffer size
+        /// </summary>
+        private int TransactionLoop<T>(string colName, bool addIfNotExists, int bufferSize, Func<CollectionPage, IEnumerable<T>> getItems, Func<CollectionPage, T, bool> action)
+        {
+            lock (_locker)
+            try
+            {
+                _transaction.Begin();
+
+                // get collection page
+                var col = this.GetCollectionPage(colName, addIfNotExists);
+
+                if (addIfNotExists == false && col == null)
+                {
+                    _transaction.Commit();
+                    return 0;
+                }
+
+                // run getItems factory
+                var items = getItems(col);
+                var enumerator = items.GetEnumerator();
+                var count = 0;
+
+                // start main loop
+                while (true)
+                {
+                    var buffer = bufferSize;
+                    var more = true;
+                    
+                    // run buffer size loop
+                    while (buffer > 0 && (more = enumerator.MoveNext()))
+                    {
+                        if (action(col, enumerator.Current)) count++;
+                        buffer--;
+                    }
+
+                    // end items? commit! no? just save
+                    if (more == false)
+                    {
+                        _transaction.Commit();
+                        return count;
+                    }
+
+                    _transaction.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
                 _transaction.Rollback();
                 throw;
             }

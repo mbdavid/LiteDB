@@ -20,6 +20,9 @@ namespace LiteDB
         /// </summary>
         public DataBlock Insert(CollectionPage col, byte[] data)
         {
+            // set collection page as dirty before changes
+            _pager.SetDirty(col);
+
             // need to extend (data is bigger than 1 page)
             var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
 
@@ -48,14 +51,10 @@ namespace LiteDB
             // update freebytes + items count
             dataPage.UpdateItemCount();
 
-            _pager.SetDirty(dataPage);
-
             // add/remove dataPage on freelist if has space
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             col.DocumentCount++;
-
-            _pager.SetDirty(col);
 
             return block;
         }
@@ -65,7 +64,8 @@ namespace LiteDB
         /// </summary>
         public DataBlock Update(CollectionPage col, PageAddress blockAddress, byte[] data)
         {
-            var dataPage = _pager.GetPage<DataPage>(blockAddress.PageID);
+            // get datapage and mark as dirty
+            var dataPage = _pager.GetPage<DataPage>(blockAddress.PageID, true);
             var block = dataPage.DataBlocks[blockAddress.Index];
             var extend = dataPage.FreeBytes + block.Data.Length - data.Length <= 0;
 
@@ -86,7 +86,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    extendPage = _pager.GetPage<ExtendPage>(block.ExtendPageID);
+                    extendPage = _pager.GetPage<ExtendPage>(block.ExtendPageID, true);
                 }
 
                 this.StoreExtendData(extendPage, data);
@@ -109,8 +109,6 @@ namespace LiteDB
 
             // add/remove dataPage on freelist if has space AND its on/off free list
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
-
-            _pager.SetDirty(dataPage);
 
             return block;
         }
@@ -154,8 +152,12 @@ namespace LiteDB
         /// </summary>
         public DataBlock Delete(CollectionPage col, PageAddress blockAddress)
         {
-            var page = _pager.GetPage<DataPage>(blockAddress.PageID);
+            // get page and mark as dirty
+            var page = _pager.GetPage<DataPage>(blockAddress.PageID, true);
             var block = page.DataBlocks[blockAddress.Index];
+
+            // mark collection page as dirty
+            _pager.SetDirty(col);
 
             // if there a extended page, delete all
             if (block.ExtendPageID != uint.MaxValue)
@@ -181,13 +183,9 @@ namespace LiteDB
             {
                 // add or remove to free list
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > DataPage.DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
-
-                _pager.SetDirty(page);
             }
 
             col.DocumentCount--;
-
-            _pager.SetDirty(col);
 
             return block;
         }
@@ -211,17 +209,15 @@ namespace LiteDB
                 // updates free bytes + items count
                 page.UpdateItemCount();
 
-                _pager.SetDirty(page);
-
                 bytesLeft -= bytesToCopy;
                 offset += bytesToCopy;
 
                 // if has bytes left, let's get a new page
                 if (bytesLeft > 0)
                 {
-                    // if i have a continuous page, get it... or create a new one
+                    // if i have a continuous page, get it... or create a new one (set as dirty)
                     page = page.NextPageID != uint.MaxValue ?
-                        _pager.GetPage<ExtendPage>(page.NextPageID) :
+                        _pager.GetPage<ExtendPage>(page.NextPageID, true) :
                         _pager.NewPage<ExtendPage>(page);
                 }
             }

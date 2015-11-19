@@ -12,38 +12,25 @@ namespace LiteDB
         /// <summary>
         /// Implements delete based on a query result
         /// </summary>
-        public int DeleteDocuments(string colName, Query query)
+        public int DeleteDocuments(string colName, Query query, int bufferSize)
         {
-            return this.Transaction<int>(colName, false, (col) =>
-            {
-                // no collection, no document - abort trans
-                if (col == null) return 0;
+            return this.TransactionLoop<IndexNode>(colName, false, bufferSize, (c) => query.Run(c, _indexer), (col, node) => {
 
-                var count = 0;
+                _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
 
-                // find nodes
-                var nodes = query.Run(col, _indexer);
+                // read dataBlock (do not read all extend pages, i will not use)
+                var dataBlock = _data.Read(node.DataBlock, false);
 
-                foreach (var node in nodes)
+                // lets remove all indexes that point to this in dataBlock
+                foreach (var index in col.GetIndexes(true))
                 {
-                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
-
-                    // read dataBlock (do not read all extend pages, i will not use)
-                    var dataBlock = _data.Read(node.DataBlock, false);
-
-                    // lets remove all indexes that point to this in dataBlock
-                    foreach (var index in col.GetIndexes(true))
-                    {
-                        _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
-                    }
-
-                    // remove object data
-                    _data.Delete(col, node.DataBlock);
-
-                    count++;
+                    _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
                 }
 
-                return count;
+                // remove object data
+                _data.Delete(col, node.DataBlock);
+
+                return true;
             });
         }
     }
