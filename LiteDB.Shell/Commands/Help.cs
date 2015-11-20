@@ -53,16 +53,9 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> spool on|off", "Spool all output in a spool file");
                 d.WriteHelp("> -- comment", "Do nothing, its just a comment");
                 d.WriteHelp("> /<command>/", "Support for multi line command");
+                d.WriteHelp("> debug on|off", "Enabled debug messages from dbengine");
                 d.WriteHelp("> version", "Show LiteDB version");
                 d.WriteHelp("> exit", "Close LiteDB shell");
-
-                d.WriteHelp();
-                d.WriteHelp("Transaction commands");
-                d.WriteHelp("====================");
-
-                d.WriteHelp("> begin", "Begins a new transaction");
-                d.WriteHelp("> commit", "Commit current transaction");
-                d.WriteHelp("> rollback", "Rollback current transaction");
 
                 d.WriteHelp();
                 d.WriteHelp("Collections commands");
@@ -75,7 +68,6 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> db.<collection>.find [skip N][limit N]", "Show all documents. Can limit/skip results");
                 d.WriteHelp("> db.<collection>.find <filter> [skip N][limit N]", "Show filtered documents based on index search. See <filter> syntax below");
                 d.WriteHelp("> db.<collection>.count <filter>", "Show count rows according query filter");
-                d.WriteHelp("> db.<collection>.exec <filter> { Action<Object (id), BsonDocument (doc), Collection (col), LiteDatabase (db)> }", "Execute C# code for each document based on filter.");
                 d.WriteHelp("> db.<collection>.ensureIndex <field> [unique]", "Create a new index document field");
                 d.WriteHelp("> db.<collection>.indexes", "List all indexes in this collection");
                 d.WriteHelp("> db.<collection>.drop", "Drop collection and destroy all documents inside");
@@ -86,9 +78,9 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("<filter> = <field> [=|>|>=|<|<=|!=|like|contains|in|between] <jsonValue>", "Filter query syntax");
                 d.WriteHelp("<filter> = (<filter> [and|or] <filter> [and|or] ...)", "Multi queries syntax");
                 d.WriteHelp("<jsonDoc> = {_id: ... , key: value, key1: value1 }", "Represent a json (extended version) for a BsonDocument. See special data types");
-                d.WriteHelp("Json Date", "{ mydate: { $date :\"2015-01-01T23:59:59Z\"} }");
-                d.WriteHelp("Json Guid", "{ myguid: { $guid :\"3a1c34b3-9f66-4d8e-975a-d545d898a4ba\"} }");
-                d.WriteHelp("Json Binary", "{ mydata: { $binary :\"base64 byte array\"} }");
+                d.WriteHelp("Json Date", "{ field: { $date :\"2015-01-01T23:59:59Z\"} }");
+                d.WriteHelp("Json Guid", "{ field: { $guid :\"3a1c34b3-9f66-4d8e-975a-d545d898a4ba\"} }");
+                d.WriteHelp("Json Binary", "{ field: { $binary :\"base64 byte array\"} }");
 
                 d.WriteHelp();
                 d.WriteHelp("File storage commands");
@@ -105,8 +97,8 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> db.info", "Get database informations");
-                d.WriteHelp("> dump", "Display dump database information");
+                d.WriteHelp("> shrink", "Reduce datafile removing empty pages");
+                d.WriteHelp("> dump [n m]", "Display dump database pages (from N page to M page)");
             }
         }
     }

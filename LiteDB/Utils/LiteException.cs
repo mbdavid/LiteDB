@@ -32,11 +32,6 @@ namespace LiteDB
             return new LiteException(100, "There is no database");
         }
 
-        public static LiteException InvalidTransaction()
-        {
-            return new LiteException(101, "This operation doesn't support open transaction.");
-        }
-
         public static LiteException FileNotFound(string fileId)
         {
             return new LiteException(102, "File '{0}' not found", fileId);
@@ -47,16 +42,19 @@ namespace LiteDB
             return new LiteException(103, "File '{0}' has no content or is corrupted", file.Id);
         }
 
-        public static LiteException InvalidDatabase(Stream stream)
+        public static LiteException InvalidDatabase()
         {
-            var filename = stream is FileStream ? ((FileStream)stream).Name : "Stream";
-
-            return new LiteException(104, "'{0}' is not a LiteDB database", filename);
+            return new LiteException(104, "Datafile is not a LiteDB database");
         }
 
-        public static LiteException InvalidDatabaseVersion(Stream stream, int version)
+        public static LiteException InvalidDatabaseVersion(int version)
         {
             return new LiteException(105, "Invalid database version: {0}", version);
+        }
+
+        public static LiteException FileSizeExceeds(long limit)
+        {
+            return new LiteException(105, "Database size exceeds limit of {0}", ConnectionString.FormatFileSize(limit));
         }
 
         public static LiteException CollectionLimitExceeded(int limit)
@@ -89,14 +87,19 @@ namespace LiteDB
             return new LiteException(111, "Index key must be less than {0} bytes", IndexService.MAX_INDEX_LENGTH);
         }
 
+        public static LiteException IndexNotFound(string colName, string field)
+        {
+            return new LiteException(112, "Index not found on '{0}.{1}'", colName, field);
+        }
+
         public static LiteException LockTimeout(TimeSpan ts)
         {
-            return new LiteException(112, "Timeout. Database is locked for more than {0}", ts.ToString());
+            return new LiteException(120, "Timeout. Database is locked for more than {0}", ts.ToString());
         }
 
         public static LiteException InvalidCommand(string command)
         {
-            return new LiteException(113, "Command '{0}' is not a valid shell command", command);
+            return new LiteException(121, "Command '{0}' is not a valid shell command", command);
         }
 
         #endregion
@@ -110,7 +113,7 @@ namespace LiteDB
 
         public static LiteException DocumentMaxDepth(int depth)
         {
-            return new LiteException(201, "Document has more than {0} nested documents. Check for circular references", depth);
+            return new LiteException(201, "Document has more than {0} nested documents. Check for circular references (use DbRef)", depth);
         }
 
         public static LiteException InvalidCtor(Type type)

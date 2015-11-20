@@ -28,7 +28,7 @@ namespace LiteDB
         /// <summary>
         /// Create a instance of a object convered in BsonValue object.
         /// </summary>
-        public BsonValue Serialize(object obj)
+        internal BsonValue Serialize(object obj)
         {
             if (obj == null) return BsonValue.Null;
 
@@ -91,13 +91,6 @@ namespace LiteDB
             {
                 return custom(obj);
             }
-            // check if is a list or array
-            else if (obj is IList || type.IsArray)
-            {
-                var itemType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
-
-                return this.SerializeArray(itemType, obj as IEnumerable, depth);
-            }
             // for dictionary
             else if (obj is IDictionary)
             {
@@ -105,7 +98,12 @@ namespace LiteDB
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
-            // otherwise treat as a plain object
+            // check if is a list or array
+            else if (obj is IEnumerable)
+            {
+                return this.SerializeArray(Reflection.GetListItemType(obj), obj as IEnumerable, depth);
+            }
+            // otherwise serialize as a plain object
             else
             {
                 return this.SerializeObject(type, obj, depth);
@@ -158,7 +156,15 @@ namespace LiteDB
 
                 if (value == null && this.SerializeNullValues == false && prop.FieldName != "_id") continue;
 
-                dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
+                // if prop has a custom serialization, use it
+                if (prop.Serialize != null)
+                {
+                    dict[prop.FieldName] = prop.Serialize(value, this);
+                }
+                else
+                {
+                    dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
+                }
             }
 
             return o;

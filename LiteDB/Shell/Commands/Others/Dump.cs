@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
@@ -15,23 +16,24 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)
         {
-            var result = new StringBuilder();
-
-            if (s.HasTerminated || s.Match("mem$"))
+            if (s.HasTerminated || s.Match(@"\d+"))
             {
-                var mem = s.Match("mem$");
+                var start = s.Scan(@"\d*").Trim();
+                var end = s.Scan(@"\s*\d*").Trim();
 
-                result = DumpDatabase.Pages(db, mem);
+                if(start.Length > 0 && end.Length == 0) end = start;
+
+                return db.DumpPages(
+                    start.Length == 0 ? 0 : Convert.ToUInt32(start),
+                    end.Length == 0 ? uint.MaxValue : Convert.ToUInt32(end));
             }
             else
             {
                 var col = s.Scan(@"[\w-]+");
                 var field = s.Scan(@"\s+\w+").Trim();
 
-                result = DumpDatabase.Index(db, col, field);
+                return db.DumpIndex(col, field);
             }
-
-            return result.ToString();
         }
     }
 }

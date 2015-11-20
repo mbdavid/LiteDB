@@ -73,7 +73,6 @@ namespace LiteDB
 
             foreach (var prop in props)
             {
-
                 // ignore indexer property
                 if (prop.GetIndexParameters().Length > 0) continue;
 
@@ -85,6 +84,7 @@ namespace LiteDB
 
                 // check if property has [BsonField] 
                 var bsonField = prop.IsDefined(fieldAttr, false);
+
                 // create getter/setter IL function
                 var getter = CreateGetMethod(type, prop, bsonField);
                 var setter = CreateSetMethod(type, prop, bsonField);
@@ -162,6 +162,14 @@ namespace LiteDB
                     else if (type.IsInterface) // some know interfaces
                     {
                         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                        {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
+                        {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                         {
                             return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                         }
@@ -297,6 +305,45 @@ namespace LiteDB
         {
             var listType = typeof(Dictionary<,>);
             return listType.MakeGenericType(k, v);
+        }
+
+        public static Type GetListItemType(object list)
+        {
+            var type = list.GetType();
+
+            if (type.IsArray) return type.GetElementType();
+
+            foreach (var i in type.GetInterfaces())
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    return i.GetGenericArguments()[0];
+                }
+            }
+
+            return typeof(object);
+        }
+
+        /// <summary>
+        /// Returns true if Type is any kind of Array/IList/ICollection/....
+        /// </summary>
+        public static bool IsList(Type type)
+        {
+            if(type.IsArray) return true;
+
+            foreach (Type @interface in type.GetInterfaces())
+            {
+                if (@interface.IsGenericType)
+                {
+                    if (@interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    {
+                        // if needed, you can also return the type used as generic argument
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         #endregion

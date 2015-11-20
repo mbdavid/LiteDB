@@ -8,16 +8,65 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// Internal class to deserialize a byte[] into a BsonDocument using BSON data format
+    /// </summary>
     internal class BsonReader
     {
-        public BsonDocument Deserialize(Stream stream)
+        /// <summary>
+        /// Main method - deserialize using ByteReader helper
+        /// </summary>
+        public BsonDocument Deserialize(byte[] bson)
         {
-            var reader = new BinaryReader(stream);
-
-            return this.ReadDocument(reader);
+            return this.ReadDocument(new ByteReader(bson));
         }
 
-        private BsonValue ReadElement(BinaryReader reader, out string name)
+        /// <summary>
+        /// Read a BsonDocument from reader
+        /// </summary>
+        public BsonDocument ReadDocument(ByteReader reader)
+        {
+            var length = reader.ReadInt32();
+            var end = reader.Position + length - 5;
+            var obj = new BsonDocument();
+
+            while (reader.Position < end)
+            {
+                string name;
+                var value = this.ReadElement(reader, out name);
+                obj.RawValue[name] = value;
+            }
+
+            reader.ReadByte(); // zero
+
+            return obj;
+        }
+
+        /// <summary>
+        /// Read an BsonArray from reader
+        /// </summary>
+        public BsonArray ReadArray(ByteReader reader)
+        {
+            var length = reader.ReadInt32();
+            var end = reader.Position + length - 5;
+            var arr = new BsonArray();
+
+            while (reader.Position < end)
+            {
+                string name;
+                var value = this.ReadElement(reader, out name);
+                arr.Add(value);
+            }
+
+            reader.ReadByte(); // zero
+
+            return arr;
+        }
+
+        /// <summary>
+        /// Reads an element (key-value) from an reader
+        /// </summary>
+        private BsonValue ReadElement(ByteReader reader, out string name)
         {
             var type = reader.ReadByte();
             name = this.ReadCString(reader);
@@ -92,43 +141,7 @@ namespace LiteDB
             throw new NotSupportedException("BSON type not supported");
         }
 
-        public BsonDocument ReadDocument(BinaryReader reader)
-        {
-            var length = reader.ReadInt32();
-            var end = (int)reader.BaseStream.Position + length - 1;
-            var obj = new BsonDocument();
-
-            while (reader.BaseStream.Position < end)
-            {
-                string name;
-                var value = this.ReadElement(reader, out name);
-                obj.RawValue[name] = value;
-            }
-
-            reader.ReadByte(); // zero
-
-            return obj;
-        }
-
-        public BsonArray ReadArray(BinaryReader reader)
-        {
-            var length = reader.ReadInt32();
-            var end = (int)reader.BaseStream.Position + length - 1;
-            var arr = new BsonArray();
-
-            while (reader.BaseStream.Position < end)
-            {
-                string name;
-                var value = this.ReadElement(reader, out name);
-                arr.Add(value);
-            }
-
-            reader.ReadByte(); // zero
-
-            return arr;
-        }
-
-        private string ReadString(BinaryReader reader)
+        private string ReadString(ByteReader reader)
         {
             var length = reader.ReadInt32();
             var bytes = reader.ReadBytes(length - 1);
@@ -136,19 +149,21 @@ namespace LiteDB
             return Encoding.UTF8.GetString(bytes);
         }
 
-        private string ReadCString(BinaryReader reader)
-        {
-            using (var ms = new MemoryStream())
-            {
-                while (true)
-                {
-                    byte buf = reader.ReadByte();
-                    if (buf == 0x00) break;
-                    ms.WriteByte(buf);
-                }
+        // use byte array buffer for CString (key-only)
+        private byte[] _strBuffer = new byte[1000];
 
-                return Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Position);
+        private string ReadCString(ByteReader reader)
+        {
+            var pos = 0;
+
+            while (true)
+            {
+                byte buf = reader.ReadByte();
+                if (buf == 0x00) break;
+                _strBuffer[pos++] = buf;
             }
+
+            return Encoding.UTF8.GetString(_strBuffer, 0, pos);
         }
     }
 }

@@ -70,6 +70,8 @@ namespace LiteDB
             this.EmptyStringToNull = true;
             this.ResolvePropertyName = (s) => s;
 
+            #region Register CustomTypes
+
             // register custom types
             this.RegisterType<Uri>
             (
@@ -104,6 +106,10 @@ namespace LiteDB
                 }
             );
 
+            #endregion
+
+            #region Register custom AutoId functions
+
             // register AutoId for ObjectId, Guid and Int32
             this.RegisterAutoId<ObjectId>
             (
@@ -126,6 +132,8 @@ namespace LiteDB
                     return max.IsMaxValue ? 1 : (max + 1); 
                 }
             );
+
+            #endregion
         }
 
         /// <summary>
@@ -186,6 +194,14 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Map your entity class to BsonDocument using fluent API
+        /// </summary>
+        public EntityBuilder<T> Entity<T>()
+        {
+            return new EntityBuilder<T>(this);
+        }
+
         #region Predefinded Property Resolvers
 
         public void UseCamelCase()
@@ -209,20 +225,23 @@ namespace LiteDB
         {
             Dictionary<string, PropertyMapper> props;
 
-            if (_mapper.TryGetValue(type, out props))
+            lock(_mapper)
             {
-                return props;
+                if (_mapper.TryGetValue(type, out props))
+                {
+                    return props;
+                }
+
+                _mapper[type] = Reflection.GetProperties(type, this.ResolvePropertyName);
+
+                return _mapper[type];
             }
-
-            _mapper[type] = Reflection.GetProperties(type, this.ResolvePropertyName);
-
-            return _mapper[type];
         }
 
         /// <summary>
-        /// Search for [BsonIndex] in PropertyMapper. If not found, returns null
+        /// Search for [BsonIndex]/Entity.Index() in PropertyMapper. If not found, returns null
         /// </summary>
-        internal IndexOptions GetIndexFromAttribute<T>(string field)
+        internal IndexOptions GetIndexFromMapper<T>(string field)
         {
             var props = this.GetPropertyMapper(typeof(T));
 

@@ -9,81 +9,84 @@ using System.Text.RegularExpressions;
 namespace LiteDB
 {
     /// <summary>
-    /// Manage ConnectionString to connect and create databases. Can be used as:
-    /// * If only a word - get from App.Config
-    /// * If is a path - use all parameters as default
-    /// * Otherwise, is name=value collection
+    /// Manage ConnectionString to connect and create databases. Connection string are NameValue using Name1=Value1; Name2=Value2
     /// </summary>
-    public class ConnectionString
+    internal class ConnectionString
     {
-        /// <summary>
-        /// Path of filename (no default - required key)
-        /// </summary>
-        public string Filename { get; private set; }
-
-        /// <summary>
-        /// Default Timeout connection to wait for unlock (default: 1 minute)
-        /// </summary>
-        public TimeSpan Timeout { get; private set; }
-
-        /// <summary>
-        /// Supports recovery mode if a fail during write pages to disk
-        /// </summary>
-        public bool JournalEnabled { get; private set; }
-
-        /// <summary>
-        /// Jounal filename with full path
-        /// </summary>
-        internal string JournalFilename { get; private set; }
-
-        /// <summary>
-        /// Define, in connection string, the user database version. When you increse this value
-        /// LiteDatabase will run OnUpdate method for each new version. If defined, must be >= 1. Default: 1
-        /// </summary>
-        public int UserVersion { get; private set; }
+        private Dictionary<string, string> _values;
 
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
-            // If is only a name, get connectionString from App.config
-            if (Regex.IsMatch(connectionString, @"^[\w-]+$"))
-                connectionString = ConfigurationManager.ConnectionStrings[connectionString].ConnectionString;
-
             // Create a dictionary from string name=value collection
-            var values = new Dictionary<string, string>();
-
             if(connectionString.Contains("="))
             {
-                values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Split(new char[] { '=' }, 2))
                     .ToDictionary(t => t[0].Trim().ToLower(), t => t.Length == 1 ? "" : t[1].Trim(), StringComparer.InvariantCultureIgnoreCase);
             }
             else
             {
                 // If connectionstring is only a filename, set filename 
-                values["filename"] = Path.GetFullPath(connectionString);
+                _values = new Dictionary<string, string>();
+                _values["filename"] = Path.GetFullPath(connectionString);
             }
-
-            // Read connection string parameters with default value
-            this.Timeout = this.GetValue<TimeSpan>(values, "timeout", new TimeSpan(0, 1, 0));
-            this.Filename = Path.GetFullPath(this.GetValue<string>(values, "filename", ""));
-            this.JournalEnabled = this.GetValue<bool>(values, "journal", true);
-            this.UserVersion = this.GetValue<int>(values, "version", 1);
-            this.JournalFilename = Path.Combine(Path.GetDirectoryName(this.Filename), 
-                Path.GetFileNameWithoutExtension(this.Filename) + "-journal" + 
-                Path.GetExtension(this.Filename));
-
-            // validade parameter values
-            if (string.IsNullOrEmpty(Filename)) throw new ArgumentException("Missing FileName in ConnectionString");
-            if (this.UserVersion <= 0) throw new ArgumentException("Connection String version must be greater or equals to 1");
         }
 
-        private T GetValue<T>(Dictionary<string, string> values, string key, T defaultValue)
+        public T GetValue<T>(string key, T defaultValue)
         {
-            return values.ContainsKey(key) ?
-                (T)Convert.ChangeType(values[key], typeof(T)) :
-                defaultValue;
+            try
+            {
+                return _values.ContainsKey(key) ?
+                    (T)Convert.ChangeType(_values[key], typeof(T)) :
+                    defaultValue;
+            }
+            catch(Exception)
+            {
+                throw new LiteException("Invalid connection string value type for " + key);
+            }
+        }
+
+        /// <summary>
+        /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="defaultSize"></param>
+        /// <returns></returns>
+        public long GetFileSize(string key, long defaultSize)
+        {
+            var size = this.GetValue<string>(key, "");
+
+            if (size.Length == 0) return defaultSize;
+
+            var match = Regex.Match(size, @"^(\d+)\s*([tgmk])?(b|byte|bytes)?$", RegexOptions.IgnoreCase);
+
+            if (!match.Success) return 0;
+
+            var num = Convert.ToInt64(match.Groups[1].Value);
+
+            switch (match.Groups[2].Value.ToLower())
+            {
+                case "t": return num * 1024L * 1024L * 1024L * 1024L;
+                case "g": return num * 1024L * 1024L * 1024L;
+                case "m": return num * 1024L * 1024L;
+                case "k": return num * 1024L;
+                case "": return num;
+            }
+
+            return 0;
+        }
+
+        public static String FormatFileSize(long byteCount)
+        {
+            string[] suf = { "B", "KB", "MB", "GB", "TB" }; //Longs run out around EB
+            if (byteCount == 0)
+                return "0" + suf[0];
+            long bytes = Math.Abs(byteCount);
+            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
+            double num = Math.Round(bytes / Math.Pow(1024, place), 1);
+            return (Math.Sign(byteCount) * num).ToString() + suf[place];
         }
     }
 }

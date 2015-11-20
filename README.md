@@ -1,28 +1,41 @@
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
+> v2.0 beta (for last 1.x version, see `Tags`)
+
 LiteDB is a small, fast and lightweight NoSQL embedded database. 
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
 - 100% C# code for .NET 4 in a single DLL (less than 200kb)
-- Transaction control - ACID
-- Recovery in writing failure (journal mode)
-- Store POCO classes or `BsonDocument`
+- Document ACID transaction
+- Recovery data in writing failure (journal mode)
+- Map your POCO class to `BsonDocument`
 - Store files and stream data (like GridFS in MongoDB)
 - Single data file storage (like SQLite)
 - Index document fields for fast search (up to 16 indexes per collection)
 - LINQ support for queries
-- Shell command line - [try this online version](http://litedb.azurewebsites.net/)
+- Shell command line - [try this online version](http://www.litedb.org/#shell)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
+## New features in v2.0 beta
+- Generic data access - can use any `Stream`
+- Better mapping class from your entity to `BsonDocument` (like EntityFramework)
+- Better cross reference with `DbRef` mapping
+- ThreadSafe / ProcessSafe
+- Lazy engine load (open datafile only when run a command)
+- Reduce your database size with shrink
+- Support for `Initial Size` and `Limit Size` databases
+- Complete re-write engine classes width full debug logger
+- See more examples in http://www.litedb.org/
+
 ## Try online
 
-[Try LiteDB Web Shell](http://litedb.azurewebsites.net/). For security reasons, in online version not all commands are available. Try offline version for full features tests.
+[Try LiteDB Web Shell](http://www.litedb.org/#shell). For security reasons, in online version not all commands are available. Try offline version for full features tests.
 
 ## Documentation
 
-Visit [Wiki for full documentation](https://github.com/mbdavid/LiteDB/wiki)
+Visit [Wiki for full documentation](https://github.com/mbdavid/LiteDB/wiki) (v1.x)
 
 ## Download
 

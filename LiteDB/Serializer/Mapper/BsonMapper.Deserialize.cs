@@ -71,7 +71,7 @@ namespace LiteDB
 
         #endregion
 
-        private object Deserialize(Type type, BsonValue value)
+        internal object Deserialize(Type type, BsonValue value)
         {
             Func<BsonValue, object> custom;
 
@@ -219,7 +219,15 @@ namespace LiteDB
 
                 if (!val.IsNull)
                 {
-                    prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                    // check if has a custom deserialize function
+                    if(prop.Deserialize != null)
+                    {
+                        prop.Setter(obj, prop.Deserialize(val, this));
+                    }
+                    else
+                    {
+                        prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                    }
                 }
             }
         }
