@@ -218,11 +218,10 @@ namespace LiteDB.Tests
             {
                 var col = db.GetCollection<MyFluentEntity>("col1");
 
-                // TODO: works only if index are created before insert data
-                // if you EnsureIndex with data in collection, items are not indexed
-                col.EnsureIndex("cust_len");
                 col.Insert(nobj);
+                col.Insert(new MyFluentEntity { MyPrimaryPk = 2, CustomName = "Xiru" });
 
+                // auto create index "cust_len"
                 var q = col.FindOne(Query.EQ("cust_len", 4));
 
                 Assert.AreEqual("John", q.CustomName);

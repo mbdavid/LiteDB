@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,14 +19,21 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            IEnumerable<BsonDocument> docs;
+            IEnumerator<BsonDocument> enumerator;
+            var more = true;
 
             // keep trying execute query to auto-create indexes when not found
+            // must try get first doc inside try/catch to get index not found (yield returns are not supported inside try/catch)
             while (true)
             {
                 try
                 {
-                    docs = _engine.Find(_name, query, skip, limit);
+                    var docs = _engine.Find(_name, query, skip, limit);
+
+                    enumerator = (IEnumerator<BsonDocument>)docs.GetEnumerator();
+
+                    more = enumerator.MoveNext();
+
                     break;
                 }
                 catch (IndexNotFoundException ex)
@@ -37,19 +45,23 @@ namespace LiteDB
                 }
             }
 
-            foreach (var doc in docs)
+            if(more == false) yield break;
+
+            // do...while
+            do
             {
                 // executing all includes in BsonDocument
                 foreach (var action in _includes)
                 {
-                    action(doc);
+                    action(enumerator.Current);
                 }
 
                 // get object from BsonDocument
-                var obj = _mapper.ToObject<T>(doc);
+                var obj = _mapper.ToObject<T>(enumerator.Current);
 
                 yield return obj;
             }
+            while(more = enumerator.MoveNext());
         }
 
         /// <summary>
