@@ -18,12 +18,12 @@ namespace LiteDB
         public const int PAGE_SIZE = 4096;
 
         /// <summary>
-        /// This size is used bytes in header pages 17 bytes (+3 free) = 20 bytes
+        /// This size is used bytes in header pages 17 bytes (+8 reserved to future use) = 25 bytes
         /// </summary>
-        public const int PAGE_HEADER_SIZE = 20;
+        public const int PAGE_HEADER_SIZE = 25;
 
         /// <summary>
-        /// Bytes avaiable to store data removing page header size - 4076 bytes
+        /// Bytes avaiable to store data removing page header size - 4071 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
@@ -175,7 +175,7 @@ namespace LiteDB
             this.NextPageID = reader.ReadUInt32();
             this.ItemCount = reader.ReadUInt16();
             this.FreeBytes = reader.ReadUInt16();
-            reader.ReadBytes(3); // reserved 3 bytes
+            reader.ReadBytes(8); // reserved 8 bytes
         }
 
         private void WriteHeader(ByteWriter writer)
@@ -187,7 +187,7 @@ namespace LiteDB
             writer.Write(this.NextPageID);
             writer.Write((UInt16)this.ItemCount);
             writer.Write((UInt16)this.FreeBytes);
-            writer.Write(new byte[3]); // reserved 3 bytes
+            writer.Write(new byte[8]); // reserved 8 bytes
         }
 
         protected abstract void ReadContent(ByteReader reader);

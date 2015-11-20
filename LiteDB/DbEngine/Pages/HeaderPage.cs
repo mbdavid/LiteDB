@@ -16,7 +16,9 @@ namespace LiteDB
         /// <summary>
         /// ChangeID in file position (can be calc?)
         /// </summary>
-        public const int CHANGE_ID_POSITION = 52;
+        public const int CHANGE_ID_POSITION = PAGE_HEADER_SIZE 
+            + 27  // HEADER_INFO
+            + 1; // FILE_VERSION
 
         /// <summary>
         /// Header info the validate that datafile is a LiteDB file (27 bytes)
@@ -84,7 +86,7 @@ namespace LiteDB
 
         protected override void ReadContent(ByteReader reader)
         {
-            var info = reader.ReadString();
+            var info = reader.ReadString(HEADER_INFO.Length);
             var ver = reader.ReadByte();
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
@@ -99,7 +101,7 @@ namespace LiteDB
 
         protected override void WriteContent(ByteWriter writer)
         {
-            writer.Write(HEADER_INFO);
+            writer.Write(HEADER_INFO, HEADER_INFO.Length);
             writer.Write(FILE_VERSION);
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
