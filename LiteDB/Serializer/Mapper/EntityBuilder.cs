@@ -60,7 +60,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Define an index based in a field on entity
+        /// Define an index based in a property on entity
         /// </summary>
         public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, bool unique = false)
         {
@@ -71,7 +71,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Define an index based in a field on entity
+        /// Define an index based in a property on entity
         /// </summary>
         public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, IndexOptions options)
         {
@@ -79,6 +79,42 @@ namespace LiteDB
             {
                 p.IndexOptions = options;
             });
+        }
+
+        /// <summary>
+        /// Define an index based in a field name on BsonDocument
+        /// </summary>
+        public EntityBuilder<T> Index(string field, bool unique = false)
+        {
+            return this.Index(field, new IndexOptions { Unique = unique });
+        }
+
+        /// <summary>
+        /// Define an index based in a field name on BsonDocument
+        /// </summary>
+        public EntityBuilder<T> Index(string field, IndexOptions options)
+        {
+            var p = _prop.Values.FirstOrDefault(x => x.FieldName == field);
+
+            if(p == null) throw new ArgumentException("field not found");
+
+            p.IndexOptions = options;
+
+            return this;
+        }
+
+        public EntityBuilder<T> Formula(string name, Func<T, BsonValue> getter)
+        {
+            // add a new property using a custom getter function
+            var p = new PropertyMapper();
+            p.FieldName = name;
+            p.Getter = new GenericGetter((obj) => getter((T)obj));
+            p.PropertyType = typeof(BsonValue);
+            p.PropertyName = "__" + name;
+            p.Setter = null; // readonly field
+
+            _prop[p.PropertyName] = p;
+            return this;
         }
 
         #region DbRef

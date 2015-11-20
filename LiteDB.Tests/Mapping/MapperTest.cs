@@ -187,7 +187,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void MapperEntityBuilder_Test()
         {
-            var mapper = new BsonMapper();
+            var mapper = BsonMapper.Global;
 
             var obj = new MyFluentEntity { MyPrimaryPk = 1, CustomName = "John", DoNotIncludeMe = true, MyDateIndexed = DateTime.Now };
 
@@ -195,11 +195,16 @@ namespace LiteDB.Tests
                 .Key(x => x.MyPrimaryPk)
                 .Map(x => x.CustomName, "custom_field_name")
                 .Ignore(x => x.DoNotIncludeMe)
-                .Index(x => x.MyDateIndexed, true);
+                .Index(x => x.MyDateIndexed, true)
+                .Formula("cust_len", (c) => c.CustomName.Length)
+                .Index("cust_len");
 
             var doc = mapper.ToDocument(obj);
 
             var json = JsonSerializer.Serialize(doc, true);
+
+            // test formula index
+            Assert.AreEqual(4, doc["cust_len"].AsInt32);
 
             var nobj = mapper.ToObject<MyFluentEntity>(doc);
 
@@ -207,6 +212,21 @@ namespace LiteDB.Tests
             Assert.AreEqual(doc["_id"].AsInt32, obj.MyPrimaryPk);
             Assert.AreEqual(doc["custom_field_name"].AsString, obj.CustomName);
             Assert.AreNotEqual(doc["DoNotIncludeMe"].AsBoolean, obj.DoNotIncludeMe);
+
+            // test index on formula
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var col = db.GetCollection<MyFluentEntity>("col1");
+
+                // TODO: works only if index are created before insert data
+                // if you EnsureIndex with data in collection, items are not indexed
+                col.EnsureIndex("cust_len");
+                col.Insert(nobj);
+
+                var q = col.FindOne(Query.EQ("cust_len", 4));
+
+                Assert.AreEqual("John", q.CustomName);
+            }
         }
     }
 }
