@@ -62,7 +62,7 @@ namespace LiteDB
                     }
 
                     // commit journal + shrink data file
-                    _disk.CommitJournal((tempHeader.LastPageID + 1) * BasePage.PAGE_SIZE);
+                    _disk.SetLength((tempHeader.LastPageID + 1) * BasePage.PAGE_SIZE);
 
                     // lets re-write all pages copying from new database
                     for (uint pageID = 0; pageID <= tempHeader.LastPageID; pageID++)

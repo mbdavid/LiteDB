@@ -95,15 +95,18 @@ namespace LiteDB
             _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
         }
 
+        /// <summary>
+        /// Set datafile length (not used)
+        /// </summary>
+        public void SetLength(long fileSize)
+        {
+        }
+
         #endregion
 
         #region Journal file
 
         public void WriteJournal(uint pageID, byte[] data)
-        {
-        }
-
-        public void CommitJournal(long fileSize)
         {
         }
 

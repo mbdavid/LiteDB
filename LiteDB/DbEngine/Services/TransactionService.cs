@@ -66,8 +66,8 @@ namespace LiteDB
                 // increase file changeID (back to 0 when overflow)
                 header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
 
-                // commit journal file - it will be used if write operation fails
-                _disk.CommitJournal((header.LastPageID + 1) * BasePage.PAGE_SIZE);
+                // set final datafile length (optimize page writes)
+                _disk.SetLength((header.LastPageID + 1) * BasePage.PAGE_SIZE);
 
                 // write all dirty pages in data file
                 foreach (var page in _cache.GetDirtyPages())

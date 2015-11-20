@@ -11,11 +11,6 @@ namespace LiteDB
     internal class FileDiskService : IDiskService
     {
         /// <summary>
-        /// Position on disk to write a mark to know when journal is finish and valid (byte 19 is free header area)
-        /// </summary>
-        private const int JOURNAL_FINISH_POSITION = 19;
-
-        /// <summary>
         /// Position, on page, about page type
         /// </summary>
         private const int PAGE_TYPE_POSITION = 4;
@@ -185,6 +180,18 @@ namespace LiteDB
             _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
         }
 
+        /// <summary>
+        /// Set datafile length
+        /// </summary>
+        public void SetLength(long fileSize)
+        {
+            // checks if new fileSize will exceed limit size
+            if (_limitSize > 0 && fileSize > _limitSize) throw LiteException.FileSizeExceeds(_limitSize);
+
+            // fileSize parameter tell me final size of data file - helpful to extend first datafile
+            _stream.SetLength(fileSize);
+        }
+
         #endregion
 
         #region Journal file
@@ -201,7 +208,11 @@ namespace LiteDB
                 {
                     _log.Write(Logger.JOURNAL, "create journal file");
 
-                    _journal = new FileStream(_journalFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                    _journal = new FileStream(_journalFilename, 
+                        FileMode.Create, 
+                        FileAccess.ReadWrite, 
+                        FileShare.None, 
+                        BasePage.PAGE_SIZE);
                 });
             }
 
@@ -209,29 +220,6 @@ namespace LiteDB
 
             // just write original bytes in order that are changed
             _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
-        }
-
-        public void CommitJournal(long fileSize)
-        {
-            // checks if new fileSize will exceed limit size
-            if(_limitSize > 0 && fileSize > _limitSize) throw LiteException.FileSizeExceeds(_limitSize);
-
-            if (_journalEnabled == false) return;
-
-            if(_journal != null)
-            {
-                _log.Write(Logger.JOURNAL, "commit journal file");
-
-                // write a mark (byte 1) to know when journal is finish
-                // after that, if found a non-exclusive-open journal file, must be recovery
-                _journal.WriteByte(JOURNAL_FINISH_POSITION, 1);
-
-                // flush all journal file data to disk
-                _journal.Flush();
-            }
-
-            // fileSize parameter tell me final size of data file - helpful to extend first datafile
-            _stream.SetLength(fileSize);
         }
 
         public void DeleteJournal()
@@ -270,21 +258,13 @@ namespace LiteDB
             {
                 _log.Write(Logger.RECOVERY, "journal file detected");
 
-                var finish = journal.ReadByte(JOURNAL_FINISH_POSITION);
-
-                // test if journal was finish
-                if(finish == 1)
-                {
-                    this.Recovery(journal);
-                }
-                else
-                {
-                    _log.Write(Logger.RECOVERY, "journal file are not commited, no recovery");
-                }
+                // copy journal pages to datafile
+                this.Recovery(journal);
 
                 // close stream for delete file
                 journal.Close();
 
+                // delete journal - datafile finish
                 File.Delete(_journalFilename);
 
                 _log.Write(Logger.RECOVERY, "recovery finish");
@@ -360,10 +340,7 @@ namespace LiteDB
             {
                 try
                 {
-                    lock(_stream)
-                    {
-                        action();
-                    }
+                    action();
                     return;
                 }
                 catch (UnauthorizedAccessException)
