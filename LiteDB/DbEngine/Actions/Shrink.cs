@@ -40,11 +40,10 @@ namespace LiteDB
                         }
 
                         // then, read all documents and copy to new engine
-                        var docs = _indexer.FindAll(col.PK, Query.Ascending);
-
+                        var nodes = _indexer.FindAll(col.PK, Query.Ascending);
 
                         tempEngine.InsertDocuments(col.CollectionName, 
-                            docs.Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock, true).Buffer)));
+                            nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock, true).Buffer)));
                     }
 
                     // get final header from temp engine
