@@ -12,55 +12,65 @@ namespace LiteDB
         /// <summary>
         /// Implement update command to a document inside a collection
         /// </summary>
-        public int UpdateDocuments(string colName, IEnumerable<BsonDocument> docs, int bufferSize)
+        public int UpdateDocuments(string colName, IEnumerable<BsonDocument> docs)
         {
-            return this.TransactionLoop<BsonDocument>(colName, false, bufferSize, (c) => docs, (col, doc) => {
+            return this.Transaction<int>(colName, false, (col) => {
 
-                // normalize id before find
-                var id = doc["_id"].Normalize(col.PK.Options);
+                // no collection, no updates
+                if(col == null) return 0;
 
-                _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = ", colName, id);
+                var count = 0;
 
-                // find indexNode from pk index
-                var indexNode = _indexer.Find(col.PK, id, false, Query.Ascending);
-
-                // if not found document, no updates
-                if (indexNode == null) return false;
-
-                // serialize document in bytes
-                var bytes = BsonSerializer.Serialize(doc);
-
-                // update data storage
-                var dataBlock = _data.Update(col, indexNode.DataBlock, bytes);
-
-                // delete/insert indexes - do not touch on PK
-                foreach (var index in col.GetIndexes(false))
+                foreach(var doc in docs)
                 {
-                    var key = doc.Get(index.Field);
+                    // normalize id before find
+                    var id = doc["_id"].Normalize(col.PK.Options);
 
-                    var node = _indexer.GetNode(dataBlock.IndexRef[index.Slot]);
+                    _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = ", colName, id);
 
-                    // check if my index node was changed
-                    if (node.Key.CompareTo(key) != 0)
+                    // find indexNode from pk index
+                    var indexNode = _indexer.Find(col.PK, id, false, Query.Ascending);
+
+                    // if not found document, no updates
+                    if (indexNode == null) continue;
+
+                    // serialize document in bytes
+                    var bytes = BsonSerializer.Serialize(doc);
+
+                    // update data storage
+                    var dataBlock = _data.Update(col, indexNode.DataBlock, bytes);
+
+                    // delete/insert indexes - do not touch on PK
+                    foreach (var index in col.GetIndexes(false))
                     {
-                        // remove old index node
-                        _indexer.Delete(index, node.Position);
+                        var key = doc.Get(index.Field);
 
-                        // and add a new one
-                        var newNode = _indexer.AddNode(index, key);
+                        var node = _indexer.GetNode(dataBlock.IndexRef[index.Slot]);
 
-                        // point my index to data object
-                        newNode.DataBlock = dataBlock.Position;
+                        // check if my index node was changed
+                        if (node.Key.CompareTo(key) != 0)
+                        {
+                            // remove old index node
+                            _indexer.Delete(index, node.Position);
 
-                        // set my block page as dirty before change
-                        _pager.SetDirty(dataBlock.Page);
+                            // and add a new one
+                            var newNode = _indexer.AddNode(index, key);
 
-                        // point my dataBlock
-                        dataBlock.IndexRef[index.Slot] = newNode.Position;
+                            // point my index to data object
+                            newNode.DataBlock = dataBlock.Position;
+
+                            // set my block page as dirty before change
+                            _pager.SetDirty(dataBlock.Page);
+
+                            // point my dataBlock
+                            dataBlock.IndexRef[index.Slot] = newNode.Position;
+                        }
                     }
+
+                    count++;
                 }
 
-                return true;
+                return count;
             });
         }
     }

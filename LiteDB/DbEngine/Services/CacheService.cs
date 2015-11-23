@@ -14,11 +14,22 @@ namespace LiteDB
     /// </summary>
     internal class CacheService : IDisposable
     {
-        // double cache structure - use normal dictionary for get pages in order
+        /// <summary>
+        /// Max cache pages size - read or dirty. If Count pass this value, clear cache (if dirty, save in disk)
+        /// </summary>
+        public const int MAX_CACHE_SIZE = 5000;
+
+        // contains only clean pages, used in read operations - can be clear any time
         private Dictionary<uint, BasePage> _cache;
+
+        // contains only dirty pages - can be write on disk before clear
         private Dictionary<uint, BasePage> _dirty;
 
+        // call when a page need be saved on journal
         public Action<BasePage> MarkAsDirtyAction = (page) => { };
+
+        // call when need clear dirty cache
+        public Action DirtyRecicleAction = () => { };
 
         public CacheService()
         {
@@ -40,6 +51,12 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page)
         {
+            // clear read cache if exceds cache limit size
+            if(_cache.Count > MAX_CACHE_SIZE)
+            {
+                _cache.Clear();
+            }
+
             // do not cache extend page - never will be reused
             if (page.PageType != PageType.Extend)
             {
@@ -63,6 +80,13 @@ namespace LiteDB
             {
                 // call action passing dirty page - used for journal file writes 
                 MarkAsDirtyAction(page);
+            }
+
+            // if dirty pages exceds, save in disk
+            if(_dirty.Count > MAX_CACHE_SIZE)
+            {
+                DirtyRecicleAction();
+                _dirty.Clear();
             }
         }
 

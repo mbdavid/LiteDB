@@ -9,11 +9,6 @@ namespace LiteDB
     public sealed partial class LiteCollection<T>
         where T : new()
     {
-        /// <summary>
-        /// Default buffer size for insert/update/delete loop operations - transaction will commit in every N docs
-        /// </summary>
-        private const int BUFFER_SIZE = 1024;
-
         private string _name;
         private DbEngine _engine;
         private BsonMapper _mapper;

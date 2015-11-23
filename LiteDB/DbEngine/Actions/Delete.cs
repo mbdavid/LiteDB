@@ -12,25 +12,35 @@ namespace LiteDB
         /// <summary>
         /// Implements delete based on a query result
         /// </summary>
-        public int DeleteDocuments(string colName, Query query, int bufferSize)
+        public int DeleteDocuments(string colName, Query query)
         {
-            return this.TransactionLoop<IndexNode>(colName, false, bufferSize, (c) => query.Run(c, _indexer), (col, node) => {
+            return this.Transaction<int>(colName, false, (col) => {
 
-                _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
+                if(col == null) return 0;
 
-                // read dataBlock (do not read all extend pages, i will not use)
-                var dataBlock = _data.Read(node.DataBlock, false);
+                var nodes = query.Run(col, _indexer);
+                var count = 0;
 
-                // lets remove all indexes that point to this in dataBlock
-                foreach (var index in col.GetIndexes(true))
+                foreach(var node in nodes)
                 {
-                    _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
+                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
+
+                    // read dataBlock (do not read all extend pages, i will not use)
+                    var dataBlock = _data.Read(node.DataBlock, false);
+
+                    // lets remove all indexes that point to this in dataBlock
+                    foreach (var index in col.GetIndexes(true))
+                    {
+                        _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
+                    }
+
+                    // remove object data
+                    _data.Delete(col, node.DataBlock);
+
+                    count++;
                 }
 
-                // remove object data
-                _data.Delete(col, node.DataBlock);
-
-                return true;
+                return count;
             });
         }
     }

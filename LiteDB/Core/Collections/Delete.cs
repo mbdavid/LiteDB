@@ -21,7 +21,7 @@ namespace LiteDB
             {
                 try
                 {
-                    return _engine.DeleteDocuments(_name, query, BUFFER_SIZE);
+                    return _engine.DeleteDocuments(_name, query);
                 }
                 catch (IndexNotFoundException ex)
                 {

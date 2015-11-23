@@ -22,6 +22,7 @@ namespace LiteDB
             _pager = pager;
             _cache = cache;
             _cache.MarkAsDirtyAction = (page) => _disk.WriteJournal(page.PageID, page.DiskData);
+            _cache.DirtyRecicleAction = () => this.Save();
         }
 
         /// <summary>
@@ -44,8 +45,14 @@ namespace LiteDB
         {
             if (_trans == false) throw new SystemException("No begin transaction");
 
-            // save dirty pages
-            this.Save();
+            if (_cache.HasDirtyPages)
+            {
+                // save dirty pages
+                this.Save();
+
+                // delete journal file - datafile is consist here
+                _disk.DeleteJournal();
+            }
 
             // unlock datafile
             _disk.Unlock();
@@ -56,31 +63,25 @@ namespace LiteDB
         /// <summary>
         /// Save all dirty pages to disk - do not touch on lock disk
         /// </summary>
-        public void Save()
+        private void Save()
         {
-            if (_cache.HasDirtyPages)
+            // get header and mark as dirty
+            var header = _pager.GetPage<HeaderPage>(0, true);
+
+            // increase file changeID (back to 0 when overflow)
+            header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
+
+            // set final datafile length (optimize page writes)
+            _disk.SetLength((header.LastPageID + 1) * BasePage.PAGE_SIZE);
+
+            // write all dirty pages in data file
+            foreach (var page in _cache.GetDirtyPages())
             {
-                // get header and mark as dirty
-                var header = _pager.GetPage<HeaderPage>(0, true);
-
-                // increase file changeID (back to 0 when overflow)
-                header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
-
-                // set final datafile length (optimize page writes)
-                _disk.SetLength((header.LastPageID + 1) * BasePage.PAGE_SIZE);
-
-                // write all dirty pages in data file
-                foreach (var page in _cache.GetDirtyPages())
-                {
-                    _disk.WritePage(page.PageID, page.WritePage());
-                }
-
-                // delete journal file - datafile is consist here
-                _disk.DeleteJournal();
-
-                // set all dirty pages as clear on cache
-                _cache.Clear();
+                _disk.WritePage(page.PageID, page.WritePage());
             }
+
+            // set all dirty pages as clear on cache
+            _cache.Clear();
         }
 
         public void Rollback()

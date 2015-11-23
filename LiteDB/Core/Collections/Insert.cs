@@ -19,7 +19,7 @@ namespace LiteDB
 
             var doc = _mapper.ToDocument(document);
 
-            _engine.InsertDocuments(_name, new BsonDocument[] { doc }, 1);
+            _engine.InsertDocuments(_name, new BsonDocument[] { doc });
 
             return doc["_id"];
         }
@@ -27,11 +27,11 @@ namespace LiteDB
         /// <summary>
         /// Insert an array of new documents to this collection. Document Id must be a new value in collection. Can be set buffer size to commit at each N documents
         /// </summary>
-        public int Insert(IEnumerable<T> docs, int bufferSize = BUFFER_SIZE)
+        public int Insert(IEnumerable<T> docs)
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            return _engine.InsertDocuments(_name, this.GetBsonDocs(docs), bufferSize);
+            return _engine.InsertDocuments(_name, this.GetBsonDocs(docs));
         }
 
         /// <summary>

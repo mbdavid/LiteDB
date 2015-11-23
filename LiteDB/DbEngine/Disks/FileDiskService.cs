@@ -23,6 +23,7 @@ namespace LiteDB
         private FileStream _journal;
         private string _journalFilename;
         private bool _journalEnabled;
+        private HashSet<uint> _journalPages = new HashSet<uint>();
 
         private Logger _log;
         private TimeSpan _timeout;
@@ -30,6 +31,8 @@ namespace LiteDB
         private string _password;
         private long _initialSize;
         private long _limitSize;
+
+        #region Initialize disk
 
         public FileDiskService(string connectionString, Logger log)
         {
@@ -94,6 +97,8 @@ namespace LiteDB
                 return false;
             }
         }
+
+        #endregion
 
         #region Lock/Unlock
 
@@ -200,6 +205,9 @@ namespace LiteDB
         {
             if(_journalEnabled == false) return;
 
+            // test if this page is not in journal file
+            if(_journalPages.Contains(pageID)) return;
+
             // open journal file if not used yet
             if(_journal == null)
             {
@@ -220,6 +228,8 @@ namespace LiteDB
 
             // just write original bytes in order that are changed
             _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
+
+            _journalPages.Add(pageID);
         }
 
         public void DeleteJournal()
@@ -229,6 +239,9 @@ namespace LiteDB
             if(_journal != null)
             {
                 _log.Write(Logger.JOURNAL, "delete journal file");
+
+                // clear pages in journal file
+                _journalPages.Clear();
 
                 // close journal stream and delete file
                 _journal.Dispose();

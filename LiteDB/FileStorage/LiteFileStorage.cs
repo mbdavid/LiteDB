@@ -13,7 +13,6 @@ namespace LiteDB
     {
         internal const string FILES = "_files";
         internal const string CHUNKS = "_chunks";
-        internal const int BUFFER_SIZE = 1024; // BsonDocument.MAX_DOCUMENT_SIZE / BasePage.PAGE_AVAILABLE_BYTES;
 
         private DbEngine _engine;
 
@@ -35,16 +34,16 @@ namespace LiteDB
             file.UploadDate = DateTime.Now;
 
             // insert file in _files collections with 0 file length
-            _engine.InsertDocuments(FILES, new BsonDocument[] { file.AsDocument }, 1);
+            _engine.InsertDocuments(FILES, new BsonDocument[] { file.AsDocument });
 
             // for each chunk, insert as a chunk document
             foreach (var chunk in file.CreateChunks(stream))
             {
-                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk }, BUFFER_SIZE);
+                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk });
             }
 
             // update fileLength/chunks to confirm full file length stored in disk
-            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument }, 1);
+            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
 
             return file;
         }
@@ -81,7 +80,7 @@ namespace LiteDB
             var file = this.FindById(id);
             if (file == null) return false;
             file.Metadata = metadata;
-            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument }, 1);
+            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
             return true;
         }
 
@@ -190,7 +189,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
             // remove file reference in _files
-            var d = _engine.DeleteDocuments(FILES, Query.EQ("_id", id), 1);
+            var d = _engine.DeleteDocuments(FILES, Query.EQ("_id", id));
 
             // if not found, just return false
             if (d == 0) return false;
@@ -199,7 +198,7 @@ namespace LiteDB
 
             while (true)
             {
-                var del = _engine.DeleteDocuments(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)), BUFFER_SIZE);
+                var del = _engine.DeleteDocuments(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)));
 
                 if (del == 0) break;
             }

@@ -19,7 +19,7 @@ namespace LiteDB
             // get BsonDocument from object
             var doc = _mapper.ToDocument(document);
 
-            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }, 1) > 0;
+            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }) > 0;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace LiteDB
             // set document _id using id parameter
             doc["_id"] = id;
 
-            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }, 1) > 0;
+            return _engine.UpdateDocuments(_name, new BsonDocument[] { doc }) > 0;
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace LiteDB
         {
             if (documents == null) throw new ArgumentNullException("document");
 
-            return _engine.UpdateDocuments(_name, documents.Select(x => _mapper.ToDocument(x)), BUFFER_SIZE);
+            return _engine.UpdateDocuments(_name, documents.Select(x => _mapper.ToDocument(x)));
         }
     }
 }

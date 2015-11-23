@@ -17,7 +17,7 @@ namespace LiteDB.Tests
             {
                 var col = db.GetCollection("b");
 
-                col.Insert(GetDocs(), 50);
+                col.Insert(GetDocs());
 
                 Assert.AreEqual(220, col.Count());
             }
