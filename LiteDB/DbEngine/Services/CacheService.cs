@@ -17,7 +17,7 @@ namespace LiteDB
         /// <summary>
         /// Max cache pages size - read or dirty. If Count pass this value, clear cache (if dirty, save in disk)
         /// </summary>
-        public const int MAX_CACHE_SIZE = 5000;
+        public const int MAX_CACHE_SIZE = 9995000;
 
         // contains only clean pages, used in read operations - can be clear any time
         private Dictionary<uint, BasePage> _cache;
