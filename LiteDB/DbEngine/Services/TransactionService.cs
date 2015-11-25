@@ -50,6 +50,9 @@ namespace LiteDB
                 // save dirty pages
                 this.Save();
 
+                // clear all pages in cache
+                _cache.Clear();
+
                 // delete journal file - datafile is consist here
                 _disk.DeleteJournal();
             }
@@ -79,9 +82,6 @@ namespace LiteDB
             {
                 _disk.WritePage(page.PageID, page.WritePage());
             }
-
-            // set all dirty pages as clear on cache
-            _cache.Clear();
         }
 
         public void Rollback()

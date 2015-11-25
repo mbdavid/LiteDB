@@ -83,10 +83,10 @@ namespace LiteDB
             }
 
             // if dirty pages exceds, save in disk
-            if(_dirty.Count > MAX_CACHE_SIZE)
+            if(_dirty.Count > MAX_CACHE_SIZE && page.PageID != 0)
             {
                 DirtyRecicleAction();
-                _dirty.Clear();
+                this.Clear();
             }
         }
 
