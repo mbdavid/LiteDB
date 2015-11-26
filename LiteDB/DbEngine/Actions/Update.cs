@@ -67,6 +67,8 @@ namespace LiteDB
                         }
                     }
 
+                    _cache.CheckPoint();
+
                     count++;
                 }
 

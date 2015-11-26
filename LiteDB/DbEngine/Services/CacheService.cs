@@ -15,9 +15,9 @@ namespace LiteDB
     internal class CacheService : IDisposable
     {
         /// <summary>
-        /// Max cache pages size - read or dirty. If Count pass this value, clear cache (if dirty, save in disk)
+        /// Max cache pages size - read or dirty. If Count pass this value cache will be clear on next checkpoint
         /// </summary>
-        public const int MAX_CACHE_SIZE = 9995000;
+        public const int MAX_CACHE_SIZE = 5000;
 
         // contains only clean pages, used in read operations - can be clear any time
         private Dictionary<uint, BasePage> _cache;
@@ -51,12 +51,6 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page)
         {
-            // clear read cache if exceds cache limit size
-            if(_cache.Count > MAX_CACHE_SIZE)
-            {
-                _cache.Clear();
-            }
-
             // do not cache extend page - never will be reused
             if (page.PageType != PageType.Extend)
             {
@@ -81,12 +75,27 @@ namespace LiteDB
                 // call action passing dirty page - used for journal file writes 
                 MarkAsDirtyAction(page);
             }
+        }
 
-            // if dirty pages exceds, save in disk
-            if(_dirty.Count > MAX_CACHE_SIZE && page.PageID != 0)
+        /// <summary>
+        /// Checkpoint is a safe point to clear cache pages without loose pages references.
+        /// Ex: is callled after each document insert/update/deleted/indexed
+        /// </summary>
+        public void CheckPoint()
+        {
+            // check if dirty pages pass limits, if pass, call dirty recicle and clear
+            if (_dirty.Count > MAX_CACHE_SIZE)
             {
+                Console.WriteLine("== limpando DIRTY");
                 DirtyRecicleAction();
-                this.Clear();
+                _dirty.Clear();
+            }
+
+            // check if read cache pass limits, just clean
+            if (_cache.Count > MAX_CACHE_SIZE)
+            {
+                Console.WriteLine("== limpando CACHE");
+                _cache.Clear();
             }
         }
 

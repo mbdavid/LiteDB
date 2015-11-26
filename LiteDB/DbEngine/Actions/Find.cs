@@ -41,6 +41,8 @@ namespace LiteDB
                     var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
                     yield return doc;
+
+                    _cache.CheckPoint();
                 }
             }
         }

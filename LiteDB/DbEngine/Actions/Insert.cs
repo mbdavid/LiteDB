@@ -63,6 +63,8 @@ namespace LiteDB
                         dataBlock.IndexRef[index.Slot] = node.Position;
                     }
 
+                    _cache.CheckPoint();
+
                     count++;
                 }
 

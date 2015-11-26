@@ -52,10 +52,10 @@ namespace LiteDB
 
                 // clear all pages in cache
                 _cache.Clear();
-
-                // delete journal file - datafile is consist here
-                _disk.DeleteJournal();
             }
+
+            // delete journal file - datafile is consist here
+            _disk.DeleteJournal();
 
             // unlock datafile
             _disk.Unlock();

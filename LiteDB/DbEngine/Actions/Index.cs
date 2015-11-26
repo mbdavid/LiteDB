@@ -48,6 +48,8 @@ namespace LiteDB
 
                     // link index node to datablock
                     newNode.DataBlock = dataBlock.Position;
+
+                    _cache.CheckPoint();
                 }
 
                 return true;
