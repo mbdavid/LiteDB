@@ -51,7 +51,6 @@ namespace LiteDB
 
                     // copy info from initial header to final header
                     tempHeader.ChangeID = header.ChangeID;
-                    tempHeader.UserVersion = header.UserVersion;
 
                     // lets create journal file before re-write
                     for (uint pageID = 0; pageID <= header.LastPageID; pageID++)

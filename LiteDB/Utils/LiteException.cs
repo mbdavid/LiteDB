@@ -102,6 +102,11 @@ namespace LiteDB
             return new LiteException(121, "Command '{0}' is not a valid shell command", command);
         }
 
+        public static LiteException AlreadyExistsCollectionName(string newName)
+        {
+            return new LiteException(122, "New collection name '{0}' already exists", newName);
+        }
+
         #endregion
 
         #region Document/Mapper Errors

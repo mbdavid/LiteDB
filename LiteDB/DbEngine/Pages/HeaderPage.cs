@@ -46,31 +46,19 @@ namespace LiteDB
         public uint LastPageID { get; set; }
 
         /// <summary>
-        /// Get/Set the first collection pageID (used as Field to be passed as reference)
+        /// Get a dictionary with all collection pages with pageID link
         /// </summary>
-        public uint FirstCollectionPageID;
-
-        /// <summary>
-        /// Get/Set count of collection in database
-        /// </summary>
-        public ushort CollectionCount { get; set; }
-
-        /// <summary>
-        /// Get/Set a user version of database file
-        /// </summary>
-        public int UserVersion { get; set; }
+        public Dictionary<string, uint> CollectionPages { get; set; }
 
         public HeaderPage()
             : base(0)
         {
             this.FreeEmptyPageID = uint.MaxValue;
-            this.FirstCollectionPageID = uint.MaxValue;
             this.ChangeID = 0;
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
-            this.CollectionCount = 0;
-            this.UserVersion = 0;
+            this.CollectionPages = new Dictionary<string, uint>();
         }
 
         /// <summary>
@@ -88,15 +76,21 @@ namespace LiteDB
         {
             var info = reader.ReadString(HEADER_INFO.Length);
             var ver = reader.ReadByte();
-            this.ChangeID = reader.ReadUInt16();
-            this.FreeEmptyPageID = reader.ReadUInt32();
-            this.FirstCollectionPageID = reader.ReadUInt32();
-            this.LastPageID = reader.ReadUInt32();
-            this.CollectionCount = reader.ReadUInt16();
-            this.UserVersion = reader.ReadInt32();
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
+
+            this.ChangeID = reader.ReadUInt16();
+            this.FreeEmptyPageID = reader.ReadUInt32();
+            this.LastPageID = reader.ReadUInt32();
+            reader.Skip(200);
+
+            // read page collections references (position on end of page)
+            var cols = reader.ReadByte();
+            for(var i = 0; i < cols; i++)
+            {
+                this.CollectionPages.Add(reader.ReadString(), reader.ReadUInt32());
+            }
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -105,10 +99,15 @@ namespace LiteDB
             writer.Write(FILE_VERSION);
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
-            writer.Write(this.FirstCollectionPageID);
             writer.Write(this.LastPageID);
-            writer.Write(this.CollectionCount);
-            writer.Write(this.UserVersion);
+            writer.Skip(200);
+
+            writer.Write((byte)this.CollectionPages.Count);
+            foreach (var key in this.CollectionPages.Keys)
+            {
+                writer.Write(key);
+                writer.Write(this.CollectionPages[key]);
+            }
         }
 
         #endregion

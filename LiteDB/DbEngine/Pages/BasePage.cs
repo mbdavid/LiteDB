@@ -175,7 +175,7 @@ namespace LiteDB
             this.NextPageID = reader.ReadUInt32();
             this.ItemCount = reader.ReadUInt16();
             this.FreeBytes = reader.ReadUInt16();
-            reader.ReadBytes(8); // reserved 8 bytes
+            reader.Skip(8); // reserved 8 bytes
         }
 
         private void WriteHeader(ByteWriter writer)
@@ -187,7 +187,7 @@ namespace LiteDB
             writer.Write(this.NextPageID);
             writer.Write((UInt16)this.ItemCount);
             writer.Write((UInt16)this.FreeBytes);
-            writer.Write(new byte[8]); // reserved 8 bytes
+            writer.Skip(8); // reserved 8 bytes
         }
 
         protected abstract void ReadContent(ByteReader reader);

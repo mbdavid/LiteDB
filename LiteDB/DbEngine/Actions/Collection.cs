@@ -18,7 +18,9 @@ namespace LiteDB
             {
                 _transaction.AvoidDirtyRead();
 
-                return _collections.GetAll().Select(x => x.CollectionName);
+                var header = _pager.GetPage<HeaderPage>(0);
+
+                return header.CollectionPages.Keys.AsEnumerable();
             }
         }
 
@@ -50,11 +52,23 @@ namespace LiteDB
 
                 _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", colName, newName);
 
+                // check if newName already exists
+                if(this.GetCollectionNames().Contains(newName.Trim().ToLower()))
+                {
+                    throw LiteException.AlreadyExistsCollectionName(newName);
+                }
+
                 // set page as dirty before any change
                 _pager.SetDirty(col);
 
                 // change collection name and save
                 col.CollectionName = newName;
+
+                // update header collection reference
+                var header = _pager.GetPage<HeaderPage>(0, true);
+
+                header.CollectionPages.Remove(colName.Trim().ToLower());
+                header.CollectionPages.Add(newName.Trim().ToLower(), col.PageID);
 
                 return true;
             });

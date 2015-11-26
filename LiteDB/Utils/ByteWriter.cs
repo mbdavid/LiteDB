@@ -27,6 +27,11 @@ namespace LiteDB
             _pos = 0;
         }
 
+        public void Skip(int length)
+        {
+            _pos += length;
+        }
+
         #region Native data types
 
         public void Write(Byte value)

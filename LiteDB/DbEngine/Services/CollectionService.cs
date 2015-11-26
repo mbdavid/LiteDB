@@ -29,13 +29,14 @@ namespace LiteDB
 
             var header = _pager.GetPage<HeaderPage>(0);
 
-            if (header.FirstCollectionPageID == uint.MaxValue) return null;
+            uint pageID;
 
-            var pages = _pager.GetSeqPages<CollectionPage>(header.FirstCollectionPageID);
+            if(header.CollectionPages.TryGetValue(name.Trim().ToLower(), out pageID))
+            {
+                return _pager.GetPage<CollectionPage>(pageID);
+            }
 
-            var col = pages.FirstOrDefault(x => x.CollectionName.Equals(name, StringComparison.InvariantCultureIgnoreCase));
-
-            return col;
+            return null;
         }
 
         /// <summary>
@@ -50,19 +51,16 @@ namespace LiteDB
             var header = _pager.GetPage<HeaderPage>(0, true);
 
             // check limit count
-            if (header.CollectionCount >= CollectionPage.MAX_COLLECTIONS)
+            if (header.CollectionPages.Count >= CollectionPage.MAX_COLLECTIONS)
             {
                 throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS);
             }
 
-            // increese collection
-            header.CollectionCount++;
-
             // get new collection page (marked as dirty)
             var col = _pager.NewPage<CollectionPage>();
 
-            // add page in collection list
-            _pager.AddOrRemoveToFreeList(true, col, header, ref header.FirstCollectionPageID);
+            // add this page to header page collection
+            header.CollectionPages.Add(name.Trim().ToLower(), col.PageID); 
 
             col.CollectionName = name;
 
@@ -76,11 +74,16 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get all collections
+        /// Get all collections pages
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            return _pager.GetSeqPages<CollectionPage>(_pager.GetPage<HeaderPage>(0).FirstCollectionPageID);
+            var header = _pager.GetPage<HeaderPage>(0);
+
+            foreach(var pageID in header.CollectionPages.Values)
+            {
+                yield return _pager.GetPage<CollectionPage>(pageID);
+            }
         }
 
         /// <summary>
@@ -128,13 +131,10 @@ namespace LiteDB
                 _pager.DeletePage(pageID);
             }
 
-            // get header and mark as dirty to decrese collection counter
+            // get header page to remove from collection list links
             var header = _pager.GetPage<HeaderPage>(0, true);
 
-            header.CollectionCount--;
-
-            // remove page from collection list
-            _pager.AddOrRemoveToFreeList(false, col, header, ref header.FirstCollectionPageID);
+            header.CollectionPages.Remove(col.CollectionName);
 
             _pager.DeletePage(col.PageID);
         }
