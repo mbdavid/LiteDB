@@ -63,7 +63,11 @@ namespace LiteDB
         /// </summary>
         public void SetPageDirty(BasePage page)
         {
+            // add page to dirty list
             _dirty[page.PageID] = page;
+
+            // and remove from clean cache (keeps page in only one list)
+            _cache.Remove(page.PageID);
 
             if (page.IsDirty) return;
 
@@ -86,7 +90,6 @@ namespace LiteDB
             // check if dirty pages pass limits, if pass, call dirty recicle and clear
             if (_dirty.Count > MAX_CACHE_SIZE)
             {
-                Console.WriteLine("== limpando DIRTY");
                 DirtyRecicleAction();
                 _dirty.Clear();
             }
@@ -94,7 +97,6 @@ namespace LiteDB
             // check if read cache pass limits, just clean
             if (_cache.Count > MAX_CACHE_SIZE)
             {
-                Console.WriteLine("== limpando CACHE");
                 _cache.Clear();
             }
         }

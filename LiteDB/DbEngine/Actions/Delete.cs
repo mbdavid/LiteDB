@@ -37,7 +37,7 @@ namespace LiteDB
                     // remove object data
                     _data.Delete(col, node.DataBlock);
 
-                    //_cache.CheckPoint();
+                    _cache.CheckPoint();
 
                     count++;
                 }

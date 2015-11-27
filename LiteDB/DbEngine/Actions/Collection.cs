@@ -35,7 +35,7 @@ namespace LiteDB
 
                 _log.Write(Logger.COMMAND, "drop collection {0}", colName);
 
-                _collections.Drop(col);
+                _collections.Drop(col, _cache);
 
                 return true;
             });

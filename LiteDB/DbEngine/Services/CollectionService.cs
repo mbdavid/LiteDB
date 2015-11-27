@@ -89,7 +89,7 @@ namespace LiteDB
         /// <summary>
         /// Drop a collection - remove all data pages + indexes pages
         /// </summary>
-        public void Drop(CollectionPage col)
+        public void Drop(CollectionPage col, CacheService cache)
         {
             // add all pages to delete
             var pages = new HashSet<uint>();
@@ -113,6 +113,8 @@ namespace LiteDB
                         if (block.ExtendPageID != uint.MaxValue)
                         {
                             _pager.DeletePage(block.ExtendPageID, true);
+
+                            cache.CheckPoint();
                         }
                     }
 
@@ -129,6 +131,7 @@ namespace LiteDB
             foreach (var pageID in pages)
             {
                 _pager.DeletePage(pageID);
+                cache.CheckPoint();
             }
 
             // get header page to remove from collection list links

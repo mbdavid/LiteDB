@@ -112,6 +112,7 @@
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
     <Compile Include="Shell\Commands\Collections\BaseCollection.cs" />
+    <Compile Include="Shell\Commands\Collections\Read.cs" />
     <Compile Include="Shell\Commands\Collections\Max.cs" />
     <Compile Include="Shell\Commands\Collections\Min.cs" />
     <Compile Include="Shell\Commands\Collections\Rename.cs" />
