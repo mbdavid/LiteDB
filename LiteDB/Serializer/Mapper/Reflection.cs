@@ -29,8 +29,8 @@ namespace LiteDB
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
             return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
-                x => x.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase),
-                x => x.Name.Equals(type.Name + "Id", StringComparison.InvariantCultureIgnoreCase));
+                x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
+                x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
 
         private static PropertyInfo SelectProperty(IEnumerable<PropertyInfo> props, params Func<PropertyInfo, bool>[] predicates)

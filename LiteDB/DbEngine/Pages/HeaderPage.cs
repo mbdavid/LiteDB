@@ -58,7 +58,7 @@ namespace LiteDB
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
-            this.CollectionPages = new Dictionary<string, uint>();
+            this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

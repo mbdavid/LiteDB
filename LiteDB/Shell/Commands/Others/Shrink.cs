@@ -11,7 +11,7 @@ namespace LiteDB.Shell.Commands
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"shrink\s*").Length > 0;
+            return s.Scan(@"shrink$").Length > 0;
         }
 
         public BsonValue Execute(LiteDatabase db, StringScanner s)

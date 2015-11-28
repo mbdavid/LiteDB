@@ -53,7 +53,7 @@ namespace LiteDB
                 _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", colName, newName);
 
                 // check if newName already exists
-                if(this.GetCollectionNames().Contains(newName.Trim().ToLower()))
+                if(this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))
                 {
                     throw LiteException.AlreadyExistsCollectionName(newName);
                 }
@@ -67,8 +67,8 @@ namespace LiteDB
                 // update header collection reference
                 var header = _pager.GetPage<HeaderPage>(0, true);
 
-                header.CollectionPages.Remove(colName.Trim().ToLower());
-                header.CollectionPages.Add(newName.Trim().ToLower(), col.PageID);
+                header.CollectionPages.Remove(colName);
+                header.CollectionPages.Add(newName, col.PageID);
 
                 return true;
             });
