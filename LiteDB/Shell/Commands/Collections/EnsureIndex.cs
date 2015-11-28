@@ -29,7 +29,7 @@ namespace LiteDB.Shell.Commands
             }
             else
             {
-                var options = db.Mapper.ToObject<IndexOptions>(doc.AsDocument);
+                var options = (new BsonMapper()).ToObject<IndexOptions>(doc.AsDocument);
 
                 return col.EnsureIndex(field, options);
             }

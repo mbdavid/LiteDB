@@ -137,7 +137,7 @@ namespace LiteDB
             // get header page to remove from collection list links
             var header = _pager.GetPage<HeaderPage>(0, true);
 
-            header.CollectionPages.Remove(col.CollectionName);
+            header.CollectionPages.Remove(col.CollectionName.Trim().ToLower());
 
             _pager.DeletePage(col.PageID);
         }

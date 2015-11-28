@@ -51,6 +51,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
+    <Compile Include="Core\Collections\AutoId.cs" />
+    <Compile Include="Core\Database\Collection.cs" />
+    <Compile Include="Core\Database\OnModelCreating.cs" />
+    <Compile Include="Core\Database\Utils.cs" />
+    <Compile Include="Core\Database\FileStorage.cs" />
     <Compile Include="DbEngine\Actions\Shrink.cs" />
     <Compile Include="DbEngine\Actions\Dump.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
@@ -107,7 +112,6 @@
     <Compile Include="Serializer\Mapper\BsonMapper.Deserialize.cs" />
     <Compile Include="Serializer\Mapper\BsonFieldAttribute.cs" />
     <Compile Include="Serializer\Mapper\BsonIndexAttribute.cs" />
-    <Compile Include="Serializer\Mapper\AutoId.cs" />
     <Compile Include="Serializer\Mapper\PropertyMapper.cs" />
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />

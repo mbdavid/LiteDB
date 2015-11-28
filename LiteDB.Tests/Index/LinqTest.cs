@@ -28,8 +28,6 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Linq_Test()
         {
-            LiteDB.BsonMapper.Global.UseLowerCaseDelimiter('_');
-
             using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" } };

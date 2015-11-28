@@ -66,6 +66,7 @@
     <Compile Include="Mapping\MapperInterfaceTest.cs" />
     <Compile Include="Mapping\BsonFieldTest.cs" />
     <Compile Include="Bson\ObjectIdTest.cs" />
+    <Compile Include="Mapping\VirtualFieldTest.cs" />
     <Compile Include="Mapping\MapperTest.cs" />
     <Compile Include="Concurrency\ConcurrentTest.cs" />
     <Compile Include="Bson\JsonTest.cs" />

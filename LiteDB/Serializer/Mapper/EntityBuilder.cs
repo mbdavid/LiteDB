@@ -104,7 +104,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create an index based in a custom getter value function. Take care if you already data in your collection (will not be work)
+        /// Create an index based in a custom getter value function. Works only for new document that are not in collections. If you have old documents, use ReIndex();
         /// </summary>
         public EntityBuilder<T> Index(string name, Func<T, BsonValue> getter)
         {

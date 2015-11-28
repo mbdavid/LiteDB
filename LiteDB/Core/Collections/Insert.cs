@@ -15,7 +15,7 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
+            this.SetAutoId(document);
 
             var doc = _mapper.ToDocument(document);
 
@@ -41,7 +41,7 @@ namespace LiteDB
         {
             foreach (var document in docs)
             {
-                _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
+                this.SetAutoId(document);
 
                 var doc = _mapper.ToDocument(document);
 

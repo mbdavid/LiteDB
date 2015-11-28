@@ -20,13 +20,7 @@ namespace LiteDB
 
                 foreach(var doc in docs)
                 {
-                    BsonValue id;
-
-                    // add ObjectId to _id if _id not found
-                    if (!doc.RawValue.TryGetValue("_id", out id))
-                    {
-                        id = doc["_id"] = ObjectId.NewObjectId();
-                    }
+                    var id = doc["_id"];
 
                     // test if _id is a valid type
                     if (id.IsNull || id.IsMinValue || id.IsMaxValue)

@@ -34,35 +34,46 @@ namespace LiteDB.Tests
         public decimal Price { get; set; }
     }
 
+    public class IncludeDatabase : LiteDatabase
+    {
+        public IncludeDatabase()
+            : base(new MemoryStream())
+        {
+        }
+
+        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
+        public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
+        public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
+
+        protected override void OnModelCreating(BsonMapper mapper)
+        {
+            mapper.Entity<Order>()
+                .DbRef(x => x.Products, "products")
+                .DbRef(x => x.ProductArray, "products")
+                .DbRef(x => x.ProductColl, "products")
+                .DbRef(x => x.ProductEmpty, "products")
+                .DbRef(x => x.ProductsNull, "products")
+                .DbRef(x => x.Customer, "customers")
+                .DbRef(x => x.CustomerNull, "customers");
+        }
+    }
+
     [TestClass]
     public class IncludeTest
     {
         [TestMethod]
         public void Include_Test()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new IncludeDatabase())
             {
-                var customers = db.GetCollection<Customer>("customers");
-                var products = db.GetCollection<Product>("products");
-                var orders = db.GetCollection<Order>("orders");
-
-                db.Mapper.Entity<Order>()
-                    .DbRef(x => x.Products, "products")
-                    .DbRef(x => x.ProductArray, "products")
-                    .DbRef(x => x.ProductColl, "products")
-                    .DbRef(x => x.ProductEmpty, "products")
-                    .DbRef(x => x.ProductsNull, "products")
-                    .DbRef(x => x.Customer, "customers")
-                    .DbRef(x => x.CustomerNull, "customers");
-
                 var customer = new Customer { Name = "John Doe" };
 
                 var product1 = new Product { Name = "TV", Price = 800 };
                 var product2 = new Product { Name = "DVD", Price = 200 };
 
                 // insert ref documents
-                customers.Insert(customer);
-                products.Insert(new Product[] { product1, product2 });
+                db.Customers.Insert(customer);
+                db.Products.Insert(new Product[] { product1, product2 });
 
                 var order = new Order
                 {
@@ -75,13 +86,9 @@ namespace LiteDB.Tests
                     ProductsNull = null
                 };
 
-                var orderJson = JsonSerializer.Serialize(db.Mapper.ToDocument(order), true);
+                db.Orders.Insert(order);
 
-                var nOrder = db.Mapper.Deserialize<Order>(JsonSerializer.Deserialize(orderJson));
-
-                orders.Insert(order);
-
-                var query = orders
+                var query = db.Orders
                     .Include(x => x.Customer)
                     .Include(x => x.CustomerNull)
                     .Include(x => x.Products)

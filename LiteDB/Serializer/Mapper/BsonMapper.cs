@@ -30,18 +30,13 @@ namespace LiteDB
         /// <summary>
         /// Mapping cache between Class/BsonDocument
         /// </summary>
-        private Dictionary<Type, Dictionary<string, PropertyMapper>> _mapper = new Dictionary<Type,Dictionary<string,PropertyMapper>>();
+        private Dictionary<Type, Dictionary<string, PropertyMapper>> _mapper = new Dictionary<Type, Dictionary<string, PropertyMapper>>();
 
         /// <summary>
         /// Map serializer/deserialize for custom types
         /// </summary>
         private Dictionary<Type, Func<object, BsonValue>> _customSerializer = new Dictionary<Type, Func<object, BsonValue>>();
         private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
-
-        /// <summary>
-        /// Map for autoId type based functions
-        /// </summary>
-        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
 
         /// <summary>
         /// A resolver name property
@@ -108,38 +103,7 @@ namespace LiteDB
 
             #endregion
 
-            #region Register custom AutoId functions
-
-            // register AutoId for ObjectId, Guid and Int32
-            this.RegisterAutoId<ObjectId>
-            (
-                isEmpty: (v) => v.Equals(ObjectId.Empty),
-                newId: (c) => ObjectId.NewObjectId()
-            );
-
-            this.RegisterAutoId<Guid>
-            (
-                isEmpty: (v) => v == Guid.Empty,
-                newId: (c) => Guid.NewGuid()
-            );
-
-            this.RegisterAutoId<Int32>
-            (
-                isEmpty: (v) => v == 0, 
-                newId: (c) => 
-                { 
-                    var max = c.Max(); 
-                    return max.IsMaxValue ? 1 : (max + 1); 
-                }
-            );
-
-            #endregion
         }
-
-        /// <summary>
-        /// Global BsonMapper instance
-        /// </summary>
-        public static BsonMapper Global = new BsonMapper();
 
         /// <summary>
         /// Register a custom type serializer/deserialize function
@@ -148,50 +112,6 @@ namespace LiteDB
         {
             _customSerializer[typeof(T)] = (o) => serialize((T)o);
             _customDeserializer[typeof(T)] = (b) => (T)deserialize(b);
-        }
-
-        /// <summary>
-        /// Register a custom Auto Id generator function for a type
-        /// </summary>
-        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
-        {
-            _autoId[typeof(T)] = new AutoId
-            {
-                IsEmpty = (o) => isEmpty((T)o),
-                NewId = (c) => (T)newId(c)
-            };
-        }
-
-        /// <summary>
-        /// Set new Id in entity class if entity needs one
-        /// </summary>
-        public void SetAutoId(object entity, LiteCollection<BsonDocument> col)
-        {
-            // if object is BsonDocument, there is no AutoId
-            if (entity is BsonDocument) return;
-
-            // get fields mapper
-            var mapper = this.GetPropertyMapper(entity.GetType());
-
-            // it's not best way because is scan all properties - but Id propably is first field :)
-            var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
-
-            // if not id or no autoId = true
-            if (id == null || id.AutoId == false) return;
-
-            AutoId autoId;
-
-            if (_autoId.TryGetValue(id.PropertyType, out autoId))
-            {
-                var value = id.Getter(entity);
-
-                if (value == null || autoId.IsEmpty(value) == true)
-                {
-                    var newId = autoId.NewId(col);
-
-                    id.Setter(entity, newId);
-                }
-            }
         }
 
         /// <summary>
@@ -225,7 +145,7 @@ namespace LiteDB
         {
             Dictionary<string, PropertyMapper> props;
 
-            lock(_mapper)
+            lock (_mapper)
             {
                 if (_mapper.TryGetValue(type, out props))
                 {

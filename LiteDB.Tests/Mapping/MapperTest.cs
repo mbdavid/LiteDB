@@ -183,49 +183,5 @@ namespace LiteDB.Tests
             Assert.AreEqual(nobj.MyInternalProperty, null);
         }
 
-
-        [TestMethod]
-        public void MapperEntityBuilder_Test()
-        {
-            var mapper = BsonMapper.Global;
-
-            var obj = new MyFluentEntity { MyPrimaryPk = 1, CustomName = "John", DoNotIncludeMe = true, MyDateIndexed = DateTime.Now };
-
-            mapper.Entity<MyFluentEntity>()
-                .Id(x => x.MyPrimaryPk)
-                .Field(x => x.CustomName, "custom_field_name")
-                .Ignore(x => x.DoNotIncludeMe)
-                .Index(x => x.MyDateIndexed, true)
-                .Index("cust_len", (c) => c.CustomName.Length)
-                .Index("cust_len");
-
-            var doc = mapper.ToDocument(obj);
-
-            var json = JsonSerializer.Serialize(doc, true);
-
-            // test formula index
-            Assert.AreEqual(4, doc["cust_len"].AsInt32);
-
-            var nobj = mapper.ToObject<MyFluentEntity>(doc);
-
-            // compare object to document
-            Assert.AreEqual(doc["_id"].AsInt32, obj.MyPrimaryPk);
-            Assert.AreEqual(doc["custom_field_name"].AsString, obj.CustomName);
-            Assert.AreNotEqual(doc["DoNotIncludeMe"].AsBoolean, obj.DoNotIncludeMe);
-
-            // test index on formula
-            using (var db = new LiteDatabase(new MemoryStream()))
-            {
-                var col = db.GetCollection<MyFluentEntity>("col1");
-
-                col.Insert(nobj);
-                col.Insert(new MyFluentEntity { MyPrimaryPk = 2, CustomName = "Xiru" });
-
-                // auto create index "cust_len"
-                var q = col.FindOne(Query.EQ("cust_len", 4));
-
-                Assert.AreEqual("John", q.CustomName);
-            }
-        }
     }
 }

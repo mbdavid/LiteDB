@@ -18,8 +18,6 @@ namespace LiteDB
 
         private Logger _log = new Logger();
 
-        public BsonMapper Mapper { get { return _mapper; } }
-
         public Logger Log { get { return _log; } }
 
         /// <summary>
@@ -27,7 +25,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(string connectionString)
         {
-            _mapper = BsonMapper.Global;
+            this.InitializeMapper();
             _engine = new Lazy<DbEngine>(
                 () => new DbEngine(new FileDiskService(connectionString, _log), _log), 
                 false);
@@ -38,7 +36,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(Stream stream)
         {
-            _mapper = BsonMapper.Global;
+            this.InitializeMapper();
             _engine = new Lazy<DbEngine>(
                 () => new DbEngine(new StreamDiskService(stream), _log),
                 false);
@@ -47,108 +45,17 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using full parameters
         /// </summary>
-        public LiteDatabase(IDiskService diskService, BsonMapper mapper)
+        public LiteDatabase(IDiskService diskService)
         {
-            _mapper = mapper;
+            this.InitializeMapper();
             _engine = new Lazy<DbEngine>(
                 () => new DbEngine(diskService, _log),
                 false);
-        }
-
-        #region Collections
-
-        /// <summary>
-        /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.
-        /// </summary>
-        /// <param name="name">Collection name (case insensitive)</param>
-        public LiteCollection<T> GetCollection<T>(string name)
-            where T : new()
-        {
-            return new LiteCollection<T>(name, _engine.Value, _mapper, _log);
-        }
-
-        /// <summary>
-        /// Get a collection using a generic BsonDocument. If collection does not exits, create a new one.
-        /// </summary>
-        /// <param name="name">Collection name (case insensitive)</param>
-        public LiteCollection<BsonDocument> GetCollection(string name)
-        {
-            return new LiteCollection<BsonDocument>(name, _engine.Value, _mapper, _log);
-        }
-
-        /// <summary>
-        /// Get all collections name inside this database.
-        /// </summary>
-        public IEnumerable<string> GetCollectionNames()
-        {
-            return _engine.Value.GetCollectionNames();
-        }
-
-        /// <summary>
-        /// Checks if a collection exists on database. Collection name is case unsensitive
-        /// </summary>
-        public bool CollectionExists(string name)
-        {
-            return _engine.Value.GetCollectionNames().Contains(name);
-        }
-
-        /// <summary>
-        /// Drop a collection and all data + indexes
-        /// </summary>
-        public bool DropCollection(string name)
-        {
-            return _engine.Value.DropCollection(name);
-        }
-
-        /// <summary>
-        /// Rename a collection. Returns false if oldName does not exists or newName already exists
-        /// </summary>
-        public bool RenameCollection(string oldName, string newName)
-        {
-            return _engine.Value.RenameCollection(oldName, newName);
-        }
-
-        #endregion
-
-        #region FileStorage
-
-        private LiteFileStorage _fs = null;
-
-        /// <summary>
-        /// Returns a special collection for storage files/stream inside datafile
-        /// </summary>
-        public LiteFileStorage FileStorage
-        {
-            get { return _fs ?? (_fs = new LiteFileStorage(_engine.Value)); }
-        }
-
-        #endregion
-
-        #region Utils
-
-        /// <summary>
-        /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
-        /// </summary>
-        public int Shrink()
-        {
-            return _engine.Value.Shrink();
-        }
-
-        internal string DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
-        {
-            return _engine.Value.DumpPages(startPage, endPage).ToString();
-        }
-
-        internal string DumpIndex(string colName, string field)
-        {
-            return _engine.Value.DumpIndex(colName, field).ToString();
         }
 
         public void Dispose()
         {
             if(_engine.IsValueCreated) _engine.Value.Dispose();
         }
-
-        #endregion
     }
 }
