@@ -34,6 +34,30 @@ namespace LiteDB
             return _mapper.ToDocument(entity);
         }
 
+        // commom shell instance
+        private LiteShell _shell = null;
+
+        /// <summary>
+        /// Run a command shell
+        /// </summary>
+        public BsonValue Run(string command)
+        {
+            return this.Run(command, new BsonValue[0]);
+        }
+
+        /// <summary>
+        /// Run a command shell formating {n} to JSON string args item index
+        /// </summary>
+        public BsonValue Run(string command, params BsonValue[] args)
+        {
+            if (_shell == null)
+            {
+                _shell = new LiteShell(this);
+            }
+
+            return _shell.Run(string.Format(command, args.Select(x => JsonSerializer.Serialize(x))));
+        }
+
         internal string DumpPages(uint startPage = 0, uint endPage = uint.MaxValue)
         {
             return _engine.Value.DumpPages(startPage, endPage).ToString();

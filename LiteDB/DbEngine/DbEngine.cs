@@ -35,22 +35,27 @@ namespace LiteDB
 
         public DbEngine(IDiskService disk, Logger log)
         {
+            // initialize disk service and check if database exists
+            var isNew = disk.Initialize();
+
+            // new database? just create header page and save it
+            if(isNew)
+            {
+                disk.WritePage(0, new HeaderPage().WritePage());
+            }
+
             _log = log;
             _disk = disk;
 
-            var isNew = _disk.Initialize();
-
-            if(isNew)
-            {
-                _disk.WritePage(0, new HeaderPage().WritePage());
-            }
-
+            // initialize all services
             _cache = new CacheService();
             _pager = new PageService(_disk, _cache);
             _indexer = new IndexService(_pager);
             _data = new DataService(_pager);
             _collections = new CollectionService(_pager, _indexer, _data);
             _transaction = new TransactionService(_disk, _pager, _cache);
+
+            // check user verion
         }
 
         #endregion
