@@ -94,6 +94,9 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index(string field, IndexOptions options)
         {
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (options == null) throw new ArgumentNullException("options");
+
             var p = _prop.Values.FirstOrDefault(x => x.FieldName == field);
 
             if(p == null) throw new ArgumentException("field not found");
@@ -116,14 +119,20 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index(string name, Func<T, BsonValue> getter, IndexOptions options)
         {
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+            if (getter == null) throw new ArgumentNullException("getter");
+            if (options == null) throw new ArgumentNullException("options");
+            if (!BsonDocument.IsValidFieldName(name)) throw new ArgumentException(string.Format("Field '{0}' has an invalid name.", name));
+
             // add a new property using a custom getter function
             var p = new PropertyMapper();
+            p.PropertyName = "__" + name;
             p.FieldName = name;
             p.Getter = new GenericGetter((obj) => getter((T)obj));
             p.PropertyType = typeof(BsonValue);
-            p.PropertyName = "__" + name;
             p.Setter = null; // readonly field
             p.IndexOptions = options;
+
 
             _prop[p.PropertyName] = p;
             return this;
@@ -136,6 +145,8 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collectionName)
         {
+            if (string.IsNullOrEmpty(collectionName)) throw new ArgumentNullException("collectionName");
+
             return this.GetProperty(property, (p) =>
             {
                 var typeRef = typeof(K);
@@ -238,9 +249,11 @@ namespace LiteDB
         /// </summary>
         private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> expr, Action<PropertyMapper> action)
         {
+            if (expr == null) throw new ArgumentNullException("property");
+
             var prop = _prop[expr.GetPath()];
 
-            if(prop == null) throw new ArgumentNullException(expr.GetPath());
+            if (prop == null) throw new ArgumentNullException(expr.GetPath());
 
             action(prop);
 
