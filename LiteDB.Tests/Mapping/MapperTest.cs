@@ -192,11 +192,11 @@ namespace LiteDB.Tests
             var obj = new MyFluentEntity { MyPrimaryPk = 1, CustomName = "John", DoNotIncludeMe = true, MyDateIndexed = DateTime.Now };
 
             mapper.Entity<MyFluentEntity>()
-                .Key(x => x.MyPrimaryPk)
-                .Map(x => x.CustomName, "custom_field_name")
+                .Id(x => x.MyPrimaryPk)
+                .Field(x => x.CustomName, "custom_field_name")
                 .Ignore(x => x.DoNotIncludeMe)
                 .Index(x => x.MyDateIndexed, true)
-                .Formula("cust_len", (c) => c.CustomName.Length)
+                .Index("cust_len", (c) => c.CustomName.Length)
                 .Index("cust_len");
 
             var doc = mapper.ToDocument(obj);

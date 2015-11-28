@@ -39,7 +39,7 @@ namespace LiteDB
         /// <summary>
         /// Define a custom name for a property when mapping to document
         /// </summary>
-        public EntityBuilder<T> Map<K>(Expression<Func<T, K>> property, string field)
+        public EntityBuilder<T> Field<K>(Expression<Func<T, K>> property, string field)
         {
             return this.GetProperty(property, (p) =>
             {
@@ -50,7 +50,7 @@ namespace LiteDB
         /// <summary>
         /// Define which property is your document id (primary key). Define if this property supports auto-id
         /// </summary>
-        public EntityBuilder<T> Key<K>(Expression<Func<T, K>> property, bool autoId = true)
+        public EntityBuilder<T> Id<K>(Expression<Func<T, K>> property, bool autoId = true)
         {
             return this.GetProperty(property, (p) =>
             {
@@ -103,7 +103,18 @@ namespace LiteDB
             return this;
         }
 
-        public EntityBuilder<T> Formula(string name, Func<T, BsonValue> getter)
+        /// <summary>
+        /// Create an index based in a custom getter value function. Take care if you already data in your collection (will not be work)
+        /// </summary>
+        public EntityBuilder<T> Index(string name, Func<T, BsonValue> getter)
+        {
+            return this.Index(name, getter, new IndexOptions());
+        }
+
+        /// <summary>
+        /// Create an index based in a custom getter value function. Take care if you already data in your collection (will not be work)
+        /// </summary>
+        public EntityBuilder<T> Index(string name, Func<T, BsonValue> getter, IndexOptions options)
         {
             // add a new property using a custom getter function
             var p = new PropertyMapper();
@@ -112,6 +123,7 @@ namespace LiteDB
             p.PropertyType = typeof(BsonValue);
             p.PropertyName = "__" + name;
             p.Setter = null; // readonly field
+            p.IndexOptions = options;
 
             _prop[p.PropertyName] = p;
             return this;
