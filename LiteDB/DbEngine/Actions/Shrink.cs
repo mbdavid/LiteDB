@@ -42,7 +42,7 @@ namespace LiteDB
                         // then, read all documents and copy to new engine
                         var nodes = _indexer.FindAll(col.PK, Query.Ascending);
 
-                        tempEngine.InsertDocuments(col.CollectionName, 
+                        tempEngine.Insert(col.CollectionName, 
                             nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock, true).Buffer)));
                     }
 

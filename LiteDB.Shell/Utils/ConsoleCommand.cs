@@ -5,12 +5,12 @@ using System.Text;
 
 namespace LiteDB.Shell
 {
-    public abstract class ConsoleCommand
+    internal abstract class ConsoleCommand
     {
         public abstract bool IsCommand(StringScanner s);
-        public abstract void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input);
+        public abstract void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input);
 
-        private static List<ConsoleCommand> Commands = new List<ConsoleCommand>();
+        private static List<ConsoleCommand> _commands = new List<ConsoleCommand>();
 
         static ConsoleCommand()
         {
@@ -21,22 +21,22 @@ namespace LiteDB.Shell
 
             foreach (var t in types)
             {
-                Commands.Add((ConsoleCommand)Activator.CreateInstance(t));
+                _commands.Add((ConsoleCommand)Activator.CreateInstance(t));
             }
         }
 
         /// <summary>
         /// If command is a console command, execute and returns true - if not, just returns false
         /// </summary>
-        public static bool TryExecute(string command, LiteShell shell, Display display, InputCommand input)
+        public static bool TryExecute(string command, ref LiteDatabase db, Display display, InputCommand input)
         {
             var s = new StringScanner(command);
 
-            foreach (var cmd in Commands)
+            foreach (var cmd in _commands)
             {
                 if (cmd.IsCommand(s))
                 {
-                    cmd.Execute(shell, s, display, input);
+                    cmd.Execute(ref db, s, display, input);
                     return true;
                 }
             }

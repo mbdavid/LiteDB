@@ -7,14 +7,14 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Dump : ILiteCommand
+    internal class Dump : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"dump\s*").Length > 0;
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
             if (s.HasTerminated || s.Match(@"\d+"))
             {
@@ -23,16 +23,16 @@ namespace LiteDB.Shell.Commands
 
                 if(start.Length > 0 && end.Length == 0) end = start;
 
-                return db.DumpPages(
+                return engine.DumpPages(
                     start.Length == 0 ? 0 : Convert.ToUInt32(start),
-                    end.Length == 0 ? uint.MaxValue : Convert.ToUInt32(end));
+                    end.Length == 0 ? uint.MaxValue : Convert.ToUInt32(end)).ToString();
             }
             else
             {
                 var col = s.Scan(@"[\w-]+");
                 var field = s.Scan(@"\s+\w+").Trim();
 
-                return db.DumpIndex(col, field);
+                return engine.DumpIndex(col, field).ToString();
             }
         }
     }

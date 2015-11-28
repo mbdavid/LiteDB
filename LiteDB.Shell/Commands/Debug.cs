@@ -13,12 +13,12 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"debug\s*").Length > 0;
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display d, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display d, InputCommand input)
         {
             var sb = new StringBuilder();
             var enabled = !(s.Scan(@"off\s*").Length > 0);
 
-            shell.Database.Log.Level = enabled ? Logger.FULL : Logger.NONE;
+            db.Log.Level = enabled ? Logger.FULL : Logger.NONE;
         }
     }
 }

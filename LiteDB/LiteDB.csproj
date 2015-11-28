@@ -54,6 +54,7 @@
     <Compile Include="Core\Collections\AutoId.cs" />
     <Compile Include="Core\Database\Collection.cs" />
     <Compile Include="Core\Database\OnModelCreating.cs" />
+    <Compile Include="Core\Database\Shell.cs" />
     <Compile Include="Core\Database\Utils.cs" />
     <Compile Include="Core\Database\FileStorage.cs" />
     <Compile Include="DbEngine\Actions\Shrink.cs" />
@@ -135,7 +136,7 @@
     <Compile Include="Shell\Commands\FileStoage\Find.cs" />
     <Compile Include="Shell\Commands\FileStoage\Update.cs" />
     <Compile Include="Shell\Commands\FileStoage\Upload.cs" />
-    <Compile Include="Shell\Commands\ILiteCommand.cs" />
+    <Compile Include="Shell\Commands\IShellCommand.cs" />
     <Compile Include="Shell\Commands\Others\Dump.cs" />
     <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
     <Compile Include="Shell\LiteShell.cs" />

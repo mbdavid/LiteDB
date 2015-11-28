@@ -13,7 +13,7 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"pretty\s*").Length > 0;
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
             display.Pretty = !(s.Scan(@"off\s*").Length > 0);
         }

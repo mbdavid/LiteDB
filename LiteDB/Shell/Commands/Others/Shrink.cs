@@ -7,16 +7,16 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Shrink : ILiteCommand
+    internal class Shrink : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"shrink$").Length > 0;
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            return (Int32)db.Shrink();
+            return engine.Shrink();
         }
     }
 }

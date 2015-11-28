@@ -62,7 +62,7 @@ namespace LiteDB
         /// </summary>
         public static Dictionary<string, PropertyMapper> GetProperties(Type type, Func<string, string> resolvePropertyName)
         {
-            var dict = new Dictionary<string, PropertyMapper>();
+            var dict = new Dictionary<string, PropertyMapper>(StringComparer.OrdinalIgnoreCase);
             var id = GetIdProperty(type);
             var ignore = typeof(BsonIgnoreAttribute);
             var idAttr = typeof(BsonIdAttribute);

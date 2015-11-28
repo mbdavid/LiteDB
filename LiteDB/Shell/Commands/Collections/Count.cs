@@ -6,19 +6,19 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class CollectionCount : BaseCollection, ILiteCommand
+    internal class CollectionCount : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "count");
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            var col = this.ReadCollection(db, s);
+            var col = this.ReadCollection(engine, s);
             var query = this.ReadQuery(s);
 
-            return col.Count(query);
+            return engine.Count(col, query);
         }
     }
 }

@@ -13,13 +13,13 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"close$").Length > 0;
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
-            if (shell.Database == null) throw LiteException.NoDatabase();
+            if (db == null) throw LiteException.NoDatabase();
 
-            shell.Database.Dispose();
+            db.Dispose();
 
-            shell.Database = null;
+            db = null;
         }
     }
 }

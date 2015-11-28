@@ -19,7 +19,7 @@ namespace LiteDB
 
             var doc = _mapper.ToDocument(document);
 
-            _engine.InsertDocuments(_name, new BsonDocument[] { doc });
+            _engine.Insert(_name, new BsonDocument[] { doc });
 
             return doc["_id"];
         }
@@ -31,7 +31,7 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            return _engine.InsertDocuments(_name, this.GetBsonDocs(docs));
+            return _engine.Insert(_name, this.GetBsonDocs(docs));
         }
 
         /// <summary>

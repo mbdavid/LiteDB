@@ -15,7 +15,7 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"timer$");
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
             input.Timer.Start();
         }

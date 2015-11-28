@@ -6,19 +6,19 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class CollectionUpdate : BaseCollection, ILiteCommand
+    internal class CollectionUpdate : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "update");
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            var col = this.ReadCollection(db, s);
+            var col = this.ReadCollection(engine, s);
             var doc = JsonSerializer.Deserialize(s).AsDocument;
 
-            return col.Update(doc);
+            return engine.Update(col, new BsonDocument[] { doc });
         }
     }
 }

@@ -13,7 +13,7 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"ver(sion)?$");
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
             var ver = typeof(LiteDatabase).Assembly.GetName().Version;
 

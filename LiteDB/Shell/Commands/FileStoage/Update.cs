@@ -7,19 +7,20 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileUpdate : BaseFileStorage, ILiteCommand
+    internal class FileUpdate : BaseFileStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "update");
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
+            var fs = new LiteFileStorage(engine);
             var id = this.ReadId(s);
             var metadata = JsonSerializer.Deserialize(s).AsDocument;
 
-            return db.FileStorage.SetMetadata(id, metadata);
+            return fs.SetMetadata(id, metadata);
         }
     }
 }

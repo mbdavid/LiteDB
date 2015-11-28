@@ -61,16 +61,17 @@
     <Compile Include="Commands\Timer.cs" />
     <Compile Include="Commands\Run.cs" />
     <Compile Include="Commands\Ed.cs" />
-    <Compile Include="ConsoleCommand.cs" />
+    <Compile Include="Utils\ConsoleCommand.cs" />
     <Compile Include="Commands\Close.cs" />
     <Compile Include="Commands\Comment.cs" />
     <Compile Include="Commands\Pretty.cs" />
     <Compile Include="Commands\Quit.cs" />
     <Compile Include="Commands\Spool.cs" />
-    <Compile Include="Display.cs" />
-    <Compile Include="InputCommand.cs" />
+    <Compile Include="Utils\Display.cs" />
+    <Compile Include="Utils\InputCommand.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

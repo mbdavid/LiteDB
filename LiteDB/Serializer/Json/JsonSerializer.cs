@@ -98,7 +98,7 @@ namespace LiteDB
         /// <summary>
         /// Deserialize a json using a StringScanner and returns BsonValue
         /// </summary>
-        public static BsonValue Deserialize(StringScanner s)
+        internal static BsonValue Deserialize(StringScanner s)
         {
             if (s == null) throw new ArgumentNullException("s");
 

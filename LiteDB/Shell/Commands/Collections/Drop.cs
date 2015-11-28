@@ -6,18 +6,18 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class CollectionDrop : BaseCollection, ILiteCommand
+    internal class CollectionDrop : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "drop$");
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            var col = this.ReadCollection(db, s);
+            var col = this.ReadCollection(engine, s);
 
-            return db.DropCollection(col.Name);
+            return engine.DropCollection(col);
         }
     }
 }

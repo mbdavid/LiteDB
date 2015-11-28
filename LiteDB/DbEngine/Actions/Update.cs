@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Implement update command to a document inside a collection
         /// </summary>
-        public int UpdateDocuments(string colName, IEnumerable<BsonDocument> docs)
+        public int Update(string colName, IEnumerable<BsonDocument> docs)
         {
             return this.Transaction<int>(colName, false, (col) => {
 

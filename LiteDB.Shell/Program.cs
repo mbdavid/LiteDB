@@ -11,7 +11,7 @@ namespace LiteDB.Shell
     {
         static void Main(string[] args)
         {
-            var shell = new LiteShell(null);
+            LiteDatabase db = null;
             var input = new InputCommand();
             var display = new Display();
 
@@ -25,7 +25,7 @@ namespace LiteDB.Shell
             {
                 try
                 {
-                    shell.Database = new LiteDatabase(args[0]);
+                    db = new LiteDatabase(args[0]);
                 }
                 catch (Exception ex)
                 {
@@ -42,11 +42,13 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, shell, display, input);
+                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, ref db, display, input);
 
                     if (isConsoleCommand == false)
                     {
-                        var result = shell.Run(cmd);
+                        if(db == null) throw LiteException.NoDatabase();
+
+                        var result = db.Run(cmd);
 
                         display.WriteResult(result);
                     }

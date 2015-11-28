@@ -15,7 +15,7 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"run\s+").Length > 0;
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
             var filename = s.Scan(@".+").Trim();
 

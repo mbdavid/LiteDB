@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int InsertDocuments(string colName, IEnumerable<BsonDocument> docs)
+        public int Insert(string colName, IEnumerable<BsonDocument> docs)
         {
             return this.Transaction<int>(colName, true, (col) => {
 
@@ -20,7 +20,13 @@ namespace LiteDB
 
                 foreach(var doc in docs)
                 {
-                    var id = doc["_id"];
+                    BsonValue id;
+
+                    // if no _id, add one as ObjectId
+                    if(!doc.RawValue.TryGetValue("_id", out id))
+                    {
+                        doc["_id"] = id = ObjectId.NewObjectId();
+                    }
 
                     // test if _id is a valid type
                     if (id.IsNull || id.IsMinValue || id.IsMaxValue)

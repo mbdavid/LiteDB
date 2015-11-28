@@ -34,16 +34,16 @@ namespace LiteDB
             file.UploadDate = DateTime.Now;
 
             // insert file in _files collections with 0 file length
-            _engine.InsertDocuments(FILES, new BsonDocument[] { file.AsDocument });
+            _engine.Insert(FILES, new BsonDocument[] { file.AsDocument });
 
             // for each chunk, insert as a chunk document
             foreach (var chunk in file.CreateChunks(stream))
             {
-                _engine.InsertDocuments(CHUNKS, new BsonDocument[] { chunk });
+                _engine.Insert(CHUNKS, new BsonDocument[] { chunk });
             }
 
             // update fileLength/chunks to confirm full file length stored in disk
-            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
+            _engine.Update(FILES, new BsonDocument[] { file.AsDocument });
 
             return file;
         }
@@ -80,7 +80,7 @@ namespace LiteDB
             var file = this.FindById(id);
             if (file == null) return false;
             file.Metadata = metadata;
-            _engine.UpdateDocuments(FILES, new BsonDocument[] { file.AsDocument });
+            _engine.Update(FILES, new BsonDocument[] { file.AsDocument });
             return true;
         }
 
@@ -189,7 +189,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
             // remove file reference in _files
-            var d = _engine.DeleteDocuments(FILES, Query.EQ("_id", id));
+            var d = _engine.Delete(FILES, Query.EQ("_id", id));
 
             // if not found, just return false
             if (d == 0) return false;
@@ -198,7 +198,7 @@ namespace LiteDB
 
             while (true)
             {
-                var del = _engine.DeleteDocuments(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)));
+                var del = _engine.Delete(CHUNKS, Query.EQ("_id", LiteFileInfo.GetChunckId(id, index++)));
 
                 if (del == 0) break;
             }

@@ -6,16 +6,16 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class ShowCollections : ILiteCommand
+    internal class ShowCollections : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"show\scollections$");
         }
 
-        public BsonValue Execute(LiteDatabase db, StringScanner s)
+        public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            var cols = db.GetCollectionNames().OrderBy(x => x).ToArray();
+            var cols = engine.GetCollectionNames().OrderBy(x => x).ToArray();
 
             if (cols.Length == 0) return BsonValue.Null;
 

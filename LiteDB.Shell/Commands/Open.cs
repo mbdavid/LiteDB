@@ -13,16 +13,16 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"open\s+").Length > 0;
         }
 
-        public override void Execute(LiteShell shell, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
             var filename = s.Scan(@".+");
 
-            if (shell.Database != null)
+            if (db != null)
             {
-                shell.Database.Dispose();
+                db.Dispose();
             }
 
-            shell.Database = new LiteDatabase(filename);
+            db = new LiteDatabase(filename);
         }
     }
 }

@@ -7,45 +7,35 @@ using System.Text;
 
 namespace LiteDB.Shell
 {
-    public class LiteShell
+    internal class LiteShell
     {
-        public Dictionary<string, ILiteCommand> Commands { get; set; }
+        private static List<IShellCommand> _commands = new List<IShellCommand>();
 
-        public LiteDatabase Database { get; set; }
-
-        public LiteShell(LiteDatabase db)
+        static LiteShell()
         {
-            this.Database = db;
-            this.Commands = new Dictionary<string, ILiteCommand>();
-
-            var type = typeof(ILiteCommand);
+            var type = typeof(IShellCommand);
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass);
 
             foreach (var t in types)
             {
-                var cmd = (ILiteCommand)Activator.CreateInstance(t);
-                this.Commands.Add(t.Name, cmd);
+                var cmd = (IShellCommand)Activator.CreateInstance(t);
+                _commands.Add(cmd);
             }
         }
 
-        public BsonValue Run(string command)
+        public BsonValue Run(DbEngine engine, string command)
         {
             if (string.IsNullOrEmpty(command)) return BsonValue.Null;
 
             var s = new StringScanner(command);
 
-            foreach (var cmd in this.Commands)
+            foreach (var cmd in _commands)
             {
-                if (cmd.Value.IsCommand(s))
+                if (cmd.IsCommand(s))
                 {
-                    if (this.Database == null)
-                    {
-                        throw LiteException.NoDatabase(); 
-                    }
-
-                    return cmd.Value.Execute(this.Database, s);
+                    return cmd.Execute(engine, s);
                 }
             }
 

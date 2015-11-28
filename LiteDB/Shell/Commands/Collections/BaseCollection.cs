@@ -13,9 +13,9 @@ namespace LiteDB.Shell.Commands
         /// <summary>
         /// Read collection name from db.(colname).(command)
         /// </summary>
-        public LiteCollection<BsonDocument> ReadCollection(LiteDatabase db, StringScanner s)
+        public string ReadCollection(DbEngine db, StringScanner s)
         {
-            return db.GetCollection(s.Scan(@"db\.([\w-]+)\.\w+\s*", 1));
+            return s.Scan(@"db\.([\w-]+)\.\w+\s*", 1);
         }
 
         public bool IsCollectionCommand(StringScanner s, string command)

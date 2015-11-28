@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Implements delete based on a query result
         /// </summary>
-        public int DeleteDocuments(string colName, Query query)
+        public int Delete(string colName, Query query)
         {
             return this.Transaction<int>(colName, false, (col) => {
 
