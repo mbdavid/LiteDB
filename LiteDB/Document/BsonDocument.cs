@@ -106,7 +106,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if field name is a valid string: only \w+(\w-)*
+        /// Test if field name is a valid string: only [\w$]+(\w-$)*
         /// </summary>
         internal static bool IsValidFieldName(string field)
         {
