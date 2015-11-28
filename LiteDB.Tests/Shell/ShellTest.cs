@@ -20,6 +20,7 @@ namespace LiteDB.Tests
                 var doc = db.Run("db.col1.find a = 1").AsArray[0].AsDocument;
                 Assert.AreEqual(1, doc["a"].AsInt32);
 
+                // change doc field a to 2
                 doc["a"] = 2;
 
                 db.Run("db.col1.update $0", doc);
@@ -29,6 +30,8 @@ namespace LiteDB.Tests
 
                 db.Run("db.col1.delete");
                 Assert.AreEqual(0, db.Run("db.col1.count").AsInt32);
+
+                Assert.AreEqual("col1", db.Run("show collections").AsString);
             }
         }
     }

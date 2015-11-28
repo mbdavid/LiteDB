@@ -59,6 +59,7 @@
     <Compile Include="Core\Database\FileStorage.cs" />
     <Compile Include="DbEngine\Actions\Shrink.cs" />
     <Compile Include="DbEngine\Actions\Dump.cs" />
+    <Compile Include="DbEngine\Actions\Stats.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
     <Compile Include="DbEngine\Disks\IDiskService.cs" />
     <Compile Include="DbEngine\Actions\Delete.cs" />
@@ -117,6 +118,7 @@
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
     <Compile Include="Shell\Commands\Collections\BaseCollection.cs" />
+    <Compile Include="Shell\Commands\Collections\Stats.cs" />
     <Compile Include="Shell\Commands\Collections\Read.cs" />
     <Compile Include="Shell\Commands\Collections\Max.cs" />
     <Compile Include="Shell\Commands\Collections\Min.cs" />

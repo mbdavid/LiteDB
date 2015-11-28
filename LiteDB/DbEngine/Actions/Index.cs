@@ -92,7 +92,7 @@ namespace LiteDB
         /// <summary>
         /// List all indexes inside a collection
         /// </summary>
-        public IEnumerable<BsonDocument> GetIndexes(string colName)
+        public IEnumerable<BsonDocument> GetIndexes(string colName, bool stats = false)
         {
             var col = this.GetCollectionPage(colName, false);
 
@@ -100,7 +100,7 @@ namespace LiteDB
 
             foreach (var index in col.GetIndexes(true))
             {
-                yield return new BsonDocument()
+                var doc = new BsonDocument()
                     .Add("slot", index.Slot)
                     .Add("field", index.Field)
                     .Add("unique", index.Options.Unique)
@@ -108,6 +108,18 @@ namespace LiteDB
                     .Add("removeAccents", index.Options.RemoveAccents)
                     .Add("trimWhitespace", index.Options.TrimWhitespace)
                     .Add("emptyStringToNull", index.Options.EmptyStringToNull);
+
+                if (stats)
+                {
+                    _cache.CheckPoint();
+
+                    var pages = _indexer.FindAll(index, Query.Ascending).GroupBy(x => x.Page.PageID).Count();
+
+                    doc.Add("pages", pages)
+                        .Add("allocated", pages * BasePage.PAGE_SIZE);
+                }
+
+                yield return doc;
             }
         }
     }

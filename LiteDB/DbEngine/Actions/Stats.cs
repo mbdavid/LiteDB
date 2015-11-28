@@ -1,0 +1,105 @@
+﻿using LiteDB.Shell;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+namespace LiteDB
+{
+    internal partial class DbEngine : IDisposable
+    {
+        /// <summary>
+        /// Get stats from a collection
+        /// </summary>
+        public BsonValue Stats(string colName)
+        {
+            var col = this.GetCollectionPage(colName, false);
+
+            if (col == null) return BsonValue.Null;
+
+            var header = _pager.GetPage<HeaderPage>(0);
+
+            int indexPages, indexFree, dataPages, extendPages, dataFree;
+
+            this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree);
+
+            return new BsonDocument()
+                .Add("name", colName)
+                .Add("documents", (int)col.DocumentCount)
+                .Add("indexes", new BsonArray(this.GetIndexes(colName, true)))
+                .Add("pages", new BsonDocument()
+                    .Add("index", indexPages)
+                    .Add("data", dataPages)
+                    .Add("extend", extendPages)
+                    .Add("total", indexPages + dataPages + extendPages + 1)
+                )
+                .Add("usage", new BsonDocument()
+                    .Add("allocated", new BsonDocument()
+                        .Add("index", indexPages * BasePage.PAGE_SIZE)
+                        .Add("data", (dataPages + extendPages) * BasePage.PAGE_SIZE)
+                        .Add("total", (indexPages + dataPages + extendPages + 1) * BasePage.PAGE_SIZE)
+                    )
+                    .Add("free", new BsonDocument()
+                        .Add("index", indexFree)
+                        .Add("data", dataFree)
+                        .Add("total", indexFree + dataFree)
+                    )
+                );
+        }
+
+        private void Usage(CollectionPage col, out int indexPages, out int indexFree, out int dataPages, out int extendPages, out int dataFree)
+        {
+            var pages = new HashSet<uint>();
+            indexPages = indexFree = dataPages = extendPages = dataFree = 0;
+
+            // get all pages from PK index + data/extend pages
+            foreach (var node in _indexer.FindAll(col.PK, Query.Ascending))
+            {
+                if (pages.Contains(node.Position.PageID)) continue;
+
+                pages.Add(node.Position.PageID);
+                indexPages++;
+                indexFree += node.Page.FreeBytes;
+
+                foreach (var n in node.Page.Nodes.Values.Where(x => !x.DataBlock.IsEmpty))
+                {
+                    var dataPage = _pager.GetPage<DataPage>(n.DataBlock.PageID, false);
+
+                    if(pages.Contains(dataPage.PageID)) continue;
+
+                    pages.Add(dataPage.PageID);
+                    dataPages++;
+                    dataFree += dataPage.FreeBytes;
+
+                    // getting extended pages
+                    foreach(var ex in dataPage.DataBlocks.Values.Where(x => x.ExtendPageID != uint.MaxValue))
+                    {
+                        foreach(var extendPage in _pager.GetSeqPages<ExtendPage>(ex.ExtendPageID))
+                        {
+                            extendPages++;
+                            dataFree += extendPage.FreeBytes;
+                        }
+                    }
+                }
+
+                _cache.CheckPoint();
+            }
+
+            // add all others indexes
+            foreach(var index in col.GetIndexes(false))
+            {
+                foreach (var node in _indexer.FindAll(index, Query.Ascending))
+                {
+                    if (pages.Contains(node.Position.PageID)) continue;
+
+                    pages.Add(node.Position.PageID);
+                    indexPages++;
+                    indexFree += node.Page.FreeBytes;
+
+                    _cache.CheckPoint();
+                }
+            }
+        }
+    }
+}
