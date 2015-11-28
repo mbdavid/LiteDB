@@ -18,11 +18,12 @@ namespace LiteDB
 
             if (col == null) return BsonValue.Null;
 
-            var header = _pager.GetPage<HeaderPage>(0);
-
             int indexPages, indexFree, dataPages, extendPages, dataFree;
 
-            this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree);
+            lock(_locker)
+            {
+                this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree);
+            }
 
             return new BsonDocument()
                 .Add("name", colName)
