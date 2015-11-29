@@ -115,8 +115,12 @@ namespace LiteDB
 
                     var pages = _indexer.FindAll(index, Query.Ascending).GroupBy(x => x.Page.PageID).Count();
 
+                    // this command can be consume too many memory!! has no CheckPoint on loop
+                    var keySize = _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
+
                     doc.Add("pages", pages)
-                        .Add("allocated", pages * BasePage.PAGE_SIZE);
+                        .Add("allocated", pages * BasePage.PAGE_SIZE)
+                        .Add("keyAverageSize", (int)keySize);
                 }
 
                 yield return doc;

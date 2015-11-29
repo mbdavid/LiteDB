@@ -17,19 +17,21 @@ namespace LiteDB.Tests
         public VerDatabase(Stream s)
             : base(s)
         {
+            this.Log.Level = Logger.FULL;
+            this.Log.Output = (m) => Debug.Print(m);
         }
 
-        protected override void OnDbVersionUpdate(DbVersion dv)
+        protected override void OnDbVersionUpdate(DbVersion ver)
         {
-            dv.Register(1, (db) => db.Run("db.col1.insert {a:1}"));
+            ver.Register(1, (db) => db.Run("db.col1.insert {_id:1}"));
 
             if(STEP == 2)
             {
-                dv.Register(2, (db) => db.Run("db.col2.insert {a:1}"));
+                ver.Register(2, (db) => db.Run("db.col2.insert {_id:1}"));
             }
             if (STEP == 3)
             {
-                dv.Register(3, (db) => db.Run("db.col3.insert {a:1}"));
+                ver.Register(3, (db) => db.Run("db.col3.insert {_id:1}"));
             }
         }
     }

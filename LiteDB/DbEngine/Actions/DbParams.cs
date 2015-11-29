@@ -12,10 +12,12 @@ namespace LiteDB
         /// <summary>
         /// Get database schema version
         /// </summary>
-        public DbParams GetDbParams()
+        public DbParams GetDbParam()
         {
             lock(_locker)
             {
+                _transaction.AvoidDirtyRead();
+
                 var header = _pager.GetPage<HeaderPage>(0);
 
                 return header.DbParams;
@@ -25,12 +27,13 @@ namespace LiteDB
         /// <summary>
         /// Set a new dbversion
         /// </summary>
-        public void SetDbParams(DbParams dbparams)
+        public void SetParam(DbParams dbparams)
         {
             lock (_locker)
             try
             {
                 _transaction.Begin();
+                _transaction.AvoidDirtyRead();
 
                 var header = _pager.GetPage<HeaderPage>(0);
 
