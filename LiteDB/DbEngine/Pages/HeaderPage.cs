@@ -46,6 +46,11 @@ namespace LiteDB
         public uint LastPageID { get; set; }
 
         /// <summary>
+        /// Database parameters stored in header page - Use 200 bytes fixed
+        /// </summary>
+        public DbParams DbParams { get; set; }
+
+        /// <summary>
         /// Get a dictionary with all collection pages with pageID link
         /// </summary>
         public Dictionary<string, uint> CollectionPages { get; set; }
@@ -58,6 +63,7 @@ namespace LiteDB
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
+            this.DbParams = new DbParams();
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -83,7 +89,7 @@ namespace LiteDB
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
-            reader.Skip(200);
+            this.DbParams.Read(reader);
 
             // read page collections references (position on end of page)
             var cols = reader.ReadByte();
@@ -100,7 +106,7 @@ namespace LiteDB
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
-            writer.Skip(200);
+            this.DbParams.Write(writer);
 
             writer.Write((byte)this.CollectionPages.Count);
             foreach (var key in this.CollectionPages.Keys)

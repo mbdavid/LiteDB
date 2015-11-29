@@ -116,10 +116,7 @@ namespace LiteDB
 
         public void Dispose()
         {
-            if(_stream != null)
-            {
-                _stream.Dispose();
-            }
+            // keep _stream open for external use
         }
 
         #endregion

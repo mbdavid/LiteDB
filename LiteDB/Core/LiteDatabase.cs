@@ -12,7 +12,7 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
-        private Lazy<DbEngine> _engine;
+        private LazyLoad<DbEngine> _engine;
 
         private BsonMapper _mapper;
 
@@ -25,10 +25,10 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(string connectionString)
         {
-            this.InitializeMapper();
-            _engine = new Lazy<DbEngine>(
+            _engine = new LazyLoad<DbEngine>(
                 () => new DbEngine(new FileDiskService(connectionString, _log), _log), 
-                false);
+                () => this.InitializeMapper(),
+                () => this.InitializeDbVersion());
         }
 
         /// <summary>
@@ -37,9 +37,10 @@ namespace LiteDB
         public LiteDatabase(Stream stream)
         {
             this.InitializeMapper();
-            _engine = new Lazy<DbEngine>(
+            _engine = new LazyLoad<DbEngine>(
                 () => new DbEngine(new StreamDiskService(stream), _log),
-                false);
+                () => this.InitializeMapper(),
+                () => this.InitializeDbVersion());
         }
 
         /// <summary>
@@ -48,9 +49,10 @@ namespace LiteDB
         public LiteDatabase(IDiskService diskService)
         {
             this.InitializeMapper();
-            _engine = new Lazy<DbEngine>(
+            _engine = new LazyLoad<DbEngine>(
                 () => new DbEngine(diskService, _log),
-                false);
+                () => this.InitializeMapper(),
+                () => this.InitializeDbVersion());
         }
 
         public void Dispose()
