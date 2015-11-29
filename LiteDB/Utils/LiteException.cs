@@ -59,7 +59,7 @@ namespace LiteDB
 
         public static LiteException CollectionLimitExceeded(int limit)
         {
-            return new LiteException(106, "This database exceeded the maximum limit of collections: {0}", limit);
+            return new LiteException(106, "This database exceeded the maximum limit of collection names size: {0} bytes", limit);
         }
 
         public static LiteException JournalFileFound(string journal)

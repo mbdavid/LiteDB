@@ -31,7 +31,7 @@ namespace LiteDB
 
             uint pageID;
 
-            if(header.CollectionPages.TryGetValue(name.Trim().ToLower(), out pageID))
+            if(header.CollectionPages.TryGetValue(name, out pageID))
             {
                 return _pager.GetPage<CollectionPage>(pageID);
             }
@@ -50,17 +50,17 @@ namespace LiteDB
             // get header marked as dirty because I will use header after (and NewPage can get another header instance)
             var header = _pager.GetPage<HeaderPage>(0, true);
 
-            // check limit count
-            if (header.CollectionPages.Count >= CollectionPage.MAX_COLLECTIONS)
+            // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
+            if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)
             {
-                throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS);
+                throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS_SIZE);
             }
 
             // get new collection page (marked as dirty)
             var col = _pager.NewPage<CollectionPage>();
 
             // add this page to header page collection
-            header.CollectionPages.Add(name.Trim().ToLower(), col.PageID); 
+            header.CollectionPages.Add(name, col.PageID); 
 
             col.CollectionName = name;
 
@@ -137,7 +137,7 @@ namespace LiteDB
             // get header page to remove from collection list links
             var header = _pager.GetPage<HeaderPage>(0, true);
 
-            header.CollectionPages.Remove(col.CollectionName.Trim().ToLower());
+            header.CollectionPages.Remove(col.CollectionName);
 
             _pager.DeletePage(col.PageID);
         }
