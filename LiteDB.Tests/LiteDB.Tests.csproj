@@ -39,6 +39,14 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FluentAssertions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentAssertions.4.1.0\lib\net40\FluentAssertions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FluentAssertions.Core, Version=4.1.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentAssertions.4.1.0\lib\net40\FluentAssertions.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.XML" />
@@ -60,6 +68,7 @@
     <Compile Include="Crud\BulkTest.cs" />
     <Compile Include="Bson\BsonTest.cs" />
     <Compile Include="Crud\DbVersionTest.cs" />
+    <Compile Include="ImplicitCollectionName\BasicTestsOnImplicitCollectionNames.cs" />
     <Compile Include="Mapping\AutoIdTest.cs" />
     <Compile Include="Crud\DropCollectionTest.cs" />
     <Compile Include="Crud\FileStorageTest.cs" />
@@ -83,6 +92,9 @@
       <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
       <Name>LiteDB</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

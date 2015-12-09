@@ -20,6 +20,16 @@ namespace LiteDB
 
             return new LiteCollection<T>(name, _engine.Value, _mapper, _log);
         }
+        /// <summary>
+        /// Get a collection with automatic name as e.g for 'Customer' the collection name is set to 'CustomerCollection'
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public LiteCollection<T> GetCollection<T>() where T : new()
+        {
+            var collectionName = typeof (T).Name + "Collection";
+            return GetCollection<T>(collectionName);
+        }
 
         /// <summary>
         /// Get a collection using a generic BsonDocument. If collection does not exits, create a new one.
