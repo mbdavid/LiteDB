@@ -106,38 +106,6 @@ namespace LiteDB
             return this;
         }
 
-        /// <summary>
-        /// Create an index based in a custom getter value function. Works only for new document that are not in collections. If you have old documents, use ReIndex();
-        /// </summary>
-        public EntityBuilder<T> Index(string name, Func<T, BsonValue> getter)
-        {
-            return this.Index(name, getter, new IndexOptions());
-        }
-
-        /// <summary>
-        /// Create an index based in a custom getter value function. Take care if you already data in your collection (will not be work)
-        /// </summary>
-        public EntityBuilder<T> Index(string name, Func<T, BsonValue> getter, IndexOptions options)
-        {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if (getter == null) throw new ArgumentNullException("getter");
-            if (options == null) throw new ArgumentNullException("options");
-            if (!BsonDocument.IsValidFieldName(name)) throw new ArgumentException(string.Format("Field '{0}' has an invalid name.", name));
-
-            // add a new property using a custom getter function
-            var p = new PropertyMapper();
-            p.PropertyName = "__" + name;
-            p.FieldName = name;
-            p.Getter = new GenericGetter((obj) => getter((T)obj));
-            p.PropertyType = typeof(BsonValue);
-            p.Setter = null; // readonly field
-            p.IndexOptions = options;
-
-
-            _prop[p.PropertyName] = p;
-            return this;
-        }
-
         #region DbRef
 
         /// <summary>
