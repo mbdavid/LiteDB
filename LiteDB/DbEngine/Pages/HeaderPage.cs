@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -16,7 +13,7 @@ namespace LiteDB
         /// <summary>
         /// ChangeID in file position (can be calc?)
         /// </summary>
-        public const int CHANGE_ID_POSITION = PAGE_HEADER_SIZE 
+        public const int CHANGE_ID_POSITION = PAGE_HEADER_SIZE
             + 27  // HEADER_INFO
             + 1; // FILE_VERSION
 
@@ -93,7 +90,7 @@ namespace LiteDB
 
             // read page collections references (position on end of page)
             var cols = reader.ReadByte();
-            for(var i = 0; i < cols; i++)
+            for (var i = 0; i < cols; i++)
             {
                 this.CollectionPages.Add(reader.ReadString(), reader.ReadUInt32());
             }
@@ -116,6 +113,6 @@ namespace LiteDB
             }
         }
 
-        #endregion
+        #endregion Read/Write pages
     }
 }

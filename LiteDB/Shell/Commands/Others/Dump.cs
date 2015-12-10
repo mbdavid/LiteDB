@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
@@ -21,7 +16,7 @@ namespace LiteDB.Shell.Commands
                 var start = s.Scan(@"\d*").Trim();
                 var end = s.Scan(@"\s*\d*").Trim();
 
-                if(start.Length > 0 && end.Length == 0) end = start;
+                if (start.Length > 0 && end.Length == 0) end = start;
 
                 return engine.DumpPages(
                     start.Length == 0 ? 0 : Convert.ToUInt32(start),

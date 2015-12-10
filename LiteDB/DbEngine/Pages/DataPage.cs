@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -18,7 +15,7 @@ namespace LiteDB
 
         /// <summary>
         /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 50% PAGE_AVAILABLE_BYTES
-        /// This value is used for minimize 
+        /// This value is used for minimize
         /// </summary>
         public const int DATA_RESERVED_BYTES = PAGE_AVAILABLE_BYTES / 2;
 
@@ -83,6 +80,6 @@ namespace LiteDB
             }
         }
 
-        #endregion
+        #endregion Read/Write pages
     }
 }

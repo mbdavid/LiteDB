@@ -1,9 +1,5 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -26,6 +22,7 @@ namespace LiteDB
                 }
             }
         }
+
         /// <summary>
         /// Use this method to override and apply rules to map your entities to BsonDocument
         /// </summary>

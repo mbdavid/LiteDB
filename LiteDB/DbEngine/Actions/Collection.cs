@@ -1,9 +1,6 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _transaction.AvoidDirtyRead();
 
@@ -31,7 +28,7 @@ namespace LiteDB
         {
             return this.Transaction<bool>(colName, false, (col) =>
             {
-                if(col == null) return false;
+                if (col == null) return false;
 
                 _log.Write(Logger.COMMAND, "drop collection {0}", colName);
 
@@ -48,12 +45,12 @@ namespace LiteDB
         {
             return this.Transaction<bool>(colName, false, (col) =>
             {
-                if(col == null) return false;
+                if (col == null) return false;
 
                 _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", colName, newName);
 
                 // check if newName already exists
-                if(this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))
+                if (this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))
                 {
                     throw LiteException.AlreadyExistsCollectionName(newName);
                 }

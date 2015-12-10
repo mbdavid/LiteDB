@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 
 namespace LiteDB
 {
@@ -76,7 +72,7 @@ namespace LiteDB
             // if page is new (not exits on datafile), there is no journal for them
             if (page.DiskData.Length > 0)
             {
-                // call action passing dirty page - used for journal file writes 
+                // call action passing dirty page - used for journal file writes
                 MarkAsDirtyAction(page);
             }
         }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-
-namespace LiteDB.Shell.Commands
+﻿namespace LiteDB.Shell.Commands
 {
     internal class Version : ConsoleCommand
     {
@@ -17,7 +11,7 @@ namespace LiteDB.Shell.Commands
         {
             var ver = typeof(LiteDatabase).Assembly.GetName().Version;
 
-            display.WriteInfo(string.Format("v{0}.{1}.{2}", 
+            display.WriteInfo(string.Format("v{0}.{1}.{2}",
                 ver.Major,
                 ver.Minor,
                 ver.Build));

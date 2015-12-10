@@ -1,9 +1,5 @@
-﻿using LiteDB.Shell;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -31,7 +27,7 @@ namespace LiteDB
             var version = conn.GetValue<ushort>("version", 0);
 
             _engine = new LazyLoad<DbEngine>(
-                () => new DbEngine(new FileDiskService(connectionString, _log), _log), 
+                () => new DbEngine(new FileDiskService(connectionString, _log), _log),
                 () => this.InitializeMapper(),
                 () => this.UpdateDbVersion(version));
         }
@@ -60,7 +56,7 @@ namespace LiteDB
 
         public void Dispose()
         {
-            if(_engine.IsValueCreated) _engine.Value.Dispose();
+            if (_engine.IsValueCreated) _engine.Value.Dispose();
         }
     }
 }

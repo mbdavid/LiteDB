@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -114,7 +111,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage. If readExtendData = false, do not read extended data 
+        /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage. If readExtendData = false, do not read extended data
         /// </summary>
         public DataBlock Read(PageAddress blockAddress, bool readExtendData)
         {

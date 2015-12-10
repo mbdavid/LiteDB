@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using LiteDB;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,7 +10,7 @@ namespace LiteDB
         /// </summary>
         public int Shrink()
         {
-            lock(_locker)
+            lock (_locker)
             {
                 // lock and clear cache - no changes during shrink
                 _disk.Lock();
@@ -30,11 +26,11 @@ namespace LiteDB
                 // create temp engine instance to copy all documents
                 using (var tempEngine = new DbEngine(tempDisk, new Logger()))
                 {
-                    // read all collections 
+                    // read all collections
                     foreach (var col in _collections.GetAll())
                     {
                         // first copy all indexes
-                        foreach(var index in col.GetIndexes(false))
+                        foreach (var index in col.GetIndexes(false))
                         {
                             tempEngine.EnsureIndex(col.CollectionName, index.Field, index.Options);
                         }
@@ -42,7 +38,7 @@ namespace LiteDB
                         // then, read all documents and copy to new engine
                         var nodes = _indexer.FindAll(col.PK, Query.Ascending);
 
-                        tempEngine.Insert(col.CollectionName, 
+                        tempEngine.Insert(col.CollectionName,
                             nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock, true).Buffer)));
                     }
 

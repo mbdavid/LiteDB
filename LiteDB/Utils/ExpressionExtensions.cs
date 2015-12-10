@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace LiteDB
 {
@@ -20,6 +17,7 @@ namespace LiteDB
                     var ue = expr.Body as UnaryExpression;
                     me = ((ue != null) ? ue.Operand : null) as MemberExpression;
                     break;
+
                 default:
                     me = expr.Body as MemberExpression;
                     break;

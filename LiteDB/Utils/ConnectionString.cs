@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
-using System.Configuration;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
@@ -20,7 +18,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
             // Create a dictionary from string name=value collection
-            if(connectionString.Contains("="))
+            if (connectionString.Contains("="))
             {
                 _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Split(new char[] { '=' }, 2))
@@ -28,7 +26,7 @@ namespace LiteDB
             }
             else
             {
-                // If connectionstring is only a filename, set filename 
+                // If connectionstring is only a filename, set filename
                 _values = new Dictionary<string, string>();
                 _values["filename"] = Path.GetFullPath(connectionString);
             }
@@ -42,7 +40,7 @@ namespace LiteDB
                     (T)Convert.ChangeType(_values[key], typeof(T)) :
                     defaultValue;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 throw new LiteException("Invalid connection string value type for " + key);
             }

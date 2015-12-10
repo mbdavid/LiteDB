@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
@@ -68,7 +66,7 @@ namespace LiteDB.Shell.Commands
 
             var oper = s.Scan(@"\s+(and|or)\s+").Trim();
 
-            if(oper.Length == 0) throw new ApplicationException("Invalid query operator");
+            if (oper.Length == 0) throw new ApplicationException("Invalid query operator");
 
             return oper == "and" ?
                 Query.And(left, this.ReadInlineQuery(s)) :

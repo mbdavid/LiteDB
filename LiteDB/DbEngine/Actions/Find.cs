@@ -1,9 +1,6 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,13 +11,13 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 // get my collection page
                 var col = this.GetCollectionPage(colName, false);
 
                 // no collection, no documents
-                if(col == null) yield break;
+                if (col == null) yield break;
 
                 // get nodes from query executor to get all IndexNodes
                 var nodes = query.Run(col, _indexer);

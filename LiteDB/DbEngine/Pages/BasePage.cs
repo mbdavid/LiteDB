@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -27,7 +23,7 @@ namespace LiteDB
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
-        #endregion
+        #endregion Page Constants
 
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
@@ -194,6 +190,6 @@ namespace LiteDB
 
         protected abstract void WriteContent(ByteWriter writer);
 
-        #endregion
+        #endregion Read/Write page
     }
 }

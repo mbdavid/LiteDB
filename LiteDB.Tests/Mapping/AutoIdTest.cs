@@ -1,10 +1,6 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace LiteDB.Tests
 {
@@ -84,7 +80,7 @@ namespace LiteDB.Tests
                 }
                 catch (LiteException)
                 {
-                    // must fail because EntityString class has a defined Id 
+                    // must fail because EntityString class has a defined Id
                     //   but has no value and no auto_id funtion - issue #43
                 }
 
@@ -102,7 +98,6 @@ namespace LiteDB.Tests
                 // test for oid
                 Assert.AreNotEqual(coid_1, ObjectId.Empty);
                 Assert.AreEqual(coid_2.Id, oid);
-
             }
         }
     }

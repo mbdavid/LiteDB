@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB.Shell
 {
     internal abstract class ConsoleCommand
     {
         public abstract bool IsCommand(StringScanner s);
+
         public abstract void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input);
 
         private static List<ConsoleCommand> _commands = new List<ConsoleCommand>();

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Shell
 {
@@ -80,7 +78,7 @@ namespace LiteDB.Shell
                     this.WriteLine(ConsoleColor.DarkCyan, "no documents");
                 }
             }
-            else if(result.Type == BsonType.String)
+            else if (result.Type == BsonType.String)
             {
                 this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
             }
@@ -117,6 +115,6 @@ namespace LiteDB.Shell
             }
         }
 
-        #endregion
+        #endregion Private methods
     }
 }

@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace LiteDB
 {
@@ -30,10 +26,10 @@ namespace LiteDB
 
         private Query VisitExpression(Expression expr)
         {
-            if (expr.NodeType == ExpressionType.Equal) // == 
+            if (expr.NodeType == ExpressionType.Equal) // ==
             {
                 var bin = expr as BinaryExpression;
-                return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right)); 
+                return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
             }
             else if (expr is MemberExpression && expr.Type == typeof(bool)) // x.Active
             {
@@ -125,7 +121,7 @@ namespace LiteDB
 
             var str = expr.ToString(); // gives you: "o => o.Whatever"
             var firstDelim = str.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
-            
+
             var property = firstDelim < 0 ? str : str.Substring(firstDelim + 1).TrimEnd(')');
 
             return this.GetBsonField(property);
@@ -134,7 +130,7 @@ namespace LiteDB
         private BsonValue VisitValue(Expression expr)
         {
             // its a constant; Eg: "fixed string"
-            if(expr is ConstantExpression)
+            if (expr is ConstantExpression)
             {
                 var value = (expr as ConstantExpression).Value;
 

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace LiteDB.Tests
 {

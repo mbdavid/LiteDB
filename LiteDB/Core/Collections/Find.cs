@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LiteDB
 {
@@ -13,7 +10,7 @@ namespace LiteDB
         #region Find
 
         /// <summary>
-        /// Find documents inside a collection using Query object. Must have indexes in query expression 
+        /// Find documents inside a collection using Query object. Must have indexes in query expression
         /// </summary>
         public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
         {
@@ -45,7 +42,7 @@ namespace LiteDB
                 }
             }
 
-            if(more == false) yield break;
+            if (more == false) yield break;
 
             // do...while
             do
@@ -61,18 +58,18 @@ namespace LiteDB
 
                 yield return obj;
             }
-            while(more = enumerator.MoveNext());
+            while (more = enumerator.MoveNext());
         }
 
         /// <summary>
-        /// Find documents inside a collection using Linq expression. Must have indexes in linq expression 
+        /// Find documents inside a collection using Linq expression. Must have indexes in linq expression
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue)
         {
             return this.Find(_visitor.Visit(predicate), skip, limit);
         }
 
-        #endregion
+        #endregion Find
 
         #region FindById + One + All
 
@@ -110,6 +107,6 @@ namespace LiteDB
             return this.Find(Query.All());
         }
 
-        #endregion
+        #endregion FindById + One + All
     }
 }

@@ -1,11 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
+﻿using System;
 
 namespace LiteDB
 {
@@ -17,7 +10,7 @@ namespace LiteDB
         public IndexOptions Options { get; private set; }
 
         public BsonIndexAttribute()
-            : this (new IndexOptions())
+            : this(new IndexOptions())
         {
         }
 
@@ -27,17 +20,19 @@ namespace LiteDB
         }
 
         public BsonIndexAttribute(
-            bool unique = false, 
-            bool ignoreCase = true, 
-            bool trimWhiteSpace = true, 
-            bool emptyStringToNull = true, 
+            bool unique = false,
+            bool ignoreCase = true,
+            bool trimWhiteSpace = true,
+            bool emptyStringToNull = true,
             bool removeAccents = true)
-            : this(new IndexOptions {
+            : this(new IndexOptions
+            {
                 Unique = unique,
                 IgnoreCase = ignoreCase,
                 TrimWhitespace = trimWhiteSpace,
                 EmptyStringToNull = emptyStringToNull,
-                RemoveAccents = removeAccents })
+                RemoveAccents = removeAccents
+            })
         {
         }
 

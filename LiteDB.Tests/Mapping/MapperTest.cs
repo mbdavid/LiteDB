@@ -1,12 +1,7 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Collections.Specialized;
-using System.Security;
 
 namespace LiteDB.Tests
 {
@@ -16,8 +11,10 @@ namespace LiteDB.Tests
     {
         [BsonId(false)]
         public int MyId { get; set; }
+
         [BsonField("MY-STRING")]
         public string MyString { get; set; }
+
         public Guid MyGuid { get; set; }
         public DateTime MyDateTime { get; set; }
         public DateTime? MyDateTimeNullable { get; set; }
@@ -28,6 +25,7 @@ namespace LiteDB.Tests
 
         [BsonIndex(ignoreCase: true)]
         public decimal MyDecimal { get; set; }
+
         public decimal? MyDecimalNullable { get; set; }
 
         [BsonIndex(true)]
@@ -40,6 +38,7 @@ namespace LiteDB.Tests
         // do not serialize this properties
         [BsonIgnore]
         public string MyIgnore { get; set; }
+
         public string MyReadOnly { get; private set; }
         public string MyWriteOnly { set; private get; }
         public string MyField = "DoNotSerializeThis";
@@ -50,16 +49,19 @@ namespace LiteDB.Tests
 
         // lists
         public string[] MyStringArray { get; set; }
+
         public List<string> MyStringList { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
 
         // interfaces
         public IMyInterface MyInterface { get; set; }
+
         public List<IMyInterface> MyListInterface { get; set; }
         public IList<IMyInterface> MyIListInterface { get; set; }
 
         // objects
         public object MyObjectString { get; set; }
+
         public object MyObjectInt { get; set; }
         public object MyObjectImpl { get; set; }
         public List<object> MyObjectList { get; set; }
@@ -126,7 +128,6 @@ namespace LiteDB.Tests
             return c;
         }
 
-
         [TestMethod]
         public void Mapper_Test()
         {
@@ -161,7 +162,6 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyNameValueCollection["key-1"], nobj.MyNameValueCollection["key-1"]);
             Assert.AreEqual(obj.MyNameValueCollection["KeyNumber2"], nobj.MyNameValueCollection["KeyNumber2"]);
 
-
             // list
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);
@@ -182,6 +182,5 @@ namespace LiteDB.Tests
 
             Assert.AreEqual(nobj.MyInternalProperty, null);
         }
-
     }
 }

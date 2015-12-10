@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace LiteDB
@@ -40,7 +38,7 @@ namespace LiteDB
             w.Serialize(value ?? BsonValue.Null);
         }
 
-        #endregion
+        #endregion Serialize
 
         #region Deserialize
 
@@ -116,6 +114,6 @@ namespace LiteDB
             }
         }
 
-        #endregion
+        #endregion Deserialize
     }
 }

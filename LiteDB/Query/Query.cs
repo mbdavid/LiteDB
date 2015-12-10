@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -159,7 +156,7 @@ namespace LiteDB
             return new QueryOr(left, right);
         }
 
-        #endregion
+        #endregion Static Methods
 
         #region Execute Query
 
@@ -183,6 +180,6 @@ namespace LiteDB
             return this.ExecuteIndex(indexer, index);
         }
 
-        #endregion
+        #endregion Execute Query
     }
 }

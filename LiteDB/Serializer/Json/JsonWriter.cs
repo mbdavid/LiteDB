@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -39,43 +38,56 @@ namespace LiteDB
                 case BsonType.Null:
                     _writer.Write("null");
                     break;
+
                 case BsonType.Array:
                     this.WriteArray(new BsonArray((List<BsonValue>)value.RawValue));
                     break;
+
                 case BsonType.Document:
                     this.WriteObject(new BsonDocument((Dictionary<string, BsonValue>)value.RawValue));
                     break;
+
                 case BsonType.Boolean:
                     _writer.Write(((bool)value.RawValue).ToString().ToLower());
                     break;
+
                 case BsonType.String:
                     this.WriteString((string)value.RawValue);
                     break;
+
                 case BsonType.Int32:
                     _writer.Write((Int32)value.RawValue);
                     break;
+
                 case BsonType.Double:
                     _writer.Write(((Double)value.RawValue).ToString("0.0########", NumberFormatInfo.InvariantInfo));
                     break;
+
                 case BsonType.Binary:
                     var bytes = (byte[])value.RawValue;
                     this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(bytes, 0, bytes.Length, Base64FormattingOptions.None) : "-- " + bytes.Length + " bytes --");
                     break;
+
                 case BsonType.ObjectId:
                     this.WriteExtendDataType("$oid", ((ObjectId)value.RawValue).ToString());
                     break;
+
                 case BsonType.Guid:
                     this.WriteExtendDataType("$guid", ((Guid)value.RawValue).ToString());
                     break;
+
                 case BsonType.DateTime:
                     this.WriteExtendDataType("$date", ((DateTime)value.RawValue).ToUniversalTime().ToString("o"));
                     break;
+
                 case BsonType.Int64:
                     this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString());
                     break;
+
                 case BsonType.MinValue:
                     this.WriteExtendDataType("$minValue", "1");
                     break;
+
                 case BsonType.MaxValue:
                     this.WriteExtendDataType("$maxValue", "1");
                     break;
@@ -142,24 +154,31 @@ namespace LiteDB
                     case '\"':
                         _writer.Write("\\\"");
                         break;
+
                     case '\\':
                         _writer.Write("\\\\");
                         break;
+
                     case '\b':
                         _writer.Write("\\b");
                         break;
+
                     case '\f':
                         _writer.Write("\\f");
                         break;
+
                     case '\n':
                         _writer.Write("\\n");
                         break;
+
                     case '\r':
                         _writer.Write("\\r");
                         break;
+
                     case '\t':
                         _writer.Write("\\t");
                         break;
+
                     default:
                         int i = (int)c;
                         if (i < 32 || i > 127)

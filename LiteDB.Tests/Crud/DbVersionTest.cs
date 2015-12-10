@@ -1,12 +1,6 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
-using System.Collections.Generic;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Threading;
+using System.IO;
 
 namespace LiteDB.Tests
 {
@@ -21,17 +15,16 @@ namespace LiteDB.Tests
 
         protected override void OnVersionUpdate(int newVersion)
         {
-            if(newVersion == 1)
+            if (newVersion == 1)
                 this.Run("db.col1.insert {_id:1}");
 
-            if(newVersion == 2)
+            if (newVersion == 2)
                 this.Run("db.col2.insert {_id:2}");
 
             if (newVersion == 3)
                 this.Run("db.col3.insert {_id:3}");
         }
     }
-
 
     [TestClass]
     public class DbVersionTest
@@ -61,7 +54,6 @@ namespace LiteDB.Tests
                 Assert.AreEqual(true, db.CollectionExists("col2"));
                 Assert.AreEqual(true, db.CollectionExists("col3"));
             }
-
         }
     }
 }

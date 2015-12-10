@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -34,7 +29,7 @@ namespace LiteDB
         }
     }
 
-    #endregion
+    #endregion JsonToken
 
     /// <summary>
     /// Class that parse a json string and returns in json token
@@ -83,7 +78,7 @@ namespace LiteDB
         {
             this.EatWhitespace();
 
-            if (this.EOF) 
+            if (this.EOF)
             {
                 return new JsonToken { TokenType = JsonTokenType.EOF };
             }
@@ -96,29 +91,36 @@ namespace LiteDB
                     token = new JsonToken { TokenType = JsonTokenType.BeginArray, Token = "[" };
                     this.Read();
                     break;
+
                 case ']':
                     token = new JsonToken { TokenType = JsonTokenType.EndArray, Token = "]" };
                     this.Read();
                     break;
+
                 case '{':
                     token = new JsonToken { TokenType = JsonTokenType.BeginDoc, Token = "{" };
                     this.Read();
                     break;
+
                 case '}':
                     token = new JsonToken { TokenType = JsonTokenType.EndDoc, Token = "}" };
                     this.Read();
                     break;
+
                 case ':':
                     token = new JsonToken { TokenType = JsonTokenType.Colon, Token = ":" };
                     this.Read();
                     break;
+
                 case ',':
                     token = new JsonToken { TokenType = JsonTokenType.Comma, Token = "," };
                     this.Read();
                     break;
+
                 case '\"':
                     token = new JsonToken { TokenType = JsonTokenType.String, Token = this.ReadString() };
                     break;
+
                 case '-':
                 case '0':
                 case '1':
@@ -132,6 +134,7 @@ namespace LiteDB
                 case '9':
                     token = new JsonToken { TokenType = JsonTokenType.Number, Token = this.ReadNumber() };
                     break;
+
                 default:
                     token = new JsonToken { TokenType = JsonTokenType.Word, Token = this.ReadWord() };
                     break;

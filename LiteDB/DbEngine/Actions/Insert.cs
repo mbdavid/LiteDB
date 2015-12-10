@@ -1,9 +1,5 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,16 +10,16 @@ namespace LiteDB
         /// </summary>
         public int Insert(string colName, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, true, (col) => {
-
+            return this.Transaction<int>(colName, true, (col) =>
+            {
                 var count = 0;
 
-                foreach(var doc in docs)
+                foreach (var doc in docs)
                 {
                     BsonValue id;
 
                     // if no _id, add one as ObjectId
-                    if(!doc.RawValue.TryGetValue("_id", out id))
+                    if (!doc.RawValue.TryGetValue("_id", out id))
                     {
                         doc["_id"] = id = ObjectId.NewObjectId();
                     }

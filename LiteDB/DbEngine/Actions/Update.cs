@@ -1,9 +1,5 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,14 +10,14 @@ namespace LiteDB
         /// </summary>
         public int Update(string colName, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, false, (col) => {
-
+            return this.Transaction<int>(colName, false, (col) =>
+            {
                 // no collection, no updates
-                if(col == null) return 0;
+                if (col == null) return 0;
 
                 var count = 0;
 
-                foreach(var doc in docs)
+                foreach (var doc in docs)
                 {
                     // normalize id before find
                     var id = doc["_id"].Normalize(col.PK.Options);

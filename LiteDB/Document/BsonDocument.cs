@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -64,9 +59,9 @@ namespace LiteDB
         /// Returns all object keys with _id in first order
         /// </summary>
         public IEnumerable<string> Keys
-        { 
-            get 
-            { 
+        {
+            get
+            {
                 var keys = this.RawValue.Keys;
 
                 if (keys.Contains("_id")) yield return "_id";
@@ -75,7 +70,7 @@ namespace LiteDB
                 {
                     yield return key;
                 }
-            } 
+            }
         }
 
         /// <summary>
@@ -117,7 +112,7 @@ namespace LiteDB
             {
                 var c = field[i];
 
-                if(char.IsLetterOrDigit(c) || c == '_' || c == '$')
+                if (char.IsLetterOrDigit(c) || c == '_' || c == '$')
                 {
                     continue;
                 }
@@ -134,7 +129,7 @@ namespace LiteDB
             return true;
         }
 
-        #endregion
+        #endregion Methods
 
         #region Get/Set methods
 
@@ -212,7 +207,7 @@ namespace LiteDB
             return this;
         }
 
-        #endregion
+        #endregion Get/Set methods
 
         #region CompareTo / ToString
 
@@ -248,6 +243,6 @@ namespace LiteDB
             return JsonSerializer.Serialize(this, false, true);
         }
 
-        #endregion
+        #endregion CompareTo / ToString
     }
 }

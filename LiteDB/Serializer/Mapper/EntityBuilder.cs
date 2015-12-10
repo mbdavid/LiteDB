@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -99,7 +94,7 @@ namespace LiteDB
 
             var p = _prop.Values.FirstOrDefault(x => x.FieldName == field);
 
-            if(p == null) throw new ArgumentException("field not found");
+            if (p == null) throw new ArgumentException("field not found");
 
             p.IndexOptions = options;
 
@@ -136,7 +131,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only 
+        /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
         internal static void RegisterDbRef(PropertyMapper p, string collectionName, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
         {
@@ -155,7 +150,7 @@ namespace LiteDB
             {
                 var idRef = bson.AsDocument["$id"];
 
-                return m.Deserialize(itemType, 
+                return m.Deserialize(itemType,
                     idRef.IsNull ?
                     bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
                     new BsonDocument().Add("_id", idRef)); // if has $id, deserialize object using only _id object
@@ -163,7 +158,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only 
+        /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
         internal static void RegisterDbRefList(PropertyMapper p, string collectionName, Type listType, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
         {
@@ -186,11 +181,11 @@ namespace LiteDB
             {
                 var array = bson.AsArray;
 
-                if(array.Count == 0) return m.Deserialize(listType, array);
+                if (array.Count == 0) return m.Deserialize(listType, array);
 
                 var hasIdRef = array[0].AsDocument["$id"].IsNull;
 
-                if(hasIdRef)
+                if (hasIdRef)
                 {
                     // if no $id, deserialize as full (was loaded via Include)
                     return m.Deserialize(listType, array);
@@ -200,7 +195,7 @@ namespace LiteDB
                     // copy array changing $id to _id
                     var arr = new BsonArray();
 
-                    foreach(var item in array)
+                    foreach (var item in array)
                     {
                         arr.Add(new BsonDocument().Add("_id", item.AsDocument["$id"]));
                     }
@@ -210,7 +205,7 @@ namespace LiteDB
             };
         }
 
-        #endregion
+        #endregion DbRef
 
         /// <summary>
         /// Get a property based on a expression. Eg.: 'x => x.UserId' return string "UserId"

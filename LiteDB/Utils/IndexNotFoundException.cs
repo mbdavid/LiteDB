@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
-namespace LiteDB
+﻿namespace LiteDB
 {
     /// <summary>
     /// A specific exception when a query didnt found an index

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -27,7 +23,7 @@ namespace LiteDB
             : this(page.PageID)
         {
             // if page is not dirty but it´s changing to empty, lets copy disk content to add in journal
-            if(!page.IsDirty && page.DiskData.Length > 0)
+            if (!page.IsDirty && page.DiskData.Length > 0)
             {
                 this.DiskData = new byte[BasePage.PAGE_SIZE];
                 Buffer.BlockCopy(page.DiskData, 0, this.DiskData, 0, BasePage.PAGE_SIZE);
@@ -53,6 +49,6 @@ namespace LiteDB
         {
         }
 
-        #endregion
+        #endregion Read/Write pages
     }
 }

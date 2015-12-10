@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -30,7 +26,7 @@ namespace LiteDB
         /// </summary>
         public void Begin()
         {
-            if(_trans == true) throw new SystemException("Begin transaction already exists");
+            if (_trans == true) throw new SystemException("Begin transaction already exists");
 
             // lock (or try to) datafile
             _disk.Lock();
@@ -39,7 +35,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Commit the transaction - increese 
+        /// Commit the transaction - increese
         /// </summary>
         public void Commit()
         {

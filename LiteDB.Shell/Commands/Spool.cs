@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
@@ -18,7 +14,7 @@ namespace LiteDB.Shell.Commands
 
         public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
         {
-            if(s.Scan("false|off").Length > 0 && _writer != null)
+            if (s.Scan("false|off").Length > 0 && _writer != null)
             {
                 display.TextWriters.Remove(_writer);
                 input.OnWrite = null;
@@ -26,7 +22,7 @@ namespace LiteDB.Shell.Commands
                 _writer.Dispose();
                 _writer = null;
             }
-            else if(_writer == null)
+            else if (_writer == null)
             {
                 if (db == null) throw LiteException.NoDatabase();
 

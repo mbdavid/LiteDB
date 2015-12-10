@@ -1,9 +1,4 @@
-﻿using LiteDB.Shell;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System;
 
 namespace LiteDB
 {
@@ -39,7 +34,7 @@ namespace LiteDB
             var isNew = disk.Initialize();
 
             // new database? just create header page and save it
-            if(isNew)
+            if (isNew)
             {
                 disk.WritePage(0, new HeaderPage().WritePage());
             }
@@ -58,7 +53,7 @@ namespace LiteDB
             // check user verion
         }
 
-        #endregion
+        #endregion Services instances
 
         /// <summary>
         /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
@@ -71,7 +66,7 @@ namespace LiteDB
             // search my page on collection service
             var col = _collections.Get(name);
 
-            if(col == null && addIfNotExits)
+            if (col == null && addIfNotExits)
             {
                 _log.Write(Logger.COMMAND, "create new collection '{0}'", name);
 
@@ -86,24 +81,26 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            lock(_locker)
-            try
+            lock (_locker)
             {
-                _transaction.Begin();
+                try
+                {
+                    _transaction.Begin();
 
-                var col = this.GetCollectionPage(colName, addIfNotExists);
+                    var col = this.GetCollectionPage(colName, addIfNotExists);
 
-                var result = action(col);
+                    var result = action(col);
 
-                _transaction.Commit();
+                    _transaction.Commit();
 
-                return result;
-            }
-            catch(Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Rollback();
-                throw;
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    _transaction.Rollback();
+                    throw;
+                }
             }
         }
 

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -49,6 +45,6 @@ namespace LiteDB
             writer.Write(this.Data);
         }
 
-        #endregion
+        #endregion Read/Write pages
     }
 }

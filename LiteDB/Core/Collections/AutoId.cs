@@ -1,13 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -22,7 +14,7 @@ namespace LiteDB
             if (document is BsonDocument)
             {
                 var doc = document as BsonDocument;
-                if(!doc.RawValue.ContainsKey("_id"))
+                if (!doc.RawValue.ContainsKey("_id"))
                 {
                     doc["_id"] = ObjectId.NewObjectId();
                 }
@@ -46,11 +38,11 @@ namespace LiteDB
             {
                 id.Setter(document, ObjectId.NewObjectId());
             }
-            else if(id.PropertyType == typeof(Guid) && Guid.Empty.Equals((Guid)value))
+            else if (id.PropertyType == typeof(Guid) && Guid.Empty.Equals((Guid)value))
             {
                 id.Setter(document, Guid.NewGuid());
             }
-            else if(id.PropertyType == typeof(Int32) && ((Int32)value) == 0)
+            else if (id.PropertyType == typeof(Int32) && ((Int32)value) == 0)
             {
                 var max = this.Max();
                 id.Setter(document, max.IsMaxValue ? 1 : max + 1);

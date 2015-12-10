@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LiteDB.Tests
@@ -53,7 +53,7 @@ namespace LiteDB.Tests
                 while (i <= N)
                 {
                     // delete document after update (query before)
-                    if(col.Exists(Query.And(Query.EQ("_id", i), Query.EQ("name", "-update-"))))
+                    if (col.Exists(Query.And(Query.EQ("_id", i), Query.EQ("name", "-update-"))))
                     {
                         var success = col.Delete(i);
                         if (success) i++;

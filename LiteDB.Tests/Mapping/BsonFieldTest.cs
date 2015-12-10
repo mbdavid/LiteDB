@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using LiteDB;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LiteDB.Tests
 {
@@ -16,7 +14,7 @@ namespace LiteDB.Tests
         private string MyPrivatePropertySerializable { get; set; }
 
         [BsonField]
-        protected  string MyProtectedPropertySerializable { get; set; }
+        protected string MyProtectedPropertySerializable { get; set; }
 
         [BsonField("INTERNAL-PROPERTY")]
         internal string MyInternalPropertyNamed { get; set; }
@@ -33,9 +31,9 @@ namespace LiteDB.Tests
 
         public void SetPrivateProperties(string str)
         {
-            MyPrivatePropertyNamed = str+"Named";
-            MyPrivatePropertySerializable = str+"Serializable";
-            MyPrivatePropertyNotSerializable = str+"NotSerialisable";
+            MyPrivatePropertyNamed = str + "Named";
+            MyPrivatePropertySerializable = str + "Serializable";
+            MyPrivatePropertyNotSerializable = str + "NotSerialisable";
         }
 
         public void SetProtectedProperties(string str)
@@ -49,28 +47,31 @@ namespace LiteDB.Tests
         {
             return MyPrivatePropertySerializable;
         }
+
         public string GetMyProtectedPropertySerializable()
         {
             return MyProtectedPropertySerializable;
         }
+
         public string GetMyPrivatePropertyNamed()
         {
             return MyPrivatePropertyNamed;
         }
+
         public string GetMyProtectedPropertyNamed()
         {
             return MyProtectedPropertyNamed;
         }
+
         public string GetMyPrivatePropertyNotSerializable()
         {
             return MyPrivatePropertyNotSerializable;
         }
+
         public string GetMyProtectedPropertyNotSerializable()
         {
             return MyProtectedPropertyNotSerializable;
         }
-
-
     }
 
     [TestClass]
@@ -84,7 +85,6 @@ namespace LiteDB.Tests
                 MyInternalPropertyNamed = "InternalPropertyNamed",
                 MyInternalPropertyNotSerializable = "InternalPropertyNotSerializable",
                 MyInternalPropertySerializable = "InternalPropertySerializable",
- 
             };
 
             c.SetProtectedProperties("ProtectedProperties");
@@ -113,7 +113,7 @@ namespace LiteDB.Tests
             //Internal
             Assert.AreEqual(obj.MyInternalPropertyNamed, nobj.MyInternalPropertyNamed);
             Assert.AreEqual(obj.MyInternalPropertySerializable, nobj.MyInternalPropertySerializable);
-            Assert.AreEqual(nobj.MyInternalPropertyNotSerializable,null);
+            Assert.AreEqual(nobj.MyInternalPropertyNotSerializable, null);
             //Private
             Assert.AreEqual(obj.GetMyPrivatePropertyNamed(), nobj.GetMyPrivatePropertyNamed());
             Assert.AreEqual(obj.GetMyPrivatePropertySerializable(), nobj.GetMyPrivatePropertySerializable());

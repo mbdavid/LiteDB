@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.IO;
 
 namespace LiteDB
 {
@@ -127,7 +124,7 @@ namespace LiteDB
             return buffer;
         }
 
-        #endregion
+        #endregion Native data types
 
         #region Extended types
 
@@ -195,7 +192,6 @@ namespace LiteDB
             throw new NotImplementedException();
         }
 
-        #endregion
-
+        #endregion Extended types
     }
 }

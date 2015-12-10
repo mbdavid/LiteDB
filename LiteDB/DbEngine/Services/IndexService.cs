@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -37,10 +34,10 @@ namespace LiteDB
             var page = _pager.NewPage<IndexPage>();
 
             // create a empty node with full max level
-            var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH) 
-            { 
-                Key = BsonValue.MinValue, 
-                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false), 
+            var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH)
+            {
+                Key = BsonValue.MinValue,
+                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
                 Page = page,
                 Position = new PageAddress(page.PageID, 0)
             };
@@ -89,10 +86,10 @@ namespace LiteDB
                 throw LiteException.IndexKeyTooLong();
             }
 
-            // creating a new index node 
+            // creating a new index node
             var node = new IndexNode(level)
-            { 
-                Key = key, 
+            {
+                Key = key,
                 KeyLength = (ushort)keyLength
             };
 
@@ -117,13 +114,13 @@ namespace LiteDB
             // scan from top left
             for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
             {
-                // get cache for last node 
+                // get cache for last node
                 cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
 
                 // for(; <while_not_this>; <do_this>) { ... }
                 for (; cur.Next[i].IsEmpty == false; cur = cache)
                 {
-                    // get cache for last node 
+                    // get cache for last node
                     cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
 
                     // read next node to compare
@@ -138,7 +135,7 @@ namespace LiteDB
                 if (i <= (level - 1)) // level == length
                 {
                     // cur = current (imediatte before - prev)
-                    // node = new inserted node 
+                    // node = new inserted node
                     // next = next node (where cur is poiting)
                     _pager.SetDirty(cur.Page);
 
@@ -210,7 +207,6 @@ namespace LiteDB
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
         }
-
 
         /// <summary>
         /// Drop all indexes pages
@@ -326,6 +322,6 @@ namespace LiteDB
             return last;
         }
 
-        #endregion
+        #endregion Find
     }
 }

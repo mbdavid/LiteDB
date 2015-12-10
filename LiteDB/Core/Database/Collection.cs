@@ -1,9 +1,6 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -45,7 +42,7 @@ namespace LiteDB
         /// </summary>
         public bool CollectionExists(string name)
         {
-            if(string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
 
             return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
         }

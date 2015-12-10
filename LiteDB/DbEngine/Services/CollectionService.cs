@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -31,7 +28,7 @@ namespace LiteDB
 
             uint pageID;
 
-            if(header.CollectionPages.TryGetValue(name, out pageID))
+            if (header.CollectionPages.TryGetValue(name, out pageID))
             {
                 return _pager.GetPage<CollectionPage>(pageID);
             }
@@ -44,8 +41,8 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Add(string name)
         {
-            if(string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if(!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("CollectionName", name);
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+            if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("CollectionName", name);
 
             // get header marked as dirty because I will use header after (and NewPage can get another header instance)
             var header = _pager.GetPage<HeaderPage>(0, true);
@@ -60,7 +57,7 @@ namespace LiteDB
             var col = _pager.NewPage<CollectionPage>();
 
             // add this page to header page collection
-            header.CollectionPages.Add(name, col.PageID); 
+            header.CollectionPages.Add(name, col.PageID);
 
             col.CollectionName = name;
 
@@ -80,7 +77,7 @@ namespace LiteDB
         {
             var header = _pager.GetPage<HeaderPage>(0);
 
-            foreach(var pageID in header.CollectionPages.Values)
+            foreach (var pageID in header.CollectionPages.Values)
             {
                 yield return _pager.GetPage<CollectionPage>(pageID);
             }
@@ -103,7 +100,7 @@ namespace LiteDB
                 foreach (var node in nodes)
                 {
                     // if is PK index, add dataPages
-                    if(index.Slot == 0)
+                    if (index.Slot == 0)
                     {
                         pages.Add(node.DataBlock.PageID);
 

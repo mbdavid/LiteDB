@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
     /// <summary>
     /// Class that converts your entity class to/from BsonDocument
-    /// If you prefer use a new instance of BsonMapper (not Global), be sure cache this instance for better performance 
+    /// If you prefer use a new instance of BsonMapper (not Global), be sure cache this instance for better performance
     /// Serialization rules:
     ///     - Classes must be "public" with a public constructor (without parameters)
     ///     - Properties must have public getter (can be read-only)
@@ -36,6 +31,7 @@ namespace LiteDB
         /// Map serializer/deserialize for custom types
         /// </summary>
         private Dictionary<Type, Func<object, BsonValue>> _customSerializer = new Dictionary<Type, Func<object, BsonValue>>();
+
         private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
 
         /// <summary>
@@ -101,8 +97,7 @@ namespace LiteDB
                 }
             );
 
-            #endregion
-
+            #endregion Register CustomTypes
         }
 
         /// <summary>
@@ -136,7 +131,7 @@ namespace LiteDB
             this.ResolvePropertyName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
         }
 
-        #endregion
+        #endregion Predefinded Property Resolvers
 
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results

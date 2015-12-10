@@ -1,10 +1,5 @@
-﻿using LiteDB;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Tests
 {
@@ -18,7 +13,7 @@ namespace LiteDB.Tests
             {
                 Assert.IsFalse(db.CollectionExists("customerCollection"));
                 var collection = db.GetCollection<Customer>("customerCollection");
-                
+
                 collection.Insert(new Customer());
                 Assert.IsTrue(db.CollectionExists("customerCollection"));
 

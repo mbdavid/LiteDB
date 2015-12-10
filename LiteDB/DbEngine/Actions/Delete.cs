@@ -1,9 +1,4 @@
-﻿using LiteDB.Shell;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System;
 
 namespace LiteDB
 {
@@ -14,14 +9,14 @@ namespace LiteDB
         /// </summary>
         public int Delete(string colName, Query query)
         {
-            return this.Transaction<int>(colName, false, (col) => {
-
-                if(col == null) return 0;
+            return this.Transaction<int>(colName, false, (col) =>
+            {
+                if (col == null) return 0;
 
                 var nodes = query.Run(col, _indexer);
                 var count = 0;
 
-                foreach(var node in nodes)
+                foreach (var node in nodes)
                 {
                     _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
 

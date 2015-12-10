@@ -1,9 +1,6 @@
-﻿using LiteDB.Shell;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -20,7 +17,7 @@ namespace LiteDB
 
             int indexPages, indexFree, dataPages, extendPages, dataFree, docSize;
 
-            lock(_locker)
+            lock (_locker)
             {
                 this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree, out docSize);
             }
@@ -50,11 +47,11 @@ namespace LiteDB
                 );
         }
 
-        private void Usage(CollectionPage col, 
-            out int indexPages, 
-            out int indexFree, 
-            out int dataPages, 
-            out int extendPages, 
+        private void Usage(CollectionPage col,
+            out int indexPages,
+            out int indexFree,
+            out int dataPages,
+            out int extendPages,
             out int dataFree,
             out int docSize)
         {
@@ -74,9 +71,9 @@ namespace LiteDB
                 {
                     var dataPage = _pager.GetPage<DataPage>(n.DataBlock.PageID, false);
 
-                    if(pages.Contains(dataPage.PageID)) continue;
+                    if (pages.Contains(dataPage.PageID)) continue;
 
-                    foreach(var block in dataPage.DataBlocks.Values)
+                    foreach (var block in dataPage.DataBlocks.Values)
                     {
                         var doc = BsonSerializer.Deserialize(_data.Read(block.Position, true).Buffer);
                         docSize += doc.GetBytesCount(true);
@@ -87,9 +84,9 @@ namespace LiteDB
                     dataFree += dataPage.FreeBytes;
 
                     // getting extended pages
-                    foreach(var ex in dataPage.DataBlocks.Values.Where(x => x.ExtendPageID != uint.MaxValue))
+                    foreach (var ex in dataPage.DataBlocks.Values.Where(x => x.ExtendPageID != uint.MaxValue))
                     {
-                        foreach(var extendPage in _pager.GetSeqPages<ExtendPage>(ex.ExtendPageID))
+                        foreach (var extendPage in _pager.GetSeqPages<ExtendPage>(ex.ExtendPageID))
                         {
                             extendPages++;
                             dataFree += extendPage.FreeBytes;
@@ -101,7 +98,7 @@ namespace LiteDB
             }
 
             // add all others indexes
-            foreach(var index in col.GetIndexes(false))
+            foreach (var index in col.GetIndexes(false))
             {
                 foreach (var node in _indexer.FindAll(index, Query.Ascending))
                 {

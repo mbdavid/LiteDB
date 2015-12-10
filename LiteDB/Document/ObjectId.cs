@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Security;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace LiteDB
@@ -55,7 +46,7 @@ namespace LiteDB
             get { return BsonValue.UnixEpoch.AddSeconds(this.Timestamp); }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Ctor
 
@@ -132,7 +123,7 @@ namespace LiteDB
             return bytes;
         }
 
-        #endregion
+        #endregion Ctor
 
         #region Equals/CompareTo/ToString
 
@@ -219,7 +210,7 @@ namespace LiteDB
             return BitConverter.ToString(this.ToByteArray()).Replace("-", "").ToLower();
         }
 
-        #endregion
+        #endregion Equals/CompareTo/ToString
 
         #region Operators
 
@@ -256,7 +247,7 @@ namespace LiteDB
             return lhs.CompareTo(rhs) <= 0;
         }
 
-        #endregion
+        #endregion Operators
 
         #region Static methods
 
@@ -303,6 +294,6 @@ namespace LiteDB
             return new ObjectId((int)timestamp, _machine, _pid, inc);
         }
 
-        #endregion
+        #endregion Static methods
     }
 }

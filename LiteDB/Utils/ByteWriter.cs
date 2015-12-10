@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.IO;
 
 namespace LiteDB
 {
@@ -159,7 +156,7 @@ namespace LiteDB
             _pos += value.Length;
         }
 
-        #endregion
+        #endregion Native data types
 
         #region Extended types
 
@@ -229,7 +226,6 @@ namespace LiteDB
             }
         }
 
-        #endregion
-
+        #endregion Extended types
     }
 }

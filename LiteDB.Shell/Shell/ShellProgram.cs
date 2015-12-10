@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Shell
 {
-    class ShellProgram
+    internal class ShellProgram
     {
         public static void Start(string filename)
         {
@@ -46,7 +41,7 @@ namespace LiteDB.Shell
 
                     if (isConsoleCommand == false)
                     {
-                        if(db == null) throw LiteException.NoDatabase();
+                        if (db == null) throw LiteException.NoDatabase();
 
                         var result = db.Run(cmd);
 

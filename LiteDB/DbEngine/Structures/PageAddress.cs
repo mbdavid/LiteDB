@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace LiteDB
+﻿namespace LiteDB
 {
     /// <summary>
     /// Represents a page adress inside a page structure - index could be byte offset position OR index in a list (6 bytes)
@@ -20,7 +14,7 @@ namespace LiteDB
         public ushort Index;
 
         public bool IsEmpty
-        { 
+        {
             get { return PageID == uint.MaxValue; }
         }
 

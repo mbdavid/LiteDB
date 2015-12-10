@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -30,9 +24,9 @@ namespace LiteDB
         {
             get
             {
-                lock(_locker)
+                lock (_locker)
                 {
-                    if(_value == null)
+                    if (_value == null)
                     {
                         _before();
                         _value = _factory();

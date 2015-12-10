@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 namespace LiteDB.Tests
 {
@@ -105,7 +102,6 @@ namespace LiteDB.Tests
                 Assert.AreEqual(product2.Price, query.ProductColl.ElementAt(0).Price);
                 Assert.AreEqual(null, query.ProductsNull);
                 Assert.AreEqual(0, query.ProductEmpty.Count);
-
             }
         }
     }

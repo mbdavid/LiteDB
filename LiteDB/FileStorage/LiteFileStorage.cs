@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -84,7 +83,7 @@ namespace LiteDB
             return true;
         }
 
-        #endregion
+        #endregion Upload
 
         #region Download
 
@@ -126,7 +125,7 @@ namespace LiteDB
             return new LiteFileStream(_engine, entry);
         }
 
-        #endregion
+        #endregion Download
 
         #region Find Files
 
@@ -177,7 +176,7 @@ namespace LiteDB
             return this.Find(null);
         }
 
-        #endregion
+        #endregion Find Files
 
         #region Delete
 
@@ -206,6 +205,6 @@ namespace LiteDB
             return true;
         }
 
-        #endregion
+        #endregion Delete
     }
 }

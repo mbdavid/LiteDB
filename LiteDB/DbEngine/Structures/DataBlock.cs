@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace LiteDB
+﻿namespace LiteDB
 {
     internal class DataBlock
     {
@@ -12,6 +6,7 @@ namespace LiteDB
                                                  4 + // ExtendedPageID (uint)
                                                  (PageAddress.SIZE * CollectionIndex.INDEX_PER_COLLECTION) + // IndexRef pointer
                                                  2; // block.Data.Length (ushort)
+
         /// <summary>
         /// Position of this dataBlock inside a page (store only Position.Index)
         /// </summary>
@@ -42,7 +37,7 @@ namespace LiteDB
         /// </summary>
         public int Length
         {
-            get { return  DataBlock.DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
+            get { return DataBlock.DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
         }
 
         /// <summary>

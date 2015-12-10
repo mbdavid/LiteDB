@@ -1,9 +1,5 @@
-﻿using LiteDB.Shell;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System;
 using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,12 +10,12 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min(string colName, string field)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 // get collection page (no col, no min)
                 var col = this.GetCollectionPage(colName, false);
 
-                if(col == null) return BsonValue.MinValue;
+                if (col == null) return BsonValue.MinValue;
 
                 // get index (no index, no min)
                 var index = col.GetIndex(field);
@@ -40,7 +36,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max(string colName, string field)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 // get collection page (no col, no max)
                 var col = this.GetCollectionPage(colName, false);
@@ -66,7 +62,7 @@ namespace LiteDB
         /// </summary>
         public int Count(string colName, Query query)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 // get collection page (no col, returns 0)
                 var col = this.GetCollectionPage(colName, false);
@@ -88,7 +84,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string colName, Query query)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 // get collection page (no col, not exists)
                 var col = this.GetCollectionPage(colName, false);

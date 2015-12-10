@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 
 namespace LiteDB
 {
@@ -44,7 +39,7 @@ namespace LiteDB
         {
         }
 
-        #endregion
+        #endregion Lock/Unlock
 
         #region Read/Write
 
@@ -102,7 +97,7 @@ namespace LiteDB
         {
         }
 
-        #endregion
+        #endregion Read/Write
 
         #region Journal file
 
@@ -119,7 +114,7 @@ namespace LiteDB
             // keep _stream open for external use
         }
 
-        #endregion
+        #endregion Journal file
 
         #region Temporary
 
@@ -133,6 +128,6 @@ namespace LiteDB
             // nothing to do
         }
 
-        #endregion
+        #endregion Temporary
     }
 }

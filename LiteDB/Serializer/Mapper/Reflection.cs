@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace LiteDB
 {
@@ -53,7 +49,7 @@ namespace LiteDB
             return null;
         }
 
-        #endregion
+        #endregion GetIdProperty
 
         #region GetProperties
 
@@ -81,7 +77,7 @@ namespace LiteDB
                 // [BsonIgnore]
                 if (prop.IsDefined(ignore, false)) continue;
 
-                // check if property has [BsonField] 
+                // check if property has [BsonField]
                 var bsonField = prop.IsDefined(fieldAttr, false);
 
                 // create getter/setter IL function
@@ -99,7 +95,7 @@ namespace LiteDB
                     var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
                     if (field != null && field.Name != null) name = field.Name;
                 }
-                
+
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
 
@@ -130,7 +126,7 @@ namespace LiteDB
             return dict;
         }
 
-        #endregion
+        #endregion GetProperties
 
         #region IL Code
 
@@ -212,7 +208,7 @@ namespace LiteDB
             var getMethod = propertyInfo.GetGetMethod(nonPublic);
             if (getMethod == null) return null;
 
-            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type,true);
+            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
             var il = getter.GetILGenerator();
 
             if (!type.IsClass) // structs
@@ -240,14 +236,14 @@ namespace LiteDB
             return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
         }
 
-        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo,bool nonPublic)
+        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
             //nonPublic: Indicates whether a non-public set accessor should be returned.
             var setMethod = propertyInfo.GetSetMethod(nonPublic);
 
             if (setMethod == null) return null;
 
-            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) },true);
+            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
             var il = setter.GetILGenerator();
 
             if (!type.IsClass) // structs
@@ -278,7 +274,7 @@ namespace LiteDB
             return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
         }
 
-        #endregion
+        #endregion IL Code
 
         #region Utils
 
@@ -328,7 +324,7 @@ namespace LiteDB
         /// </summary>
         public static bool IsList(Type type)
         {
-            if(type.IsArray) return true;
+            if (type.IsArray) return true;
 
             foreach (Type @interface in type.GetInterfaces())
             {
@@ -345,6 +341,6 @@ namespace LiteDB
             return false;
         }
 
-        #endregion
+        #endregion Utils
     }
 }

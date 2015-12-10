@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 
 #if DEBUG
+
 namespace LiteDB.Shell.Commands
 {
     /// <summary>
@@ -33,4 +29,5 @@ namespace LiteDB.Shell.Commands
         }
     }
 }
+
 #endif

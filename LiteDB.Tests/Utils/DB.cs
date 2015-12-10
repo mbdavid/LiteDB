@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using LiteDB;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 
 namespace LiteDB.Tests
 {
@@ -15,7 +9,7 @@ namespace LiteDB.Tests
         public static string RandomFilename()
         {
             var path = System.IO.Path.GetFullPath(
-                System.IO.Directory.GetCurrentDirectory() + 
+                System.IO.Directory.GetCurrentDirectory() +
                 string.Format("../../../../TestResults/test-{0}.db", Guid.NewGuid()));
 
             return path;

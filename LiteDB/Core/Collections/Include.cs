@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 
 namespace LiteDB
 {
@@ -25,18 +19,18 @@ namespace LiteDB
             {
                 var value = bson.Get(path);
 
-                if(value.IsNull) return;
+                if (value.IsNull) return;
 
                 // if property value is an array, populate all values
-                if(value.IsArray)
+                if (value.IsArray)
                 {
                     var array = value.AsArray;
-                    if(array.Count == 0) return;
+                    if (array.Count == 0) return;
 
                     // all doc refs in an array must be same collection, lets take first only
                     var col = new LiteCollection<BsonDocument>(array[0].AsDocument["$ref"], _engine, _mapper, _log);
 
-                    for(var i = 0; i < array.Count; i++)
+                    for (var i = 0; i < array.Count; i++)
                     {
                         var obj = col.FindById(array[i].AsDocument["$id"]);
                         array[i] = obj;

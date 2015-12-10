@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LiteDB;
-using System.IO;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
 
 namespace LiteDB.Tests
 {
@@ -21,7 +18,7 @@ namespace LiteDB.Tests
 
             while (GetFileSize(filename) < fileSize)
             {
-                using (var db = new LiteDatabase("journal=false;filename="+filename))
+                using (var db = new LiteDatabase("journal=false;filename=" + filename))
                 {
                     var col = db.GetCollection("col1");
 

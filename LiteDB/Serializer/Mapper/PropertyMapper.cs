@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace LiteDB
 {
     internal delegate object GenericSetter(object target, object value);
+
     internal delegate object GenericGetter(object obj);
 
     /// <summary>
@@ -25,6 +20,7 @@ namespace LiteDB
 
         // used when a property has a custom serialization/deserialization (like DbRef)
         public Func<object, BsonMapper, BsonValue> Serialize { get; set; }
+
         public Func<BsonValue, BsonMapper, object> Deserialize { get; set; }
 
         // if this field has a [BsonIndex] store indexoptions

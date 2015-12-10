@@ -1,12 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -151,7 +144,7 @@ namespace LiteDB
 
             foreach (var prop in mapper.Values)
             {
-                // get property value 
+                // get property value
                 var value = prop.Getter(obj);
 
                 if (value == null && this.SerializeNullValues == false && prop.FieldName != "_id") continue;

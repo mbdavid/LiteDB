@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -69,7 +63,7 @@ namespace LiteDB
             typeof(Byte)
         };
 
-        #endregion
+        #endregion Basic direct .NET convert types
 
         internal object Deserialize(Type type, BsonValue value)
         {
@@ -220,7 +214,7 @@ namespace LiteDB
                 if (!val.IsNull)
                 {
                     // check if has a custom deserialize function
-                    if(prop.Deserialize != null)
+                    if (prop.Deserialize != null)
                     {
                         prop.Setter(obj, prop.Deserialize(val, this));
                     }

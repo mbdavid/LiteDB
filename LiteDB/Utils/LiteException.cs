@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace LiteDB
 {
@@ -107,7 +103,7 @@ namespace LiteDB
             return new LiteException(122, "New collection name '{0}' already exists", newName);
         }
 
-        #endregion
+        #endregion Database Errors
 
         #region Document/Mapper Errors
 
@@ -146,6 +142,6 @@ namespace LiteDB
             return new LiteException(206, "Property '{0}' was not mapped into BsonDocument", name);
         }
 
-        #endregion
+        #endregion Document/Mapper Errors
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace LiteDB
 {
@@ -80,9 +76,9 @@ namespace LiteDB
         /// </summary>
         public int Length
         {
-            get 
-            { 
-                return IndexNode.INDEX_NODE_FIXED_SIZE + 
+            get
+            {
+                return IndexNode.INDEX_NODE_FIXED_SIZE +
                     (this.Prev.Length * PageAddress.SIZE * 2) + // Prev + Next
                     this.KeyLength; // bytes count in BsonValue
             }

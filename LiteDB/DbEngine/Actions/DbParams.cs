@@ -1,9 +1,4 @@
-﻿using LiteDB.Shell;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System;
 
 namespace LiteDB
 {
@@ -14,7 +9,7 @@ namespace LiteDB
         /// </summary>
         public DbParams GetDbParam()
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _transaction.AvoidDirtyRead();
 
@@ -31,24 +26,24 @@ namespace LiteDB
         {
             lock (_locker)
             try
-            {
-                _transaction.Begin();
-                _transaction.AvoidDirtyRead();
+                {
+                    _transaction.Begin();
+                    _transaction.AvoidDirtyRead();
 
-                var header = _pager.GetPage<HeaderPage>(0);
+                    var header = _pager.GetPage<HeaderPage>(0);
 
-                header.DbParams = dbparams;
+                    header.DbParams = dbparams;
 
-                _pager.SetDirty(header);
+                    _pager.SetDirty(header);
 
-                _transaction.Commit();
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Rollback();
-                throw;
-            }
+                    _transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    _transaction.Rollback();
+                    throw;
+                }
         }
     }
 }

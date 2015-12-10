@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LiteDB
 {
@@ -88,7 +84,7 @@ namespace LiteDB
             return this.Exists(_visitor.Visit(predicate));
         }
 
-        #endregion
+        #endregion Count/Exits
 
         #region Min/Max
 
@@ -180,6 +176,6 @@ namespace LiteDB
             return this.Max(field);
         }
 
-        #endregion
+        #endregion Min/Max
     }
 }

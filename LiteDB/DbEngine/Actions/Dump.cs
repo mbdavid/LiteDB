@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using LiteDB;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
 
 namespace LiteDB
@@ -24,7 +20,7 @@ namespace LiteDB
 
             for (uint i = startPage; i <= endPage; i++)
             {
-                if(i > header.LastPageID) break;
+                if (i > header.LastPageID) break;
 
                 var p = BasePage.ReadPage(_disk.ReadPage(i));
 
@@ -217,5 +213,5 @@ namespace LiteDB
         }
     }
 
-    #endregion
+    #endregion Dump Extensions
 }

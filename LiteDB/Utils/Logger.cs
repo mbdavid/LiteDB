@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
     /// <summary>
-    /// A logger class to log all information about database. Used with levels. Level = 0 - 255 
+    /// A logger class to log all information about database. Used with levels. Level = 0 - 255
     /// All log will be trigger before operation execute (better for log)
     /// </summary>
     public class Logger
@@ -47,7 +41,7 @@ namespace LiteDB
         /// </summary>
         public void Write(byte component, string message, params object[] args)
         {
-            if((component & this.Level) == 0) return;
+            if ((component & this.Level) == 0) return;
 
             var text = string.Format(message, args);
 

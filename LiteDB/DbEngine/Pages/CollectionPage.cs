@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
@@ -111,12 +108,12 @@ namespace LiteDB
             }
         }
 
-        #endregion
+        #endregion Read/Write pages
 
         #region Methods to work with index array
 
         /// <summary>
-        /// Returns first free index slot to be used 
+        /// Returns first free index slot to be used
         /// </summary>
         public CollectionIndex GetFreeIndex()
         {
@@ -149,6 +146,6 @@ namespace LiteDB
             return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
         }
 
-        #endregion
+        #endregion Methods to work with index array
     }
 }

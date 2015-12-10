@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 
 namespace LiteDB
 {
@@ -36,13 +33,13 @@ namespace LiteDB
 
 #if DEBUG
             // if page is empty, convert to T
-            if(page.PageType == PageType.Empty && typeof(T) != typeof(BasePage))
+            if (page.PageType == PageType.Empty && typeof(T) != typeof(BasePage))
             {
                 throw new SystemException("Pager.GetPage<T>() never shuld happend");
             }
 #endif
             // set page as dirty if passing by param
-            if(setDirty)
+            if (setDirty)
             {
                 this.SetDirty((T)page);
             }
@@ -59,7 +56,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read all sequences pages from a start pageID (using NextPageID) 
+        /// Read all sequences pages from a start pageID (using NextPageID)
         /// </summary>
         public IEnumerable<T> GetSeqPages<T>(uint firstPageID)
             where T : BasePage
@@ -77,7 +74,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile) 
+        /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile)
         /// Set as Dirty
         /// </summary>
         public T NewPage<T>(BasePage prevPage = null)
@@ -153,7 +150,7 @@ namespace LiteDB
         public T GetFreePage<T>(uint startPageID, int size)
             where T : BasePage
         {
-            if(startPageID != uint.MaxValue)
+            if (startPageID != uint.MaxValue)
             {
                 // get the first page
                 //var page = this.GetPage<BasePage>(startPageID);
@@ -202,7 +199,7 @@ namespace LiteDB
             }
             else
             {
-                // if this page is not in sequence, its not on freelist 
+                // if this page is not in sequence, its not on freelist
                 if (page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue)
                     return;
 
@@ -318,6 +315,6 @@ namespace LiteDB
             this.AddToFreeList(page, startPage, ref fieldPageID);
         }
 
-        #endregion
+        #endregion Add Or Remove do empty list
     }
 }

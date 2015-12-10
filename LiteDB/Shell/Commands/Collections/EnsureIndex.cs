@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-
-namespace LiteDB.Shell.Commands
+﻿namespace LiteDB.Shell.Commands
 {
     internal class CollectionEnsureIndex : BaseCollection, IShellCommand
     {
@@ -18,7 +12,7 @@ namespace LiteDB.Shell.Commands
             var col = this.ReadCollection(engine, s);
             var field = s.Scan(this.FieldPattern).Trim();
             var opts = JsonSerializer.Deserialize(s);
-            var options = 
+            var options =
                 opts.IsNull ? new IndexOptions() :
                 opts.IsBoolean ? new IndexOptions { Unique = opts.AsBoolean } :
                 (new BsonMapper()).ToObject<IndexOptions>(opts.AsDocument);

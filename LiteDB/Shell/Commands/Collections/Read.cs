@@ -1,9 +1,4 @@
 ﻿#if DEBUG
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
@@ -23,7 +18,7 @@ namespace LiteDB.Shell.Commands
             var docs = engine.Find(col, query, skipLimit.Key, skipLimit.Value);
             var cnt = 0;
 
-            foreach(var d in docs)
+            foreach (var d in docs)
             {
                 cnt++;
             }
@@ -32,4 +27,5 @@ namespace LiteDB.Shell.Commands
         }
     }
 }
+
 #endif

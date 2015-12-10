@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -127,40 +122,33 @@ namespace LiteDB
             this.RawValue = value;
 
             if (value == null) this.Type = BsonType.Null;
-
             else if (value is Int32) this.Type = BsonType.Int32;
             else if (value is Int64) this.Type = BsonType.Int64;
             else if (value is Double) this.Type = BsonType.Double;
-
             else if (value is String) this.Type = BsonType.String;
-
             else if (value is Dictionary<string, BsonValue>) this.Type = BsonType.Document;
             else if (value is List<BsonValue>) this.Type = BsonType.Array;
-
             else if (value is Byte[]) this.Type = BsonType.Binary;
             else if (value is ObjectId) this.Type = BsonType.ObjectId;
             else if (value is Guid) this.Type = BsonType.Guid;
-
             else if (value is Boolean) this.Type = BsonType.Boolean;
             else if (value is DateTime) this.Type = BsonType.DateTime;
-
             else if (value is BsonValue)
             {
                 var v = (BsonValue)value;
                 this.Type = v.Type;
                 this.RawValue = v.RawValue;
             }
-
             else throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Convert types
 
         public BsonArray AsArray
         {
-            get 
+            get
             {
                 if (this.IsArray)
                 {
@@ -239,7 +227,7 @@ namespace LiteDB
             get { return this.Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
         }
 
-        #endregion
+        #endregion Convert types
 
         #region IsTypes
 
@@ -318,7 +306,7 @@ namespace LiteDB
             get { return this.Type == BsonType.MaxValue; }
         }
 
-        #endregion
+        #endregion IsTypes
 
         #region Implicit Ctor
 
@@ -395,7 +383,7 @@ namespace LiteDB
         }
 
         // Binary
-        public static implicit operator Byte[](BsonValue value)
+        public static implicit operator Byte[] (BsonValue value)
         {
             return (Byte[])value.RawValue;
         }
@@ -459,7 +447,7 @@ namespace LiteDB
             return this.IsNull ? "(null)" : this.RawValue.ToString();
         }
 
-        #endregion
+        #endregion Implicit Ctor
 
         #region IComparable<BsonValue>, IEquatable<BsonValue>
 
@@ -483,7 +471,7 @@ namespace LiteDB
             // for both values with same datatype just compare
             switch (this.Type)
             {
-                case BsonType.Null: 
+                case BsonType.Null:
                 case BsonType.MinValue:
                 case BsonType.MaxValue:
                     return 0;
@@ -513,7 +501,7 @@ namespace LiteDB
             return this.CompareTo(other) == 0;
         }
 
-        #endregion
+        #endregion IComparable<BsonValue>, IEquatable<BsonValue>
 
         #region Operators
 
@@ -563,7 +551,7 @@ namespace LiteDB
             return hash;
         }
 
-        #endregion
+        #endregion Operators
 
         #region GetBytesCount, Normalize
 
@@ -605,6 +593,7 @@ namespace LiteDB
                         this.Length += this.GetBytesCountElement(i.ToString(), array[i] ?? BsonValue.Null, recalc);
                     }
                     break;
+
                 case BsonType.Document:
                     var doc = (Dictionary<string, BsonValue>)this.RawValue;
                     this.Length = 5; // header + footer
@@ -620,7 +609,7 @@ namespace LiteDB
 
         private int GetBytesCountElement(string key, BsonValue value, bool recalc)
         {
-            return 
+            return
                 1 + // element type
                 Encoding.UTF8.GetByteCount(key) + // CString
                 1 + // CString 0x00
@@ -641,7 +630,7 @@ namespace LiteDB
 
             if (options.TrimWhitespace) text = text.Trim();
             if (options.IgnoreCase) text = text.ToLower();
-            
+
             // convert emptystring to null
             if (text.Length == 0 && options.EmptyStringToNull)
             {
@@ -670,7 +659,6 @@ namespace LiteDB
             return sb.ToString();
         }
 
-        #endregion
-
+        #endregion GetBytesCount, Normalize
     }
 }
