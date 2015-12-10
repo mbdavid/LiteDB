@@ -18,6 +18,8 @@ namespace LiteDB
 
         private Logger _log = new Logger();
 
+        public ushort Version { get; private set; }
+
         public Logger Log { get { return _log; } }
 
         /// <summary>
@@ -25,34 +27,35 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(string connectionString)
         {
+            var conn = new ConnectionString(connectionString);
+            var version = conn.GetValue<ushort>("version", 0);
+
             _engine = new LazyLoad<DbEngine>(
                 () => new DbEngine(new FileDiskService(connectionString, _log), _log), 
                 () => this.InitializeMapper(),
-                () => this.InitializeDbVersion());
+                () => this.UpdateDbVersion(version));
         }
 
         /// <summary>
         /// Initialize database using any read/write Stream (like MemoryStream)
         /// </summary>
-        public LiteDatabase(Stream stream)
+        public LiteDatabase(Stream stream, ushort version = 0)
         {
-            this.InitializeMapper();
             _engine = new LazyLoad<DbEngine>(
                 () => new DbEngine(new StreamDiskService(stream), _log),
                 () => this.InitializeMapper(),
-                () => this.InitializeDbVersion());
+                () => this.UpdateDbVersion(version));
         }
 
         /// <summary>
         /// Starts LiteDB database using full parameters
         /// </summary>
-        public LiteDatabase(IDiskService diskService)
+        public LiteDatabase(IDiskService diskService, ushort version = 0)
         {
-            this.InitializeMapper();
             _engine = new LazyLoad<DbEngine>(
                 () => new DbEngine(diskService, _log),
                 () => this.InitializeMapper(),
-                () => this.InitializeDbVersion());
+                () => this.UpdateDbVersion(version));
         }
 
         public void Dispose()
