@@ -21,6 +21,7 @@ namespace LiteDB.Shell
                 try
                 {
                     db = new LiteDatabase(filename);
+                    db.Log.Logging += LogMessage;
                 }
                 catch (Exception ex)
                 {
@@ -53,6 +54,12 @@ namespace LiteDB.Shell
                     display.WriteError(ex.Message);
                 }
             }
+        }
+
+        public static void LogMessage(string msg)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine(msg);
         }
     }
 }

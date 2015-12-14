@@ -14,6 +14,8 @@ namespace LiteDB.Shell.Commands
             var sb = new StringBuilder();
             var enabled = !(s.Scan(@"off\s*").Length > 0);
 
+            if(db == null) throw LiteException.NoDatabase();
+
             db.Log.Level = enabled ? Logger.FULL : Logger.NONE;
         }
     }

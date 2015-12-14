@@ -17,6 +17,7 @@
             }
 
             db = new LiteDatabase(filename);
+            db.Log.Logging += ShellProgram.LogMessage;
         }
     }
 }
