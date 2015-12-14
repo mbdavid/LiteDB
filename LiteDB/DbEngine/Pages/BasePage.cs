@@ -102,7 +102,7 @@ namespace LiteDB
             if (type == typeof(ExtendPage)) return (T)(BasePage)(new ExtendPage(pageID));
             if (type == typeof(EmptyPage)) return (T)(BasePage)(new EmptyPage(pageID));
 
-            throw new SystemException("Invalid base page type T");
+            throw new Exception("Invalid base page type T");
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace LiteDB
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);
                 case PageType.Empty: return new EmptyPage(pageID);
-                default: throw new SystemException("Invalid pageType");
+                default: throw new Exception("Invalid pageType");
             }
         }
 

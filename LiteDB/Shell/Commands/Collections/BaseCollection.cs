@@ -66,7 +66,7 @@ namespace LiteDB.Shell.Commands
 
             var oper = s.Scan(@"\s+(and|or)\s+").Trim();
 
-            if (oper.Length == 0) throw new ApplicationException("Invalid query operator");
+            if (oper.Length == 0) throw new LiteException("Invalid query operator");
 
             return oper == "and" ?
                 Query.And(left, this.ReadInlineQuery(s)) :
@@ -91,7 +91,7 @@ namespace LiteDB.Shell.Commands
                 case "in": return Query.In(field, value.AsArray);
                 case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
                 case "contains": return Query.Contains(field, value);
-                default: throw new ApplicationException("Invalid query operator");
+                default: throw new LiteException("Invalid query operator");
             }
         }
     }

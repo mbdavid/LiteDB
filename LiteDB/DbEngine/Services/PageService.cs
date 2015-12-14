@@ -35,7 +35,7 @@ namespace LiteDB
             // if page is empty, convert to T
             if (page.PageType == PageType.Empty && typeof(T) != typeof(BasePage))
             {
-                throw new SystemException("Pager.GetPage<T>() never shuld happend");
+                throw new Exception("Pager.GetPage<T>() never shuld happend");
             }
 #endif
             // set page as dirty if passing by param
