@@ -180,6 +180,7 @@
     <Compile Include="Utils\DictionaryExtensions.cs" />
     <Compile Include="Utils\LiteException.cs" />
     <Compile Include="Utils\Logger.cs" />
+    <Compile Include="Utils\SimpleAES.cs" />
     <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
   <ItemGroup>

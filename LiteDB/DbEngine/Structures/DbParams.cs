@@ -10,16 +10,23 @@
         /// </summary>
         public ushort DbVersion = 0;
 
+        /// <summary>
+        /// SHA1 password hash (if data pages are encrypted)
+        /// </summary>
+        public byte[] Password = new byte[20];
+
         public void Read(ByteReader reader)
         {
             this.DbVersion = reader.ReadUInt16();
-            reader.Skip(198);
+            this.Password = reader.ReadBytes(20);
+            reader.Skip(178);
         }
 
         public void Write(ByteWriter writer)
         {
             writer.Write(this.DbVersion);
-            writer.Skip(198);
+            writer.Write(this.Password);
+            writer.Skip(178);
         }
     }
 }

@@ -19,15 +19,16 @@ namespace LiteDB
         public Logger Log { get { return _log; } }
 
         /// <summary>
-        /// Starts LiteDB database using a connectionString for filesystem database
+        /// Starts LiteDB database using a connection string for filesystem database
         /// </summary>
         public LiteDatabase(string connectionString)
         {
             var conn = new ConnectionString(connectionString);
             var version = conn.GetValue<ushort>("version", 0);
+            var password = conn.GetValue<string>("password", null);
 
             _engine = new LazyLoad<DbEngine>(
-                () => new DbEngine(new FileDiskService(connectionString, _log), _log),
+                () => new DbEngine(new FileDiskService(conn, _log), _log),
                 () => this.InitializeMapper(),
                 () => this.UpdateDbVersion(version));
         }

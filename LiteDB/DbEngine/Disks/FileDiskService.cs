@@ -25,24 +25,20 @@ namespace LiteDB
         private Logger _log;
         private TimeSpan _timeout;
         private bool _readonly;
-        private string _password;
         private long _initialSize;
         private long _limitSize;
 
         #region Initialize disk
 
-        public FileDiskService(string connectionString, Logger log)
+        public FileDiskService(ConnectionString conn, Logger log)
         {
-            var str = new ConnectionString(connectionString);
-
-            _filename = str.GetValue<string>("filename", "");
-            var journalEnabled = str.GetValue<bool>("journal", true);
-            _timeout = str.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
-            _readonly = str.GetValue<bool>("readonly", false);
-            _password = str.GetValue<string>("password", null);
-            _initialSize = str.GetFileSize("initial size", 0);
-            _limitSize = str.GetFileSize("limit size", 0);
-            var level = str.GetValue<byte?>("log", null);
+            _filename = conn.GetValue<string>("filename", "");
+            var journalEnabled = conn.GetValue<bool>("journal", true);
+            _timeout = conn.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
+            _readonly = conn.GetValue<bool>("readonly", false);
+            _initialSize = conn.GetFileSize("initial size", 0);
+            _limitSize = conn.GetFileSize("limit size", 0);
+            var level = conn.GetValue<byte?>("log", null);
 
             // simple validations
             if (string.IsNullOrWhiteSpace(_filename)) throw new ArgumentNullException("filename");
@@ -328,7 +324,7 @@ namespace LiteDB
             this.DeleteTempDisk();
 
             // no journal, no logger
-            return new FileDiskService("filename=" + _tempFilename + ";journal=false", new Logger());
+            return new FileDiskService(new ConnectionString("filename=" + _tempFilename + ";journal=false"), new Logger());
         }
 
         public void DeleteTempDisk()
