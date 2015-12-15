@@ -11,36 +11,33 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            lock (_locker)
+            // get my collection page
+            var col = this.GetCollectionPage(colName, false);
+
+            // no collection, no documents
+            if (col == null) yield break;
+
+            // get nodes from query executor to get all IndexNodes
+            var nodes = query.Run(col, _indexer);
+
+            // skip first N nodes
+            if (skip > 0) nodes = nodes.Skip(skip);
+
+            // limit in M nodes
+            if (limit != int.MaxValue) nodes = nodes.Take(limit);
+
+            // for each document, read data and deserialize as document
+            foreach (var node in nodes)
             {
-                // get my collection page
-                var col = this.GetCollectionPage(colName, false);
+                _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
 
-                // no collection, no documents
-                if (col == null) yield break;
+                var dataBlock = _data.Read(node.DataBlock, true);
 
-                // get nodes from query executor to get all IndexNodes
-                var nodes = query.Run(col, _indexer);
+                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
 
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
+                yield return doc;
 
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-                // for each document, read data and deserialize as document
-                foreach (var node in nodes)
-                {
-                    _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
-
-                    var dataBlock = _data.Read(node.DataBlock, true);
-
-                    var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
-
-                    yield return doc;
-
-                    _cache.CheckPoint();
-                }
+                _cache.CheckPoint();
             }
         }
     }

@@ -8,15 +8,16 @@ namespace LiteDB.Tests
 {
     public class TestPocoClass
     {
-        public String Key { get; set; }
-        public Int32 Data { get; set; }
+        [BsonId]
+        public string Key { get; set; }
+        public int Info { get; set; }
     }
 
     [TestClass]
-    public class MyTest
+    public class Task_Test
     {
-        private volatile static LiteDatabase db;
-        private volatile static LiteCollection<TestPocoClass> col;
+        private static LiteDatabase db;
+        private static LiteCollection<TestPocoClass> col;
 
         [ClassInitialize()]
         public static void ClassInit(TestContext context)
@@ -34,39 +35,47 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void TestMethod1()
+        public void FindLocker_Test()
         {
             Assert.AreEqual(col.Count(), 0);
-            var tf = Task.Factory.StartNew(FillData);
-            Task.WaitAll(tf);
-            var Data = col.FindOne(o => o.Key == "Test1");
-            Assert.AreNotEqual(Data, null);
-            Assert.AreEqual(Data.Data, 1);
-            tf = Task.Factory.StartNew(UpdateData);
-            Task.WaitAll(tf);
-            Data = col.FindOne(o => o.Key == "Test1");
-            Assert.AreNotEqual(Data, null);
-            Assert.AreEqual(Data.Data, 77);
+
+            // insert data
+            Task.Factory.StartNew(InsertData).Wait();
+
+            // test inserted data :: Info = 1
+            var data = col.FindOne(o => o.Key == "Test1");
+            Assert.IsNotNull(data);
+            Assert.AreEqual(1, data.Info);
+
+            // update data :: Info = 77
+            Task.Factory.StartNew(UpdateData).Wait();
+
+            // find updated data
+            data = col.FindOne(o => o.Key == "Test1");
+            Assert.IsNotNull(data);
+            Assert.AreEqual(77, data.Info);
+
+            // drop collection
             db.DropCollection("col1");
             Assert.AreEqual(db.CollectionExists("col1"), false);
         }
 
-        private void FillData()
+        private void InsertData()
         {
-            TestPocoClass c = new TestPocoClass()
+            var data = new TestPocoClass()
             {
                 Key = "Test1",
-                Data = 1
+                Info = 1
             };
-            col.Insert(c);
+            col.Insert(data);
         }
 
         private void UpdateData()
         {
-            var Data = col.FindOne(o => o.Key == "Test1");
-            Assert.AreNotEqual(Data, null);
-            Data.Data = 77;
-            col.Update(Data);
+            var data = col.FindOne(o => o.Key == "Test1");
+            Assert.IsNotNull(data);
+            data.Info = 77;
+            col.Update(data);
         }
     }
 }
