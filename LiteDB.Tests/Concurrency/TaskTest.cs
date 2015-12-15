@@ -22,7 +22,7 @@ namespace LiteDB.Tests
         [ClassInitialize()]
         public static void ClassInit(TestContext context)
         {
-            db = new LiteDatabase(new MemoryStream());//@"d:\test.ldb");
+            db = new LiteDatabase(new MemoryStream());
             col = db.GetCollection<TestPocoClass>("col1");
             col.EnsureIndex(o => o.Key);
         }
@@ -31,7 +31,6 @@ namespace LiteDB.Tests
         public static void ClassCleanup()
         {
             db.Dispose();
-            //File.Delete(@"d:\test.ldb");
         }
 
         [TestMethod]
