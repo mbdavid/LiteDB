@@ -10,7 +10,7 @@ namespace LiteDB.Tests
             : base(s, version)
         {
             this.Log.Level = Logger.FULL;
-            this.Log.Output = (m) => Debug.Print(m);
+            this.Log.Logging += (m) => Debug.Print(m);
         }
 
         protected override void OnVersionUpdate(int newVersion)

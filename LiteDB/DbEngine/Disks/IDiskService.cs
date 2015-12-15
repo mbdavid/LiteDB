@@ -6,6 +6,8 @@ namespace LiteDB
     {
         bool Initialize();
 
+        void CreateNew();
+
         void Lock();
 
         void Unlock();
