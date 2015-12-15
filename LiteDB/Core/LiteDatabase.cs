@@ -25,10 +25,10 @@ namespace LiteDB
         {
             var conn = new ConnectionString(connectionString);
             var version = conn.GetValue<ushort>("version", 0);
-            var password = conn.GetValue<string>("password", null);
+            var encrypted = !string.IsNullOrWhiteSpace(conn.GetValue<string>("password", null));
 
             _engine = new LazyLoad<DbEngine>(
-                () => new DbEngine(new FileDiskService(conn, _log), _log),
+                () => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log),
                 () => this.InitializeMapper(),
                 () => this.UpdateDbVersion(version));
         }

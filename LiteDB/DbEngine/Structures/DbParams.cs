@@ -6,12 +6,12 @@
     internal class DbParams
     {
         /// <summary>
-        /// Database user version 
+        /// Database user version [2 bytes]
         /// </summary>
         public ushort DbVersion = 0;
 
         /// <summary>
-        /// SHA1 password hash (if data pages are encrypted)
+        /// Password hash in SHA1 [20 bytes]
         /// </summary>
         public byte[] Password = new byte[20];
 

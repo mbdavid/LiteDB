@@ -103,6 +103,11 @@ namespace LiteDB
             return new LiteException(122, "New collection name '{0}' already exists", newName);
         }
 
+        public static LiteException DatabaseWrongPassword()
+        {
+            return new LiteException(123, "Invalida database password");
+        }
+
         #endregion Database Errors
 
         #region Document/Mapper Errors

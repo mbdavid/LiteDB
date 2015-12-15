@@ -23,6 +23,14 @@ namespace LiteDB
             return (_stream.Length == 0);
         }
 
+        /// <summary>
+        /// Create new database - just create empty header page
+        /// </summary>
+        public void CreateNew()
+        {
+            this.WritePage(0, new HeaderPage().WritePage());
+        }
+
         #region Lock/Unlock
 
         /// <summary>

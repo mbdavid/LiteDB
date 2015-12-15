@@ -63,6 +63,7 @@
     <Compile Include="DbEngine\Actions\Dump.cs" />
     <Compile Include="DbEngine\Actions\Stats.cs" />
     <Compile Include="DbEngine\Actions\DbParams.cs" />
+    <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
     <Compile Include="DbEngine\Disks\IDiskService.cs" />
     <Compile Include="DbEngine\Actions\Delete.cs" />

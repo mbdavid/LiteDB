@@ -61,6 +61,7 @@
     <Compile Include="Crud\BulkTest.cs" />
     <Compile Include="Bson\BsonTest.cs" />
     <Compile Include="Crud\DbVersionTest.cs" />
+    <Compile Include="Disks\EncryptedTest.cs" />
     <Compile Include="Mapping\AutoIdTest.cs" />
     <Compile Include="Crud\DropCollectionTest.cs" />
     <Compile Include="Crud\FileStorageTest.cs" />

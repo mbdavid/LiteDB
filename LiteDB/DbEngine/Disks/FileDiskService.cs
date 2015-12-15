@@ -90,6 +90,14 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Create new database - just create empty header page
+        /// </summary>
+        public virtual void CreateNew()
+        {
+            this.WritePage(0, new HeaderPage().WritePage());
+        }
+
         #endregion Initialize disk
 
         #region Lock/Unlock
@@ -139,7 +147,7 @@ namespace LiteDB
         /// <summary>
         /// Read page bytes from disk
         /// </summary>
-        public byte[] ReadPage(uint pageID)
+        public virtual byte[] ReadPage(uint pageID)
         {
             var buffer = new byte[BasePage.PAGE_SIZE];
             var position = (long)pageID * (long)BasePage.PAGE_SIZE;
@@ -164,7 +172,7 @@ namespace LiteDB
         /// <summary>
         /// Persist single page bytes to disk
         /// </summary>
-        public void WritePage(uint pageID, byte[] buffer)
+        public virtual void WritePage(uint pageID, byte[] buffer)
         {
             var position = (long)pageID * (long)BasePage.PAGE_SIZE;
 
@@ -246,7 +254,7 @@ namespace LiteDB
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (_stream != null)
             {
@@ -269,7 +277,7 @@ namespace LiteDB
                 this.Recovery(journal);
 
                 // close stream for delete file
-                journal.Close();
+                journal.Dispose();
 
                 // delete journal - datafile finish
                 File.Delete(_journalFilename);
@@ -304,8 +312,7 @@ namespace LiteDB
                 }
 
                 // write in stream
-                _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);
-                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+                this.WritePage(pageID, buffer);
             }
 
             _log.Write(Logger.RECOVERY, "resize datafile to {0} bytes", fileSize);
