@@ -4,38 +4,67 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
-    public class OptionSet
+    /// <summary>
+    /// Very simple class that parses command line arguments 
+    /// </summary>
+    internal class OptionSet
     {
-        public string Filename;
-        public string Upgrade;
-        public string Run;
+        private Dictionary<string, string> _options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public string Extra { get; private set; }
+
+        public bool Has(string key)
+        {
+            return _options.ContainsKey(key);
+        }
+
+        public string Get(string key)
+        {
+            string str;
+            if (_options.TryGetValue(key, out str)) return str;
+            return null;
+        }
 
         public OptionSet(string[] args)
         {
-            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var index = 0;
+            var expr = new Regex(@"^(--|-|\/)(\w+)([=:]?)");
 
-            foreach (var item in args)
+            for (var i = 0; i < args.Length; i++)
             {
-                var m = Regex.Match(item, @"^(--|-|\/)(\w+)[=:]?(.*)$");
+                var arg = args[i];
+                var m = expr.Match(arg);
+                if (arg == ">" || arg == "|") break;
 
                 if (m.Success)
                 {
                     var key = m.Groups[2].Value;
-                    var value = m.Groups[3].Value;
+                    var equals = m.Groups[3].Value;
+                    var value = "";
 
-                    options.Add(key, string.IsNullOrWhiteSpace(value) ? "true" : value);
+                    if (equals.Length > 0)
+                    {
+                         value = arg.Substring(m.Value.Length);
+                    }
+                    else
+                    {
+                        if(i < args.Length - 1)
+                        {
+                            var next = args[i + 1];
+                            if(!(expr.IsMatch(next) || next == ">" || next == "|"))
+                            {
+                                value = next;
+                                i++;
+                            }
+                        }
+                    }
+
+                    _options.Add(key, string.IsNullOrWhiteSpace(value) ? "true" : value);
                 }
-                else if (index == 0)
+                else
                 {
-                    this.Filename = item;
+                    this.Extra = arg;
                 }
-
-                index++;
             }
-
-            options.TryGetValue("upgrade", out this.Upgrade);
-            options.TryGetValue("run", out this.Run);
         }
     }
 }

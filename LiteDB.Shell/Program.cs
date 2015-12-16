@@ -6,16 +6,15 @@
         {
             var o = new OptionSet(args);
 
-            if (o.Upgrade != null)
+            if (o.Has("upgrade"))
             {
-                // do upgrade
             }
-            else if (o.Run != null)
+            else if(o.Has("run"))
             {
             }
             else
             {
-                ShellProgram.Start(o.Filename);
+                ShellProgram.Start(o.Extra);
             }
         }
     }
