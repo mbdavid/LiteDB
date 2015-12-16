@@ -7,7 +7,7 @@
             return s.Match(@"--");
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
         {
         }
     }

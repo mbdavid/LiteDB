@@ -12,7 +12,7 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"spo(ol)?\s*").Length > 0;
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
         {
             if (s.Scan("false|off").Length > 0 && _writer != null)
             {
@@ -24,7 +24,7 @@ namespace LiteDB.Shell.Commands
             }
             else if (_writer == null)
             {
-                if (db == null) throw LiteException.NoDatabase();
+                if (engine == null) throw ShellExpcetion.NoDatabase();
 
                 var path = Path.GetFullPath(string.Format("LiteDB-spool-{0:yyyy-MM-dd-HH-mm}.txt", DateTime.Now));
 

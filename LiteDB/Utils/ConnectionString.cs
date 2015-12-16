@@ -27,7 +27,7 @@ namespace LiteDB
             else
             {
                 // If connectionstring is only a filename, set filename
-                _values = new Dictionary<string, string>();
+                _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 _values["filename"] = Path.GetFullPath(connectionString);
             }
         }
@@ -49,9 +49,6 @@ namespace LiteDB
         /// <summary>
         /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="defaultSize"></param>
-        /// <returns></returns>
         public long GetFileSize(string key, long defaultSize)
         {
             var size = this.GetValue<string>(key, "");

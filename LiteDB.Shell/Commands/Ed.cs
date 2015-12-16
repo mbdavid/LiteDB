@@ -11,7 +11,7 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"ed$");
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
         {
             var temp = Path.GetTempPath() + "LiteDB.Shell.txt";
 

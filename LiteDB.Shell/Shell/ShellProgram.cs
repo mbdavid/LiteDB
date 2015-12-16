@@ -6,7 +6,7 @@ namespace LiteDB.Shell
     {
         public static void Start(string filename)
         {
-            LiteDatabase db = null;
+            IShellEngine engine = null;
             var input = new InputCommand();
             var display = new Display();
 
@@ -15,18 +15,10 @@ namespace LiteDB.Shell
             // show welcome message
             display.WriteWelcome();
 
-            // if has a argument, its database file - try open
+            // if has filename, open
             if (!string.IsNullOrEmpty(filename))
             {
-                try
-                {
-                    db = new LiteDatabase(filename);
-                    db.Log.Logging += LogMessage;
-                }
-                catch (Exception ex)
-                {
-                    display.WriteError(ex.Message);
-                }
+                input.Queue.Enqueue("open " + filename);
             }
 
             while (true)
@@ -38,15 +30,13 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, ref db, display, input);
+                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, ref engine, display, input);
 
                     if (isConsoleCommand == false)
                     {
-                        if (db == null) throw LiteException.NoDatabase();
+                        if (engine == null) throw ShellExpcetion.NoDatabase();
 
-                        var result = db.Run(cmd);
-
-                        display.WriteResult(result);
+                        engine.Run(cmd, display);
                     }
                 }
                 catch (Exception ex)
