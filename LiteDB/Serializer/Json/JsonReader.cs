@@ -68,9 +68,8 @@ namespace LiteDB
                 case JsonTokenType.BeginArray: return this.ReadArray();
                 case JsonTokenType.Number:
                     return token.Token.Contains(".") ?
-new BsonValue(Convert.ToDouble(token.Token, CultureInfo.InvariantCulture.NumberFormat)) :
-new BsonValue(Convert.ToInt32(token.Token));
-
+                        new BsonValue(Convert.ToDouble(token.Token, CultureInfo.InvariantCulture.NumberFormat)) :
+                        new BsonValue(Convert.ToInt32(token.Token));
                 case JsonTokenType.Word:
                     switch (token.Token)
                     {

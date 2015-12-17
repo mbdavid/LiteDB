@@ -1,6 +1,7 @@
 ﻿extern alias v104;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using v104::LiteDB;
@@ -15,15 +16,7 @@ namespace LiteDB.Shell
 
         public bool Detect(string filename)
         {
-            try
-            {
-                new LiteDatabase(filename);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return Helper.Try(() => new LiteDatabase(filename));
         }
 
         public void Open(string connectionString)
@@ -46,6 +39,10 @@ namespace LiteDB.Shell
             var result = _db.RunCommand(command);
 
             this.WriteResult(result, display);
+        }
+
+        public void Export(Stream stream)
+        {
         }
 
         #region Display Bson Result
