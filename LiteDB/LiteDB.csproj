@@ -144,7 +144,7 @@
     <Compile Include="Shell\Commands\FileStoage\Update.cs" />
     <Compile Include="Shell\Commands\FileStoage\Upload.cs" />
     <Compile Include="Shell\Commands\IShellCommand.cs" />
-    <Compile Include="Shell\Commands\Others\Dump.cs" />
+    <Compile Include="Shell\Commands\Others\DiskDump.cs" />
     <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
     <Compile Include="Shell\LiteShell.cs" />
     <Compile Include="DbEngine\Pages\DataPage.cs" />

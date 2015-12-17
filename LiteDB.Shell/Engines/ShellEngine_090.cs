@@ -39,26 +39,26 @@ namespace LiteDB.Shell
             throw new NotImplementedException("This command does not work in this version");
         }
 
-        public void Export(Stream stream)
+        public void Dump(TextWriter writer)
         {
-            var dump = new DumpWriter(stream);
-            var collections = _db.GetCollections();
-
-            foreach(var name in collections)
+            foreach(var name in _db.GetCollections())
             {
                 var col = _db.GetCollection(name);
-                var indexes = col.GetIndexes();
+                var indexes = col.GetIndexes().Where(x => x["field"] != "_id");
 
-                dump.WriteCollection(name);
+                writer.WriteLine("-- Collection '{0}'", name);
 
                 foreach(var index in indexes)
                 {
-                    dump.WriteIndex(index["field"], "");
+                    writer.WriteLine("db.{0}.ensureIndex {1} {2}",
+                        name,
+                        index["field"].AsString,
+                        JsonEx.Serialize(index));
                 }
 
-                foreach(var doc in col.Find(Query.All()))
+                foreach (var doc in col.Find(Query.All()))
                 {
-                    dump.WriteDocument(JsonEx.Serialize(doc, false, true));
+                    writer.WriteLine("db.{0}.insert {1}", name,  JsonEx.Serialize(doc));
                 }
             }
         }

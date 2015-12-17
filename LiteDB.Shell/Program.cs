@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
@@ -9,18 +10,7 @@ namespace LiteDB.Shell
         {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
-            var o = new OptionSet(args);
-
-            if (o.Has("upgrade"))
-            {
-            }
-            else if(o.Has("run"))
-            {
-            }
-            else
-            {
-                ShellProgram.Start(o.Extra);
-            }
+            ShellProgram.Start(args.Length > 0 ? args[0] : null);
         }
 
         /// <summary>
@@ -28,10 +18,12 @@ namespace LiteDB.Shell
         /// </summary>
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
-            if (args.Name.StartsWith("LiteDB,", StringComparison.OrdinalIgnoreCase))
+            var match = Regex.Match(args.Name, @"^LiteDB, Version=(\d+)\.(\d+).(\d+)");
+
+            if (match.Success)
             {
                 // get version number without dots .
-                var v = args.Name.Substring(16, 5).Replace(".", "");
+                var v = match.Groups[1].Value + match.Groups[2].Value + match.Groups[3].Value;
 
                 // load assembly from resource stream  manifest
                 var stream = Assembly.GetEntryAssembly().GetManifestResourceStream("LiteDB.Shell.Resources.LiteDB" + v + ".dll");

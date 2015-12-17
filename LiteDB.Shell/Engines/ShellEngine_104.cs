@@ -41,8 +41,28 @@ namespace LiteDB.Shell
             this.WriteResult(result, display);
         }
 
-        public void Export(Stream stream)
+        public void Dump(TextWriter writer)
         {
+            foreach (var name in _db.GetCollectionNames())
+            {
+                var col = _db.GetCollection(name);
+                var indexes = col.GetIndexes().Where(x => x["field"] != "_id");
+
+                writer.WriteLine("-- Collection '{0}'", name);
+
+                foreach (var index in indexes)
+                {
+                    writer.WriteLine("db.{0}.ensureIndex {1} {2}",
+                        name,
+                        index["field"].AsString,
+                        JsonSerializer.Serialize(index["options"].AsDocument));
+                }
+
+                foreach (var doc in col.Find(Query.All()))
+                {
+                    writer.WriteLine("db.{0}.insert {1}", name, JsonSerializer.Serialize(doc));
+                }
+            }
         }
 
         #region Display Bson Result

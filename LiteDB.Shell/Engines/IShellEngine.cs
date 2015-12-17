@@ -13,11 +13,6 @@ namespace LiteDB.Shell
         void Open(string connectionString);
         void Debug(bool enable);
         void Run(string command, Display display);
-        void Export(Stream stream);
-
-        // var dump = new DumpWriter(TextWriter)
-        // var dump = new DumpReader(TextReader)
-        //
-        //void Import(DumpReader dump);
+        void Dump(TextWriter writer);
     }
 }

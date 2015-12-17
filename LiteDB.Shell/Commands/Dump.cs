@@ -2,11 +2,11 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Export : ConsoleCommand
+    internal class Dump : ConsoleCommand
     {
         public override bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"export\s+").Length > 0;
+            return s.Scan(@"dump\s+").Length > 0;
         }
 
         public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
@@ -17,7 +17,11 @@ namespace LiteDB.Shell.Commands
 
             using (var file = new FileStream(filename, FileMode.Create))
             {
-                engine.Export(file);
+                using (var writer = new StreamWriter(file))
+                {
+                    engine.Dump(writer);
+                    writer.Flush();
+                }
             }
         }
     }

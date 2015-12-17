@@ -42,30 +42,26 @@ namespace LiteDB.Shell
             this.WriteResult(result, display);
         }
 
-        public void Export(Stream stream)
+        public void Dump(TextWriter writer)
         {
-            using (var dump = new DumpWriter(stream))
+            foreach (var name in _db.GetCollectionNames())
             {
-                var collections =  _db.GetCollectionNames();
+                var col = _db.GetCollection(name);
+                var indexes = col.GetIndexes().Where(x => x["field"] != "_id");
 
-                foreach (var name in collections)
+                writer.WriteLine("-- Collection '{0}'", name);
+
+                foreach (var index in indexes)
                 {
-                    _db.Log.Write(Logger.COMMAND, "exporting \"{0}\"...", name);
+                    writer.WriteLine("db.{0}.ensureIndex {1} {2}", 
+                        name, 
+                        index["field"].AsString, 
+                        JsonSerializer.Serialize(index));
+                }
 
-                    var col = _db.GetCollection(name);
-                    var indexes = col.GetIndexes();
-
-                    dump.WriteCollection(name);
-
-                    foreach (var index in indexes)
-                    {
-                        dump.WriteIndex(index["field"].AsString, "");
-                    }
-
-                    foreach (var doc in col.Find(Query.All()))
-                    {
-                        dump.WriteDocument(JsonSerializer.Serialize(doc, false, true));
-                    }
+                foreach (var doc in col.Find(Query.All()))
+                {
+                    writer.WriteLine("db.{0}.insert {1}", name, JsonSerializer.Serialize(doc, false, true));
                 }
             }
         }
