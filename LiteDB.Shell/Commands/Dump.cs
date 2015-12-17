@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
@@ -13,12 +15,29 @@ namespace LiteDB.Shell.Commands
         {
             if (engine == null) throw ShellExpcetion.NoDatabase();
 
+            var direction = s.Scan(@"[><]\s*").Trim();
             var filename = s.Scan(@".+").Trim();
 
-            using (var file = new FileStream(filename, FileMode.Create))
+            //dump import
+            if(direction == "<")
             {
-                using (var writer = new StreamWriter(file))
+                using (var reader = new StreamReader(filename))
                 {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.StartsWith("--")) continue;
+                        engine.Run(line, new Display()); // no output
+                    }
+                }
+            }
+            // dump export
+            else
+            {
+                using (var writer = new StreamWriter(filename, false, Encoding.UTF8, 65536))
+                {
+                    writer.AutoFlush = true;
+                    writer.WriteLine("-- LiteDB v{0}.{1}.{2} dump file @ {3}", engine.Version.Major, engine.Version.Minor, engine.Version.Build, DateTime.Now);
                     engine.Dump(writer);
                     writer.Flush();
                 }

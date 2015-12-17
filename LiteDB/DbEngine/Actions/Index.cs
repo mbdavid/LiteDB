@@ -100,11 +100,13 @@ namespace LiteDB
                 var doc = new BsonDocument()
                     .Add("slot", index.Slot)
                     .Add("field", index.Field)
-                    .Add("unique", index.Options.Unique)
-                    .Add("ignoreCase", index.Options.IgnoreCase)
-                    .Add("removeAccents", index.Options.RemoveAccents)
-                    .Add("trimWhitespace", index.Options.TrimWhitespace)
-                    .Add("emptyStringToNull", index.Options.EmptyStringToNull);
+                    .Add("options", new BsonDocument()
+                        .Add("unique", index.Options.Unique)
+                        .Add("ignoreCase", index.Options.IgnoreCase)
+                        .Add("removeAccents", index.Options.RemoveAccents)
+                        .Add("trimWhitespace", index.Options.TrimWhitespace)
+                        .Add("emptyStringToNull", index.Options.EmptyStringToNull)
+                    );
 
                 if (stats)
                 {
@@ -113,11 +115,13 @@ namespace LiteDB
                     var pages = _indexer.FindAll(index, Query.Ascending).GroupBy(x => x.Page.PageID).Count();
 
                     // this command can be consume too many memory!! has no CheckPoint on loop
-                    var keySize = _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
+                    var keySize = pages == 0 ? 0 : _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
 
-                    doc.Add("pages", pages)
+                    doc.Add("stats", new BsonDocument()
+                        .Add("pages", pages)
                         .Add("allocated", pages * BasePage.PAGE_SIZE)
-                        .Add("keyAverageSize", (int)keySize);
+                        .Add("keyAverageSize", (int)keySize)
+                    );
                 }
 
                 yield return doc;

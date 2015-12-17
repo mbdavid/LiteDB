@@ -12,6 +12,7 @@ namespace LiteDB.Shell
         public Display()
         {
             this.TextWriters = new List<TextWriter>();
+            this.Pretty = false;
         }
 
         public void WriteWelcome()
