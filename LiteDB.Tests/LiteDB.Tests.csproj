@@ -41,6 +41,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <Choose>
@@ -66,6 +67,7 @@
     <Compile Include="Crud\DropCollectionTest.cs" />
     <Compile Include="Crud\FileStorageTest.cs" />
     <Compile Include="Crud\BigFileTest.cs" />
+    <Compile Include="Mapping\DataTableTest.cs" />
     <Compile Include="Mapping\MapperInterfaceTest.cs" />
     <Compile Include="Mapping\BsonFieldTest.cs" />
     <Compile Include="Bson\ObjectIdTest.cs" />
