@@ -219,7 +219,7 @@ namespace LiteDB
                         case 'r': sb.Append('\r'); break;
                         case 't': sb.Append('\t'); break;
                         case 'u':
-                            var codePoint = ParseUnicode(_current, this.Read(), this.Read(), this.Read());
+                            var codePoint = this.ParseUnicode(this.Read(), this.Read(), this.Read(), this.Read());
                             sb.Append((char)codePoint);
                             break;
                     }
@@ -232,7 +232,7 @@ namespace LiteDB
                 this.Read();
             }
 
-            this.Read();
+            this.Read(); // read last "
 
             return sb.ToString();
         }

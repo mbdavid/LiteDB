@@ -21,7 +21,7 @@ namespace LiteDB.Shell.Commands
             //dump import
             if(direction == "<")
             {
-                using (var reader = new StreamReader(filename))
+                using (var reader = new StreamReader(filename, Encoding.UTF8))
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
