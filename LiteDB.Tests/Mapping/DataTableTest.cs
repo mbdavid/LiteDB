@@ -14,8 +14,8 @@ namespace LiteDB.Tests
         {
             using (var db = new LiteDatabase(new MemoryStream()))
             {
-                db.Run("db.col1.insert {name:\"John Doe\", age: 38, active: true}");
-                db.Run("db.col1.insert {name:\"Jonatan Doe\", age: 25, active: true}");
+                db.Run("db.col1.insert {name:\"John Doe\"}");
+                db.Run("db.col1.insert {name:\"Jonatan Doe\", age: 25}");
                 db.Run("db.col1.insert {name:\"Maria Doe\", age: 32, active: false}");
 
                 var query = db.GetCollection("col1").FindAll();
@@ -24,8 +24,8 @@ namespace LiteDB.Tests
 
                 Assert.AreEqual(3, dt.Rows.Count);
                 Assert.AreEqual("John Doe", (string)dt.Rows[0]["name"]);
-                Assert.AreEqual(38, (int)dt.Rows[0]["age"]);
-                Assert.AreEqual(true, (bool)dt.Rows[0]["active"]);
+                Assert.AreEqual(25, (int)dt.Rows[1]["age"]);
+                Assert.AreEqual(false, (bool)dt.Rows[2]["active"]);
             }
         }
     }
@@ -41,18 +41,15 @@ namespace LiteDB.Tests
 
             foreach(var doc in docs)
             {
-                if(dt.Columns.Count == 0)
-                {
-                    foreach(var key in doc.Keys)
-                    {
-                        dt.Columns.Add(key, doc[key].IsNull ? typeof(string) : doc[key].RawValue.GetType());
-                    }
-                }
-
-                var dr = dt.NewRow();
+               var dr = dt.NewRow();
 
                 foreach (var key in doc.Keys)
                 {
+                    if (!dt.Columns.Contains(key))
+                    {
+                        dt.Columns.Add(key, doc[key].IsNull ? typeof(string) : doc[key].RawValue.GetType());
+                    }
+
                     dr[key] = doc[key].RawValue;
                 }
 
