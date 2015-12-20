@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\Debug.cs" />
+    <Compile Include="Commands\Upgrade.cs" />
     <Compile Include="Commands\Dump.cs" />
     <Compile Include="Commands\Version.cs" />
     <Compile Include="Commands\Help.cs" />
@@ -75,7 +76,6 @@
     <Compile Include="Engines\IShellEngine.cs" />
     <Compile Include="Shell\ConsoleCommand.cs" />
     <Compile Include="Commands\Close.cs" />
-    <Compile Include="Commands\Comment.cs" />
     <Compile Include="Commands\Pretty.cs" />
     <Compile Include="Commands\Quit.cs" />
     <Compile Include="Commands\Spool.cs" />
@@ -86,6 +86,7 @@
     <Compile Include="Shell\ShellException.cs" />
     <Compile Include="Shell\ShellProgram.cs" />
     <Compile Include="Utils\Helper.cs" />
+    <Compile Include="Utils\OptionSet.cs" />
     <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
   <ItemGroup>

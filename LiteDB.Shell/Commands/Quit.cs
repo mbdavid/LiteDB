@@ -12,7 +12,7 @@ namespace LiteDB.Shell.Commands
         public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
         {
             if(engine != null) engine.Dispose();
-            Environment.Exit(0);
+            input.Running = false;
         }
     }
 }

@@ -26,7 +26,6 @@ namespace LiteDB.Shell.Commands
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        if (line.StartsWith("--")) continue;
                         engine.Run(line, new Display()); // no output
                     }
                 }
@@ -37,7 +36,9 @@ namespace LiteDB.Shell.Commands
                 using (var writer = new StreamWriter(filename, false, Encoding.UTF8, 65536))
                 {
                     writer.AutoFlush = true;
-                    writer.WriteLine("-- LiteDB v{0}.{1}.{2} dump file @ {3}", engine.Version.Major, engine.Version.Minor, engine.Version.Build, DateTime.Now);
+                    writer.WriteLine("-- LiteDB v{0}.{1}.{2} dump file @ {3}", 
+                        engine.Version.Major, engine.Version.Minor, engine.Version.Build,
+                        DateTime.Now);
                     engine.Dump(writer);
                     writer.Flush();
                 }

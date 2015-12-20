@@ -4,26 +4,18 @@ namespace LiteDB.Shell
 {
     internal class ShellProgram
     {
-        public static void Start(string filename)
+        public static void Start(InputCommand input, Display display)
         {
             IShellEngine engine = null;
-            var input = new InputCommand();
-            var display = new Display();
 
             display.TextWriters.Add(Console.Out);
 
             // show welcome message
             display.WriteWelcome();
 
-            // if has filename, open
-            if (!string.IsNullOrEmpty(filename))
+            while (input.Running)
             {
-                input.Queue.Enqueue("open " + filename);
-            }
-
-            while (true)
-            {
-                // read next command from user
+                // read next command from user or queue
                 var cmd = input.ReadCommand();
 
                 if (string.IsNullOrEmpty(cmd)) continue;

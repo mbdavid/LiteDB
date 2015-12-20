@@ -6,11 +6,35 @@ namespace LiteDB.Shell
 {
     internal class Program
     {
+        /// <summary>
+        /// Opens console shell app. Usage:
+        /// LiteDB.Shell [myfile.db] --param1 value1 --params2 "value 2"
+        /// Parameters:
+        /// --exec "command" : Execute an shell command (can be multiples --exec)
+        /// --run script.txt : Run script commands file 
+        /// --pretty         : Show JSON in multiline + idented
+        /// --upgrade        : Upgrade database to lastest version
+        /// --exit           : Exit after last command
+        /// </summary>
         private static void Main(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
-            ShellProgram.Start(args.Length > 0 ? args[0] : null);
+            var input = new InputCommand();
+            var display = new Display();
+            var o = new OptionSet();
+
+            o.Register((v) => input.Queue.Enqueue("open " + v));
+            o.Register("pretty", () => display.Pretty = true);
+            o.Register("exit", () => input.AutoExit = true);
+            o.Register("upgrade", () => input.Queue.Enqueue("upgrade"));
+            o.Register<string>("run", (v) => input.Queue.Enqueue("run " + v));
+            o.Register<string>("exec", (v) => input.Queue.Enqueue(v));
+
+            // parse command line calling register parameters
+            o.Parse(args);
+
+            ShellProgram.Start(input, display);
         }
 
         /// <summary>
