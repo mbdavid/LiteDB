@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace LiteDB.Tests
 {
@@ -14,18 +16,35 @@ namespace LiteDB.Tests
 
             using (var db = new LiteDatabase(new MemoryStream()))
             {
+                // upload
                 db.FileStorage.Upload("Core.dll", "Core.dll");
 
+                // exits
                 var exists = db.FileStorage.Exists("Core.dll");
-
                 Assert.AreEqual(true, exists);
 
-                var deleted = db.FileStorage.Delete("Core.dll");
+                // find
+                var files = db.FileStorage.Find("Core");
+                Assert.AreEqual(1, files.Count());
+                Assert.AreEqual("Core.dll", files.First().Id);
 
+                // find by id
+                var core = db.FileStorage.FindById("Core.dll");
+                Assert.IsNotNull(core);
+                Assert.AreEqual("Core.dll", core.Id);
+
+                // download
+                var mem = new MemoryStream();
+                db.FileStorage.Download("Core.dll", mem);
+                var content = Encoding.UTF8.GetString(mem.ToArray());
+                Assert.AreEqual("FileCoreContent", content);
+
+                // delete
+                var deleted = db.FileStorage.Delete("Core.dll");
                 Assert.AreEqual(true, deleted);
 
+                // not found deleted
                 var deleted2 = db.FileStorage.Delete("Core.dll");
-
                 Assert.AreEqual(false, deleted2);
             }
 
