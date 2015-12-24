@@ -43,7 +43,10 @@ namespace LiteDB.Shell
 
         public void Dump(TextWriter writer)
         {
-            foreach (var name in _db.GetCollectionNames())
+            // do not include this collections now
+            var specials = new string[] { "_files" };
+
+            foreach (var name in _db.GetCollectionNames().Where(x => !specials.Contains(x)))
             {
                 var col = _db.GetCollection(name);
                 var indexes = col.GetIndexes().Where(x => x["field"] != "_id");
@@ -62,6 +65,22 @@ namespace LiteDB.Shell
                 {
                     writer.WriteLine("db.{0}.insert {1}", name, JsonSerializer.Serialize(doc));
                 }
+            }
+
+            // convert FileStorage to new format
+            var files = _db.GetCollection("_files");
+            var chunks = _db.GetCollection("_chunks");
+
+            if (files.Count() == 0) return;
+
+            writer.WriteLine("-- FileStorage: _files");
+
+            foreach (var file in files.Find(Query.All()))
+            {
+                // adding missing values
+                file["chunks"] = chunks.Count(Query.StartsWith("_id", file["_id"] + @"\"));
+
+                writer.WriteLine("db._files.insert {0}", JsonSerializer.Serialize(file));
             }
         }
 

@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\Debug.cs" />
-    <Compile Include="Commands\Upgrade.cs" />
     <Compile Include="Commands\Dump.cs" />
     <Compile Include="Commands\Version.cs" />
     <Compile Include="Commands\Help.cs" />
