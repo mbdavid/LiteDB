@@ -1,6 +1,6 @@
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
-## > v2.0.0-beta (for 1.0.x version, see `Tags`)
+## > v2.0.0-rc (for 1.0.x version, see `Tags`)
 
 LiteDB is a small, fast and lightweight NoSQL embedded database. 
 
@@ -9,6 +9,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - 100% C# code for .NET 4 in a single DLL (less than 200kb)
 - Document ACID transaction
 - Recovery data in writing failure (journal mode)
+- Encryption datafile using DES cryptography
 - Map your POCO class to `BsonDocument`
 - Store files and stream data (like GridFS in MongoDB)
 - Single data file storage (like SQLite)
@@ -18,10 +19,9 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
-## New features in v2.0.0-beta
+## New features in v2.0.0
 - Generic data access - can use any `Stream`
 - Better mapping class from your entity to `BsonDocument` (like EntityFramework)
-- Virtual property (Formula) as index field
 - Better cross reference with `DbRef` mapping
 - ThreadSafe / ProcessSafe
 - Lazy engine load (open datafile only when run a command)
