@@ -250,7 +250,7 @@ namespace LiteDB
                 _journal = null;
 
                 // remove journal file
-                File.Delete(_journalFilename);
+                this.TryExec(() => File.Delete(_journalFilename));
             }
         }
 
@@ -280,7 +280,7 @@ namespace LiteDB
                 journal.Dispose();
 
                 // delete journal - datafile finish
-                File.Delete(_journalFilename);
+                this.TryExec(() => File.Delete(_journalFilename));
 
                 _log.Write(Logger.RECOVERY, "recovery finish");
             });
@@ -382,13 +382,9 @@ namespace LiteDB
                     success(stream);
                 }
             }
-            catch (FileNotFoundException)
+            catch (Exception)
             {
-                // do nothing - no journal file, no recovery
-            }
-            catch (IOException ex)
-            {
-                ex.WaitIfLocked(0);
+                // not found OR lock by another process, .... no recovery, do nothing
             }
         }
 

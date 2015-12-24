@@ -57,6 +57,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Concurrency\ParallelTest.cs" />
     <Compile Include="Concurrency\TaskTest.cs" />
     <Compile Include="Concurrency\ThreadSafeTest.cs" />
     <Compile Include="Crud\BulkTest.cs" />

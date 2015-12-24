@@ -135,70 +135,73 @@ namespace LiteDB
         /// </summary>
         public static object CreateInstance(Type type)
         {
-            try
+            lock(_cacheCtor)
             {
-                CreateObject c = null;
-
-                if (_cacheCtor.TryGetValue(type, out c))
+                try
                 {
-                    return c();
-                }
-                else
-                {
-                    if (type.IsClass)
-                    {
-                        var dynMethod = new DynamicMethod("_", type, null);
-                        var il = dynMethod.GetILGenerator();
-                        il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
-                        il.Emit(OpCodes.Ret);
-                        c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
-                        _cacheCtor.Add(type, c);
-                    }
-                    else if (type.IsInterface) // some know interfaces
-                    {
-                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
-                        {
-                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                        }
-                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
-                        {
-                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                        }
-                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                        {
-                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                        }
-                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                        {
-                            var k = type.GetGenericArguments()[0];
-                            var v = type.GetGenericArguments()[1];
-                            return CreateInstance(GetGenericDictionaryOfType(k, v));
-                        }
-                        else
-                        {
-                            throw LiteException.InvalidCtor(type);
-                        }
-                    }
-                    else // structs
-                    {
-                        var dynMethod = new DynamicMethod("_", typeof(object), null);
-                        var il = dynMethod.GetILGenerator();
-                        var lv = il.DeclareLocal(type);
-                        il.Emit(OpCodes.Ldloca_S, lv);
-                        il.Emit(OpCodes.Initobj, type);
-                        il.Emit(OpCodes.Ldloc_0);
-                        il.Emit(OpCodes.Box, type);
-                        il.Emit(OpCodes.Ret);
-                        c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
-                        _cacheCtor.Add(type, c);
-                    }
+                    CreateObject c = null;
 
-                    return c();
+                    if (_cacheCtor.TryGetValue(type, out c))
+                    {
+                        return c();
+                    }
+                    else
+                    {
+                        if (type.IsClass)
+                        {
+                            var dynMethod = new DynamicMethod("_", type, null);
+                            var il = dynMethod.GetILGenerator();
+                            il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
+                            il.Emit(OpCodes.Ret);
+                            c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+                            _cacheCtor.Add(type, c);
+                        }
+                        else if (type.IsInterface) // some know interfaces
+                        {
+                            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                            {
+                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                            }
+                            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
+                            {
+                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                            }
+                            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                            {
+                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                            }
+                            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                            {
+                                var k = type.GetGenericArguments()[0];
+                                var v = type.GetGenericArguments()[1];
+                                return CreateInstance(GetGenericDictionaryOfType(k, v));
+                            }
+                            else
+                            {
+                                throw LiteException.InvalidCtor(type);
+                            }
+                        }
+                        else // structs
+                        {
+                            var dynMethod = new DynamicMethod("_", typeof(object), null);
+                            var il = dynMethod.GetILGenerator();
+                            var lv = il.DeclareLocal(type);
+                            il.Emit(OpCodes.Ldloca_S, lv);
+                            il.Emit(OpCodes.Initobj, type);
+                            il.Emit(OpCodes.Ldloc_0);
+                            il.Emit(OpCodes.Box, type);
+                            il.Emit(OpCodes.Ret);
+                            c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+                            _cacheCtor.Add(type, c);
+                        }
+
+                        return c();
+                    }
                 }
-            }
-            catch (Exception)
-            {
-                throw LiteException.InvalidCtor(type);
+                catch (Exception)
+                {
+                    throw LiteException.InvalidCtor(type);
+                }
             }
         }
 
