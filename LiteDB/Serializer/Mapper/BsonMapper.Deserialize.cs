@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace LiteDB
 {
@@ -179,14 +181,27 @@ namespace LiteDB
         private object DeserializeList(Type type, BsonArray value)
         {
             var itemType = Reflection.UnderlyingTypeOf(type);
-            var list = (IList)Reflection.CreateInstance(type);
+            var enumerable = (IEnumerable)Reflection.CreateInstance(type);
+            var list = enumerable as IList;
 
-            foreach (var item in value)
+            if (list != null)
             {
-                list.Add(this.Deserialize(itemType, item));
+                foreach (BsonValue item in value)
+                {
+                    list.Add(Deserialize(itemType, item));
+                }
+            }
+            else
+            {
+                var addMethod = type.GetMethod("Add");
+
+                foreach (BsonValue item in value)
+                {
+                    addMethod.Invoke(enumerable, new[] { Deserialize(itemType, item) });
+                }
             }
 
-            return list;
+            return enumerable;
         }
 
         private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)

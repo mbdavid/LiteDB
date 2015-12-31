@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace LiteDB.Tests
 {
@@ -51,6 +52,7 @@ namespace LiteDB.Tests
         public string[] MyStringArray { get; set; }
 
         public List<string> MyStringList { get; set; }
+        public IEnumerable<string> MyStringEnumerable { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
 
         // interfaces
@@ -105,6 +107,7 @@ namespace LiteDB.Tests
                 MyNameValueCollection = new NameValueCollection(),
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
                 MyStringArray = new string[] { "One", "Two" },
+                MyStringEnumerable = new string[] { "One", "Two" },
                 MyEnumProp = MyEnum.Second,
                 MyChar = 'Y',
                 MyUri = new Uri("http://www.numeria.com.br"),
@@ -165,6 +168,8 @@ namespace LiteDB.Tests
             // list
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);
+            Assert.AreEqual(obj.MyStringEnumerable.First(), nobj.MyStringEnumerable.First());
+            Assert.AreEqual(obj.MyStringEnumerable.Take(1).First(), nobj.MyStringEnumerable.Take(1).First());
             Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
 
             // interfaces
