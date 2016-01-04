@@ -1,11 +1,42 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
 namespace LiteDB.Tests
 {
+    public class CustomStringEnumerable : IEnumerable<string>
+    {
+        private readonly List<string> innerList;
+
+        public CustomStringEnumerable()
+        {
+            innerList = new List<string>();
+        }
+
+        public CustomStringEnumerable(IEnumerable<string> list)
+        {
+            innerList = new List<string>(list);
+        }
+
+        public void Add(string item)
+        {
+            innerList.Add(item);
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return innerList.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
     public enum MyEnum { First, Second }
 
     public class MyClass
@@ -53,6 +84,7 @@ namespace LiteDB.Tests
 
         public List<string> MyStringList { get; set; }
         public IEnumerable<string> MyStringEnumerable { get; set; }
+        public CustomStringEnumerable CustomStringEnumerable { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
 
         // interfaces
@@ -108,6 +140,7 @@ namespace LiteDB.Tests
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
                 MyStringArray = new string[] { "One", "Two" },
                 MyStringEnumerable = new string[] { "One", "Two" },
+                CustomStringEnumerable = new CustomStringEnumerable(new string[] { "One", "Two" }),
                 MyEnumProp = MyEnum.Second,
                 MyChar = 'Y',
                 MyUri = new Uri("http://www.numeria.com.br"),
@@ -170,6 +203,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);
             Assert.AreEqual(obj.MyStringEnumerable.First(), nobj.MyStringEnumerable.First());
             Assert.AreEqual(obj.MyStringEnumerable.Take(1).First(), nobj.MyStringEnumerable.Take(1).First());
+            Assert.AreEqual(true, obj.CustomStringEnumerable.SequenceEqual(nobj.CustomStringEnumerable));
             Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
 
             // interfaces
