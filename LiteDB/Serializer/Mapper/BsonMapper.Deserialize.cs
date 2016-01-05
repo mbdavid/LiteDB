@@ -14,14 +14,20 @@ namespace LiteDB
         public T ToObject<T>(BsonDocument doc)
             where T : new()
         {
+            return (T)ToObject(typeof(T), doc);
+        }
+
+        /// <summary>
+        /// Deserialize a BsonDocument to entity class
+        /// </summary>
+        public object ToObject(Type type, BsonDocument doc)
+        {
             if (doc == null) throw new ArgumentNullException("doc");
 
-            var type = typeof(T);
-
             // if T is BsonDocument, just return them
-            if (type == typeof(BsonDocument)) return (T)(object)doc;
+            if (type == typeof(BsonDocument)) return doc;
 
-            return (T)this.Deserialize(type, doc);
+            return Deserialize(type, doc);
         }
 
         /// <summary>

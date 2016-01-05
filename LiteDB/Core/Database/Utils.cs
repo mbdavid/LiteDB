@@ -22,6 +22,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Convert a BsonDocument to a class object using BsonMapper rules
+        /// </summary>
+        public object ToObject(Type type, BsonDocument doc)
+        {
+            return _mapper.ToObject(type, doc);
+        }
+
+        /// <summary>
         /// Convert an entity class instance into a BsonDocument using BsonMapper rules
         /// </summary>
         public BsonDocument ToDocument(object entity)
