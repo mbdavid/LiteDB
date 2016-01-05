@@ -14,14 +14,20 @@ namespace LiteDB
         public T ToObject<T>(BsonDocument doc)
             where T : new()
         {
+            return (T)ToObject(typeof(T), doc);
+        }
+
+        /// <summary>
+        /// Deserialize a BsonDocument to entity class
+        /// </summary>
+        public object ToObject(Type type, BsonDocument doc)
+        {
             if (doc == null) throw new ArgumentNullException("doc");
 
-            var type = typeof(T);
-
             // if T is BsonDocument, just return them
-            if (type == typeof(BsonDocument)) return (T)(object)doc;
+            if (type == typeof(BsonDocument)) return doc;
 
-            return (T)this.Deserialize(type, doc);
+            return Deserialize(type, doc);
         }
 
         /// <summary>
@@ -180,7 +186,7 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-            var itemType = Reflection.UnderlyingTypeOf(type);
+            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
 
