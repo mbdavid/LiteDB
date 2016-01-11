@@ -65,7 +65,7 @@ namespace LiteDB
 
         public static LiteException IndexDropId()
         {
-            return new LiteException(108, "Primary key index '_id' can't be droped");
+            return new LiteException(108, "Primary key index '_id' can't be dropped");
         }
 
         public static LiteException IndexLimitExceeded(string collection)
@@ -105,7 +105,7 @@ namespace LiteDB
 
         public static LiteException DatabaseWrongPassword()
         {
-            return new LiteException(123, "Invalida database password");
+            return new LiteException(123, "Invalid database password");
         }
 
         #endregion Database Errors
@@ -124,7 +124,7 @@ namespace LiteDB
 
         public static LiteException InvalidCtor(Type type)
         {
-            return new LiteException(202, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if has a public constructor with no parameters", type.FullName, type.AssemblyQualifiedName);
+            return new LiteException(202, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters", type.FullName, type.AssemblyQualifiedName);
         }
 
         public static LiteException UnexpectedToken(string token)
