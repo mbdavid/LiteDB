@@ -12,13 +12,19 @@ namespace LiteDB
 
         private void InitializeMapper()
         {
-            lock (_mapperCache)
+            var type = this.GetType();
+
+            if (!_mapperCache.TryGetValue(type, out _mapper))
             {
-                if (!_mapperCache.TryGetValue(this.GetType(), out _mapper))
+                lock (_mapperCache)
                 {
-                    _mapper = new BsonMapper();
-                    _mapperCache.Add(this.GetType(), _mapper);
-                    this.OnModelCreating(_mapper);
+                    if (!_mapperCache.TryGetValue(type, out _mapper))
+                    {
+                        _mapper = new BsonMapper();
+                        this.OnModelCreating(_mapper);
+
+                        _mapperCache.Add(type, _mapper);
+                    }
                 }
             }
         }
