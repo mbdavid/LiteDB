@@ -348,9 +348,9 @@ namespace LiteDB
         /// </summary>
         private void TryExec(Action action)
         {
-            var timer = DateTime.Now.Add(_timeout);
+            var timer = DateTime.UtcNow.Add(_timeout);
 
-            while (DateTime.Now < timer)
+            while (DateTime.UtcNow < timer)
             {
                 try
                 {
