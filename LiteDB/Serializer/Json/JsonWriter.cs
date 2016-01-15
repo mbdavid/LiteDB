@@ -122,9 +122,9 @@ namespace LiteDB
                 var item = arr[i];
 
                 // do not do this tests if is not pretty format - to better performance
-                if (this.Pretty == true)
+                if (this.Pretty)
                 {
-                    if (!((item.IsDocument && item.AsDocument.Keys.Count() > 0) || (item.IsArray && item.AsArray.Count > 0)))
+                    if (!((item.IsDocument && item.AsDocument.Keys.Any()) || (item.IsArray && item.AsArray.Count > 0)))
                     {
                         this.WriteIndent();
                     }
@@ -222,7 +222,7 @@ namespace LiteDB
             {
                 _writer.Write(' ');
 
-                if ((value.IsDocument && value.AsDocument.Keys.Count() > 0) || (value.IsArray && value.AsArray.Count > 0))
+                if ((value.IsDocument && value.AsDocument.Keys.Any()) || (value.IsArray && value.AsArray.Count > 0))
                 {
                     this.WriteNewLine();
                 }
