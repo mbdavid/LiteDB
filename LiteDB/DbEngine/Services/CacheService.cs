@@ -122,7 +122,7 @@ namespace LiteDB
             }
         }
 
-        public bool HasDirtyPages { get { return _dirty.Count() > 0; } }
+        public bool HasDirtyPages { get { return _dirty.Count > 0; } }
 
         /// <summary>
         /// Returns all dirty pages including header page (for better write performance, get all pages in PageID increase order)
