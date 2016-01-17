@@ -14,7 +14,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Concurrent_Test()
         {
-            var dbname = DB.RandomFilename();
+            var dbname = DB.RandomFile();
             var N = 300; // interate counter
 
             var a = new LiteDatabase(dbname);

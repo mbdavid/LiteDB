@@ -39,7 +39,7 @@ namespace LiteDB
                         var nodes = _indexer.FindAll(col.PK, Query.Ascending);
 
                         tempEngine.Insert(col.CollectionName,
-                            nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock, true).Buffer)));
+                            nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock))));
                     }
 
                     // get final header from temp engine

@@ -27,13 +27,14 @@ namespace LiteDB
                 // read all objects (read from PK index)
                 foreach (var node in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
                 {
-                    var dataBlock = _data.Read(node.DataBlock, true);
+                    var buffer = _data.Read(node.DataBlock);
+                    var dataBlock = _data.GetBlock(node.DataBlock);
 
                     // mark datablock page as dirty
                     _pager.SetDirty(dataBlock.Page);
 
                     // read object
-                    var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+                    var doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
                     // adding index
                     var key = doc.Get(field);

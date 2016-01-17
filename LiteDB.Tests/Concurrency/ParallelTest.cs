@@ -78,7 +78,7 @@ namespace LiteDB.Tests
         [ClassInitialize()]
         public static void ClassInit(TestContext context)
         {
-            _filename = DB.RandomFilename();
+            _filename = DB.RandomFile();
         }
 
         private void Setup()

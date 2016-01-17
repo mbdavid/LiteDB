@@ -31,9 +31,9 @@ namespace LiteDB
             {
                 _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
 
-                var dataBlock = _data.Read(node.DataBlock, true);
+                var buffer = _data.Read(node.DataBlock);
 
-                var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+                var doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
                 yield return doc;
 

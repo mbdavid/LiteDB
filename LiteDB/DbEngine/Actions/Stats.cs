@@ -75,7 +75,7 @@ namespace LiteDB
 
                     foreach (var block in dataPage.DataBlocks.Values)
                     {
-                        var doc = BsonSerializer.Deserialize(_data.Read(block.Position, true).Buffer);
+                        var doc = BsonSerializer.Deserialize(_data.Read(block.Position));
                         docSize += doc.GetBytesCount(true);
                     }
 

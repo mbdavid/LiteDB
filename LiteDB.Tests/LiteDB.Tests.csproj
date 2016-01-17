@@ -78,6 +78,7 @@
     <Compile Include="Index\LinqTest.cs" />
     <Compile Include="Mapping\IncludeTest.cs" />
     <Compile Include="Shell\ShellTest.cs" />
+    <Compile Include="Utils\Initialize.cs" />
     <Compile Include="Utils\DB.cs" />
     <Compile Include="Index\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

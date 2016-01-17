@@ -11,8 +11,8 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Encrypted_Order()
         {
-            var encrypt = DB.RandomFilename();
-            var plain = DB.RandomFilename();
+            var encrypt = DB.RandomFile();
+            var plain = DB.RandomFile();
 
             var cs_enc = "password=abc;filename=" + encrypt;
             var cs_enc_wrong = "password=abcd;filename=" + encrypt;

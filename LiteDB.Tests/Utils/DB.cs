@@ -1,18 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace LiteDB.Tests
 {
     public class DB
     {
+        public static List<string> _files = new List<string>();
+
         // Get a unique database name in TestResults folder
-        public static string RandomFilename()
+        public static string RandomFile(string ext = "db")
         {
             var path = System.IO.Path.GetFullPath(
                 System.IO.Directory.GetCurrentDirectory() +
-                string.Format("../../../../TestResults/test-{0}.db", Guid.NewGuid()));
+                string.Format("../../../../TestResults/test-{0}.{1}", Guid.NewGuid(), ext));
+
+            _files.Add(path);
 
             return path;
+        }
+
+        public static void DeleteFiles()
+        {
+            foreach(var f in _files)
+            {
+                File.Delete(f);
+            }
+            _files = new List<string>();
         }
 
         public static string LoremIpsum(int minWords, int maxWords,
