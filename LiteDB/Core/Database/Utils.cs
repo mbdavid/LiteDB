@@ -7,7 +7,7 @@ namespace LiteDB
         /// <summary>
         /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
         /// </summary>
-        public int Shrink()
+        public long Shrink()
         {
             return _engine.Value.Shrink();
         }

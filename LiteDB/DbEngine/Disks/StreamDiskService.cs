@@ -68,7 +68,7 @@ namespace LiteDB
         public byte[] ReadPage(uint pageID)
         {
             var buffer = new byte[BasePage.PAGE_SIZE];
-            var position = (long)pageID * (long)BasePage.PAGE_SIZE;
+            long position = BasePage.GetSizeOfPages(pageID);
 
             // position cursor
             if (_stream.Position != position)
@@ -87,7 +87,7 @@ namespace LiteDB
         /// </summary>
         public void WritePage(uint pageID, byte[] buffer)
         {
-            var position = (long)pageID * (long)BasePage.PAGE_SIZE;
+            long position = BasePage.GetSizeOfPages(pageID);
 
             // position cursor
             if (_stream.Position != position)

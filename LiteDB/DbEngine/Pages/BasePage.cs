@@ -84,6 +84,36 @@ namespace LiteDB
         /// </summary>
         public abstract void UpdateItemCount();
 
+        /// <summary>
+        /// Returns a size of specified number of pages
+        /// </summary>
+        /// <param name="pageCount">The page count</param>
+        /// <returns></returns>
+        public static long GetSizeOfPages(uint pageCount)
+        {
+            try
+            {
+                return checked((long)pageCount * BasePage.PAGE_SIZE);
+            }
+            catch (OverflowException)
+            {
+                //TODO: throw appropriate LiteException
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Returns a size of specified number of pages
+        /// </summary>
+        /// <param name="pageCount">The page count</param>
+        /// <returns></returns>
+        public static long GetSizeOfPages(int pageCount)
+        {
+            if (pageCount < 0) throw new ArgumentOutOfRangeException("pageCount", "Could not be less than 0.");
+
+            return BasePage.GetSizeOfPages((uint) pageCount);
+        }
+
         #region Read/Write page
 
         /// <summary>
