@@ -150,7 +150,7 @@ namespace LiteDB
         public virtual byte[] ReadPage(uint pageID)
         {
             var buffer = new byte[BasePage.PAGE_SIZE];
-            long position = BasePage.GetSizeOfPages(pageID);
+            var position = BasePage.GetSizeOfPages(pageID);
 
             this.TryExec(() =>
             {
@@ -174,7 +174,7 @@ namespace LiteDB
         /// </summary>
         public virtual void WritePage(uint pageID, byte[] buffer)
         {
-            long position = BasePage.GetSizeOfPages(pageID);
+            var position = BasePage.GetSizeOfPages(pageID);
 
             _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 

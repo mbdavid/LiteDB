@@ -21,7 +21,7 @@ namespace LiteDB
 
                 // get initial disk size
                 var header = _pager.GetPage<HeaderPage>(0);
-                long diff = 0;
+                var diff = 0L;
 
                 // create temp engine instance to copy all documents
                 using (var tempEngine = new DbEngine(tempDisk, new Logger()))
