@@ -120,7 +120,7 @@ namespace LiteDB
 
                     doc.Add("stats", new BsonDocument()
                         .Add("pages", pages)
-                        .Add("allocated", pages * BasePage.PAGE_SIZE)
+                        .Add("allocated", BasePage.GetSizeOfPages(pages))
                         .Add("keyAverageSize", (int)keySize)
                     );
                 }

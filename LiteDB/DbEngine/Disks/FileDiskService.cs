@@ -42,8 +42,8 @@ namespace LiteDB
 
             // simple validations
             if (string.IsNullOrWhiteSpace(_filename)) throw new ArgumentNullException("filename");
-            if (_initialSize > 0 && _initialSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("initial size too low");
-            if (_limitSize > 0 && _limitSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("limit size too low");
+            if (_initialSize > 0 && _initialSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("initial size too low");
+            if (_limitSize > 0 && _limitSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("limit size too low");
             if (_initialSize > 0 && _limitSize > 0 && _initialSize > _limitSize) throw new ArgumentException("limit size less than initial size");
 
             // setup log + log-level
@@ -150,7 +150,7 @@ namespace LiteDB
         public virtual byte[] ReadPage(uint pageID)
         {
             var buffer = new byte[BasePage.PAGE_SIZE];
-            var position = (long)pageID * (long)BasePage.PAGE_SIZE;
+            long position = BasePage.GetSizeOfPages(pageID);
 
             this.TryExec(() =>
             {
@@ -174,7 +174,7 @@ namespace LiteDB
         /// </summary>
         public virtual void WritePage(uint pageID, byte[] buffer)
         {
-            var position = (long)pageID * (long)BasePage.PAGE_SIZE;
+            long position = BasePage.GetSizeOfPages(pageID);
 
             _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -308,7 +308,7 @@ namespace LiteDB
                 {
                     var header = (HeaderPage)BasePage.ReadPage(buffer);
 
-                    fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
+                    fileSize = BasePage.GetSizeOfPages(header.LastPageID + 1);
                 }
 
                 // write in stream

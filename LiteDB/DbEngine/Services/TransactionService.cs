@@ -71,7 +71,7 @@ namespace LiteDB
             header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
 
             // set final datafile length (optimize page writes)
-            _disk.SetLength((header.LastPageID + 1) * BasePage.PAGE_SIZE);
+            _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));
 
             // write all dirty pages in data file
             foreach (var page in _cache.GetDirtyPages())
