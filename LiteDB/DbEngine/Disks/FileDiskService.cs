@@ -41,7 +41,7 @@ namespace LiteDB
             var level = conn.GetValue<byte?>("log", null);
 
             // simple validations
-            if (_filename==null || _filename.Length <= 0) throw new ArgumentNullException("filename");
+            if (String.IsNullOrEmpty(_filename) || _filename.Trim().Length == 0) throw new ArgumentNullException("filename");
             if (_initialSize > 0 && _initialSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("initial size too low");
             if (_limitSize > 0 && _limitSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("limit size too low");
             if (_initialSize > 0 && _limitSize > 0 && _initialSize > _limitSize) throw new ArgumentException("limit size less than initial size");

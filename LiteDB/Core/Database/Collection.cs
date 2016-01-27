@@ -13,7 +13,7 @@ namespace LiteDB
         public LiteCollection<T> GetCollection<T>(string name)
             where T : new()
         {
-            if (name == null || name.Length <= 0) throw new ArgumentNullException("name");
+            if (String.IsNullOrEmpty(name) || name.Trim().Length == 0) throw new ArgumentNullException("name");
 
             return new LiteCollection<T>(name, _engine.Value, _mapper, _log);
         }
@@ -24,7 +24,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            if (name == null || name.Length <= 0) throw new ArgumentNullException("name");
+            if (String.IsNullOrEmpty(name) || name.Trim().Length == 0) throw new ArgumentNullException("name");
 
             return new LiteCollection<BsonDocument>(name, _engine.Value, _mapper, _log);
         }
@@ -42,7 +42,7 @@ namespace LiteDB
         /// </summary>
         public bool CollectionExists(string name)
         {
-            if (name == null || name.Length <= 0) throw new ArgumentNullException("name");
+            if (String.IsNullOrEmpty(name) || name.Trim().Length == 0) throw new ArgumentNullException("name");
 
             return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
         }
@@ -62,8 +62,8 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
         {
-            if (oldName == null || oldName.Length <= 0) throw new ArgumentNullException("oldName");
-            if (newName == null || newName.Length <= 0) throw new ArgumentNullException("newName");
+            if (String.IsNullOrEmpty(oldName) || oldName.Trim().Length == 0) throw new ArgumentNullException("oldName");
+            if (String.IsNullOrEmpty(newName) || newName.Trim().Length == 0) throw new ArgumentNullException("newName");
 
             return _engine.Value.RenameCollection(oldName, newName);
         }
