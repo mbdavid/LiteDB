@@ -239,8 +239,13 @@ namespace LiteDB
             if (expr.Method.DeclaringType.FullName != "System.Linq.Enumerable")
                 throw new NotImplementedException("Cannot parse methods outside the System.Linq.Enumerable class.");
 
+            // we currently support method calls only.
+            // TODO: Expand to support the full range of expressions
+            var methodBody = ((LambdaExpression)expr.Arguments[1]).Body as MethodCallExpression;
+            if (methodBody == null)
+                throw new NotImplementedException("Unsupported expression in the body of the lambda expression.");
+
             var values = this.VisitValue(expr.Arguments[0]).AsArray;
-            var methodBody = (MethodCallExpression)((LambdaExpression)expr.Arguments[1]).Body;
             var queries = new Query[values.Count];
 
             for (var i = 0; i < queries.Length; i++)
