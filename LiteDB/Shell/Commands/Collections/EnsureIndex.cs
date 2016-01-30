@@ -10,7 +10,7 @@
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
             var col = this.ReadCollection(engine, s);
-            var field = s.Scan(this.FieldPattern).Trim();
+            var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field name");
             var opts = JsonSerializer.Deserialize(s);
             var options = new IndexOptions();
 

@@ -76,6 +76,7 @@
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\Pages\EmptyPage.cs" />
     <Compile Include="DbEngine\Structures\DbParams.cs" />
+    <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />
@@ -124,7 +125,6 @@
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
     <Compile Include="Shell\Commands\Collections\BaseCollection.cs" />
     <Compile Include="Shell\Commands\Collections\Stats.cs" />
-    <Compile Include="Shell\Commands\Collections\Read.cs" />
     <Compile Include="Shell\Commands\Collections\Max.cs" />
     <Compile Include="Shell\Commands\Collections\Min.cs" />
     <Compile Include="Shell\Commands\Collections\Rename.cs" />
@@ -165,6 +165,7 @@
     <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Services\TransactionService.cs" />
     <Compile Include="Shell\Commands\Others\Shrink.cs" />
+    <Compile Include="Utils\StringExtensions.cs" />
     <Compile Include="Utils\ExpressionExtensions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\LazyLoad.cs" />

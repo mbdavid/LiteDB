@@ -6,7 +6,7 @@ namespace LiteDB.Shell.Commands
 {
     internal class BaseCollection
     {
-        public Regex FieldPattern = new Regex(@"\w[\w-]*(\.[\w-]+)*\s*");
+        public Regex FieldPattern = new Regex(@"[\w$\.-]+\s*");
 
         /// <summary>
         /// Read collection name from db.(colname).(command)
@@ -58,25 +58,20 @@ namespace LiteDB.Shell.Commands
         private Query ReadInlineQuery(StringScanner s)
         {
             var left = this.ReadOneQuery(s);
-
-            if (s.Match(@"\s+(and|or)\s+") == false)
-            {
-                return left;
-            }
-
             var oper = s.Scan(@"\s+(and|or)\s+").Trim();
 
-            if (oper.Length == 0) throw new LiteException("Invalid query operator");
+            // there is no right side
+            if (oper.Length == 0) return left;
 
-            return oper == "and" ?
-                Query.And(left, this.ReadInlineQuery(s)) :
-                Query.Or(left, this.ReadInlineQuery(s));
+            var right = this.ReadInlineQuery(s);
+
+            return oper == "and" ? Query.And(left, right) : Query.Or(left, right);
         }
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = s.Scan(this.FieldPattern).Trim();
-            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between|contains)");
+            var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field name");
+            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between|contains)").ThrowIfEmpty("Invalid query operator");
             var value = JsonSerializer.Deserialize(s);
 
             switch (oper)

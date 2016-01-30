@@ -11,15 +11,6 @@ namespace LiteDB
         /// <summary>
         /// Deserialize a BsonDocument to entity class
         /// </summary>
-        public T ToObject<T>(BsonDocument doc)
-            where T : new()
-        {
-            return (T)ToObject(typeof(T), doc);
-        }
-
-        /// <summary>
-        /// Deserialize a BsonDocument to entity class
-        /// </summary>
         public object ToObject(Type type, BsonDocument doc)
         {
             if (doc == null) throw new ArgumentNullException("doc");
@@ -27,13 +18,22 @@ namespace LiteDB
             // if T is BsonDocument, just return them
             if (type == typeof(BsonDocument)) return doc;
 
-            return Deserialize(type, doc);
+            return this.Deserialize(type, doc);
+        }
+
+        /// <summary>
+        /// Deserialize a BsonDocument to entity class
+        /// </summary>
+        public T ToObject<T>(BsonDocument doc)
+            where T : new()
+        {
+            return (T)this.ToObject(typeof(T), doc);
         }
 
         /// <summary>
         /// Deserialize an BsonValue to .NET object typed in T
         /// </summary>
-        public T Deserialize<T>(BsonValue value)
+        internal T Deserialize<T>(BsonValue value)
         {
             if (value == null) return default(T);
 
