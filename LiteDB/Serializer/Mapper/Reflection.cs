@@ -72,7 +72,8 @@ namespace LiteDB
                 if (prop.GetIndexParameters().Length > 0) continue;
 
                 // ignore not read/write
-                if (!prop.CanRead || !prop.CanWrite) continue;
+                ////if (!prop.CanRead || !prop.CanWrite) continue;
+                if (!prop.CanRead) continue;
 
                 // [BsonIgnore]
                 if (prop.IsDefined(ignore, false)) continue;
@@ -148,7 +149,7 @@ namespace LiteDB
                 throw LiteException.InvalidCtor(type);
             }
 
-            lock(_cacheCtor)
+            lock (_cacheCtor)
             {
                 try
                 {

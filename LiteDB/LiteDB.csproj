@@ -76,6 +76,7 @@
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\Pages\EmptyPage.cs" />
     <Compile Include="DbEngine\Structures\DbParams.cs" />
+    <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />
