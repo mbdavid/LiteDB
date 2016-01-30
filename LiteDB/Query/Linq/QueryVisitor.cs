@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Expressions.ParameterExpression,
+                                                                  LiteDB.BsonValue>;
 
 namespace LiteDB
 {
@@ -11,11 +13,13 @@ namespace LiteDB
     {
         private BsonMapper _mapper;
         private Type _type;
+        private ParameterDictionary parameters;
 
         public QueryVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
             _type = typeof(T);
+            parameters = new ParameterDictionary();
         }
 
         public Query Visit(Expression predicate)
@@ -141,6 +145,17 @@ namespace LiteDB
 
                 return _mapper.Serialize(value);
             }
+            else if (expr is MemberExpression && parameters.Count > 0)
+            {
+                var mExpr = (MemberExpression)expr;
+                return _mapper.Serialize(this.VisitValue(mExpr.Expression).AsDocument[mExpr.Member.Name]);
+            }
+            else if (expr is ParameterExpression)
+            {
+                BsonValue result;
+                if (parameters.TryGetValue((ParameterExpression)expr, out result))
+                    return result;
+            }
 
             // execute expression
             var objectMember = Expression.Convert(expr, typeof(object));
@@ -239,21 +254,17 @@ namespace LiteDB
             if (expr.Method.DeclaringType.FullName != "System.Linq.Enumerable")
                 throw new NotImplementedException("Cannot parse methods outside the System.Linq.Enumerable class.");
 
-            // we currently support method calls only.
-            // TODO: Expand to support the full range of expressions
-            var methodBody = ((LambdaExpression)expr.Arguments[1]).Body as MethodCallExpression;
-            if (methodBody == null)
-                throw new NotImplementedException("Unsupported expression in the body of the lambda expression.");
-
+            var lambda = (LambdaExpression)expr.Arguments[1];
             var values = this.VisitValue(expr.Arguments[0]).AsArray;
             var queries = new Query[values.Count];
 
             for (var i = 0; i < queries.Length; i++)
             {
-                var newValue = Expression.Constant(values[i].RawValue);
-                var newMethod = methodBody.Update(methodBody.Object, new[] { newValue });
-                queries[i] = this.VisitExpression(newMethod);
+                parameters[lambda.Parameters[0]] = values[i];
+                queries[i] = this.VisitExpression(lambda.Body);
             }
+
+            parameters.Remove(lambda.Parameters[0]);
 
             if (expr.Method.Name == "Any")
                 return CreateOrQuery(ref queries);
