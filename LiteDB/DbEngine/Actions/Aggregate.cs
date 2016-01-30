@@ -60,7 +60,7 @@ namespace LiteDB
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count
         /// </summary>
-        public int Count(string colName, Query query)
+        public long Count(string colName, Query query)
         {
             lock (_locker)
             {
@@ -69,13 +69,13 @@ namespace LiteDB
 
                 if (col == null) return 0;
 
-                if (query == null) return (int)col.DocumentCount;
+                if (query == null) return col.DocumentCount;
 
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
                 // count all nodes
-                return nodes.Count();
+                return nodes.LongCount();
             }
         }
 

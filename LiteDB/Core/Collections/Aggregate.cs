@@ -5,12 +5,59 @@ namespace LiteDB
 {
     public partial class LiteCollection<T>
     {
-        #region Count/Exits
+        #region Count
 
         /// <summary>
         /// Get document count using property on collection.
         /// </summary>
         public int Count()
+        {
+            // do not use indexes - collections has DocumentCount property
+            return (int)_engine.Count(_name, null);
+        }
+
+        /// <summary>
+        /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
+        /// </summary>
+        public int Count(Query query)
+        {
+            if (query == null) throw new ArgumentNullException("query");
+
+            // keep trying execute query to auto-create indexes when not found
+            while (true)
+            {
+                try
+                {
+                    return (int)_engine.Count(_name, query);
+                }
+                catch (IndexNotFoundException ex)
+                {
+                    // if query returns this exception, let's auto create using mapper (or using default options)
+                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
+        /// </summary>
+        public int Count(Expression<Func<T, bool>> predicate)
+        {
+            if (predicate == null) throw new ArgumentNullException("predicate");
+
+            return this.Count(_visitor.Visit(predicate));
+        }
+
+        #endregion Count
+
+        #region LongCount
+
+        /// <summary>
+        /// Get document count using property on collection.
+        /// </summary>
+        public long LongCount()
         {
             // do not use indexes - collections has DocumentCount property
             return _engine.Count(_name, null);
@@ -19,7 +66,7 @@ namespace LiteDB
         /// <summary>
         /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public int Count(Query query)
+        public long LongCount(Query query)
         {
             if (query == null) throw new ArgumentNullException("query");
 
@@ -43,12 +90,16 @@ namespace LiteDB
         /// <summary>
         /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public int Count(Expression<Func<T, bool>> predicate)
+        public long LongCount(Expression<Func<T, bool>> predicate)
         {
             if (predicate == null) throw new ArgumentNullException("predicate");
 
-            return this.Count(_visitor.Visit(predicate));
+            return this.LongCount(_visitor.Visit(predicate));
         }
+
+        #endregion LongCount
+
+        #region Exists
 
         /// <summary>
         /// Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression
@@ -84,7 +135,7 @@ namespace LiteDB
             return this.Exists(_visitor.Visit(predicate));
         }
 
-        #endregion Count/Exits
+        #endregion Exits
 
         #region Min/Max
 
