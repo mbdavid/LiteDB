@@ -9,8 +9,25 @@ namespace LiteDB.Tests
         public int Id { get; set; }
         public string Name { get; set; }
         public bool Active { get; set; }
+        public int Age { get; set; }
 
         public UserDomain Domain { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var other = (obj as User);
+            if (other != null)
+            {
+                return other.Id == this.Id;
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Id.GetHashCode();
+        }
     }
 
     public class UserDomain
@@ -73,11 +90,12 @@ namespace LiteDB.Tests
                 var col = db.GetCollection<User>("Users");
 
                 col.EnsureIndex(x => x.Name, true);
+                col.EnsureIndex(x => x.Age);
 
-                col.Insert(new[] { new User() { Id = 1, Name = "John Smith" },
-                                   new User() { Id = 2, Name = "Jane Smith" },
-                                   new User() { Id = 3, Name = "John Doe" },
-                                   new User() { Id = 4, Name = "Jane Doe" } });
+                col.Insert(new[] { new User() { Id = 1, Name = "John Smith", Age = 10 },
+                                   new User() { Id = 2, Name = "Jane Smith", Age = 12 },
+                                   new User() { Id = 3, Name = "John Doe", Age = 24 },
+                                   new User() { Id = 4, Name = "Jane Doe", Age = 42 } });
 
                 var empty = new string[] { };
                 Assert.AreEqual(0, col.Count(user => empty.All(name => user.Name.Contains(name))));
@@ -98,6 +116,13 @@ namespace LiteDB.Tests
                 var janeDoe = new[] { "Jane", "Doe" };
                 Assert.AreEqual(1, col.Count(user => janeDoe.All(name => user.Name.Contains(name))));
                 Assert.AreEqual(3, col.Count(user => janeDoe.Any(name => user.Name.Contains(name))));
+
+                var numRange = new[] { new { Min = 10, Max = 12 },
+                                       new { Min = 21, Max = 33 } };
+                var numQuery = numRange.Select(num => Query.And(Query.GTE("Age", num.Min), Query.LTE("Age", num.Max)));
+                var queryResult = col.Find(numQuery.Aggregate((lhs, rhs) => Query.Or(lhs, rhs)));
+                var lambdaResult = col.Find(p => numRange.Any(num => p.Age >= num.Min && p.Age <= num.Max));
+                Assert.IsTrue(queryResult.OrderBy(u => u.Name).SequenceEqual(lambdaResult.OrderBy(u => u.Name)));
             }
         }
     }
