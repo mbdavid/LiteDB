@@ -69,6 +69,7 @@
     <Compile Include="Crud\FileStorageTest.cs" />
     <Compile Include="Crud\BigFileTest.cs" />
     <Compile Include="Mapping\DataTableTest.cs" />
+    <Compile Include="Mapping\DbRefIndexTest.cs" />
     <Compile Include="Mapping\MapperInterfaceTest.cs" />
     <Compile Include="Mapping\BsonFieldTest.cs" />
     <Compile Include="Bson\ObjectIdTest.cs" />

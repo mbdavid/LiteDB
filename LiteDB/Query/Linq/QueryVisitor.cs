@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Expressions.ParameterExpression,
@@ -13,13 +14,13 @@ namespace LiteDB
     {
         private BsonMapper _mapper;
         private Type _type;
-        private ParameterDictionary parameters;
+        private ParameterDictionary _parameters;
 
         public QueryVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
             _type = typeof(T);
-            parameters = new ParameterDictionary();
+            _parameters = new ParameterDictionary();
         }
 
         public Query Visit(Expression predicate)
@@ -145,16 +146,20 @@ namespace LiteDB
 
                 return _mapper.Serialize(value.Type, value.Value, 0);
             }
-            else if (expr is MemberExpression && parameters.Count > 0)
+            else if (expr is MemberExpression && _parameters.Count > 0)
             {
                 var mExpr = (MemberExpression)expr;
-                return _mapper.Serialize(this.VisitValue(mExpr.Expression).AsDocument[mExpr.Member.Name]);
+                var mValue = this.VisitValue(mExpr.Expression);
+                var value = mValue.AsDocument[mExpr.Member.Name];
+                return _mapper.Serialize(typeof(object), value, 0);
             }
             else if (expr is ParameterExpression)
             {
                 BsonValue result;
-                if (parameters.TryGetValue((ParameterExpression)expr, out result))
+                if (_parameters.TryGetValue((ParameterExpression)expr, out result))
+                {
                     return result;
+                }
             }
 
             // execute expression
@@ -177,7 +182,7 @@ namespace LiteDB
                 throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", expr.ToString()));
             }
 
-            return this.GetBsonField(((PropertyInfo)member.Member).Name);
+            return this.VisitMember(member);
         }
 
         /// <summary>
@@ -187,42 +192,39 @@ namespace LiteDB
         private string GetBsonField(string property)
         {
             var parts = property.Split('.');
-            Type propType;
-
-            if (parts.Length == 1) return this.GetTypeField(_type, property, out propType);
-
             var fields = new string[parts.Length];
             var type = _type;
+            var isdbref = false;
+            PropertyMapper prop;
 
-            for (var i = 0; i < fields.Length; i++)
+            // loop "first.second.last"
+            for (var i = 0; i < parts.Length; i++)
             {
-                fields[i] = this.GetTypeField(type, parts[i], out propType);
+                var map = _mapper.GetPropertyMapper(type);
+                var part = parts[i];
 
-                type = propType;
+                if (map.TryGetValue(part, out prop))
+                {
+                    type = prop.PropertyType;
+
+                    fields[i] = prop.FieldName;
+
+                    if(prop.FieldName == "_id" && isdbref)
+                    {
+                        isdbref = false;
+                        fields[i] = "$id";
+                    }
+
+                    // if this property is DbRef, so if next property is _id, change to $id
+                    if (prop.IsDbRef) isdbref = true;
+                }
+                else
+                {
+                    throw LiteException.PropertyNotMapped(property);
+                }
             }
 
             return string.Join(".", fields);
-        }
-
-        /// <summary>
-        /// Get a field name passing mapper type and returns property type
-        /// </summary>
-        private string GetTypeField(Type type, string property, out Type propertyType)
-        {
-            // lets get mapping bettwen .NET class and BsonDocument
-            var map = _mapper.GetPropertyMapper(type);
-            PropertyMapper prop;
-
-            if (map.TryGetValue(property, out prop))
-            {
-                propertyType = prop.PropertyType;
-
-                return prop.FieldName;
-            }
-            else
-            {
-                throw LiteException.PropertyNotMapped(property);
-            }
         }
 
         private Query CreateAndQuery(ref Query[] queries, int startIndex = 0)
@@ -260,11 +262,11 @@ namespace LiteDB
 
             for (var i = 0; i < queries.Length; i++)
             {
-                parameters[lambda.Parameters[0]] = values[i];
+                _parameters[lambda.Parameters[0]] = values[i];
                 queries[i] = this.VisitExpression(lambda.Body);
             }
 
-            parameters.Remove(lambda.Parameters[0]);
+            _parameters.Remove(lambda.Parameters[0]);
 
             if (expr.Method.Name == "Any")
                 return CreateOrQuery(ref queries);
