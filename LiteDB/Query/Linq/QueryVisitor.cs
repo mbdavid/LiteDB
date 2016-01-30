@@ -132,9 +132,9 @@ namespace LiteDB
             // its a constant; Eg: "fixed string"
             if (expr is ConstantExpression)
             {
-                var value = (expr as ConstantExpression).Value;
+                var value = (expr as ConstantExpression);
 
-                return _mapper.Serialize(value);
+                return _mapper.Serialize(value.Type, value.Value, 0);
             }
 
             // execute expression
@@ -142,7 +142,7 @@ namespace LiteDB
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
             var getter = getterLambda.Compile();
 
-            return _mapper.Serialize(getter());
+            return _mapper.Serialize(getterLambda.ReturnType, getter(), 0);
         }
 
         /// <summary>

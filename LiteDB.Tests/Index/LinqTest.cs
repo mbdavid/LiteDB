@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.IO;
 
 namespace LiteDB.Tests
@@ -36,8 +37,14 @@ namespace LiteDB.Tests
 
                 col.Insert(new User[] { c1, c2, c3, c4 });
 
+                // a simple lambda function to returns string "Numeria"
+                Func<string> GetNumeria = () => "Numeria";
+                var strNumeria = GetNumeria();
+
                 // sub-class
                 Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == GetNumeria()));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == strNumeria));
 
                 // == !=
                 Assert.AreEqual(1, col.Count(x => x.Id == 1));
