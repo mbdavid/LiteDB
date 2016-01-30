@@ -167,7 +167,7 @@ namespace LiteDB
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
             var getter = getterLambda.Compile();
 
-            return _mapper.Serialize(getterLambda.ReturnType, getter(), 0);
+            return _mapper.Serialize(typeof(object), getter(), 0);
         }
 
         /// <summary>

@@ -92,13 +92,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB\LiteDB.csproj">
-      <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
-      <Name>LiteDB</Name>
-      <Aliases>v200</Aliases>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
@@ -113,6 +106,13 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\LiteDB090.dll" />
     <EmbeddedResource Include="Resources\LiteDB104.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB\LiteDB.csproj">
+      <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
+      <Name>LiteDB</Name>
+      <Aliases>v200</Aliases>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
