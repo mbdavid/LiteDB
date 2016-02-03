@@ -268,6 +268,7 @@ namespace LiteDB
 
         private void TryRecovery()
         {
+            if (!_journalEnabled)return;
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
             {
