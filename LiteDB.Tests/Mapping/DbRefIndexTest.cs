@@ -19,8 +19,8 @@ namespace LiteDB.Tests
 
     public class DbRefIndexDatabase : LiteDatabase
     {
-        public DbRefIndexDatabase(string f)
-            : base(f)
+        public DbRefIndexDatabase()
+            : base(new MemoryStream())
         {
         }
 
@@ -46,11 +46,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void DbRefIndexe_Test()
         {
-            var f = "";
-            f = @"C:\Git\LiteDB\LiteDB.Shell\bin\Debug\_dbref.db";
-            File.Delete(f);
-
-            using (var db = new DbRefIndexDatabase(f))
+            using (var db = new DbRefIndexDatabase())
             {
                 var customer = new DCustomer { Login = "jd", Name = "John Doe" };
                 var order = new DOrder { OrderNumber = 1, Customer = customer };
