@@ -268,7 +268,11 @@ namespace LiteDB
 
         private void TryRecovery()
         {
-            if (!_journalEnabled)return;
+            if (!_journalEnabled) return;
+
+            // avoid debug window always throw an exception if file didn't exists
+            if (!File.Exists(_journalFilename))  return;
+
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
             {
