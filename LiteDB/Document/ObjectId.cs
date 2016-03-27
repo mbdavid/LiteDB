@@ -177,7 +177,7 @@ namespace LiteDB
             if (r != 0) return r;
 
             r = this.Pid.CompareTo(other.Pid);
-            if (r != 0) return r;
+            if (r != 0) return r < 0 ? -1 : 1;
 
             return this.Increment.CompareTo(other.Increment);
         }
