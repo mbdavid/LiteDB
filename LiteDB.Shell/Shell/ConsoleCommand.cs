@@ -8,7 +8,7 @@ namespace LiteDB.Shell
     {
         public abstract bool IsCommand(StringScanner s);
 
-        public abstract void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input);
+        public abstract void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input);
 
         private static List<ConsoleCommand> _commands = new List<ConsoleCommand>();
 
@@ -28,7 +28,7 @@ namespace LiteDB.Shell
         /// <summary>
         /// If command is a console command, execute and returns true - if not, just returns false
         /// </summary>
-        public static bool TryExecute(string command, ref LiteDatabase db, Display display, InputCommand input)
+        public static bool TryExecute(string command, ref IShellEngine engine, Display display, InputCommand input)
         {
             var s = new StringScanner(command);
 
@@ -36,7 +36,7 @@ namespace LiteDB.Shell
             {
                 if (cmd.IsCommand(s))
                 {
-                    cmd.Execute(ref db, s, display, input);
+                    cmd.Execute(ref engine, s, display, input);
                     return true;
                 }
             }

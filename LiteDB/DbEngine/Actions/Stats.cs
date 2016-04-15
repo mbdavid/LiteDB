@@ -35,9 +35,9 @@ namespace LiteDB
                 )
                 .Add("usage", new BsonDocument()
                     .Add("allocated", new BsonDocument()
-                        .Add("index", indexPages * BasePage.PAGE_SIZE)
-                        .Add("data", (dataPages + extendPages) * BasePage.PAGE_SIZE)
-                        .Add("total", (indexPages + dataPages + extendPages + 1) * BasePage.PAGE_SIZE)
+                        .Add("index", BasePage.GetSizeOfPages(indexPages))
+                        .Add("data", BasePage.GetSizeOfPages(dataPages + extendPages))
+                        .Add("total", BasePage.GetSizeOfPages(indexPages + dataPages + extendPages + 1))
                     )
                     .Add("free", new BsonDocument()
                         .Add("index", indexFree)
@@ -75,7 +75,7 @@ namespace LiteDB
 
                     foreach (var block in dataPage.DataBlocks.Values)
                     {
-                        var doc = BsonSerializer.Deserialize(_data.Read(block.Position, true).Buffer);
+                        var doc = BsonSerializer.Deserialize(_data.Read(block.Position));
                         docSize += doc.GetBytesCount(true);
                     }
 

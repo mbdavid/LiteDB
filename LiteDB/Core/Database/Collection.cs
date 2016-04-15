@@ -13,7 +13,7 @@ namespace LiteDB
         public LiteCollection<T> GetCollection<T>(string name)
             where T : new()
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
             return new LiteCollection<T>(name, _engine.Value, _mapper, _log);
         }
@@ -24,7 +24,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
             return new LiteCollection<BsonDocument>(name, _engine.Value, _mapper, _log);
         }
@@ -42,7 +42,7 @@ namespace LiteDB
         /// </summary>
         public bool CollectionExists(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
             return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
         }
@@ -52,7 +52,7 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
             return _engine.Value.DropCollection(name);
         }
@@ -62,8 +62,8 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
         {
-            if (string.IsNullOrWhiteSpace(oldName)) throw new ArgumentNullException("oldName");
-            if (string.IsNullOrWhiteSpace(newName)) throw new ArgumentNullException("newName");
+            if (oldName.IsNullOrWhiteSpace()) throw new ArgumentNullException("oldName");
+            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
 
             return _engine.Value.RenameCollection(oldName, newName);
         }

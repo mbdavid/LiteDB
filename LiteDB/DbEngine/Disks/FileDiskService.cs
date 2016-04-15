@@ -25,29 +25,25 @@ namespace LiteDB
         private Logger _log;
         private TimeSpan _timeout;
         private bool _readonly;
-        private string _password;
         private long _initialSize;
         private long _limitSize;
 
         #region Initialize disk
 
-        public FileDiskService(string connectionString, Logger log)
+        public FileDiskService(ConnectionString conn, Logger log)
         {
-            var str = new ConnectionString(connectionString);
-
-            _filename = str.GetValue<string>("filename", "");
-            var journalEnabled = str.GetValue<bool>("journal", true);
-            _timeout = str.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
-            _readonly = str.GetValue<bool>("readonly", false);
-            _password = str.GetValue<string>("password", null);
-            _initialSize = str.GetFileSize("initial size", 0);
-            _limitSize = str.GetFileSize("limit size", 0);
-            var level = str.GetValue<byte?>("log", null);
+            _filename = conn.GetValue<string>("filename", "");
+            var journalEnabled = conn.GetValue<bool>("journal", true);
+            _timeout = conn.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
+            _readonly = conn.GetValue<bool>("readonly", false);
+            _initialSize = conn.GetFileSize("initial size", 0);
+            _limitSize = conn.GetFileSize("limit size", 0);
+            var level = conn.GetValue<byte?>("log", null);
 
             // simple validations
-            if (string.IsNullOrWhiteSpace(_filename)) throw new ArgumentNullException("filename");
-            if (_initialSize > 0 && _initialSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("initial size too low");
-            if (_limitSize > 0 && _limitSize < (BasePage.PAGE_SIZE * 10)) throw new ArgumentException("limit size too low");
+            if (_filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+            if (_initialSize > 0 && _initialSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("initial size too low");
+            if (_limitSize > 0 && _limitSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("limit size too low");
             if (_initialSize > 0 && _limitSize > 0 && _initialSize > _limitSize) throw new ArgumentException("limit size less than initial size");
 
             // setup log + log-level
@@ -92,6 +88,14 @@ namespace LiteDB
                 this.TryRecovery();
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Create new database - just create empty header page
+        /// </summary>
+        public virtual void CreateNew()
+        {
+            this.WritePage(0, new HeaderPage().WritePage());
         }
 
         #endregion Initialize disk
@@ -143,10 +147,10 @@ namespace LiteDB
         /// <summary>
         /// Read page bytes from disk
         /// </summary>
-        public byte[] ReadPage(uint pageID)
+        public virtual byte[] ReadPage(uint pageID)
         {
             var buffer = new byte[BasePage.PAGE_SIZE];
-            var position = (long)pageID * (long)BasePage.PAGE_SIZE;
+            var position = BasePage.GetSizeOfPages(pageID);
 
             this.TryExec(() =>
             {
@@ -168,9 +172,9 @@ namespace LiteDB
         /// <summary>
         /// Persist single page bytes to disk
         /// </summary>
-        public void WritePage(uint pageID, byte[] buffer)
+        public virtual void WritePage(uint pageID, byte[] buffer)
         {
-            var position = (long)pageID * (long)BasePage.PAGE_SIZE;
+            var position = BasePage.GetSizeOfPages(pageID);
 
             _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -246,11 +250,11 @@ namespace LiteDB
                 _journal = null;
 
                 // remove journal file
-                File.Delete(_journalFilename);
+                this.TryExec(() => File.Delete(_journalFilename));
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (_stream != null)
             {
@@ -264,6 +268,11 @@ namespace LiteDB
 
         private void TryRecovery()
         {
+            if (!_journalEnabled) return;
+
+            // avoid debug window always throw an exception if file didn't exists
+            if (!File.Exists(_journalFilename))  return;
+
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
             {
@@ -273,10 +282,10 @@ namespace LiteDB
                 this.Recovery(journal);
 
                 // close stream for delete file
-                journal.Close();
+                journal.Dispose();
 
                 // delete journal - datafile finish
-                File.Delete(_journalFilename);
+                this.TryExec(() => File.Delete(_journalFilename));
 
                 _log.Write(Logger.RECOVERY, "recovery finish");
             });
@@ -304,12 +313,11 @@ namespace LiteDB
                 {
                     var header = (HeaderPage)BasePage.ReadPage(buffer);
 
-                    fileSize = (header.LastPageID + 1) * BasePage.PAGE_SIZE;
+                    fileSize = BasePage.GetSizeOfPages(header.LastPageID + 1);
                 }
 
                 // write in stream
-                _stream.Seek(pageID * BasePage.PAGE_SIZE, SeekOrigin.Begin);
-                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+                this.WritePage(pageID, buffer);
             }
 
             _log.Write(Logger.RECOVERY, "resize datafile to {0} bytes", fileSize);
@@ -328,7 +336,7 @@ namespace LiteDB
             this.DeleteTempDisk();
 
             // no journal, no logger
-            return new FileDiskService("filename=" + _tempFilename + ";journal=false", new Logger());
+            return new FileDiskService(new ConnectionString("filename=" + _tempFilename + ";journal=false"), new Logger());
         }
 
         public void DeleteTempDisk()
@@ -345,9 +353,9 @@ namespace LiteDB
         /// </summary>
         private void TryExec(Action action)
         {
-            var timer = DateTime.Now.Add(_timeout);
+            var timer = DateTime.UtcNow.Add(_timeout);
 
-            while (DateTime.Now < timer)
+            while (DateTime.UtcNow < timer)
             {
                 try
                 {
@@ -379,13 +387,9 @@ namespace LiteDB
                     success(stream);
                 }
             }
-            catch (FileNotFoundException)
+            catch (Exception)
             {
-                // do nothing - no journal file, no recovery
-            }
-            catch (IOException ex)
-            {
-                ex.WaitIfLocked(0);
+                // not found OR lock by another process, .... no recovery, do nothing
             }
         }
 

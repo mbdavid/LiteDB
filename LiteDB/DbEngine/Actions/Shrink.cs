@@ -8,7 +8,7 @@ namespace LiteDB
         /// <summary>
         /// Copy database do another disk
         /// </summary>
-        public int Shrink()
+        public long Shrink()
         {
             lock (_locker)
             {
@@ -21,7 +21,7 @@ namespace LiteDB
 
                 // get initial disk size
                 var header = _pager.GetPage<HeaderPage>(0);
-                var diff = 0;
+                var diff = 0L;
 
                 // create temp engine instance to copy all documents
                 using (var tempEngine = new DbEngine(tempDisk, new Logger()))
@@ -39,7 +39,7 @@ namespace LiteDB
                         var nodes = _indexer.FindAll(col.PK, Query.Ascending);
 
                         tempEngine.Insert(col.CollectionName,
-                            nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock, true).Buffer)));
+                            nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock))));
                     }
 
                     // get final header from temp engine
@@ -55,7 +55,7 @@ namespace LiteDB
                     }
 
                     // commit journal + shrink data file
-                    _disk.SetLength((tempHeader.LastPageID + 1) * BasePage.PAGE_SIZE);
+                    _disk.SetLength(BasePage.GetSizeOfPages(tempHeader.LastPageID + 1));
 
                     // lets re-write all pages copying from new database
                     for (uint pageID = 0; pageID <= tempHeader.LastPageID; pageID++)
@@ -67,7 +67,7 @@ namespace LiteDB
                     _disk.DeleteJournal();
 
                     // get diff from initial and final last pageID
-                    diff = (int)((header.LastPageID - tempHeader.LastPageID) * BasePage.PAGE_SIZE);
+                    diff = BasePage.GetSizeOfPages(header.LastPageID - tempHeader.LastPageID);
                 }
 
                 // unlock disk and ckar cache to continue

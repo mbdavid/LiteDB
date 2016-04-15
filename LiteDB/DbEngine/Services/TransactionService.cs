@@ -26,7 +26,7 @@ namespace LiteDB
         /// </summary>
         public void Begin()
         {
-            if (_trans == true) throw new SystemException("Begin transaction already exists");
+            if (_trans == true) throw new Exception("Begin transaction already exists");
 
             // lock (or try to) datafile
             _disk.Lock();
@@ -39,7 +39,7 @@ namespace LiteDB
         /// </summary>
         public void Commit()
         {
-            if (_trans == false) throw new SystemException("No begin transaction");
+            if (_trans == false) throw new Exception("No begin transaction");
 
             if (_cache.HasDirtyPages)
             {
@@ -71,7 +71,7 @@ namespace LiteDB
             header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
 
             // set final datafile length (optimize page writes)
-            _disk.SetLength((header.LastPageID + 1) * BasePage.PAGE_SIZE);
+            _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));
 
             // write all dirty pages in data file
             foreach (var page in _cache.GetDirtyPages())

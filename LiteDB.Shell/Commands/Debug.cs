@@ -9,12 +9,14 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"debug\s*").Length > 0;
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display d, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display d, InputCommand input)
         {
             var sb = new StringBuilder();
             var enabled = !(s.Scan(@"off\s*").Length > 0);
 
-            db.Log.Level = enabled ? Logger.FULL : Logger.NONE;
+            if(engine == null) throw ShellExpcetion.NoDatabase();
+
+            engine.Debug(enabled);
         }
     }
 }

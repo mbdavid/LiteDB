@@ -9,9 +9,10 @@ namespace LiteDB.Shell.Commands
             return s.Match(@"(quit|exit)$");
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
         {
-            Environment.Exit(0);
+            if(engine != null) engine.Dispose();
+            input.Running = false;
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace LiteDB
 {
@@ -9,23 +11,29 @@ namespace LiteDB
         /// <summary>
         /// Deserialize a BsonDocument to entity class
         /// </summary>
-        public T ToObject<T>(BsonDocument doc)
-            where T : new()
+        public object ToObject(Type type, BsonDocument doc)
         {
             if (doc == null) throw new ArgumentNullException("doc");
 
-            var type = typeof(T);
-
             // if T is BsonDocument, just return them
-            if (type == typeof(BsonDocument)) return (T)(object)doc;
+            if (type == typeof(BsonDocument)) return doc;
 
-            return (T)this.Deserialize(type, doc);
+            return this.Deserialize(type, doc);
+        }
+
+        /// <summary>
+        /// Deserialize a BsonDocument to entity class
+        /// </summary>
+        public T ToObject<T>(BsonDocument doc)
+            where T : new()
+        {
+            return (T)this.ToObject(typeof(T), doc);
         }
 
         /// <summary>
         /// Deserialize an BsonValue to .NET object typed in T
         /// </summary>
-        public T Deserialize<T>(BsonValue value)
+        internal T Deserialize<T>(BsonValue value)
         {
             if (value == null) return default(T);
 
@@ -178,15 +186,28 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-            var itemType = Reflection.UnderlyingTypeOf(type);
-            var list = (IList)Reflection.CreateInstance(type);
+            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+            var enumerable = (IEnumerable)Reflection.CreateInstance(type);
+            var list = enumerable as IList;
 
-            foreach (var item in value)
+            if (list != null)
             {
-                list.Add(this.Deserialize(itemType, item));
+                foreach (BsonValue item in value)
+                {
+                    list.Add(Deserialize(itemType, item));
+                }
+            }
+            else
+            {
+                var addMethod = type.GetMethod("Add");
+
+                foreach (BsonValue item in value)
+                {
+                    addMethod.Invoke(enumerable, new[] { Deserialize(itemType, item) });
+                }
             }
 
-            return list;
+            return enumerable;
         }
 
         private void DeserializeDictionary(Type K, Type T, IDictionary dict, BsonDocument value)

@@ -84,6 +84,26 @@ namespace LiteDB
         /// </summary>
         public abstract void UpdateItemCount();
 
+        /// <summary>
+        /// Returns a size of specified number of pages
+        /// </summary>
+        /// <param name="pageCount">The page count</param>
+        public static long GetSizeOfPages(uint pageCount)
+        {
+            return checked((long)pageCount * BasePage.PAGE_SIZE);
+        }
+
+        /// <summary>
+        /// Returns a size of specified number of pages
+        /// </summary>
+        /// <param name="pageCount">The page count</param>
+        public static long GetSizeOfPages(int pageCount)
+        {
+            if (pageCount < 0) throw new ArgumentOutOfRangeException("pageCount", "Could not be less than 0.");
+
+            return BasePage.GetSizeOfPages((uint)pageCount);
+        }
+
         #region Read/Write page
 
         /// <summary>
@@ -94,15 +114,15 @@ namespace LiteDB
         {
             var type = typeof(T);
 
-            // why I need cast to BasePage before cast to T?? if you know, please tell me :)
-            if (type == typeof(HeaderPage)) return (T)(BasePage)(new HeaderPage());
-            if (type == typeof(CollectionPage)) return (T)(BasePage)(new CollectionPage(pageID));
-            if (type == typeof(IndexPage)) return (T)(BasePage)(new IndexPage(pageID));
-            if (type == typeof(DataPage)) return (T)(BasePage)(new DataPage(pageID));
-            if (type == typeof(ExtendPage)) return (T)(BasePage)(new ExtendPage(pageID));
-            if (type == typeof(EmptyPage)) return (T)(BasePage)(new EmptyPage(pageID));
+            // casting using "as T" #90 / thanks @Skysper
+            if (type == typeof(HeaderPage)) return new HeaderPage() as T;
+            if (type == typeof(CollectionPage)) return new CollectionPage(pageID) as T;
+            if (type == typeof(IndexPage)) return new IndexPage(pageID) as T;
+            if (type == typeof(DataPage)) return new DataPage(pageID) as T;
+            if (type == typeof(ExtendPage)) return new ExtendPage(pageID) as T;
+            if (type == typeof(EmptyPage)) return new EmptyPage(pageID) as T;
 
-            throw new SystemException("Invalid base page type T");
+            throw new Exception("Invalid base page type T");
         }
 
         /// <summary>
@@ -118,7 +138,7 @@ namespace LiteDB
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);
                 case PageType.Empty: return new EmptyPage(pageID);
-                default: throw new SystemException("Invalid pageType");
+                default: throw new Exception("Invalid pageType");
             }
         }
 

@@ -7,13 +7,13 @@
             return s.Scan(@"close$").Length > 0;
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display display, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display display, InputCommand input)
         {
-            if (db == null) throw LiteException.NoDatabase();
+            if (engine == null) throw ShellExpcetion.NoDatabase();
 
-            db.Dispose();
+            engine.Dispose();
 
-            db = null;
+            engine = null;
         }
     }
 }

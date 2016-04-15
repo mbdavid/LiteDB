@@ -40,25 +40,11 @@
             get { return DataBlock.DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
         }
 
-        /// <summary>
-        /// Represent data from Extend Pages - not persistable and used only when load data
-        /// </summary>
-        public byte[] ExtendData { get; set; }
-
-        /// <summary>
-        /// A readonly property  (non-persistable) that contains data from this page OR from Extended Pages
-        /// </summary>
-        public byte[] Buffer
-        {
-            get { return this.ExtendPageID == uint.MaxValue ? this.Data : this.ExtendData; }
-        }
-
         public DataBlock()
         {
             this.Position = PageAddress.Empty;
             this.ExtendPageID = uint.MaxValue;
             this.Data = new byte[0];
-            this.ExtendData = new byte[0];
 
             this.IndexRef = new PageAddress[CollectionIndex.INDEX_PER_COLLECTION];
 

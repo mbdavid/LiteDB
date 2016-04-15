@@ -12,6 +12,7 @@ namespace LiteDB.Shell
         public Display()
         {
             this.TextWriters = new List<TextWriter>();
+            this.Pretty = false;
         }
 
         public void WriteWelcome()
@@ -55,57 +56,24 @@ namespace LiteDB.Shell
             }
         }
 
-        public void WriteResult(BsonValue result)
-        {
-            var index = 0;
+        #region Print public methods
 
-            if (result.IsNull) return;
-
-            if (result.IsDocument)
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
-            }
-            else if (result.IsArray)
-            {
-                foreach (var doc in result.AsArray)
-                {
-                    this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
-                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(doc, this.Pretty, false));
-                }
-
-                if (index == 0)
-                {
-                    this.WriteLine(ConsoleColor.DarkCyan, "no documents");
-                }
-            }
-            else if (result.Type == BsonType.String)
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
-            }
-            else
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
-            }
-        }
-
-        #region Private methods
-
-        private void Write(string text)
+        public void Write(string text)
         {
             this.Write(Console.ForegroundColor, text);
         }
 
-        private void WriteLine(string text)
+        public void WriteLine(string text)
         {
             this.WriteLine(Console.ForegroundColor, text);
         }
 
-        private void WriteLine(ConsoleColor color, string text)
+        public void WriteLine(ConsoleColor color, string text)
         {
             this.Write(color, text + Environment.NewLine);
         }
 
-        private void Write(ConsoleColor color, string text)
+        public void Write(ConsoleColor color, string text)
         {
             Console.ForegroundColor = color;
 

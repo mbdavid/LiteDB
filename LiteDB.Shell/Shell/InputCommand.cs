@@ -9,6 +9,8 @@ namespace LiteDB.Shell
         public Queue<string> Queue { get; set; }
         public List<string> History { get; set; }
         public Stopwatch Timer { get; set; }
+        public bool Running { get; set; }
+        public bool AutoExit { get; set; }
 
         public Action<string> OnWrite { get; set; }
 
@@ -17,6 +19,8 @@ namespace LiteDB.Shell
             this.Queue = new Queue<string>();
             this.History = new List<string>();
             this.Timer = new Stopwatch();
+            this.Running = true;
+            this.AutoExit = false; // run "exit" command when there is not more command in queue
         }
 
         public string ReadCommand()
@@ -82,6 +86,8 @@ namespace LiteDB.Shell
             }
             else
             {
+                if (this.AutoExit) return "exit";
+
                 var cmd = Console.ReadLine();
 
                 if (this.OnWrite != null)

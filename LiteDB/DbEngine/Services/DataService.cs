@@ -33,7 +33,6 @@ namespace LiteDB
             if (extend)
             {
                 var extendPage = _pager.NewPage<ExtendPage>();
-                block.ExtendData = data;
                 block.ExtendPageID = extendPage.PageID;
                 this.StoreExtendData(extendPage, data);
             }
@@ -71,7 +70,6 @@ namespace LiteDB
             {
                 // clear my block data
                 block.Data = new byte[0];
-                block.ExtendData = data;
 
                 // create (or get a existed) extendpage and store data there
                 ExtendPage extendPage;
@@ -111,20 +109,28 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage. If readExtendData = false, do not read extended data
+        /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage.
         /// </summary>
-        public DataBlock Read(PageAddress blockAddress, bool readExtendData)
+        public byte[] Read(PageAddress blockAddress)
         {
-            var page = _pager.GetPage<DataPage>(blockAddress.PageID);
-            var block = page.DataBlocks[blockAddress.Index];
+            var block = this.GetBlock(blockAddress);
 
-            // if there is a extend page, read bytes to block.Data
-            if (readExtendData && block.ExtendPageID != uint.MaxValue)
+            // if there is a extend page, read bytes all bytes from extended pages
+            if (block.ExtendPageID != uint.MaxValue)
             {
-                block.ExtendData = this.ReadExtendData(block.ExtendPageID);
+                return this.ReadExtendData(block.ExtendPageID);
             }
 
-            return block;
+            return block.Data;
+        }
+
+        /// <summary>
+        /// Get a data block from a DataPage using address
+        /// </summary>
+        public DataBlock GetBlock(PageAddress blockAddress)
+        {
+            var page = _pager.GetPage<DataPage>(blockAddress.PageID);
+            return page.DataBlocks[blockAddress.Index];
         }
 
         /// <summary>

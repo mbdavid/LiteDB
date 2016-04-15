@@ -21,7 +21,7 @@ namespace LiteDB
                     _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
 
                     // read dataBlock (do not read all extend pages, i will not use)
-                    var dataBlock = _data.Read(node.DataBlock, false);
+                    var dataBlock = _data.GetBlock(node.DataBlock);
 
                     // lets remove all indexes that point to this in dataBlock
                     foreach (var index in col.GetIndexes(true))
