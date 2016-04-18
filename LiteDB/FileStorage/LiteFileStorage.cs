@@ -108,7 +108,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
 
-            var doc = _engine.Find(FILES, Query.EQ("_id", id)).FirstOrDefault();
+            var doc = _engine.Find(FILES, Query.EQ("_id", new BsonValue(id))).FirstOrDefault();
 
             if (doc == null) return null;
 

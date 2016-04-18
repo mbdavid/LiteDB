@@ -33,10 +33,10 @@ namespace LiteDB
             // initialize disk service and check if database exists
             var isNew = disk.Initialize();
 
-            // new database? just create header page and save it
+            // new database? create new database
             if (isNew)
             {
-                disk.WritePage(0, new HeaderPage().WritePage());
+                disk.CreateNew();
             }
 
             _log = log;

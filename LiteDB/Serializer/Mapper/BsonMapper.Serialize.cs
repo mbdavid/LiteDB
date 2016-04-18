@@ -8,27 +8,25 @@ namespace LiteDB
         /// <summary>
         /// Serialize a entity class to BsonDocument
         /// </summary>
-        public BsonDocument ToDocument(object entity)
+        public BsonDocument ToDocument(Type type, object entity)
         {
             if (entity == null) throw new ArgumentNullException("entity");
 
             // if object is BsonDocument, just return them
-            if (entity is BsonDocument) return (BsonDocument)entity;
+            if (entity is BsonDocument) return (BsonDocument)(object)entity;
 
-            return this.Serialize(entity).AsDocument;
+            return this.Serialize(type, entity, 0).AsDocument;
         }
 
         /// <summary>
-        /// Create a instance of a object convered in BsonValue object.
+        /// Serialize a entity class to BsonDocument
         /// </summary>
-        internal BsonValue Serialize(object obj)
+        public BsonDocument ToDocument<T>(T entity)
         {
-            if (obj == null) return BsonValue.Null;
-
-            return this.Serialize(obj.GetType(), obj, 0);
+            return this.ToDocument(typeof(T), entity).AsDocument;
         }
 
-        private BsonValue Serialize(Type type, object obj, int depth)
+        internal BsonValue Serialize(Type type, object obj, int depth)
         {
             if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH);
 

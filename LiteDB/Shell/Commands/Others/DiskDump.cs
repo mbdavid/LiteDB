@@ -2,11 +2,11 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Dump : IShellCommand
+    internal class DiskDump : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"dump\s*").Length > 0;
+            return s.Scan(@"diskdump\s*").Length > 0;
         }
 
         public BsonValue Execute(DbEngine engine, StringScanner s)

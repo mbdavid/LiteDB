@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -35,7 +36,7 @@ namespace LiteDB
         /// <summary>
         /// Get the number of documents inside this collection
         /// </summary>
-        public uint DocumentCount { get; set; }
+        public long DocumentCount { get; set; }
 
         /// <summary>
         /// Get all indexes from this collection - includes non-used indexes
@@ -72,7 +73,7 @@ namespace LiteDB
         {
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
-            this.DocumentCount = reader.ReadUInt32();
+            var uintCount = reader.ReadUInt32(); // read as uint (4 bytes)
 
             foreach (var index in this.Indexes)
             {
@@ -86,13 +87,21 @@ namespace LiteDB
                 index.Options.EmptyStringToNull = reader.ReadBoolean();
                 index.Options.RemoveAccents = reader.ReadBoolean();
             }
+
+            // be compatible with v2_beta
+            var longCount = reader.ReadInt64();
+            this.DocumentCount = Math.Max(uintCount, longCount);
+
         }
 
         protected override void WriteContent(ByteWriter writer)
         {
             writer.Write(this.CollectionName);
             writer.Write(this.FreeDataPageID);
-            writer.Write(this.DocumentCount);
+
+            // to be compatible with v2_beta, write here only uint (4 bytes)
+            writer.Write(this.DocumentCount > uint.MaxValue ?
+                uint.MaxValue : (uint)this.DocumentCount);
 
             foreach (var index in this.Indexes)
             {
@@ -106,6 +115,9 @@ namespace LiteDB
                 writer.Write(index.Options.EmptyStringToNull);
                 writer.Write(index.Options.RemoveAccents);
             }
+
+            // write all document count 8 bytes here
+            writer.Write(this.DocumentCount);
         }
 
         #endregion Read/Write pages

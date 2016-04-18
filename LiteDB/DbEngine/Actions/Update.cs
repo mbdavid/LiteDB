@@ -22,6 +22,12 @@ namespace LiteDB
                     // normalize id before find
                     var id = doc["_id"].Normalize(col.PK.Options);
 
+                    // validate id for null, min/max values
+                    if (id.IsNull || id.IsMinValue || id.IsMaxValue)
+                    {
+                        throw LiteException.InvalidDataType("_id", id);
+                    }
+
                     _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = ", colName, id);
 
                     // find indexNode from pk index

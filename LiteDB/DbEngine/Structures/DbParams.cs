@@ -6,20 +6,27 @@
     internal class DbParams
     {
         /// <summary>
-        /// Database user version 
+        /// Database user version [2 bytes]
         /// </summary>
         public ushort DbVersion = 0;
+
+        /// <summary>
+        /// Password hash in SHA1 [20 bytes]
+        /// </summary>
+        public byte[] Password = new byte[20];
 
         public void Read(ByteReader reader)
         {
             this.DbVersion = reader.ReadUInt16();
-            reader.Skip(198);
+            this.Password = reader.ReadBytes(20);
+            reader.Skip(178);
         }
 
         public void Write(ByteWriter writer)
         {
             writer.Write(this.DbVersion);
-            writer.Skip(198);
+            writer.Write(this.Password);
+            writer.Skip(178);
         }
     }
 }

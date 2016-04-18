@@ -50,7 +50,10 @@ namespace LiteDB
             // do not cache extend page - never will be reused
             if (page.PageType != PageType.Extend)
             {
-                _cache[page.PageID] = page;
+                lock(_cache)
+                {
+                    _cache[page.PageID] = page;
+                }
             }
         }
 
@@ -59,21 +62,24 @@ namespace LiteDB
         /// </summary>
         public void SetPageDirty(BasePage page)
         {
-            // add page to dirty list
-            _dirty[page.PageID] = page;
-
-            // and remove from clean cache (keeps page in only one list)
-            _cache.Remove(page.PageID);
-
-            if (page.IsDirty) return;
-
-            page.IsDirty = true;
-
-            // if page is new (not exits on datafile), there is no journal for them
-            if (page.DiskData.Length > 0)
+            lock(_cache)
             {
-                // call action passing dirty page - used for journal file writes
-                MarkAsDirtyAction(page);
+                // add page to dirty list
+                _dirty[page.PageID] = page;
+
+                // and remove from clean cache (keeps page in only one list)
+                _cache.Remove(page.PageID);
+
+                if (page.IsDirty) return;
+
+                page.IsDirty = true;
+
+                // if page is new (not exits on datafile), there is no journal for them
+                if (page.DiskData.Length > 0)
+                {
+                    // call action passing dirty page - used for journal file writes
+                    MarkAsDirtyAction(page);
+                }
             }
         }
 
@@ -83,17 +89,20 @@ namespace LiteDB
         /// </summary>
         public void CheckPoint()
         {
-            // check if dirty pages pass limits, if pass, call dirty recicle and clear
-            if (_dirty.Count > MAX_CACHE_SIZE)
+            lock(_cache)
             {
-                DirtyRecicleAction();
-                _dirty.Clear();
-            }
+                // check if dirty pages pass limits, if pass, call dirty recicle and clear
+                if (_dirty.Count > MAX_CACHE_SIZE)
+                {
+                    DirtyRecicleAction();
+                    _dirty.Clear();
+                }
 
-            // check if read cache pass limits, just clean
-            if (_cache.Count > MAX_CACHE_SIZE)
-            {
-                _cache.Clear();
+                // check if read cache pass limits, just clean
+                if (_cache.Count > MAX_CACHE_SIZE)
+                {
+                    _cache.Clear();
+                }
             }
         }
 
@@ -102,15 +111,18 @@ namespace LiteDB
         /// </summary>
         public bool Clear()
         {
-            var hasDirty = _dirty.Count > 0;
+            lock(_cache)
+            {
+                var hasDirty = _dirty.Count > 0;
 
-            _dirty.Clear();
-            _cache.Clear();
+                _dirty.Clear();
+                _cache.Clear();
 
-            return hasDirty;
+                return hasDirty;
+            }
         }
 
-        public bool HasDirtyPages { get { return _dirty.Count() > 0; } }
+        public bool HasDirtyPages { get { return _dirty.Count > 0; } }
 
         /// <summary>
         /// Returns all dirty pages including header page (for better write performance, get all pages in PageID increase order)

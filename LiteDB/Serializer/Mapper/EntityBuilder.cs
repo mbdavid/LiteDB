@@ -113,6 +113,7 @@ namespace LiteDB
             return this.GetProperty(property, (p) =>
             {
                 var typeRef = typeof(K);
+                p.IsDbRef = true;
 
                 if (Reflection.IsList(typeRef))
                 {

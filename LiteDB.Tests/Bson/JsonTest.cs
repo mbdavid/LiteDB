@@ -11,6 +11,7 @@ namespace LiteDB.Tests
             // create same object, but using BsonDocument
             var doc = new BsonDocument();
             doc["_id"] = 123;
+            doc["Special"] = "Màçã ámö-î";
             doc["FirstString"] = "BEGIN this string \" has \" \t and this \f \n\r END";
             doc["CustomerId"] = Guid.NewGuid();
             doc["Date"] = new DateTime(2015, 1, 1);
@@ -42,6 +43,7 @@ namespace LiteDB.Tests
 
             var doc = JsonSerializer.Deserialize(json).AsDocument;
 
+            Assert.AreEqual(o["Special"].AsString, doc["Special"].AsString);
             Assert.AreEqual(o["Date"].AsDateTime, doc["Date"].AsDateTime);
             Assert.AreEqual(o["CustomerId"].AsGuid, doc["CustomerId"].AsGuid);
             Assert.AreEqual(o["Items"].AsArray.Count, doc["Items"].AsArray.Count);

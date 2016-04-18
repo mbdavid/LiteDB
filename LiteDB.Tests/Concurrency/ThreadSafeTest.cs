@@ -14,7 +14,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Thread_Test()
         {
-            var dbname = DB.RandomFilename();
+            var dbname = DB.RandomFile();
             var N = 300; // interate counter
 
             // use a single instance of LiteDatabase/Collection

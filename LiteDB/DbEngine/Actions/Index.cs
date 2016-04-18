@@ -27,13 +27,14 @@ namespace LiteDB
                 // read all objects (read from PK index)
                 foreach (var node in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
                 {
-                    var dataBlock = _data.Read(node.DataBlock, true);
+                    var buffer = _data.Read(node.DataBlock);
+                    var dataBlock = _data.GetBlock(node.DataBlock);
 
                     // mark datablock page as dirty
                     _pager.SetDirty(dataBlock.Page);
 
                     // read object
-                    var doc = BsonSerializer.Deserialize(dataBlock.Buffer).AsDocument;
+                    var doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
                     // adding index
                     var key = doc.Get(field);
@@ -100,11 +101,13 @@ namespace LiteDB
                 var doc = new BsonDocument()
                     .Add("slot", index.Slot)
                     .Add("field", index.Field)
-                    .Add("unique", index.Options.Unique)
-                    .Add("ignoreCase", index.Options.IgnoreCase)
-                    .Add("removeAccents", index.Options.RemoveAccents)
-                    .Add("trimWhitespace", index.Options.TrimWhitespace)
-                    .Add("emptyStringToNull", index.Options.EmptyStringToNull);
+                    .Add("options", new BsonDocument()
+                        .Add("unique", index.Options.Unique)
+                        .Add("ignoreCase", index.Options.IgnoreCase)
+                        .Add("removeAccents", index.Options.RemoveAccents)
+                        .Add("trimWhitespace", index.Options.TrimWhitespace)
+                        .Add("emptyStringToNull", index.Options.EmptyStringToNull)
+                    );
 
                 if (stats)
                 {
@@ -113,11 +116,13 @@ namespace LiteDB
                     var pages = _indexer.FindAll(index, Query.Ascending).GroupBy(x => x.Page.PageID).Count();
 
                     // this command can be consume too many memory!! has no CheckPoint on loop
-                    var keySize = _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
+                    var keySize = pages == 0 ? 0 : _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
 
-                    doc.Add("pages", pages)
-                        .Add("allocated", pages * BasePage.PAGE_SIZE)
-                        .Add("keyAverageSize", (int)keySize);
+                    doc.Add("stats", new BsonDocument()
+                        .Add("pages", pages)
+                        .Add("allocated", BasePage.GetSizeOfPages(pages))
+                        .Add("keyAverageSize", (int)keySize)
+                    );
                 }
 
                 yield return doc;

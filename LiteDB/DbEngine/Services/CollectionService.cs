@@ -105,7 +105,7 @@ namespace LiteDB
                         pages.Add(node.DataBlock.PageID);
 
                         // read datablock to check if there is any extended page
-                        var block = _data.Read(node.DataBlock, false);
+                        var block = _data.GetBlock(node.DataBlock);
 
                         if (block.ExtendPageID != uint.MaxValue)
                         {

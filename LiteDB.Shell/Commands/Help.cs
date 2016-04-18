@@ -9,7 +9,7 @@ namespace LiteDB.Shell.Commands
             return s.Scan(@"help\s*").Length > 0;
         }
 
-        public override void Execute(ref LiteDatabase db, StringScanner s, Display d, InputCommand input)
+        public override void Execute(ref IShellEngine engine, StringScanner s, Display d, InputCommand input)
         {
             var sb = new StringBuilder();
             var full = s.Match("full");
@@ -19,6 +19,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Basic Shell Commands - try `help full` for all commands");
                 d.WriteHelp("=======================================================");
 
+                d.WriteHelp("> show collections", "List all collections inside database");
                 d.WriteHelp("> db.<collection>.insert <jsonDoc>", "Insert a new document into collection");
                 d.WriteHelp("> db.<collection>.update <jsonDoc>", "Update a document inside collection");
                 d.WriteHelp("> db.<collection>.delete <filter>", "Delete documents using a filter clausule (see find)");
@@ -33,7 +34,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp(" > db.customers.insert { _id:1, name:\"John Doe\", age: 37 }");
                 d.WriteHelp(" > db.customers.ensureIndex name");
                 d.WriteHelp(" > db.customers.find name like \"John\"");
-                d.WriteHelp(" > db.customers.find (name like \"John\" and _id between [0, 100]) limit 10");
+                d.WriteHelp(" > db.customers.find name like \"John\" and _id between [0, 100] limit 10");
             }
             else
             {
@@ -44,6 +45,8 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> close", "Close current database");
                 d.WriteHelp("> run <filename>", "Run commands inside filename");
                 d.WriteHelp("> pretty on|off", "Turns on/off pretty json format");
+                d.WriteHelp("> dump > <filename.dmp>", "Export all documents to an external file script");
+                d.WriteHelp("> dump < <filename.dmp>", "Import all documents inside a script dump file");
                 d.WriteHelp("> timer", "Show timer before prompt");
                 d.WriteHelp("> ed", "Open nodepad with last command to edit and execute");
                 d.WriteHelp("> spool on|off", "Spool all output in a spool file");
@@ -57,6 +60,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Collections commands");
                 d.WriteHelp("====================");
 
+                d.WriteHelp("> show collections", "List all collections inside database");
                 d.WriteHelp("> db.<collection>.insert <jsonDoc>", "Insert a new document into collection");
                 d.WriteHelp("> db.<collection>.update <jsonDoc>", "Update a document inside collection");
                 d.WriteHelp("> db.<collection>.delete <filter>", "Delete documents using a filter clausule (see find)");
@@ -83,7 +87,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("File storage commands");
                 d.WriteHelp("=====================");
 
-                d.WriteHelp("> fs.find", "List all files on datafile");
+                d.WriteHelp("> fs.find", "List all files on database");
                 d.WriteHelp("> fs.find <fileId>", "List file info from a key. Supports * for starts with key");
                 d.WriteHelp("> fs.upload <fileId> <filename>", "Insert a new file inside database");
                 d.WriteHelp("> fs.download <fileId> <filename>", "Save a file to disk passing a file key and filename");
@@ -94,8 +98,8 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> shrink", "Reduce datafile removing empty pages");
-                d.WriteHelp("> dump [n m]", "Display dump database pages (from N page to M page)");
+                d.WriteHelp("> shrink", "Reduce database removing empty pages");
+                d.WriteHelp("> diskdump [n m]", "Display database disk pages strucutre (from N page to M page)");
             }
         }
     }

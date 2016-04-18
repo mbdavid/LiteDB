@@ -7,7 +7,7 @@ namespace LiteDB
         /// <summary>
         /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
         /// </summary>
-        public int Shrink()
+        public long Shrink()
         {
             return _engine.Value.Shrink();
         }
@@ -19,6 +19,14 @@ namespace LiteDB
             where T : new()
         {
             return _mapper.ToObject<T>(doc);
+        }
+
+        /// <summary>
+        /// Convert a BsonDocument to a class object using BsonMapper rules
+        /// </summary>
+        public object ToObject(Type type, BsonDocument doc)
+        {
+            return _mapper.ToObject(type, doc);
         }
 
         /// <summary>

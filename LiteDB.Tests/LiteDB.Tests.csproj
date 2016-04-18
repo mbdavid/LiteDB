@@ -39,8 +39,17 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LiteDB090">
+      <HintPath>..\LiteDB.Shell\Resources\LiteDB090.dll</HintPath>
+      <Aliases>v090</Aliases>
+    </Reference>
+    <Reference Include="LiteDB104">
+      <HintPath>..\LiteDB.Shell\Resources\LiteDB104.dll</HintPath>
+      <Aliases>v104</Aliases>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <Choose>
@@ -56,23 +65,31 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Concurrency\ParallelTest.cs" />
+    <Compile Include="Concurrency\TaskTest.cs" />
     <Compile Include="Concurrency\ThreadSafeTest.cs" />
+    <Compile Include="Crud\LongCountTest.cs" />
     <Compile Include="Crud\BulkTest.cs" />
     <Compile Include="Bson\BsonTest.cs" />
     <Compile Include="Crud\DbVersionTest.cs" />
+    <Compile Include="Disks\EncryptedTest.cs" />
     <Compile Include="Mapping\AutoIdTest.cs" />
     <Compile Include="Crud\DropCollectionTest.cs" />
     <Compile Include="Crud\FileStorageTest.cs" />
     <Compile Include="Crud\BigFileTest.cs" />
+    <Compile Include="Mapping\DataTableTest.cs" />
+    <Compile Include="Mapping\DbRefIndexTest.cs" />
     <Compile Include="Mapping\MapperInterfaceTest.cs" />
     <Compile Include="Mapping\BsonFieldTest.cs" />
     <Compile Include="Bson\ObjectIdTest.cs" />
+    <Compile Include="Mapping\DerivedTypesTest.cs" />
     <Compile Include="Mapping\MapperTest.cs" />
     <Compile Include="Concurrency\ConcurrentTest.cs" />
     <Compile Include="Bson\JsonTest.cs" />
     <Compile Include="Index\LinqTest.cs" />
     <Compile Include="Mapping\IncludeTest.cs" />
     <Compile Include="Shell\ShellTest.cs" />
+    <Compile Include="Utils\Initialize.cs" />
     <Compile Include="Utils\DB.cs" />
     <Compile Include="Index\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
