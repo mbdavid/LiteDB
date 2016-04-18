@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using LiteDB;
+using System.Reflection;
 
 namespace LiteDB
 {
@@ -137,7 +139,7 @@ namespace LiteDB
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                dict["_type"] = new BsonValue(t.FullName + ", " + t.Assembly.GetName().Name);
+                dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
             foreach (var prop in mapper.Values)

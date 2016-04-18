@@ -185,6 +185,7 @@
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Utils\SimpleAES.cs" />
     <Compile Include="Utils\StringScanner.cs" />
+    <Compile Include="Utils\TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LiteDB.snk" />

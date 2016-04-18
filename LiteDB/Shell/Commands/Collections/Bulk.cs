@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#if !PORTABLE
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -25,3 +26,4 @@ namespace LiteDB.Shell.Commands
         }
     }
 }
+#endif

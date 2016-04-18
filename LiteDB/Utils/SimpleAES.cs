@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !PORTABLE
+using System;
 using System.Security.Cryptography;
 using System.IO;
 using System.Text;
@@ -91,3 +92,4 @@ namespace LiteDB
         }
     }
 }
+#endif

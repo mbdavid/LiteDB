@@ -9,7 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Shell", "LiteDB.Shel
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Tests", "LiteDB.Tests\LiteDB.Tests.csproj", "{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDBPortable", "LiteDBPortable\LiteDBPortable.csproj", "{28C0558C-13B2-4F3D-B956-5D6081625F61}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Portable.Tests", "LiteDB.Portable.Tests\LiteDB.Portable.Tests.csproj", "{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Portable", "Portable", "{2BA700FB-431A-4609-851F-971E302DB7CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Portable", "LiteDB.Portable\LiteDB.Portable.csproj", "{28C0558C-13B2-4F3D-B956-5D6081625F61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +33,10 @@ Global
 		{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{28C0558C-13B2-4F3D-B956-5D6081625F61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{28C0558C-13B2-4F3D-B956-5D6081625F61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28C0558C-13B2-4F3D-B956-5D6081625F61}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -36,5 +44,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E} = {2BA700FB-431A-4609-851F-971E302DB7CE}
+		{28C0558C-13B2-4F3D-B956-5D6081625F61} = {2BA700FB-431A-4609-851F-971E302DB7CE}
 	EndGlobalSection
 EndGlobal

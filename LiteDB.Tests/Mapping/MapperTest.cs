@@ -76,8 +76,10 @@ namespace LiteDB.Tests
         public string MyField = "DoNotSerializeThis";
         internal string MyInternalProperty { get; set; }
 
+#if !PORTABLE
         // special types
         public NameValueCollection MyNameValueCollection { get; set; }
+#endif
 
         // lists
         public string[] MyStringArray { get; set; }
@@ -136,7 +138,9 @@ namespace LiteDB.Tests
                 MyStringList = new List<string>() { "String-1", "String-2" },
                 MyWriteOnly = "write-only",
                 MyInternalProperty = "internal-field",
+#if !PORTABLE
                 MyNameValueCollection = new NameValueCollection(),
+#endif
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
                 MyStringArray = new string[] { "One", "Two" },
                 MyStringEnumerable = new string[] { "One", "Two" },
@@ -158,9 +162,10 @@ namespace LiteDB.Tests
                 MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") }
             };
 
+#if !PORTABLE
             c.MyNameValueCollection["key-1"] = "value-1";
             c.MyNameValueCollection["KeyNumber2"] = "value-2";
-
+#endif
             return c;
         }
 
@@ -195,9 +200,10 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
+#if !PORTABLE
             Assert.AreEqual(obj.MyNameValueCollection["key-1"], nobj.MyNameValueCollection["key-1"]);
             Assert.AreEqual(obj.MyNameValueCollection["KeyNumber2"], nobj.MyNameValueCollection["KeyNumber2"]);
-
+#endif
             // list
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);

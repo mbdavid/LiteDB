@@ -18,6 +18,7 @@ namespace LiteDB
 
         public Logger Log { get { return _log; } }
 
+#if !PORTABLE
         /// <summary>
         /// Starts LiteDB database using a connection string for filesystem database
         /// </summary>
@@ -32,6 +33,7 @@ namespace LiteDB
                 () => this.InitializeMapper(),
                 () => this.UpdateDbVersion(version));
         }
+#endif
 
         /// <summary>
         /// Initialize database using any read/write Stream (like MemoryStream)

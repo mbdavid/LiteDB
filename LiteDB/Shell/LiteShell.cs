@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace LiteDB.Shell
 {
@@ -11,10 +12,14 @@ namespace LiteDB.Shell
         static LiteShell()
         {
             var type = typeof(IShellCommand);
+#if !PORTABLE
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass);
-
+#else
+            var types = typeof(LiteShell).GetTypeInfo().Assembly.GetTypes()
+                .Where(p => type.IsAssignableFrom(p) && p.GetTypeInfo().IsClass);
+#endif
             foreach (var t in types)
             {
                 var cmd = (IShellCommand)Activator.CreateInstance(t);

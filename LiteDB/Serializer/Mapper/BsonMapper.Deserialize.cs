@@ -113,7 +113,7 @@ namespace LiteDB
             }
 
             // enum value is a string
-            else if (type.IsEnum)
+            else if (type.GetTypeInfo().IsEnum)
             {
                 return Enum.Parse(type, value.AsString);
             }
@@ -151,7 +151,7 @@ namespace LiteDB
 
                 var o = Reflection.CreateInstance(type);
 
-                if (o is IDictionary && type.IsGenericType)
+                if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
@@ -186,7 +186,7 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
 

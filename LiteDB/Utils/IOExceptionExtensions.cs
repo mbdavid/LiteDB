@@ -16,7 +16,10 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
+#if !PORTABLE
+                    // TODO szurgot: How to handle wait in portable without async
                     Thread.Sleep(timer);
+#endif
                 }
             }
             else

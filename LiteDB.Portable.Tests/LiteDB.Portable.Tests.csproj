@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LiteDB.Tests</RootNamespace>
+    <AssemblyName>LiteDB.Portable.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Globalization.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Globalization.Extensions.4.0.0\lib\net46\System.Globalization.Extensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reflection.TypeExtensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reflection.TypeExtensions.4.0.0\lib\net46\System.Reflection.TypeExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <ItemGroup>
+    <Compile Include="..\LiteDB.Tests\Bson\BsonTest.cs">
+      <Link>Bson\BsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Bson\JsonTest.cs">
+      <Link>Bson\JsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Bson\ObjectIdTest.cs">
+      <Link>Bson\ObjectIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Concurrency\TaskTest.cs">
+      <Link>Concurrency\TaskTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Crud\BulkTest.cs">
+      <Link>Crud\BulkTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Crud\DbVersionTest.cs">
+      <Link>Crud\DbVersionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Crud\DropCollectionTest.cs">
+      <Link>Crud\DropCollectionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Index\IndexOrderTest.cs">
+      <Link>Index\IndexOrderTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Index\LinqTest.cs">
+      <Link>Index\LinqTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\AutoIdTest.cs">
+      <Link>Mapping\AutoIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\BsonFieldTest.cs">
+      <Link>Mapping\BsonFieldTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\DataTableTest.cs">
+      <Link>Mapping\DataTableTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\DbRefIndexTest.cs">
+      <Link>Mapping\DbRefIndexTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\DerivedTypesTest.cs">
+      <Link>Mapping\DerivedTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\IncludeTest.cs">
+      <Link>Mapping\IncludeTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\MapperInterfaceTest.cs">
+      <Link>Mapping\MapperInterfaceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Mapping\MapperTest.cs">
+      <Link>Mapping\MapperTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Shell\ShellTest.cs">
+      <Link>Shell\ShellTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Utils\DB.cs">
+      <Link>Utils\DB.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Utils\Initialize.cs">
+      <Link>Utils\Initialize.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB.Portable\LiteDB.Portable.csproj">
+      <Project>{28c0558c-13b2-4f3d-b956-5d6081625f61}</Project>
+      <Name>LiteDB.Portable</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Disks\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.CodedUITestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Extension, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITesting, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !PORTABLE
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -396,3 +397,4 @@ namespace LiteDB
         #endregion Utils
     }
 }
+#endif
