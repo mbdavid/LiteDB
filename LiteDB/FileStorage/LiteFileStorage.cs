@@ -52,6 +52,7 @@ namespace LiteDB
             return this.Upload(new LiteFileInfo(id), stream);
         }
 
+#if !PCL
         public LiteFileInfo Upload(string id, string filename)
         {
             using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
@@ -70,7 +71,7 @@ namespace LiteDB
                 return this.Upload(new LiteFileInfo(Path.GetFileName(filename), filename), stream);
             }
         }
-
+#endif
         /// <summary>
         /// Update metada on a file. File must exisits
         /// </summary>
@@ -83,9 +84,9 @@ namespace LiteDB
             return true;
         }
 
-        #endregion Upload
+#endregion Upload
 
-        #region Download
+#region Download
 
         /// <summary>
         /// Copy all file content to a steam
@@ -125,9 +126,9 @@ namespace LiteDB
             return new LiteFileStream(_engine, entry);
         }
 
-        #endregion Download
+#endregion Download
 
-        #region Find Files
+#region Find Files
 
         /// <summary>
         /// Find a file inside datafile and returns FileEntry instance. Returns null if not found
@@ -176,9 +177,9 @@ namespace LiteDB
             return this.Find(null);
         }
 
-        #endregion Find Files
+#endregion Find Files
 
-        #region Delete
+#region Delete
 
         /// <summary>
         /// Delete a file inside datafile and all metadata related
@@ -205,6 +206,6 @@ namespace LiteDB
             return true;
         }
 
-        #endregion Delete
+#endregion Delete
     }
 }

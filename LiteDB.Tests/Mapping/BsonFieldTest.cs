@@ -110,6 +110,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(doc["PRIVATE-PROPERTY"].AsString, obj.GetMyPrivatePropertyNamed());
             Assert.AreEqual(doc["PROTECTED-PROPERTY"].AsString, obj.GetMyProtectedPropertyNamed());
             Assert.AreEqual(obj.MyString, nobj.MyString);
+#if !PCL
             //Internal
             Assert.AreEqual(obj.MyInternalPropertyNamed, nobj.MyInternalPropertyNamed);
             Assert.AreEqual(obj.MyInternalPropertySerializable, nobj.MyInternalPropertySerializable);
@@ -122,6 +123,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.GetMyProtectedPropertyNamed(), nobj.GetMyProtectedPropertyNamed());
             Assert.AreEqual(obj.GetMyProtectedPropertySerializable(), nobj.GetMyProtectedPropertySerializable());
             Assert.AreEqual(nobj.GetMyProtectedPropertyNotSerializable(), null);
+#endif
         }
     }
 }

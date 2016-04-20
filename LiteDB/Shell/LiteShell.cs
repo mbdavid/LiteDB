@@ -12,14 +12,19 @@ namespace LiteDB.Shell
         static LiteShell()
         {
             var type = typeof(IShellCommand);
-#if !PORTABLE
+#if NETFULL
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && p.IsClass);
-#else
+#elif NETCORE
             var types = typeof(LiteShell).GetTypeInfo().Assembly.GetTypes()
-                .Where(p => type.IsAssignableFrom(p) && p.GetTypeInfo().IsClass);
+               .Where(p => type.IsAssignableFrom(p) && p.GetTypeInfo().IsClass);
+#else
+            // PCL Reflection on PCL only allows public types, so there's no point
+            // since all shell types are internal
+            IEnumerable<Type> types = new List<Type>();
 #endif
+
             foreach (var t in types)
             {
                 var cmd = (IShellCommand)Activator.CreateInstance(t);

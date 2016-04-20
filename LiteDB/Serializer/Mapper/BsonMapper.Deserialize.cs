@@ -153,8 +153,13 @@ namespace LiteDB
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
+#if !NETFULL
+                    var k = type.GetTypeInfo().GenericTypeArguments[0];
+                    var t = type.GetTypeInfo().GenericTypeArguments[1];
+#else
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
+#endif
 
                     this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
                 }
@@ -186,7 +191,11 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
+#if PCL
+            var itemType = type.GetTypeInfo().GenericTypeArguments.FirstOrDefault() ?? type.GetTypeInfo().ImplementedInterfaces.First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetTypeInfo().GenericTypeArguments.First();
+#else
             var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+#endif
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
 
@@ -199,7 +208,11 @@ namespace LiteDB
             }
             else
             {
+#if PCL
+                var addMethod = type.GetRuntimeMethod("Add", new Type[1] { itemType });
+#else
                 var addMethod = type.GetMethod("Add");
+#endif
 
                 foreach (BsonValue item in value)
                 {

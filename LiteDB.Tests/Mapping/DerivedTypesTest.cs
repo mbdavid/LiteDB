@@ -41,6 +41,8 @@ namespace LiteDB.Tests
 
                 var colBson = db.GetCollection<BsonDocument>("Collection");
 
+                var docs = colBson.FindAll().ToList();
+
                 // checks if BsonDocument contains _type
                 var doc1 = colBson.FindById(1);
                 var doc2 = colBson.FindById(2);

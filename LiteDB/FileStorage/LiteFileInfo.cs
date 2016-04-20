@@ -131,6 +131,7 @@ namespace LiteDB
             return new LiteFileStream(_engine, this);
         }
 
+#if !PCL
         /// <summary>
         /// Save file content to a external file
         /// </summary>
@@ -143,6 +144,7 @@ namespace LiteDB
                 this.OpenRead().CopyTo(file);
             }
         }
+#endif
 
         /// <summary>
         /// Copy file content to another stream

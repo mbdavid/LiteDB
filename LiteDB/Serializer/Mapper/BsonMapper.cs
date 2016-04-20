@@ -71,7 +71,7 @@ namespace LiteDB
             );
             
             //TODO: szurgot Not sure if this would be possible in portable
-#if !PORTABLE
+#if NETFULL
             this.RegisterType<NameValueCollection>
             (
                 serialize: (nv) =>

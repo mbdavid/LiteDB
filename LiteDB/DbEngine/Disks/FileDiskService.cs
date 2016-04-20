@@ -1,4 +1,4 @@
-﻿#if !PORTABLE
+﻿#if !NETCORE && !PCL
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,7 +29,7 @@ namespace LiteDB
         private long _initialSize;
         private long _limitSize;
 
-        #region Initialize disk
+#region Initialize disk
 
         public FileDiskService(ConnectionString conn, Logger log)
         {
@@ -99,9 +99,9 @@ namespace LiteDB
             this.WritePage(0, new HeaderPage().WritePage());
         }
 
-        #endregion Initialize disk
+#endregion Initialize disk
 
-        #region Lock/Unlock
+#region Lock/Unlock
 
         /// <summary>
         /// Lock datafile agains other process read/write
@@ -125,9 +125,9 @@ namespace LiteDB
             _stream.Unlock(0, _lockLength);
         }
 
-        #endregion Lock/Unlock
+#endregion Lock/Unlock
 
-        #region Read/Write
+#region Read/Write
 
         /// <summary>
         /// Read first 2 bytes from datafile - contains changeID (avoid to read all header page)
@@ -200,9 +200,9 @@ namespace LiteDB
             _stream.SetLength(fileSize);
         }
 
-        #endregion Read/Write
+#endregion Read/Write
 
-        #region Journal file
+#region Journal file
 
         public void WriteJournal(uint pageID, byte[] buffer)
         {
@@ -263,9 +263,9 @@ namespace LiteDB
             }
         }
 
-        #endregion Journal file
+#endregion Journal file
 
-        #region Recovery datafile
+#region Recovery datafile
 
         private void TryRecovery()
         {
@@ -327,9 +327,9 @@ namespace LiteDB
             _stream.SetLength(fileSize);
         }
 
-        #endregion Recovery datafile
+#endregion Recovery datafile
 
-        #region Temporary
+#region Temporary
 
         public IDiskService GetTempDisk()
         {
@@ -345,9 +345,9 @@ namespace LiteDB
             File.Delete(_tempFilename);
         }
 
-        #endregion Temporary
+#endregion Temporary
 
-        #region Utils
+#region Utils
 
         /// <summary>
         /// Try run an operation over datafile - keep tring if locked
@@ -394,7 +394,7 @@ namespace LiteDB
             }
         }
 
-        #endregion Utils
+#endregion Utils
     }
 }
 #endif

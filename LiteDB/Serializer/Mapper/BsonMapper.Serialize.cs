@@ -87,7 +87,11 @@ namespace LiteDB
             // for dictionary
             else if (obj is IDictionary)
             {
+#if PCL
+                var itemType = type.GetTypeInfo().GenericTypeArguments[1];
+#else
                 var itemType = type.GetGenericArguments()[1];
+#endif
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }

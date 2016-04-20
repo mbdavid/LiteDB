@@ -18,7 +18,7 @@ namespace LiteDB
 
         public Logger Log { get { return _log; } }
 
-#if !PORTABLE
+#if !NETCORE && !PCL
         /// <summary>
         /// Starts LiteDB database using a connection string for filesystem database
         /// </summary>

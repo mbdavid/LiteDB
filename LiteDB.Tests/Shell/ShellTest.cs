@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿#if !PCL
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
 namespace LiteDB.Tests
@@ -32,3 +33,4 @@ namespace LiteDB.Tests
         }
     }
 }
+#endif

@@ -1,4 +1,4 @@
-﻿#if !PORTABLE
+﻿#if !NETCORE && !PCL
 using System;
 using System.Security.Cryptography;
 using System.IO;

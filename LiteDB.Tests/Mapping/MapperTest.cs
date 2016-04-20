@@ -225,7 +225,9 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyObjectList[1], obj.MyObjectList[1]);
             Assert.AreEqual(obj.MyObjectList[3], obj.MyObjectList[3]);
 
+#if !PCL
             Assert.AreEqual(nobj.MyInternalProperty, null);
+#endif
         }
     }
 }

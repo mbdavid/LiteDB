@@ -641,9 +641,12 @@ namespace LiteDB
             {
                 return text;
             }
-
             // removing accents
+#if PCL
+            var normalized = text; // TODO szurgot: Normalize doesn't seem to exist in PCL
+#else
             var normalized = text.Normalize(NormalizationForm.FormD);
+#endif
             var sb = new StringBuilder();
 
             for (int i = 0; i < normalized.Length; i++)
@@ -659,6 +662,6 @@ namespace LiteDB
             return sb.ToString();
         }
 
-        #endregion GetBytesCount, Normalize
+#endregion GetBytesCount, Normalize
     }
 }
