@@ -1,9 +1,11 @@
-﻿#if !NETCORE && !PCL
+﻿#if !PCL
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-
+#if NETCORE
+using System.Threading.Tasks;
+#endif
 namespace LiteDB
 {
     internal class FileDiskService : IDiskService
@@ -29,7 +31,11 @@ namespace LiteDB
         private long _initialSize;
         private long _limitSize;
 
-#region Initialize disk
+#if NETCORE
+        private SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1);
+#endif
+
+        #region Initialize disk
 
         public FileDiskService(ConnectionString conn, Logger log)
         {
@@ -63,12 +69,19 @@ namespace LiteDB
         {
             _log.Write(Logger.DISK, "open datafile '{0}', page size {1}", Path.GetFileName(_filename), BasePage.PAGE_SIZE);
 
-            // open data file (r/w or r)
-            _stream = new FileStream(_filename,
-                _readonly ? FileMode.Open : FileMode.OpenOrCreate,
-                _readonly ? FileAccess.Read : FileAccess.ReadWrite,
-                _readonly ? FileShare.Read : FileShare.ReadWrite,
-                BasePage.PAGE_SIZE);
+            _stream =
+#if NETCORE
+                syncOverAsync<FileStream>(() => { return
+#endif
+                // open data file (r/w or r)
+                new FileStream(_filename,
+                   _readonly ? FileMode.Open : FileMode.OpenOrCreate,
+                   _readonly ? FileAccess.Read : FileAccess.ReadWrite,
+                   _readonly ? FileShare.Read : FileShare.ReadWrite,
+                   BasePage.PAGE_SIZE);
+#if NETCORE
+                });
+#endif
 
             if (_stream.Length == 0)
             {
@@ -108,12 +121,23 @@ namespace LiteDB
         /// </summary>
         public void Lock()
         {
+#if NETFULL
             this.TryExec(() =>
             {
                 _lockLength = _stream.Length;
                 _log.Write(Logger.DISK, "lock datafile");
                 _stream.Lock(0, _lockLength);
             });
+#elif NETCORE
+            bool locked = _lockSemaphore.Wait(_timeout);
+            if (!locked)
+            {
+                LiteException.LockTimeout(_timeout);
+            }
+
+            _lockLength = _stream.Length;
+            _log.Write(Logger.DISK, "lock datafile");
+#endif
         }
 
         /// <summary>
@@ -122,7 +146,11 @@ namespace LiteDB
         public void Unlock()
         {
             _log.Write(Logger.DISK, "unlock datafile");
+#if NETFULL
             _stream.Unlock(0, _lockLength);
+#elif NETCORE
+            _lockSemaphore.Release();
+#endif
         }
 
 #endregion Lock/Unlock
@@ -219,11 +247,18 @@ namespace LiteDB
                 {
                     _log.Write(Logger.JOURNAL, "create journal file");
 
-                    _journal = new FileStream(_journalFilename,
+                    _journal =
+#if NETCORE
+                    syncOverAsync<FileStream>(() => { return
+#endif
+                        new FileStream(_journalFilename,
                         FileMode.Create,
                         FileAccess.ReadWrite,
                         FileShare.None,
                         BasePage.PAGE_SIZE);
+#if NETCORE
+                    });
+#endif
                 });
             }
 
@@ -251,7 +286,11 @@ namespace LiteDB
                 _journal = null;
 
                 // remove journal file
+#if NETFULL                
                 this.TryExec(() => File.Delete(_journalFilename));
+#elif NETCORE
+                this.TryExec(() => syncOverAsync(() => { File.Delete(_journalFilename); }));
+#endif
             }
         }
 
@@ -272,7 +311,14 @@ namespace LiteDB
             if (!_journalEnabled) return;
 
             // avoid debug window always throw an exception if file didn't exists
+#if NETFULL
             if (!File.Exists(_journalFilename))  return;
+#elif NETCORE
+            if (!syncOverAsync(() =>
+            {
+                return File.Exists(_journalFilename);
+            })) return;
+#endif
 
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
@@ -286,7 +332,11 @@ namespace LiteDB
                 journal.Dispose();
 
                 // delete journal - datafile finish
+#if NETFULL
                 this.TryExec(() => File.Delete(_journalFilename));
+#elif NETCORE
+                this.TryExec(() => syncOverAsync(() => { File.Delete(_journalFilename); }));
+#endif
 
                 _log.Write(Logger.RECOVERY, "recovery finish");
             });
@@ -365,7 +415,11 @@ namespace LiteDB
                 }
                 catch (UnauthorizedAccessException)
                 {
+#if NETFULL
                     Thread.Sleep(250);
+#elif NETCORE
+                    System.Threading.Tasks.Task.Delay(250).ConfigureAwait(true).GetAwaiter().GetResult();
+#endif
                 }
                 catch (IOException ex)
                 {
@@ -383,7 +437,14 @@ namespace LiteDB
             // check if is using by another process, if not, call fn passing stream opened
             try
             {
+#if NETFULL
                 using (var stream = File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+#elif NETCORE
+                using (var stream = syncOverAsync<FileStream>(() =>
+                {
+                    return File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                }))
+#endif
                 {
                     success(stream);
                 }
@@ -395,6 +456,20 @@ namespace LiteDB
         }
 
 #endregion Utils
+
+#if NETCORE
+        // These methods will run the specified Action on a background thread
+        // so they will not cause issues with UI
+        private void syncOverAsync(Action f)
+        {
+            Task.Run(f).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private T syncOverAsync<T>(Func<T> f)
+        {
+            return Task.Run<T>(f).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+#endif
     }
 }
 #endif

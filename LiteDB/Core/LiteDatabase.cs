@@ -18,7 +18,7 @@ namespace LiteDB
 
         public Logger Log { get { return _log; } }
 
-#if !NETCORE && !PCL
+#if NETFULL || NETCORE
         /// <summary>
         /// Starts LiteDB database using a connection string for filesystem database
         /// </summary>
@@ -26,10 +26,16 @@ namespace LiteDB
         {
             var conn = new ConnectionString(connectionString);
             var version = conn.GetValue<ushort>("version", 0);
+#if NETFULL
             var encrypted = !StringExtensions.IsNullOrWhiteSpace(conn.GetValue<string>("password", null));
+#endif
 
             _engine = new LazyLoad<DbEngine>(
+#if NETFULL
                 () => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log),
+#elif NETCORE
+                () => new DbEngine(new FileDiskService(conn, _log), _log),
+#endif
                 () => this.InitializeMapper(),
                 () => this.UpdateDbVersion(version));
         }
