@@ -227,21 +227,55 @@ namespace LiteDB
 
             foreach (var prop in props.Values)
             {
-                // property is read only
-                if (prop.Setter == null) continue;
-
-                var val = value[prop.FieldName];
-
-                if (!val.IsNull)
+                if (prop.Setter != null)
                 {
-                    // check if has a custom deserialize function
-                    if (prop.Deserialize != null)
+                    DeserializeWithSetter(prop, obj, value);
+                }
+                else
+                {
+                    DeserializeReadOnly(prop, obj, value);
+                }
+            }
+        }
+
+        private void DeserializeWithSetter(PropertyMapper prop, object obj, BsonDocument value)
+        {
+            var val = value[prop.FieldName];
+            if (!val.IsNull)
+            {
+                // check if has a custom deserialize function
+                if (prop.Deserialize != null)
+                {
+                    prop.Setter(obj, prop.Deserialize(val, this));
+                }
+                else
+                {
+                    prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                }
+            }
+        }
+
+        private void DeserializeReadOnly(PropertyMapper prop, object obj, BsonDocument value)
+        {
+            var val = value[prop.FieldName];
+            if (!val.IsNull)
+            {
+                // check if has a custom deserialize function
+                if (prop.Deserialize != null)
+                {
+                    prop.Setter(obj, prop.Deserialize(val, this));
+                }
+                else
+                {
+                    if (val.IsArray && !prop.PropertyType.IsArray)
                     {
-                        prop.Setter(obj, prop.Deserialize(val, this));
-                    }
-                    else
-                    {
-                        prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                        //I would change this for ICollection, but that is not possible in .net 2
+                        IList objectCollection = (IList)obj.GetType().GetProperty(prop.PropertyName).GetValue(obj, null);
+                        IList databaseCollection = (IList)Deserialize(prop.PropertyType, val);
+                        foreach (var item in databaseCollection)
+                        {
+                            objectCollection.Add(item);
+                        }
                     }
                 }
             }

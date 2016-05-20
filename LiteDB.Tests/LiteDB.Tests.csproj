@@ -88,6 +88,7 @@
     <Compile Include="Bson\JsonTest.cs" />
     <Compile Include="Index\LinqTest.cs" />
     <Compile Include="Mapping\IncludeTest.cs" />
+    <Compile Include="Mapping\UnitTest1.cs" />
     <Compile Include="Shell\ShellTest.cs" />
     <Compile Include="Utils\Initialize.cs" />
     <Compile Include="Utils\DB.cs" />
