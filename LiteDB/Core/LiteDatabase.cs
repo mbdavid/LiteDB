@@ -14,45 +14,45 @@ namespace LiteDB
 
         private Logger _log = new Logger();
 
-        public ushort Version { get; private set; }
-
         public Logger Log { get { return _log; } }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for filesystem database
         /// </summary>
-        public LiteDatabase(string connectionString)
+        public LiteDatabase(string connectionString, BsonMapper mapper = null)
         {
             var conn = new ConnectionString(connectionString);
-            var version = conn.GetValue<ushort>("version", 0);
             var encrypted = !StringExtensions.IsNullOrWhiteSpace(conn.GetValue<string>("password", null));
 
-            _engine = new LazyLoad<DbEngine>(
-                () => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log),
-                () => this.InitializeMapper(),
-                () => this.UpdateDbVersion(version));
+            _mapper = mapper ?? BsonMapper.Global;
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log));
         }
 
         /// <summary>
         /// Initialize database using any read/write Stream (like MemoryStream)
         /// </summary>
-        public LiteDatabase(Stream stream, ushort version = 0)
+        public LiteDatabase(Stream stream, BsonMapper mapper = null)
         {
-            _engine = new LazyLoad<DbEngine>(
-                () => new DbEngine(new StreamDiskService(stream), _log),
-                () => this.InitializeMapper(),
-                () => this.UpdateDbVersion(version));
+            _mapper = mapper ?? BsonMapper.Global;
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(new StreamDiskService(stream), _log));
         }
 
         /// <summary>
         /// Starts LiteDB database using full parameters
         /// </summary>
-        public LiteDatabase(IDiskService diskService, ushort version = 0)
+        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null)
         {
-            _engine = new LazyLoad<DbEngine>(
-                () => new DbEngine(diskService, _log),
-                () => this.InitializeMapper(),
-                () => this.UpdateDbVersion(version));
+            _mapper = mapper ?? BsonMapper.Global;
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(diskService, _log));
+        }
+
+        /// <summary>
+        /// Get/Set database version
+        /// </summary>
+        public ushort DbVersion
+        {
+            get { return _engine.Value.ReadDbVersion(); }
+            set { _engine.Value.WriteDbVersion(value); }
         }
 
         public void Dispose()

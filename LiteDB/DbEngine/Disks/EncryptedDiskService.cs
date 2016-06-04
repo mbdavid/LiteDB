@@ -34,7 +34,7 @@ namespace LiteDB
         public override void CreateNew()
         {
             var header = new HeaderPage();
-            header.DbParams.Password = _password;
+            header.Password = _password;
             this.WritePage(0, header.WritePage());
         }
 
@@ -51,7 +51,7 @@ namespace LiteDB
                 // I know, header page will be double read (it's the price for isolated concerns)
                 var header = (HeaderPage)BasePage.ReadPage(buffer);
 
-                if(header.DbParams.Password.BinaryCompareTo(_password) != 0)
+                if(header.Password.BinaryCompareTo(_password) != 0)
                 {
                     throw LiteException.DatabaseWrongPassword();
                 }

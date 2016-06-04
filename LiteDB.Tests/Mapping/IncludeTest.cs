@@ -33,18 +33,11 @@ namespace LiteDB.Tests
 
     public class IncludeDatabase : LiteDatabase
     {
-        public IncludeDatabase()
-            : base(new MemoryStream())
-        {
-        }
+        private static BsonMapper _mapper = new BsonMapper();
 
-        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
-        public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
-        public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
-
-        protected override void OnModelCreating(BsonMapper mapper)
+        static IncludeDatabase()
         {
-            mapper.Entity<Order>()
+            _mapper.Entity<Order>()
                 .DbRef(x => x.Products, "products")
                 .DbRef(x => x.ProductArray, "products")
                 .DbRef(x => x.ProductColl, "products")
@@ -53,6 +46,16 @@ namespace LiteDB.Tests
                 .DbRef(x => x.Customer, "customers")
                 .DbRef(x => x.CustomerNull, "customers");
         }
+
+
+        public IncludeDatabase()
+            : base(new MemoryStream(), _mapper)
+        {
+        }
+
+        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
+        public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
+        public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
     }
 
     [TestClass]

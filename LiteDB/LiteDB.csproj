@@ -54,15 +54,12 @@
     <Compile Include="Core\Collections\AutoId.cs" />
     <Compile Include="Core\Collections\Stats.cs" />
     <Compile Include="Core\Database\Collection.cs" />
-    <Compile Include="Core\Database\DbVersion.cs" />
-    <Compile Include="Core\Database\OnModelCreating.cs" />
     <Compile Include="Core\Database\Shell.cs" />
     <Compile Include="Core\Database\Utils.cs" />
     <Compile Include="Core\Database\FileStorage.cs" />
     <Compile Include="DbEngine\Actions\Shrink.cs" />
     <Compile Include="DbEngine\Actions\Dump.cs" />
     <Compile Include="DbEngine\Actions\Stats.cs" />
-    <Compile Include="DbEngine\Actions\DbParams.cs" />
     <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
     <Compile Include="DbEngine\Disks\IDiskService.cs" />
@@ -75,7 +72,6 @@
     <Compile Include="DbEngine\Actions\Insert.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\Pages\EmptyPage.cs" />
-    <Compile Include="DbEngine\Structures\DbParams.cs" />
     <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
@@ -165,10 +161,10 @@
     <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Services\TransactionService.cs" />
     <Compile Include="Shell\Commands\Others\Shrink.cs" />
+    <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Utils\StringExtensions.cs" />
     <Compile Include="Utils\ExpressionExtensions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
-    <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Utils\StreamExtensions.cs" />
     <Compile Include="Utils\ByteReader.cs" />
     <Compile Include="Utils\ByteWriter.cs" />

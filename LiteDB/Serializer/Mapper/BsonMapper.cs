@@ -54,6 +54,11 @@ namespace LiteDB
         /// </summary>
         public bool EmptyStringToNull { get; set; }
 
+        /// <summary>
+        /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
+        /// </summary>
+        public static BsonMapper Global = new BsonMapper();
+
         public BsonMapper()
         {
             this.SerializeNullValues = false;
