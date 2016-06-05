@@ -33,7 +33,7 @@ namespace LiteDB
             if (expr.NodeType == ExpressionType.Equal) // ==
             {
                 var bin = expr as BinaryExpression;
-                return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr is MemberExpression && expr.Type == typeof(bool)) // x.Active
             {
@@ -42,7 +42,7 @@ namespace LiteDB
             else if (expr.NodeType == ExpressionType.NotEqual) // !=
             {
                 var bin = expr as BinaryExpression;
-                return Query.Not(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return Query.Not(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.Not) // !x.Active
             {
@@ -52,22 +52,22 @@ namespace LiteDB
             else if (expr.NodeType == ExpressionType.LessThan) // <
             {
                 var bin = expr as BinaryExpression;
-                return Query.LT(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return Query.LT(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.LessThanOrEqual) // <=
             {
                 var bin = expr as BinaryExpression;
-                return Query.LTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return Query.LTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.GreaterThan) // >
             {
                 var bin = expr as BinaryExpression;
-                return Query.GT(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return Query.GT(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.GreaterThanOrEqual) // >=
             {
                 var bin = expr as BinaryExpression;
-                return Query.GTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right));
+                return Query.GTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr is MethodCallExpression)
             {
@@ -77,21 +77,21 @@ namespace LiteDB
                 // StartsWith
                 if (method == "StartsWith")
                 {
-                    var value = this.VisitValue(met.Arguments[0]);
+                    var value = this.VisitValue(met.Arguments[0], null);
 
                     return Query.StartsWith(this.VisitMember(met.Object), value);
                 }
                 // Contains
                 else if (method == "Contains")
                 {
-                    var value = this.VisitValue(met.Arguments[0]);
+                    var value = this.VisitValue(met.Arguments[0], null);
 
                     return Query.Contains(this.VisitMember(met.Object), value);
                 }
                 // Equals
                 else if (method == "Equals")
                 {
-                    var value = this.VisitValue(met.Arguments[0]);
+                    var value = this.VisitValue(met.Arguments[0], null);
 
                     return Query.EQ(this.VisitMember(met.Object), value);
                 }
@@ -136,19 +136,34 @@ namespace LiteDB
             return this.GetBsonField(property);
         }
 
-        private BsonValue VisitValue(Expression expr)
+        private BsonValue VisitValue(Expression expr, Expression left)
         {
             // its a constant; Eg: "fixed string"
             if (expr is ConstantExpression)
             {
                 var value = (expr as ConstantExpression);
 
+                // convert enum int to string
+                if (left != null)
+                {
+                    var unary = left as UnaryExpression;
+                    if (unary != null)
+                    {
+                        var leftType = unary.Operand.Type;
+                        if (leftType.IsEnum)
+                        {
+                            var str = Enum.GetName(leftType, value.Value);
+                            return _mapper.Serialize(typeof(string), str, 0);
+                        }
+                    }
+                }
+
                 return _mapper.Serialize(value.Type, value.Value, 0);
             }
             else if (expr is MemberExpression && _parameters.Count > 0)
             {
                 var mExpr = (MemberExpression)expr;
-                var mValue = this.VisitValue(mExpr.Expression);
+                var mValue = this.VisitValue(mExpr.Expression, left);
                 var value = mValue.AsDocument[mExpr.Member.Name];
                 return _mapper.Serialize(typeof(object), value, 0);
             }
@@ -256,7 +271,7 @@ namespace LiteDB
                 throw new NotImplementedException("Cannot parse methods outside the System.Linq.Enumerable class.");
 
             var lambda = (LambdaExpression)expr.Arguments[1];
-            var values = this.VisitValue(expr.Arguments[0]).AsArray;
+            var values = this.VisitValue(expr.Arguments[0], null).AsArray;
             var queries = new Query[values.Count];
 
             for (var i = 0; i < queries.Length; i++)
