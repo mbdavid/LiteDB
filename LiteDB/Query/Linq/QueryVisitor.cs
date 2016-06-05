@@ -14,13 +14,12 @@ namespace LiteDB
     {
         private BsonMapper _mapper;
         private Type _type;
-        private ParameterDictionary _parameters;
+        private ParameterDictionary _parameters = new ParameterDictionary();
 
         public QueryVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
             _type = typeof(T);
-            _parameters = new ParameterDictionary();
         }
 
         public Query Visit(Expression predicate)

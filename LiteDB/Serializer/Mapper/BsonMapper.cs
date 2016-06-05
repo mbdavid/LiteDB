@@ -55,6 +55,10 @@ namespace LiteDB
         public bool EmptyStringToNull { get; set; }
 
         /// <summary>
+        /// Map for autoId type based functions
+        /// </summary>
+        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
+        /// <summary>
         /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
@@ -102,7 +106,40 @@ namespace LiteDB
                 }
             );
 
+            this.RegisterType<DateTimeOffset>
+            (
+                serialize: (value) => new BsonValue(value.UtcDateTime),
+                deserialize: (bson) => bson.AsDateTime.ToUniversalTime()
+            );
+
             #endregion Register CustomTypes
+
+            #region Register AutoId
+
+            // register AutoId for ObjectId, Guid and Int32
+            this.RegisterAutoId<ObjectId>
+            (
+                isEmpty: (v) => v.Equals(ObjectId.Empty),
+                newId: (c) => ObjectId.NewObjectId()
+            );
+
+            this.RegisterAutoId<Guid>
+            (
+                isEmpty: (v) => v == Guid.Empty,
+                newId: (c) => Guid.NewGuid()
+            );
+
+            this.RegisterAutoId<Int32>
+            (
+                isEmpty: (v) => v == 0,
+                newId: (c) =>
+                {
+                    var max = c.Max();
+                    return max.IsMaxValue ? 1 : (max + 1);
+                }
+            );
+
+            #endregion  
         }
 
         /// <summary>
@@ -112,6 +149,58 @@ namespace LiteDB
         {
             _customSerializer[typeof(T)] = (o) => serialize((T)o);
             _customDeserializer[typeof(T)] = (b) => (T)deserialize(b);
+        }
+
+        /// <summary>
+        /// Register a custom Auto Id generator function for a type
+        /// </summary>
+        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
+        {
+            _autoId[typeof(T)] = new AutoId
+            {
+                IsEmpty = (o) => isEmpty((T)o),
+                NewId = (c) => (T)newId(c)
+            };
+        }
+
+        /// <summary>
+        /// Set new Id in entity class if entity needs one
+        /// </summary>
+        public void SetAutoId(object entity, LiteCollection<BsonDocument> col)
+        {
+            // if object is BsonDocument, add _id as ObjectId
+            if (entity is BsonDocument)
+            {
+                var doc = entity as BsonDocument;
+                if (!doc.RawValue.ContainsKey("_id"))
+                {
+                    doc["_id"] = ObjectId.NewObjectId();
+                }
+                return;
+            }
+
+            // get fields mapper
+            var mapper = this.GetPropertyMapper(entity.GetType());
+
+            // it's not best way because is scan all properties - but Id propably is first field :)
+            var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+            // if not id or no autoId = true
+            if (id == null || id.AutoId == false) return;
+
+            AutoId autoId;
+
+            if (_autoId.TryGetValue(id.PropertyType, out autoId))
+            {
+                var value = id.Getter(entity);
+
+                if (value == null || autoId.IsEmpty(value) == true)
+                {
+                    var newId = autoId.NewId(col);
+
+                    id.Setter(entity, newId);
+                }
+            }
         }
 
         /// <summary>
