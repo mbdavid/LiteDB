@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Expressions.ParameterExpression,
-                                                                  LiteDB.BsonValue>;
+using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Expressions.ParameterExpression, LiteDB.BsonValue>;
 
 namespace LiteDB
 {
@@ -138,34 +137,33 @@ namespace LiteDB
 
         private BsonValue VisitValue(Expression expr, Expression left)
         {
+            // check if left side is an enum and convert to string before return
+            Func<Type, object, BsonValue> convert = (type, value) =>
+            {
+                var enumType = (left as UnaryExpression)?.Operand.Type;
+
+                if (enumType != null && enumType.IsEnum)
+                {
+                    var str = Enum.GetName(enumType, value);
+                    return _mapper.Serialize(typeof(string), str, 0);
+                }
+
+                return _mapper.Serialize(type, value, 0);
+            };
+
             // its a constant; Eg: "fixed string"
             if (expr is ConstantExpression)
             {
                 var value = (expr as ConstantExpression);
 
-                // convert enum int to string
-                if (left != null)
-                {
-                    var unary = left as UnaryExpression;
-                    if (unary != null)
-                    {
-                        var leftType = unary.Operand.Type;
-                        if (leftType.IsEnum)
-                        {
-                            var str = Enum.GetName(leftType, value.Value);
-                            return _mapper.Serialize(typeof(string), str, 0);
-                        }
-                    }
-                }
-
-                return _mapper.Serialize(value.Type, value.Value, 0);
+                return convert(value.Type, value.Value);
             }
             else if (expr is MemberExpression && _parameters.Count > 0)
             {
                 var mExpr = (MemberExpression)expr;
                 var mValue = this.VisitValue(mExpr.Expression, left);
                 var value = mValue.AsDocument[mExpr.Member.Name];
-                return _mapper.Serialize(typeof(object), value, 0);
+                return convert(typeof(object), value);
             }
             else if (expr is ParameterExpression)
             {
@@ -181,7 +179,7 @@ namespace LiteDB
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
             var getter = getterLambda.Compile();
 
-            return _mapper.Serialize(typeof(object), getter(), 0);
+            return convert(typeof(object), getter());
         }
 
         /// <summary>

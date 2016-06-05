@@ -62,32 +62,39 @@ namespace LiteDB.Tests
                 var strNumeria = GetNumeria();
 
                 // sub-class
-                //Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
-                //Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == GetNumeria()));
-                //Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == strNumeria));
-                //
-                //// == !=
-                //Assert.AreEqual(1, col.Count(x => x.Id == 1));
-                //Assert.AreEqual(3, col.Count(x => x.Id != 1));
-                //
-                //// member booleans
-                //Assert.AreEqual(3, col.Count(x => !x.Active));
-                //Assert.AreEqual(1, col.Count(x => x.Active));
-                //
-                //// methods
-                //Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
-                //Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
-                //Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
-                //
-                //// > >= < <=
-                //Assert.AreEqual(1, col.Count(x => x.Id > 3));
-                //Assert.AreEqual(1, col.Count(x => x.Id >= 4));
-                //Assert.AreEqual(1, col.Count(x => x.Id < 2));
-                //Assert.AreEqual(1, col.Count(x => x.Id <= 1));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == GetNumeria()));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == strNumeria));
+                
+                // == !=
+                Assert.AreEqual(1, col.Count(x => x.Id == 1));
+                Assert.AreEqual(3, col.Count(x => x.Id != 1));
+                
+                // member booleans
+                Assert.AreEqual(3, col.Count(x => !x.Active));
+                Assert.AreEqual(1, col.Count(x => x.Active));
+                
+                // methods
+                Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
+                Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
+                Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
+                
+                // > >= < <=
+                Assert.AreEqual(1, col.Count(x => x.Id > 3));
+                Assert.AreEqual(1, col.Count(x => x.Id >= 4));
+                Assert.AreEqual(1, col.Count(x => x.Id < 2));
+                Assert.AreEqual(1, col.Count(x => x.Id <= 1));
 
                 // enum
                 Assert.AreEqual(1, col.Count(x => x.OS == PlatformID.Xbox));
+                Assert.AreEqual(1, col.Count(x => x.OS == (PlatformID)5)); // Xbox
+                Assert.AreEqual(1, col.Count(x => x.OS == (PlatformID)Enum.Parse(typeof(PlatformID), "Xbox")));
                 Assert.AreEqual(3, col.Count(x => x.OS == PlatformID.Win32NT));
+
+                // doesnt works... must be a better linq provider
+                //var plataforms = new PlatformID[] { PlatformID.Xbox, PlatformID.Win32NT };
+                //Assert.AreEqual(4, col.Count(x => plataforms.Contains(x.OS)));
+
 
                 // and/or
                 Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "MAURICIO"));
