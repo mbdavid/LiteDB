@@ -7,25 +7,21 @@ namespace LiteDB.Tests
     public class EntityInt
     {
         public int Id { get; set; }
-        public string Name { get; set; }
     }
 
     public class EntityGuid
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
     }
 
     public class EntityOid
     {
         public ObjectId Id { get; set; }
-        public string Name { get; set; }
     }
 
     public class EntityString
     {
         public string Id { get; set; }
-        public string Name { get; set; }
     }
 
     [TestClass]
@@ -34,7 +30,14 @@ namespace LiteDB.Tests
         [TestMethod]
         public void AutoId_Test()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            var mapper = new BsonMapper();
+
+            mapper.RegisterAutoId<string>(
+                (s) => s == null,
+                (c) => "doc-" + c.Count()
+            );
+
+            using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_guid = db.GetCollection<EntityGuid>("guid");
@@ -42,25 +45,26 @@ namespace LiteDB.Tests
                 var cs_str = db.GetCollection<EntityString>("str");
 
                 // int32
-                var cint_1 = new EntityInt { Name = "Using Int 1" };
-                var cint_2 = new EntityInt { Name = "Using Int 2" };
-                var cint_5 = new EntityInt { Id = 5, Name = "Using Int 5" }; // set Id, do not generate (jump 3 and 4)!
-                var cint_6 = new EntityInt { Id = 0, Name = "Using Int 6" }; // for int, 0 is empty
+                var cint_1 = new EntityInt { };
+                var cint_2 = new EntityInt { };
+                var cint_5 = new EntityInt { Id = 5 }; // set Id, do not generate (jump 3 and 4)!
+                var cint_6 = new EntityInt { Id = 0 }; // for int, 0 is empty
 
                 // guid
                 var guid = Guid.NewGuid();
 
-                var cguid_1 = new EntityGuid { Id = guid, Name = "Using Guid" };
-                var cguid_2 = new EntityGuid { Name = "Using Guid" };
+                var cguid_1 = new EntityGuid { Id = guid };
+                var cguid_2 = new EntityGuid { };
 
                 // oid
                 var oid = ObjectId.NewObjectId();
 
-                var coid_1 = new EntityOid { Name = "ObjectId-1" };
-                var coid_2 = new EntityOid { Id = oid, Name = "ObjectId-2" };
+                var coid_1 = new EntityOid { };
+                var coid_2 = new EntityOid { Id = oid };
 
                 // string - there is no AutoId for string
-                var cstr_1 = new EntityString { Name = "Object using String" };
+                var cstr_1 = new EntityString { };
+                var cstr_2 = new EntityString { Id = "mydoc2" };
 
                 cs_int.Insert(cint_1);
                 cs_int.Insert(cint_2);
@@ -73,31 +77,26 @@ namespace LiteDB.Tests
                 cs_oid.Insert(coid_1);
                 cs_oid.Insert(coid_2);
 
-                try
-                {
-                    cs_str.Insert(cstr_1);
-                    Assert.Fail();
-                }
-                catch (LiteException)
-                {
-                    // must fail because EntityString class has a defined Id
-                    //   but has no value and no auto_id funtion - issue #43
-                }
+                cs_str.Insert(cstr_1);
 
                 // test for int
-                Assert.AreEqual(cint_1.Id, 1);
-                Assert.AreEqual(cint_2.Id, 2);
-                Assert.AreEqual(cint_5.Id, 5);
-                Assert.AreEqual(cint_6.Id, 6);
+                Assert.AreEqual(1, cint_1.Id);
+                Assert.AreEqual(2, cint_2.Id);
+                Assert.AreEqual(5, cint_5.Id);
+                Assert.AreEqual(6, cint_6.Id);
 
                 // test for guid
-                Assert.AreEqual(cguid_1.Id, guid);
-                Assert.AreNotEqual(cguid_2.Id, Guid.Empty);
-                Assert.AreNotEqual(cguid_1.Id, cguid_2.Id);
+                Assert.AreEqual(guid, cguid_1.Id);
+                Assert.AreNotEqual(Guid.Empty, cguid_2.Id);
+                Assert.AreNotEqual(cguid_2.Id, cguid_1.Id);
 
                 // test for oid
-                Assert.AreNotEqual(coid_1, ObjectId.Empty);
-                Assert.AreEqual(coid_2.Id, oid);
+                Assert.AreNotEqual(ObjectId.Empty, coid_1.Id);
+                Assert.AreEqual(oid, coid_2.Id);
+
+                // test for string
+                Assert.AreEqual("doc-0", cstr_1.Id);
+                Assert.AreEqual("mydoc2", cstr_2.Id);
             }
         }
     }
