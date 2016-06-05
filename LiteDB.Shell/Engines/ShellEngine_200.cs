@@ -16,7 +16,7 @@ namespace LiteDB.Shell
 
         public bool Detect(string filename)
         {
-            return Helper.Try(() => new LiteDatabase(filename).CollectionExists("dummy"));
+            return true; //TODO: implement a better version detect (using byte position)
         }
 
         public void Open(string connectionString)

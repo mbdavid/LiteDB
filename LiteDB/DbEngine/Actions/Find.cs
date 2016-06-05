@@ -11,6 +11,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
+            _transaction.Begin(true);
+
             // get my collection page
             var col = this.GetCollectionPage(colName, false);
 
@@ -18,7 +20,18 @@ namespace LiteDB
             if (col == null) yield break;
 
             // get nodes from query executor to get all IndexNodes
-            var nodes = query.Run(col, _indexer);
+            IEnumerable<IndexNode> nodes;
+
+            try
+            {
+                nodes = query.Run(col, _indexer);
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
+                _transaction.Abort();
+                throw;
+            }
 
             // skip first N nodes
             if (skip > 0) nodes = nodes.Skip(skip);
@@ -31,14 +44,28 @@ namespace LiteDB
             {
                 _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
 
-                var buffer = _data.Read(node.DataBlock);
+                byte[] buffer;
+                BsonDocument doc;
 
-                var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                // encapsulate read operation inside a try/catch (yeild do not support try/catch)
+                try
+                {
+                    buffer = _data.Read(node.DataBlock);
+                    doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    _transaction.Abort();
+                    throw;
+                }
 
                 yield return doc;
 
                 _cache.CheckPoint();
             }
+
+            _transaction.Complete();
         }
     }
 }

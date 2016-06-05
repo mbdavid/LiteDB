@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public bool EnsureIndex(string colName, string field, IndexOptions options)
         {
-            return this.Transaction<bool>(colName, true, (col) =>
+            return this.WriteTransaction<bool>(colName, true, (col) =>
             {
                 // check if index already exists
                 if (col.GetIndex(field) != null) return false;
@@ -61,7 +61,7 @@ namespace LiteDB
         {
             if (field == "_id") throw LiteException.IndexDropId();
 
-            return this.Transaction<bool>(colName, false, (col) =>
+            return this.WriteTransaction<bool>(colName, false, (col) =>
             {
                 // no collection, no index
                 if (col == null) return false;

@@ -55,8 +55,10 @@
     <Compile Include="Core\Collections\Stats.cs" />
     <Compile Include="Core\Database\Collection.cs" />
     <Compile Include="Core\Database\Shell.cs" />
+    <Compile Include="Core\Database\Transaction.cs" />
     <Compile Include="Core\Database\Utils.cs" />
     <Compile Include="Core\Database\FileStorage.cs" />
+    <Compile Include="DbEngine\Actions\DbVersion.cs" />
     <Compile Include="DbEngine\Actions\Shrink.cs" />
     <Compile Include="DbEngine\Actions\Dump.cs" />
     <Compile Include="DbEngine\Actions\Stats.cs" />
@@ -142,6 +144,8 @@
     <Compile Include="Shell\Commands\IShellCommand.cs" />
     <Compile Include="Shell\Commands\Others\Comment.cs" />
     <Compile Include="Shell\Commands\Others\DiskDump.cs" />
+    <Compile Include="Shell\Commands\Others\DbVersion.cs" />
+    <Compile Include="Shell\Commands\Others\Transaction.cs" />
     <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
     <Compile Include="Shell\LiteShell.cs" />
     <Compile Include="DbEngine\Pages\DataPage.cs" />

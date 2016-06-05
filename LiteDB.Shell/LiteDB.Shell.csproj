@@ -84,7 +84,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shell\ShellException.cs" />
     <Compile Include="Shell\ShellProgram.cs" />
-    <Compile Include="Utils\Helper.cs" />
     <Compile Include="Utils\OptionSet.cs" />
     <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
