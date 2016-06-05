@@ -1,5 +1,13 @@
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
+## > dev :: v2.0.0-alfa
+- Removed Thread Safe
+- Exposes Transactions again
+- New datafile format
+- Register AutoId back
+- BsonMapper is now external from LiteDatabase (can be passed in LiteDatabase ctor)
+
+
 ## > v2.0.0-rc (for 1.0.x version, see `Tags`)
 
 LiteDB is a small, fast and lightweight NoSQL embedded database. 
