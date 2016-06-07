@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace LiteDB.Tests.Mapping
 {
@@ -9,7 +10,7 @@ namespace LiteDB.Tests.Mapping
     public class MapperReadOnly
     {
         [TestMethod]
-        public void MapReadOnlyCollection()
+        public void MapGetOnlyCollection()
         {
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter('_');
@@ -33,6 +34,23 @@ namespace LiteDB.Tests.Mapping
             Assert.AreEqual(0, nobj.ReadOnlyArray.Length);
         }
 
+        [TestMethod]
+        public void MapReadOnlyCollection()
+        {
+            var mapper = new BsonMapper();
+            mapper.UseLowerCaseDelimiter('_');
+
+            var obj = CreateReadOnlyModel();
+            var doc = mapper.ToDocument(obj);
+
+            var json = JsonSerializer.Serialize(doc, true);
+
+            var nobj = mapper.ToObject<ReadOnlyCompositeObject>(doc);
+
+            Assert.AreEqual(3, nobj.ReadOnlyInWrapperWithSetter.Count);
+            Assert.AreEqual(3, nobj.ReadOnlyInWrapper.Count);
+        }
+
         private CompositeObject CreateModel()
         {
             var obj = new CompositeObject();
@@ -43,6 +61,27 @@ namespace LiteDB.Tests.Mapping
             ((IList)obj.ReadOnlyEnumeration).Add(new SimpleObject() { Name = "Enum two" });
             return obj;
         }
+
+        private ReadOnlyCompositeObject CreateReadOnlyModel()
+        {
+            var model = new ReadOnlyCompositeObject();
+            model.ReadOnlyInWrapperWithSetter = new ReadOnlyCollection<int>(new List<int>() { 1, 2});
+            return model;
+        }
+    }
+
+    public class ReadOnlyCompositeObject
+    {
+        private ReadOnlyCollection<int> read = new ReadOnlyCollection<int>(new List<int>() { 1,2,3});
+        public ReadOnlyCollection<int> ReadOnlyInWrapper
+        {
+            get
+            {
+                return read;
+            }
+        }
+
+        public ReadOnlyCollection<int> ReadOnlyInWrapperWithSetter { get; set; }
     }
 
     public class CompositeObject

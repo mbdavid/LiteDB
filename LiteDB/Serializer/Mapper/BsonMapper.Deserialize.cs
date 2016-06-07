@@ -227,14 +227,20 @@ namespace LiteDB
 
             foreach (var prop in props.Values)
             {
-                if (prop.Setter != null)
-                {
-                    DeserializeWithSetter(prop, obj, value);
-                }
-                else
-                {
-                    DeserializeReadOnly(prop, obj, value);
-                }
+
+                    if (prop.Setter != null)
+                    {
+                            DeserializeWithSetter(prop, obj, value);
+                        
+                    }
+                    else
+                    {
+                        if (obj.GetType().GetProperty(prop.PropertyName).CanWrite)
+                        {
+                            DeserializeReadOnly(prop, obj, value);
+                        }
+                    }
+                
             }
         }
 
