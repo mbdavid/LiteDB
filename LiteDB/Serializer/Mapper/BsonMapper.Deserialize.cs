@@ -186,7 +186,23 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+            Type itemType = type.GetGenericArguments().FirstOrDefault();
+            if(itemType == null)
+            {
+                var genericType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IEnumerable<>));
+                if (genericType != null)
+                {
+                    itemType = genericType.GetGenericArguments().FirstOrDefault();
+                }
+                if(itemType == null)
+                {
+                    // it must've been an enumerable provided as an Object property
+                    // so, we either deducing type from an actual array item or fallback to the Object type
+                    var valueType = value.Count > 0 ? value[0].RawValue.GetType() : typeof(object);
+                    // as long as we can't figure out is it an array or a list there is no much difference what to return, right?
+                    return DeserializeArray(valueType, value);
+                }
+            }
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
 
