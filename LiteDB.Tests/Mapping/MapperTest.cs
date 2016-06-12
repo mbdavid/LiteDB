@@ -99,6 +99,8 @@ namespace LiteDB.Tests
         public object MyObjectInt { get; set; }
         public object MyObjectImpl { get; set; }
         public List<object> MyObjectList { get; set; }
+        public object MyObjectIsList { get; set; }
+        public object MyObjectIsArray { get; set; }
     }
 
     public interface IMyInterface
@@ -155,7 +157,10 @@ namespace LiteDB.Tests
                 MyObjectString = "MyString",
                 MyObjectInt = 123,
                 MyObjectImpl = new MyImpl { Name = "John" },
-                MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") }
+                MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") },
+
+                MyObjectIsList = new List<string> { "One","Two"},
+                MyObjectIsArray = new []{ "One","Two"}
             };
 
             c.MyNameValueCollection["key-1"] = "value-1";
@@ -205,6 +210,9 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyStringEnumerable.Take(1).First(), nobj.MyStringEnumerable.Take(1).First());
             Assert.AreEqual(true, obj.CustomStringEnumerable.SequenceEqual(nobj.CustomStringEnumerable));
             Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
+
+            CollectionAssert.AreEquivalent((ICollection) obj.MyObjectIsList, (ICollection) nobj.MyObjectIsList);
+            CollectionAssert.AreEquivalent((ICollection) obj.MyObjectIsArray, (ICollection) nobj.MyObjectIsArray);
 
             // interfaces
             Assert.AreEqual(obj.MyInterface.Name, nobj.MyInterface.Name);
