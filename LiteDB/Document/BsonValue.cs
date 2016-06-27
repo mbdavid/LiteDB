@@ -662,4 +662,3 @@ namespace LiteDB
         #endregion GetBytesCount, Normalize
     }
 }
-
