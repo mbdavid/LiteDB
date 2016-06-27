@@ -459,7 +459,7 @@ namespace LiteDB
                 // if both values are number, convert them to Double to compare
                 if (this.IsNumber && other.IsNumber)
                 {
-                    return Convert.ToDouble(this.RawValue).CompareTo(Convert.ToDouble(this.RawValue));
+                    return Convert.ToDouble(this.RawValue).CompareTo(Convert.ToDouble(other.RawValue));
                 }
                 // if not, order by sort type order
                 else
