@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace LiteDB
 {
@@ -163,11 +162,16 @@ namespace LiteDB
                     {
                         if (type.IsClass)
                         {
-                            var dynMethod = new DynamicMethod("_", type, null);
+                            /*var dynMethod = new DynamicMethod("_", type, null);
                             var il = dynMethod.GetILGenerator();
                             il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
                             il.Emit(OpCodes.Ret);
                             c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+                            _cacheCtor.Add(type, c);*/
+                            c = (CreateObject)(() =>
+                            {
+                                return type.GetConstructor(Type.EmptyTypes).Invoke(null);
+                            });
                             _cacheCtor.Add(type, c);
                         }
                         else if (type.IsInterface) // some know interfaces
@@ -197,7 +201,7 @@ namespace LiteDB
                         }
                         else // structs
                         {
-                            var dynMethod = new DynamicMethod("_", typeof(object), null);
+                            /*var dynMethod = new DynamicMethod("_", typeof(object), null);
                             var il = dynMethod.GetILGenerator();
                             var lv = il.DeclareLocal(type);
                             il.Emit(OpCodes.Ldloca_S, lv);
@@ -206,6 +210,10 @@ namespace LiteDB
                             il.Emit(OpCodes.Box, type);
                             il.Emit(OpCodes.Ret);
                             c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+                            _cacheCtor.Add(type, c);*/
+                            c = (CreateObject)(() => {
+                                return Activator.CreateInstance(type);
+                            });
                             _cacheCtor.Add(type, c);
                         }
 
@@ -225,32 +233,35 @@ namespace LiteDB
             var getMethod = propertyInfo.GetGetMethod(nonPublic);
             if (getMethod == null) return null;
 
-            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
-            var il = getter.GetILGenerator();
+            /*            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
+                        var il = getter.GetILGenerator();
 
-            if (!type.IsClass) // structs
-            {
-                var lv = il.DeclareLocal(type);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Unbox_Any, type);
-                il.Emit(OpCodes.Stloc_0);
-                il.Emit(OpCodes.Ldloca_S, lv);
-                il.EmitCall(OpCodes.Call, getMethod, null);
-                if (propertyInfo.PropertyType.IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-                il.EmitCall(OpCodes.Callvirt, getMethod, null);
-                if (propertyInfo.PropertyType.IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-            }
+                        if (!type.IsClass) // structs
+                        {
+                            var lv = il.DeclareLocal(type);
+                            il.Emit(OpCodes.Ldarg_0);
+                            il.Emit(OpCodes.Unbox_Any, type);
+                            il.Emit(OpCodes.Stloc_0);
+                            il.Emit(OpCodes.Ldloca_S, lv);
+                            il.EmitCall(OpCodes.Call, getMethod, null);
+                            if (propertyInfo.PropertyType.IsValueType)
+                                il.Emit(OpCodes.Box, propertyInfo.PropertyType);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Ldarg_0);
+                            il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
+                            il.EmitCall(OpCodes.Callvirt, getMethod, null);
+                            if (propertyInfo.PropertyType.IsValueType)
+                                il.Emit(OpCodes.Box, propertyInfo.PropertyType);
+                        }
 
-            il.Emit(OpCodes.Ret);
+                        il.Emit(OpCodes.Ret);
 
-            return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
+                        return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));*/
+            return (GenericGetter)((obj) => {
+                return getMethod.Invoke(obj, null);
+            });
         }
 
         private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
@@ -259,7 +270,7 @@ namespace LiteDB
             var setMethod = propertyInfo.GetSetMethod(nonPublic);
 
             if (setMethod == null) return null;
-
+/*
             var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
             var il = setter.GetILGenerator();
 
@@ -288,7 +299,10 @@ namespace LiteDB
 
             il.Emit(OpCodes.Ret);
 
-            return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
+            return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));*/
+            return (GenericSetter)((target, value) => {
+                return setMethod.Invoke(target, new[] { value });
+            });
         }
 
         #endregion IL Code
