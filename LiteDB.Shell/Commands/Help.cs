@@ -98,6 +98,10 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
+                d.WriteHelp("> begin", "Begin an exclusive transaction");
+                d.WriteHelp("> commit", "Commit transaction");
+                d.WriteHelp("> rollback", "Rollback a transaction");
+                d.WriteHelp("> dbversion [N]", "Get/Set user database file version");
                 d.WriteHelp("> shrink", "Reduce database removing empty pages");
                 d.WriteHelp("> diskdump [n m]", "Display database disk pages strucutre (from N page to M page)");
             }

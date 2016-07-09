@@ -23,20 +23,15 @@ namespace LiteDB
             // initialize AES with passoword
             var password = conn.GetValue<string>("password", null);
 
-            // hash password to store in header to check
+            // hash password to store in header to check if password is correct
             _password = SimpleAES.HashSHA1(password);
 
             _crypto = new SimpleAES(password);
         }
 
-        /// <summary>
-        /// Create new database - empty header with password
-        /// </summary>
-        public override void CreateNew()
+        protected override HeaderPage CreateHeaderPage()
         {
-            var header = new HeaderPage();
-            header.DbParams.Password = _password;
-            this.WritePage(0, header.WritePage());
+            return new HeaderPage() { Password = _password };
         }
 
         /// <summary>
@@ -52,7 +47,7 @@ namespace LiteDB
                 // I know, header page will be double read (it's the price for isolated concerns)
                 var header = (HeaderPage)BasePage.ReadPage(buffer);
 
-                if(header.DbParams.Password.BinaryCompareTo(_password) != 0)
+                if(header.Password.BinaryCompareTo(_password) != 0)
                 {
                     throw LiteException.DatabaseWrongPassword();
                 }
