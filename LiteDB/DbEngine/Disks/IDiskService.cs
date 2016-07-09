@@ -8,9 +8,9 @@ namespace LiteDB
 
         void CreateNew();
 
-        void Lock();
+        void Open(bool readOnly);
 
-        void Unlock();
+        void Close();
 
         void WriteJournal(uint pageID, byte[] original);
 
@@ -21,8 +21,6 @@ namespace LiteDB
         void WritePage(uint pageID, byte[] buffer);
 
         void SetLength(long fileSize);
-
-        ushort GetChangeID();
 
         IDiskService GetTempDisk();
 

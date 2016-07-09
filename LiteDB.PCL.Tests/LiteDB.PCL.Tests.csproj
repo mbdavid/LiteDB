@@ -33,7 +33,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PCL;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -57,72 +57,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="..\LiteDB.Tests\Bson\BsonTest.cs">
-      <Link>Bson\BsonTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Bson\JsonTest.cs">
-      <Link>Bson\JsonTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Bson\ObjectIdTest.cs">
-      <Link>Bson\ObjectIdTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Concurrency\TaskTest.cs">
-      <Link>Concurrency\TaskTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Crud\BulkTest.cs">
-      <Link>Crud\BulkTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Crud\DbVersionTest.cs">
-      <Link>Crud\DbVersionTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Crud\DropCollectionTest.cs">
-      <Link>Crud\DropCollectionTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Index\IndexOrderTest.cs">
-      <Link>Index\IndexOrderTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Index\LinqTest.cs">
-      <Link>Index\LinqTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\AutoIdTest.cs">
-      <Link>Mapping\AutoIdTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\BsonFieldTest.cs">
-      <Link>Mapping\BsonFieldTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\DataTableTest.cs">
-      <Link>Mapping\DataTableTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\DbRefIndexTest.cs">
-      <Link>Mapping\DbRefIndexTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\DerivedTypesTest.cs">
-      <Link>Mapping\DerivedTypesTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\IncludeTest.cs">
-      <Link>Mapping\IncludeTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\MapperInterfaceTest.cs">
-      <Link>Mapping\MapperInterfaceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Mapping\MapperTest.cs">
-      <Link>Mapping\MapperTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Shell\ShellTest.cs">
-      <Link>Shell\ShellTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Utils\DB.cs">
-      <Link>Utils\DB.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\Utils\Initialize.cs">
-      <Link>Utils\Initialize.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Disks\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +67,71 @@
       <Project>{c7cd1fab-d964-45cd-9e94-868f031d99b0}</Project>
       <Name>LiteDB.PCL</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\LiteDB.Tests\AutoIdTest.cs">
+      <Link>AutoIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BsonFieldTest.cs">
+      <Link>BsonFieldTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BsonTest.cs">
+      <Link>BsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BulkTest.cs">
+      <Link>BulkTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ConcurrentTest.cs">
+      <Link>ConcurrentTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DbRefIndexTest.cs">
+      <Link>DbRefIndexTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DbVersionTest.cs">
+      <Link>DbVersionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DerivedTypesTest.cs">
+      <Link>DerivedTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DropCollectionTest.cs">
+      <Link>DropCollectionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\EncryptedTest.cs">
+      <Link>EncryptedTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IncludeTest.cs">
+      <Link>IncludeTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IndexOrderTest.cs">
+      <Link>IndexOrderTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\JsonTest.cs">
+      <Link>JsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LinqTest.cs">
+      <Link>LinqTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LoopTest.cs">
+      <Link>LoopTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\MapperInterfaceTest.cs">
+      <Link>MapperInterfaceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\MapperTest.cs">
+      <Link>MapperTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ObjectIdTest.cs">
+      <Link>ObjectIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ShellTest.cs">
+      <Link>ShellTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Utils\DB.cs">
+      <Link>Utils\DB.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Utils\Initialize.cs">
+      <Link>Utils\Initialize.cs</Link>
+    </Compile>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

@@ -29,19 +29,23 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <None Include="LiteDB.snk" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\LiteDB\Core\Collections\Aggregate.cs">
       <Link>Core\Collections\Aggregate.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Collections\AutoId.cs">
-      <Link>Core\Collections\AutoId.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Core\Collections\Delete.cs">
       <Link>Core\Collections\Delete.cs</Link>
@@ -70,17 +74,14 @@
     <Compile Include="..\LiteDB\Core\Database\Collection.cs">
       <Link>Core\Database\Collection.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Core\Database\DbVersion.cs">
-      <Link>Core\Database\DbVersion.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
       <Link>Core\Database\FileStorage.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Core\Database\OnModelCreating.cs">
-      <Link>Core\Database\OnModelCreating.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Core\Database\Shell.cs">
       <Link>Core\Database\Shell.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
+      <Link>Core\Database\Transaction.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Core\Database\Utils.cs">
       <Link>Core\Database\Utils.cs</Link>
@@ -88,41 +89,41 @@
     <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
       <Link>Core\LiteDatabase.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Aggregate.cs">
-      <Link>DbEngine\Actions\Aggregate.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Collection.cs">
-      <Link>DbEngine\Actions\Collection.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\DbParams.cs">
-      <Link>DbEngine\Actions\DbParams.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Delete.cs">
-      <Link>DbEngine\Actions\Delete.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Dump.cs">
-      <Link>DbEngine\Actions\Dump.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Find.cs">
-      <Link>DbEngine\Actions\Find.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Index.cs">
-      <Link>DbEngine\Actions\Index.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Insert.cs">
-      <Link>DbEngine\Actions\Insert.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Shrink.cs">
-      <Link>DbEngine\Actions\Shrink.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Stats.cs">
-      <Link>DbEngine\Actions\Stats.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Actions\Update.cs">
-      <Link>DbEngine\Actions\Update.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\DbEngine\DbEngine.cs">
       <Link>DbEngine\DbEngine.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Aggregate.cs">
+      <Link>DbEngine\DbEngine\Aggregate.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Collection.cs">
+      <Link>DbEngine\DbEngine\Collection.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\DbVersion.cs">
+      <Link>DbEngine\DbEngine\DbVersion.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Delete.cs">
+      <Link>DbEngine\DbEngine\Delete.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Dump.cs">
+      <Link>DbEngine\DbEngine\Dump.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Find.cs">
+      <Link>DbEngine\DbEngine\Find.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Index.cs">
+      <Link>DbEngine\DbEngine\Index.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Insert.cs">
+      <Link>DbEngine\DbEngine\Insert.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Shrink.cs">
+      <Link>DbEngine\DbEngine\Shrink.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Stats.cs">
+      <Link>DbEngine\DbEngine\Stats.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Update.cs">
+      <Link>DbEngine\DbEngine\Update.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\DbEngine\Disks\EncryptedDiskService.cs">
       <Link>DbEngine\Disks\EncryptedDiskService.cs</Link>
@@ -180,9 +181,6 @@
     </Compile>
     <Compile Include="..\LiteDB\DbEngine\Structures\DataBlock.cs">
       <Link>DbEngine\Structures\DataBlock.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Structures\DbParams.cs">
-      <Link>DbEngine\Structures\DbParams.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\DbEngine\Structures\IndexNode.cs">
       <Link>DbEngine\Structures\IndexNode.cs</Link>
@@ -280,17 +278,20 @@
     <Compile Include="..\LiteDB\Serializer\Json\JsonWriter.cs">
       <Link>Serializer\Json\JsonWriter.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Serializer\Mapper\BsonFieldAttribute.cs">
-      <Link>Serializer\Mapper\BsonFieldAttribute.cs</Link>
+    <Compile Include="..\LiteDB\Serializer\Mapper\Attributes\BsonFieldAttribute.cs">
+      <Link>Serializer\Mapper\Attributes\BsonFieldAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Serializer\Mapper\BsonIdAttribute.cs">
-      <Link>Serializer\Mapper\BsonIdAttribute.cs</Link>
+    <Compile Include="..\LiteDB\Serializer\Mapper\Attributes\BsonIdAttribute.cs">
+      <Link>Serializer\Mapper\Attributes\BsonIdAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Serializer\Mapper\BsonIgnoreAttribute.cs">
-      <Link>Serializer\Mapper\BsonIgnoreAttribute.cs</Link>
+    <Compile Include="..\LiteDB\Serializer\Mapper\Attributes\BsonIgnoreAttribute.cs">
+      <Link>Serializer\Mapper\Attributes\BsonIgnoreAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Serializer\Mapper\BsonIndexAttribute.cs">
-      <Link>Serializer\Mapper\BsonIndexAttribute.cs</Link>
+    <Compile Include="..\LiteDB\Serializer\Mapper\Attributes\BsonIndexAttribute.cs">
+      <Link>Serializer\Mapper\Attributes\BsonIndexAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Serializer\Mapper\AutoId.cs">
+      <Link>Serializer\Mapper\AutoId.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Serializer\Mapper\BsonMapper.cs">
       <Link>Serializer\Mapper\BsonMapper.cs</Link>
@@ -379,6 +380,9 @@
     <Compile Include="..\LiteDB\Shell\Commands\Others\Comment.cs">
       <Link>Shell\Commands\Others\Comment.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\Shell\Commands\Others\DbVersion.cs">
+      <Link>Shell\Commands\Others\DbVersion.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Shell\Commands\Others\DiskDump.cs">
       <Link>Shell\Commands\Others\DiskDump.cs</Link>
     </Compile>
@@ -387,6 +391,9 @@
     </Compile>
     <Compile Include="..\LiteDB\Shell\Commands\Others\Shrink.cs">
       <Link>Shell\Commands\Others\Shrink.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Shell\Commands\Others\Transaction.cs">
+      <Link>Shell\Commands\Others\Transaction.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Shell\LiteShell.cs">
       <Link>Shell\LiteShell.cs</Link>
@@ -408,6 +415,9 @@
     </Compile>
     <Compile Include="..\LiteDB\Utils\ExpressionExtensions.cs">
       <Link>Utils\ExpressionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Utils\FileCore.cs">
+      <Link>Utils\FileCore.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Utils\IndexNotFoundException.cs">
       <Link>Utils\IndexNotFoundException.cs</Link>

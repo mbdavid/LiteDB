@@ -7,6 +7,7 @@ namespace LiteDB.Tests
 {
     public class DB
     {
+#if !PCL
         public static List<string> _files = new List<string>();
 
         // Get a unique database name in TestResults folder
@@ -29,6 +30,7 @@ namespace LiteDB.Tests
             }
             _files = new List<string>();
         }
+#endif
 
         public static string LoremIpsum(int minWords, int maxWords,
             int minSentences, int maxSentences,

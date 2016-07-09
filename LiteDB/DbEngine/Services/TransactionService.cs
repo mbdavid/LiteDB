@@ -10,7 +10,7 @@ namespace LiteDB
         private IDiskService _disk;
         private PageService _pager;
         private CacheService _cache;
-        private bool _trans = false;
+        private int _level = 0;
 
         internal TransactionService(IDiskService disk, PageService pager, CacheService cache)
         {
@@ -24,39 +24,34 @@ namespace LiteDB
         /// <summary>
         /// Starts a new transaction - lock database to garantee that only one processes is in a transaction
         /// </summary>
-        public void Begin()
+        public void Begin(bool readOnly)
         {
-            if (_trans == true) throw new Exception("Begin transaction already exists");
+            _level++;
 
-            // lock (or try to) datafile
-            _disk.Lock();
-
-            _trans = true;
+            _disk.Open(readOnly);
         }
 
         /// <summary>
-        /// Commit the transaction - increese
+        /// Complete transaction commit dirty pages and closing data file
         /// </summary>
-        public void Commit()
+        public void Complete()
         {
-            if (_trans == false) throw new Exception("No begin transaction");
+            if (--_level > 0) return;
 
             if (_cache.HasDirtyPages)
             {
                 // save dirty pages
                 this.Save();
 
-                // clear all pages in cache
-                _cache.Clear();
+                // delete journal file - datafile is consist here
+                _disk.DeleteJournal();
             }
 
-            // delete journal file - datafile is consist here
-            _disk.DeleteJournal();
+            // clear all pages in cache
+            _cache.Clear();
 
-            // unlock datafile
-            _disk.Unlock();
-
-            _trans = false;
+            // close datafile
+            _disk.Close();
         }
 
         /// <summary>
@@ -80,9 +75,12 @@ namespace LiteDB
             }
         }
 
-        public void Rollback()
+        /// <summary>
+        /// Stop transaction, discard journal file and close database
+        /// </summary>
+        public void Abort()
         {
-            if (_trans == false) return;
+            _level = 0;
 
             // clear all pages from memory (return true if has dirty pages on cache)
             if (_cache.Clear())
@@ -91,33 +89,8 @@ namespace LiteDB
                 _disk.DeleteJournal();
             }
 
-            // unlock datafile
-            _disk.Unlock();
-
-            _trans = false;
-        }
-
-        /// <summary>
-        /// This method must be called before read/write operation to avoid dirty reads.
-        /// It's occurs when my cache contains pages that was changed in another process
-        /// </summary>
-        public bool AvoidDirtyRead()
-        {
-            var cache = (HeaderPage)_cache.GetPage(0);
-
-            if (cache == null) return false;
-
-            // read change direct from disk
-            var change = _disk.GetChangeID();
-
-            // if changeID was changed, file was changed by another process - clear all cache
-            if (cache.ChangeID != change)
-            {
-                _cache.Clear();
-                return true;
-            }
-
-            return false;
+            // release datafile
+            _disk.Close();
         }
     }
 }
