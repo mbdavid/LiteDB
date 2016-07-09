@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,7 +31,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -165,6 +165,7 @@
     <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Services\TransactionService.cs" />
     <Compile Include="Shell\Commands\Others\Shrink.cs" />
+    <Compile Include="Utils\FileCore.cs" />
     <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Utils\StringExtensions.cs" />
     <Compile Include="Utils\ExpressionExtensions.cs" />
@@ -185,6 +186,7 @@
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Utils\SimpleAES.cs" />
     <Compile Include="Utils\StringScanner.cs" />
+    <Compile Include="Utils\TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LiteDB.snk" />

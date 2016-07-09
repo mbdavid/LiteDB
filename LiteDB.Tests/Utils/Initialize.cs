@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿#if !PCL
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,10 +13,11 @@ namespace LiteDB.Tests
         [AssemblyCleanup]
         public static void AssemblyCleanup()
         {
-            // wait all threads close FileDB
+            // wait all threads close LiteDB
             System.Threading.Thread.Sleep(2000);
 
             DB.DeleteFiles();
         }
     }
 }
+#endif

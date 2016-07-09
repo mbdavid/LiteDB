@@ -22,22 +22,27 @@ namespace LiteDB
 		int Count<T>(Expression<Func<T, bool>> predicate);
 		bool Exists<T>(Expression<Func<T, bool>> predicate);		
 		
-		IQuery Query<T>(params Expression<Func<T, object>> includes);
+		IQuery Query<T>();
 		
 		ITransaction GetTransaction();
     }
 	
 	public interface IQuery<T>()
 	{
+		IQuery<T> Include(Expression<Func<T, object>> field)
+		
 		IQuery<T> Where(Expression<Func<T, bool>> predicate)
+		IQuery<T> OrderBy(Expression<Func<T, bool>> predicate)
+		
+		T First<T>();
+		T FirstOrDefault<T>();
+		T Single<T>();
+		T SingleOrDefault<T>();
 		
 		T First<T>(Expression<Func<T, bool>> predicate);
 		T FirstOrDefault<T>(Expression<Func<T, bool>> predicate);
 		T Single<T>(Expression<Func<T, bool>> predicate);
 		T SingleOrDefault<T>(Expression<Func<T, bool>> predicate);
-		
-		// order by?
-		// paged?
 		
 		IEnumerable<T> ToEnumerable<T>();
 		T[] ToArray<T>();

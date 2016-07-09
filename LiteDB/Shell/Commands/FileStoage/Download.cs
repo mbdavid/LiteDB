@@ -1,4 +1,5 @@
-﻿namespace LiteDB.Shell.Commands
+﻿#if NETFULL
+namespace LiteDB.Shell.Commands
 {
     internal class FileDownload : BaseFileStorage, IShellCommand
     {
@@ -28,3 +29,4 @@
         }
     }
 }
+#endif

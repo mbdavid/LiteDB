@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETCORE && !PCL
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -79,3 +80,4 @@ namespace LiteDB
         }
     }
 }
+#endif

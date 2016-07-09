@@ -141,7 +141,7 @@ namespace LiteDB
             var length = reader.ReadInt32();
             var bytes = reader.ReadBytes(length - 1);
             reader.ReadByte(); // discard \x00
-            return Encoding.UTF8.GetString(bytes);
+            return Encoding.UTF8.GetString(bytes, 0, length - 1);
         }
 
         // use byte array buffer for CString (key-only)

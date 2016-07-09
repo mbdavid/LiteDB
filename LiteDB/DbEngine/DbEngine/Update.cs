@@ -28,7 +28,7 @@ namespace LiteDB
                         throw LiteException.InvalidDataType("_id", id);
                     }
 
-                    _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = ", colName, id);
+                    _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = {1}", colName, id);
 
                     // find indexNode from pk index
                     var indexNode = _indexer.Find(col.PK, id, false, Query.Ascending);

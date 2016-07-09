@@ -3,12 +3,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BCC55ED6-CE7B-4811-979C-FE74B3A2D6AE}</ProjectGuid>
+    <ProjectGuid>{4DCD636D-8C3C-4F1C-A615-DB0AFE545F9E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LiteDB.Tests</RootNamespace>
-    <AssemblyName>LiteDB.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <AssemblyName>LiteDB.NetCore.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,23 +33,23 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LiteDB090">
-      <HintPath>..\LiteDB.Shell\Resources\LiteDB090.dll</HintPath>
-      <Aliases>v090</Aliases>
-    </Reference>
-    <Reference Include="LiteDB104">
-      <HintPath>..\LiteDB.Shell\Resources\LiteDB104.dll</HintPath>
-      <Aliases>v104</Aliases>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Globalization.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Globalization.Extensions.4.0.0\lib\net46\System.Globalization.Extensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reflection.TypeExtensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reflection.TypeExtensions.4.0.0\lib\net46\System.Reflection.TypeExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.XML" />
   </ItemGroup>
   <Choose>
@@ -65,34 +65,81 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="LoopTest.cs" />
-    <Compile Include="BulkTest.cs" />
-    <Compile Include="BsonTest.cs" />
-    <Compile Include="DbVersionTest.cs" />
-    <Compile Include="EncryptedTest.cs" />
-    <Compile Include="AutoIdTest.cs" />
-    <Compile Include="DropCollectionTest.cs" />
-    <Compile Include="DbRefIndexTest.cs" />
-    <Compile Include="MapperInterfaceTest.cs" />
-    <Compile Include="BsonFieldTest.cs" />
-    <Compile Include="ObjectIdTest.cs" />
-    <Compile Include="DerivedTypesTest.cs" />
-    <Compile Include="MapperTest.cs" />
-    <Compile Include="ConcurrentTest.cs" />
-    <Compile Include="JsonTest.cs" />
-    <Compile Include="LinqTest.cs" />
-    <Compile Include="IncludeTest.cs" />
-    <Compile Include="ShellTest.cs" />
-    <Compile Include="Utils\Initialize.cs" />
-    <Compile Include="Utils\DB.cs" />
-    <Compile Include="IndexOrderTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB\LiteDB.csproj">
-      <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
-      <Name>LiteDB</Name>
+    <ProjectReference Include="..\LiteDB.NetCore\LiteDB.NetCore.csproj">
+      <Project>{28c0558c-13b2-4f3d-b956-5d6081625f61}</Project>
+      <Name>LiteDB.NetCore</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\LiteDB.Tests\AutoIdTest.cs">
+      <Link>AutoIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BsonFieldTest.cs">
+      <Link>BsonFieldTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BsonTest.cs">
+      <Link>BsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BulkTest.cs">
+      <Link>BulkTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ConcurrentTest.cs">
+      <Link>ConcurrentTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DbRefIndexTest.cs">
+      <Link>DbRefIndexTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DbVersionTest.cs">
+      <Link>DbVersionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DerivedTypesTest.cs">
+      <Link>DerivedTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DropCollectionTest.cs">
+      <Link>DropCollectionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\EncryptedTest.cs">
+      <Link>EncryptedTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IncludeTest.cs">
+      <Link>IncludeTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IndexOrderTest.cs">
+      <Link>IndexOrderTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\JsonTest.cs">
+      <Link>JsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LinqTest.cs">
+      <Link>LinqTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LoopTest.cs">
+      <Link>LoopTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\MapperInterfaceTest.cs">
+      <Link>MapperInterfaceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\MapperTest.cs">
+      <Link>MapperTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ObjectIdTest.cs">
+      <Link>ObjectIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ShellTest.cs">
+      <Link>ShellTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Utils\DB.cs">
+      <Link>Utils\DB.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Utils\Initialize.cs">
+      <Link>Utils\Initialize.cs</Link>
+    </Compile>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

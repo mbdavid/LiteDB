@@ -16,7 +16,11 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
+#if NETFULL
                     Thread.Sleep(timer);
+#else
+                    System.Threading.Tasks.Task.Delay(250).ConfigureAwait(true).GetAwaiter().GetResult();
+#endif
                 }
             }
             else

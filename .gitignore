@@ -175,3 +175,8 @@ UpgradeLog*.htm
 FakesAssemblies/
 /WebShell/Properties/PublishProfiles/*.pubxml
 /WebShell/App_Data
+
+# Nuget 3.0 Files
+*.lock.json
+*.nuget.props
+*.nuget.targets

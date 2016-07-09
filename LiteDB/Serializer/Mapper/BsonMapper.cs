@@ -78,7 +78,9 @@ namespace LiteDB
                 serialize: (uri) => uri.AbsoluteUri,
                 deserialize: (bson) => new Uri(bson.AsString)
             );
-
+            
+            //TODO: szurgot Not sure if this would be possible in portable
+#if NETFULL
             this.RegisterType<NameValueCollection>
             (
                 serialize: (nv) =>
@@ -111,6 +113,7 @@ namespace LiteDB
                 serialize: (value) => new BsonValue(value.UtcDateTime),
                 deserialize: (bson) => bson.AsDateTime.ToUniversalTime()
             );
+#endif
 
             #endregion Register CustomTypes
 
@@ -140,6 +143,7 @@ namespace LiteDB
             );
 
             #endregion  
+
         }
 
         /// <summary>
@@ -211,7 +215,7 @@ namespace LiteDB
             return new EntityBuilder<T>(this);
         }
 
-        #region Predefinded Property Resolvers
+#region Predefinded Property Resolvers
 
         public void UseCamelCase()
         {
@@ -225,7 +229,7 @@ namespace LiteDB
             this.ResolvePropertyName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
         }
 
-        #endregion Predefinded Property Resolvers
+#endregion Predefinded Property Resolvers
 
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results

@@ -15,19 +15,28 @@ namespace LiteDB
         private Logger _log = new Logger();
 
         public Logger Log { get { return _log; } }
+		
+		public BsonMapper Mapper { get { return _mapper; } }
 
+#if NETFULL || NETCORE
         /// <summary>
         /// Starts LiteDB database using a connection string for filesystem database
         /// </summary>
         public LiteDatabase(string connectionString, BsonMapper mapper = null)
         {
             var conn = new ConnectionString(connectionString);
-            var encrypted = !StringExtensions.IsNullOrWhiteSpace(conn.GetValue<string>("password", null));
 
             _mapper = mapper ?? BsonMapper.Global;
-            _engine = new LazyLoad<DbEngine>(() => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log));
-        }
 
+#if NETFULL
+            var encrypted = !StringExtensions.IsNullOrWhiteSpace(conn.GetValue<string>("password", null));
+
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log));
+#elif NETCORE
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(new FileDiskService(conn, _log), _log));
+#endif
+        }
+#endif
         /// <summary>
         /// Initialize database using any read/write Stream (like MemoryStream)
         /// </summary>

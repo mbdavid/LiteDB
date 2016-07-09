@@ -3,7 +3,11 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal unsafe class ByteWriter
+    internal
+#if NETFULL
+        unsafe 
+#endif
+        class ByteWriter
     {
         private byte[] _buffer;
         private int _pos;
@@ -29,7 +33,7 @@ namespace LiteDB
             _pos += length;
         }
 
-        #region Native data types
+#region Native data types
 
         public void Write(Byte value)
         {
@@ -47,8 +51,11 @@ namespace LiteDB
 
         public void Write(UInt16 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
 
@@ -57,7 +64,11 @@ namespace LiteDB
 
         public void Write(UInt32 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -69,7 +80,11 @@ namespace LiteDB
 
         public void Write(UInt64 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -85,7 +100,11 @@ namespace LiteDB
 
         public void Write(Int16 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -95,7 +114,11 @@ namespace LiteDB
 
         public void Write(Int32 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -107,7 +130,11 @@ namespace LiteDB
 
         public void Write(Int64 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -123,7 +150,11 @@ namespace LiteDB
 
         public void Write(Single value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -135,7 +166,11 @@ namespace LiteDB
 
         public void Write(Double value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
 
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
@@ -156,9 +191,9 @@ namespace LiteDB
             _pos += value.Length;
         }
 
-        #endregion Native data types
+#endregion Native data types
 
-        #region Extended types
+#region Extended types
 
         public void Write(string value)
         {
@@ -226,6 +261,6 @@ namespace LiteDB
             }
         }
 
-        #endregion Extended types
+#endregion Extended types
     }
 }

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Maurício David")]
 [assembly: AssemblyProduct("LiteDB")]
-[assembly: AssemblyCopyright("MIT © 2015")]
+[assembly: AssemblyCopyright("MIT © 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]

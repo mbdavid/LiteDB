@@ -140,6 +140,7 @@ namespace LiteDB
             // check if left side is an enum and convert to string before return
             Func<Type, object, BsonValue> convert = (type, value) =>
             {
+#if NETFULL
                 var enumType = (left as UnaryExpression)?.Operand.Type;
 
                 if (enumType != null && enumType.IsEnum)
@@ -147,7 +148,7 @@ namespace LiteDB
                     var str = Enum.GetName(enumType, value);
                     return _mapper.Serialize(typeof(string), str, 0);
                 }
-
+#endif
                 return _mapper.Serialize(type, value, 0);
             };
 

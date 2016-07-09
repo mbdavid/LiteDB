@@ -1,10 +1,17 @@
-﻿using System;
+﻿#if !PCL
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+#if NETCORE
+using System.Threading.Tasks;
+#endif
 
 namespace LiteDB
 {
+    /// <summary>
+    /// Implement NTFS File disk
+    /// </summary>
     internal class FileDiskService : IDiskService
     {
         /// <summary>
@@ -57,7 +64,7 @@ namespace LiteDB
         /// </summary>
         public bool Initialize()
         {
-            var exists = File.Exists(_filename);
+            var exists = FileCore.Exists(_filename);
 
             if (exists) this.TryRecovery();
 
@@ -70,11 +77,10 @@ namespace LiteDB
         public void CreateNew()
         {
             // open file as create mode
-            using (var stream = new FileStream(_filename,
+            using (var stream = FileCore.FileStream(_filename,
                 FileMode.Create,
                 FileAccess.ReadWrite,
-                FileShare.None,
-                BasePage.PAGE_SIZE))
+                FileShare.None))
             {
                 _log.Write(Logger.DISK, "initialize new datafile");
 
@@ -115,7 +121,7 @@ namespace LiteDB
             {
                 // close stream (will be open in write mode)
                 _log.Write(Logger.DISK, "close read only datafile");
-                _stream.Close();
+                _stream.Dispose();
                 _stream = null;
             }
 
@@ -131,11 +137,10 @@ namespace LiteDB
 
             TryExec(() =>
             {
-                _stream = new FileStream(_filename,
+                _stream = FileCore.FileStream(_filename,
                     FileMode.Open,
                     access,
-                    share,
-                    BasePage.PAGE_SIZE);
+                    share);
             });
         }
 
@@ -147,7 +152,7 @@ namespace LiteDB
             if (_stream != null)
             {
                 _log.Write(Logger.DISK, "close datafile '{0}'", Path.GetFileName(_filename));
-                _stream.Close();
+                _stream.Dispose();
                 _stream = null;
             }
         }
@@ -232,11 +237,10 @@ namespace LiteDB
                 {
                     _log.Write(Logger.JOURNAL, "create journal file");
 
-                    _journal = new FileStream(_journalFilename,
+                    _journal = FileCore.FileStream(_journalFilename,
                         FileMode.Create,
                         FileAccess.ReadWrite,
-                        FileShare.None,
-                        BasePage.PAGE_SIZE);
+                        FileShare.None);
                 });
             }
 
@@ -264,7 +268,7 @@ namespace LiteDB
                 _journal = null;
 
                 // remove journal file
-                this.TryExec(() => File.Delete(_journalFilename));
+                this.TryExec(() => FileCore.Delete(_journalFilename));
             }
         }
 
@@ -277,7 +281,7 @@ namespace LiteDB
             if (!_journalEnabled) return;
 
             // avoid debug window always throw an exception if file didn't exists
-            if (!File.Exists(_journalFilename))  return;
+            if (!FileCore.Exists(_journalFilename)) return;
 
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
@@ -293,7 +297,7 @@ namespace LiteDB
                 journal.Dispose();
 
                 // delete journal - datafile finish
-                this.TryExec(() => File.Delete(_journalFilename));
+                this.TryExec(() => FileCore.Delete(_journalFilename));
 
                 _log.Write(Logger.RECOVERY, "recovery finish");
 
@@ -351,7 +355,7 @@ namespace LiteDB
 
         public void DeleteTempDisk()
         {
-            File.Delete(_tempFilename);
+            FileCore.Delete(_tempFilename);
         }
 
         #endregion Temporary
@@ -374,7 +378,11 @@ namespace LiteDB
                 }
                 catch (UnauthorizedAccessException)
                 {
+#if NETFULL
                     Thread.Sleep(250);
+#elif NETCORE
+                    System.Threading.Tasks.Task.Delay(250).ConfigureAwait(true).GetAwaiter().GetResult();
+#endif
                 }
                 catch (IOException ex)
                 {
@@ -406,3 +414,4 @@ namespace LiteDB
         #endregion Utils
     }
 }
+#endif

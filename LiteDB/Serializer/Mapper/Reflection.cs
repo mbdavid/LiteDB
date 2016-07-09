@@ -22,9 +22,17 @@ namespace LiteDB
         /// </summary>
         public static PropertyInfo GetIdProperty(Type type)
         {
+#if PCL
+            return SelectProperty(type.GetRuntimeProperties(),
+#else
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
             return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
+#endif
+#if NETFULL
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+#else
+                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
+#endif
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
                 x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
@@ -64,8 +72,11 @@ namespace LiteDB
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
+#if PCL
+            var props = type.GetRuntimeProperties();
+#else
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-
+#endif
             foreach (var prop in props)
             {
                 // ignore indexer property
@@ -161,33 +172,50 @@ namespace LiteDB
                     }
                     else
                     {
-                        if (type.IsClass)
+                        if (type.GetTypeInfo().IsClass)
                         {
+#if NETFULL
                             var dynMethod = new DynamicMethod("_", type, null);
                             var il = dynMethod.GetILGenerator();
                             il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
                             il.Emit(OpCodes.Ret);
                             c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+#else
+                            c = (CreateObject)(() =>
+                            {
+#if PCL
+                                var ctor = type.GetTypeInfo().DeclaredConstructors.Where(ct => ct.GetParameters().Length == 0).First();
+                                return ctor.Invoke(null);
+#else
+                                return type.GetConstructor(new Type[0]).Invoke(null);
+#endif
+                            });
+#endif
                             _cacheCtor.Add(type, c);
                         }
-                        else if (type.IsInterface) // some know interfaces
+                        else if (type.GetTypeInfo().IsInterface) // some know interfaces
                         {
-                            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                            if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
                             {
                                 return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                             }
-                            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
+                            else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
                             {
                                 return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                             }
-                            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                            else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                             {
                                 return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                             }
-                            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                            else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                             {
+#if PCL
+                                var k = type.GetTypeInfo().GenericTypeArguments[0];
+                                var v = type.GetTypeInfo().GenericTypeArguments[1];
+#else
                                 var k = type.GetGenericArguments()[0];
                                 var v = type.GetGenericArguments()[1];
+#endif
                                 return CreateInstance(GetGenericDictionaryOfType(k, v));
                             }
                             else
@@ -197,6 +225,7 @@ namespace LiteDB
                         }
                         else // structs
                         {
+#if NETFULL
                             var dynMethod = new DynamicMethod("_", typeof(object), null);
                             var il = dynMethod.GetILGenerator();
                             var lv = il.DeclareLocal(type);
@@ -206,6 +235,13 @@ namespace LiteDB
                             il.Emit(OpCodes.Box, type);
                             il.Emit(OpCodes.Ret);
                             c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+#else
+                            c = (CreateObject)(() =>
+                            {
+                                return Activator.CreateInstance(type);
+                            });
+#endif
+
                             _cacheCtor.Add(type, c);
                         }
 
@@ -222,9 +258,14 @@ namespace LiteDB
         private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
             //nonPublic: Indicates whether a non-public get accessor should be returned.
+#if PCL
+            var getMethod = propertyInfo.GetMethod;
+#else
             var getMethod = propertyInfo.GetGetMethod(nonPublic);
+#endif
             if (getMethod == null) return null;
 
+#if NETFULL
             var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
             var il = getter.GetILGenerator();
 
@@ -251,14 +292,24 @@ namespace LiteDB
             il.Emit(OpCodes.Ret);
 
             return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
+#else
+            return (GenericGetter)((obj) => {
+                return getMethod.Invoke(obj, null);
+            });
+#endif
         }
 
         private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
             //nonPublic: Indicates whether a non-public set accessor should be returned.
+#if PCL
+            var setMethod = propertyInfo.SetMethod;
+#else
             var setMethod = propertyInfo.GetSetMethod(nonPublic);
+#endif
 
             if (setMethod == null) return null;
+#if NETFULL
 
             var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
             var il = setter.GetILGenerator();
@@ -289,6 +340,11 @@ namespace LiteDB
             il.Emit(OpCodes.Ret);
 
             return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
+#else
+            return (GenericSetter)((target, value) => {
+                return setMethod.Invoke(target, new[] { value });
+            });
+#endif
         }
 
         #endregion IL Code
@@ -297,14 +353,18 @@ namespace LiteDB
 
         public static bool IsNullable(Type type)
         {
-            if (!type.IsGenericType) return false;
+            if (!type.GetTypeInfo().IsGenericType) return false;
             var g = type.GetGenericTypeDefinition();
             return (g.Equals(typeof(Nullable<>)));
         }
 
         public static Type UnderlyingTypeOf(Type type)
         {
+#if NETFULL
             return type.GetGenericArguments()[0];
+#else
+            return type.GetTypeInfo().GenericTypeArguments[0];
+#endif
         }
 
         public static Type GetGenericListOfType(Type type)
@@ -324,12 +384,19 @@ namespace LiteDB
             var type = list.GetType();
 
             if (type.IsArray) return type.GetElementType();
-
+#if PCL
+            foreach (var i in type.GetTypeInfo().ImplementedInterfaces)
+#else
             foreach (var i in type.GetInterfaces())
+#endif
             {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
+#if PCL
+                    return i.GetTypeInfo().GenericTypeArguments[0];
+#else
                     return i.GetGenericArguments()[0];
+#endif
                 }
             }
 
@@ -343,9 +410,13 @@ namespace LiteDB
         {
             if (type.IsArray) return true;
 
+#if PCL
+            foreach (Type @interface in type.GetTypeInfo().ImplementedInterfaces)
+#else
             foreach (Type @interface in type.GetInterfaces())
+#endif
             {
-                if (@interface.IsGenericType)
+                if (@interface.GetTypeInfo().IsGenericType)
                 {
                     if (@interface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                     {
