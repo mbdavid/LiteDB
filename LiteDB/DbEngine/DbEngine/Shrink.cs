@@ -10,11 +10,10 @@ namespace LiteDB
         /// </summary>
         public long Shrink()
         {
-            lock (_locker)
+            try
             {
-                // lock and clear cache - no changes during shrink
-                _disk.Lock();
-                _cache.Clear();
+                // begin a write exclusive access
+                _transaction.Begin(false);
 
                 // create a temporary disk
                 var tempDisk = _disk.GetTempDisk();
@@ -26,6 +25,8 @@ namespace LiteDB
                 // create temp engine instance to copy all documents
                 using (var tempEngine = new DbEngine(tempDisk, new Logger()))
                 {
+                    tempDisk.Open(false);
+
                     // read all collections
                     foreach (var col in _collections.GetAll())
                     {
@@ -68,16 +69,23 @@ namespace LiteDB
 
                     // get diff from initial and final last pageID
                     diff = BasePage.GetSizeOfPages(header.LastPageID - tempHeader.LastPageID);
+
+                    tempDisk.Close();
                 }
 
-                // unlock disk and ckar cache to continue
-                _disk.Unlock();
-                _cache.Clear();
+                // unlock disk and clear cache to continue
+                _transaction.Complete();
 
                 // delete temporary disk
                 _disk.DeleteTempDisk();
 
                 return diff;
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
+                _transaction.Abort();
+                throw;
             }
         }
     }

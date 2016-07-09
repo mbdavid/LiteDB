@@ -31,36 +31,27 @@ namespace LiteDB
             this.WritePage(0, new HeaderPage().WritePage());
         }
 
-        #region Lock/Unlock
+        #region Open/Close
 
         /// <summary>
-        /// Lock stream
+        /// Open in shared read mode
         /// </summary>
-        public void Lock()
+        public void Open(bool readOnly)
         {
+            // for Stream do nothing (stream are already opened);
         }
 
         /// <summary>
-        /// Release lock
+        /// Close datafile
         /// </summary>
-        public void Unlock()
+        public void Close()
         {
+            // for Stream do nothing (stream are already opened);
         }
 
-        #endregion Lock/Unlock
+        #endregion Open/Close
 
         #region Read/Write
-
-        /// <summary>
-        /// Read first 2 bytes from datafile - contains changeID (avoid to read all header page)
-        /// </summary>
-        public ushort GetChangeID()
-        {
-            var bytes = new byte[2];
-            _stream.Seek(HeaderPage.CHANGE_ID_POSITION, SeekOrigin.Begin);
-            _stream.Read(bytes, 0, 2);
-            return BitConverter.ToUInt16(bytes, 0);
-        }
 
         /// <summary>
         /// Read page bytes from disk

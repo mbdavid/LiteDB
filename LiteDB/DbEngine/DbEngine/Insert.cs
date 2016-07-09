@@ -10,7 +10,7 @@ namespace LiteDB
         /// </summary>
         public int Insert(string colName, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, true, (col) =>
+            return this.WriteTransaction<int>(colName, true, (col) =>
             {
                 var count = 0;
 

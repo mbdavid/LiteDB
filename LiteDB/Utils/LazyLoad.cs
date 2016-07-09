@@ -2,20 +2,19 @@
 
 namespace LiteDB
 {
+    /// <summary>
+    /// LazyLoad class for .NET 3.5
+    /// </summary>
     internal class LazyLoad<T>
         where T : class
     {
         private T _value = null;
         private Func<T> _factory;
-        private Action _before = () => { };
-        private Action _after = () => { };
         private object _locker = new object();
 
-        public LazyLoad(Func<T> factory, Action before, Action after)
+        public LazyLoad(Func<T> factory)
         {
             _factory = factory;
-            _before = before;
-            _after = after;
         }
 
         public bool IsValueCreated { get { return _value != null; } }
@@ -28,9 +27,7 @@ namespace LiteDB
                 {
                     if (_value == null)
                     {
-                        _before();
                         _value = _factory();
-                        _after();
                     }
                 }
 

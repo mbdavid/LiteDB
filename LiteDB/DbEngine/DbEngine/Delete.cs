@@ -9,7 +9,7 @@ namespace LiteDB
         /// </summary>
         public int Delete(string colName, Query query)
         {
-            return this.Transaction<int>(colName, false, (col) =>
+            return this.WriteTransaction<int>(colName, false, (col) =>
             {
                 if (col == null) return 0;
 

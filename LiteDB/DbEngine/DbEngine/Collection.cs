@@ -11,13 +11,23 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            lock (_locker)
+            try
             {
-                _transaction.AvoidDirtyRead();
+                // initalize read only transaction
+                _transaction.Begin(true);
 
                 var header = _pager.GetPage<HeaderPage>(0);
 
+                // complete transaction, release datafile
+                _transaction.Complete();
+
                 return header.CollectionPages.Keys.AsEnumerable();
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
+                _transaction.Abort();
+                throw;
             }
         }
 
@@ -26,7 +36,7 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string colName)
         {
-            return this.Transaction<bool>(colName, false, (col) =>
+            return this.WriteTransaction<bool>(colName, false, (col) =>
             {
                 if (col == null) return false;
 
@@ -43,7 +53,7 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string colName, string newName)
         {
-            return this.Transaction<bool>(colName, false, (col) =>
+            return this.WriteTransaction<bool>(colName, false, (col) =>
             {
                 if (col == null) return false;
 

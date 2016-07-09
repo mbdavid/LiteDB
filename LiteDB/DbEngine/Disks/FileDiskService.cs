@@ -14,7 +14,6 @@ namespace LiteDB
 
         private FileStream _stream;
         private string _filename;
-        private long _lockLength;
 
         private string _tempFilename;
         private FileStream _journal;
@@ -24,7 +23,6 @@ namespace LiteDB
 
         private Logger _log;
         private TimeSpan _timeout;
-        private bool _readonly;
         private long _initialSize;
         private long _limitSize;
 
@@ -32,10 +30,10 @@ namespace LiteDB
 
         public FileDiskService(ConnectionString conn, Logger log)
         {
+            // setting all class variables
             _filename = conn.GetValue<string>("filename", "");
-            var journalEnabled = conn.GetValue<bool>("journal", true);
+            _journalEnabled = conn.GetValue<bool>("journal", true);
             _timeout = conn.GetValue<TimeSpan>("timeout", new TimeSpan(0, 1, 0));
-            _readonly = conn.GetValue<bool>("readonly", false);
             _initialSize = conn.GetFileSize("initial size", 0);
             _limitSize = conn.GetFileSize("limit size", 0);
             var level = conn.GetValue<byte?>("log", null);
@@ -50,7 +48,6 @@ namespace LiteDB
             _log = log;
             if (level.HasValue) _log.Level = level.Value;
 
-            _journalEnabled = _readonly ? false : journalEnabled; // readonly? no journal
             _journalFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-journal" + Path.GetExtension(_filename));
             _tempFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-temp" + Path.GetExtension(_filename));
         }
@@ -60,16 +57,24 @@ namespace LiteDB
         /// </summary>
         public bool Initialize()
         {
-            _log.Write(Logger.DISK, "open datafile '{0}', page size {1}", Path.GetFileName(_filename), BasePage.PAGE_SIZE);
+            var exists = File.Exists(_filename);
 
-            // open data file (r/w or r)
-            _stream = new FileStream(_filename,
-                _readonly ? FileMode.Open : FileMode.OpenOrCreate,
-                _readonly ? FileAccess.Read : FileAccess.ReadWrite,
-                _readonly ? FileShare.Read : FileShare.ReadWrite,
-                BasePage.PAGE_SIZE);
+            if (exists) this.TryRecovery();
 
-            if (_stream.Length == 0)
+            return !exists;
+        }
+
+        /// <summary>
+        /// Create new database - just create empty header page
+        /// </summary>
+        public void CreateNew()
+        {
+            // open file as create mode
+            using (var stream = new FileStream(_filename,
+                FileMode.Create,
+                FileAccess.ReadWrite,
+                FileShare.None,
+                BasePage.PAGE_SIZE))
             {
                 _log.Write(Logger.DISK, "initialize new datafile");
 
@@ -77,72 +82,84 @@ namespace LiteDB
                 if (_initialSize > 0)
                 {
                     _log.Write(Logger.DISK, "initial datafile size {0}", _initialSize);
-
-                    _stream.SetLength(_initialSize);
+                    stream.SetLength(_initialSize);
                 }
 
-                return true;
-            }
-            else
-            {
-                this.TryRecovery();
-                return false;
+                // create a new header page in bytes
+                var bytes = this.CreateHeaderPage().WritePage();
+
+                // write bytes on page
+                stream.Write(bytes, 0, BasePage.PAGE_SIZE);
             }
         }
 
         /// <summary>
-        /// Create new database - just create empty header page
+        /// To be override in Encripted disk
         /// </summary>
-        public virtual void CreateNew()
+        protected virtual HeaderPage CreateHeaderPage()
         {
-            this.WritePage(0, new HeaderPage().WritePage());
+            return new HeaderPage();
         }
 
         #endregion Initialize disk
 
-        #region Lock/Unlock
+        #region Open/Close
 
         /// <summary>
-        /// Lock datafile agains other process read/write
+        /// Open datafile if not opened
         /// </summary>
-        public void Lock()
+        public void Open(bool readOnly)
         {
-            this.TryExec(() =>
+            // checked if database is open in read mode but needs be in write mode
+            if (_stream != null && readOnly == false && _stream.CanWrite == false)
             {
-                _lockLength = _stream.Length;
-                _log.Write(Logger.DISK, "lock datafile");
-                _stream.Lock(0, _lockLength);
+                // close stream (will be open in write mode)
+                _log.Write(Logger.DISK, "close read only datafile");
+                _stream.Close();
+                _stream = null;
+            }
+
+            // if stream are already opended stops
+            if (_stream != null) return;
+
+            // read = shared read
+            // write = exclusive write
+            var access = readOnly ? FileAccess.Read : FileAccess.ReadWrite;
+            var share = readOnly ? FileShare.Read : FileShare.None;
+
+            _log.Write(Logger.DISK, "open {0} datafile '{1}', page size {2}", readOnly ? "read" : "write", Path.GetFileName(_filename), BasePage.PAGE_SIZE);
+
+            TryExec(() =>
+            {
+                _stream = new FileStream(_filename,
+                    FileMode.Open,
+                    access,
+                    share,
+                    BasePage.PAGE_SIZE);
             });
         }
 
         /// <summary>
-        /// Release lock
+        /// Close datafile
         /// </summary>
-        public void Unlock()
+        public void Close()
         {
-            _log.Write(Logger.DISK, "unlock datafile");
-            _stream.Unlock(0, _lockLength);
+            if (_stream != null)
+            {
+                _log.Write(Logger.DISK, "close datafile '{0}'", Path.GetFileName(_filename));
+                _stream.Close();
+                _stream = null;
+            }
         }
 
-        #endregion Lock/Unlock
+        public virtual void Dispose()
+        {
+            this.Close();
+        }
+
+        #endregion Open/Close
 
         #region Read/Write
-
-        /// <summary>
-        /// Read first 2 bytes from datafile - contains changeID (avoid to read all header page)
-        /// </summary>
-        public ushort GetChangeID()
-        {
-            var bytes = new byte[2];
-
-            this.TryExec(() =>
-            {
-                _stream.Seek(HeaderPage.CHANGE_ID_POSITION, SeekOrigin.Begin);
-                _stream.Read(bytes, 0, 2);
-            });
-
-            return BitConverter.ToUInt16(bytes, 0);
-        }
 
         /// <summary>
         /// Read page bytes from disk
@@ -152,17 +169,14 @@ namespace LiteDB
             var buffer = new byte[BasePage.PAGE_SIZE];
             var position = BasePage.GetSizeOfPages(pageID);
 
-            this.TryExec(() =>
+            // position cursor
+            if (_stream.Position != position)
             {
-                // position cursor
-                if (_stream.Position != position)
-                {
-                    _stream.Seek(position, SeekOrigin.Begin);
-                }
+                _stream.Seek(position, SeekOrigin.Begin);
+            }
 
-                // read bytes from data file
-                _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
-            });
+            // read bytes from data file
+            _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -254,14 +268,6 @@ namespace LiteDB
             }
         }
 
-        public virtual void Dispose()
-        {
-            if (_stream != null)
-            {
-                _stream.Dispose();
-            }
-        }
-
         #endregion Journal file
 
         #region Recovery datafile
@@ -276,6 +282,8 @@ namespace LiteDB
             // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
             this.OpenExclusiveFile(_journalFilename, (journal) =>
             {
+                this.Open(false);
+
                 _log.Write(Logger.RECOVERY, "journal file detected");
 
                 // copy journal pages to datafile
@@ -288,6 +296,8 @@ namespace LiteDB
                 this.TryExec(() => File.Delete(_journalFilename));
 
                 _log.Write(Logger.RECOVERY, "recovery finish");
+
+                this.Close();
             });
         }
 

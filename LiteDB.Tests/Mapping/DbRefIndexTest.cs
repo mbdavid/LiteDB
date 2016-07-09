@@ -17,18 +17,14 @@ namespace LiteDB.Tests
         public DCustomer Customer { get; set; }
     }
 
-    public class DbRefIndexDatabase : LiteDatabase
+    [TestClass]
+    public class DbRefIndexTest
     {
-        public DbRefIndexDatabase()
-            : base(new MemoryStream())
+        [TestMethod]
+        public void DbRefIndexe_Test()
         {
-        }
+            var mapper = new BsonMapper();
 
-        public LiteCollection<DCustomer> Customers { get { return this.GetCollection<DCustomer>("customers"); } }
-        public LiteCollection<DOrder> Orders { get { return this.GetCollection<DOrder>("orders"); } }
-
-        protected override void OnModelCreating(BsonMapper mapper)
-        {
             mapper.Entity<DCustomer>()
                 .Id(x => x.Login)
                 .Field(x => x.Name, "customer_name");
@@ -37,27 +33,22 @@ namespace LiteDB.Tests
                 .Id(x => x.OrderNumber)
                 .Field(x => x.Customer, "cust")
                 .DbRef(x => x.Customer, "customers");
-        }
-    }
 
-    [TestClass]
-    public class DbRefIndexTest
-    {
-        [TestMethod]
-        public void DbRefIndexe_Test()
-        {
-            using (var db = new DbRefIndexDatabase())
+            using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var customer = new DCustomer { Login = "jd", Name = "John Doe" };
                 var order = new DOrder { OrderNumber = 1, Customer = customer };
 
-                db.Customers.Insert(customer);
-                db.Orders.Insert(order);
+                var customers = db.GetCollection<DCustomer>("Customers");
+                var orders = db.GetCollection<DOrder>("Orders");
+
+                customers.Insert(customer);
+                orders.Insert(order);
 
                 // create an index in Customer.Id ref
-                db.Orders.EnsureIndex(x => x.Customer.Login);
+                orders.EnsureIndex(x => x.Customer.Login);
 
-                var query = db.Orders
+                var query = orders
                     .Include(x => x.Customer)
                     .FindOne(x => x.Customer.Login == "jd");
 

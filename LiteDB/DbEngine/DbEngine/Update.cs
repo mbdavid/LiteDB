@@ -10,7 +10,7 @@ namespace LiteDB
         /// </summary>
         public int Update(string colName, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, false, (col) =>
+            return this.WriteTransaction<int>(colName, false, (col) =>
             {
                 // no collection, no updates
                 if (col == null) return 0;

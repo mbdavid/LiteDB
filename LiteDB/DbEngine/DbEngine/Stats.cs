@@ -11,40 +11,38 @@ namespace LiteDB
         /// </summary>
         public BsonValue Stats(string colName)
         {
-            var col = this.GetCollectionPage(colName, false);
-
-            if (col == null) return BsonValue.Null;
-
-            int indexPages, indexFree, dataPages, extendPages, dataFree, docSize;
-
-            lock (_locker)
+            return this.ReadTransaction<BsonValue>(colName, (col) =>
             {
-                this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree, out docSize);
-            }
+                if (col == null) return BsonValue.Null;
 
-            return new BsonDocument()
-                .Add("name", colName)
-                .Add("documents", (int)col.DocumentCount)
-                .Add("documentAverageSize", (int)((float)docSize / col.DocumentCount))
-                .Add("indexes", new BsonArray(this.GetIndexes(colName, true)))
-                .Add("pages", new BsonDocument()
-                    .Add("index", indexPages)
-                    .Add("data", dataPages)
-                    .Add("extend", extendPages)
-                    .Add("total", indexPages + dataPages + extendPages + 1)
-                )
-                .Add("usage", new BsonDocument()
-                    .Add("allocated", new BsonDocument()
-                        .Add("index", BasePage.GetSizeOfPages(indexPages))
-                        .Add("data", BasePage.GetSizeOfPages(dataPages + extendPages))
-                        .Add("total", BasePage.GetSizeOfPages(indexPages + dataPages + extendPages + 1))
+                int indexPages, indexFree, dataPages, extendPages, dataFree, docSize;
+
+                this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree, out docSize);
+
+                return new BsonDocument()
+                    .Add("name", colName)
+                    .Add("documents", (int)col.DocumentCount)
+                    .Add("documentAverageSize", (int)((float)docSize / col.DocumentCount))
+                    .Add("indexes", new BsonArray(this.GetIndexes(colName, true)))
+                    .Add("pages", new BsonDocument()
+                        .Add("index", indexPages)
+                        .Add("data", dataPages)
+                        .Add("extend", extendPages)
+                        .Add("total", indexPages + dataPages + extendPages + 1)
                     )
-                    .Add("free", new BsonDocument()
-                        .Add("index", indexFree)
-                        .Add("data", dataFree)
-                        .Add("total", indexFree + dataFree)
-                    )
-                );
+                    .Add("usage", new BsonDocument()
+                        .Add("allocated", new BsonDocument()
+                            .Add("index", BasePage.GetSizeOfPages(indexPages))
+                            .Add("data", BasePage.GetSizeOfPages(dataPages + extendPages))
+                            .Add("total", BasePage.GetSizeOfPages(indexPages + dataPages + extendPages + 1))
+                        )
+                        .Add("free", new BsonDocument()
+                            .Add("index", indexFree)
+                            .Add("data", dataFree)
+                            .Add("total", indexFree + dataFree)
+                        )
+                    );
+            });
         }
 
         private void Usage(CollectionPage col,
