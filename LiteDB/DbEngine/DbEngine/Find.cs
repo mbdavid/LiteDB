@@ -13,21 +13,45 @@ namespace LiteDB
         {
             _transaction.Begin(true);
 
+            // get my collection page
+            var col = this.GetCollectionPage(colName, false);
+
+            // no collection, no documents
+            if (col == null) yield break;
+
+            // get nodes from query executor to get all IndexNodes
+            IEnumerable<IndexNode> nodes;
+
             try
             {
-                // get my collection page
-                var col = this.GetCollectionPage(colName, false);
+                nodes = query.Run(col, _indexer);
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
+                _transaction.Abort();
+                throw;
+            }
 
-                // no collection, no documents
-                if (col == null)
-                    yield break;
+            // skip first N nodes
+            if (skip > 0) nodes = nodes.Skip(skip);
 
-                // get nodes from query executor to get all IndexNodes
-                IEnumerable<IndexNode> nodes;
+            // limit in M nodes
+            if (limit != int.MaxValue) nodes = nodes.Take(limit);
 
+            // for each document, read data and deserialize as document
+            foreach (var node in nodes)
+            {
+                _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
+
+                byte[] buffer;
+                BsonDocument doc;
+
+                // encapsulate read operation inside a try/catch (yeild do not support try/catch)
                 try
                 {
-                    nodes = query.Run(col, _indexer);
+                    buffer = _data.Read(node.DataBlock);
+                    doc = BsonSerializer.Deserialize(buffer).AsDocument;
                 }
                 catch (Exception ex)
                 {
@@ -36,42 +60,12 @@ namespace LiteDB
                     throw;
                 }
 
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
+                yield return doc;
 
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-                // for each document, read data and deserialize as document
-                foreach (var node in nodes)
-                {
-                    _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
-
-                    byte[] buffer;
-                    BsonDocument doc;
-
-                    // encapsulate read operation inside a try/catch (yeild do not support try/catch)
-                    try
-                    {
-                        buffer = _data.Read(node.DataBlock);
-                        doc = BsonSerializer.Deserialize(buffer).AsDocument;
-                    }
-                    catch (Exception ex)
-                    {
-                        _log.Write(Logger.ERROR, ex.Message);
-                        _transaction.Abort();
-                        throw;
-                    }
-
-                    yield return doc;
-
-                    _cache.CheckPoint();
-                }
+                _cache.CheckPoint();
             }
-            finally
-            {
-                _transaction.Complete();
-            }
+
+            _transaction.Complete();
         }
     }
 }

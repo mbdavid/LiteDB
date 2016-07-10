@@ -59,7 +59,7 @@ namespace LiteDB
 
         #endregion GetIdProperty
 
-       #region GetProperties
+        #region GetProperties
 
         /// <summary>
         /// Read all properties from a type - store in a static cache - exclude: Id and [BsonIgnore]
@@ -98,13 +98,6 @@ namespace LiteDB
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
-
-                if (dict.ContainsKey(prop.Name))
-                {
-                    // When reflecting over types like LiteDBDocument overriden properties can show up more than once
-                    // Like RawValue
-                    continue;
-                }
 
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
@@ -145,7 +138,7 @@ namespace LiteDB
             return dict;
         }
 
-        #endregion GetProperties 
+        #endregion GetProperties
 
         #region IL Code
 
