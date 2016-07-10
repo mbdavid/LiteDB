@@ -65,6 +65,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DiskFileTest.cs" />
     <Compile Include="LoopTest.cs" />
     <Compile Include="BulkTest.cs" />
     <Compile Include="BsonTest.cs" />
