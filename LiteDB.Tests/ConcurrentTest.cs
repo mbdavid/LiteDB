@@ -23,6 +23,9 @@ namespace LiteDB.Tests
             var c = new LiteDatabase(dbname);
             var d = new LiteDatabase(dbname);
 
+            // needs create file before tasks starts
+            a.Run("db.x.insert {_id:1}");
+
             // task A -> insert N documents
             var ta = Task.Factory.StartNew(() =>
             {
