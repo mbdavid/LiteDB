@@ -11,23 +11,24 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            try
+            // initalize read only transaction
+            using (var trans = _transaction.Begin(true))
             {
-                // initalize read only transaction
-                _transaction.Begin(true);
+                try
+                {
+                    var header = _pager.GetPage<HeaderPage>(0);
 
-                var header = _pager.GetPage<HeaderPage>(0);
+                    // complete transaction, release datafile
+                    trans.Complete();
 
-                // complete transaction, release datafile
-                _transaction.Complete();
-
-                return header.CollectionPages.Keys.AsEnumerable();
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Abort();
-                throw;
+                    return header.CollectionPages.Keys.AsEnumerable();
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Abort();
+                    throw;
+                }
             }
         }
 

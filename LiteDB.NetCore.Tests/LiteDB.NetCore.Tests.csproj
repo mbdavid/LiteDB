@@ -68,12 +68,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.NetCore\LiteDB.NetCore.csproj">
-      <Project>{28c0558c-13b2-4f3d-b956-5d6081625f61}</Project>
-      <Name>LiteDB.NetCore</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -134,12 +128,21 @@
     <Compile Include="..\LiteDB.Tests\ShellTest.cs">
       <Link>ShellTest.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB.Tests\StreamDb_Test.cs">
+      <Link>StreamDb_Test.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB.Tests\Utils\DB.cs">
       <Link>Utils\DB.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB.Tests\Utils\Initialize.cs">
       <Link>Utils\Initialize.cs</Link>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB.NetCore\LiteDB.NetCore.csproj">
+      <Project>{28c0558c-13b2-4f3d-b956-5d6081625f61}</Project>
+      <Name>LiteDB.NetCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

@@ -99,6 +99,13 @@ namespace LiteDB
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
 
+                if (dict.ContainsKey(prop.Name))
+                {
+                    // If the property is already in the dictionary, it's probably an override
+                    // Keep the first instance added
+                    continue;
+                }
+
                 var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
 
                 // check if property has [BsonField] with a custom field name

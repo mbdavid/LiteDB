@@ -126,6 +126,9 @@
     <Compile Include="..\LiteDB.Tests\ShellTest.cs">
       <Link>ShellTest.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB.Tests\StreamDb_Test.cs">
+      <Link>StreamDb_Test.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB.Tests\Utils\DB.cs">
       <Link>Utils\DB.cs</Link>
     </Compile>

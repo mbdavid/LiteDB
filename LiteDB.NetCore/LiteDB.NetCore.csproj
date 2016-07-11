@@ -445,6 +445,9 @@
     <Compile Include="..\LiteDB\Utils\StringScanner.cs">
       <Link>Utils\StringScanner.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\Utils\TransactionCancelledException.cs">
+      <Link>Utils\TransactionCancelledException.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Utils\TypeExtensions.cs">
       <Link>Utils\TypeExtensions.cs</Link>
     </Compile>

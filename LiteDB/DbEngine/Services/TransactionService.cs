@@ -1,4 +1,6 @@
-﻿using System;
+﻿using LiteDB.Utils;
+using System;
+using System.Collections.Generic;
 
 namespace LiteDB
 {
@@ -7,6 +9,8 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService
     {
+        internal Stack<Transaction> activeTransactions = new Stack<Transaction>();
+
         private IDiskService _disk;
         private PageService _pager;
         private CacheService _cache;
@@ -24,34 +28,47 @@ namespace LiteDB
         /// <summary>
         /// Starts a new transaction - lock database to garantee that only one processes is in a transaction
         /// </summary>
-        public void Begin(bool readOnly)
+        public Transaction Begin(bool readOnly)
         {
-            _level++;
+            lock (activeTransactions)
+            {
+                _level++;
 
-            _disk.Open(readOnly);
+                _disk.Open(readOnly);
+
+                var trans = new Transaction(this);
+
+                activeTransactions.Push(trans);
+
+                return trans;
+            }
         }
 
         /// <summary>
         /// Complete transaction commit dirty pages and closing data file
         /// </summary>
-        public void Complete()
+        internal void Complete(Transaction trans)
         {
-            if (--_level > 0) return;
-
-            if (_cache.HasDirtyPages)
+            lock (activeTransactions)
             {
-                // save dirty pages
-                this.Save();
+                popTopTransaction(trans);
+                if (activeTransactions.Count > 0) return;
 
-                // delete journal file - datafile is consist here
-                _disk.DeleteJournal();
+                if (_cache.HasDirtyPages)
+                {
+                    // save dirty pages
+                    this.Save();
+
+                    // delete journal file - datafile is consist here
+                    _disk.DeleteJournal();
+                }
+
+                // clear all pages in cache
+                _cache.Clear();
+
+                // close datafile
+                _disk.Close();
             }
-
-            // clear all pages in cache
-            _cache.Clear();
-
-            // close datafile
-            _disk.Close();
         }
 
         /// <summary>
@@ -78,19 +95,104 @@ namespace LiteDB
         /// <summary>
         /// Stop transaction, discard journal file and close database
         /// </summary>
+        public void Abort(Transaction trans)
+        {
+            lock (activeTransactions)
+            {
+                // During an abort, and active transaction becomes invalid
+                // Mark them as such, and pull them off the stack
+                while (activeTransactions.Count > 0)
+                {
+                    var temp = activeTransactions.Pop();
+                    temp.Cancel();
+                }
+
+                // clear all pages from memory (return true if has dirty pages on cache)
+                if (_cache.Clear())
+                {
+                    // if has dirty page, has journal file - delete it (is not valid)
+                    _disk.DeleteJournal();
+                }
+
+                // release datafile
+                _disk.Close();
+            }
+        }
+
+        private void popTopTransaction(Transaction trans)
+        {
+            var temp = activeTransactions.Peek();
+            if (temp != trans)
+            {
+                throw new ArgumentException("Invalid transaction on top of stack");
+            }
+            activeTransactions.Pop();
+        }
+    }
+
+    public enum TransactionState
+    {
+        Started,
+        Completed,
+        Canceled,
+        Aborted
+    }
+    public class Transaction : IDisposable
+    {
+        public TransactionState State { get; private set; }
+        private TransactionService _service;
+        internal Transaction(TransactionService _service)
+        {
+            this._service = _service;
+            State = TransactionState.Started;
+        }
+
+        public void Complete()
+        {
+            switch (State)
+            {
+                case TransactionState.Started:
+                    _service.Complete(this);
+                    State = TransactionState.Completed;
+                    break;
+                case TransactionState.Completed:
+                    break;
+                case TransactionState.Aborted:
+                    throw new ArgumentException("Transaction already aborted. Cannot be completed");
+                case TransactionState.Canceled:
+                    throw new TransactionCancelledException();
+            }
+        }
+
         public void Abort()
         {
-            _level = 0;
-
-            // clear all pages from memory (return true if has dirty pages on cache)
-            if (_cache.Clear())
+            switch (State)
             {
-                // if has dirty page, has journal file - delete it (is not valid)
-                _disk.DeleteJournal();
+                case TransactionState.Started:
+                    _service.Abort(this);
+                    State = TransactionState.Aborted;
+                    break;
+                case TransactionState.Aborted:
+                    break;
+                case TransactionState.Completed:
+                    throw new ArgumentException("Transaction already completed, cannot abort");
+                case TransactionState.Canceled:
+                    throw new TransactionCancelledException();
             }
+        }
 
-            // release datafile
-            _disk.Close();
+        internal void Cancel()
+        {
+            this.State = TransactionState.Canceled;
+        }
+
+        public void Dispose()
+        {
+            if (State == TransactionState.Started)
+            {
+                // Only complete it if it's still in process
+                this.Complete();
+            }
         }
     }
 }
