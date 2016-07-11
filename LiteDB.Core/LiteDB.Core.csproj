@@ -91,6 +91,39 @@
     <Compile Include="..\LiteDB\DbEngine\DbEngine.cs">
       <Link>DbEngine\DbEngine.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Aggregate.cs">
+      <Link>DbEngine\DbEngine\Aggregate.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Collection.cs">
+      <Link>DbEngine\DbEngine\Collection.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\DbVersion.cs">
+      <Link>DbEngine\DbEngine\DbVersion.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Delete.cs">
+      <Link>DbEngine\DbEngine\Delete.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Dump.cs">
+      <Link>DbEngine\DbEngine\Dump.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Find.cs">
+      <Link>DbEngine\DbEngine\Find.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Index.cs">
+      <Link>DbEngine\DbEngine\Index.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Insert.cs">
+      <Link>DbEngine\DbEngine\Insert.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Shrink.cs">
+      <Link>DbEngine\DbEngine\Shrink.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Stats.cs">
+      <Link>DbEngine\DbEngine\Stats.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\DbEngine\DbEngine\Update.cs">
+      <Link>DbEngine\DbEngine\Update.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\DbEngine\Disks\FileDiskServiceBase.cs">
       <Link>DbEngine\Disks\FileDiskServiceBase.cs</Link>
     </Compile>
@@ -341,17 +374,6 @@
       <Link>Utils\StringScanner.cs</Link>
     </Compile>
     <Compile Include="Core\ExpressionReflectionHandler.cs" />
-    <Compile Include="DbEngine\DbEngine\Aggregate.cs" />
-    <Compile Include="DbEngine\DbEngine\Collection.cs" />
-    <Compile Include="DbEngine\DbEngine\DbVersion.cs" />
-    <Compile Include="DbEngine\DbEngine\Delete.cs" />
-    <Compile Include="DbEngine\DbEngine\Dump.cs" />
-    <Compile Include="DbEngine\DbEngine\Find.cs" />
-    <Compile Include="DbEngine\DbEngine\Index.cs" />
-    <Compile Include="DbEngine\DbEngine\Insert.cs" />
-    <Compile Include="DbEngine\DbEngine\Shrink.cs" />
-    <Compile Include="DbEngine\DbEngine\Stats.cs" />
-    <Compile Include="DbEngine\DbEngine\Update.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
