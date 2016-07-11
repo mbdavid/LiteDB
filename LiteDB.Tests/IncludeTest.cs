@@ -33,79 +33,78 @@ namespace LiteDB.Tests
 
     public class IncludeDatabase : LiteDatabase
     {
-        private static BsonMapper _mapper = new BsonMapper();
+       public IncludeDatabase(Stream stream, BsonMapper mapper = null) : base(stream, mapper)
+       {
+       }
 
-        static IncludeDatabase()
-        {
-            _mapper.Entity<Order>()
-                .DbRef(x => x.Products, "products")
-                .DbRef(x => x.ProductArray, "products")
-                .DbRef(x => x.ProductColl, "products")
-                .DbRef(x => x.ProductEmpty, "products")
-                .DbRef(x => x.ProductsNull, "products")
-                .DbRef(x => x.Customer, "customers")
-                .DbRef(x => x.CustomerNull, "customers");
-        }
-
-
-        public IncludeDatabase()
-            : base(new MemoryStream(), _mapper)
-        {
-        }
-
-        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
+       public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
         public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
         public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
     }
 
     [TestClass]
-    public class IncludeTest
+    public class IncludeTest :TestBase
     {
-        [TestMethod]
+      public BsonMapper _mapper = new BsonMapper();
+
+
+       public IncludeTest()
+       {
+          _mapper.Entity<Order>()
+             .DbRef(x => x.Products, "products")
+             .DbRef(x => x.ProductArray, "products")
+             .DbRef(x => x.ProductColl, "products")
+             .DbRef(x => x.ProductEmpty, "products")
+             .DbRef(x => x.ProductsNull, "products")
+             .DbRef(x => x.Customer, "customers")
+             .DbRef(x => x.CustomerNull, "customers");
+       }
+
+       [TestMethod]
         public void Include_Test()
         {
-            using (var db = new IncludeDatabase())
+         using (var db = new IncludeDatabase(new MemoryStream(), _mapper))
+         {
+            var customer = new Customer { Name = "John Doe" };
+
+            var product1 = new Product { Name = "TV", Price = 800 };
+            var product2 = new Product { Name = "DVD", Price = 200 };
+
+            // insert ref documents
+            db.Customers.Insert(customer);
+            db.Products.Insert(new Product[] { product1, product2 });
+
+            var order = new Order
             {
-                var customer = new Customer { Name = "John Doe" };
+               Customer = customer,
+               CustomerNull = null,
+               Products = new List<Product>() { product1, product2 },
+               ProductArray = new Product[] { product1 },
+               ProductColl = new List<Product>() { product2 },
+               ProductEmpty = new List<Product>(),
+               ProductsNull = null
+            };
 
-                var product1 = new Product { Name = "TV", Price = 800 };
-                var product2 = new Product { Name = "DVD", Price = 200 };
+            db.Orders.Insert(order);
 
-                // insert ref documents
-                db.Customers.Insert(customer);
-                db.Products.Insert(new Product[] { product1, product2 });
+            var query = db.Orders
+                .Include(x => x.Customer)
+                .Include(x => x.CustomerNull)
+                .Include(x => x.Products)
+                .Include(x => x.ProductArray)
+                .Include(x => x.ProductColl)
+                .Include(x => x.ProductsNull)
+                .FindAll()
+                .FirstOrDefault();
 
-                var order = new Order
-                {
-                    Customer = customer,
-                    CustomerNull = null,
-                    Products = new List<Product>() { product1, product2 },
-                    ProductArray = new Product[] { product1 },
-                    ProductColl = new List<Product>() { product2 },
-                    ProductEmpty = new List<Product>(),
-                    ProductsNull = null
-                };
-
-                db.Orders.Insert(order);
-
-                var query = db.Orders
-                    .Include(x => x.Customer)
-                    .Include(x => x.CustomerNull)
-                    .Include(x => x.Products)
-                    .Include(x => x.ProductArray)
-                    .Include(x => x.ProductColl)
-                    .Include(x => x.ProductsNull)
-                    .FindAll()
-                    .FirstOrDefault();
-
-                Assert.AreEqual(customer.Name, query.Customer.Name);
-                Assert.AreEqual(product1.Price, query.Products[0].Price);
-                Assert.AreEqual(product2.Name, query.Products[1].Name);
-                Assert.AreEqual(product1.Name, query.ProductArray[0].Name);
-                Assert.AreEqual(product2.Price, query.ProductColl.ElementAt(0).Price);
-                Assert.AreEqual(null, query.ProductsNull);
-                Assert.AreEqual(0, query.ProductEmpty.Count);
-            }
+            Assert.AreEqual(customer.Name, query.Customer.Name);
+            Assert.AreEqual(product1.Price, query.Products[0].Price);
+            Assert.AreEqual(product2.Name, query.Products[1].Name);
+            Assert.AreEqual(product1.Name, query.ProductArray[0].Name);
+            Assert.AreEqual(product2.Price, query.ProductColl.ElementAt(0).Price);
+            Assert.AreEqual(null, query.ProductsNull);
+            Assert.AreEqual(0, query.ProductEmpty.Count);
+         }
         }
     }
 }

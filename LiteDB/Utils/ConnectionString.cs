@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// Manage ConnectionString to connect and create databases. Connection string are NameValue using Name1=Value1; Name2=Value2
     /// </summary>
-    internal class ConnectionString
+    public class ConnectionString
     {
         private Dictionary<string, string> _values;
 

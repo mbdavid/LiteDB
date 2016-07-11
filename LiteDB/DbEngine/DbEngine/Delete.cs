@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace LiteDB
+﻿namespace LiteDB
 {
-    internal partial class DbEngine : IDisposable
+   public partial class DbEngine
     {
         /// <summary>
         /// Implements delete based on a query result

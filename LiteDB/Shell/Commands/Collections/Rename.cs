@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Shell.Commands
 {
-    internal class CollectionRename : BaseCollection, IShellCommand
+    public class CollectionRename : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

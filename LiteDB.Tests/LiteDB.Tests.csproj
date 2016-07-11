@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NAMEVALUECOLLECTION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -65,7 +65,14 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="BigFileTest.cs" />
+    <Compile Include="DatabasePerformanceTest.cs" />
+    <Compile Include="DataTableTest.cs" />
     <Compile Include="DiskFileTest.cs" />
+    <Compile Include="FileStorageTest.cs" />
+    <Compile Include="IndexDbRef.cs" />
+    <Compile Include="InitializeTests.cs" />
+    <Compile Include="LongCountTest.cs" />
     <Compile Include="LoopTest.cs" />
     <Compile Include="BulkTest.cs" />
     <Compile Include="BsonTest.cs" />
@@ -76,6 +83,7 @@
     <Compile Include="DbRefIndexTest.cs" />
     <Compile Include="MapperInterfaceTest.cs" />
     <Compile Include="BsonFieldTest.cs" />
+    <Compile Include="ObjectCreationPerformanceTest.cs" />
     <Compile Include="ObjectIdTest.cs" />
     <Compile Include="DerivedTypesTest.cs" />
     <Compile Include="MapperTest.cs" />
@@ -84,8 +92,9 @@
     <Compile Include="LinqTest.cs" />
     <Compile Include="IncludeTest.cs" />
     <Compile Include="ShellTest.cs" />
-    <Compile Include="Utils\Initialize.cs" />
-    <Compile Include="Utils\DB.cs" />
+    <Compile Include="TestBase.cs" />
+    <Compile Include="TestPlatform.cs" />
+    <Compile Include="DB.cs" />
     <Compile Include="IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

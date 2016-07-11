@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -71,71 +70,31 @@ namespace LiteDB
             this.ResolvePropertyName = (s) => s;
 
             #region Register CustomTypes
-
-            // register custom types
-            this.RegisterType<Uri>
-            (
-                serialize: (uri) => uri.AbsoluteUri,
-                deserialize: (bson) => new Uri(bson.AsString)
-            );
-            
-            //TODO: szurgot Not sure if this would be possible in portable
-#if NETFULL
-            this.RegisterType<NameValueCollection>
-            (
-                serialize: (nv) =>
-                {
-                    var doc = new BsonDocument();
-
-                    foreach (var key in nv.AllKeys)
-                    {
-                        doc[key] = nv[key];
-                    }
-
-                    return doc;
-                },
-                deserialize: (bson) =>
-                {
-                    var nv = new NameValueCollection();
-                    var doc = bson.AsDocument;
-
-                    foreach (var key in doc.Keys)
-                    {
-                        nv[key] = doc[key].AsString;
-                    }
-
-                    return nv;
-                }
-            );
-
-            this.RegisterType<DateTimeOffset>
-            (
-                serialize: (value) => new BsonValue(value.UtcDateTime),
-                deserialize: (bson) => bson.AsDateTime.ToUniversalTime()
-            );
-#endif
+         
+            RegisterType(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
+            RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
 
             #endregion Register CustomTypes
 
             #region Register AutoId
 
             // register AutoId for ObjectId, Guid and Int32
-            this.RegisterAutoId<ObjectId>
+            RegisterAutoId
             (
-                isEmpty: (v) => v.Equals(ObjectId.Empty),
-                newId: (c) => ObjectId.NewObjectId()
+                v => v.Equals(ObjectId.Empty),
+                c => ObjectId.NewObjectId()
             );
 
-            this.RegisterAutoId<Guid>
+            RegisterAutoId
             (
-                isEmpty: (v) => v == Guid.Empty,
-                newId: (c) => Guid.NewGuid()
+                v => v == Guid.Empty,
+                c => Guid.NewGuid()
             );
 
-            this.RegisterAutoId<Int32>
+            RegisterAutoId
             (
-                isEmpty: (v) => v == 0,
-                newId: (c) =>
+                v => v == 0,
+                c =>
                 {
                     var max = c.Max();
                     return max.IsMaxValue ? 1 : (max + 1);
@@ -162,8 +121,8 @@ namespace LiteDB
         {
             _autoId[typeof(T)] = new AutoId
             {
-                IsEmpty = (o) => isEmpty((T)o),
-                NewId = (c) => (T)newId(c)
+                IsEmpty = o => isEmpty((T)o),
+                NewId = c => newId(c)
             };
         }
 
@@ -184,7 +143,7 @@ namespace LiteDB
             }
 
             // get fields mapper
-            var mapper = this.GetPropertyMapper(entity.GetType());
+            var mapper = GetPropertyMapper(entity.GetType());
 
             // it's not best way because is scan all properties - but Id propably is first field :)
             var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");

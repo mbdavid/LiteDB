@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class CollectionIndexes : BaseCollection, IShellCommand
+    public class CollectionIndexes : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
+using LiteDB.Interfaces;
 
 namespace LiteDB
 {
     /// <summary>
     /// Helper class to get entity properties and map as BsonValue
     /// </summary>
-    internal class Reflection
+    public class Reflection
     {
-        private delegate object CreateObject();
 
         private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
 
@@ -93,8 +92,8 @@ namespace LiteDB
                 var bsonField = prop.IsDefined(fieldAttr, false);
 
                 // create getter/setter IL function
-                var getter = CreateGetMethod(type, prop, bsonField);
-                var setter = CreateSetMethod(type, prop, bsonField);
+                var getter = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateGenericGetter(type, prop, bsonField);
+                var setter = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateGenericSetter(type, prop, bsonField);
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
@@ -140,8 +139,7 @@ namespace LiteDB
 
         #endregion GetProperties
 
-        #region IL Code
-
+  
         /// <summary>
         /// Create a new instance from a Type
         /// </summary>
@@ -174,24 +172,7 @@ namespace LiteDB
                     {
                         if (type.GetTypeInfo().IsClass)
                         {
-#if NETFULL
-                            var dynMethod = new DynamicMethod("_", type, null);
-                            var il = dynMethod.GetILGenerator();
-                            il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
-                            il.Emit(OpCodes.Ret);
-                            c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
-#else
-                            c = (CreateObject)(() =>
-                            {
-#if PCL
-                                var ctor = type.GetTypeInfo().DeclaredConstructors.Where(ct => ct.GetParameters().Length == 0).First();
-                                return ctor.Invoke(null);
-#else
-                                return type.GetConstructor(new Type[0]).Invoke(null);
-#endif
-                            });
-#endif
-                            _cacheCtor.Add(type, c);
+                     _cacheCtor.Add(type, c = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateClass(type));
                         }
                         else if (type.GetTypeInfo().IsInterface) // some know interfaces
                         {
@@ -225,129 +206,18 @@ namespace LiteDB
                         }
                         else // structs
                         {
-#if NETFULL
-                            var dynMethod = new DynamicMethod("_", typeof(object), null);
-                            var il = dynMethod.GetILGenerator();
-                            var lv = il.DeclareLocal(type);
-                            il.Emit(OpCodes.Ldloca_S, lv);
-                            il.Emit(OpCodes.Initobj, type);
-                            il.Emit(OpCodes.Ldloc_0);
-                            il.Emit(OpCodes.Box, type);
-                            il.Emit(OpCodes.Ret);
-                            c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
-#else
-                            c = (CreateObject)(() =>
-                            {
-                                return Activator.CreateInstance(type);
-                            });
-#endif
-
-                            _cacheCtor.Add(type, c);
+                     _cacheCtor.Add(type, c = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateStruct(type));
                         }
 
                         return c();
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     throw LiteException.InvalidCtor(type);
                 }
             }
         }
-
-        private static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
-        {
-            //nonPublic: Indicates whether a non-public get accessor should be returned.
-#if PCL
-            var getMethod = propertyInfo.GetMethod;
-#else
-            var getMethod = propertyInfo.GetGetMethod(nonPublic);
-#endif
-            if (getMethod == null) return null;
-
-#if NETFULL
-            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
-            var il = getter.GetILGenerator();
-
-            if (!type.IsClass) // structs
-            {
-                var lv = il.DeclareLocal(type);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Unbox_Any, type);
-                il.Emit(OpCodes.Stloc_0);
-                il.Emit(OpCodes.Ldloca_S, lv);
-                il.EmitCall(OpCodes.Call, getMethod, null);
-                if (propertyInfo.PropertyType.IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-                il.EmitCall(OpCodes.Callvirt, getMethod, null);
-                if (propertyInfo.PropertyType.IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-            }
-
-            il.Emit(OpCodes.Ret);
-
-            return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
-#else
-            return (GenericGetter)((obj) => {
-                return getMethod.Invoke(obj, null);
-            });
-#endif
-        }
-
-        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
-        {
-            //nonPublic: Indicates whether a non-public set accessor should be returned.
-#if PCL
-            var setMethod = propertyInfo.SetMethod;
-#else
-            var setMethod = propertyInfo.GetSetMethod(nonPublic);
-#endif
-
-            if (setMethod == null) return null;
-#if NETFULL
-
-            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
-            var il = setter.GetILGenerator();
-
-            if (!type.IsClass) // structs
-            {
-                var lv = il.DeclareLocal(type);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Unbox_Any, type);
-                il.Emit(OpCodes.Stloc_0);
-                il.Emit(OpCodes.Ldloca_S, lv);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-                il.EmitCall(OpCodes.Call, setMethod, null);
-                il.Emit(OpCodes.Ldloc_0);
-                il.Emit(OpCodes.Box, type);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-                il.EmitCall(OpCodes.Callvirt, setMethod, null);
-                il.Emit(OpCodes.Ldarg_0);
-            }
-
-            il.Emit(OpCodes.Ret);
-
-            return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
-#else
-            return (GenericSetter)((target, value) => {
-                return setMethod.Invoke(target, new[] { value });
-            });
-#endif
-        }
-
-        #endregion IL Code
 
         #region Utils
 

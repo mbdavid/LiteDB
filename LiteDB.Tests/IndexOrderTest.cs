@@ -5,12 +5,12 @@ using System.Linq;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class IndexOrderTest
-    {
+    public class IndexOrderTest : TestBase
+   {
         [TestMethod]
         public void Index_Order()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection<BsonDocument>("order");
 
@@ -23,7 +23,7 @@ namespace LiteDB.Tests
                 col.EnsureIndex("text");
 
                 var asc = string.Join("",
-                    col.Find(Query.All("text", Query.Ascending))
+                    col.Find(Query.All("text"))
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
