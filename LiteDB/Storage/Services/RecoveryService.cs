@@ -71,7 +71,7 @@ namespace LiteDB
         private BasePage ReadPageJournal(BinaryReader reader)
         {
             var stream = reader.BaseStream;
-            var posStart = stream.Position * BasePage.PAGE_SIZE;
+            var posStart = stream.Position;
             var posEnd = posStart + BasePage.PAGE_SIZE;
 
             // Create page instance and read from disk (read page header + content page)
