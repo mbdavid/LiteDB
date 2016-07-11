@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Resources;
 using System.Runtime.InteropServices;
 
 // Allgemeine Informationen über eine Assembly werden über die folgende 
@@ -13,7 +13,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyMetadata("TargetPlatform","UAP")]
+[assembly: AssemblyMetadata("TargetPlatform", "UAP")]
+[assembly: NeutralResourcesLanguage("en")]
 
 // Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
 //
