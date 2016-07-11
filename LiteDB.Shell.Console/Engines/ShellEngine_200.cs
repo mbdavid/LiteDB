@@ -22,7 +22,7 @@ namespace LiteDB.Shell
 
         public void Open(string connectionString)
         {
-            _db = LiteDatabaseFactory.Create(connectionString);
+            _db = new LiteDatabase(connectionString);
             _db.Log.Logging += ShellProgram.LogMessage;
             _liteShell = new LiteShell(_db);        }
 

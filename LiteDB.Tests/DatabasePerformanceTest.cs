@@ -14,7 +14,7 @@ namespace LiteDB.Tests
       [TestMethod]
       public void Create_300k_Rows_DB_And_Search()
       {
-         using (var db = LiteDatabaseFactory.Create(dbpath))
+         using (var db = new LiteDatabase(dbpath))
          {
             var c = db.GetCollection<PerfItem>("perf");
             //c.EnsureIndex("MyGuid", true);
@@ -39,7 +39,7 @@ namespace LiteDB.Tests
 
          Guid g;
 
-         using (var db = LiteDatabaseFactory.Create(dbpath))
+         using (var db = new LiteDatabase(dbpath))
          {
             var c = db.GetCollection<PerfItem>("perf");
 
@@ -54,7 +54,7 @@ namespace LiteDB.Tests
             Debug.WriteLine(i.MyGuid + " - " + i.Nome);
          }
 
-         using (var db = LiteDatabaseFactory.Create(dbpath))
+         using (var db = new LiteDatabase(dbpath))
          {
             var c = db.GetCollection<PerfItem>("perf");
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
 using System.Linq;
 
 namespace LiteDB.Tests
@@ -19,7 +20,12 @@ namespace LiteDB.Tests
 
     public class Hospital : LiteDatabase
     {
-        public LiteCollection<Patient> Patients { get { return this.GetCollection<Patient>("Patient"); } }
+      public Hospital(string connectionString, BsonMapper mapper = null) 
+         : base(connectionString, mapper)
+       {
+      }
+
+      public LiteCollection<Patient> Patients { get { return this.GetCollection<Patient>("Patient"); } }
 
         public LiteCollection<Ward> Wards { get { return this.GetCollection<Ward>("Ward"); } }
     }
@@ -39,7 +45,7 @@ namespace LiteDB.Tests
        //.Index("Ward.Id")
        .DbRef(x => x.Ward, "Ward");
 
-         using (var db = LiteDatabaseFactory.Create<Hospital>(dbFile, bsonMapper))
+         using (var db = new Hospital(dbFile, bsonMapper))
             {
                 var w1 = new Ward { Id = 1, Name = "Ward 1" };
                 var w2 = new Ward { Id = 2, Name = "Ward 2" };

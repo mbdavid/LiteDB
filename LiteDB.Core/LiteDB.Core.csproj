@@ -79,9 +79,6 @@
     <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
       <Link>Core\LiteDatabase.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Core\LiteDatabaseFactory.cs">
-      <Link>Core\LiteDatabaseFactory.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Core\LiteDbPlatform.cs">
       <Link>Core\LiteDbPlatform.cs</Link>
     </Compile>

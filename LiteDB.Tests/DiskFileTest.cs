@@ -13,9 +13,9 @@ namespace LiteDB.Tests
           //var dbname = @"C:\Git\LiteDB\LiteDB.Shell\bin\Debug\disk.db"; // DB.RandomFile();
           var dbname = DB.RandomFile();
 
-          //File.Delete(dbname);
+         //File.Delete(dbname);
 
-          using (var db = LiteDatabaseFactory.Create(dbname))
+         using (var db = new LiteDatabase(dbname))
           {
              var shell = new LiteShell(db);
 

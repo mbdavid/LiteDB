@@ -1,4 +1,6 @@
-﻿using LiteDB.Interfaces;
+﻿using System.IO;
+using LiteDB.Core;
+using LiteDB.Interfaces;
 
 namespace LiteDB
 {
@@ -20,14 +22,29 @@ namespace LiteDB
           get { return _engine.Value; }
        }
 
-       public LiteDatabase()
+      /// <summary>
+      /// Starts LiteDB database using a connection string for filesystem database
+      /// </summary>
+      public LiteDatabase(string connectionString, BsonMapper mapper = null)
       {
-
+         var conn = new ConnectionString(connectionString);
+         CreateEngine(LiteDbPlatform.Platform.CreateFileDiskService(conn, _log), mapper);
       }
 
+      /// <summary>
+      /// Starts LiteDB database using a custom IDiskService
+      /// </summary>
       public LiteDatabase(IDiskService diskService, BsonMapper mapper = null)
       {
          CreateEngine(diskService, mapper);
+      }
+
+       /// <summary>
+       /// Initialize database using any read/write Stream (like MemoryStream)
+       /// </summary>
+       public LiteDatabase(Stream stream, BsonMapper mapper = null)
+       {
+         CreateEngine(new StreamDiskService(stream), mapper);
       }
 
       public void CreateEngine(IDiskService diskService, BsonMapper mapper = null)

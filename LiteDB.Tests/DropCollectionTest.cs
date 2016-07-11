@@ -9,7 +9,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void DropCollection_Test()
         {
-         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
                 Assert.IsFalse(db.CollectionExists("customerCollection"));
                 var collection = db.GetCollection<Customer>("customerCollection");

@@ -18,7 +18,7 @@ namespace LiteDB.Tests
 
             while (GetFileSize(filename) < fileSize)
             {
-            using (var db = LiteDatabaseFactory.Create("journal=false;filename=" + filename))
+            using (var db = new LiteDatabase("journal=false;filename=" + filename))
                 {
                     var col = db.GetCollection("col1");
 

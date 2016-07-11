@@ -16,7 +16,7 @@ namespace LiteDB.Tests
             var cs_enc_wrong = "password=abcd;filename=" + encrypt;
 
             // create a database with no password - plain data
-            using (var db = LiteDatabaseFactory.Create(plain))
+            using (var db = new LiteDatabase(plain))
             {
             var shell = new LiteShell(db);
                 shell.Run("db.col1.insert {name:\"Mauricio David\"}");
@@ -26,7 +26,7 @@ namespace LiteDB.Tests
             Assert.IsTrue(TestPlatform.FileReadAllText(plain).Contains("Mauricio David"));
 
             // create a database with password
-            using (var db = LiteDatabaseFactory.Create(cs_enc))
+            using (var db = new LiteDatabase(cs_enc))
          {
             var shell = new LiteShell(db);
             shell.Run("db.col1.insert {name:\"Mauricio David\"}");
@@ -36,7 +36,7 @@ namespace LiteDB.Tests
             Assert.IsFalse(TestPlatform.FileReadAllText(encrypt).Contains("Mauricio David"));
 
             // try access using wrong password
-            using (var db = LiteDatabaseFactory.Create(cs_enc_wrong))
+            using (var db = new LiteDatabase(cs_enc_wrong))
             {
                 try
             {

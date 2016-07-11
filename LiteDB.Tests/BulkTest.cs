@@ -11,7 +11,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Bulk_Test()
         {
-            using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection("b");
 

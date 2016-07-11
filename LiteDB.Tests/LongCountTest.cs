@@ -11,7 +11,7 @@ namespace LiteDB.Tests
         //[TestMethod]
         public void LongCountTest_Test()
         {
-         using (var db = LiteDatabaseFactory.Create(DB.RandomFile()))
+         using (var db = new LiteDatabase(DB.RandomFile()))
             {
                 var c = db.GetCollection("col1");
 

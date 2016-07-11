@@ -19,10 +19,10 @@ namespace LiteDB.Tests
             var dbname = DB.RandomFile();
             var N = 300; // interate counter
 
-         var a = LiteDatabaseFactory.Create(dbname);
-            var b = LiteDatabaseFactory.Create(dbname);
-            var c = LiteDatabaseFactory.Create(dbname);
-            var d = LiteDatabaseFactory.Create(dbname);
+         var a = new LiteDatabase(dbname);
+            var b = new LiteDatabase(dbname);
+            var c = new LiteDatabase(dbname);
+            var d = new LiteDatabase(dbname);
 
          var shell = new LiteShell(a);
 
@@ -96,7 +96,7 @@ namespace LiteDB.Tests
             c.Dispose();
             d.Dispose();
 
-         using (var db = LiteDatabaseFactory.Create(dbname))
+         using (var db = new LiteDatabase(dbname))
             {
                 var col = db.GetCollection("col1");
                 var doc = col.FindById(1);

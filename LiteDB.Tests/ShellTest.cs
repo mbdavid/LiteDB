@@ -10,7 +10,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Shell_Test()
         {
-         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
             var shell = new LiteShell(db);
 

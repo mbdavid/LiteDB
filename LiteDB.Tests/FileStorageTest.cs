@@ -15,7 +15,7 @@ namespace LiteDB.Tests
             // create a dump file
             var coreDllPath = TestPlatform.FileWriteAllText("Core.dll", "FileCoreContent");
 
-         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
                 // upload
                 db.FileStorage.Upload("Core.dll", coreDllPath);
@@ -58,7 +58,7 @@ namespace LiteDB.Tests
             var file5mb = new byte[5 * 1024 * 1024];
             var filedb = DB.RandomFile();
 
-         using (var db = LiteDatabaseFactory.Create(filedb))
+         using (var db = new LiteDatabase(filedb))
 			{
                 for(var i = 0; i < 50; i++)
 				{
@@ -71,7 +71,7 @@ namespace LiteDB.Tests
 
 			var binFiles = new List<string>();
 
-			using (var db = LiteDatabaseFactory.Create(filedb))
+         using (var db = new LiteDatabase(filedb))
 			{
 				foreach (var f in db.FileStorage.FindAll())
 				{

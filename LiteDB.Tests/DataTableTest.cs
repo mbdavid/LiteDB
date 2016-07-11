@@ -12,7 +12,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void DataTable_Test()
         {
-         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
             var shell = new LiteShell(db);
                 shell.Run("db.col1.insert {name:\"John Doe\"}");

@@ -10,7 +10,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Index_Order()
         {
-         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection<BsonDocument>("order");
 

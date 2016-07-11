@@ -52,7 +52,6 @@
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
     <Compile Include="Core\Collections\Stats.cs" />
-    <Compile Include="Core\LiteDatabaseFactory.cs" />
     <Compile Include="Core\LiteDbPlatform.cs" />
     <Compile Include="Core\LiteDbPlatformBase.cs" />
     <Compile Include="Core\LiteDbPlatformFullDotNet.cs" />

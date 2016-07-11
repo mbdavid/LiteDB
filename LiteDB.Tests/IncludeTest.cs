@@ -33,7 +33,11 @@ namespace LiteDB.Tests
 
     public class IncludeDatabase : LiteDatabase
     {
-        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
+       public IncludeDatabase(Stream stream, BsonMapper mapper = null) : base(stream, mapper)
+       {
+       }
+
+       public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
         public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
         public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
     }
@@ -59,7 +63,7 @@ namespace LiteDB.Tests
        [TestMethod]
         public void Include_Test()
         {
-         using (var db = LiteDatabaseFactory.Create<IncludeDatabase>(new MemoryStream(), _mapper))
+         using (var db = new IncludeDatabase(new MemoryStream(), _mapper))
          {
             var customer = new Customer { Name = "John Doe" };
 
