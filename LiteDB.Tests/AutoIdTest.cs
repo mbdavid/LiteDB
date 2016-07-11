@@ -25,7 +25,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class AutoIdTest
+    public class AutoIdTest : TestBase
     {
         [TestMethod]
         public void AutoId_Test()
@@ -37,7 +37,7 @@ namespace LiteDB.Tests
                 (c) => "doc-" + c.Count()
             );
 
-            using (var db = new LiteDatabase(new MemoryStream(), mapper))
+         using (var db = LiteDatabaseFactory.Create(new MemoryStream(), mapper))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_guid = db.GetCollection<EntityGuid>("guid");

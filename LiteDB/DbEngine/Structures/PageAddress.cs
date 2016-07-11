@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents a page adress inside a page structure - index could be byte offset position OR index in a list (6 bytes)
     /// </summary>
-    internal struct PageAddress
+    public struct PageAddress
     {
         public const int SIZE = 6;
 

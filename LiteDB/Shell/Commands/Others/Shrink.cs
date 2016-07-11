@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Shell.Commands
 {
-    internal class Shrink : IShellCommand
+    public class Shrink : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

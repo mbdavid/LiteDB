@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// Represents the collection page AND a collection item, because CollectionPage represent a Collection (1 page = 1 collection). All collections pages are linked with Prev/Next links
     /// </summary>
-    internal class CollectionPage : BasePage
+    public class CollectionPage : BasePage
     {
         /// <summary>
         /// Represent maximun bytes that all collections names can be used in header

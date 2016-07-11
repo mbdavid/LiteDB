@@ -1,14 +1,11 @@
-﻿#if !PCL
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using LiteDB.Shell;
 
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class EncryptedTest
-    {
+    public class EncryptedTest : TestBase
+   {
         [TestMethod]
         public void Encrypted_Order()
         {
@@ -19,29 +16,32 @@ namespace LiteDB.Tests
             var cs_enc_wrong = "password=abcd;filename=" + encrypt;
 
             // create a database with no password - plain data
-            using (var db = new LiteDatabase(plain))
+            using (var db = LiteDatabaseFactory.Create(plain))
             {
-                db.Run("db.col1.insert {name:\"Mauricio David\"}");
+            var shell = new LiteShell(db);
+                shell.Run("db.col1.insert {name:\"Mauricio David\"}");
             }
 
             // read datafile to find "Mauricio" string
-            Assert.IsTrue(File.ReadAllText(plain).Contains("Mauricio David"));
+            Assert.IsTrue(TestPlatform.FileReadAllText(plain).Contains("Mauricio David"));
 
             // create a database with password
-            using (var db = new LiteDatabase(cs_enc))
-            {
-                db.Run("db.col1.insert {name:\"Mauricio David\"}");
+            using (var db = LiteDatabaseFactory.Create(cs_enc))
+         {
+            var shell = new LiteShell(db);
+            shell.Run("db.col1.insert {name:\"Mauricio David\"}");
             }
 
             // test if is possible find "Mauricio" string
-            Assert.IsFalse(File.ReadAllText(encrypt).Contains("Mauricio David"));
+            Assert.IsFalse(TestPlatform.FileReadAllText(encrypt).Contains("Mauricio David"));
 
             // try access using wrong password
-            using (var db = new LiteDatabase(cs_enc_wrong))
+            using (var db = LiteDatabaseFactory.Create(cs_enc_wrong))
             {
                 try
-                {
-                    db.Run("show collections");
+            {
+               var shell = new LiteShell(db);
+               shell.Run("show collections");
 
                     Assert.Fail(); // can't work
                 }
@@ -50,7 +50,9 @@ namespace LiteDB.Tests
                     Assert.IsTrue(ex.ErrorCode == 123); // wrong password
                 }
             }
+
+			TestPlatform.DeleteFile(plain);
+			TestPlatform.DeleteFile(encrypt);
         }
     }
 }
-#endif

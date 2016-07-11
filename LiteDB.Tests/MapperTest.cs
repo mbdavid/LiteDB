@@ -76,8 +76,8 @@ namespace LiteDB.Tests
         public string MyField = "DoNotSerializeThis";
         internal string MyInternalProperty { get; set; }
 
-#if !PORTABLE
-        // special types
+#if NAMEVALUECOLLECTION
+      // special types
         public NameValueCollection MyNameValueCollection { get; set; }
 #endif
 
@@ -122,7 +122,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class MapperTest
+	public class MapperTest : TestBase
     {
         private MyClass CreateModel()
         {
@@ -138,7 +138,7 @@ namespace LiteDB.Tests
                 MyStringList = new List<string>() { "String-1", "String-2" },
                 MyWriteOnly = "write-only",
                 MyInternalProperty = "internal-field",
-#if !PORTABLE
+#if NAMEVALUECOLLECTION
                 MyNameValueCollection = new NameValueCollection(),
 #endif
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
@@ -162,19 +162,54 @@ namespace LiteDB.Tests
                 MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") }
             };
 
-#if !PORTABLE
+#if NAMEVALUECOLLECTION
             c.MyNameValueCollection["key-1"] = "value-1";
             c.MyNameValueCollection["KeyNumber2"] = "value-2";
 #endif
             return c;
         }
 
-        [TestMethod]
-        public void Mapper_Test()
-        {
-            var mapper = new BsonMapper();
-            mapper.UseLowerCaseDelimiter('_');
+       public BsonMapper CreateMapper()
+       {
+         var mapper = new BsonMapper();
+         mapper.UseLowerCaseDelimiter('_');
 
+#if NAMEVALUECOLLECTION
+         mapper.RegisterType(
+            nv =>
+            {
+               var doc = new BsonDocument();
+
+               foreach (var key in nv.AllKeys)
+               {
+                  doc[key] = nv[key];
+               }
+
+               return doc;
+            },
+
+            bson =>
+            {
+               var nv = new NameValueCollection();
+               var doc = bson.AsDocument;
+
+               foreach (var key in doc.Keys)
+               {
+                  nv[key] = doc[key].AsString;
+               }
+
+               return nv;
+            }
+         );
+#endif
+
+          return mapper;
+       }
+
+      [TestMethod]
+        public void Mapper_Test()
+      {
+         var mapper = CreateMapper();
             var obj = CreateModel();
             var doc = mapper.ToDocument(obj);
 
@@ -200,7 +235,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
-#if !PORTABLE
+#if NAMEVALUECOLLECTION
             Assert.AreEqual(obj.MyNameValueCollection["key-1"], nobj.MyNameValueCollection["key-1"]);
             Assert.AreEqual(obj.MyNameValueCollection["KeyNumber2"], nobj.MyNameValueCollection["KeyNumber2"]);
 #endif

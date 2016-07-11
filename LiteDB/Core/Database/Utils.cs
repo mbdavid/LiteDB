@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace LiteDB
 {
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.

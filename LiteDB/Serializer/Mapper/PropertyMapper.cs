@@ -1,15 +1,13 @@
 ﻿using System;
+using LiteDB.Interfaces;
 
 namespace LiteDB
 {
-    internal delegate object GenericSetter(object target, object value);
-
-    internal delegate object GenericGetter(object obj);
 
     /// <summary>
     /// Internal representation for a .NET Property mapped to BsonDocument
     /// </summary>
-    internal class PropertyMapper
+    public class PropertyMapper
     {
         public bool AutoId { get; set; }
         public string PropertyName { get; set; }

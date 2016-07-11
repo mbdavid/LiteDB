@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class ShowCollections : IShellCommand
+    public class ShowCollections : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

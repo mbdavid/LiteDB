@@ -5,7 +5,18 @@ using System.Linq;
 
 namespace LiteDB.Tests
 {
-    public class User
+   public enum PlatformID
+   {
+      Win32S,
+      Win32Windows,
+      Win32NT,
+      WinCE,
+      Unix,
+      Xbox,
+      MacOSX,
+   }
+
+   public class User
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -38,12 +49,12 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class LinqTest
-    {
+    public class LinqTest : TestBase
+   {
         [TestMethod]
         public void Linq_Test()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
             {
                 var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Xbox };
                 var c2 = new User { Id = 2, Name = "Malatruco", Active = false, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Win32NT };
@@ -105,7 +116,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void EnumerableTest()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+         using (var db = LiteDatabaseFactory.Create(new MemoryStream()))
             {
                 var col = db.GetCollection<User>("Users");
 

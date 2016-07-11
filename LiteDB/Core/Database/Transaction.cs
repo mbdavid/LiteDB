@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Begin a exclusive read/write transaction

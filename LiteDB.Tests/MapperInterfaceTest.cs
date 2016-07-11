@@ -4,7 +4,7 @@ using System.Reflection;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class MapperInterfaceTest
+	public class MapperInterfaceTest : TestBase
     {
         public interface IMyInterface
         {
