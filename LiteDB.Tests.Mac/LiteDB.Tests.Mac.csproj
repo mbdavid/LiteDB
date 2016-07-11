@@ -165,6 +165,9 @@
     <Compile Include="..\LiteDB.Tests\ShellTest.cs">
       <Link>Tests\ShellTest.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB.Tests\DiskFileTest.cs">
+      <Link>Tests\DiskFileTest.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainMenu.xib" />

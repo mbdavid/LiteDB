@@ -7,8 +7,8 @@ namespace LiteDB.Tests
    [TestClass]
    public class DatabasePerformanceTest : TestBase
    {
-		private static string filepath = DB.RandomFile("ldb;journal=true");
-		private static string dbpath = "filename="+ filepath;
+		private static string filepath = DB.RandomFile("ldb");
+		private static string dbpath = "filename="+ filepath+ ";journal=true";
 
 
       [TestMethod]

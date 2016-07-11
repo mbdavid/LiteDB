@@ -146,6 +146,9 @@
     <Compile Include="..\LiteDB.Tests\DerivedTypesTest.cs">
       <Link>DerivedTypesTest.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB.Tests\DiskFileTest.cs">
+      <Link>DiskFileTest.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB.Tests\DropCollectionTest.cs">
       <Link>DropCollectionTest.cs</Link>
     </Compile>

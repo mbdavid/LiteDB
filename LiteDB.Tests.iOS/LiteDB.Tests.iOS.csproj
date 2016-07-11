@@ -182,6 +182,9 @@
     <Compile Include="InitializeTests.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestPlatform.cs" />
+    <Compile Include="..\LiteDB.Tests\DiskFileTest.cs">
+      <Link>DiskFileTest.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

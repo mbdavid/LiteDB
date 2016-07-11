@@ -52,6 +52,10 @@ namespace LiteDB.Tests
 
       public static void DeleteFile(string path)
       {
+         var folder = ApplicationData.Current.TemporaryFolder;
+
+         path = path.Replace(folder.Path, "");
+
          var file = AsyncHelpers.RunSync(ApplicationData.Current.TemporaryFolder.GetFileAsync(path));
 
          file.DeleteAsync();

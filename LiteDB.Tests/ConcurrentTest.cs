@@ -13,7 +13,7 @@ namespace LiteDB.Tests
    {
         private Random _rnd = new Random();
 
-        [TestMethod]
+        //[TestMethod]
         public void Concurrent_Test()
         {
             var dbname = DB.RandomFile();
