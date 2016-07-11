@@ -107,13 +107,13 @@ namespace LiteDB
                     return nv;
                 }
             );
+#endif
 
             this.RegisterType<DateTimeOffset>
             (
                 serialize: (value) => new BsonValue(value.UtcDateTime),
                 deserialize: (bson) => bson.AsDateTime.ToUniversalTime()
             );
-#endif
 
             #endregion Register CustomTypes
 

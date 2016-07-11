@@ -1,5 +1,4 @@
-﻿#if !PCL
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,9 +12,17 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Loop_Test()
         {
+#if NETFULL
             var f = DB.RandomFile();
+#else
+            var ms = new MemoryStream();
+#endif
 
+#if NETFULL
             using (var db = new LiteDatabase(f))
+#else
+            using (var db = new LiteDatabase(ms))
+#endif
             {
                 var col = db.GetCollection("b");
 
@@ -25,7 +32,11 @@ namespace LiteDB.Tests
                 col.Insert(new BsonDocument().Add("Number", 4));
             }
 
+#if NETFULL
             using (var db = new LiteDatabase(f))
+#else
+            using (var db = new LiteDatabase(ms))
+#endif
             {
                 var col = db.GetCollection("b");
 
@@ -43,4 +54,3 @@ namespace LiteDB.Tests
         }
     }
 }
-#endif

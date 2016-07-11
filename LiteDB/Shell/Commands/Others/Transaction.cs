@@ -5,6 +5,8 @@ namespace LiteDB.Shell.Commands
 {
     internal class BeginTrans : IShellCommand
     {
+        internal static Transaction _currentTransaction = null;
+
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"begin(\stransaction)?");
@@ -12,7 +14,11 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            engine.BeginTrans();
+            if (_currentTransaction != null)
+            {
+                throw new LiteException("Transaction already started");
+            }
+            _currentTransaction = engine.BeginTrans();
 
             return BsonValue.Null;
         }
@@ -27,7 +33,12 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            engine.Commit();
+            if (BeginTrans._currentTransaction == null)
+            {
+                throw new LiteException("No trnsaction started");
+            }
+            BeginTrans._currentTransaction.Complete();
+            BeginTrans._currentTransaction = null;
 
             return BsonValue.Null;
         }
@@ -42,7 +53,12 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            engine.Rollback();
+            if (BeginTrans._currentTransaction == null)
+            {
+                throw new LiteException("No trnsaction started");
+            }
+            BeginTrans._currentTransaction.Abort();
+            BeginTrans._currentTransaction = null;
 
             return BsonValue.Null;
         }
