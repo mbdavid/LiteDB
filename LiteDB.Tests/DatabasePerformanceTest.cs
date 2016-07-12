@@ -14,28 +14,30 @@ namespace LiteDB.Tests
       [TestMethod]
       public void Create_300k_Rows_DB_And_Search()
       {
-         using (var db = new LiteDatabase(dbpath))
-         {
-            var c = db.GetCollection<PerfItem>("perf");
-            //c.EnsureIndex("MyGuid", true);
-            var id = 0;
-
-            for (var j = 0; j < 3; j++)
+            using (var db = new LiteDatabase(dbpath))
             {
-               var d = DateTime.Now;
-               db.Engine.BeginTrans();
+                var c = db.GetCollection<PerfItem>("perf");
+                //c.EnsureIndex("MyGuid", true);
+                var id = 0;
 
-               for (var i = 0; i < 100000; i++)
-               {
-                  id++;
+                for (var j = 0; j < 3; j++)
+                {
+                    var d = DateTime.Now;
+                    using (var trans = db.Engine.BeginTrans())
+                    {
 
-                  c.Insert(new PerfItem { Id = id, MyGuid = Guid.NewGuid(), Nome = "Jose Silva " + id });
-               }
+                        for (var i = 0; i < 100000; i++)
+                        {
+                            id++;
 
-               db.Engine.Commit();
-               Debug.WriteLine("Commits " + j + " in " + DateTime.Now.Subtract(d).TotalMilliseconds);
+                            c.Insert(new PerfItem { Id = id, MyGuid = Guid.NewGuid(), Nome = "Jose Silva " + id });
+                        }
+
+                        trans.Commit();
+                    }
+                    Debug.WriteLine("Commits " + j + " in " + DateTime.Now.Subtract(d).TotalMilliseconds);
+                }
             }
-         }
 
          Guid g;
 

@@ -197,6 +197,7 @@
     <Compile Include="Utils\SimpleAES.cs" />
     <Compile Include="Utils\StringScanner.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Utils\TransactionCancelledException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LiteDB.snk" />

@@ -9,23 +9,25 @@ namespace LiteDB
         /// </summary>
         public ushort ReadDbVersion()
         {
-            try
+            // initalize read only transaction
+            using (var trans = _transaction.Begin(true))
             {
-                // initalize read only transaction
-                _transaction.Begin(true);
+                try
+                {
 
-                var header = _pager.GetPage<HeaderPage>(0);
+                    var header = _pager.GetPage<HeaderPage>(0);
 
-                // complete transaction, release datafile
-                _transaction.Complete();
+                    // complete transaction, release datafile
+                    trans.Commit();
 
-                return header.DbVersion;
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Abort();
-                throw;
+                    return header.DbVersion;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Rollback();
+                    throw;
+                }
             }
         }
 
@@ -34,25 +36,27 @@ namespace LiteDB
         /// </summary>
         public void WriteDbVersion(ushort version)
         {
-            try
+            // initalize read/write transaction
+            using (var trans = _transaction.Begin(false))
             {
-                // initalize read/write transaction
-                _transaction.Begin(false);
+                try
+                {
 
-                var header = _pager.GetPage<HeaderPage>(0);
+                    var header = _pager.GetPage<HeaderPage>(0);
 
-                header.DbVersion = version;
+                    header.DbVersion = version;
 
-                _pager.SetDirty(header);
+                    _pager.SetDirty(header);
 
-                // complete transaction, release datafile
-                _transaction.Complete();
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Abort();
-                throw;
+                    // complete transaction, release datafile
+                    trans.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Rollback();
+                    throw;
+                }
             }
         }
     }
