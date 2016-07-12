@@ -3,9 +3,9 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal
+   public
 #if NETFULL
-        unsafe 
+      unsafe 
 #endif
         class ByteReader
     {

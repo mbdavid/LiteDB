@@ -1,0 +1,205 @@
+﻿<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">iPhoneSimulator</Platform>
+    <ProjectGuid>{76B74E11-3A77-4170-8C7C-9413563B0BF4}</ProjectGuid>
+    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>LiteDB.Tests.iOS</RootNamespace>
+    <AssemblyName>LiteDBTestsMac</AssemblyName>
+    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\iPhoneSimulator\Debug</OutputPath>
+    <DefineConstants>__UNIFIED__;__MOBILE__;__IOS__;DEBUG;PCL;PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchDebug>true</MtouchDebug>
+    <MtouchFastDev>true</MtouchFastDev>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchLink>None</MtouchLink>
+    <MtouchArch>i386</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+    <DeviceSpecificBuild>false</DeviceSpecificBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\iPhone\Release</OutputPath>
+    <DefineConstants></DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchFloat32>true</MtouchFloat32>
+    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+    <MtouchLink>SdkOnly</MtouchLink>
+    <MtouchArch>ARMv7, ARM64</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\iPhoneSimulator\Release</OutputPath>
+    <DefineConstants></DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchLink>None</MtouchLink>
+    <MtouchArch>i386</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\iPhone\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <DeviceSpecificBuild>true</DeviceSpecificBuild>
+    <MtouchDebug>true</MtouchDebug>
+    <MtouchFastDev>true</MtouchFastDev>
+    <MtouchUseSGen>true</MtouchUseSGen>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchFloat32>true</MtouchFloat32>
+    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+    <MtouchLink>SdkOnly</MtouchLink>
+    <MtouchArch>ARMv7, ARM64</MtouchArch>
+    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
+    <MtouchTlsProvider>Default</MtouchTlsProvider>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Xamarin.iOS" />
+    <Reference Include="MonoTouch.NUnitLite" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterfaceDefinition Include="LaunchScreen.storyboard" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Info.plist" />
+    <None Include="Entitlements.plist" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\LiteDB.Tests\AutoIdTest.cs">
+      <Link>AutoIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BsonFieldTest.cs">
+      <Link>BsonFieldTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BsonTest.cs">
+      <Link>BsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\BulkTest.cs">
+      <Link>BulkTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DatabasePerformanceTest.cs">
+      <Link>DatabasePerformanceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ConcurrentTest.cs">
+      <Link>ConcurrentTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DataTableTest.cs">
+      <Link>DataTableTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DB.cs">
+      <Link>DB.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DbRefIndexTest.cs">
+      <Link>DbRefIndexTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DbVersionTest.cs">
+      <Link>DbVersionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DerivedTypesTest.cs">
+      <Link>DerivedTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\DropCollectionTest.cs">
+      <Link>DropCollectionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\EncryptedTest.cs">
+      <Link>EncryptedTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\FileStorageTest.cs">
+      <Link>FileStorageTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IncludeTest.cs">
+      <Link>IncludeTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IndexDbRef.cs">
+      <Link>IndexDbRef.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\IndexOrderTest.cs">
+      <Link>IndexOrderTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\JsonTest.cs">
+      <Link>JsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LinqTest.cs">
+      <Link>LinqTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LongCountTest.cs">
+      <Link>LongCountTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\LoopTest.cs">
+      <Link>LoopTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\MapperInterfaceTest.cs">
+      <Link>MapperInterfaceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\MapperTest.cs">
+      <Link>MapperTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ObjectCreationPerformanceTest.cs">
+      <Link>ObjectCreationPerformanceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ObjectIdTest.cs">
+      <Link>ObjectIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\ShellTest.cs">
+      <Link>ShellTest.cs</Link>
+    </Compile>
+    <Compile Include="Main.cs" />
+    <Compile Include="UnitTestAppDelegate.cs" />
+    <Compile Include="InitializeTests.cs" />
+    <Compile Include="TestBase.cs" />
+    <Compile Include="TestPlatform.cs" />
+    <Compile Include="..\LiteDB.Tests\DiskFileTest.cs">
+      <Link>DiskFileTest.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
+      <Project>{59BA13E6-C19B-4D8B-B504-FB5D0A1E27F3}</Project>
+      <Name>LiteDB.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LiteDB.Platform.iOS\LiteDB.Platform.iOS.csproj">
+      <Project>{7F334F08-A934-4D91-ABBE-3F29A4AF3C15}</Project>
+      <Name>LiteDB.Platform.iOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LiteDB.Shell\LiteDB.Shell.csproj">
+      <Project>{4D615F2E-BC3D-4F5C-BD75-B6FAB2B55A5C}</Project>
+      <Name>LiteDB.Shell</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
+</Project>

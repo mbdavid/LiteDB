@@ -1,8 +1,4 @@
-﻿#if !PCL
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 
 namespace LiteDB.Tests
@@ -15,7 +11,7 @@ namespace LiteDB.Tests
         {
             var f = DB.RandomFile();
 
-            using (var db = new LiteDatabase(f))
+         using (var db = new LiteDatabase(f))
             {
                 var col = db.GetCollection("b");
 
@@ -25,7 +21,7 @@ namespace LiteDB.Tests
                 col.Insert(new BsonDocument().Add("Number", 4));
             }
 
-            using (var db = new LiteDatabase(f))
+         using (var db = new LiteDatabase(f))
             {
                 var col = db.GetCollection("b");
 
@@ -43,4 +39,3 @@ namespace LiteDB.Tests
         }
     }
 }
-#endif

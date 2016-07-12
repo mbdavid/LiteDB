@@ -1,4 +1,5 @@
 ﻿using System;
+using LiteDB.Interfaces;
 
 namespace LiteDB
 {
@@ -6,7 +7,7 @@ namespace LiteDB
     /// A internal class that take care of all engine data structure access - it´s basic implementation of a NoSql database
     /// Its isolated from complete solution - works on low level only
     /// </summary>
-    internal partial class DbEngine : IDisposable
+    public partial class DbEngine : IDisposable
     {
         #region Services instances
 

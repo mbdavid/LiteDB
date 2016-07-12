@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using LiteDB.Interfaces;
 
 namespace LiteDB
 {
-    /// <summary>
+   /// <summary>
     /// Implement a Index service - Add/Remove index nodes on SkipList
     /// Based on: http://igoro.com/archive/skip-lists-are-fascinating/
     /// </summary>
-    internal class IndexService
-    {
+    internal class IndexService : IIndexService
+   {
         /// <summary>
         /// Max size of a index entry - usde for string, binary, array and documents
         /// </summary>

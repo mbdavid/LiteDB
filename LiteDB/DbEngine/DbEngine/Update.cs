@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LiteDB
 {
-    internal partial class DbEngine : IDisposable
+   public partial class DbEngine
     {
         /// <summary>
         /// Implement update command to a document inside a collection

@@ -25,19 +25,19 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class AutoIdTest
+    public class AutoIdTest : TestBase
     {
         [TestMethod]
         public void AutoId_Test()
         {
             var mapper = new BsonMapper();
 
-            mapper.RegisterAutoId<string>(
+            mapper.RegisterAutoId(
                 (s) => s == null,
                 (c) => "doc-" + c.Count()
             );
 
-            using (var db = new LiteDatabase(new MemoryStream(), mapper))
+         using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_guid = db.GetCollection<EntityGuid>("guid");

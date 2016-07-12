@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class DbEngine : IDisposable
+   public partial class DbEngine
     {
         /// <summary>
         /// Dump all pages into a string - debug purpose only

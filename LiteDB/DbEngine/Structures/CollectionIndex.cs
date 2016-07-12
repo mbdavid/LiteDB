@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    internal class CollectionIndex
+   public class CollectionIndex
     {
         public static Regex IndexPattern = new Regex(@"[\w-$\.]+$");
 

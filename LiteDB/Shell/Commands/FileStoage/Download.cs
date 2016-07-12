@@ -1,7 +1,8 @@
-﻿#if NETFULL
+﻿using LiteDB.Extensions;
+
 namespace LiteDB.Shell.Commands
 {
-    internal class FileDownload : BaseFileStorage, IShellCommand
+    public class FileDownload : BaseFileStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -18,7 +19,7 @@ namespace LiteDB.Shell.Commands
 
             if (file != null)
             {
-                file.SaveAs(filename, true);
+                file.SaveAs(filename);
 
                 return file.AsDocument;
             }
@@ -29,4 +30,3 @@ namespace LiteDB.Shell.Commands
         }
     }
 }
-#endif

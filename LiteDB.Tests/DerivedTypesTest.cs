@@ -1,8 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 
@@ -24,12 +20,12 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class DerivedTypeTest
+	public class DerivedTypeTest : TestBase
     {
         [TestMethod]
         public void DerivedType_Test()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+         using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var derived1 = new Derived1 { Id = 1, Member1 = "Derived1" };
                 var derived2 = new Derived2 { Id = 2, Member2 = "Dereived2" };
@@ -42,6 +38,8 @@ namespace LiteDB.Tests
                 var colBson = db.GetCollection<BsonDocument>("Collection");
 
                 var docs = colBson.FindAll().ToList();
+
+            Assert.IsTrue(docs.Count > 0);
 
                 // checks if BsonDocument contains _type
                 var doc1 = colBson.FindById(1);

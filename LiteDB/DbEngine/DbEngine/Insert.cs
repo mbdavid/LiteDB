@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LiteDB
 {
-    internal partial class DbEngine : IDisposable
+   public partial class DbEngine
     {
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count

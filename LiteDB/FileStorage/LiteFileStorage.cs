@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using LiteDB.Core;
 
 namespace LiteDB
 {
@@ -15,7 +16,7 @@ namespace LiteDB
 
         private DbEngine _engine;
 
-        internal LiteFileStorage(DbEngine engine)
+        public LiteFileStorage(DbEngine engine)
         {
             _engine = engine;
         }
@@ -52,10 +53,10 @@ namespace LiteDB
             return this.Upload(new LiteFileInfo(id), stream);
         }
 
-#if !PCL
+
         public LiteFileInfo Upload(string id, string filename)
         {
-            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            using (var stream = LiteDbPlatform.Platform.FileHandler.ReadFileAsStream(filename))
             {
                 return this.Upload(new LiteFileInfo(id, filename), stream);
             }
@@ -66,12 +67,12 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string filename)
         {
-            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+         using (var stream = LiteDbPlatform.Platform.FileHandler.ReadFileAsStream(filename))
             {
                 return this.Upload(new LiteFileInfo(Path.GetFileName(filename), filename), stream);
             }
         }
-#endif
+
         /// <summary>
         /// Update metada on a file. File must exisits
         /// </summary>

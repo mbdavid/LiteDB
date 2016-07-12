@@ -1,6 +1,6 @@
 ﻿namespace LiteDB.Shell.Commands
 {
-    internal class Comment : IShellCommand
+    public class Comment : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileFind : BaseFileStorage, IShellCommand
+    public class FileFind : BaseFileStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

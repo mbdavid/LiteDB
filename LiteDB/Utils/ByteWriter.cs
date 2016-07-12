@@ -3,11 +3,12 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal
+   public
 #if NETFULL
-        unsafe 
+       unsafe 
 #endif
-        class ByteWriter
+
+   class ByteWriter
     {
         private byte[] _buffer;
         private int _pos;

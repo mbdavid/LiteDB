@@ -8,7 +8,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Support for Portable UWP/PCL (thanks to @szurgot)
 - ACID transactions
 - Data recovery after write failure (journal mode)
-- Datafile encryption using DES cryptography
+- Datafile encryption using DES (AES) cryptography
 - Map your POCO classes to `BsonDocument`
 - Store files and stream data (like GridFS in MongoDB)
 - Single data file storage (like SQLite)
