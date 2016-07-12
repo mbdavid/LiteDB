@@ -370,6 +370,9 @@
     <Compile Include="..\LiteDB\Utils\StringScanner.cs">
       <Link>Utils\StringScanner.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\Utils\TransactionCancelledException.cs">
+      <Link>Utils\TransactionCancelledException.cs</Link>
+    </Compile>
     <Compile Include="Core\ExpressionReflectionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

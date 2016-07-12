@@ -73,25 +73,9 @@ namespace LiteDB
         /// <summary>
         /// Starts a new write exclusive transaction
         /// </summary>
-        public void BeginTrans()
+        public Transaction BeginTrans()
         {
-            _transaction.Begin(false);
-        }
-
-        /// <summary>
-        /// Commit transaction
-        /// </summary>
-        public void Commit()
-        {
-            _transaction.Complete();
-        }
-
-        /// <summary>
-        /// Rollback transaction
-        /// </summary>
-        public void Rollback()
-        {
-            _transaction.Abort();
+            return _transaction.Begin(false);
         }
 
         /// <summary>
@@ -99,23 +83,24 @@ namespace LiteDB
         /// </summary>
         private T ReadTransaction<T>(string colName, Func<CollectionPage, T> action)
         {
-            try
+            using (var trans = _transaction.Begin(true))
             {
-                _transaction.Begin(true);
+                try
+                {
+                    var col = this.GetCollectionPage(colName, false);
 
-                var col = this.GetCollectionPage(colName, false);
+                    var result = action(col);
 
-                var result = action(col);
+                    trans.Commit();
 
-                _transaction.Complete();
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Abort();
-                throw;
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Rollback();
+                    throw;
+                }
             }
         }
 
@@ -124,23 +109,24 @@ namespace LiteDB
         /// </summary>
         private T WriteTransaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            try
+            using (var trans = _transaction.Begin(false))
             {
-                _transaction.Begin(false);
+                try
+                {
+                    var col = this.GetCollectionPage(colName, addIfNotExists);
 
-                var col = this.GetCollectionPage(colName, addIfNotExists);
+                    var result = action(col);
 
-                var result = action(col);
+                    trans.Commit();
 
-                _transaction.Complete();
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
-                _transaction.Abort();
-                throw;
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Rollback();
+                    throw;
+                }
             }
         }
 

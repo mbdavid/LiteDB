@@ -16,49 +16,57 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            IEnumerator<BsonDocument> enumerator;
+            IEnumerator<BsonDocument> enumerator = null;
             var more = true;
 
-            // keep trying execute query to auto-create indexes when not found
-            // must try get first doc inside try/catch to get index not found (yield returns are not supported inside try/catch)
-            while (true)
+            try
             {
-                try
+
+                // keep trying execute query to auto-create indexes when not found
+                // must try get first doc inside try/catch to get index not found (yield returns are not supported inside try/catch)
+                while (true)
                 {
-                    var docs = _engine.Find(_name, query, skip, limit);
+                    try
+                    {
+                        var docs = _engine.Find(_name, query, skip, limit);
 
-                    enumerator = (IEnumerator<BsonDocument>)docs.GetEnumerator();
+                        enumerator = (IEnumerator<BsonDocument>)docs.GetEnumerator();
 
-                    more = enumerator.MoveNext();
+                        more = enumerator.MoveNext();
 
-                    break;
+                        break;
+                    }
+                    catch (IndexNotFoundException ex)
+                    {
+                        // if query returns this exception, let's auto create using mapper (or using default options)
+                        var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+
+                        _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    }
                 }
-                catch (IndexNotFoundException ex)
+
+                if (more == false) yield break;
+
+                // do...while
+                do
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+                    // executing all includes in BsonDocument
+                    foreach (var action in _includes)
+                    {
+                        action(enumerator.Current);
+                    }
 
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    // get object from BsonDocument
+                    var obj = _mapper.ToObject<T>(enumerator.Current);
+
+                    yield return obj;
                 }
+                while (more = enumerator.MoveNext());
             }
-
-            if (more == false) yield break;
-
-            // do...while
-            do
+            finally
             {
-                // executing all includes in BsonDocument
-                foreach (var action in _includes)
-                {
-                    action(enumerator.Current);
-                }
-
-                // get object from BsonDocument
-                var obj = _mapper.ToObject<T>(enumerator.Current);
-
-                yield return obj;
+                if (enumerator != null) enumerator.Dispose();
             }
-            while (more = enumerator.MoveNext());
         }
 
         /// <summary>

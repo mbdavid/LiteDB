@@ -92,6 +92,7 @@
     <Compile Include="LinqTest.cs" />
     <Compile Include="IncludeTest.cs" />
     <Compile Include="ShellTest.cs" />
+    <Compile Include="StreamDb_Test.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestPlatform.cs" />
     <Compile Include="DB.cs" />
