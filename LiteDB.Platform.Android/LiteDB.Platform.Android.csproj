@@ -9,8 +9,8 @@
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LiteDB.Platform.Android</RootNamespace>
-    <AssemblyName>LiteDB.Platform.Android</AssemblyName>
+    <RootNamespace>LiteDB.Platform</RootNamespace>
+    <AssemblyName>LiteDB.Platform</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
@@ -43,8 +43,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\LiteDB\Core\Database\Collection.cs">
+      <Link>Platform\Database\Collection.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
+      <Link>Platform\Database\FileStorage.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
+      <Link>Platform\Database\Transaction.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Utils.cs">
+      <Link>Platform\Database\Utils.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Core\EmitReflectionHandler.cs">
       <Link>EmitReflectionHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
+      <Link>Platform\LiteDatabase.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Core\LiteDbPlatformFullDotNet.cs">
       <Link>LiteDbPlatformFullDotNet.cs</Link>
@@ -52,11 +67,16 @@
     <Compile Include="..\LiteDB\DbEngine\Disks\FileDiskServiceDotNet.cs">
       <Link>FileDiskServiceDotNet.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\Platform.cs">
+      <Link>Platform.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Utils\SimpleAES.cs">
       <Link>SimpleAES.cs</Link>
     </Compile>
     <Compile Include="Resources\Resource.Designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />

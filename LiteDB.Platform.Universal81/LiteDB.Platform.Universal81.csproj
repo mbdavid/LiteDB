@@ -8,8 +8,8 @@
     <ProjectGuid>{87BFCC95-A361-47EE-946D-337EABAF8F0F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LiteDB.Platform.Universal81</RootNamespace>
-    <AssemblyName>LiteDB.Platform.Universal81</AssemblyName>
+    <RootNamespace>LiteDB.Platform</RootNamespace>
+    <AssemblyName>LiteDB.Platform</AssemblyName>
     <DefaultLanguage>de-DE</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -45,12 +45,30 @@
     <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\LiteDB\Core\Database\Collection.cs">
+      <Link>Platform\Database\Collection.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
+      <Link>Platform\Database\FileStorage.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
+      <Link>Platform\Database\Transaction.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Utils.cs">
+      <Link>Platform\Database\Utils.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
+      <Link>Platform\LiteDatabase.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="AsyncHelpers.cs" />
     <Compile Include="EncryptionFactory.cs" />
     <Compile Include="FileDiskService.cs" />
     <Compile Include="FileHandlerWindowsStore.cs" />
     <Compile Include="LiteDbPlatformWindowsStore.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Platform.cs" />
     <Compile Include="SimpleAES.cs" />
   </ItemGroup>
   <ItemGroup>

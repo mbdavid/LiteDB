@@ -9,9 +9,9 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: global::Android.Runtime.ResourceDesignerAttribute("LiteDB.Platform.Android.Resource", IsApplication=false)]
+[assembly: global::Android.Runtime.ResourceDesignerAttribute("LiteDB.Platform.Resource", IsApplication=false)]
 
-namespace LiteDB.Platform.Android
+namespace LiteDB.Platform
 {
 	
 	

@@ -29,7 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -63,21 +63,6 @@
     </Compile>
     <Compile Include="..\LiteDB\Core\Collections\Update.cs">
       <Link>Core\Collections\Update.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Collection.cs">
-      <Link>Core\Database\Collection.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
-      <Link>Core\Database\FileStorage.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
-      <Link>Core\Database\Transaction.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Utils.cs">
-      <Link>Core\Database\Utils.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
-      <Link>Core\LiteDatabase.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Core\LiteDbPlatform.cs">
       <Link>Core\LiteDbPlatform.cs</Link>
@@ -247,6 +232,9 @@
     <Compile Include="..\LiteDB\Interfaces\IReflectionHandler.cs">
       <Link>Interfaces\IReflectionHandler.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Query\Impl\QueryAll.cs">
       <Link>Query\Impl\QueryAll.cs</Link>
     </Compile>
@@ -373,8 +361,8 @@
     <Compile Include="..\LiteDB\Utils\TransactionCancelledException.cs">
       <Link>Utils\TransactionCancelledException.cs</Link>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo.Core.cs" />
     <Compile Include="Core\ExpressionReflectionHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

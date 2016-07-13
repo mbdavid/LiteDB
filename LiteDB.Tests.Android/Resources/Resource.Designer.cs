@@ -26,8 +26,8 @@ namespace LiteDB.Tests.Android
 		
 		public static void UpdateIdValues()
 		{
-			global::LiteDB.Platform.Android.Resource.String.ApplicationName = global::LiteDB.Tests.Android.Resource.String.ApplicationName;
-			global::LiteDB.Platform.Android.Resource.String.Hello = global::LiteDB.Tests.Android.Resource.String.Hello;
+			global::LiteDB.Platform.Resource.String.ApplicationName = global::LiteDB.Tests.Android.Resource.String.ApplicationName;
+			global::LiteDB.Platform.Resource.String.Hello = global::LiteDB.Tests.Android.Resource.String.Hello;
 			global::Xamarin.Android.NUnitLite.Resource.Id.OptionHostName = global::LiteDB.Tests.Android.Resource.Id.OptionHostName;
 			global::Xamarin.Android.NUnitLite.Resource.Id.OptionPort = global::LiteDB.Tests.Android.Resource.Id.OptionPort;
 			global::Xamarin.Android.NUnitLite.Resource.Id.OptionRemoteServer = global::LiteDB.Tests.Android.Resource.Id.OptionRemoteServer;
