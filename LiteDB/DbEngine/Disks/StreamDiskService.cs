@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using LiteDB.Interfaces;
 
 namespace LiteDB
@@ -7,7 +6,7 @@ namespace LiteDB
     /// <summary>
     /// A simple implementation of diskservice using base Stream (no journal, thread safe)
     /// </summary>
-    internal class StreamDiskService : IDiskService
+    public class StreamDiskService : IDiskService
     {
         private Stream _stream;
 

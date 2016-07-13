@@ -21,7 +21,7 @@ namespace LiteDB.Tests.Mapping
       }
 
 
-#if PCL
+#if PCL || NETFX_CORE
       [TestMethod]
       public void OneHundredMillionObjectsWithExpressionCompile()
       {

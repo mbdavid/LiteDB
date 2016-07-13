@@ -21,6 +21,11 @@ namespace LiteDB
        {
           get { return _engine.Value; }
        }
+      
+       static LiteDatabase()
+       {
+            Platform.Platform.Initialize();
+       }
 
       /// <summary>
       /// Starts LiteDB database using a connection string for filesystem database

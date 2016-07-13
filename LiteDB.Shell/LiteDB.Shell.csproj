@@ -29,11 +29,14 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Shell\Commands\Collections\BaseCollection.cs">
       <Link>Shell\Commands\Collections\BaseCollection.cs</Link>
     </Compile>
@@ -106,7 +109,6 @@
     <Compile Include="..\LiteDB\Shell\LiteShell.cs">
       <Link>LiteShell.cs</Link>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
