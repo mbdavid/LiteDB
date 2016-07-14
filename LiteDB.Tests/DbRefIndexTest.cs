@@ -16,7 +16,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class DbRefIndexTest
+    public class DbRefIndexTest : TestBase
     {
         [TestMethod]
         public void DbRefIndexe_Test()

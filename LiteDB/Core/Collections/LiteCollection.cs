@@ -18,7 +18,7 @@ namespace LiteDB
         /// </summary>
         public string Name { get { return _name; } }
 
-        internal LiteCollection(string name, DbEngine engine, BsonMapper mapper, Logger log)
+        public LiteCollection(string name, DbEngine engine, BsonMapper mapper, Logger log)
         {
             _name = name;
             _engine = engine;

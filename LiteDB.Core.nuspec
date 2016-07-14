@@ -3,7 +3,7 @@
     <metadata>
         <id>LiteDB.Core</id>
         <version>2.0.0</version>
-        <title>LiteDB</title>
+        <title>LiteDB.Core</title>
         <authors>Mauricio David</authors>
         <projectUrl>http://www.litedb.org</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>

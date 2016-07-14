@@ -8,9 +8,9 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>LiteDB.Tests.Mac</RootNamespace>
     <AssemblyName>LiteDB.Tests.Mac</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>Xamarin.Mac</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
+    <UseXamMacFullFramework>true</UseXamMacFullFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,7 +47,7 @@
     <IncludeMonoRuntime>true</IncludeMonoRuntime>
     <UseSGen>true</UseSGen>
     <UseRefCounting>true</UseRefCounting>
-    <LinkMode>SdkOnly</LinkMode>
+    <LinkMode>None</LinkMode>
     <HttpClientHandler>HttpClientHandler</HttpClientHandler>
     <TlsProvider>Default</TlsProvider>
     <XamMacArch></XamMacArch>
@@ -174,22 +174,22 @@
     <InterfaceDefinition Include="MainWindow.xib" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
-      <Project>{59BA13E6-C19B-4D8B-B504-FB5D0A1E27F3}</Project>
-      <Name>LiteDB.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Platform.MacOS\LiteDB.Platform.MacOS.csproj">
-      <Project>{49E13166-B850-4CC1-87B7-1DF9DB79506E}</Project>
-      <Name>LiteDB.Platform.MacOS</Name>
+    <Folder Include="Tests\" />
+    <Folder Include="Tests\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDb.Platform.DotNet45\LiteDb.Platform.DotNet45.csproj">
+      <Project>{75D3B7B0-1AA2-4BFE-A9ED-8040352A6640}</Project>
+      <Name>LiteDb.Platform.DotNet45</Name>
     </ProjectReference>
     <ProjectReference Include="..\LiteDB.Shell\LiteDB.Shell.csproj">
       <Project>{4D615F2E-BC3D-4F5C-BD75-B6FAB2B55A5C}</Project>
       <Name>LiteDB.Shell</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Tests\" />
-    <Folder Include="Tests\" />
+    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
+      <Project>{59BA13E6-C19B-4D8B-B504-FB5D0A1E27F3}</Project>
+      <Name>LiteDB.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>

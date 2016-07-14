@@ -1,5 +1,4 @@
 ﻿using LiteDB.Core;
-using LiteDB.Platform.iOS;
 
 namespace LiteDB.Tests
 {
@@ -7,8 +6,7 @@ namespace LiteDB.Tests
    {
       public TestBase()
       {
-         LiteDbPlatform.Initialize(new LiteDbPlatformiOS(new EncryptionFactory(),
-     new ExpressionReflectionHandler(), new FileHandler()));
+			LiteDbPlatform.Initialize(new LiteDbPlatformFullDotNet());
       }
 
    }
