@@ -2,7 +2,7 @@
 
 namespace LiteDB.Interfaces
 {
-   public interface IIndexService
+   internal interface IIndexService
    {
       /// <summary>
       /// Create a new index and returns head page address (skip list)
