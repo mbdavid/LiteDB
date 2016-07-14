@@ -1,5 +1,7 @@
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
+[![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 LiteDB is a small, fast and lightweight NoSQL embedded database. 
 
 - Serverless NoSQL Document Store
