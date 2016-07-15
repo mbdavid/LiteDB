@@ -18,8 +18,6 @@
         </dependencies>
     </metadata>
     <files>
-        <file src="LiteDB.Platform\bin\Release\LiteDB.Platform.dll" target="lib\portable-net45+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10\LiteDB.Platform.dll" />
-        <file src="LiteDB.Platform\bin\Release\LiteDB.Platform.pdb" target="lib\portable-net45+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10\LiteDB.Platform.pdb" />
         <file src="LiteDB.Platform.Android\bin\Release\LiteDB.Platform.dll" target="lib\MonoAndroid10\LiteDB.Platform.dll" />
         <file src="LiteDB.Platform.Android\bin\Release\LiteDB.Platform.pdb" target="lib\MonoAndroid10\LiteDB.Platform.pdb" />
         <file src="LiteDB.Platform.DotNet45\bin\Release\LiteDb.Platform.dll" target="lib\net45\LiteDB.Platform.dll" />

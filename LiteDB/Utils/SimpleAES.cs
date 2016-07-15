@@ -45,10 +45,10 @@ namespace LiteDB
             
                 pdb = new Rfc2898DeriveBytes(password, SALT);
                 _rijndael.Key = pdb.GetBytes(32);
-            Debug.WriteLine("Key = "+ ToHex(_rijndael.Key));
+            //Debug.WriteLine("Key = "+ ToHex(_rijndael.Key));
                 _rijndael.IV = pdb.GetBytes(16);
 
-            Debug.WriteLine("IV = " + ToHex(_rijndael.IV));
+            //Debug.WriteLine("IV = " + ToHex(_rijndael.IV));
          }
             finally
             {
@@ -75,11 +75,7 @@ namespace LiteDB
                 stream.Position = 0;
                 var encrypted = new byte[stream.Length];
                 stream.Read(encrypted, 0, encrypted.Length);
-
-
-            Debug.WriteLine("Decrypted: "+ ToHex(bytes));
-            Debug.WriteLine("To Encrypted: "+ ToHex(encrypted));
-
+            
                 return encrypted;
             }
         }
@@ -99,11 +95,6 @@ namespace LiteDB
                 var decryptedBytes = new Byte[stream.Length];
                 stream.Read(decryptedBytes, 0, decryptedBytes.Length);
 
-
-            Debug.WriteLine("Encrypted: " + ToHex(encryptedValue));
-            Debug.WriteLine("To Decrypted: " + ToHex(decryptedBytes));
-
-
             return decryptedBytes;
             }
         }
@@ -116,7 +107,7 @@ namespace LiteDB
             var sha = new SHA1CryptoServiceProvider();
             var shaBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
 
-         Debug.WriteLine("Sha1 "+ ToHex(shaBytes));
+         //Debug.WriteLine("Sha1 "+ ToHex(shaBytes));
 
          return shaBytes;
         }

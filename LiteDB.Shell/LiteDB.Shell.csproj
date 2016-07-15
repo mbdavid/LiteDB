@@ -79,17 +79,23 @@
     <Compile Include="..\LiteDB\Shell\Commands\Collections\Update.cs">
       <Link>Shell\Commands\Collections\Update.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Shell\Commands\FileStoage\BaseFileStorage.cs">
-      <Link>Shell\Commands\FileStoage\BaseFileStorage.cs</Link>
+    <Compile Include="..\LiteDB\Shell\Commands\FileStorage\BaseFileStorage.cs">
+      <Link>Shell\Commands\FileStorage\BaseFileStorage.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Shell\Commands\FileStoage\Delete.cs">
-      <Link>Shell\Commands\FileStoage\Delete.cs</Link>
+    <Compile Include="..\LiteDB\Shell\Commands\FileStorage\Delete.cs">
+      <Link>Shell\Commands\FileStorage\Delete.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Shell\Commands\FileStoage\Find.cs">
-      <Link>Shell\Commands\FileStoage\Find.cs</Link>
+    <Compile Include="..\LiteDB\Shell\Commands\FileStorage\Download.cs">
+      <Link>Shell\Commands\FileStorage\Download.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Shell\Commands\FileStoage\Update.cs">
-      <Link>Shell\Commands\FileStoage\Update.cs</Link>
+    <Compile Include="..\LiteDB\Shell\Commands\FileStorage\Find.cs">
+      <Link>Shell\Commands\FileStorage\Find.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Shell\Commands\FileStorage\Update.cs">
+      <Link>Shell\Commands\FileStorage\Update.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Shell\Commands\FileStorage\Upload.cs">
+      <Link>Shell\Commands\FileStorage\Upload.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Shell\Commands\IShellCommand.cs">
       <Link>Shell\Commands\IShellCommand.cs</Link>

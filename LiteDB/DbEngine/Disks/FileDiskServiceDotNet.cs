@@ -52,11 +52,6 @@ namespace LiteDB
          TryExec(() => File.Delete(filepath));
       }
 
-      protected override void WaitFor(int milliseconds)
-      {
-         Thread.Sleep(250);
-      }
-
       protected override void OpenExclusiveFile(string filename, Action<Stream> success)
       {
          try

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.IO;
+using System.Threading;
 using LiteDB.Interfaces;
 
 namespace LiteDB
@@ -9,6 +10,11 @@ namespace LiteDB
       public override FileDiskServiceBase CreateFileDiskService(ConnectionString conn, Logger log)
       {
          return new FileDiskServiceDotNet(conn, log);
+      }
+
+      public override void WaitFor(int milliseconds)
+      {
+         Thread.Sleep(milliseconds);
       }
 
       public LiteDbPlatformFullDotNet(IEncryptionFactory encryptionFactory, IReflectionHandler reflectionHandler, IFileHandler fileHandler) 

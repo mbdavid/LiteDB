@@ -1,6 +1,4 @@
-﻿using LiteDB.Extensions;
-
-namespace LiteDB.Shell.Commands
+﻿namespace LiteDB.Shell.Commands
 {
     public class FileDownload : BaseFileStorage, IShellCommand
     {
@@ -23,10 +21,8 @@ namespace LiteDB.Shell.Commands
 
                 return file.AsDocument;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
     }
 }
