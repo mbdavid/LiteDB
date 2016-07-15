@@ -64,6 +64,21 @@
     <Compile Include="..\LiteDB\Core\Collections\Update.cs">
       <Link>Core\Collections\Update.cs</Link>
     </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Collection.cs">
+      <Link>Core\Database\Collection.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
+      <Link>Core\Database\FileStorage.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
+      <Link>Core\Database\Transaction.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\Database\Utils.cs">
+      <Link>Core\Database\Utils.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
+      <Link>Core\LiteDatabase.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Core\LiteDbPlatform.cs">
       <Link>Core\LiteDbPlatform.cs</Link>
     </Compile>
@@ -180,6 +195,18 @@
     </Compile>
     <Compile Include="..\LiteDB\Document\ObjectId.cs">
       <Link>Document\ObjectId.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Exceptions\IndexNotFoundException.cs">
+      <Link>Exceptions\IndexNotFoundException.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Exceptions\LiteException.cs">
+      <Link>Exceptions\LiteException.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Exceptions\PlatformNotInitializedException.cs">
+      <Link>Exceptions\PlatformNotInitializedException.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Exceptions\TransactionCancelledException.cs">
+      <Link>Exceptions\TransactionCancelledException.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Extensions\BinaryExtensions.cs">
       <Link>Extensions\BinaryExtensions.cs</Link>
@@ -340,14 +367,8 @@
     <Compile Include="..\LiteDB\Utils\ConnectionString.cs">
       <Link>Utils\ConnectionString.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Utils\IndexNotFoundException.cs">
-      <Link>Utils\IndexNotFoundException.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Utils\LazyLoad.cs">
       <Link>Utils\LazyLoad.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Utils\LiteException.cs">
-      <Link>Utils\LiteException.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Utils\Logger.cs">
       <Link>Utils\Logger.cs</Link>
@@ -357,9 +378,6 @@
     </Compile>
     <Compile Include="..\LiteDB\Utils\StringScanner.cs">
       <Link>Utils\StringScanner.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Utils\TransactionCancelledException.cs">
-      <Link>Utils\TransactionCancelledException.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.Core.cs" />
     <Compile Include="Core\ExpressionReflectionHandler.cs" />

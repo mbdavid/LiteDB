@@ -45,21 +45,6 @@
     <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Core\Database\Collection.cs">
-      <Link>Platform\Database\Collection.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
-      <Link>Platform\Database\FileStorage.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
-      <Link>Platform\Database\Transaction.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Utils.cs">
-      <Link>Platform\Database\Utils.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
-      <Link>Platform\LiteDatabase.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
@@ -68,7 +53,6 @@
     <Compile Include="FileDiskService.cs" />
     <Compile Include="FileHandlerWindowsStore.cs" />
     <Compile Include="LiteDbPlatformWindowsStore.cs" />
-    <Compile Include="Platform.cs" />
     <Compile Include="SimpleAES.cs" />
   </ItemGroup>
   <ItemGroup>

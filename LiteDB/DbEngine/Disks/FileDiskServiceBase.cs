@@ -136,7 +136,6 @@ protected bool _readonly;
       protected abstract bool FileExists(string filename);
       protected abstract FileDiskServiceBase CreateFileDiskService(ConnectionString connectionString, Logger log);
       protected abstract void DeleteFile(string filepath);
-      protected abstract void WaitFor(int milliseconds);
       protected abstract void OpenExclusiveFile(string filename, Action<Stream> success);
 
       #endregion
@@ -431,7 +430,7 @@ protected bool _readonly;
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    WaitFor(250);
+                    LiteDbPlatform.Platform.WaitFor(250);
                 }
                 catch (IOException ex)
                 {

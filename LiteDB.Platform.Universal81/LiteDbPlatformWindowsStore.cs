@@ -1,4 +1,6 @@
-﻿#if WINDOWS_UWP
+﻿
+using System.Threading.Tasks;
+#if WINDOWS_UWP
 using System.Collections.Specialized;
 #endif
 using LiteDB.Core;
@@ -54,6 +56,11 @@ namespace LiteDB.Universal81
       public override FileDiskServiceBase CreateFileDiskService(ConnectionString conn, Logger log)
       {
          return new FileDiskService(m_folder, conn, log);
+      }
+
+      public override void WaitFor(int milliseconds)
+      {
+         AsyncHelpers.RunSync(() => Task.Delay(milliseconds));
       }
    }
 }

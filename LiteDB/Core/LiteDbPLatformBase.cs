@@ -39,5 +39,7 @@ namespace LiteDB
       {
          get { return m_fileHandler ?? (m_fileHandler = m_getFileHandler()); }
       }
+
+      public abstract void WaitFor(int milliseconds);
    }
 }

@@ -1,8 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
-#if NETFULL
-using System.Threading;
-#endif 
+using LiteDB.Core;
 
 namespace LiteDB
 {
@@ -18,11 +16,7 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
-#if NETFULL
-                    Thread.Sleep(timer);
-#else
-                    System.Threading.Tasks.Task.Delay(250).ConfigureAwait(true).GetAwaiter().GetResult();
-#endif
+                    LiteDbPlatform.Platform.WaitFor(timer);
                 }
             }
             else

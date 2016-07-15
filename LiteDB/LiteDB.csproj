@@ -67,7 +67,9 @@
     <Compile Include="DbEngine\Disks\FileDiskServiceDotNet.cs" />
     <Compile Include="DbEngine\Disks\FileDiskServiceBase.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
+    <Compile Include="Exceptions\PlatformNotInitializedException.cs" />
     <Compile Include="Extensions\ByteArrayExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Interfaces\IEncryption.cs" />
     <Compile Include="Interfaces\IEncryptionFactory.cs" />
     <Compile Include="Interfaces\IDiskService.cs" />
@@ -85,7 +87,6 @@
     <Compile Include="Interfaces\ILiteDatabase.cs" />
     <Compile Include="Interfaces\ILiteDbPlatform.cs" />
     <Compile Include="Interfaces\IReflectionHandler.cs" />
-    <Compile Include="Platform.cs" />
     <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
@@ -148,12 +149,12 @@
     <Compile Include="Shell\Commands\Collections\Indexes.cs" />
     <Compile Include="Shell\Commands\Collections\Insert.cs" />
     <Compile Include="Shell\Commands\Collections\Update.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Delete.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Download.cs" />
-    <Compile Include="Shell\Commands\FileStoage\BaseFileStorage.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Find.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Update.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Upload.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Delete.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Download.cs" />
+    <Compile Include="Shell\Commands\FileStorage\BaseFileStorage.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Find.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Update.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Upload.cs" />
     <Compile Include="Shell\Commands\IShellCommand.cs" />
     <Compile Include="Shell\Commands\Others\Comment.cs" />
     <Compile Include="Shell\Commands\Others\DiskDump.cs" />
@@ -180,7 +181,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
-    <Compile Include="Utils\IndexNotFoundException.cs" />
+    <Compile Include="Exceptions\IndexNotFoundException.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Utils\ByteReader.cs" />
     <Compile Include="Utils\ByteWriter.cs" />
@@ -193,12 +194,11 @@
     <Compile Include="Extensions\IOExceptionExtensions.cs" />
     <Compile Include="Utils\MimeTypeConverter.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
-    <Compile Include="Utils\LiteException.cs" />
+    <Compile Include="Exceptions\LiteException.cs" />
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Utils\SimpleAES.cs" />
     <Compile Include="Utils\StringScanner.cs" />
-    <Compile Include="Extensions\TypeExtensions.cs" />
-    <Compile Include="Utils\TransactionCancelledException.cs" />
+    <Compile Include="Exceptions\TransactionCancelledException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LiteDB.snk" />

@@ -8,6 +8,12 @@ namespace LiteDB.Core
       [Android.Runtime.Preserve]
       public static ILiteDbPlatform Platform;
 
+      public static void ThrowIfNotInitialized()
+      {
+         if(Platform == null)
+            throw new PlatformNotInitializedException();
+      }
+
       [Android.Runtime.Preserve]
       public static void Initialize(ILiteDbPlatform platform)
       {

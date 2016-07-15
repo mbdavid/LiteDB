@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace LiteDB.Shell.Commands
+﻿namespace LiteDB.Shell.Commands
 {
     public class BeginTrans : IShellCommand
     {

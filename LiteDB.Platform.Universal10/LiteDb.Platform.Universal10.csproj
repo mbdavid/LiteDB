@@ -122,26 +122,8 @@
     <Compile Include="..\LiteDB.Platform.Universal81\LiteDbPlatformWindowsStore.cs">
       <Link>LiteDbPlatformWindowsStore.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB.Platform.Universal81\Platform.cs">
-      <Link>Platform.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB.Platform.Universal81\SimpleAES.cs">
       <Link>SimpleAES.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Collection.cs">
-      <Link>Platform\Database\Collection.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\FileStorage.cs">
-      <Link>Platform\Database\FileStorage.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Transaction.cs">
-      <Link>Platform\Database\Transaction.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\Database\Utils.cs">
-      <Link>Platform\Database\Utils.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\LiteDatabase.cs">
-      <Link>Platform\LiteDatabase.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>

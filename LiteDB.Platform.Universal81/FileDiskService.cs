@@ -81,16 +81,10 @@ namespace LiteDB.Universal81
           ;
        }
 
-       protected override void WaitFor(int milliseconds)
-       {
-         AsyncHelpers.RunSync(() => Task.Delay(250));
-      }
-
        protected override void OpenExclusiveFile(string filename, Action<Stream> success)
        {
          try
          {
-            
             using (var stream = CreateStream(filename))
             {
                success(stream);
