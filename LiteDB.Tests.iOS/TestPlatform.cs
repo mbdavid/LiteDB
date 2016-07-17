@@ -21,6 +21,11 @@ namespace LiteDB.Tests
             _path = Path.GetFullPath(Directory.GetCurrentDirectory() + "../../../../TestResults/");
         }
 
+        public static string GetFullPath(string filename)
+        {
+            return _path + filename;
+        }
+
         public static long GetFileSize(string filename)
         {
             return new FileInfo(_path + filename).Length;

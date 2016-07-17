@@ -17,6 +17,11 @@ namespace LiteDB.Tests
 
     public class TestPlatform
     {
+        public static string GetFullPath(string filename)
+        {
+            return filename;
+        }
+
         public static long GetFileSize(string filename)
         {
             var folder = ApplicationData.Current.TemporaryFolder;
