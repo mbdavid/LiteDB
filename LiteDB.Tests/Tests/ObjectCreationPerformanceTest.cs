@@ -1,5 +1,5 @@
 ﻿using System;
-using LiteDB.Plataform;
+using LiteDB.Platform;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LiteDB.Tests.Mapping

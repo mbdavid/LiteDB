@@ -1,70 +1,63 @@
 ﻿using System;
 using System.IO;
+using LiteDB.Platform;
 using NUnit.Framework;
 
 namespace LiteDB.Tests
 {
-   class TestPlatform
-   {
-      public static string GetTempFilePath(string ext)
-      {
-         var path = Path.GetTempPath() + "TestResults/";
+    public class TestBase
+    {
+        public TestBase()
+        {
+            LitePlatform.Initialize(new LitePlatformAndroid());
+        }
+    }
 
-         Directory.CreateDirectory(path);
+    public class TestPlatform
+    {
+        public static string GetTempFilePath(string ext)
+        {
+            var path = Path.GetTempPath() + "TestResults/";
 
-         return path + string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
-      }
-      public static long GetFileSize(string filename)
-      {
-         return new FileInfo(filename).Length;
-      }
+            Directory.CreateDirectory(path);
 
-      public static string FileWriteAllText(string fileName, string content, string customPath = null)
-      {
-         var path = customPath ?? Path.GetTempPath();
+            return path + string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
+        }
 
-         Directory.CreateDirectory(path);
+        public static long GetFileSize(string filename)
+        {
+            return new FileInfo(filename).Length;
+        }
 
-         var filePath = path + fileName;
+        public static void FileWriteAllText(string filename, string content)
+        {
+            File.WriteAllText(filename, content);
+        }
 
-         File.WriteAllText(filePath, content);
+        public static void DeleteFile(string filename)
+        {
+            File.Delete(filename);
+        }
 
-         return filePath;
-      }
-
-      public static void DeleteFile(string path)
-      {
-			try
-			{
-
-				File.Delete(path);
-
-			}
-			catch (Exception ex)
-			{
-
-			}
-      }
-
-      public static string FileReadAllText(string path)
-      {
-         return File.ReadAllText(path);
-      }
-   }
+        public static string FileReadAllText(string path)
+        {
+            return File.ReadAllText(path);
+        }
+    }
 }
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-   public class TestClassAttribute : TestFixtureAttribute { }
+    public class TestClassAttribute : TestFixtureAttribute { }
 
-   public class AssemblyInitializeAttribute : TestFixtureSetUpAttribute { }
-   public class AssemblyCleanupAttribute : TestFixtureTearDownAttribute { }
+    public class AssemblyInitializeAttribute : TestFixtureSetUpAttribute { }
+    public class AssemblyCleanupAttribute : TestFixtureTearDownAttribute { }
 
-   public class ClassInitializeAttribute : SetUpAttribute { }
+    public class ClassInitializeAttribute : SetUpAttribute { }
 
-   public class ClassCleanupAttribute : TearDownAttribute { }
+    public class ClassCleanupAttribute : TearDownAttribute { }
 
-   public class TestMethodAttribute : TestAttribute { }
+    public class TestMethodAttribute : TestAttribute { }
 
-   public class Assert : NUnit.Framework.Assert { }
+    public class Assert : NUnit.Framework.Assert { }
 }

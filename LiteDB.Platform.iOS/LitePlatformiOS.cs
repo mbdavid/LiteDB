@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using LiteDB.Platform;
 
-namespace LiteDB.Plataform
+namespace LiteDB.Platform
 {
     public class LitePlatformiOS : ILitePlatform
     {

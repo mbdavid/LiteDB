@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Text;
-using LiteDB.Plataform;
+using LiteDB.Platform;
 
 namespace LiteDB.Shell.Commands
 {

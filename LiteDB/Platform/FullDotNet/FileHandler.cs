@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Threading;
 
-namespace LiteDB.Plataform
+namespace LiteDB.Platform
 {
     public class FileHandler : IFileHandler
     {

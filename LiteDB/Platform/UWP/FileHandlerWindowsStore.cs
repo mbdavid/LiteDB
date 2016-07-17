@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using LiteDB.Plataform;
+using LiteDB.Platform;
 using Windows.Storage;
 
 namespace LiteDB.Platform

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
-using LiteDB.Plataform;
+using LiteDB.Platform;
 
 namespace LiteDB
 {

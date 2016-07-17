@@ -103,8 +103,8 @@ namespace LiteDB.Tests
                 Assert.AreEqual(3, col.Count(x => x.OS == PlatformID.Win32NT));
 
                 // doesnt works... must be a better linq provider
-                //var plataforms = new PlatformID[] { PlatformID.Xbox, PlatformID.Win32NT };
-                //Assert.AreEqual(4, col.Count(x => plataforms.Contains(x.OS)));
+                //var Platforms = new PlatformID[] { PlatformID.Xbox, PlatformID.Win32NT };
+                //Assert.AreEqual(4, col.Count(x => Platforms.Contains(x.OS)));
 
 
                 // and/or

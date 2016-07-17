@@ -107,16 +107,16 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Plataform\UWP\AsyncHelpers.cs">
+    <Compile Include="..\LiteDB\Platform\UWP\AsyncHelpers.cs">
       <Link>AsyncHelpers.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\UWP\ExpressionReflectionHandler.cs">
+    <Compile Include="..\LiteDB\Platform\UWP\ExpressionReflectionHandler.cs">
       <Link>ExpressionReflectionHandler.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\UWP\FileHandlerWindowsStore.cs">
+    <Compile Include="..\LiteDB\Platform\UWP\FileHandlerWindowsStore.cs">
       <Link>FileHandlerWindowsStore.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\UWP\LitePlatformWindowsStore.cs">
+    <Compile Include="..\LiteDB\Platform\UWP\LitePlatformWindowsStore.cs">
       <Link>LitePlatformWindowsStore.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">

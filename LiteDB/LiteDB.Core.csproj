@@ -110,11 +110,11 @@
     <Compile Include="FileStorage\LiteFileInfo.cs" />
     <Compile Include="FileStorage\LiteFileStorage.cs" />
     <Compile Include="FileStorage\LiteFileStream.cs" />
-    <Compile Include="Plataform\Interfaces\IEncryption.cs" />
-    <Compile Include="Plataform\Interfaces\IFileHandler.cs" />
-    <Compile Include="Plataform\Interfaces\ILitePlatform.cs" />
-    <Compile Include="Plataform\Interfaces\IReflectionHandler.cs" />
-    <Compile Include="Plataform\LitePlataform.cs" />
+    <Compile Include="Platform\Interfaces\IEncryption.cs" />
+    <Compile Include="Platform\Interfaces\IFileHandler.cs" />
+    <Compile Include="Platform\Interfaces\ILitePlatform.cs" />
+    <Compile Include="Platform\Interfaces\IReflectionHandler.cs" />
+    <Compile Include="Platform\LitePlataform.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\Impl\QueryAll.cs" />
     <Compile Include="Query\Impl\QueryAnd.cs" />

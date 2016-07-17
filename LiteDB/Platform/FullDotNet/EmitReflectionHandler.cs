@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace LiteDB.Plataform
+namespace LiteDB.Platform
 {
     public class EmitReflectionHandler : IReflectionHandler
     {

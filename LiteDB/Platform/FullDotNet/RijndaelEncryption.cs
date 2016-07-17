@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
 using System.Text;
-using LiteDB.Plataform;
+using LiteDB.Platform;
 
-namespace LiteDB.Plataform
+namespace LiteDB.Platform
 {
     /// <summary>
     /// Simple Rijndael wrapper to encrypt data pages (based in http://stackoverflow.com/questions/165808/simple-two-way-encryption-for-c-sharp)

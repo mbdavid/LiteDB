@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using LiteDB.Plataform;
+using LiteDB.Platform;
 
 namespace LiteDB
 {

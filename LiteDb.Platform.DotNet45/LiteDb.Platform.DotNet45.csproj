@@ -42,16 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Plataform\FullDotNet\EmitReflectionHandler.cs">
+    <Compile Include="..\LiteDB\Platform\FullDotNet\EmitReflectionHandler.cs">
       <Link>EmitReflectionHandler.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\FullDotNet\FileHandler.cs">
+    <Compile Include="..\LiteDB\Platform\FullDotNet\FileHandler.cs">
       <Link>FileHandler.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\FullDotNet\LitePlatformFullDotNet.cs">
+    <Compile Include="..\LiteDB\Platform\FullDotNet\LitePlatformFullDotNet.cs">
       <Link>LitePlatformFullDotNet.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryption.cs">
+    <Compile Include="..\LiteDB\Platform\FullDotNet\RijndaelEncryption.cs">
       <Link>RijndaelEncryption.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">

@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Android.App;
 using Android.OS;
-using LiteDB.Core;
 using Xamarin.Android.NUnitLite;
 
 namespace LiteDB.Tests.Android
@@ -15,7 +14,7 @@ namespace LiteDB.Tests.Android
       {
          if (falseflag)
          {
-            var ignore = new LiteDbPlatform();
+            var ignore = new LitePlatform();
          }
       }
 #pragma warning restore 0219, 0649
