@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace LiteDB.Platform
+namespace LiteDB
 {
     public interface IFileHandler
     {

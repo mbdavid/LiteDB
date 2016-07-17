@@ -1,5 +1,4 @@
 ﻿using System;
-using LiteDB.Platform;
 
 namespace LiteDB
 {
@@ -12,7 +11,7 @@ namespace LiteDB
 #if NETFULL
         static LitePlatform()
         {
-            LitePlatform.Platform = new LitePlatformFullDotNet();
+            LitePlatform.Platform = new LiteDB.Platform.LitePlatformFullDotNet();
         }
 #endif
 

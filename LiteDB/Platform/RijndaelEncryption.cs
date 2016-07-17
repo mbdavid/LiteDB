@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
 using System.Text;
-using LiteDB.Platform;
+using LiteDB;
 
 namespace LiteDB.Platform
 {

@@ -1,5 +1,4 @@
 ﻿using System;
-using LiteDB.Platform;
 
 namespace LiteDB
 {

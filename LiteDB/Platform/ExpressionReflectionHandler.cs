@@ -1,7 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using LiteDB.Platform;
+using LiteDB;
 
 namespace LiteDB.Platform
 {

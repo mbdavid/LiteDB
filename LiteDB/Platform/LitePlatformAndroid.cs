@@ -2,7 +2,7 @@
 using System.Collections.Specialized;
 using System.IO;
 using System.Threading;
-using LiteDB.Platform;
+using LiteDB;
 
 namespace LiteDB.Platform
 {

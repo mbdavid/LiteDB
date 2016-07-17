@@ -71,7 +71,6 @@
     <Compile Include="Tests\DbRefIndexTest.cs" />
     <Compile Include="Tests\MapperInterfaceTest.cs" />
     <Compile Include="Tests\BsonFieldTest.cs" />
-    <Compile Include="Tests\ObjectCreationPerformanceTest.cs" />
     <Compile Include="Tests\ObjectIdTest.cs" />
     <Compile Include="Tests\DerivedTypesTest.cs" />
     <Compile Include="Tests\MapperTest.cs" />

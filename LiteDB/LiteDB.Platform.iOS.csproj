@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\LiteDB.Platform.iOS\</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>bin\Release\LiteDB.Platform.iOS\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -36,21 +36,17 @@
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.iOS" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Compile Include="..\LiteDB\Platform\FullDotNet\FileHandler.cs">
-      <Link>FileHandler.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Platform\FullDotNet\RijndaelEncryption.cs">
-      <Link>RijndaelEncryption.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Platform\UWP\ExpressionReflectionHandler.cs">
-      <Link>ExpressionReflectionHandler.cs</Link>
-    </Compile>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="LitePlatformiOS.cs" />
+    <Compile Include="Platform\ExpressionReflectionHandler.cs" />
+    <Compile Include="Platform\FileHandler.cs" />
+    <Compile Include="Platform\LitePlatformiOS.cs" />
+    <Compile Include="Platform\RijndaelEncryption.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">

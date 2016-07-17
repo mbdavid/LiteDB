@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug\LiteDB.Core\</OutputPath>
     <DefineConstants>TRACE;DEBUG;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release\LiteDB.Core\</OutputPath>
     <DefineConstants>TRACE;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -55,6 +55,7 @@
     <Compile Include="Core\Database\Transaction.cs" />
     <Compile Include="Core\Database\Utils.cs" />
     <Compile Include="Core\LiteDatabase.cs" />
+    <Compile Include="Core\LitePlataform.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\DbEngine\Aggregate.cs" />
     <Compile Include="DbEngine\DbEngine\Collection.cs" />
@@ -69,7 +70,6 @@
     <Compile Include="DbEngine\DbEngine\Update.cs" />
     <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
     <Compile Include="DbEngine\Disks\FileDiskService.cs" />
-    <Compile Include="DbEngine\Disks\IDiskService.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
     <Compile Include="DbEngine\Pages\BasePage.cs" />
     <Compile Include="DbEngine\Pages\CollectionPage.cs" />
@@ -110,11 +110,11 @@
     <Compile Include="FileStorage\LiteFileInfo.cs" />
     <Compile Include="FileStorage\LiteFileStorage.cs" />
     <Compile Include="FileStorage\LiteFileStream.cs" />
-    <Compile Include="Platform\Interfaces\IEncryption.cs" />
-    <Compile Include="Platform\Interfaces\IFileHandler.cs" />
-    <Compile Include="Platform\Interfaces\ILitePlatform.cs" />
-    <Compile Include="Platform\Interfaces\IReflectionHandler.cs" />
-    <Compile Include="Platform\LitePlataform.cs" />
+    <Compile Include="Interfaces\IDiskService.cs" />
+    <Compile Include="Interfaces\IEncryption.cs" />
+    <Compile Include="Interfaces\IFileHandler.cs" />
+    <Compile Include="Interfaces\ILitePlatform.cs" />
+    <Compile Include="Interfaces\IReflectionHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\Impl\QueryAll.cs" />
     <Compile Include="Query\Impl\QueryAnd.cs" />

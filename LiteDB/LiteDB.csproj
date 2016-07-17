@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug\LiteDB\</OutputPath>
     <DefineConstants>TRACE;DEBUG;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -30,7 +30,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release\LiteDB\</OutputPath>
     <DefineConstants>TRACE;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -53,13 +53,13 @@
     <Compile Include="Core\Collections\Aggregate.cs" />
     <Compile Include="Core\Collections\Stats.cs" />
     <Compile Include="Core\Database\Shell.cs" />
-    <Compile Include="Platform\LitePlataform.cs" />
+    <Compile Include="Core\LitePlataform.cs" />
     <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
     <Compile Include="DbEngine\Structures\LiteTransaction.cs" />
-    <Compile Include="Platform\FullDotNet\FileHandler.cs" />
+    <Compile Include="Platform\FileHandler.cs" />
     <Compile Include="Utils\PreserveAttribute.cs" />
-    <Compile Include="Platform\FullDotNet\LitePlatformFullDotNet.cs" />
-    <Compile Include="Platform\FullDotNet\EmitReflectionHandler.cs" />
+    <Compile Include="Platform\LitePlatformFullDotNet.cs" />
+    <Compile Include="Platform\EmitReflectionHandler.cs" />
     <Compile Include="Core\Database\Collection.cs" />
     <Compile Include="Core\Database\Transaction.cs" />
     <Compile Include="Core\Database\Utils.cs" />
@@ -73,8 +73,8 @@
     <Compile Include="Exceptions\PlatformNotInitializedException.cs" />
     <Compile Include="Extensions\ByteArrayExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
-    <Compile Include="Platform\Interfaces\IEncryption.cs" />
-    <Compile Include="DbEngine\Disks\IDiskService.cs" />
+    <Compile Include="Interfaces\IEncryption.cs" />
+    <Compile Include="Interfaces\IDiskService.cs" />
     <Compile Include="DbEngine\DbEngine\Delete.cs" />
     <Compile Include="DbEngine\DbEngine\Find.cs" />
     <Compile Include="DbEngine\DbEngine\Index.cs" />
@@ -84,9 +84,9 @@
     <Compile Include="DbEngine\DbEngine\Insert.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\Pages\EmptyPage.cs" />
-    <Compile Include="Platform\Interfaces\IFileHandler.cs" />
-    <Compile Include="Platform\Interfaces\ILitePlatform.cs" />
-    <Compile Include="Platform\Interfaces\IReflectionHandler.cs" />
+    <Compile Include="Interfaces\IFileHandler.cs" />
+    <Compile Include="Interfaces\ILitePlatform.cs" />
+    <Compile Include="Interfaces\IReflectionHandler.cs" />
     <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
@@ -196,7 +196,7 @@
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Exceptions\LiteException.cs" />
     <Compile Include="Utils\Logger.cs" />
-    <Compile Include="Platform\FullDotNet\RijndaelEncryption.cs" />
+    <Compile Include="Platform\RijndaelEncryption.cs" />
     <Compile Include="Utils\StringScanner.cs" />
     <Compile Include="Exceptions\TransactionCancelledException.cs" />
   </ItemGroup>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace LiteDB.Platform
+namespace LiteDB
 {
     public delegate object CreateObject();
 

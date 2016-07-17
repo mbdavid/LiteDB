@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug\LiteDB.Platform.Universal81\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release\LiteDB.Platform.Universal81\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -38,36 +38,22 @@
     <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Platform\UWP\AsyncHelpers.cs">
-      <Link>AsyncHelpers.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Platform\UWP\ExpressionReflectionHandler.cs">
-      <Link>ExpressionReflectionHandler.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Platform\UWP\FileHandlerWindowsStore.cs">
-      <Link>FileHandlerWindowsStore.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Platform\UWP\LitePlatformWindowsStore.cs">
-      <Link>LitePlatformWindowsStore.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
-      <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <Compile Include="Platform\AsyncHelpers.cs" />
+    <Compile Include="Platform\ExpressionReflectionHandler.cs" />
+    <Compile Include="Platform\FileHandlerWindowsStore.cs" />
+    <Compile Include="Platform\LitePlatformWindowsStore.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
       <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
       <Name>LiteDB.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

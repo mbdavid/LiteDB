@@ -9,18 +9,15 @@ namespace LiteDB.Tests
         public string Filename { get; private set; }
         public string ConnectionString { get; private set; }
 
-        public TempFile(string connectionString = null)
+        public TempFile(string connectionString = null, string ext = "db")
         {
-            var path = this.Filename = TestPlatform.GetTempFilePath("db");
-
-            this.Filename = path;
-            this.ConnectionString = connectionString == null ?
-                path : "filename=" + path + ";" + connectionString;
+            this.Filename = string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
+            this.ConnectionString = "filename=" + this.Filename + ";" + connectionString;
         }
 
         public void Dispose()
         {
-            TestPlatform.DeleteFile(Filename);
+            TestPlatform.DeleteFile(this.Filename);
         }
 
         #region LoremIpsum Generator

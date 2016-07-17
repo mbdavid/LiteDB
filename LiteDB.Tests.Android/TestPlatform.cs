@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using LiteDB.Platform;
-using NUnit.Framework;
 
 namespace LiteDB.Tests
 {
@@ -15,49 +14,42 @@ namespace LiteDB.Tests
 
     public class TestPlatform
     {
-        public static string GetTempFilePath(string ext)
+        private static string _path;
+
+        static TestPlatform()
         {
-            var path = Path.GetTempPath() + "TestResults/";
-
-            Directory.CreateDirectory(path);
-
-            return path + string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
+            _path = Path.GetFullPath(Directory.GetCurrentDirectory() + "../../../../TestResults/");
         }
 
         public static long GetFileSize(string filename)
         {
-            return new FileInfo(filename).Length;
+            return new FileInfo(_path + filename).Length;
         }
 
         public static void FileWriteAllText(string filename, string content)
         {
-            File.WriteAllText(filename, content);
+            File.WriteAllText(_path + filename, content);
         }
 
         public static void DeleteFile(string filename)
         {
-            File.Delete(filename);
+            File.Delete(_path + filename);
         }
 
-        public static string FileReadAllText(string path)
+        public static string FileReadAllText(string filename)
         {
-            return File.ReadAllText(path);
+            return File.ReadAllText(_path + filename);
         }
     }
 }
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-    public class TestClassAttribute : TestFixtureAttribute { }
-
-    public class AssemblyInitializeAttribute : TestFixtureSetUpAttribute { }
-    public class AssemblyCleanupAttribute : TestFixtureTearDownAttribute { }
-
-    public class ClassInitializeAttribute : SetUpAttribute { }
-
-    public class ClassCleanupAttribute : TearDownAttribute { }
-
-    public class TestMethodAttribute : TestAttribute { }
-
+    public class TestClassAttribute : NUnit.Framework.TestFixtureAttribute { }
+    public class AssemblyInitializeAttribute : NUnit.Framework.TestFixtureSetUpAttribute { }
+    public class AssemblyCleanupAttribute : NUnit.Framework.TestFixtureTearDownAttribute { }
+    public class ClassInitializeAttribute : NUnit.Framework.SetUpAttribute { }
+    public class ClassCleanupAttribute : NUnit.Framework.TearDownAttribute { }
+    public class TestMethodAttribute : NUnit.Framework.TestAttribute { }
     public class Assert : NUnit.Framework.Assert { }
 }

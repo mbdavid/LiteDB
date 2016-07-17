@@ -164,9 +164,6 @@
     <Compile Include="..\LiteDB.Tests\Tests\MapperTest.cs">
       <Link>Tests\MapperTest.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB.Tests\Tests\ObjectCreationPerformanceTest.cs">
-      <Link>Tests\ObjectCreationPerformanceTest.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB.Tests\Tests\ObjectIdTest.cs">
       <Link>Tests\ObjectIdTest.cs</Link>
     </Compile>
@@ -180,20 +177,20 @@
       <Link>Tests\TempFile.cs</Link>
     </Compile>
     <Compile Include="Main.cs" />
-    <Compile Include="UnitTestAppDelegate.cs" />
     <Compile Include="TestPlatform.cs" />
+    <Compile Include="UnitTestAppDelegate.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Platform.iOS\LiteDB.Platform.iOS.csproj">
+    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
+      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
+      <Name>LiteDB.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LiteDB\LiteDB.Platform.iOS.csproj">
       <Project>{7f334f08-a934-4d91-abbe-3f29a4af3c15}</Project>
       <Name>LiteDB.Platform.iOS</Name>
       <IsAppExtension>false</IsAppExtension>
       <IsWatchApp>false</IsWatchApp>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
-      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
-      <Name>LiteDB.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />

@@ -14,31 +14,31 @@ namespace LiteDB.Tests
 
     public class TestPlatform
     {
-        public static string GetTempFilePath(string ext)
+        private static string _path;
+
+        static TestPlatform()
         {
-            return Path.GetFullPath(
-                   Directory.GetCurrentDirectory() +
-                   string.Format("../../../../TestResults/test-{0}.{1}", Guid.NewGuid(), ext));
+            _path = Path.GetFullPath(Directory.GetCurrentDirectory() + "../../../../TestResults/");
         }
 
         public static long GetFileSize(string filename)
         {
-            return new FileInfo(filename).Length;
+            return new FileInfo(_path + filename).Length;
         }
 
         public static void FileWriteAllText(string filename, string content)
         {
-            File.WriteAllText(filename, content);
+            File.WriteAllText(_path + filename, content);
         }
 
         public static void DeleteFile(string filename)
         {
-            File.Delete(filename);
+            File.Delete(_path + filename);
         }
 
         public static string FileReadAllText(string filename)
         {
-            return File.ReadAllText(filename);
+            return File.ReadAllText(_path + filename);
         }
     }
 }

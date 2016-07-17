@@ -12,7 +12,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void FileStorage_InsertDelete()
         {
-            using (var dll = new TempFile())
+            using (var dll = new TempFile(null, "dll"))
             {
                 // create a dump file
                 TestPlatform.FileWriteAllText(dll.Filename, "FileCoreContent");
@@ -75,7 +75,7 @@ namespace LiteDB.Tests
                 {
                     foreach (var f in db.FileStorage.FindAll())
                     {
-                        using (var ftmp = new TempFile())
+                        using (var ftmp = new TempFile(null, "dll"))
                         {
                             f.SaveAs(ftmp.Filename);
                         }

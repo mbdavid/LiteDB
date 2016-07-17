@@ -118,9 +118,6 @@
     <Compile Include="..\LiteDB.Tests\Tests\MapperTest.cs">
       <Link>Tests\MapperTest.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB.Tests\Tests\ObjectCreationPerformanceTest.cs">
-      <Link>Tests\ObjectCreationPerformanceTest.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB.Tests\Tests\ObjectIdTest.cs">
       <Link>Tests\ObjectIdTest.cs</Link>
     </Compile>
@@ -134,9 +131,9 @@
       <Link>Tests\TempFile.cs</Link>
     </Compile>
     <Compile Include="MainActivity.cs" />
-    <Compile Include="TestPlatform.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestPlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -152,13 +149,13 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Platform.Android\LiteDB.Platform.Android.csproj">
-      <Project>{4510a5de-d86f-4f96-be1a-ec227a42210d}</Project>
-      <Name>LiteDB.Platform.Android</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
       <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
       <Name>LiteDB.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LiteDB\LiteDB.Platform.Android.csproj">
+      <Project>{4510a5de-d86f-4f96-be1a-ec227a42210d}</Project>
+      <Name>LiteDB.Platform.Android</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LiteDB.Platform
+namespace LiteDB
 {
     public interface ILitePlatform
     {

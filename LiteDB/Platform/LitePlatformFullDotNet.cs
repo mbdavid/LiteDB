@@ -1,26 +1,18 @@
 ﻿using System;
-using System.Threading.Tasks;
-#if WINDOWS_UWP
 using System.Collections.Specialized;
-#endif
-using LiteDB.Platform;
-using Windows.Storage;
-using LiteDB.Platform;
+using System.IO;
+using System.Threading;
+using LiteDB;
 
-namespace LiteDB.Universal81
+namespace LiteDB.Platform
 {
-    public class LitePlatformWindowsStore : ILitePlatform
+    public class LitePlatformFullDotNet : ILitePlatform
     {
-        private readonly StorageFolder m_folder;
+        private readonly LazyLoad<IFileHandler> _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler());
+        private readonly LazyLoad<IReflectionHandler> _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new EmitReflectionHandler());
 
-        private readonly LazyLoad<IFileHandler> _fileHandler;
-        private readonly LazyLoad<IReflectionHandler> _reflectionHandler;
-
-        public LitePlatformWindowsStore(StorageFolder folder)
+        public LitePlatformFullDotNet()
         {
-            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerWindowsStore(folder));
-            _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new ExpressionReflectionHandler());
-
             AddNameCollectionToMapper();
         }
 
@@ -30,17 +22,16 @@ namespace LiteDB.Universal81
 
         public IEncryption GetEncryption(string password)
         {
-            throw new NotImplementedException();
+            return new RijndaelEncryption(password);
         }
 
         public void WaitFor(int milliseconds)
         {
-            AsyncHelpers.RunSync(() => Task.Delay(milliseconds));
+            Thread.Sleep(milliseconds);
         }
 
-        public void AddNameCollectionToMapper()
+        private void AddNameCollectionToMapper()
         {
-#if WINDOWS_UWP
             BsonMapper.Global.RegisterType(
                nv =>
                {
@@ -67,7 +58,6 @@ namespace LiteDB.Universal81
                    return nv;
                }
             );
-#endif
         }
     }
 }
