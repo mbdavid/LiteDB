@@ -41,11 +41,8 @@
     <Compile Include="..\LiteDB\Plataform\UWP\AsyncHelpers.cs">
       <Link>AsyncHelpers.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\UWP\EncryptionFactory.cs">
-      <Link>EncryptionFactory.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Plataform\UWP\FileDiskService.cs">
-      <Link>FileDiskService.cs</Link>
+    <Compile Include="..\LiteDB\Plataform\UWP\ExpressionReflectionHandler.cs">
+      <Link>ExpressionReflectionHandler.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Plataform\UWP\FileHandlerWindowsStore.cs">
       <Link>FileHandlerWindowsStore.cs</Link>

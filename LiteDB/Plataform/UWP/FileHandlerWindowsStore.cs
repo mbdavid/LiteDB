@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using LiteDB.Plataform;
 using Windows.Storage;
 
 namespace LiteDB.Platform
@@ -13,7 +14,21 @@ namespace LiteDB.Platform
             _folder = folder;
         }
 
-        public Stream ReadFileAsStream(string filename)
+        public Stream CreateFile(string filename, bool overwritten)
+        {
+            var raStream = AsyncHelpers.RunSync(async () =>
+            {
+                filename = filename.Replace(_folder.Path, "");
+
+                var file = await _folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+
+                return await file.OpenAsync(FileAccessMode.ReadWrite);
+            });
+
+            return raStream.AsStream();
+        }
+
+        public Stream OpenFileAsStream(string filename, bool readOnly)
         {
             var raStream = AsyncHelpers.RunSync(async () =>
             {
@@ -27,18 +42,46 @@ namespace LiteDB.Platform
             return raStream.AsStream();
         }
 
-        public Stream CreateFile(string filename, bool overwritten)
+        public bool FileExists(string filename)
         {
-            var raStream = AsyncHelpers.RunSync(async () =>
-             {
-                 filename = filename.Replace(_folder.Path, "");
+            return AsyncHelpers.RunSync(async () =>
+            {
+                try
+                {
+                    await _folder.GetFileAsync(filename);
 
-                 var file = await _folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            });
+        }
 
-                 return await file.OpenAsync(FileAccessMode.ReadWrite);
-             });
+        public void DeleteFile(string filename)
+        {
+            AsyncHelpers.RunSync(async () =>
+            {
+                var file = await _folder.GetFileAsync(filename);
 
-            return raStream.AsStream();
+                await file.DeleteAsync();
+            });
+        }
+
+        public void OpenExclusiveFile(string filename, Action<Stream> success)
+        {
+            try
+            {
+                using (var stream = CreateFile(filename, true))
+                {
+                    success(stream);
+                }
+            }
+            catch (Exception)
+            {
+                // not found OR lock by another process, .... no recovery, do nothing
+            }
         }
     }
 }

@@ -8,6 +8,8 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase
     {
+        public const int PAGE_SIZE = BasePage.PAGE_SIZE;
+
         private LazyLoad<DbEngine> _engine;
 
         private BsonMapper _mapper;

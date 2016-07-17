@@ -55,96 +55,12 @@
     <Reference Include="Xamarin.Android.NUnitLite" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB.Tests\DiskFileTest.cs">
-      <Link>Tests\DiskFileTest.cs</Link>
-    </Compile>
     <Compile Include="InitializeTests.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestPlatform.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="..\LiteDB.Tests\AutoIdTest.cs">
-      <Link>Tests\AutoIdTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BigFileTest.cs">
-      <Link>Tests\BigFileTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BsonFieldTest.cs">
-      <Link>Tests\BsonFieldTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BsonTest.cs">
-      <Link>Tests\BsonTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BulkTest.cs">
-      <Link>Tests\BulkTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ConcurrentTest.cs">
-      <Link>Tests\ConcurrentTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DatabasePerformanceTest.cs">
-      <Link>Tests\DatabasePerformanceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DataTableTest.cs">
-      <Link>Tests\DataTableTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DB.cs">
-      <Link>Tests\DB.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DbRefIndexTest.cs">
-      <Link>Tests\DbRefIndexTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DbVersionTest.cs">
-      <Link>Tests\DbVersionTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DerivedTypesTest.cs">
-      <Link>Tests\DerivedTypesTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DropCollectionTest.cs">
-      <Link>Tests\DropCollectionTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\EncryptedTest.cs">
-      <Link>Tests\EncryptedTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\FileStorageTest.cs">
-      <Link>Tests\FileStorageTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\IncludeTest.cs">
-      <Link>Tests\IncludeTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\IndexDbRef.cs">
-      <Link>Tests\IndexDbRef.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\IndexOrderTest.cs">
-      <Link>Tests\IndexOrderTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\JsonTest.cs">
-      <Link>Tests\JsonTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\LinqTest.cs">
-      <Link>Tests\LinqTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\LongCountTest.cs">
-      <Link>Tests\LongCountTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\LoopTest.cs">
-      <Link>Tests\LoopTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\MapperInterfaceTest.cs">
-      <Link>Tests\MapperInterfaceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\MapperTest.cs">
-      <Link>Tests\MapperTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ObjectCreationPerformanceTest.cs">
-      <Link>Tests\ObjectCreationPerformanceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ObjectIdTest.cs">
-      <Link>Tests\ObjectIdTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ShellTest.cs">
-      <Link>Tests\ShellTest.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -158,7 +74,9 @@
   <ItemGroup>
     <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Tests\" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
      Other similar extension points exist, see Microsoft.Common.targets.

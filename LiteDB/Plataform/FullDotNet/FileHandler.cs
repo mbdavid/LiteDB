@@ -13,7 +13,7 @@ namespace LiteDB.Plataform
                FileMode.Open,
                readOnly ? FileAccess.Read : FileAccess.ReadWrite,
                readOnly ? FileShare.Read : FileShare.None,
-               BasePage.PAGE_SIZE);
+               LiteDatabase.PAGE_SIZE);
         }
 
         public Stream CreateFile(string filename, bool overwritten)
@@ -21,7 +21,7 @@ namespace LiteDB.Plataform
             return new FileStream(filename,
                 overwritten ? FileMode.Create : FileMode.CreateNew,
                 FileAccess.ReadWrite,
-                FileShare.None, BasePage.PAGE_SIZE);
+                FileShare.None, LiteDatabase.PAGE_SIZE);
         }
 
         public bool FileExists(string filename)

@@ -6,5 +6,6 @@ namespace LiteDB.Plataform
     {
         byte[] Encrypt(byte[] bytes);
         byte[] Decrypt(byte[] encryptedValue);
+        byte[] HashSHA1(string str);
     }
 }

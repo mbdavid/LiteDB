@@ -107,23 +107,17 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB.Platform.Universal81\AsyncHelpers.cs">
+    <Compile Include="..\LiteDB\Plataform\UWP\AsyncHelpers.cs">
       <Link>AsyncHelpers.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB.Platform.Universal81\EncryptionFactory.cs">
-      <Link>EncryptionFactory.cs</Link>
+    <Compile Include="..\LiteDB\Plataform\UWP\ExpressionReflectionHandler.cs">
+      <Link>ExpressionReflectionHandler.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB.Platform.Universal81\FileDiskService.cs">
-      <Link>FileDiskService.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Platform.Universal81\FileHandlerWindowsStore.cs">
+    <Compile Include="..\LiteDB\Plataform\UWP\FileHandlerWindowsStore.cs">
       <Link>FileHandlerWindowsStore.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB.Platform.Universal81\LiteDbPlatformWindowsStore.cs">
-      <Link>LiteDbPlatformWindowsStore.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Platform.Universal81\SimpleAES.cs">
-      <Link>SimpleAES.cs</Link>
+    <Compile Include="..\LiteDB\Plataform\UWP\LitePlatformWindowsStore.cs">
+      <Link>LitePlatformWindowsStore.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>

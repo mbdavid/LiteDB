@@ -101,93 +101,14 @@
     <None Include="Entitlements.plist" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB.Tests\AutoIdTest.cs">
-      <Link>AutoIdTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BsonFieldTest.cs">
-      <Link>BsonFieldTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BsonTest.cs">
-      <Link>BsonTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\BulkTest.cs">
-      <Link>BulkTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DatabasePerformanceTest.cs">
-      <Link>DatabasePerformanceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ConcurrentTest.cs">
-      <Link>ConcurrentTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DataTableTest.cs">
-      <Link>DataTableTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DB.cs">
-      <Link>DB.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DbRefIndexTest.cs">
-      <Link>DbRefIndexTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DbVersionTest.cs">
-      <Link>DbVersionTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DerivedTypesTest.cs">
-      <Link>DerivedTypesTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\DropCollectionTest.cs">
-      <Link>DropCollectionTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\EncryptedTest.cs">
-      <Link>EncryptedTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\FileStorageTest.cs">
-      <Link>FileStorageTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\IncludeTest.cs">
-      <Link>IncludeTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\IndexDbRef.cs">
-      <Link>IndexDbRef.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\IndexOrderTest.cs">
-      <Link>IndexOrderTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\JsonTest.cs">
-      <Link>JsonTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\LinqTest.cs">
-      <Link>LinqTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\LongCountTest.cs">
-      <Link>LongCountTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\LoopTest.cs">
-      <Link>LoopTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\MapperInterfaceTest.cs">
-      <Link>MapperInterfaceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\MapperTest.cs">
-      <Link>MapperTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ObjectCreationPerformanceTest.cs">
-      <Link>ObjectCreationPerformanceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ObjectIdTest.cs">
-      <Link>ObjectIdTest.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB.Tests\ShellTest.cs">
-      <Link>ShellTest.cs</Link>
-    </Compile>
     <Compile Include="Main.cs" />
     <Compile Include="UnitTestAppDelegate.cs" />
     <Compile Include="InitializeTests.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestPlatform.cs" />
-    <Compile Include="..\LiteDB.Tests\DiskFileTest.cs">
-      <Link>DiskFileTest.cs</Link>
-    </Compile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Tests\" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

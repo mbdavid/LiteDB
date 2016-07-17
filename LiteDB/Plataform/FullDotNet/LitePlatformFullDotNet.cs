@@ -7,22 +7,22 @@ namespace LiteDB.Plataform
 {
     public class LitePlatformFullDotNet : ILitePlatform
     {
-        private readonly LazyLoad<IFileHandler> _fileHandler;
-        private readonly LazyLoad<IReflectionHandler> _reflectionHandler;
-        private readonly LazyLoad<IEncryptionFactory> _encryptionFactory;
+        private readonly LazyLoad<IFileHandler> _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler());
+        private readonly LazyLoad<IReflectionHandler> _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new EmitReflectionHandler());
 
         public LitePlatformFullDotNet()
         {
-            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler());
-            _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new EmitReflectionHandler());
-            _encryptionFactory = new LazyLoad<IEncryptionFactory>(() => new RijndaelEncryptionFactory());
-
             AddNameCollectionToMapper();
         }
 
-        public IEncryptionFactory EncryptionFactory { get { return _encryptionFactory.Value; } }
         public IFileHandler FileHandler { get { return _fileHandler.Value; } }
+
         public IReflectionHandler ReflectionHandler { get { return _reflectionHandler.Value; } }
+
+        public IEncryption GetEncryption(string password)
+        {
+            return new RijndaelEncryption(password);
+        }
 
         public void WaitFor(int milliseconds)
         {

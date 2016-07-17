@@ -37,7 +37,6 @@ namespace LiteDB.Tests.Mapping
          }
       }
 
-
       [TestMethod]
       public void OneHundredMillionStructsWithExpressionCompile()
       {
@@ -79,7 +78,6 @@ namespace LiteDB.Tests.Mapping
 
             }
         }
-
 #endif
     }
 }

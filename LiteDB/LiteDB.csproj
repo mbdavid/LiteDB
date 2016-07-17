@@ -57,7 +57,6 @@
     <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
     <Compile Include="DbEngine\Structures\LiteTransaction.cs" />
     <Compile Include="Plataform\FullDotNet\FileHandler.cs" />
-    <Compile Include="Plataform\FullDotNet\RijndaelEncryptionFactory.cs" />
     <Compile Include="Utils\PreserveAttribute.cs" />
     <Compile Include="Plataform\FullDotNet\LitePlatformFullDotNet.cs" />
     <Compile Include="Plataform\FullDotNet\EmitReflectionHandler.cs" />
@@ -75,7 +74,6 @@
     <Compile Include="Extensions\ByteArrayExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Plataform\Interfaces\IEncryption.cs" />
-    <Compile Include="Plataform\Interfaces\IEncryptionFactory.cs" />
     <Compile Include="DbEngine\Disks\IDiskService.cs" />
     <Compile Include="DbEngine\DbEngine\Delete.cs" />
     <Compile Include="DbEngine\DbEngine\Find.cs" />

@@ -21,9 +21,9 @@ namespace LiteDB.Plataform
             _rijndael = Rijndael.Create();
             _rijndael.Padding = PaddingMode.Zeros;
             Rfc2898DeriveBytes pdb = null;
+
             try
             {
-
                 pdb = new Rfc2898DeriveBytes(password, SALT);
                 _rijndael.Key = pdb.GetBytes(32);
                 _rijndael.IV = pdb.GetBytes(16);
@@ -80,7 +80,7 @@ namespace LiteDB.Plataform
         /// <summary>
         /// Hash a password using SHA1 just to verify password
         /// </summary>
-        public static byte[] HashSHA1(string password)
+        public byte[] HashSHA1(string password)
         {
             var sha = new SHA1CryptoServiceProvider();
             var shaBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));

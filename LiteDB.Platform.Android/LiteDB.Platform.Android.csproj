@@ -55,12 +55,11 @@
     <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryption.cs">
       <Link>RijndaelEncryption.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryptionFactory.cs">
-      <Link>RijndaelEncryptionFactory.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="LitePlatformAndroid.cs" />
+    <Compile Include="Resources\Resource.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">

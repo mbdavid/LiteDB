@@ -5,7 +5,7 @@ namespace LiteDB
     /// <summary>
     /// LazyLoad class for .NET 3.5
     /// </summary>
-    internal class LazyLoad<T>
+    public class LazyLoad<T>
         where T : class
     {
         private T _value = null;

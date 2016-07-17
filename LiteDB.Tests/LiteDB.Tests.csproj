@@ -57,38 +57,37 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="BigFileTest.cs" />
-    <Compile Include="DatabasePerformanceTest.cs" />
-    <Compile Include="DataTableTest.cs" />
-    <Compile Include="DiskFileTest.cs" />
-    <Compile Include="FileStorageTest.cs" />
-    <Compile Include="IndexDbRef.cs" />
-    <Compile Include="InitializeTests.cs" />
-    <Compile Include="LongCountTest.cs" />
-    <Compile Include="LoopTest.cs" />
-    <Compile Include="BulkTest.cs" />
-    <Compile Include="BsonTest.cs" />
-    <Compile Include="DbVersionTest.cs" />
-    <Compile Include="EncryptedTest.cs" />
-    <Compile Include="AutoIdTest.cs" />
-    <Compile Include="DropCollectionTest.cs" />
-    <Compile Include="DbRefIndexTest.cs" />
-    <Compile Include="MapperInterfaceTest.cs" />
-    <Compile Include="BsonFieldTest.cs" />
-    <Compile Include="ObjectCreationPerformanceTest.cs" />
-    <Compile Include="ObjectIdTest.cs" />
-    <Compile Include="DerivedTypesTest.cs" />
-    <Compile Include="MapperTest.cs" />
-    <Compile Include="ConcurrentTest.cs" />
-    <Compile Include="JsonTest.cs" />
-    <Compile Include="LinqTest.cs" />
-    <Compile Include="IncludeTest.cs" />
-    <Compile Include="ShellTest.cs" />
-    <Compile Include="StreamDb_Test.cs" />
+    <Compile Include="Tests\DatabasePerformanceTest.cs" />
+    <Compile Include="Tests\DataTableTest.cs" />
+    <Compile Include="Tests\DiskFileTest.cs" />
+    <Compile Include="Tests\FileStorageTest.cs" />
+    <Compile Include="Tests\IndexDbRef.cs" />
+    <Compile Include="Tests\InitializeTests.cs" />
+    <Compile Include="Tests\LongCountTest.cs" />
+    <Compile Include="Tests\LoopTest.cs" />
+    <Compile Include="Tests\BulkTest.cs" />
+    <Compile Include="Tests\BsonTest.cs" />
+    <Compile Include="Tests\DbVersionTest.cs" />
+    <Compile Include="Tests\EncryptedTest.cs" />
+    <Compile Include="Tests\AutoIdTest.cs" />
+    <Compile Include="Tests\DropCollectionTest.cs" />
+    <Compile Include="Tests\DbRefIndexTest.cs" />
+    <Compile Include="Tests\MapperInterfaceTest.cs" />
+    <Compile Include="Tests\BsonFieldTest.cs" />
+    <Compile Include="Tests\ObjectCreationPerformanceTest.cs" />
+    <Compile Include="Tests\ObjectIdTest.cs" />
+    <Compile Include="Tests\DerivedTypesTest.cs" />
+    <Compile Include="Tests\MapperTest.cs" />
+    <Compile Include="Tests\ConcurrentTest.cs" />
+    <Compile Include="Tests\JsonTest.cs" />
+    <Compile Include="Tests\LinqTest.cs" />
+    <Compile Include="Tests\IncludeTest.cs" />
+    <Compile Include="Tests\ShellTest.cs" />
+    <Compile Include="Tests\StreamDbTest.cs" />
     <Compile Include="Utils\TestBase.cs" />
-    <Compile Include="TestPlatform.cs" />
+    <Compile Include="Utils\TestPlatform.cs" />
     <Compile Include="Utils\DB.cs" />
-    <Compile Include="IndexOrderTest.cs" />
+    <Compile Include="Tests\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

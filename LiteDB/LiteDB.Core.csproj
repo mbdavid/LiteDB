@@ -111,7 +111,6 @@
     <Compile Include="FileStorage\LiteFileStorage.cs" />
     <Compile Include="FileStorage\LiteFileStream.cs" />
     <Compile Include="Plataform\Interfaces\IEncryption.cs" />
-    <Compile Include="Plataform\Interfaces\IEncryptionFactory.cs" />
     <Compile Include="Plataform\Interfaces\IFileHandler.cs" />
     <Compile Include="Plataform\Interfaces\ILitePlatform.cs" />
     <Compile Include="Plataform\Interfaces\IReflectionHandler.cs" />

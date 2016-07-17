@@ -14,7 +14,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class StreamDb_Test : TestBase
+    public class StreamDbTest : TestBase
     {
         [TestMethod]
         public void FindBeforeInsertClosesTransaction()

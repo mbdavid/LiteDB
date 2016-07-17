@@ -24,11 +24,9 @@ namespace LiteDB
             var password = conn.GetValue<string>("password", null);
 
             // hash password to store in header to check if password is correct
-            var factory = LitePlatform.Platform.EncryptionFactory;
+            _crypto = LitePlatform.Platform.GetEncryption(password);
 
-            _password = factory.HashSHA1(password);
-
-            _crypto = factory.CreateEncryption(password);
+            _password = _crypto.HashSHA1(password);
         }
 
         protected override HeaderPage CreateHeaderPage()
