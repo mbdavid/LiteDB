@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
 {
-    public class BaseCollection
+    internal class BaseCollection
     {
         public Regex FieldPattern = new Regex(@"[\w$\.-]+\s*");
 

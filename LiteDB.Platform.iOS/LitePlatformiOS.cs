@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Specialized;
-using System.IO;
-using System.Threading;
-using LiteDB.Plataform;
+using System.Collections.Generic;
+using System.Text;
 
-namespace LiteDB.Platform.iOS
+namespace LiteDB.Platform
 {
-   public class LitePlatformiOS : ILitePlatform
-   {
-   }
+    public class LitePlatformiOS : LitePlatformFullDotNot
+    {
+    }
 }

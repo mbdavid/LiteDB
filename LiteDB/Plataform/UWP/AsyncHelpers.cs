@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
-namespace LiteDB.Universal81
+namespace LiteDB.Platform
 {
     /// <summary>
     /// http://stackoverflow.com/a/5097066
@@ -106,7 +106,6 @@ namespace LiteDB.Universal81
             SynchronizationContext.SetSynchronizationContext(oldContext);
             return ret;
         }
-
 
         private class ExclusiveSynchronizationContext : SynchronizationContext
         {

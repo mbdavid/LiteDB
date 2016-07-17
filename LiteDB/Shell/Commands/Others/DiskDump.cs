@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    public class DiskDump : IShellCommand
+    internal class DiskDump : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

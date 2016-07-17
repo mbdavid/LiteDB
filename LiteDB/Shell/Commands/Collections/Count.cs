@@ -1,6 +1,8 @@
-﻿namespace LiteDB.Shell.Commands
+﻿using System;
+
+namespace LiteDB.Shell.Commands
 {
-    public class CollectionCount : BaseCollection, IShellCommand
+    internal class CollectionCount : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

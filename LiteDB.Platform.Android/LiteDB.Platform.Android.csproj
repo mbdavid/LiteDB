@@ -14,8 +14,8 @@
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v4.0.3</TargetFrameworkVersion>
+    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <TargetFrameworkVersion>v6.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,16 +43,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\EmitReflectionHandler.cs">
+      <Link>EmitReflectionHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\FileHandler.cs">
+      <Link>FileHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\LitePlatformFullDotNet.cs">
+      <Link>LitePlatformFullDotNet.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryption.cs">
+      <Link>RijndaelEncryption.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryptionFactory.cs">
+      <Link>RijndaelEncryptionFactory.cs</Link>
+    </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Resources\Resource.Designer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\AboutResources.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\Values\Strings.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">

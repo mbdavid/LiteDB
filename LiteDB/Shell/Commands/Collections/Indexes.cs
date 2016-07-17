@@ -1,8 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    public class CollectionIndexes : BaseCollection, IShellCommand
+    internal class CollectionIndexes : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

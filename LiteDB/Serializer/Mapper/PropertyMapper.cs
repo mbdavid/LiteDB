@@ -6,7 +6,7 @@ namespace LiteDB
     /// <summary>
     /// Internal representation for a .NET Property mapped to BsonDocument
     /// </summary>
-    public class PropertyMapper
+    internal class PropertyMapper
     {
         public bool AutoId { get; set; }
         public string PropertyName { get; set; }

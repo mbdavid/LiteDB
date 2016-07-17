@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace LiteDB.Universal81
+namespace LiteDB.Platform
 {
     public class FileDiskService : FileDiskServiceBase
     {
@@ -27,8 +27,7 @@ namespace LiteDB.Universal81
         {
             var raStream = AsyncHelpers.RunSync(() => CreateFileOrOpen(filename));
 
-            return raStream.AsStream(BasePage.PAGE_SIZE);
-
+            return raStream.AsStream(4096);
         }
 
         // protected override void InnerLock()

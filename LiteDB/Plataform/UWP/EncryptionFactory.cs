@@ -1,7 +1,7 @@
+using System;
 using Windows.Security.Cryptography.Core;
-using LiteDB.Interfaces;
 
-namespace LiteDB.Universal81
+namespace LiteDB.Platform
 {
     public class EncryptionFactory : IEncryptionFactory
     {

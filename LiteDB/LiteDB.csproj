@@ -53,7 +53,7 @@
     <Compile Include="Core\Collections\Aggregate.cs" />
     <Compile Include="Core\Collections\Stats.cs" />
     <Compile Include="Core\Database\Shell.cs" />
-    <Compile Include="Core\LitePlataform.cs" />
+    <Compile Include="Plataform\LitePlataform.cs" />
     <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
     <Compile Include="DbEngine\Structures\LiteTransaction.cs" />
     <Compile Include="Plataform\FullDotNet\FileHandler.cs" />

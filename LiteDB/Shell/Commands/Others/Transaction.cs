@@ -1,6 +1,8 @@
-﻿namespace LiteDB.Shell.Commands
+﻿using System;
+
+namespace LiteDB.Shell.Commands
 {
-    public class BeginTrans : IShellCommand
+    internal class BeginTrans : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -15,7 +17,7 @@
         }
     }
 
-    public class CommitTrans : IShellCommand
+    internal class CommitTrans : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -30,7 +32,7 @@
         }
     }
 
-    public class RollbackTrans : IShellCommand
+    internal class RollbackTrans : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

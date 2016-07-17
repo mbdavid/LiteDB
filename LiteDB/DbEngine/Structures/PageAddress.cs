@@ -5,7 +5,7 @@ namespace LiteDB
     /// <summary>
     /// Represents a page adress inside a page structure - index could be byte offset position OR index in a list (6 bytes)
     /// </summary>
-    public struct PageAddress
+    internal struct PageAddress
     {
         public const int SIZE = 6;
 

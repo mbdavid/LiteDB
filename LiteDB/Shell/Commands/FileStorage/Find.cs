@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileFind : BaseFileStorage, IShellCommand
+    internal class FileFind : BaseFileStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

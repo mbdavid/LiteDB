@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    public class FileDelete : BaseFileStorage, IShellCommand
+    internal class FileDelete : BaseFileStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

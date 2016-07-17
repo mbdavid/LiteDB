@@ -1,6 +1,8 @@
-﻿namespace LiteDB.Shell.Commands
+﻿using System;
+
+namespace LiteDB.Shell.Commands
 {
-    public class CollectionDelete : BaseCollection, IShellCommand
+    internal class CollectionDelete : BaseCollection, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

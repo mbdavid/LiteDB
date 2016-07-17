@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-    public class CollectionIndex
+    internal class CollectionIndex
     {
         public static Regex IndexPattern = new Regex(@"[\w-$\.]+$");
 

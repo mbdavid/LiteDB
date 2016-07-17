@@ -1,6 +1,8 @@
-﻿namespace LiteDB.Shell.Commands
+﻿using System;
+
+namespace LiteDB.Shell.Commands
 {
-    public class FileUpdate : BaseFileStorage, IShellCommand
+    internal class FileUpdate : BaseFileStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {

@@ -3,11 +3,10 @@ using System.Text;
 
 namespace LiteDB
 {
-    public
+    internal
 #if NETFULL
-       unsafe
+    unsafe
 #endif
-
     class ByteWriter
     {
         private byte[] _buffer;
@@ -70,7 +69,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -86,7 +84,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -106,7 +103,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
 
@@ -120,7 +116,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -136,7 +131,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -156,7 +150,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -172,7 +165,6 @@ namespace LiteDB
 #else
             var pi = BitConverter.GetBytes(value);
 #endif
-
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];

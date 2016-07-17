@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LiteDB
 {
-    public class HeaderPage : BasePage
+    internal class HeaderPage : BasePage
     {
         /// <summary>
         /// Page type = Header

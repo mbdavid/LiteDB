@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public class IndexPage : BasePage
+    internal class IndexPage : BasePage
     {
         /// <summary>
         /// Page type = Index

@@ -55,7 +55,6 @@
     <Compile Include="Core\Database\Transaction.cs" />
     <Compile Include="Core\Database\Utils.cs" />
     <Compile Include="Core\LiteDatabase.cs" />
-    <Compile Include="Core\LitePlataform.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\DbEngine\Aggregate.cs" />
     <Compile Include="DbEngine\DbEngine\Collection.cs" />
@@ -116,6 +115,7 @@
     <Compile Include="Plataform\Interfaces\IFileHandler.cs" />
     <Compile Include="Plataform\Interfaces\ILitePlatform.cs" />
     <Compile Include="Plataform\Interfaces\IReflectionHandler.cs" />
+    <Compile Include="Plataform\LitePlataform.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\Impl\QueryAll.cs" />
     <Compile Include="Query\Impl\QueryAnd.cs" />

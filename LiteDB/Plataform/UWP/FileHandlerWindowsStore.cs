@@ -1,27 +1,25 @@
 using System;
 using System.IO;
 using Windows.Storage;
-using LiteDB.Interfaces;
 
-namespace LiteDB.Universal81
+namespace LiteDB.Platform
 {
     public class FileHandlerWindowsStore : IFileHandler
     {
-        private readonly StorageFolder m_folder;
+        private readonly StorageFolder _folder;
 
         public FileHandlerWindowsStore(StorageFolder folder)
         {
-
-            m_folder = folder;
+            _folder = folder;
         }
 
         public Stream ReadFileAsStream(string filename)
         {
             var raStream = AsyncHelpers.RunSync(async () =>
             {
-                filename = filename.Replace(m_folder.Path, "");
+                filename = filename.Replace(_folder.Path, "");
 
-                var file = await m_folder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists);
+                var file = await _folder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists);
 
                 return await file.OpenAsync(FileAccessMode.ReadWrite);
             });
@@ -33,9 +31,9 @@ namespace LiteDB.Universal81
         {
             var raStream = AsyncHelpers.RunSync(async () =>
              {
-                 filename = filename.Replace(m_folder.Path, "");
+                 filename = filename.Replace(_folder.Path, "");
 
-                 var file = await m_folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+                 var file = await _folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
 
                  return await file.OpenAsync(FileAccessMode.ReadWrite);
              });
