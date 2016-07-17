@@ -54,7 +54,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void FileStoage_50files()
+        public void FileStorage_50files()
         {
             var file5mb = new byte[5 * 1024 * 1024];
 

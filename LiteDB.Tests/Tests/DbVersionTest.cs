@@ -4,10 +4,10 @@ using System.IO;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class DbVersionTest
+    public class DbVersionTest : TestBase
     {
         [TestMethod]
-        public void DbVerion_Test()
+        public void DbVersion_Test()
         {
             var m = new MemoryStream();
 

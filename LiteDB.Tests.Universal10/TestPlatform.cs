@@ -45,7 +45,9 @@ namespace LiteDB.Tests
             var folder = ApplicationData.Current.TemporaryFolder;
             var file = AsyncHelpers.RunSync(folder.GetFileAsync(filename));
 
-            file.DeleteAsync();
+#pragma warning disable 4014
+            var t = file.DeleteAsync();
+#pragma warning restore 4014
         }
 
         public static string FileReadAllText(string filename)
