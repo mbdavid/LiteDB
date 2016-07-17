@@ -1,9 +1,18 @@
 ﻿using System;
 using System.IO;
+using LiteDB.Platform;
 using NUnit.Framework;
 
 namespace LiteDB.Tests
 {
+    public class TestBase
+    {
+        public TestBase()
+        {
+            LitePlatform.Initialize(new LitePlatformiOS());
+        }
+    }
+
     class TestPlatform
     {
         public static string GetTempFilePath(string ext)
@@ -20,27 +29,19 @@ namespace LiteDB.Tests
             return new FileInfo(filename).Length;
         }
 
-        public static string FileWriteAllText(string fileName, string content, string customPath = null)
+        public static void FileWriteAllText(string filename, string content)
         {
-            var path = customPath ?? Path.GetTempPath();
-
-            Directory.CreateDirectory(path);
-
-            var filePath = path + fileName;
-
-            File.WriteAllText(filePath, content);
-
-            return filePath;
+            File.WriteAllText(filename, content);
         }
 
-        public static void DeleteFile(string path)
+        public static void DeleteFile(string filename)
         {
-            File.Delete(path);
+            File.Delete(filename);
         }
 
-        public static string FileReadAllText(string path)
+        public static string FileReadAllText(string filename)
         {
-            return File.ReadAllText(path);
+            return File.ReadAllText(filename);
         }
     }
 }

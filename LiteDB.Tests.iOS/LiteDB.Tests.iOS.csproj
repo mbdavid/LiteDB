@@ -101,14 +101,100 @@
     <None Include="Entitlements.plist" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\LiteDB.Tests\Tests\AutoIdTest.cs">
+      <Link>Tests\AutoIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\BsonFieldTest.cs">
+      <Link>Tests\BsonFieldTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\BsonTest.cs">
+      <Link>Tests\BsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\BulkTest.cs">
+      <Link>Tests\BulkTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\ConcurrentTest.cs">
+      <Link>Tests\ConcurrentTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DatabasePerformanceTest.cs">
+      <Link>Tests\DatabasePerformanceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DataTableTest.cs">
+      <Link>Tests\DataTableTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DbRefIndexTest.cs">
+      <Link>Tests\DbRefIndexTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DbVersionTest.cs">
+      <Link>Tests\DbVersionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DerivedTypesTest.cs">
+      <Link>Tests\DerivedTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DiskFileTest.cs">
+      <Link>Tests\DiskFileTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\DropCollectionTest.cs">
+      <Link>Tests\DropCollectionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\EncryptedTest.cs">
+      <Link>Tests\EncryptedTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\FileStorageTest.cs">
+      <Link>Tests\FileStorageTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\IncludeTest.cs">
+      <Link>Tests\IncludeTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\IndexOrderTest.cs">
+      <Link>Tests\IndexOrderTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\JsonTest.cs">
+      <Link>Tests\JsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\LinqTest.cs">
+      <Link>Tests\LinqTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\LoopTest.cs">
+      <Link>Tests\LoopTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\MapperInterfaceTest.cs">
+      <Link>Tests\MapperInterfaceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\MapperTest.cs">
+      <Link>Tests\MapperTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\ObjectCreationPerformanceTest.cs">
+      <Link>Tests\ObjectCreationPerformanceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\ObjectIdTest.cs">
+      <Link>Tests\ObjectIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\ShellTest.cs">
+      <Link>Tests\ShellTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\StreamDbTest.cs">
+      <Link>Tests\StreamDbTest.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB.Tests\Tests\TempFile.cs">
+      <Link>Tests\TempFile.cs</Link>
+    </Compile>
     <Compile Include="Main.cs" />
     <Compile Include="UnitTestAppDelegate.cs" />
-    <Compile Include="InitializeTests.cs" />
-    <Compile Include="TestBase.cs" />
     <Compile Include="TestPlatform.cs" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Tests\" />
+    <ProjectReference Include="..\LiteDB.Platform.iOS\LiteDB.Platform.iOS.csproj">
+      <Project>{7f334f08-a934-4d91-abbe-3f29a4af3c15}</Project>
+      <Name>LiteDB.Platform.iOS</Name>
+      <IsAppExtension>false</IsAppExtension>
+      <IsWatchApp>false</IsWatchApp>
+    </ProjectReference>
+    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
+      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
+      <Name>LiteDB.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

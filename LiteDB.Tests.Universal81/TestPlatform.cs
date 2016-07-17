@@ -1,79 +1,88 @@
 ﻿using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using LiteDB.Platform;
 using Windows.Storage;
-using LiteDB.Universal81;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-   public class TestClassAttribute: TestPlatform.UnitTestFramework.TestClassAttribute { }
+    public class TestClassAttribute : TestPlatform.UnitTestFramework.TestClassAttribute { }
 
-   public class TestMethodAttribute : TestPlatform.UnitTestFramework.TestMethodAttribute { }
+    public class TestMethodAttribute : TestPlatform.UnitTestFramework.TestMethodAttribute { }
 
-   public class Assert : TestPlatform.UnitTestFramework.Assert { }
+    public class Assert : TestPlatform.UnitTestFramework.Assert { }
 }
 
 namespace LiteDB.Tests
 {
-   public class TestPlatform
-   {
-      public static string GetTempFilePath(string ext)
-      {
-         return string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
-      }
+    public class TestBase
+    {
+        public TestBase()
+        {
+            LitePlatform.Initialize(new LitePlatformWindowStore());
+        }
+    }
 
-      public static long GetFileSize(string filename)
-      {
-         var folder = ApplicationData.Current.TemporaryFolder;
-         var file = AsyncHelpers.RunSync(folder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists));
+    public class TestPlatform
+    {
+        public static string GetTempFilePath(string ext)
+        {
+            var folder = ApplicationData.Current.TemporaryFolder;
 
-         var properties = AsyncHelpers.RunSync(file.GetBasicPropertiesAsync());
+            return string.Format(folder.Path + @"\test-{0}.{1}", Guid.NewGuid(), ext);
+        }
 
-         return (long) properties.Size;
-      }
+        public static long GetFileSize(string filename)
+        {
+            var folder = ApplicationData.Current.TemporaryFolder;
+            var file = AsyncHelpers.RunSync(folder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists));
 
-      public static string FileWriteAllText(string fileName, string content, string customPath = null)
-      {
-         var folder = ApplicationData.Current.TemporaryFolder;
+            var properties = AsyncHelpers.RunSync(file.GetBasicPropertiesAsync());
 
-         if (!string.IsNullOrEmpty(customPath))
-         {
-            folder = AsyncHelpers.RunSync(folder.CreateFolderAsync(customPath, CreationCollisionOption.OpenIfExists));
-         }
+            return (long)properties.Size;
+        }
 
-         var file = AsyncHelpers.RunSync(folder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists));
+        public static string FileWriteAllText(string fileName, string content)
+        {
 
-         var bytes = Encoding.UTF8.GetBytes(content);
-         
-         AsyncHelpers.RunSync(async () => await FileIO.WriteBytesAsync(file, bytes));
+            if (!string.IsNullOrEmpty(customPath))
+            {
+                folder = AsyncHelpers.RunSync(folder.CreateFolderAsync(customPath, CreationCollisionOption.OpenIfExists));
+            }
 
-         return file.Path;
-      }
+            var file = AsyncHelpers.RunSync(folder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists));
 
-      public static void DeleteFile(string path)
-      {
-         var folder = ApplicationData.Current.TemporaryFolder;
+            var bytes = Encoding.UTF8.GetBytes(content);
 
-         path = path.Replace(folder.Path, "");
+            AsyncHelpers.RunSync(async () => await FileIO.WriteBytesAsync(file, bytes));
 
-         var file = AsyncHelpers.RunSync(ApplicationData.Current.TemporaryFolder.GetFileAsync(path));
+            return file.Path;
+        }
 
-         file.DeleteAsync();
-      }
+        public static void DeleteFile(string path)
+        {
+            var folder = ApplicationData.Current.TemporaryFolder;
 
-      public static string FileReadAllText(string path)
-      {
+            path = path.Replace(folder.Path, "");
 
-         var file = AsyncHelpers.RunSync(ApplicationData.Current.TemporaryFolder.GetFileAsync(path));
+            var file = AsyncHelpers.RunSync(ApplicationData.Current.TemporaryFolder.GetFileAsync(path));
 
-         var buffer = AsyncHelpers.RunSync(FileIO.ReadBufferAsync(file));
+            file.DeleteAsync();
+        }
 
-         var arr = buffer.ToArray();
+        public static string FileReadAllText(string path)
+        {
 
-         var res = Encoding.UTF8.GetString(arr, 0, arr.Length);
+            var file = AsyncHelpers.RunSync(ApplicationData.Current.TemporaryFolder.GetFileAsync(path));
 
-         return res;
+            var buffer = AsyncHelpers.RunSync(FileIO.ReadBufferAsync(file));
 
-      }
-   }
+            var arr = buffer.ToArray();
+
+            var res = Encoding.UTF8.GetString(arr, 0, arr.Length);
+
+            return res;
+
+        }
+    }
 }
