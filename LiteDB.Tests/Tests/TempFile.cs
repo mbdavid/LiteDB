@@ -11,8 +11,8 @@ namespace LiteDB.Tests
 
         public TempFile(string connectionString = null, string ext = "db")
         {
-            this.Filename = string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
-            this.ConnectionString = "filename=" + TestPlatform.GetFullPath(this.Filename) + ";" + connectionString;
+            this.Filename = TestPlatform.GetFullPath(string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
+            this.ConnectionString = "filename=" + this.Filename + ";" + connectionString;
         }
 
         public void Dispose()

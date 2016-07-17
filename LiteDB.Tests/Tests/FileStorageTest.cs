@@ -20,7 +20,7 @@ namespace LiteDB.Tests
                 using (var db = new LiteDatabase(new MemoryStream()))
                 {
                     // upload
-                    db.FileStorage.Upload("Core.dll", TestPlatform.GetFullPath(dll.Filename));
+                    db.FileStorage.Upload("Core.dll", dll.Filename);
 
                     // exits
                     var exists = db.FileStorage.Exists("Core.dll");
