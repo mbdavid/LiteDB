@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LiteDB
 {
-    public static class DictionaryExtensions
+    internal static class DictionaryExtensions
     {
         public static ushort NextIndex<T>(this Dictionary<ushort, T> dict)
         {

@@ -3,9 +3,9 @@ using System.Text;
 
 namespace LiteDB
 {
-   public
+    public
 #if NETFULL
-      unsafe 
+      unsafe
 #endif
         class ByteReader
     {
@@ -25,7 +25,7 @@ namespace LiteDB
             _pos += length;
         }
 
-#region Native data types
+        #region Native data types
 
         public Byte ReadByte()
         {
@@ -169,9 +169,9 @@ namespace LiteDB
             return buffer;
         }
 
-#endregion Native data types
+        #endregion Native data types
 
-#region Extended types
+        #region Extended types
 
         public string ReadString()
         {
@@ -237,6 +237,6 @@ namespace LiteDB
             throw new NotImplementedException();
         }
 
-#endregion Extended types
+        #endregion Extended types
     }
 }

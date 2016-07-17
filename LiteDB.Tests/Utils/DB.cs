@@ -11,7 +11,7 @@ namespace LiteDB.Tests
         // Get a unique database name in TestResults folder
         public static string RandomFile(string ext = "db")
         {
-           var path = TestPlatform.GetTempFilePath(ext);
+            var path = TestPlatform.GetTempFilePath(ext);
 
             _files.Add(path);
 
@@ -20,7 +20,7 @@ namespace LiteDB.Tests
 
         public static void DeleteFiles()
         {
-            foreach(var f in _files)
+            foreach (var f in _files)
             {
                 TestPlatform.DeleteFile(f);
             }

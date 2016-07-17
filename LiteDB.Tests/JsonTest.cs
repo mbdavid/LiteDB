@@ -5,7 +5,7 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class JsonTest : TestBase
-   {
+    {
         private BsonDocument CreateDoc()
         {
             // create same object, but using BsonDocument

@@ -2,80 +2,53 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LiteDB.Interfaces;
-#if PCL
-using System.Reflection;
-#endif
+using LiteDB.Shell.Commands;
 
 namespace LiteDB.Shell
 {
-    public class LiteShell
+    internal class LiteShell
     {
         private static List<IShellCommand> _commands = new List<IShellCommand>();
 
         static LiteShell()
         {
-            var type = typeof(IShellCommand);
-#if NETFULL
-            var types = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes())
-                .Where(p => type.IsAssignableFrom(p) && p.IsClass);
-#elif PCL
-           var shellCommandTypeInfo = type.GetTypeInfo();
+            #region Register shell commands
 
-           var assembly = typeof(LiteShell).GetTypeInfo().Assembly;
+            _commands.Add(new CollectionBulk());
+            _commands.Add(new CollectionCount());
+            _commands.Add(new CollectionDelete());
+            _commands.Add(new CollectionDrop());
+            _commands.Add(new CollectionDropIndex());
+            _commands.Add(new CollectionEnsureIndex());
+            _commands.Add(new CollectionFind());
+            _commands.Add(new CollectionIndexes());
+            _commands.Add(new CollectionInsert());
+            _commands.Add(new CollectionMax());
+            _commands.Add(new CollectionMin());
+            _commands.Add(new CollectionRename());
+            _commands.Add(new CollectionStats());
+            _commands.Add(new CollectionUpdate());
 
-         var types = assembly.ExportedTypes
-               .Where(p =>
-               {
-                  var typeInfo = p.GetTypeInfo();
+            _commands.Add(new FileDelete());
+            _commands.Add(new FileDownload());
+            _commands.Add(new FileFind());
+            _commands.Add(new FileUpdate());
+            _commands.Add(new FileUpload());
 
-                  if (!typeInfo.IsClass)
-                     return false;
+            _commands.Add(new Comment());
+            _commands.Add(new DbVersion());
+            _commands.Add(new DiskDump());
+            _commands.Add(new ShowCollections());
+            _commands.Add(new Shrink());
 
-                  return shellCommandTypeInfo.IsAssignableFrom(typeInfo);
-               });
-#endif
+            _commands.Add(new BeginTrans());
+            _commands.Add(new CommitTrans());
+            _commands.Add(new RollbackTrans());
 
-            foreach (var t in types)
-            {
-                var cmd = (IShellCommand)Activator.CreateInstance(t);
-                _commands.Add(cmd);
-            }
+#endregion
         }
 
-       private DbEngine m_engine;
-
-       public LiteShell(ILiteDatabase database)
-       {
-          m_engine = database.Engine;
-       }
-
-      /// <summary>
-      /// Run a command shell
-      /// </summary>
-      public BsonValue Run(string command)
-      {
-         return Run(m_engine, command);
-      }
-
-
-      /// <summary>
-      /// Run a command shell formating $0, $1 to JSON string args item index
-      /// </summary>
-      public BsonValue Run(string command, params BsonValue[] args)
-      {
-         var cmd = Regex.Replace(command, @"\$(\d+)", (k) =>
-         {
-            var index = Convert.ToInt32(k.Groups[1].Value);
-            return JsonSerializer.Serialize(args[index]);
-         });
-
-         return Run(m_engine, cmd);
-      }
-
-
-      public BsonValue Run(DbEngine engine, string command)
+        public BsonValue Run(DbEngine engine, string command)
         {
             if (string.IsNullOrEmpty(command)) return BsonValue.Null;
 

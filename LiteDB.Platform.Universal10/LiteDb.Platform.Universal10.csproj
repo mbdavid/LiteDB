@@ -131,7 +131,7 @@
     <EmbeddedResource Include="Properties\LiteDb.Platform.Universal10.rd.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
+    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
       <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
       <Name>LiteDB.Core</Name>
     </ProjectReference>

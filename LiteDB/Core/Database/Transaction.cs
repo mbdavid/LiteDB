@@ -7,9 +7,9 @@ namespace LiteDB
         /// <summary>
         /// Begin a exclusive read/write transaction
         /// </summary>
-        public void BeginTrans()
+        public LiteTransaction BeginTrans()
         {
-            _engine.Value.BeginTrans();
+            return _engine.Value.BeginTrans();
         }
     }
 }

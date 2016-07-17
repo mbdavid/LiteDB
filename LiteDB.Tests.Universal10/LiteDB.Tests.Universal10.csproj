@@ -206,20 +206,6 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
-      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
-      <Name>LiteDB.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Platform.Universal81\LiteDB.Platform.Universal81.csproj">
-      <Project>{87bfcc95-a361-47ee-946d-337eabaf8f0f}</Project>
-      <Name>LiteDB.Platform.Universal81</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Shell\LiteDB.Shell.csproj">
-      <Project>{4d615f2e-bc3d-4f5c-bd75-b6fab2b55a5c}</Project>
-      <Name>LiteDB.Shell</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

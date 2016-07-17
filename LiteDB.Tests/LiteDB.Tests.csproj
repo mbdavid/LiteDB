@@ -85,9 +85,9 @@
     <Compile Include="IncludeTest.cs" />
     <Compile Include="ShellTest.cs" />
     <Compile Include="StreamDb_Test.cs" />
-    <Compile Include="TestBase.cs" />
+    <Compile Include="Utils\TestBase.cs" />
     <Compile Include="TestPlatform.cs" />
-    <Compile Include="DB.cs" />
+    <Compile Include="Utils\DB.cs" />
     <Compile Include="IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

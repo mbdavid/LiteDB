@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using LiteDB.Core;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
@@ -143,15 +143,15 @@ namespace LiteDB
             }
         }
 
-      /// <summary>
-      /// Save file content to a external file
-      /// </summary>
-      public void SaveAs(string filename, bool overwritten = true)
-      {
-         using (var file = LiteDbPlatform.Platform.FileHandler.CreateFile(filename, overwritten))
-         {
-            OpenRead().CopyTo(file);
-         }
-      }
-   }
+        /// <summary>
+        /// Save file content to a external file
+        /// </summary>
+        public void SaveAs(string filename, bool overwritten = true)
+        {
+            using (var file = LitePlatform.Platform.FileHandler.CreateFile(filename, overwritten))
+            {
+                OpenRead().CopyTo(file);
+            }
+        }
+    }
 }

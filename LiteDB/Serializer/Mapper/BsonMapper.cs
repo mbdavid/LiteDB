@@ -70,7 +70,7 @@ namespace LiteDB
             this.ResolvePropertyName = (s) => s;
 
             #region Register CustomTypes
-         
+
             RegisterType(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
             RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
 
@@ -174,7 +174,7 @@ namespace LiteDB
             return new EntityBuilder<T>(this);
         }
 
-#region Predefinded Property Resolvers
+        #region Predefinded Property Resolvers
 
         public void UseCamelCase()
         {
@@ -188,7 +188,7 @@ namespace LiteDB
             this.ResolvePropertyName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
         }
 
-#endregion Predefinded Property Resolvers
+        #endregion Predefinded Property Resolvers
 
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results

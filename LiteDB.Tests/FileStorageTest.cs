@@ -8,14 +8,14 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class FileStorage_Test : TestBase
-   {
+    {
         [TestMethod]
         public void FileStorage_InsertDelete()
         {
             // create a dump file
             var coreDllPath = TestPlatform.FileWriteAllText("Core.dll", "FileCoreContent");
 
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 // upload
                 db.FileStorage.Upload("Core.dll", coreDllPath);
@@ -37,7 +37,7 @@ namespace LiteDB.Tests
                 // download
                 var mem = new MemoryStream();
                 db.FileStorage.Download("Core.dll", mem);
-                var content = Encoding.UTF8.GetString(mem.ToArray(),0, (int)mem.Length);
+                var content = Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length);
                 Assert.AreEqual("FileCoreContent", content);
 
                 // delete
@@ -49,44 +49,44 @@ namespace LiteDB.Tests
                 Assert.AreEqual(false, deleted2);
             }
 
-         TestPlatform.DeleteFile("Core.dll");
+            TestPlatform.DeleteFile("Core.dll");
         }
 
-      [TestMethod]
+        [TestMethod]
         public void FileStoage_50files()
         {
             var file5mb = new byte[5 * 1024 * 1024];
             var filedb = DB.RandomFile();
 
-         using (var db = new LiteDatabase(filedb))
-			{
-                for(var i = 0; i < 50; i++)
-				{
-					db.FileStorage.Upload("file_" + i, new MemoryStream(file5mb));
+            using (var db = new LiteDatabase(filedb))
+            {
+                for (var i = 0; i < 50; i++)
+                {
+                    db.FileStorage.Upload("file_" + i, new MemoryStream(file5mb));
                 }
             }
 
-			// filedb must have, at least, 250mb
-			Assert.IsTrue(TestPlatform.GetFileSize(filedb) > (250 * 1024 * 1024), "Datafile must have more than 250Mb");
+            // filedb must have, at least, 250mb
+            Assert.IsTrue(TestPlatform.GetFileSize(filedb) > (250 * 1024 * 1024), "Datafile must have more than 250Mb");
 
-			var binFiles = new List<string>();
+            var binFiles = new List<string>();
 
-         using (var db = new LiteDatabase(filedb))
-			{
-				foreach (var f in db.FileStorage.FindAll())
-				{
-					var file = DB.RandomFile("bin");
-					binFiles.Add(file);
-					f.SaveAs(file);
-				}
-			}
+            using (var db = new LiteDatabase(filedb))
+            {
+                foreach (var f in db.FileStorage.FindAll())
+                {
+                    var file = DB.RandomFile("bin");
+                    binFiles.Add(file);
+                    f.SaveAs(file);
+                }
+            }
 
-			TestPlatform.DeleteFile(filedb);
+            TestPlatform.DeleteFile(filedb);
 
-			foreach (var f in binFiles)
-			{
-				TestPlatform.DeleteFile(f);
-			}
+            foreach (var f in binFiles)
+            {
+                TestPlatform.DeleteFile(f);
+            }
         }
 
     }

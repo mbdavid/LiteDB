@@ -1,5 +1,4 @@
 ﻿using System;
-using LiteDB.Interfaces;
 
 namespace LiteDB
 {
@@ -73,9 +72,25 @@ namespace LiteDB
         /// <summary>
         /// Starts a new write exclusive transaction
         /// </summary>
-        public Transaction BeginTrans()
+        public LiteTransaction BeginTrans()
         {
             return _transaction.Begin(false);
+        }
+
+        /// <summary>
+        /// Commit current transactions
+        /// </summary>
+        public void Commit()
+        {
+            _transaction.Complete();
+        }
+
+        /// <summary>
+        /// Rollback all open transactions
+        /// </summary>
+        public void Rollback()
+        {
+            _transaction.Abort();
         }
 
         /// <summary>

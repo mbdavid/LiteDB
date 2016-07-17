@@ -42,24 +42,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Core\EmitReflectionHandler.cs">
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\EmitReflectionHandler.cs">
       <Link>EmitReflectionHandler.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Core\LiteDbPlatformFullDotNet.cs">
-      <Link>LiteDbPlatformFullDotNet.cs</Link>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\FileHandler.cs">
+      <Link>FileHandler.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Disks\FileDiskServiceDotNet.cs">
-      <Link>FileDiskServiceDotNet.cs</Link>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\LitePlatformFullDotNet.cs">
+      <Link>LitePlatformFullDotNet.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryption.cs">
+      <Link>RijndaelEncryption.cs</Link>
+    </Compile>
+    <Compile Include="..\LiteDB\Plataform\FullDotNet\RijndaelEncryptionFactory.cs">
+      <Link>RijndaelEncryptionFactory.cs</Link>
     </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="..\LiteDB\Utils\SimpleAES.cs">
-      <Link>SimpleAES.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
+    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
       <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
       <Name>LiteDB.Core</Name>
     </ProjectReference>

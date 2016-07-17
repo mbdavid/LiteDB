@@ -1,4 +1,6 @@
-﻿namespace LiteDB
+﻿using System;
+
+namespace LiteDB
 {
     /// <summary>
     /// A specific exception when a query didnt found an index

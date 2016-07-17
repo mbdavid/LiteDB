@@ -37,7 +37,7 @@ namespace LiteDB.Tests
                 (c) => "doc-" + c.Count()
             );
 
-         using (var db = new LiteDatabase(new MemoryStream(), mapper))
+            using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var cs_int = db.GetCollection<EntityInt>("int");
                 var cs_guid = db.GetCollection<EntityGuid>("guid");

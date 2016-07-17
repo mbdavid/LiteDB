@@ -43,20 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Core\EmitReflectionHandler.cs">
-      <Link>EmitReflectionHandler.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Core\LiteDbPlatformFullDotNet.cs">
-      <Link>LiteDbPlatformFullDotNet.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\DbEngine\Disks\FileDiskServiceDotNet.cs">
-      <Link>FileDiskServiceDotNet.cs</Link>
-    </Compile>
     <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\LiteDB\Utils\SimpleAES.cs">
-      <Link>SimpleAES.cs</Link>
     </Compile>
     <Compile Include="Resources\Resource.Designer.cs" />
   </ItemGroup>
@@ -67,7 +55,7 @@
     <AndroidResource Include="Resources\Values\Strings.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
+    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
       <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
       <Name>LiteDB.Core</Name>
     </ProjectReference>

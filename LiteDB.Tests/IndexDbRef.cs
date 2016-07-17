@@ -20,12 +20,12 @@ namespace LiteDB.Tests
 
     public class Hospital : LiteDatabase
     {
-      public Hospital(string connectionString, BsonMapper mapper = null) 
-         : base(connectionString, mapper)
-       {
-      }
+        public Hospital(string connectionString, BsonMapper mapper = null)
+           : base(connectionString, mapper)
+        {
+        }
 
-      public LiteCollection<Patient> Patients { get { return this.GetCollection<Patient>("Patient"); } }
+        public LiteCollection<Patient> Patients { get { return this.GetCollection<Patient>("Patient"); } }
 
         public LiteCollection<Ward> Wards { get { return this.GetCollection<Ward>("Ward"); } }
     }
@@ -36,16 +36,16 @@ namespace LiteDB.Tests
         [TestMethod]
         public void IndexDbRef_Order()
         {
-           var dbFile = DB.RandomFile();
+            var dbFile = DB.RandomFile();
 
-           var bsonMapper = new BsonMapper();
+            var bsonMapper = new BsonMapper();
 
-         bsonMapper.Entity<Patient>()
-       //.Index(x => x.Ward.Id)
-       //.Index("Ward.Id")
-       .DbRef(x => x.Ward, "Ward");
+            bsonMapper.Entity<Patient>()
+          //.Index(x => x.Ward.Id)
+          //.Index("Ward.Id")
+          .DbRef(x => x.Ward, "Ward");
 
-         using (var db = new Hospital(dbFile, bsonMapper))
+            using (var db = new Hospital(dbFile, bsonMapper))
             {
                 var w1 = new Ward { Id = 1, Name = "Ward 1" };
                 var w2 = new Ward { Id = 2, Name = "Ward 2" };
@@ -68,8 +68,8 @@ namespace LiteDB.Tests
                 Assert.AreEqual(2, query.Count());
             }
 
-         TestPlatform.DeleteFile(dbFile);
+            TestPlatform.DeleteFile(dbFile);
 
-      }
-   }
+        }
+    }
 }

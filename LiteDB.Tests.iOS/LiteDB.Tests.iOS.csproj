@@ -189,19 +189,5 @@
     </Compile>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
-      <Project>{59BA13E6-C19B-4D8B-B504-FB5D0A1E27F3}</Project>
-      <Name>LiteDB.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Platform.iOS\LiteDB.Platform.iOS.csproj">
-      <Project>{7F334F08-A934-4D91-ABBE-3F29A4AF3C15}</Project>
-      <Name>LiteDB.Platform.iOS</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Shell\LiteDB.Shell.csproj">
-      <Project>{4D615F2E-BC3D-4F5C-BD75-B6FAB2B55A5C}</Project>
-      <Name>LiteDB.Shell</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

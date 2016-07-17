@@ -662,6 +662,6 @@ namespace LiteDB
             return sb.ToString();
         }
 
-#endregion GetBytesCount, Normalize
+        #endregion GetBytesCount, Normalize
     }
 }

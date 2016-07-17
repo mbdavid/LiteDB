@@ -158,20 +158,6 @@
   <ItemGroup>
     <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
-      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
-      <Name>LiteDB.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Platform.Android\LiteDB.Platform.Android.csproj">
-      <Project>{4510a5de-d86f-4f96-be1a-ec227a42210d}</Project>
-      <Name>LiteDB.Platform.Android</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LiteDB.Shell\LiteDB.Shell.csproj">
-      <Project>{4d615f2e-bc3d-4f5c-bd75-b6fab2b55a5c}</Project>
-      <Name>LiteDB.Shell</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

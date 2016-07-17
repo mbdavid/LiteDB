@@ -6,11 +6,11 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class IndexOrderTest : TestBase
-   {
+    {
         [TestMethod]
         public void Index_Order()
         {
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection<BsonDocument>("order");
 

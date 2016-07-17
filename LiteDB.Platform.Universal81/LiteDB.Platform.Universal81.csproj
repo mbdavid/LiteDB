@@ -34,13 +34,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .NET Framework is automatically included -->
-    <ProjectReference Include="..\LiteDB.Core\LiteDB.Core.csproj">
-      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
-      <Name>LiteDB.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <TargetPlatform Include="Windows, Version=8.1" />
     <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
   </ItemGroup>
@@ -52,7 +45,7 @@
     <Compile Include="EncryptionFactory.cs" />
     <Compile Include="FileDiskService.cs" />
     <Compile Include="FileHandlerWindowsStore.cs" />
-    <Compile Include="LiteDbPlatformWindowsStore.cs" />
+    <Compile Include="LitePlatformWindowsStore.cs" />
     <Compile Include="SimpleAES.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -63,6 +56,12 @@
       <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
+      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
+      <Name>LiteDB.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

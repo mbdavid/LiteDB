@@ -5,7 +5,7 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class EncryptedTest : TestBase
-   {
+    {
         [TestMethod]
         public void Encrypted_Order()
         {
@@ -18,8 +18,7 @@ namespace LiteDB.Tests
             // create a database with no password - plain data
             using (var db = new LiteDatabase(plain))
             {
-            var shell = new LiteShell(db);
-                shell.Run("db.col1.insert {name:\"Mauricio David\"}");
+                db.Run("db.col1.insert {name:\"Mauricio David\"}");
             }
 
             // read datafile to find "Mauricio" string
@@ -27,9 +26,8 @@ namespace LiteDB.Tests
 
             // create a database with password
             using (var db = new LiteDatabase(cs_enc))
-         {
-            var shell = new LiteShell(db);
-            shell.Run("db.col1.insert {name:\"Mauricio David\"}");
+            {
+                db.Run("db.col1.insert {name:\"Mauricio David\"}");
             }
 
             // test if is possible find "Mauricio" string
@@ -39,20 +37,19 @@ namespace LiteDB.Tests
             using (var db = new LiteDatabase(cs_enc_wrong))
             {
                 try
-            {
-               var shell = new LiteShell(db);
-               shell.Run("show collections");
+                {
+                    db.Run("show collections");
 
                     Assert.Fail(); // can't work
                 }
-                catch(LiteException ex)
+                catch (LiteException ex)
                 {
                     Assert.IsTrue(ex.ErrorCode == 123); // wrong password
                 }
             }
 
-			TestPlatform.DeleteFile(plain);
-			TestPlatform.DeleteFile(encrypt);
+            TestPlatform.DeleteFile(plain);
+            TestPlatform.DeleteFile(encrypt);
         }
     }
 }

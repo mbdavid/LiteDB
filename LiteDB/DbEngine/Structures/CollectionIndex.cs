@@ -1,8 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-   public class CollectionIndex
+    public class CollectionIndex
     {
         public static Regex IndexPattern = new Regex(@"[\w-$\.]+$");
 

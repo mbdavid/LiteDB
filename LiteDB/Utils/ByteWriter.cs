@@ -3,12 +3,12 @@ using System.Text;
 
 namespace LiteDB
 {
-   public
+    public
 #if NETFULL
-       unsafe 
+       unsafe
 #endif
 
-   class ByteWriter
+    class ByteWriter
     {
         private byte[] _buffer;
         private int _pos;
@@ -34,7 +34,7 @@ namespace LiteDB
             _pos += length;
         }
 
-#region Native data types
+        #region Native data types
 
         public void Write(Byte value)
         {
@@ -192,9 +192,9 @@ namespace LiteDB
             _pos += value.Length;
         }
 
-#endregion Native data types
+        #endregion Native data types
 
-#region Extended types
+        #region Extended types
 
         public void Write(string value)
         {
@@ -262,6 +262,6 @@ namespace LiteDB
             }
         }
 
-#endregion Extended types
+        #endregion Extended types
     }
 }

@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
-using LiteDB.Core;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
-    public static class IOExceptionExtensions
+    internal static class IOExceptionExtensions
     {
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
@@ -16,7 +16,7 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
-                    LiteDbPlatform.Platform.WaitFor(timer);
+                    LitePlatform.Platform.WaitFor(timer);
                 }
             }
             else

@@ -75,7 +75,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-	public class BsonFieldTest : TestBase
+    public class BsonFieldTest : TestBase
     {
         private MyBsonFieldTestClass CreateModel()
         {

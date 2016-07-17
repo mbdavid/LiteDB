@@ -1,9 +1,8 @@
 ﻿using System;
-using LiteDB.Interfaces;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
-
     /// <summary>
     /// Internal representation for a .NET Property mapped to BsonDocument
     /// </summary>

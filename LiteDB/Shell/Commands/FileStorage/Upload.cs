@@ -1,5 +1,5 @@
-﻿#if NETFULL
-using System.IO;
+﻿using System.IO;
+using LiteDB.Plataform;
 
 namespace LiteDB.Shell.Commands
 {
@@ -14,10 +14,11 @@ namespace LiteDB.Shell.Commands
         {
             var fs = new LiteFileStorage(engine);
             var id = this.ReadId(s);
+            var fileHandler = LitePlatform.Platform.FileHandler;
 
-            var filename = Path.GetFullPath(s.Scan(@"\s*.*").Trim());
+            var filename = s.Scan(@"\s*.*").Trim();
 
-            if (!File.Exists(filename)) throw new IOException("File " + filename + " not found");
+            if (!fileHandler.FileExists(filename)) throw new IOException("File " + filename + " not found");
 
             var file = fs.Upload(id, filename);
 
@@ -25,4 +26,3 @@ namespace LiteDB.Shell.Commands
         }
     }
 }
-#endif

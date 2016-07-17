@@ -11,13 +11,13 @@ namespace LiteDB.Tests
         {
             var m = new MemoryStream();
 
-         using (var db = new LiteDatabase(m))
+            using (var db = new LiteDatabase(m))
             {
                 Assert.AreEqual(0, db.DbVersion);
                 db.DbVersion = 5;
             }
 
-         using (var db = new LiteDatabase(m))
+            using (var db = new LiteDatabase(m))
             {
                 Assert.AreEqual(5, db.DbVersion);
             }

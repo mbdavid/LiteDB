@@ -1,14 +1,13 @@
 ﻿using System.IO;
-using LiteDB.Core;
-using LiteDB.Interfaces;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
     /// <summary>
     /// The LiteDB database. Used for create a LiteDB instance and use all storage resoures. It's the database connection
     /// </summary>
-    public partial class LiteDatabase : ILiteDatabase
-   {
+    public partial class LiteDatabase
+    {
         private LazyLoad<DbEngine> _engine;
 
         private BsonMapper _mapper;
@@ -17,54 +16,54 @@ namespace LiteDB
 
         public Logger Log { get { return _log; } }
 
-       public DbEngine Engine
-       {
-          get { return _engine.Value; }
-       }
-      
-      /// <summary>
-      /// Starts LiteDB database using a connection string for filesystem database
-      /// </summary>
-      public LiteDatabase(string connectionString, BsonMapper mapper = null)
-      {
-         var conn = new ConnectionString(connectionString);
-         CreateEngine(LiteDbPlatform.Platform.CreateFileDiskService(conn, _log), mapper);
-      }
+        /// <summary>
+        /// Starts LiteDB database using a connection string for filesystem database
+        /// </summary>
+        public LiteDatabase(string connectionString, BsonMapper mapper = null)
+        {
+            LitePlatform.ThrowIfNotInitialized();
 
-      /// <summary>
-      /// Starts LiteDB database using a custom IDiskService
-      /// </summary>
-      public LiteDatabase(IDiskService diskService, BsonMapper mapper = null)
-      {
-         CreateEngine(diskService, mapper);
-      }
+            var conn = new ConnectionString(connectionString);
 
-       /// <summary>
-       /// Initialize database using any read/write Stream (like MemoryStream)
-       /// </summary>
-       public LiteDatabase(Stream stream, BsonMapper mapper = null)
-       {
-         CreateEngine(new StreamDiskService(stream), mapper);
-      }
+            _mapper = mapper ?? BsonMapper.Global;
 
-      public void CreateEngine(IDiskService diskService, BsonMapper mapper = null)
-      {
-         LiteDbPlatform.ThrowIfNotInitialized();
+            var encrypted = !StringExtensions.IsNullOrWhiteSpace(conn.GetValue<string>("password", null));
 
-         _mapper = mapper ?? BsonMapper.Global;
-         _engine = new LazyLoad<DbEngine>(() => new DbEngine(diskService, _log));
-      }
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(encrypted ? new EncryptedDiskService(conn, _log) : new FileDiskService(conn, _log), _log));
+        }
 
-      /// <summary>
-      /// Get/Set database version
-      /// </summary>
-      public ushort DbVersion
-      {
-         get { return _engine.Value.ReadDbVersion(); }
-         set { _engine.Value.WriteDbVersion(value); }
-      }
+        /// <summary>
+        /// Starts LiteDB database using a custom IDiskService
+        /// </summary>
+        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null)
+        {
+            LitePlatform.ThrowIfNotInitialized();
 
-      public void Dispose()
+            _mapper = mapper ?? BsonMapper.Global;
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(diskService, _log));
+        }
+
+        /// <summary>
+        /// Initialize database using any read/write Stream (like MemoryStream)
+        /// </summary>
+        public LiteDatabase(Stream stream, BsonMapper mapper = null)
+        {
+            LitePlatform.ThrowIfNotInitialized();
+
+            _mapper = mapper ?? BsonMapper.Global;
+            _engine = new LazyLoad<DbEngine>(() => new DbEngine(new StreamDiskService(stream), _log));
+        }
+
+        /// <summary>
+        /// Get/Set database version
+        /// </summary>
+        public ushort DbVersion
+        {
+            get { return _engine.Value.ReadDbVersion(); }
+            set { _engine.Value.WriteDbVersion(value); }
+        }
+
+        public void Dispose()
         {
             if (_engine.IsValueCreated) _engine.Value.Dispose();
         }

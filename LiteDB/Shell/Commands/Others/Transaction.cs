@@ -2,8 +2,6 @@
 {
     public class BeginTrans : IShellCommand
     {
-        internal static Transaction _currentTransaction = null;
-
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"begin(\stransaction)?");
@@ -11,11 +9,7 @@
 
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            if (_currentTransaction != null)
-            {
-                throw new LiteException("Transaction already started");
-            }
-            _currentTransaction = engine.BeginTrans();
+            engine.BeginTrans();
 
             return BsonValue.Null;
         }
@@ -30,12 +24,7 @@
 
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            if (BeginTrans._currentTransaction == null)
-            {
-                throw new LiteException("No trnsaction started");
-            }
-            BeginTrans._currentTransaction.Commit();
-            BeginTrans._currentTransaction = null;
+            engine.Commit();
 
             return BsonValue.Null;
         }
@@ -50,12 +39,7 @@
 
         public BsonValue Execute(DbEngine engine, StringScanner s)
         {
-            if (BeginTrans._currentTransaction == null)
-            {
-                throw new LiteException("No trnsaction started");
-            }
-            BeginTrans._currentTransaction.Rollback();
-            BeginTrans._currentTransaction = null;
+            engine.Rollback();
 
             return BsonValue.Null;
         }

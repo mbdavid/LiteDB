@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public static class ExpressionExtensions
+    internal static class ExpressionExtensions
     {
         public static string GetPath<T, K>(this Expression<Func<T, K>> expr)
         {

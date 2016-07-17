@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Data;
-using LiteDB.Shell;
 
 namespace LiteDB.Tests
 {
@@ -12,12 +11,11 @@ namespace LiteDB.Tests
         [TestMethod]
         public void DataTable_Test()
         {
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
-            var shell = new LiteShell(db);
-                shell.Run("db.col1.insert {name:\"John Doe\"}");
-                shell.Run("db.col1.insert {name:\"Jonatan Doe\", age: 25}");
-                shell.Run("db.col1.insert {name:\"Maria Doe\", age: 32, active: false}");
+                db.Run("db.col1.insert {name:\"John Doe\"}");
+                db.Run("db.col1.insert {name:\"Jonatan Doe\", age: 25}");
+                db.Run("db.col1.insert {name:\"Maria Doe\", age: 32, active: false}");
 
                 var query = db.GetCollection("col1").FindAll();
 
@@ -40,9 +38,9 @@ namespace LiteDB.Tests
         {
             var dt = new DataTable();
 
-            foreach(var doc in docs)
+            foreach (var doc in docs)
             {
-               var dr = dt.NewRow();
+                var dr = dt.NewRow();
 
                 foreach (var key in doc.Keys)
                 {

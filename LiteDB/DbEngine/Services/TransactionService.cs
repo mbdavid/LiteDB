@@ -1,6 +1,4 @@
-﻿using LiteDB.Interfaces;
-using LiteDB.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -10,12 +8,10 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService
     {
-        internal Stack<Transaction> activeTransactions = new Stack<Transaction>();
-
         private IDiskService _disk;
         private PageService _pager;
         private CacheService _cache;
-        private int _level = 0;
+        private Stack<LiteTransaction> _activeTransactions = new Stack<LiteTransaction>();
 
         internal TransactionService(IDiskService disk, PageService pager, CacheService cache)
         {
@@ -29,17 +25,15 @@ namespace LiteDB
         /// <summary>
         /// Starts a new transaction - lock database to garantee that only one processes is in a transaction
         /// </summary>
-        public Transaction Begin(bool readOnly)
+        public LiteTransaction Begin(bool readOnly)
         {
-            lock (activeTransactions)
+            lock (_activeTransactions)
             {
-                _level++;
-
                 _disk.Open(readOnly);
 
-                var trans = new Transaction(this);
+                var trans = new LiteTransaction(this);
 
-                activeTransactions.Push(trans);
+                _activeTransactions.Push(trans);
 
                 return trans;
             }
@@ -48,12 +42,14 @@ namespace LiteDB
         /// <summary>
         /// Complete transaction commit dirty pages and closing data file
         /// </summary>
-        internal void Complete(Transaction trans)
+        public void Complete(LiteTransaction trans)
         {
-            lock (activeTransactions)
+            lock (_activeTransactions)
             {
                 popTopTransaction(trans);
-                if (activeTransactions.Count > 0) return;
+
+                // check if trans are last transaction in stack
+                if (_activeTransactions.Count > 0) return;
 
                 if (_cache.HasDirtyPages)
                 {
@@ -70,6 +66,14 @@ namespace LiteDB
                 // close datafile
                 _disk.Close();
             }
+        }
+
+        /// <summary>
+        /// Complete transaction using top transaction
+        /// </summary>
+        public void Complete()
+        {
+            this.Complete(_activeTransactions.Peek());
         }
 
         /// <summary>
@@ -96,16 +100,15 @@ namespace LiteDB
         /// <summary>
         /// Stop transaction, discard journal file and close database
         /// </summary>
-        public void Abort(Transaction trans)
+        public void Abort()
         {
-            lock (activeTransactions)
+            lock (_activeTransactions)
             {
-                // During an abort, and active transaction becomes invalid
-                // Mark them as such, and pull them off the stack
-                while (activeTransactions.Count > 0)
+                // during an abort, and active transaction becomes invalid
+                // mark them as such, and pull them off the stack
+                while (_activeTransactions.Count > 0)
                 {
-                    var temp = activeTransactions.Pop();
-                    temp.Cancel();
+                    _activeTransactions.Pop().Cancel();
                 }
 
                 // clear all pages from memory (return true if has dirty pages on cache)
@@ -120,80 +123,13 @@ namespace LiteDB
             }
         }
 
-        private void popTopTransaction(Transaction trans)
+        private void popTopTransaction(LiteTransaction trans)
         {
-            var temp = activeTransactions.Peek();
-            if (temp != trans)
-            {
-                throw new ArgumentException("Invalid transaction on top of stack");
-            }
-            activeTransactions.Pop();
-        }
-    }
+            var temp = _activeTransactions.Peek();
 
-    public enum TransactionState
-    {
-        Started,
-        Completed,
-        Canceled,
-        Aborted
-    }
-    public class Transaction : IDisposable
-    {
-        public TransactionState State { get; private set; }
-        private TransactionService _service;
-        internal Transaction(TransactionService _service)
-        {
-            this._service = _service;
-            State = TransactionState.Started;
-        }
+            if (temp != trans) throw new ArgumentException("Invalid transaction on top of stack");
 
-        public void Commit()
-        {
-            switch (State)
-            {
-                case TransactionState.Started:
-                    _service.Complete(this);
-                    State = TransactionState.Completed;
-                    break;
-                case TransactionState.Completed:
-                    break;
-                case TransactionState.Aborted:
-                    throw new ArgumentException("Transaction already aborted. Cannot be completed");
-                case TransactionState.Canceled:
-                    throw new TransactionCancelledException();
-            }
-        }
-
-        public void Rollback()
-        {
-            switch (State)
-            {
-                case TransactionState.Started:
-                    _service.Abort(this);
-                    State = TransactionState.Aborted;
-                    break;
-                case TransactionState.Aborted:
-                    break;
-                case TransactionState.Completed:
-                    throw new ArgumentException("Transaction already completed, cannot abort");
-                case TransactionState.Canceled:
-                    throw new TransactionCancelledException();
-            }
-        }
-
-        internal void Cancel()
-        {
-            this.State = TransactionState.Canceled;
-        }
-
-        public void Dispose()
-        {
-            if (State == TransactionState.Started)
-            {
-                // Only complete it if it's still in process
-                this.Commit();
-            }
+            _activeTransactions.Pop();
         }
     }
 }

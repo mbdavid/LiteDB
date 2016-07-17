@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using LiteDB.Interfaces;
 
 namespace LiteDB
 {

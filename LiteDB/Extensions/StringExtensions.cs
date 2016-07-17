@@ -1,10 +1,12 @@
-﻿namespace LiteDB
+﻿using System;
+
+namespace LiteDB
 {
-    public static class StringExtensions
+    internal static class StringExtensions
     {
         public static string ThrowIfEmpty(this string str, string message)
         {
-            if(str.IsNullOrWhiteSpace())
+            if (str.IsNullOrWhiteSpace())
             {
                 throw new LiteException(message);
             }

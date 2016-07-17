@@ -1,4 +1,6 @@
-﻿namespace LiteDB
+﻿using System;
+
+namespace LiteDB
 {
     internal class DataBlock
     {

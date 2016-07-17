@@ -4,59 +4,60 @@ using NUnit.Framework;
 
 namespace LiteDB.Tests
 {
-   class TestPlatform
-   {
-      public static string GetTempFilePath(string ext)
-      {
-         var path = Path.GetTempPath() + "/TestResults/";
+    class TestPlatform
+    {
+        public static string GetTempFilePath(string ext)
+        {
+            var path = Path.GetTempPath() + "/TestResults/";
 
-         Directory.CreateDirectory(path);
+            Directory.CreateDirectory(path);
 
-         return path + string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
-      }
+            return path + string.Format("test-{0}.{1}", Guid.NewGuid(), ext);
+        }
 
-      public static long GetFileSize(string filename)
-      {
-         return new FileInfo(filename).Length;
-      }
+        public static long GetFileSize(string filename)
+        {
+            return new FileInfo(filename).Length;
+        }
 
-      public static string FileWriteAllText(string fileName, string content, string customPath = null)
-      {
-         var path = customPath ?? Path.GetTempPath();
+        public static string FileWriteAllText(string fileName, string content, string customPath = null)
+        {
+            var path = customPath ?? Path.GetTempPath();
 
-         Directory.CreateDirectory(path);
+            Directory.CreateDirectory(path);
 
-         var filePath = path + fileName;
+            var filePath = path + fileName;
 
-         File.WriteAllText(filePath, content);
+            File.WriteAllText(filePath, content);
 
-         return filePath;
-      }
+            return filePath;
+        }
 
-      public static void DeleteFile(string path)
-      {
-         File.Delete(path);
-      }
+        public static void DeleteFile(string path)
+        {
+            File.Delete(path);
+        }
 
-      public static string FileReadAllText(string path)
-      {
-         return File.ReadAllText(path);
-      }
-   }
+        public static string FileReadAllText(string path)
+        {
+            return File.ReadAllText(path);
+        }
+    }
 }
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-   public class TestClassAttribute : TestFixtureAttribute { }
+    public class TestClassAttribute : TestFixtureAttribute { }
 
-   public class AssemblyInitializeAttribute : TestFixtureSetUpAttribute { }
-   public class AssemblyCleanupAttribute : TestFixtureTearDownAttribute { }
+    public class AssemblyInitializeAttribute : TestFixtureSetUpAttribute { }
 
-   public class ClassInitializeAttribute : SetUpAttribute { }
+    public class AssemblyCleanupAttribute : TestFixtureTearDownAttribute { }
 
-   public class ClassCleanupAttribute : TearDownAttribute { }
+    public class ClassInitializeAttribute : SetUpAttribute { }
 
-   public class TestMethodAttribute : TestAttribute { }
+    public class ClassCleanupAttribute : TearDownAttribute { }
 
-   public class Assert : NUnit.Framework.Assert { }
+    public class TestMethodAttribute : TestAttribute { }
+
+    public class Assert : NUnit.Framework.Assert { }
 }

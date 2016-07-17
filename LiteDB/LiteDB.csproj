@@ -52,10 +52,15 @@
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
     <Compile Include="Core\Collections\Stats.cs" />
-    <Compile Include="Core\LiteDbPlatform.cs" />
-    <Compile Include="Core\LiteDbPlatformBase.cs" />
-    <Compile Include="Core\LiteDbPlatformFullDotNet.cs" />
-    <Compile Include="Core\EmitReflectionHandler.cs" />
+    <Compile Include="Core\Database\Shell.cs" />
+    <Compile Include="Core\LitePlataform.cs" />
+    <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
+    <Compile Include="DbEngine\Structures\LiteTransaction.cs" />
+    <Compile Include="Plataform\FullDotNet\FileHandler.cs" />
+    <Compile Include="Plataform\FullDotNet\RijndaelEncryptionFactory.cs" />
+    <Compile Include="Utils\PreserveAttribute.cs" />
+    <Compile Include="Plataform\FullDotNet\LitePlatformFullDotNet.cs" />
+    <Compile Include="Plataform\FullDotNet\EmitReflectionHandler.cs" />
     <Compile Include="Core\Database\Collection.cs" />
     <Compile Include="Core\Database\Transaction.cs" />
     <Compile Include="Core\Database\Utils.cs" />
@@ -64,15 +69,14 @@
     <Compile Include="DbEngine\DbEngine\Shrink.cs" />
     <Compile Include="DbEngine\DbEngine\Dump.cs" />
     <Compile Include="DbEngine\DbEngine\Stats.cs" />
-    <Compile Include="DbEngine\Disks\FileDiskServiceDotNet.cs" />
-    <Compile Include="DbEngine\Disks\FileDiskServiceBase.cs" />
+    <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
     <Compile Include="Exceptions\PlatformNotInitializedException.cs" />
     <Compile Include="Extensions\ByteArrayExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
-    <Compile Include="Interfaces\IEncryption.cs" />
-    <Compile Include="Interfaces\IEncryptionFactory.cs" />
-    <Compile Include="Interfaces\IDiskService.cs" />
+    <Compile Include="Plataform\Interfaces\IEncryption.cs" />
+    <Compile Include="Plataform\Interfaces\IEncryptionFactory.cs" />
+    <Compile Include="DbEngine\Disks\IDiskService.cs" />
     <Compile Include="DbEngine\DbEngine\Delete.cs" />
     <Compile Include="DbEngine\DbEngine\Find.cs" />
     <Compile Include="DbEngine\DbEngine\Index.cs" />
@@ -82,11 +86,9 @@
     <Compile Include="DbEngine\DbEngine\Insert.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\Pages\EmptyPage.cs" />
-    <Compile Include="Interfaces\IFileHandler.cs" />
-    <Compile Include="Interfaces\IIndexService.cs" />
-    <Compile Include="Interfaces\ILiteDatabase.cs" />
-    <Compile Include="Interfaces\ILiteDbPlatform.cs" />
-    <Compile Include="Interfaces\IReflectionHandler.cs" />
+    <Compile Include="Plataform\Interfaces\IFileHandler.cs" />
+    <Compile Include="Plataform\Interfaces\ILitePlatform.cs" />
+    <Compile Include="Plataform\Interfaces\IReflectionHandler.cs" />
     <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
@@ -196,7 +198,7 @@
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Exceptions\LiteException.cs" />
     <Compile Include="Utils\Logger.cs" />
-    <Compile Include="Utils\SimpleAES.cs" />
+    <Compile Include="Plataform\FullDotNet\RijndaelEncryption.cs" />
     <Compile Include="Utils\StringScanner.cs" />
     <Compile Include="Exceptions\TransactionCancelledException.cs" />
   </ItemGroup>

@@ -7,7 +7,7 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class BigFileTest : TestBase
-   {
+    {
         //[TestMethod]
         public void BigFile_Test()
         {
@@ -18,7 +18,7 @@ namespace LiteDB.Tests
 
             while (GetFileSize(filename) < fileSize)
             {
-            using (var db = new LiteDatabase("journal=false;filename=" + filename))
+                using (var db = new LiteDatabase("journal=false;filename=" + filename))
                 {
                     var col = db.GetCollection("col1");
 

@@ -4,7 +4,7 @@ using System.Reflection;
 namespace LiteDB.Tests
 {
     [TestClass]
-	public class MapperInterfaceTest : TestBase
+    public class MapperInterfaceTest : TestBase
     {
         public interface IMyInterface
         {
@@ -50,7 +50,7 @@ namespace LiteDB.Tests
             var bson2 = mapper.ToDocument(c2); // add _type in Impl property
             var bson3 = mapper.ToDocument(c3); // do not add _type in Impl property
 
-            string dllName = this.GetType().GetTypeInfo().Assembly.GetName().Name;
+            string dllName = this.GetType().Assembly.GetName().Name;
 
             Assert.AreEqual("LiteDB.Tests.MapperInterfaceTest+MyClassImpl, " + dllName, bson1["Impl"].AsDocument["_type"].AsString);
             Assert.AreEqual("LiteDB.Tests.MapperInterfaceTest+MyClassImpl, " + dllName, bson2["Impl"].AsDocument["_type"].AsString);

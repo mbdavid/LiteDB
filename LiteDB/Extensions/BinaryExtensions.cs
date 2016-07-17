@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    public static class BinaryExtensions
+    internal static class BinaryExtensions
     {
         // https://code.google.com/p/freshbooks-api/source/browse/depend/NClassify.Generator/content/ByteArray.cs?r=bbb6c13ec7a01eae082796550f1ddc05f61694b8
         public static int BinaryCompareTo(this byte[] lh, byte[] rh)

@@ -7,11 +7,11 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class BulkTest : TestBase
-   {
+    {
         [TestMethod]
         public void Bulk_Test()
         {
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection("b");
 

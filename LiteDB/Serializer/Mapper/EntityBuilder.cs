@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LiteDB.Core;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
@@ -17,7 +17,7 @@ namespace LiteDB
 
         internal EntityBuilder(BsonMapper mapper)
         {
-            LiteDbPlatform.ThrowIfNotInitialized();
+            LitePlatform.ThrowIfNotInitialized();
 
             _mapper = mapper;
             _prop = mapper.GetPropertyMapper(typeof(T));

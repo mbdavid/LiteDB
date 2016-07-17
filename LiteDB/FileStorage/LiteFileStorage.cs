@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LiteDB.Core;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
@@ -56,7 +56,7 @@ namespace LiteDB
 
         public LiteFileInfo Upload(string id, string filename)
         {
-            using (var stream = LiteDbPlatform.Platform.FileHandler.ReadFileAsStream(filename))
+            using (var stream = LitePlatform.Platform.FileHandler.OpenFileAsStream(filename, true))
             {
                 return this.Upload(new LiteFileInfo(id, filename), stream);
             }
@@ -67,7 +67,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string filename)
         {
-         using (var stream = LiteDbPlatform.Platform.FileHandler.ReadFileAsStream(filename))
+            using (var stream = LitePlatform.Platform.FileHandler.OpenFileAsStream(filename, true))
             {
                 return this.Upload(new LiteFileInfo(Path.GetFileName(filename), filename), stream);
             }
@@ -85,9 +85,9 @@ namespace LiteDB
             return true;
         }
 
-#endregion Upload
+        #endregion Upload
 
-#region Download
+        #region Download
 
         /// <summary>
         /// Copy all file content to a steam
@@ -127,9 +127,9 @@ namespace LiteDB
             return new LiteFileStream(_engine, entry);
         }
 
-#endregion Download
+        #endregion Download
 
-#region Find Files
+        #region Find Files
 
         /// <summary>
         /// Find a file inside datafile and returns FileEntry instance. Returns null if not found
@@ -178,9 +178,9 @@ namespace LiteDB
             return this.Find(null);
         }
 
-#endregion Find Files
+        #endregion Find Files
 
-#region Delete
+        #region Delete
 
         /// <summary>
         /// Delete a file inside datafile and all metadata related
@@ -207,6 +207,6 @@ namespace LiteDB
             return true;
         }
 
-#endregion Delete
+        #endregion Delete
     }
 }

@@ -32,7 +32,7 @@ namespace LiteDB.Tests
                 .Field(x => x.Customer, "cust")
                 .DbRef(x => x.Customer, "customers");
 
-         using (var db = new LiteDatabase(new MemoryStream(), mapper))
+            using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var customer = new DCustomer { Login = "jd", Name = "John Doe" };
                 var order = new DOrder { OrderNumber = 1, Customer = customer };

@@ -77,7 +77,7 @@ namespace LiteDB.Tests
         internal string MyInternalProperty { get; set; }
 
 #if NAMEVALUECOLLECTION
-      // special types
+        // special types
         public NameValueCollection MyNameValueCollection { get; set; }
 #endif
 
@@ -122,7 +122,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-	public class MapperTest : TestBase
+    public class MapperTest : TestBase
     {
         private MyClass CreateModel()
         {
@@ -169,47 +169,47 @@ namespace LiteDB.Tests
             return c;
         }
 
-       public BsonMapper CreateMapper()
-       {
-         var mapper = new BsonMapper();
-         mapper.UseLowerCaseDelimiter('_');
+        public BsonMapper CreateMapper()
+        {
+            var mapper = new BsonMapper();
+            mapper.UseLowerCaseDelimiter('_');
 
 #if NAMEVALUECOLLECTION
-         mapper.RegisterType(
-            nv =>
-            {
-               var doc = new BsonDocument();
-
-               foreach (var key in nv.AllKeys)
+            mapper.RegisterType(
+               nv =>
                {
-                  doc[key] = nv[key];
-               }
+                   var doc = new BsonDocument();
 
-               return doc;
-            },
+                   foreach (var key in nv.AllKeys)
+                   {
+                       doc[key] = nv[key];
+                   }
 
-            bson =>
-            {
-               var nv = new NameValueCollection();
-               var doc = bson.AsDocument;
+                   return doc;
+               },
 
-               foreach (var key in doc.Keys)
+               bson =>
                {
-                  nv[key] = doc[key].AsString;
-               }
+                   var nv = new NameValueCollection();
+                   var doc = bson.AsDocument;
 
-               return nv;
-            }
-         );
+                   foreach (var key in doc.Keys)
+                   {
+                       nv[key] = doc[key].AsString;
+                   }
+
+                   return nv;
+               }
+            );
 #endif
 
-          return mapper;
-       }
+            return mapper;
+        }
 
-      [TestMethod]
+        [TestMethod]
         public void Mapper_Test()
-      {
-         var mapper = CreateMapper();
+        {
+            var mapper = CreateMapper();
             var obj = CreateModel();
             var doc = mapper.ToDocument(obj);
 

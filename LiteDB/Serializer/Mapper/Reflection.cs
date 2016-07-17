@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LiteDB.Interfaces;
+using LiteDB.Plataform;
 
 namespace LiteDB
 {
     /// <summary>
     /// Helper class to get entity properties and map as BsonValue
     /// </summary>
-    public class Reflection
+    internal class Reflection
     {
-
         private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
 
         #region GetIdProperty
@@ -92,8 +91,8 @@ namespace LiteDB
                 var bsonField = prop.IsDefined(fieldAttr, false);
 
                 // create getter/setter IL function
-                var getter = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateGenericGetter(type, prop, bsonField);
-                var setter = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateGenericSetter(type, prop, bsonField);
+                var getter = LitePlatform.Platform.ReflectionHandler.CreateGenericGetter(type, prop, bsonField);
+                var setter = LitePlatform.Platform.ReflectionHandler.CreateGenericSetter(type, prop, bsonField);
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
@@ -147,7 +146,6 @@ namespace LiteDB
 
         #endregion GetProperties
 
-  
         /// <summary>
         /// Create a new instance from a Type
         /// </summary>
@@ -180,7 +178,7 @@ namespace LiteDB
                     {
                         if (type.GetTypeInfo().IsClass)
                         {
-                     _cacheCtor.Add(type, c = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateClass(type));
+                            _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateClass(type));
                         }
                         else if (type.GetTypeInfo().IsInterface) // some know interfaces
                         {
@@ -214,13 +212,13 @@ namespace LiteDB
                         }
                         else // structs
                         {
-                     _cacheCtor.Add(type, c = LiteDB.Core.LiteDbPlatform.Platform.ReflectionHandler.CreateStruct(type));
+                            _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateStruct(type));
                         }
 
                         return c();
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw LiteException.InvalidCtor(type);
                 }

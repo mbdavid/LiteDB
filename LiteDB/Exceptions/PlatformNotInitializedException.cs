@@ -1,10 +1,12 @@
-﻿namespace LiteDB
+﻿using System;
+
+namespace LiteDB
 {
-   public class PlatformNotInitializedException : LiteException
-   {
-      public PlatformNotInitializedException() 
-         : base("LiteDbPlatform not initialized.")
-      {
-      }
-   }
+    public class PlatformNotInitializedException : LiteException
+    {
+        public PlatformNotInitializedException()
+           : base("LiteDbPlatform not initialized.")
+        {
+        }
+    }
 }

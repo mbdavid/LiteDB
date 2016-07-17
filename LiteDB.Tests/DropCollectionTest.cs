@@ -5,11 +5,11 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class DropCollectionTest : TestBase
-   {
+    {
         [TestMethod]
         public void DropCollection_Test()
         {
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 Assert.IsFalse(db.CollectionExists("customerCollection"));
                 var collection = db.GetCollection<Customer>("customerCollection");

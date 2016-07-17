@@ -5,18 +5,18 @@ using System.Linq;
 
 namespace LiteDB.Tests
 {
-   public enum PlatformID
-   {
-      Win32S,
-      Win32Windows,
-      Win32NT,
-      WinCE,
-      Unix,
-      Xbox,
-      MacOSX,
-   }
+    public enum PlatformID
+    {
+        Win32S,
+        Win32Windows,
+        Win32NT,
+        WinCE,
+        Unix,
+        Xbox,
+        MacOSX,
+    }
 
-   public class User
+    public class User
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -50,11 +50,11 @@ namespace LiteDB.Tests
 
     [TestClass]
     public class LinqTest : TestBase
-   {
+    {
         [TestMethod]
         public void Linq_Test()
         {
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Xbox };
                 var c2 = new User { Id = 2, Name = "Malatruco", Active = false, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Win32NT };
@@ -76,20 +76,20 @@ namespace LiteDB.Tests
                 Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
                 Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == GetNumeria()));
                 Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == strNumeria));
-                
+
                 // == !=
                 Assert.AreEqual(1, col.Count(x => x.Id == 1));
                 Assert.AreEqual(3, col.Count(x => x.Id != 1));
-                
+
                 // member booleans
                 Assert.AreEqual(3, col.Count(x => !x.Active));
                 Assert.AreEqual(1, col.Count(x => x.Active));
-                
+
                 // methods
                 Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
                 Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
                 Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
-                
+
                 // > >= < <=
                 Assert.AreEqual(1, col.Count(x => x.Id > 3));
                 Assert.AreEqual(1, col.Count(x => x.Id >= 4));
@@ -116,7 +116,7 @@ namespace LiteDB.Tests
         [TestMethod]
         public void EnumerableTest()
         {
-         using (var db = new LiteDatabase(new MemoryStream()))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection<User>("Users");
 

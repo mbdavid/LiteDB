@@ -10,7 +10,7 @@ namespace LiteDB.Tests
 {
     [TestClass]
     public class ConcurrentTest : TestBase
-   {
+    {
         private Random _rnd = new Random();
 
         //[TestMethod]
@@ -19,15 +19,13 @@ namespace LiteDB.Tests
             var dbname = DB.RandomFile();
             var N = 300; // interate counter
 
-         var a = new LiteDatabase(dbname);
+            var a = new LiteDatabase(dbname);
             var b = new LiteDatabase(dbname);
             var c = new LiteDatabase(dbname);
             var d = new LiteDatabase(dbname);
 
-         var shell = new LiteShell(a);
-
-         // needs create file before tasks starts
-         shell.Run("db.x.insert {_id:1}");
+            // needs create file before tasks starts
+            a.Run("db.x.insert {_id:1}");
 
             // task A -> insert N documents
             var ta = Task.Factory.StartNew(() =>
@@ -96,7 +94,7 @@ namespace LiteDB.Tests
             c.Dispose();
             d.Dispose();
 
-         using (var db = new LiteDatabase(dbname))
+            using (var db = new LiteDatabase(dbname))
             {
                 var col = db.GetCollection("col1");
                 var doc = col.FindById(1);

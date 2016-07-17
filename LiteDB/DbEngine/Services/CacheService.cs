@@ -50,7 +50,7 @@ namespace LiteDB
             // do not cache extend page - never will be reused
             if (page.PageType != PageType.Extend)
             {
-                lock(_cache)
+                lock (_cache)
                 {
                     _cache[page.PageID] = page;
                 }
@@ -62,7 +62,7 @@ namespace LiteDB
         /// </summary>
         public void SetPageDirty(BasePage page)
         {
-            lock(_cache)
+            lock (_cache)
             {
                 // add page to dirty list
                 _dirty[page.PageID] = page;
@@ -89,7 +89,7 @@ namespace LiteDB
         /// </summary>
         public void CheckPoint()
         {
-            lock(_cache)
+            lock (_cache)
             {
                 // check if dirty pages pass limits, if pass, call dirty recicle and clear
                 if (_dirty.Count > MAX_CACHE_SIZE)
@@ -111,7 +111,7 @@ namespace LiteDB
         /// </summary>
         public bool Clear()
         {
-            lock(_cache)
+            lock (_cache)
             {
                 var hasDirty = _dirty.Count > 0;
 

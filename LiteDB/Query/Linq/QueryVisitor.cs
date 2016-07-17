@@ -221,7 +221,7 @@ namespace LiteDB
 
                     fields[i] = prop.FieldName;
 
-                    if(prop.FieldName == "_id" && isdbref)
+                    if (prop.FieldName == "_id" && isdbref)
                     {
                         isdbref = false;
                         fields[i] = "$id";

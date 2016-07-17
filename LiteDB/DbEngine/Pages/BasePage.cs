@@ -2,9 +2,9 @@
 
 namespace LiteDB
 {
-   public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
+    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 
-   public abstract class BasePage
+    public abstract class BasePage
     {
         #region Page Constants
 
