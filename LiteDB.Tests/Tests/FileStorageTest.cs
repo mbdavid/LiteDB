@@ -12,82 +12,76 @@ namespace LiteDB.Tests
         [TestMethod]
         public void FileStorage_InsertDelete()
         {
-            // create a dump file
-            var coreDllPath = TestPlatform.FileWriteAllText("Core.dll", "FileCoreContent");
-
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var dll = new TempFile())
             {
-                // upload
-                db.FileStorage.Upload("Core.dll", coreDllPath);
+                // create a dump file
+                TestPlatform.FileWriteAllText(dll.Filename, "FileCoreContent");
 
-                // exits
-                var exists = db.FileStorage.Exists("Core.dll");
-                Assert.AreEqual(true, exists);
+                using (var db = new LiteDatabase(new MemoryStream()))
+                {
+                    // upload
+                    db.FileStorage.Upload("Core.dll", dll.Filename);
 
-                // find
-                var files = db.FileStorage.Find("Core");
-                Assert.AreEqual(1, files.Count());
-                Assert.AreEqual("Core.dll", files.First().Id);
+                    // exits
+                    var exists = db.FileStorage.Exists("Core.dll");
+                    Assert.AreEqual(true, exists);
 
-                // find by id
-                var core = db.FileStorage.FindById("Core.dll");
-                Assert.IsNotNull(core);
-                Assert.AreEqual("Core.dll", core.Id);
+                    // find
+                    var files = db.FileStorage.Find("Core");
+                    Assert.AreEqual(1, files.Count());
+                    Assert.AreEqual("Core.dll", files.First().Id);
 
-                // download
-                var mem = new MemoryStream();
-                db.FileStorage.Download("Core.dll", mem);
-                var content = Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length);
-                Assert.AreEqual("FileCoreContent", content);
+                    // find by id
+                    var core = db.FileStorage.FindById("Core.dll");
+                    Assert.IsNotNull(core);
+                    Assert.AreEqual("Core.dll", core.Id);
 
-                // delete
-                var deleted = db.FileStorage.Delete("Core.dll");
-                Assert.AreEqual(true, deleted);
+                    // download
+                    var mem = new MemoryStream();
+                    db.FileStorage.Download("Core.dll", mem);
+                    var content = Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length);
+                    Assert.AreEqual("FileCoreContent", content);
 
-                // not found deleted
-                var deleted2 = db.FileStorage.Delete("Core.dll");
-                Assert.AreEqual(false, deleted2);
+                    // delete
+                    var deleted = db.FileStorage.Delete("Core.dll");
+                    Assert.AreEqual(true, deleted);
+
+                    // not found deleted
+                    var deleted2 = db.FileStorage.Delete("Core.dll");
+                    Assert.AreEqual(false, deleted2);
+                }
             }
-
-            TestPlatform.DeleteFile("Core.dll");
         }
 
         [TestMethod]
         public void FileStoage_50files()
         {
             var file5mb = new byte[5 * 1024 * 1024];
-            var filedb = DB.RandomFile();
 
-            using (var db = new LiteDatabase(filedb))
+            using (var tmp = new TempFile())
             {
-                for (var i = 0; i < 50; i++)
+                using (var db = new LiteDatabase(tmp.ConnectionString))
                 {
-                    db.FileStorage.Upload("file_" + i, new MemoryStream(file5mb));
+                    for (var i = 0; i < 50; i++)
+                    {
+                        db.FileStorage.Upload("file_" + i, new MemoryStream(file5mb));
+                    }
                 }
-            }
 
-            // filedb must have, at least, 250mb
-            Assert.IsTrue(TestPlatform.GetFileSize(filedb) > (250 * 1024 * 1024), "Datafile must have more than 250Mb");
+                // filedb must have, at least, 250mb
+                Assert.IsTrue(TestPlatform.GetFileSize(tmp.Filename) > (250 * 1024 * 1024), "Datafile must have more than 250Mb");
 
-            var binFiles = new List<string>();
-
-            using (var db = new LiteDatabase(filedb))
-            {
-                foreach (var f in db.FileStorage.FindAll())
+                using (var db = new LiteDatabase(tmp.ConnectionString))
                 {
-                    var file = DB.RandomFile("bin");
-                    binFiles.Add(file);
-                    f.SaveAs(file);
+                    foreach (var f in db.FileStorage.FindAll())
+                    {
+                        using (var ftmp = new TempFile())
+                        {
+                            f.SaveAs(ftmp.Filename);
+                        }
+                    }
                 }
-            }
-
-            TestPlatform.DeleteFile(filedb);
-
-            foreach (var f in binFiles)
-            {
-                TestPlatform.DeleteFile(f);
             }
         }
-
     }
 }

@@ -61,9 +61,6 @@
     <Compile Include="Tests\DataTableTest.cs" />
     <Compile Include="Tests\DiskFileTest.cs" />
     <Compile Include="Tests\FileStorageTest.cs" />
-    <Compile Include="Tests\IndexDbRef.cs" />
-    <Compile Include="Tests\InitializeTests.cs" />
-    <Compile Include="Tests\LongCountTest.cs" />
     <Compile Include="Tests\LoopTest.cs" />
     <Compile Include="Tests\BulkTest.cs" />
     <Compile Include="Tests\BsonTest.cs" />
@@ -84,9 +81,8 @@
     <Compile Include="Tests\IncludeTest.cs" />
     <Compile Include="Tests\ShellTest.cs" />
     <Compile Include="Tests\StreamDbTest.cs" />
-    <Compile Include="Utils\TestBase.cs" />
-    <Compile Include="Utils\TestPlatform.cs" />
-    <Compile Include="Utils\DB.cs" />
+    <Compile Include="Tests\TempFile.cs" />
+    <Compile Include="TestPlatform.cs" />
     <Compile Include="Tests\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

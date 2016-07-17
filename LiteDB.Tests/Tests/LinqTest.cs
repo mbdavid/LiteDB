@@ -13,7 +13,7 @@ namespace LiteDB.Tests
         WinCE,
         Unix,
         Xbox,
-        MacOSX,
+        MacOSX
     }
 
     public class User

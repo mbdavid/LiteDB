@@ -4,28 +4,26 @@ using System.Text;
 
 namespace LiteDB.Tests
 {
-    public class DB
+    public class TempFile : IDisposable
     {
-        public static List<string> _files = new List<string>();
+        public string Filename { get; private set; }
+        public string ConnectionString { get; private set; }
 
-        // Get a unique database name in TestResults folder
-        public static string RandomFile(string ext = "db")
+        public TempFile(string connectionString = null)
         {
-            var path = TestPlatform.GetTempFilePath(ext);
+            var path = this.Filename = TestPlatform.GetTempFilePath("db");
 
-            _files.Add(path);
-
-            return path;
+            this.Filename = path;
+            this.ConnectionString = connectionString == null ?
+                path : "filename=" + path + ";" + connectionString;
         }
 
-        public static void DeleteFiles()
+        public void Dispose()
         {
-            foreach (var f in _files)
-            {
-                TestPlatform.DeleteFile(f);
-            }
-            _files = new List<string>();
+            TestPlatform.DeleteFile(Filename);
         }
+
+        #region LoremIpsum Generator
 
         public static string LoremIpsum(int minWords, int maxWords,
             int minSentences, int maxSentences,
@@ -57,5 +55,7 @@ namespace LiteDB.Tests
 
             return result.ToString();
         }
+
+        #endregion
     }
 }

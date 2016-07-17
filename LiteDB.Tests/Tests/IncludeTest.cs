@@ -33,22 +33,9 @@ namespace LiteDB.Tests
 
     public class IncludeDatabase : LiteDatabase
     {
-        public IncludeDatabase(Stream stream, BsonMapper mapper = null) : base(stream, mapper)
-        {
-        }
+        private static BsonMapper _mapper = new BsonMapper();
 
-        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
-        public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
-        public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
-    }
-
-    [TestClass]
-    public class IncludeTest : TestBase
-    {
-        public BsonMapper _mapper = new BsonMapper();
-
-
-        public IncludeTest()
+        static IncludeDatabase()
         {
             _mapper.Entity<Order>()
                .DbRef(x => x.Products, "products")
@@ -60,10 +47,22 @@ namespace LiteDB.Tests
                .DbRef(x => x.CustomerNull, "customers");
         }
 
+        public IncludeDatabase(Stream stream) : base(stream, _mapper)
+        {
+        }
+
+        public LiteCollection<Customer> Customers { get { return this.GetCollection<Customer>("customers"); } }
+        public LiteCollection<Order> Orders { get { return this.GetCollection<Order>("orders"); } }
+        public LiteCollection<Product> Products { get { return this.GetCollection<Product>("products"); } }
+    }
+
+    [TestClass]
+    public class IncludeTest : TestBase
+    {
         [TestMethod]
         public void Include_Test()
         {
-            using (var db = new IncludeDatabase(new MemoryStream(), _mapper))
+            using (var db = new IncludeDatabase(new MemoryStream()))
             {
                 var customer = new Customer { Name = "John Doe" };
 

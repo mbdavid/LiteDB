@@ -10,22 +10,20 @@ namespace LiteDB.Tests
         [TestMethod]
         public void DiskFile_Test()
         {
-            //var dbname = @"C:\Git\LiteDB\LiteDB.Shell\bin\Debug\disk.db"; // DB.RandomFile();
-            var dbname = DB.RandomFile();
-
-            //File.Delete(dbname);
-
-            using (var db = new LiteDatabase(dbname))
+            using (var tmp = new TempFile())
             {
-                db.Run("db.col1.insert {_id:10}");
-                db.Run("db.col1.insert {_id:2}");
-                db.Run("db.col1.insert {_id:3}");
+                using (var db = new LiteDatabase(tmp.ConnectionString))
+                {
+                    db.Run("db.col1.insert {_id:10}");
+                    db.Run("db.col1.insert {_id:2}");
+                    db.Run("db.col1.insert {_id:3}");
 
-                var col1 = db.GetCollection("col1");
+                    var col1 = db.GetCollection("col1");
 
-                var d = col1.FindAll().First();
+                    var d = col1.FindAll().First();
 
-                db.Run("db.col1.insert {_id:4}");
+                    db.Run("db.col1.insert {_id:4}");
+                }
             }
         }
     }

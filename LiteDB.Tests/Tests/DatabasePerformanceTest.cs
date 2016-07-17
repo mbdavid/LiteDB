@@ -7,65 +7,63 @@ namespace LiteDB.Tests
     [TestClass]
     public class DatabasePerformanceTest : TestBase
     {
-        private static string filepath = DB.RandomFile("ldb");
-        private static string dbpath = "filename=" + filepath + ";journal=true";
-
         [TestMethod]
         public void Create_300k_Rows_DB_And_Search()
         {
-            using (var db = new LiteDatabase(dbpath))
+            using (var tmp = new TempFile("journal=false"))
             {
-                var c = db.GetCollection<PerfItem>("perf");
-                //c.EnsureIndex("MyGuid", true);
-                var id = 0;
-
-                for (var j = 0; j < 3; j++)
+                using (var db = new LiteDatabase(tmp.ConnectionString))
                 {
-                    var d = DateTime.Now;
-                    using (var trans = db.BeginTrans())
+                    var c = db.GetCollection<PerfItem>("perf");
+                    //c.EnsureIndex("MyGuid", true);
+                    var id = 0;
+
+                    for (var j = 0; j < 3; j++)
                     {
-
-                        for (var i = 0; i < 100000; i++)
+                        var d = DateTime.Now;
+                        using (var trans = db.BeginTrans())
                         {
-                            id++;
 
-                            c.Insert(new PerfItem { Id = id, MyGuid = Guid.NewGuid(), Nome = "Jose Silva " + id });
+                            for (var i = 0; i < 100000; i++)
+                            {
+                                id++;
+
+                                c.Insert(new PerfItem { Id = id, MyGuid = Guid.NewGuid(), Nome = "Jose Silva " + id });
+                            }
+
+                            trans.Commit();
                         }
 
-                        trans.Commit();
+                        Debug.WriteLine("Commits " + j + " in " + DateTime.Now.Subtract(d).TotalMilliseconds);
                     }
+                }
 
-                    Debug.WriteLine("Commits " + j + " in " + DateTime.Now.Subtract(d).TotalMilliseconds);
+                Guid g;
+
+                using (var db = new LiteDatabase(tmp.ConnectionString))
+                {
+                    var c = db.GetCollection<PerfItem>("perf");
+
+                    //c.EnsureIndex("Id");
+
+                    Debug.WriteLine("Total rows in collection " + c.Count());
+
+                    var i = c.FindById(7737);
+
+                    g = i.MyGuid;
+
+                    Debug.WriteLine(i.MyGuid + " - " + i.Nome);
+                }
+
+                using (var db = new LiteDatabase(tmp.ConnectionString))
+                {
+                    var c = db.GetCollection<PerfItem>("perf");
+
+                    var i = c.FindOne(Query.EQ("MyGuid", g));
+
+                    Debug.WriteLine(i.MyGuid + " - " + i.Nome);
                 }
             }
-
-            Guid g;
-
-            using (var db = new LiteDatabase(dbpath))
-            {
-                var c = db.GetCollection<PerfItem>("perf");
-
-                //c.EnsureIndex("Id");
-
-                Debug.WriteLine("Total rows in collection " + c.Count());
-
-                var i = c.FindById(7737);
-
-                g = i.MyGuid;
-
-                Debug.WriteLine(i.MyGuid + " - " + i.Nome);
-            }
-
-            using (var db = new LiteDatabase(dbpath))
-            {
-                var c = db.GetCollection<PerfItem>("perf");
-
-                var i = c.FindOne(Query.EQ("MyGuid", g));
-
-                Debug.WriteLine(i.MyGuid + " - " + i.Nome);
-            }
-
-            TestPlatform.DeleteFile(filepath);
         }
     }
 

@@ -27,7 +27,7 @@ namespace LiteDB.Tests
             {
                 var doc = new BsonDocument()
                     .Add("_id", Guid.NewGuid())
-                    .Add("content", DB.LoremIpsum(20, 50, 1, 2, 1));
+                    .Add("content", TempFile.LoremIpsum(20, 50, 1, 2, 1));
 
                 yield return doc;
             }
