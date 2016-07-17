@@ -22,29 +22,30 @@ namespace LiteDB
 
         public void TryRecovery()
         {
-            // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
-            this.OpenExclusiveFile(_connectionString.JournalFilename, (stream) =>
-            {
-                // check if FINISH_POSITON is true
-                using (var reader = new BinaryReader(stream))
+            if(_connectionString.JournalEnabled == true) {
+                // if I can open journal file, test FINISH_POSITION. If no journal, do not call action()
+                this.OpenExclusiveFile(_connectionString.JournalFilename, (stream) =>
                 {
-                    stream.Seek(JournalService.FINISH_POSITION, SeekOrigin.Begin);
-
-                    // if file is finish, datafile needs to be recovery. if not,
-                    // the failure ocurrs during write journal file but not finish - just discard it
-                    if (reader.ReadBoolean() == true)
+                    // check if FINISH_POSITON is true
+                    using (var reader = new BinaryReader(stream))
                     {
-                        this.DoRecovery(reader);
+                        stream.Seek(JournalService.FINISH_POSITION, SeekOrigin.Begin);
+    
+                        // if file is finish, datafile needs to be recovery. if not,
+                        // the failure ocurrs during write journal file but not finish - just discard it
+                        if (reader.ReadBoolean() == true)
+                        {
+                            this.DoRecovery(reader);
+                        }
                     }
-                }
-
-                // close stream for delete file
-                stream.Close();
-
-                File.Delete(_connectionString.JournalFilename);
-            });
-
-            // if I can't open, it's in use (and it's ok, there is a transaction executing in another process)
+    
+                    // close stream for delete file
+                    stream.Close();
+    
+                    File.Delete(_connectionString.JournalFilename);
+                });
+                // if I can't open, it's in use (and it's ok, there is a transaction executing in another process)
+            }
         }
 
         private void DoRecovery(BinaryReader reader)
