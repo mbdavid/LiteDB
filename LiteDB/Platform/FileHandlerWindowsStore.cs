@@ -73,7 +73,7 @@ namespace LiteDB.Platform
         {
             try
             {
-                using (var stream = CreateFile(filename, true))
+                using (var stream = OpenFileAsStream(filename, true))
                 {
                     success(stream);
                 }
