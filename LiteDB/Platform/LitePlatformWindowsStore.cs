@@ -10,15 +10,15 @@ namespace LiteDB.Platform
 {
     public class LitePlatformWindowsStore : ILitePlatform
     {
-        private readonly StorageFolder m_folder;
-
         private readonly LazyLoad<IFileHandler> _fileHandler;
         private readonly LazyLoad<IReflectionHandler> _reflectionHandler;
+        private readonly Func<string, IEncryption> _encryption;
 
-        public LitePlatformWindowsStore(StorageFolder folder)
+        public LitePlatformWindowsStore(StorageFolder folder, Func<string, IEncryption> encryption = null)
         {
             _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerWindowsStore(folder));
             _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new ExpressionReflectionHandler());
+            _encryption = encryption;
 
             AddNameCollectionToMapper();
         }
@@ -29,7 +29,9 @@ namespace LiteDB.Platform
 
         public IEncryption GetEncryption(string password)
         {
-            throw new NotImplementedException();
+            if(_encryption == null) throw new NotImplementedException();
+
+            return _encryption(password);
         }
 
         public void WaitFor(int milliseconds)
