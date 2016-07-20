@@ -16,7 +16,7 @@ namespace LiteDB.Tests
     {
         public static string GetFullPath(string filename)
         {
-			return Path.GetFullPath(Path.GetTempPath()) + filename;
+            return Path.GetFullPath(Path.GetTempPath()) + filename;
         }
 
         public static long GetFileSize(string filename)
