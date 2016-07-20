@@ -22,7 +22,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\LiteDB.Platform.Universal10\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -31,7 +31,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\LiteDB.Platform.Universal10\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -103,24 +103,32 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
+    <Compile Include="..\..\LiteDB\Platform\AsyncHelpers.cs">
+      <Link>AsyncHelpers.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB\Platform\ExpressionReflectionHandler.cs">
+      <Link>ExpressionReflectionHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB\Platform\FileHandlerWindowsStore.cs">
+      <Link>FileHandlerWindowsStore.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB\Platform\LitePlatformWindowsStore.cs">
+      <Link>LitePlatformWindowsStore.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Platform\AsyncHelpers.cs" />
-    <Compile Include="Platform\ExpressionReflectionHandler.cs" />
-    <Compile Include="Platform\FileHandlerWindowsStore.cs" />
-    <Compile Include="Platform\LitePlatformWindowsStore.cs" />
-    <EmbeddedResource Include="Properties\LiteDB.Platform.Universal10.rd.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB\LiteDB.Core.csproj">
+    <ProjectReference Include="..\..\LiteDB\LiteDB.Core.csproj">
       <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
       <Name>LiteDB.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="LiteDB.Platform.Universal10.project.json" />
+    <None Include="project.json" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

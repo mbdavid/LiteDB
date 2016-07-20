@@ -6,29 +6,15 @@
         <title>LiteDB</title>
         <authors>Mauricio David</authors>
         <projectUrl>http://www.litedb.org</projectUrl>
+        <iconUrl>http://www.litedb.org/img/logo_64x64.png</iconUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>My package description.</description>
+        <description>A simple embedded .NET NoSQL Document Store in a single data file</description>
         <summary>A simple embedded .NET NoSQL Document Store in a single data file</summary>
         <copyright>MIT</copyright>
         <language>en-US</language>
         <tags>nosql database embed document store</tags>
     </metadata>
     <files>
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Android\LiteDB.Core.dll" target="lib\MonoAndroid\LiteDB.Core.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Android\LiteDB.Platform.dll" target="lib\MonoAndroid\LiteDB.Platform.dll" />
-        <file src="LiteDB\bin\Release\LiteDB\LiteDB.dll" target="lib\net35\LiteDB.dll" />
-        <file src="LiteDB.Shell\bin\Release\LiteDB.Shell.exe" target="lib\net35\LiteDB.Shell.exe" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.DotNet45\LiteDB.Core.dll" target="lib\net45\LiteDB.Core.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.DotNet45\LiteDB.Platform.dll" target="lib\net45\LiteDB.Platform.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Universal81\LiteDB.Core.dll" target="lib\portable-net4+win8\LiteDB.Core.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Universal81\LiteDB.Platform.dll" target="lib\portable-net4+win8\LiteDB.Platform.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Universal81\LiteDB.Platform.pri" target="lib\portable-net4+win8\LiteDB.Platform.pri" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Universal10\LiteDB.Core.dll" target="lib\uap10.0\LiteDB.Core.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Universal10\LiteDB.Platform.dll" target="lib\uap10.0\LiteDB.Platform.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.Universal10\LiteDB.Platform.pri" target="lib\uap10.0\LiteDB.Platform.pri" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.iOS\LiteDB.Core.dll" target="lib\Xamarin.iOS10\LiteDB.Core.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.iOS\LiteDB.Core.dll.mdb" target="lib\Xamarin.iOS10\LiteDB.Core.dll.mdb" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.iOS\LiteDB.Platform.dll" target="lib\Xamarin.iOS10\LiteDB.Platform.dll" />
-        <file src="LiteDB\bin\Release\LiteDB.Platform.iOS\LiteDB.Platform.dll.mdb" target="lib\Xamarin.iOS10\LiteDB.Platform.dll.mdb" />
+        <file src="LiteDB\bin\Release\LiteDB.dll" target="lib\net35\LiteDB.dll" />
     </files>
 </package>
