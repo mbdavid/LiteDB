@@ -14,7 +14,19 @@ namespace LiteDB.Platform
         private readonly LazyLoad<IReflectionHandler> _reflectionHandler;
         private readonly Func<string, IEncryption> _encryption;
 
-        public LitePlatformWindowsStore(StorageFolder folder, Func<string, IEncryption> encryption = null)
+        /// <summary>
+        /// Default construtor. Places all database files in the default application folder.
+        /// </summary>
+        public LitePlatformWindowsStore() : this(Windows.Storage.ApplicationData.Current.LocalFolder) { }
+
+        /// <summary>
+        /// Constructor which allows encryption, but sets the default folder to the application data folder.
+        /// </summary>
+        /// <param name="encryption"></param>
+        public LitePlatformWindowsStore(Func<string, IEncryption> encryption) : this(Windows.Storage.ApplicationData.Current.LocalFolder, encryption) { }
+        
+        // Making this private for now, because putting the folder anywhere but in the application store causes performance issues.
+        private LitePlatformWindowsStore(StorageFolder folder, Func<string, IEncryption> encryption = null)
         {
             _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerWindowsStore(folder));
             _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new ExpressionReflectionHandler());
@@ -29,7 +41,7 @@ namespace LiteDB.Platform
 
         public IEncryption GetEncryption(string password)
         {
-            if(_encryption == null) throw new NotImplementedException();
+            if (_encryption == null) throw new ArgumentException("Encryption requested, but encryption was not set during initialization");
 
             return _encryption(password);
         }

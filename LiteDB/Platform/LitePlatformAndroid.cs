@@ -8,7 +8,7 @@ namespace LiteDB.Platform
 {
     public class LitePlatformAndroid : ILitePlatform
     {
-        private readonly LazyLoad<IFileHandler> _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler());
+        private readonly LazyLoad<IFileHandler> _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal)));
         private readonly LazyLoad<IReflectionHandler> _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new ExpressionReflectionHandler());
 
         public LitePlatformAndroid()
