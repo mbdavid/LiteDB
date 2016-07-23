@@ -150,15 +150,19 @@ using(var db = new LiteDatabase("MyData.db"))
 }</code></pre>
 
             <pre class="language-csharp demo-box" style="display: none" id="code3"><code>// Custom entity mapping to BsonDocument
-using(var db = new LiteDatabase(@"MyData.db"))
-{
-    db.Mapper.Entity&lt;Customer&gt;()
+            
+// Re-use mapper from global instance
+var mapper = BsonMapper.Global;            
+
+mapper.Entity&lt;Customer&gt;()
         .Key(x => x.CustomerKey)
         .Map(x => x.Name, "customer_name")
         .Ignore(x => x.Age)
         .Index(x => x.Name, unique);
-
-    var doc = db.Mapper.ToDocument(new Customer { ... });
+            
+using(var db = new LiteDatabase(@"MyData.db"))
+{
+    var doc = mapper.ToDocument(new Customer { ... });
     var json = JsonSerializer.Serialize(doc, true);
     
     /* json:
@@ -191,14 +195,17 @@ public class Order
     public Customer Customer { get; set; }
     public List&lt;Product&gt; Products { get; set; }
 }        
+
+// Re-use mapper from global instance
+var mapper = BsonMapper.Global;
+
+// Produts and Customer are other collections (not embedded document)
+mapper.Entity&lt;Order&gt;()
+    .DbRef(x => x.Products, "products")
+    .DbRef(x => x.Customer, "customers");
             
 using(var db = new LiteDatabase(@"MyData.db"))
 {
-    // Produts and Customer are other collections (not embedded document)
-    db.Mapper.Entity&lt;Order&gt;()
-        .DbRef(x => x.Products, "products")
-        .DbRef(x => x.Customer, "customers");
-
     var orders = db.GetCollection&lt;Order&gt;("orders");
         
     // When query Order, includes references
