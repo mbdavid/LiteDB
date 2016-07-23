@@ -8,9 +8,15 @@ namespace LiteDB.Platform
 {
     public class FileHandler : IFileHandler
     {
+        private string defaultPath = ".";
+        public FileHandler(String defaultPath)
+        {
+            this.defaultPath = defaultPath;
+        }
+
         public Stream OpenFileAsStream(string filename, bool readOnly)
         {
-            return new FileStream(filename,
+            return new FileStream(Path.Combine(defaultPath, filename),
                FileMode.Open,
                readOnly ? FileAccess.Read : FileAccess.ReadWrite,
                readOnly ? FileShare.Read : FileShare.None,
@@ -19,7 +25,7 @@ namespace LiteDB.Platform
 
         public Stream CreateFile(string filename, bool overwritten)
         {
-            return new FileStream(filename,
+            return new FileStream(Path.Combine(defaultPath, filename),
                 overwritten ? FileMode.Create : FileMode.CreateNew,
                 FileAccess.ReadWrite,
                 FileShare.None, LiteDatabase.PAGE_SIZE);
@@ -27,19 +33,19 @@ namespace LiteDB.Platform
 
         public bool FileExists(string filename)
         {
-            return File.Exists(filename);
+            return File.Exists(Path.Combine(defaultPath, filename));
         }
 
         public void DeleteFile(string filename)
         {
-            File.Delete(filename);
+            File.Delete(Path.Combine(defaultPath, filename));
         }
 
         public void OpenExclusiveFile(string filename, Action<Stream> success)
         {
             try
             {
-                using (var stream = File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                using (var stream = File.Open(Path.Combine(defaultPath, filename), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     success(stream);
                 }

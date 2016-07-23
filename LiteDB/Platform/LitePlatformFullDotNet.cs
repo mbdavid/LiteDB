@@ -8,11 +8,22 @@ namespace LiteDB.Platform
 {
     public class LitePlatformFullDotNet : ILitePlatform
     {
-        private readonly LazyLoad<IFileHandler> _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler());
+        private readonly LazyLoad<IFileHandler> _fileHandler;
         private readonly LazyLoad<IReflectionHandler> _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new EmitReflectionHandler());
 
-        public LitePlatformFullDotNet()
+        /// <summary>
+        /// Default constructor. Will put all files in the application directory unless otherwise specified
+        /// </summary>
+        public LitePlatformFullDotNet() : this(".") { }
+
+        /// <summary>
+        /// Constructor which accepts a default directory for all files. 
+        /// Default directory can be overridden by specifying a full path when opening the database.
+        /// </summary>
+        /// <param name="defaultPath">Default path where files will be placed.</param>
+        public LitePlatformFullDotNet(String defaultPath)
         {
+            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler(defaultPath));
             AddNameCollectionToMapper();
         }
 

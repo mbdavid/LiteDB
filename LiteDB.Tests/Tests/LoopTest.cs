@@ -4,7 +4,7 @@ using System.Linq;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class LoopTest
+    public class LoopTest : TestBase
     {
         [TestMethod]
         public void Loop_Test()

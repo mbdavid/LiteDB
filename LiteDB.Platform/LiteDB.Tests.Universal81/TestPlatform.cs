@@ -11,7 +11,7 @@ namespace LiteDB.Tests
     {
         public TestBase()
         {
-            LitePlatform.Initialize(new LitePlatformWindowsStore(ApplicationData.Current.TemporaryFolder));
+            LitePlatform.Initialize(new LitePlatformWindowsStore());
         }
     }
 
@@ -24,7 +24,7 @@ namespace LiteDB.Tests
 
         public static long GetFileSize(string filename)
         {
-            var folder = ApplicationData.Current.TemporaryFolder;
+            var folder = ApplicationData.Current.LocalFolder;
             var file = AsyncHelpers.RunSync(folder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists));
             var properties = AsyncHelpers.RunSync(file.GetBasicPropertiesAsync());
 
@@ -33,7 +33,7 @@ namespace LiteDB.Tests
 
         public static void FileWriteAllText(string filename, string content)
         {
-            var folder = ApplicationData.Current.TemporaryFolder;
+            var folder = ApplicationData.Current.LocalFolder;
             var file = AsyncHelpers.RunSync(folder.CreateFileAsync(filename, CreationCollisionOption.OpenIfExists));
             var bytes = Encoding.UTF8.GetBytes(content);
 
@@ -42,7 +42,7 @@ namespace LiteDB.Tests
 
         public static void DeleteFile(string filename)
         {
-            var folder = ApplicationData.Current.TemporaryFolder;
+            var folder = ApplicationData.Current.LocalFolder;
             var file = AsyncHelpers.RunSync(folder.GetFileAsync(filename));
 
 #pragma warning disable 4014
@@ -52,7 +52,7 @@ namespace LiteDB.Tests
 
         public static string FileReadAllText(string filename)
         {
-            var folder = ApplicationData.Current.TemporaryFolder;
+            var folder = ApplicationData.Current.LocalFolder;
             var file = AsyncHelpers.RunSync(folder.GetFileAsync(filename));
             var buffer = AsyncHelpers.RunSync(FileIO.ReadBufferAsync(file));
             var arr = buffer.ToArray();
