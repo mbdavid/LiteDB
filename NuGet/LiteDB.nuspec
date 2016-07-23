@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>LiteDB</id>
+        <version>1.0.5</version>
+        <title>LiteDB</title>
+        <authors>Mauricio David</authors>
+        <projectUrl>https://github.com/mbdavid/LiteDB</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A simple embedded .NET NoSQL Document Store in a single data file</description>
+        <summary>A simple embedded .NET NoSQL Document Store in a single data file</summary>
+        <copyright>MIT</copyright>
+        <language>en-US</language>
+        <tags>nosql database embed document store</tags>
+    </metadata>
+    <files>
+        <file src="..\LiteDB\bin\Release\LiteDB.dll" target="lib\net40\LiteDB.dll" />
+        <file src="..\LiteDB\bin\Debug\LiteDB.xml" target="lib\net40\LiteDB.xml" />
+    </files>
+</package>
