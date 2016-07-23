@@ -8,15 +8,16 @@ namespace LiteDB.Platform
 {
     public class FileHandler : IFileHandler
     {
-        private string defaultPath = ".";
+        private string _defaultPath = ".";
+
         public FileHandler(String defaultPath)
         {
-            this.defaultPath = defaultPath;
+            _defaultPath = defaultPath;
         }
 
         public Stream OpenFileAsStream(string filename, bool readOnly)
         {
-            return new FileStream(Path.Combine(defaultPath, filename),
+            return new FileStream(Path.Combine(_defaultPath, filename),
                FileMode.Open,
                readOnly ? FileAccess.Read : FileAccess.ReadWrite,
                readOnly ? FileShare.Read : FileShare.None,
@@ -25,7 +26,7 @@ namespace LiteDB.Platform
 
         public Stream CreateFile(string filename, bool overwritten)
         {
-            return new FileStream(Path.Combine(defaultPath, filename),
+            return new FileStream(Path.Combine(_defaultPath, filename),
                 overwritten ? FileMode.Create : FileMode.CreateNew,
                 FileAccess.ReadWrite,
                 FileShare.None, LiteDatabase.PAGE_SIZE);
@@ -33,19 +34,19 @@ namespace LiteDB.Platform
 
         public bool FileExists(string filename)
         {
-            return File.Exists(Path.Combine(defaultPath, filename));
+            return File.Exists(Path.Combine(_defaultPath, filename));
         }
 
         public void DeleteFile(string filename)
         {
-            File.Delete(Path.Combine(defaultPath, filename));
+            File.Delete(Path.Combine(_defaultPath, filename));
         }
 
         public void OpenExclusiveFile(string filename, Action<Stream> success)
         {
             try
             {
-                using (var stream = File.Open(Path.Combine(defaultPath, filename), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                using (var stream = File.Open(Path.Combine(_defaultPath, filename), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     success(stream);
                 }

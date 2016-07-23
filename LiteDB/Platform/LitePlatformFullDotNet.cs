@@ -21,7 +21,7 @@ namespace LiteDB.Platform
         /// Default directory can be overridden by specifying a full path when opening the database.
         /// </summary>
         /// <param name="defaultPath">Default path where files will be placed.</param>
-        public LitePlatformFullDotNet(String defaultPath)
+        public LitePlatformFullDotNet(string defaultPath)
         {
             _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandler(defaultPath));
             AddNameCollectionToMapper();

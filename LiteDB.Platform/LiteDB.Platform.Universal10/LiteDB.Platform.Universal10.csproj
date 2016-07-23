@@ -115,6 +115,9 @@
     <Compile Include="..\..\LiteDB\Platform\LitePlatformWindowsStore.cs">
       <Link>LitePlatformWindowsStore.cs</Link>
     </Compile>
+    <Compile Include="..\..\LiteDB\Platform\UWPEncryption.cs">
+      <Link>UWPEncryption.cs</Link>
+    </Compile>
     <Compile Include="..\..\LiteDB\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
