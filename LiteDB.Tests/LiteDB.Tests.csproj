@@ -62,6 +62,7 @@
     <Compile Include="Tests\DiskFileTest.cs" />
     <Compile Include="Tests\FileStorageTest.cs" />
     <Compile Include="Tests\DateTimeUtcTest.cs" />
+    <Compile Include="Tests\TransactionTest.cs" />
     <Compile Include="Tests\LoopTest.cs" />
     <Compile Include="Tests\BulkTest.cs" />
     <Compile Include="Tests\BsonTest.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="Tests\DbRefIndexTest.cs" />
     <Compile Include="Tests\MapperInterfaceTest.cs" />
     <Compile Include="Tests\BsonFieldTest.cs" />
+    <Compile Include="Tests\PolymorphicTest.cs" />
     <Compile Include="Tests\ObjectIdTest.cs" />
     <Compile Include="Tests\DerivedTypesTest.cs" />
     <Compile Include="Tests\MapperTest.cs" />
