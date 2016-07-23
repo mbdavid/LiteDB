@@ -188,7 +188,7 @@ namespace LiteDB
 
         public DateTime ReadDateTime()
         {
-            return new DateTime(this.ReadInt64());
+            return new DateTime(this.ReadInt64(), DateTimeKind.Utc);
         }
 
         public Guid ReadGuid()

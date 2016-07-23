@@ -15,7 +15,15 @@ namespace LiteDB
 
         private Logger _log = new Logger();
 
+        /// <summary>
+        /// Get logger class instance
+        /// </summary>
         public Logger Log { get { return _log; } }
+
+        /// <summary>
+        /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
+        /// </summary>
+        public BsonMapper Mapper { get { return _mapper; } }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for filesystem database

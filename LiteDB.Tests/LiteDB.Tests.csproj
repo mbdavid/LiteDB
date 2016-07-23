@@ -61,6 +61,7 @@
     <Compile Include="Tests\DataTableTest.cs" />
     <Compile Include="Tests\DiskFileTest.cs" />
     <Compile Include="Tests\FileStorageTest.cs" />
+    <Compile Include="Tests\DateTimeUtcTest.cs" />
     <Compile Include="Tests\LoopTest.cs" />
     <Compile Include="Tests\BulkTest.cs" />
     <Compile Include="Tests\BsonTest.cs" />
