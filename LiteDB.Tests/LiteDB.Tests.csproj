@@ -62,6 +62,7 @@
     <Compile Include="Tests\DiskFileTest.cs" />
     <Compile Include="Tests\FileStorageTest.cs" />
     <Compile Include="Tests\DateTimeUtcTest.cs" />
+    <Compile Include="Tests\MapperExceptionTest.cs" />
     <Compile Include="Tests\TransactionTest.cs" />
     <Compile Include="Tests\LoopTest.cs" />
     <Compile Include="Tests\BulkTest.cs" />

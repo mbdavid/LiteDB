@@ -147,6 +147,8 @@ namespace LiteDB
                 if (doc.RawValue.TryGetValue("_type", out typeField))
                 {
                     type = Type.GetType(typeField.AsString);
+
+                    if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
                 }
 
                 var o = Reflection.CreateInstance(type);

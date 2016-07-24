@@ -20,7 +20,6 @@ namespace LiteDB.Tests
         {
             // see: http://stackoverflow.com/questions/6930489/safely-comparing-local-and-universal-datetimes
 
-            // when kind = Local, works fine. When kind = Utc, not found!
             var kind = DateTimeKind.Utc;
 
             // with EnsureIndex before

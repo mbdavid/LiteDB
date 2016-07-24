@@ -147,6 +147,11 @@ namespace LiteDB
             return new LiteException(206, "Property '{0}' was not mapped into BsonDocument", name);
         }
 
+        public static LiteException InvalidTypedName(string type)
+        {
+            return new LiteException(207, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName')", type);
+        }
+
         #endregion Document/Mapper Errors
     }
 }
