@@ -10,7 +10,8 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Index_Order()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var tmp = new TempFile())
+            using (var db = new LiteDatabase(tmp.ConnectionString))
             {
                 var col = db.GetCollection<BsonDocument>("order");
 
@@ -32,8 +33,13 @@ namespace LiteDB.Tests
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
-                Assert.AreEqual(asc, "ABCDE");
-                Assert.AreEqual(desc, "EDCBA");
+                Assert.AreEqual("ABCDE", asc);
+                Assert.AreEqual("EDCBA", desc);
+
+                var indexes = col.GetIndexes();
+
+                Assert.AreEqual(1, indexes.Count(x => x.Field == "text"));
+
             }
         }
     }

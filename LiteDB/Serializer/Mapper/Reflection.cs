@@ -169,53 +169,46 @@ namespace LiteDB
                 {
                     CreateObject c = null;
 
-                    if (_cacheCtor.TryGetValue(type, out c))
+                    if (type.GetTypeInfo().IsClass)
                     {
-                        return c();
+                        _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateClass(type));
                     }
-                    else
+                    else if (type.GetTypeInfo().IsInterface) // some know interfaces
                     {
-                        if (type.GetTypeInfo().IsClass)
+                        if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
                         {
-                            _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateClass(type));
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
                         }
-                        else if (type.GetTypeInfo().IsInterface) // some know interfaces
+                        else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
                         {
-                            if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
-                            {
-                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                            }
-                            else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
-                            {
-                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                            }
-                            else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                            {
-                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                            }
-                            else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                            {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
+                        else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                        {
+                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                        }
+                        else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                        {
 #if PCL
-                                var k = type.GetTypeInfo().GenericTypeArguments[0];
-                                var v = type.GetTypeInfo().GenericTypeArguments[1];
+                            var k = type.GetTypeInfo().GenericTypeArguments[0];
+                            var v = type.GetTypeInfo().GenericTypeArguments[1];
 #else
-                                var k = type.GetGenericArguments()[0];
-                                var v = type.GetGenericArguments()[1];
+                            var k = type.GetGenericArguments()[0];
+                            var v = type.GetGenericArguments()[1];
 #endif
-                                return CreateInstance(GetGenericDictionaryOfType(k, v));
-                            }
-                            else
-                            {
-                                throw LiteException.InvalidCtor(type);
-                            }
+                            return CreateInstance(GetGenericDictionaryOfType(k, v));
                         }
-                        else // structs
+                        else
                         {
-                            _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateStruct(type));
+                            throw LiteException.InvalidCtor(type);
                         }
-
-                        return c();
                     }
+                    else // structs
+                    {
+                        _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateStruct(type));
+                    }
+
+                    return c();
                 }
                 catch (Exception)
                 {

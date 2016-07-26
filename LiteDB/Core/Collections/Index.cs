@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LiteDB
@@ -57,11 +58,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all indexes in this collections
+        /// Returns all indexes information, including index stats 
         /// </summary>
-        public IEnumerable<BsonDocument> GetIndexes()
+        public IEnumerable<IndexInfo> GetIndexes(bool includeStats = false)
         {
-            return _engine.GetIndexes(_name);
+            return _engine.GetIndexes(_name, includeStats);
         }
 
         /// <summary>

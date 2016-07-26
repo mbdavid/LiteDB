@@ -8,39 +8,42 @@ namespace LiteDB
         /// <summary>
         /// Get stats from a collection
         /// </summary>
-        public BsonValue Stats(string colName)
+        public CollectionInfo Stats(string colName)
         {
-            return this.ReadTransaction<BsonValue>(colName, (col) =>
+            return this.ReadTransaction<CollectionInfo>(colName, (col) =>
             {
-                if (col == null) return BsonValue.Null;
+                if (col == null) return null;
 
                 int indexPages, indexFree, dataPages, extendPages, dataFree, docSize;
 
                 this.Usage(col, out indexPages, out indexFree, out dataPages, out extendPages, out dataFree, out docSize);
 
-                return new BsonDocument()
-                    .Add("name", colName)
-                    .Add("documents", (int)col.DocumentCount)
-                    .Add("documentAverageSize", (int)((float)docSize / col.DocumentCount))
-                    .Add("indexes", new BsonArray(this.GetIndexes(colName, true)))
-                    .Add("pages", new BsonDocument()
-                        .Add("index", indexPages)
-                        .Add("data", dataPages)
-                        .Add("extend", extendPages)
-                        .Add("total", indexPages + dataPages + extendPages + 1)
-                    )
-                    .Add("usage", new BsonDocument()
-                        .Add("allocated", new BsonDocument()
-                            .Add("index", BasePage.GetSizeOfPages(indexPages))
-                            .Add("data", BasePage.GetSizeOfPages(dataPages + extendPages))
-                            .Add("total", BasePage.GetSizeOfPages(indexPages + dataPages + extendPages + 1))
-                        )
-                        .Add("free", new BsonDocument()
-                            .Add("index", indexFree)
-                            .Add("data", dataFree)
-                            .Add("total", indexFree + dataFree)
-                        )
-                    );
+                return new CollectionInfo
+                {
+                    Name = colName,
+                    DocumentsCount = (int)col.DocumentCount,
+                    DocumentAverageSize = (int)((float)docSize / col.DocumentCount),
+                    Indexes = this.GetIndexes(colName, true).ToList(),
+                    TotalPages = indexPages + dataPages + extendPages + 1,
+                    TotalAllocated = BasePage.GetSizeOfPages(indexPages + dataPages + extendPages + 1),
+                    TotalFree = indexFree + dataFree,
+                    Pages = new Dictionary<string, int>()
+                    {
+                        { "Index", indexPages },
+                        { "Data", dataPages },
+                        { "Extend", extendPages }
+                    },
+                    Allocated = new Dictionary<string, long>()
+                    {
+                        { "Index", BasePage.GetSizeOfPages(indexPages) },
+                        { "Data", BasePage.GetSizeOfPages(dataPages + extendPages) }
+                    },
+                    Free = new Dictionary<string, long>()
+                    {
+                        { "Index", indexFree },
+                        { "Data", dataFree }
+                    }
+                };
             });
         }
 

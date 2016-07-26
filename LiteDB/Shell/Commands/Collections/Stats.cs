@@ -13,7 +13,9 @@ namespace LiteDB.Shell.Commands
         {
             var col = this.ReadCollection(engine, s);
 
-            return engine.Stats(col);
+            var mapper = new BsonMapper().UseCamelCase();
+
+            return mapper.ToDocument<CollectionInfo>(engine.Stats(col));
         }
     }
 }

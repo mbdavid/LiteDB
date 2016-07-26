@@ -57,6 +57,7 @@ namespace LiteDB
         /// Map for autoId type based functions
         /// </summary>
         private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
+
         /// <summary>
         /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
         /// </summary>
@@ -176,16 +177,26 @@ namespace LiteDB
 
         #region Predefinded Property Resolvers
 
-        public void UseCamelCase()
+        /// <summary>
+        /// Use lower camel case resolution for convert property names to field names
+        /// </summary>
+        public BsonMapper UseCamelCase()
         {
             this.ResolvePropertyName = (s) => char.ToLower(s[0]) + s.Substring(1);
+
+            return this;
         }
 
         private Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])");
 
-        public void UseLowerCaseDelimiter(char delimiter = '_')
+        /// <summary>
+        /// Use lower camel case with delemiter resolution for convert property names to field names
+        /// </summary>
+        public BsonMapper UseLowerCaseDelimiter(char delimiter = '_')
         {
             this.ResolvePropertyName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
+
+            return this;
         }
 
         #endregion Predefinded Property Resolvers
