@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Tests\DatabasePerformanceTest.cs" />
     <Compile Include="Tests\DataTableTest.cs" />
+    <Compile Include="Tests\Datafilev1Test.cs" />
     <Compile Include="Tests\DiskFileTest.cs" />
     <Compile Include="Tests\FileStorageTest.cs" />
     <Compile Include="Tests\DateTimeUtcTest.cs" />

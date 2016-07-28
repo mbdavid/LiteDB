@@ -204,7 +204,7 @@ namespace LiteDB
         public void SetLength(long fileSize)
         {
             // checks if new fileSize will exceed limit size
-            if (_limitSize > 0 && fileSize > _limitSize) throw LiteException.FileSizeExceeds(_limitSize);
+            if (_limitSize > 0 && fileSize > _limitSize) throw LiteException.FileSizeExceeded(_limitSize);
 
             // fileSize parameter tell me final size of data file - helpful to extend first datafile
             _stream.SetLength(fileSize);

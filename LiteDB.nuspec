@@ -16,5 +16,7 @@
     </metadata>
     <files>
         <file src="LiteDB\bin\Release\LiteDB.dll" target="lib\net35\LiteDB.dll" />
+        <file src="LiteDB.Shell\bin\Release\LiteDB.dll" target="tools\LiteDB.dll" />
+        <file src="LiteDB.Shell\bin\Release\LiteDB.Shell.exe" target="tools\LiteDB.Shell.exe" />
     </files>
 </package>
