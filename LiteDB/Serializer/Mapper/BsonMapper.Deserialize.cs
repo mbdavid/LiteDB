@@ -68,7 +68,8 @@ namespace LiteDB
             typeof(Single),
             typeof(Decimal),
             typeof(Char),
-            typeof(Byte)
+            typeof(Byte),
+            typeof(SByte)
         };
 
         #endregion Basic direct .NET convert types
