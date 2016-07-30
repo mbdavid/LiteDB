@@ -156,7 +156,7 @@ var mapper = BsonMapper.Global;
 
 mapper.Entity&lt;Customer&gt;()
         .Key(x => x.CustomerKey)
-        .Map(x => x.Name, "customer_name")
+        .Field(x => x.Name, "customer_name")
         .Ignore(x => x.Age)
         .Index(x => x.Name, unique);
             
