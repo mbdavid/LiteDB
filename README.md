@@ -11,7 +11,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - ACID transactions
 - Data recovery after write failure (journal mode)
 - Datafile encryption using DES (AES) cryptography
-- Map your POCO classes to `BsonDocument` using attributs or fluent API
+- Map your POCO classes to `BsonDocument` using attributes or fluent mapper API
 - Store files and stream data (like GridFS in MongoDB)
 - Single data file storage (like SQLite)
 - Index document fields for fast search (up to 16 indexes per collection)
@@ -19,9 +19,9 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Shell command line - [try this online version](http://www.litedb.org/#shell)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
-- Install portable verion from NuGet: `Install-Package LiteDB.Core`
+- Install portable version from NuGet: `Install-Package LiteDB.Core`
 
-## New features in v2.0.0-rc2
+## New features in v2
 - Generic data access - can use any `Stream` as datafile
 - Better mapping of classes from your entity to `BsonDocument` (like EntityFramework)
 - Better cross reference with `DbRef` mapping
@@ -30,8 +30,8 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Support for `Initial Size` and `Limit Size` databases
 - Complete re-write of engine classes with full debug logger
 - Complete re-write disk operation to be more safe
-- Back transaction control 
-- Back `Mapper.Global` class mapper definition
+- Transaction control
+- `BsonMapper.Global` class mapper definition
 - See more examples at http://www.litedb.org/ and unit tests
 
 ## Try online
@@ -88,6 +88,52 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 	// Use Linq to query documents
 	var results = col.Find(x => x.Name.StartsWith("Jo"));
 }
+```
+
+Using fluent mapper and cross document reference for more complex data models
+
+```C#
+// DbRef to cross references
+public class Order
+{
+    public ObjectId Id { get; set; }
+    public DateTime OrderDate { get; set; }
+	public Address ShippingAddress { get; set; }
+    public Customer Customer { get; set; }
+    public List<Product> Products { get; set; }
+	public decimal Total => Products.Sum(p => p.Price);
+}        
+
+// Re-use mapper from global instance
+var mapper = BsonMapper.Global;
+
+// "Produts" and "Customer" are from other collections (not embedded document)
+mapper.Entity<Order>()
+    .DbRef(x => x.Customer, "customers")   // 1 to 1/0 reference
+    .DbRef(x => x.Products, "products")    // 1 to Many reference
+	.Field(x => x.ShippingAddress, "addr") // Embedded sub document
+	.Index(x => x.OrderDate)               // Index this field
+	.Ignore(x => x.Total);                 // Do not store this
+            
+using(var db = new LiteDatabase("MyOrderDatafile.db"))
+{
+    var orders = db.GetCollection<Order>("orders");
+        
+    // When query Order, includes references
+    var query = orders
+        .Include(x => x.Customer)
+        .Include(x => x.Products) // 1 to many reference
+        .Find(x => x.OrderDate <= DateTime.Now);
+
+    // Each instance of Order will load Customer/Products references
+	foreach(var order in query)
+	{
+		var name = order.Customer.Name;
+		...
+	}
+                    
+}
+
 ```
 
 ## Where to use?
