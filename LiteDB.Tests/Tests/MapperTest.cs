@@ -54,6 +54,7 @@ namespace LiteDB.Tests
         public MyEnum MyEnumProp { get; set; }
         public char MyChar { get; set; }
         public byte MyByte { get; set; }
+        public sbyte MySByte { get; set; }
 
         [BsonIndex(ignoreCase: true)]
         public decimal MyDecimal { get; set; }
@@ -149,6 +150,7 @@ namespace LiteDB.Tests
                 MyChar = 'Y',
                 MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255,
+                MySByte = -99,
                 MyDecimal = 19.9m,
                 MyDecimalNullable = 25.5m,
 
@@ -233,6 +235,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyEnumProp, nobj.MyEnumProp);
             Assert.AreEqual(obj.MyChar, nobj.MyChar);
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
+            Assert.AreEqual(obj.MySByte, nobj.MySByte);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
 #if NAMEVALUECOLLECTION
