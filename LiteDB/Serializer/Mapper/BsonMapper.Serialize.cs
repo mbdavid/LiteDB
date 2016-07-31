@@ -29,7 +29,7 @@ namespace LiteDB
 
         internal BsonValue Serialize(Type type, object obj, int depth)
         {
-            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH);
+            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(type, MAX_DEPTH);
 
             if (obj == null) return BsonValue.Null;
 
