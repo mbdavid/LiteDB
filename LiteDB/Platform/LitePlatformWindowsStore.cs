@@ -28,7 +28,11 @@ namespace LiteDB.Platform
         // Making this private for now, because putting the folder anywhere but in the application store causes performance issues.
         private LitePlatformWindowsStore(StorageFolder folder, Func<string, IEncryption> encryption = null)
         {
-            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerWindowsStore(folder));
+#if WINDOWS_UWP
+            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerUWP(Windows.Storage.ApplicationData.Current.LocalFolder));
+#else
+            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerWindowsStore(Windows.Storage.ApplicationData.Current.LocalFolder));
+#endif
             _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new ExpressionReflectionHandler());
             _encryption = encryption;
 
