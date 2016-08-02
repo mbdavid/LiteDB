@@ -5,9 +5,8 @@ namespace LiteDB
     public class TransactionCancelledException : LiteException
     {
         public TransactionCancelledException()
-            : base("This transaction is cancelled due to an aborted transaction")
+            : base(TRANSACTION_CANCELLED_EXCEPTION, "This transaction is cancelled due to an aborted transaction")
         {
-
         }
     }
 }

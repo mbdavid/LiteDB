@@ -204,7 +204,7 @@ namespace LiteDB
 
         public void Write(DateTime value)
         {
-            this.Write(value.Ticks);
+            this.Write(value.ToUniversalTime().Ticks);
         }
 
         public void Write(Guid value)

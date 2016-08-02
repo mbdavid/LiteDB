@@ -9,7 +9,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min(string colName, string field)
         {
-            return this.ReadTransaction<long>(colName, (col) =>
+            return this.ReadTransaction<BsonValue>(colName, (col) =>
             {
                 if (col == null) return BsonValue.MinValue;
 

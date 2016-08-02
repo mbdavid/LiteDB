@@ -29,7 +29,7 @@ namespace LiteDB
 
         internal BsonValue Serialize(Type type, object obj, int depth)
         {
-            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH);
+            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH, type);
 
             if (obj == null) return BsonValue.Null;
 
@@ -62,7 +62,7 @@ namespace LiteDB
             else if (obj is Boolean) return new BsonValue((Boolean)obj);
             else if (obj is DateTime) return new BsonValue((DateTime)obj);
             // basic .net type to convert to bson
-            else if (obj is Int16 || obj is UInt16 || obj is Byte)
+            else if (obj is Int16 || obj is UInt16 || obj is Byte || obj is SByte)
             {
                 return new BsonValue(Convert.ToInt32(obj));
             }

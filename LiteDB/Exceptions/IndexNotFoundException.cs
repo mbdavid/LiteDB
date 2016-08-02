@@ -11,7 +11,7 @@ namespace LiteDB
         public string Field { get; set; }
 
         public IndexNotFoundException(string collection, string field)
-            : base("Index not found")
+            : base(INDEX_NOT_FOUND, "Index not found")
         {
             this.Collection = collection;
             this.Field = field;

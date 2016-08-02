@@ -21,7 +21,6 @@ namespace LiteDB
 
             try
             {
-
                 // keep trying execute query to auto-create indexes when not found
                 // must try get first doc inside try/catch to get index not found (yield returns are not supported inside try/catch)
                 while (true)

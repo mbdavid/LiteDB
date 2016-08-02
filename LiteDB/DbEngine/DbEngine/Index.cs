@@ -89,42 +89,36 @@ namespace LiteDB
         /// <summary>
         /// List all indexes inside a collection
         /// </summary>
-        public IEnumerable<BsonDocument> GetIndexes(string colName, bool stats = false)
+        public IEnumerable<IndexInfo> GetIndexes(string colName, bool stats = false)
         {
-            var col = this.GetCollectionPage(colName, false);
-
-            if (col == null) yield break;
-
-            foreach (var index in col.GetIndexes(true))
+            // transaction will be closed as soon as the IEnumerable goes out of scope
+            using (var trans = _transaction.Begin(true))
             {
-                var doc = new BsonDocument()
-                    .Add("slot", index.Slot)
-                    .Add("field", index.Field)
-                    .Add("options", new BsonDocument()
-                        .Add("unique", index.Options.Unique)
-                        .Add("ignoreCase", index.Options.IgnoreCase)
-                        .Add("removeAccents", index.Options.RemoveAccents)
-                        .Add("trimWhitespace", index.Options.TrimWhitespace)
-                        .Add("emptyStringToNull", index.Options.EmptyStringToNull)
-                    );
+                var col = this.GetCollectionPage(colName, false);
 
-                if (stats)
+                if (col == null) yield break;
+
+                foreach (var index in col.GetIndexes(true))
                 {
-                    _cache.CheckPoint();
+                    var info = new IndexInfo(index);
 
-                    var pages = _indexer.FindAll(index, Query.Ascending).GroupBy(x => x.Page.PageID).Count();
+                    if (stats)
+                    {
+                        _cache.CheckPoint();
 
-                    // this command can be consume too many memory!! has no CheckPoint on loop
-                    var keySize = pages == 0 ? 0 : _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
+                        var pages = _indexer.FindAll(index, Query.Ascending).GroupBy(x => x.Page.PageID).Count();
 
-                    doc.Add("stats", new BsonDocument()
-                        .Add("pages", pages)
-                        .Add("allocated", BasePage.GetSizeOfPages(pages))
-                        .Add("keyAverageSize", (int)keySize)
-                    );
+                        // this command can be consume too many memory!! has no CheckPoint on loop
+                        var keySize = pages == 0 ? 0 : _indexer.FindAll(index, Query.Ascending).Average(x => x.KeyLength);
+
+                        info.Stats = new IndexInfo.IndexStats();
+                        info.Stats.Pages = pages;
+                        info.Stats.Allocated = BasePage.GetSizeOfPages(pages);
+                        info.Stats.KeyAverageSize = (int)keySize;
+                    }
+
+                    yield return info;
                 }
-
-                yield return doc;
             }
         }
     }

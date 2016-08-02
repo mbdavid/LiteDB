@@ -68,7 +68,8 @@ namespace LiteDB
             typeof(Single),
             typeof(Decimal),
             typeof(Char),
-            typeof(Byte)
+            typeof(Byte),
+            typeof(SByte)
         };
 
         #endregion Basic direct .NET convert types
@@ -147,6 +148,8 @@ namespace LiteDB
                 if (doc.RawValue.TryGetValue("_type", out typeField))
                 {
                     type = Type.GetType(typeField.AsString);
+
+                    if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
                 }
 
                 var o = Reflection.CreateInstance(type);
