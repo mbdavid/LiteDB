@@ -109,8 +109,8 @@
     <Compile Include="..\..\LiteDB\Platform\ExpressionReflectionHandler.cs">
       <Link>ExpressionReflectionHandler.cs</Link>
     </Compile>
-    <Compile Include="..\..\LiteDB\Platform\FileHandlerWindowsStore.cs">
-      <Link>FileHandlerWindowsStore.cs</Link>
+    <Compile Include="..\..\LiteDB\Platform\FileHandlerUWP.cs">
+      <Link>FileHandlerUWP.cs</Link>
     </Compile>
     <Compile Include="..\..\LiteDB\Platform\LitePlatformWindowsStore.cs">
       <Link>LitePlatformWindowsStore.cs</Link>

@@ -15,7 +15,11 @@ namespace LiteDB.Platform
         
         public LitePlatformWindowsStore()
         {
+#if WINDOWS_UWP
+            _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerUWP(Windows.Storage.ApplicationData.Current.LocalFolder));
+#else
             _fileHandler = new LazyLoad<IFileHandler>(() => new FileHandlerWindowsStore(Windows.Storage.ApplicationData.Current.LocalFolder));
+#endif
             _reflectionHandler = new LazyLoad<IReflectionHandler>(() => new ExpressionReflectionHandler());
 
             AddNameCollectionToMapper();
