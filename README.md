@@ -1,3 +1,26 @@
+## Thread Safe version
+- LiteDB will be single process - when a process open datafile will be opened with NoShare
+- DbEngine still lazy load (with lazy open file)
+- LiteDB will close datafile only when Dispose() LiteDatabase/DbEngine/IDiskService
+- All write method DbEngine will be inside a `lock`
+- Cache must be `locked` to support concurrent queries
+- Cache will be keeped after read/writes :)
+- No more check header page in each operation :)
+- Journal file will be deleted only when disk dispose (set length = 0 to reuse)
+- Still using journal file to cache memory control do not exceed 5000 pages
+- No more transaction control to user (will be document acid only)
+
+This structure will be work more close to a DBMS (centralized database instance with a server running).
+
+- Will not support N application running in some datafile (like many desktops apps using a server datafile)
+- Console shell CLI must be always disconected?
+
+### To think about
+- Be portable only `netstandard 1.4` (run .net 4.5, core, UWP 10, xamarin)
+- Write operation can be in an async Task? Will be rock in performance :)
+
+=============================================================================
+
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
 [![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb)
