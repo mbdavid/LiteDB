@@ -14,7 +14,9 @@ namespace LiteDB.Platform
         /// <summary>
         /// Default constructor. Will put all files in the application directory unless otherwise specified
         /// </summary>
-        public LitePlatformFullDotNet() : this(".") { }
+        public LitePlatformFullDotNet() : this(".")
+        {
+        }
 
         /// <summary>
         /// Constructor which accepts a default directory for all files. 

@@ -55,6 +55,8 @@ namespace LiteDB.Tests
         public char MyChar { get; set; }
         public byte MyByte { get; set; }
         public sbyte MySByte { get; set; }
+        public TimeSpan MyTimespan { get; set; }
+        public KeyValuePair<string, int> MyKeyValuePair { get; set; }
 
         [BsonIndex(ignoreCase: true)]
         public decimal MyDecimal { get; set; }
@@ -89,6 +91,7 @@ namespace LiteDB.Tests
         public IEnumerable<string> MyStringEnumerable { get; set; }
         public CustomStringEnumerable CustomStringEnumerable { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
+        public Dictionary<StringComparison, string> MyDictEnum { get; set; }
 
         // interfaces
         public IMyInterface MyInterface { get; set; }
@@ -143,6 +146,7 @@ namespace LiteDB.Tests
                 MyNameValueCollection = new NameValueCollection(),
 #endif
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
+                MyDictEnum = new Dictionary<StringComparison, string>() { { StringComparison.Ordinal, "ordinal" } },
                 MyStringArray = new string[] { "One", "Two" },
                 MyStringEnumerable = new string[] { "One", "Two" },
                 CustomStringEnumerable = new CustomStringEnumerable(new string[] { "One", "Two" }),
@@ -151,6 +155,8 @@ namespace LiteDB.Tests
                 MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255,
                 MySByte = -99,
+                MyTimespan = TimeSpan.FromDays(1),
+                MyKeyValuePair = new KeyValuePair<string, int>("my-key", 123),
                 MyDecimal = 19.9m,
                 MyDecimalNullable = 25.5m,
 
@@ -236,6 +242,8 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyChar, nobj.MyChar);
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MySByte, nobj.MySByte);
+            Assert.AreEqual(obj.MyTimespan, nobj.MyTimespan);
+            Assert.AreEqual(obj.MyKeyValuePair, nobj.MyKeyValuePair);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
 #if NAMEVALUECOLLECTION
@@ -249,6 +257,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyStringEnumerable.Take(1).First(), nobj.MyStringEnumerable.Take(1).First());
             Assert.AreEqual(true, obj.CustomStringEnumerable.SequenceEqual(nobj.CustomStringEnumerable));
             Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
+            Assert.AreEqual(obj.MyDictEnum[StringComparison.Ordinal], nobj.MyDictEnum[StringComparison.Ordinal]);
 
             // interfaces
             Assert.AreEqual(obj.MyInterface.Name, nobj.MyInterface.Name);

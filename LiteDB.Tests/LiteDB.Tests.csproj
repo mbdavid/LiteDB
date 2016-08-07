@@ -57,6 +57,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Tests\ConcurrentThreadTest.cs" />
     <Compile Include="Tests\DatabasePerformanceTest.cs" />
     <Compile Include="Tests\DataTableTest.cs" />
     <Compile Include="Tests\Datafilev1Test.cs" />

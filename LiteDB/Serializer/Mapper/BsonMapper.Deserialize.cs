@@ -232,7 +232,7 @@ namespace LiteDB
         {
             foreach (var key in value.Keys)
             {
-                var k = Convert.ChangeType(key, K);
+                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, key) : Convert.ChangeType(key, K);
                 var v = this.Deserialize(T, value[key]);
 
                 dict.Add(k, v);

@@ -74,6 +74,7 @@ namespace LiteDB
 
             RegisterType(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
             RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
+            RegisterType<TimeSpan>(value => new BsonValue(value.Ticks), bson => new TimeSpan(bson.AsInt64));
 
             #endregion Register CustomTypes
 
