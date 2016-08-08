@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace LiteDB
@@ -104,6 +105,17 @@ namespace LiteDB
             return new HeaderPage();
         }
 
+        /// <summary>
+        /// To be override in Encripted disk
+        /// </summary>
+        protected virtual void ValidatePassword(byte[] passwordHash)
+        {
+            if (passwordHash.Any(b => b > 0))
+            {
+                throw LiteException.DatabaseWrongPassword();
+            }
+        }
+
         #endregion Initialize disk
 
         #region Open/Close
@@ -176,6 +188,14 @@ namespace LiteDB
             _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
+
+            // when read header, checks passoword
+            if (pageID == 0)
+            {
+                // I know, header page will be double read (it's the price for isolated concerns)
+                var header = (HeaderPage)BasePage.ReadPage(buffer);
+                ValidatePassword(header.Password);
+            }
 
             return buffer;
         }
