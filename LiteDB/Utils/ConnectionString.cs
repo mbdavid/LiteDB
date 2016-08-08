@@ -67,7 +67,8 @@ namespace LiteDB
             if (_values.Count > 1 || _values.ContainsKey("filename") || !_values.ContainsValue(null))
                 return;
 
-            _values["filename"] = (_values.Count > 0 ? _values.Keys.FirstOrDefault() : connectionString) ?? string.Empty;
+            _values["filename"] = (_values.Count > 0 ? _values.Keys.FirstOrDefault() : connectionString.Trim().Trim('"')) ??
+                                  string.Empty;
 #if !PCL
             _values["filename"] = Path.GetFullPath(_values["filename"]);
 #endif
