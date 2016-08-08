@@ -20,7 +20,7 @@ namespace LiteDB.Shell
             {
                 var header = new byte[4096];
                 s.Read(header, 0, 4096);
-                return header[44] == 4; // FILE_VERSION
+                return header[45] == 4; // FILE_VERSION
             }
         }
 
