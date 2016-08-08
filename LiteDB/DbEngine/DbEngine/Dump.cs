@@ -16,26 +16,39 @@ namespace LiteDB
             sb.AppendLine("=============");
             sb.AppendLine();
 
-            var header = (HeaderPage)BasePage.ReadPage(_disk.ReadPage(0));
-
-            for (uint i = startPage; i <= endPage; i++)
+            using (var trans = _transaction.Begin(true))
             {
-                if (i > header.LastPageID) break;
+                try
+                {
+                    var header = (HeaderPage)BasePage.ReadPage(_disk.ReadPage(0));
 
-                var p = BasePage.ReadPage(_disk.ReadPage(i));
+                    for (uint i = startPage; i <= endPage; i++)
+                    {
+                        if (i > header.LastPageID) break;
 
-                sb.AppendFormat("{0} <{1},{2}> [{3}] {4}{5} | ",
-                    p.PageID.Dump(),
-                    p.PrevPageID.Dump(),
-                    p.NextPageID.Dump(),
-                    p.PageType.ToString().PadRight(6).Substring(0, 6),
-                    p.FreeBytes.ToString("0000"),
-                    p.IsDirty ? "d" : " ");
+                        var p = BasePage.ReadPage(_disk.ReadPage(i));
 
-                p.Dump(sb);
-                sb.AppendLine();
+                        sb.AppendFormat("{0} <{1},{2}> [{3}] {4}{5} | ",
+                            p.PageID.Dump(),
+                            p.PrevPageID.Dump(),
+                            p.NextPageID.Dump(),
+                            p.PageType.ToString().PadRight(6).Substring(0, 6),
+                            p.FreeBytes.ToString("0000"),
+                            p.IsDirty ? "d" : " ");
+
+                        p.Dump(sb);
+                        sb.AppendLine();
+
+                        trans.Commit();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Rollback();
+                    throw;
+                }
             }
-
             return sb;
         }
 
