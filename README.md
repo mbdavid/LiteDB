@@ -1,5 +1,5 @@
-## Thread Safe version
-- LiteDB will be single process - when a process open datafile will be opened with NoShare
+# v-next
+- LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
 - DbEngine still lazy load (with lazy open file)
 - LiteDB will close datafile only when Dispose() LiteDatabase/DbEngine/IDiskService
 - All write method DbEngine will be inside a `lock`
@@ -12,12 +12,17 @@
 
 This structure will be work more close to a DBMS (centralized database instance with a server running).
 
+## cons
 - Will not support N application running in some datafile (like many desktops apps using a server datafile)
 - Console shell CLI must be always disconected?
 
 ### To think about
-- Be portable only `netstandard 1.4` (run .net 4.5, core, UWP 10, xamarin)
+- Be .NET 3.5 / portable `netstandard 1.4` (run .net 4.6, core, UWP 10, xamarin)
 - Write operation can be in an async Task? Will be rock in performance :)
+- Remove all "unnecessary" code (code that could be in another lib/exe)
+   - Shrink
+   - Shell inside core
+   - Stats
 
 =============================================================================
 
