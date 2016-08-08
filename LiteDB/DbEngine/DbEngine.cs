@@ -6,7 +6,7 @@ namespace LiteDB
     /// A internal class that take care of all engine data structure access - it´s basic implementation of a NoSql database
     /// Its isolated from complete solution - works on low level only
     /// </summary>
-    internal partial class DbEngine : IDisposable
+    public partial class DbEngine : IDisposable
     {
         #region Services instances
 
@@ -26,14 +26,12 @@ namespace LiteDB
 
         private CollectionService _collections;
 
-        private object _locker = new object();
-
         public DbEngine(IDiskService disk, Logger log)
         {
             // initialize disk service and check if database exists
             var isNew = disk.Initialize();
 
-            // new database? create new database
+            // new database? create new datafile
             if (isNew)
             {
                 disk.CreateNew();
@@ -49,8 +47,6 @@ namespace LiteDB
             _data = new DataService(_pager);
             _collections = new CollectionService(_pager, _indexer, _data);
             _transaction = new TransactionService(_disk, _pager, _cache);
-
-            // check user verion
         }
 
         #endregion Services instances
@@ -60,9 +56,6 @@ namespace LiteDB
         /// </summary>
         private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
         {
-            // before get a collection, avoid dirty reads
-            _transaction.AvoidDirtyRead();
-
             // search my page on collection service
             var col = _collections.Get(name);
 
@@ -77,28 +70,76 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Encapsulate all transaction commands in same data structure
+        /// Starts a new write exclusive transaction
         /// </summary>
-        private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
+        public LiteTransaction BeginTrans()
         {
-            lock (_locker)
+            return _transaction.Begin(false);
+        }
+
+        /// <summary>
+        /// Commit current transactions
+        /// </summary>
+        public void Commit()
+        {
+            _transaction.Complete();
+        }
+
+        /// <summary>
+        /// Rollback all open transactions
+        /// </summary>
+        public void Rollback()
+        {
+            _transaction.Abort();
+        }
+
+        /// <summary>
+        /// Encapsulate a read only transaction
+        /// </summary>
+        private T ReadTransaction<T>(string colName, Func<CollectionPage, T> action)
+        {
+            using (var trans = _transaction.Begin(true))
             {
                 try
                 {
-                    _transaction.Begin();
-
-                    var col = this.GetCollectionPage(colName, addIfNotExists);
+                    var col = this.GetCollectionPage(colName, false);
 
                     var result = action(col);
 
-                    _transaction.Commit();
+                    trans.Commit();
 
                     return result;
                 }
                 catch (Exception ex)
                 {
                     _log.Write(Logger.ERROR, ex.Message);
-                    _transaction.Rollback();
+                    trans.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Encapsulate read/write transaction
+        /// </summary>
+        private T WriteTransaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
+        {
+            using (var trans = _transaction.Begin(false))
+            {
+                try
+                {
+                    var col = this.GetCollectionPage(colName, addIfNotExists);
+
+                    var result = action(col);
+
+                    trans.Commit();
+
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+                    trans.Rollback();
                     throw;
                 }
             }

@@ -2,10 +2,6 @@
 
 namespace LiteDB
 {
-    internal delegate object GenericSetter(object target, object value);
-
-    internal delegate object GenericGetter(object obj);
-
     /// <summary>
     /// Internal representation for a .NET Property mapped to BsonDocument
     /// </summary>

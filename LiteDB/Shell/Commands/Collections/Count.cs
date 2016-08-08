@@ -1,4 +1,6 @@
-﻿namespace LiteDB.Shell.Commands
+﻿using System;
+
+namespace LiteDB.Shell.Commands
 {
     internal class CollectionCount : BaseCollection, IShellCommand
     {

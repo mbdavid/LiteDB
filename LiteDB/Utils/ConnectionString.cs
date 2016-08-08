@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// Manage ConnectionString to connect and create databases. Connection string are NameValue using Name1=Value1; Name2=Value2
     /// </summary>
-    internal class ConnectionString
+    public class ConnectionString
     {
         private Dictionary<string, string> _values;
 
@@ -28,7 +28,11 @@ namespace LiteDB
             {
                 // If connectionstring is only a filename, set filename
                 _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+#if PCL
+                _values["filename"] = connectionString;
+#else
                 _values["filename"] = Path.GetFullPath(connectionString);
+#endif
             }
         }
 

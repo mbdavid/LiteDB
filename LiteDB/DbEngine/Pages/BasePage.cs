@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    internal enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
+    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 
     internal abstract class BasePage
     {
@@ -151,6 +151,11 @@ namespace LiteDB
 
             var pageID = reader.ReadUInt32();
             var pageType = (PageType)reader.ReadByte();
+
+            if (pageID == 0 && (byte)pageType > 5)
+            {
+                throw LiteException.InvalidDatabase();
+            }
 
             var page = CreateInstance(pageID, pageType);
 

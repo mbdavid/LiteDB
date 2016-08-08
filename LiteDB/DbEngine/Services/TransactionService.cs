@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LiteDB
 {
@@ -10,7 +11,7 @@ namespace LiteDB
         private IDiskService _disk;
         private PageService _pager;
         private CacheService _cache;
-        private bool _trans = false;
+        private Stack<LiteTransaction> _activeTransactions = new Stack<LiteTransaction>();
 
         internal TransactionService(IDiskService disk, PageService pager, CacheService cache)
         {
@@ -24,39 +25,55 @@ namespace LiteDB
         /// <summary>
         /// Starts a new transaction - lock database to garantee that only one processes is in a transaction
         /// </summary>
-        public void Begin()
+        public LiteTransaction Begin(bool readOnly)
         {
-            if (_trans == true) throw new Exception("Begin transaction already exists");
+            lock (_activeTransactions)
+            {
+                _disk.Open(readOnly);
 
-            // lock (or try to) datafile
-            _disk.Lock();
+                var trans = new LiteTransaction(this);
 
-            _trans = true;
+                _activeTransactions.Push(trans);
+
+                return trans;
+            }
         }
 
         /// <summary>
-        /// Commit the transaction - increese
+        /// Complete transaction commit dirty pages and closing data file
         /// </summary>
-        public void Commit()
+        public void Complete(LiteTransaction trans)
         {
-            if (_trans == false) throw new Exception("No begin transaction");
-
-            if (_cache.HasDirtyPages)
+            lock (_activeTransactions)
             {
-                // save dirty pages
-                this.Save();
+                popTopTransaction(trans);
+
+                // check if trans are last transaction in stack
+                if (_activeTransactions.Count > 0) return;
+
+                if (_cache.HasDirtyPages)
+                {
+                    // save dirty pages
+                    this.Save();
+
+                    // delete journal file - datafile is consist here
+                    _disk.DeleteJournal();
+                }
 
                 // clear all pages in cache
                 _cache.Clear();
+
+                // close datafile
+                _disk.Close();
             }
+        }
 
-            // delete journal file - datafile is consist here
-            _disk.DeleteJournal();
-
-            // unlock datafile
-            _disk.Unlock();
-
-            _trans = false;
+        /// <summary>
+        /// Complete transaction using top transaction
+        /// </summary>
+        public void Complete()
+        {
+            this.Complete(_activeTransactions.Peek());
         }
 
         /// <summary>
@@ -80,44 +97,39 @@ namespace LiteDB
             }
         }
 
-        public void Rollback()
+        /// <summary>
+        /// Stop transaction, discard journal file and close database
+        /// </summary>
+        public void Abort()
         {
-            if (_trans == false) return;
-
-            // clear all pages from memory (return true if has dirty pages on cache)
-            if (_cache.Clear())
+            lock (_activeTransactions)
             {
-                // if has dirty page, has journal file - delete it (is not valid)
-                _disk.DeleteJournal();
+                // during an abort, and active transaction becomes invalid
+                // mark them as such, and pull them off the stack
+                while (_activeTransactions.Count > 0)
+                {
+                    _activeTransactions.Pop().Cancel();
+                }
+
+                // clear all pages from memory (return true if has dirty pages on cache)
+                if (_cache.Clear())
+                {
+                    // if has dirty page, has journal file - delete it (is not valid)
+                    _disk.DeleteJournal();
+                }
+
+                // release datafile
+                _disk.Close();
             }
-
-            // unlock datafile
-            _disk.Unlock();
-
-            _trans = false;
         }
 
-        /// <summary>
-        /// This method must be called before read/write operation to avoid dirty reads.
-        /// It's occurs when my cache contains pages that was changed in another process
-        /// </summary>
-        public bool AvoidDirtyRead()
+        private void popTopTransaction(LiteTransaction trans)
         {
-            var cache = (HeaderPage)_cache.GetPage(0);
+            var temp = _activeTransactions.Peek();
 
-            if (cache == null) return false;
+            if (temp != trans) throw new ArgumentException("Invalid transaction on top of stack");
 
-            // read change direct from disk
-            var change = _disk.GetChangeID();
-
-            // if changeID was changed, file was changed by another process - clear all cache
-            if (cache.ChangeID != change)
-            {
-                _cache.Clear();
-                return true;
-            }
-
-            return false;
+            _activeTransactions.Pop();
         }
     }
 }

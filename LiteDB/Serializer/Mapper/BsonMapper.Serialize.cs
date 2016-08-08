@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace LiteDB
 {
@@ -28,7 +30,7 @@ namespace LiteDB
 
         internal BsonValue Serialize(Type type, object obj, int depth)
         {
-            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH);
+            if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH, type);
 
             if (obj == null) return BsonValue.Null;
 
@@ -61,7 +63,7 @@ namespace LiteDB
             else if (obj is Boolean) return new BsonValue((Boolean)obj);
             else if (obj is DateTime) return new BsonValue((DateTime)obj);
             // basic .net type to convert to bson
-            else if (obj is Int16 || obj is UInt16 || obj is Byte)
+            else if (obj is Int16 || obj is UInt16 || obj is Byte || obj is SByte)
             {
                 return new BsonValue(Convert.ToInt32(obj));
             }
@@ -85,7 +87,11 @@ namespace LiteDB
             // for dictionary
             else if (obj is IDictionary)
             {
+#if PCL
+                var itemType = type.GetTypeInfo().GenericTypeArguments[1];
+#else
                 var itemType = type.GetGenericArguments()[1];
+#endif
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
@@ -137,7 +143,7 @@ namespace LiteDB
             // adding _type only where property Type is not same as object instance type
             if (type != t)
             {
-                dict["_type"] = new BsonValue(t.FullName + ", " + t.Assembly.GetName().Name);
+                dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
             foreach (var prop in mapper.Values)

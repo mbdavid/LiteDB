@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{95D43B67-F530-40AD-B24E-0866C94C256C}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LiteDB.Tests.Android</RootNamespace>
+    <AssemblyName>LiteDB.Tests.Android</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <AndroidApplication>true</AndroidApplication>
+    <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <TargetFrameworkVersion>v6.0</TargetFrameworkVersion>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;PCL;NAMEVALUECOLLECTION</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
+    <AndroidLinkSkip />
+    <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
+    <AndroidSupportedAbis>
+    </AndroidSupportedAbis>
+    <AndroidStoreUncompressedFileExtensions />
+    <MandroidI18n />
+    <Debugger>Xamarin</Debugger>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Mono.Android" />
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Xamarin.Android.NUnitLite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\LiteDB.Tests\Tests\AutoIdTest.cs">
+      <Link>Tests\AutoIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\BsonFieldTest.cs">
+      <Link>Tests\BsonFieldTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\BsonTest.cs">
+      <Link>Tests\BsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\BulkTest.cs">
+      <Link>Tests\BulkTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\ConcurrentTest.cs">
+      <Link>Tests\ConcurrentTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DatabasePerformanceTest.cs">
+      <Link>Tests\DatabasePerformanceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DataTableTest.cs">
+      <Link>Tests\DataTableTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DbRefIndexTest.cs">
+      <Link>Tests\DbRefIndexTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DbVersionTest.cs">
+      <Link>Tests\DbVersionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DerivedTypesTest.cs">
+      <Link>Tests\DerivedTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DiskFileTest.cs">
+      <Link>Tests\DiskFileTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\DropCollectionTest.cs">
+      <Link>Tests\DropCollectionTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\EncryptedTest.cs">
+      <Link>Tests\EncryptedTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\FileStorageTest.cs">
+      <Link>Tests\FileStorageTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\IncludeTest.cs">
+      <Link>Tests\IncludeTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\IndexOrderTest.cs">
+      <Link>Tests\IndexOrderTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\JsonTest.cs">
+      <Link>Tests\JsonTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\LinqTest.cs">
+      <Link>Tests\LinqTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\LoopTest.cs">
+      <Link>Tests\LoopTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\MapperInterfaceTest.cs">
+      <Link>Tests\MapperInterfaceTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\MapperTest.cs">
+      <Link>Tests\MapperTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\ObjectIdTest.cs">
+      <Link>Tests\ObjectIdTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\ShellTest.cs">
+      <Link>Tests\ShellTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\StreamDbTest.cs">
+      <Link>Tests\StreamDbTest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\LiteDB.Tests\Tests\TempFile.cs">
+      <Link>Tests\TempFile.cs</Link>
+    </Compile>
+    <Compile Include="MainActivity.cs" />
+    <Compile Include="Resources\Resource.Designer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestPlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AboutResources.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\Icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\values\Strings.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\LiteDB\LiteDB.Core.csproj">
+      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
+      <Name>LiteDB.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LiteDB.Platform.Android\LiteDB.Platform.Android.csproj">
+      <Project>{4510a5de-d86f-4f96-be1a-ec227a42210d}</Project>
+      <Name>LiteDB.Platform.Android</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+     Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

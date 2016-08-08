@@ -16,6 +16,8 @@ namespace LiteDB
 
         internal EntityBuilder(BsonMapper mapper)
         {
+            LitePlatform.ThrowIfNotInitialized();
+
             _mapper = mapper;
             _prop = mapper.GetPropertyMapper(typeof(T));
         }

@@ -3,7 +3,11 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal unsafe class ByteWriter
+    internal
+#if NETFULL
+    unsafe
+#endif
+    class ByteWriter
     {
         private byte[] _buffer;
         private int _pos;
@@ -47,8 +51,11 @@ namespace LiteDB
 
         public void Write(UInt16 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
 
@@ -57,8 +64,11 @@ namespace LiteDB
 
         public void Write(UInt32 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -69,8 +79,11 @@ namespace LiteDB
 
         public void Write(UInt64 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -85,8 +98,11 @@ namespace LiteDB
 
         public void Write(Int16 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
 
@@ -95,8 +111,11 @@ namespace LiteDB
 
         public void Write(Int32 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -107,8 +126,11 @@ namespace LiteDB
 
         public void Write(Int64 value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -123,8 +145,11 @@ namespace LiteDB
 
         public void Write(Single value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -135,8 +160,11 @@ namespace LiteDB
 
         public void Write(Double value)
         {
+#if NETFULL
             byte* pi = (byte*)&value;
-
+#else
+            var pi = BitConverter.GetBytes(value);
+#endif
             _buffer[_pos + 0] = pi[0];
             _buffer[_pos + 1] = pi[1];
             _buffer[_pos + 2] = pi[2];
@@ -176,7 +204,7 @@ namespace LiteDB
 
         public void Write(DateTime value)
         {
-            this.Write(value.Ticks);
+            this.Write(value.ToUniversalTime().Ticks);
         }
 
         public void Write(Guid value)

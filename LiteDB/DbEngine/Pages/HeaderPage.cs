@@ -25,7 +25,7 @@ namespace LiteDB
         /// <summary>
         /// Datafile specification version
         /// </summary>
-        private const byte FILE_VERSION = 5;
+        private const byte FILE_VERSION = 6;
 
         /// <summary>
         /// Get/Set the changeID of data. When a client read pages, all pages are in the same version. But when OpenTransaction, we need validade that current changeID is the sabe that we have in cache
@@ -43,9 +43,14 @@ namespace LiteDB
         public uint LastPageID { get; set; }
 
         /// <summary>
-        /// Database parameters stored in header page - Use 200 bytes fixed
+        /// Database user version [2 bytes]
         /// </summary>
-        public DbParams DbParams { get; set; }
+        public ushort DbVersion = 0;
+
+        /// <summary>
+        /// Password hash in SHA1 [20 bytes]
+        /// </summary>
+        public byte[] Password = new byte[20];
 
         /// <summary>
         /// Get a dictionary with all collection pages with pageID link
@@ -60,7 +65,8 @@ namespace LiteDB
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
-            this.DbParams = new DbParams();
+            this.DbVersion = 0;
+            this.Password = new byte[20];
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -86,7 +92,8 @@ namespace LiteDB
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
-            this.DbParams.Read(reader);
+            this.DbVersion = reader.ReadUInt16();
+            this.Password = reader.ReadBytes(this.Password.Length);
 
             // read page collections references (position on end of page)
             var cols = reader.ReadByte();
@@ -103,7 +110,8 @@ namespace LiteDB
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
-            this.DbParams.Write(writer);
+            writer.Write(this.DbVersion);
+            writer.Write(this.Password);
 
             writer.Write((byte)this.CollectionPages.Count);
             foreach (var key in this.CollectionPages.Keys)

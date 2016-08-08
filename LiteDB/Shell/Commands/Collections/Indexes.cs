@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
@@ -13,7 +14,9 @@ namespace LiteDB.Shell.Commands
         {
             var col = this.ReadCollection(engine, s);
 
-            return new BsonArray(engine.GetIndexes(col).Select(x => x.AsDocument));
+            var mapper = new BsonMapper().UseCamelCase();
+
+            return new BsonArray(engine.GetIndexes(col).Select(x => mapper.ToDocument<IndexInfo>(x)));
         }
     }
 }

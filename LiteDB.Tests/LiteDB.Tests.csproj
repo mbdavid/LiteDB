@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NAMEVALUECOLLECTION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -39,14 +39,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LiteDB090">
-      <HintPath>..\LiteDB.Shell\Resources\LiteDB090.dll</HintPath>
-      <Aliases>v090</Aliases>
-    </Reference>
-    <Reference Include="LiteDB104">
-      <HintPath>..\LiteDB.Shell\Resources\LiteDB104.dll</HintPath>
-      <Aliases>v104</Aliases>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -65,33 +57,38 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Concurrency\ParallelTest.cs" />
-    <Compile Include="Concurrency\TaskTest.cs" />
-    <Compile Include="Concurrency\ThreadSafeTest.cs" />
-    <Compile Include="Crud\LongCountTest.cs" />
-    <Compile Include="Crud\BulkTest.cs" />
-    <Compile Include="Bson\BsonTest.cs" />
-    <Compile Include="Crud\DbVersionTest.cs" />
-    <Compile Include="Disks\EncryptedTest.cs" />
-    <Compile Include="Mapping\AutoIdTest.cs" />
-    <Compile Include="Crud\DropCollectionTest.cs" />
-    <Compile Include="Crud\FileStorageTest.cs" />
-    <Compile Include="Crud\BigFileTest.cs" />
-    <Compile Include="Mapping\DataTableTest.cs" />
-    <Compile Include="Mapping\DbRefIndexTest.cs" />
-    <Compile Include="Mapping\MapperInterfaceTest.cs" />
-    <Compile Include="Mapping\BsonFieldTest.cs" />
-    <Compile Include="Bson\ObjectIdTest.cs" />
-    <Compile Include="Mapping\DerivedTypesTest.cs" />
-    <Compile Include="Mapping\MapperTest.cs" />
-    <Compile Include="Concurrency\ConcurrentTest.cs" />
-    <Compile Include="Bson\JsonTest.cs" />
-    <Compile Include="Index\LinqTest.cs" />
-    <Compile Include="Mapping\IncludeTest.cs" />
-    <Compile Include="Shell\ShellTest.cs" />
-    <Compile Include="Utils\Initialize.cs" />
-    <Compile Include="Utils\DB.cs" />
-    <Compile Include="Index\IndexOrderTest.cs" />
+    <Compile Include="Tests\ConcurrentThreadTest.cs" />
+    <Compile Include="Tests\DatabasePerformanceTest.cs" />
+    <Compile Include="Tests\DataTableTest.cs" />
+    <Compile Include="Tests\Datafilev1Test.cs" />
+    <Compile Include="Tests\DiskFileTest.cs" />
+    <Compile Include="Tests\FileStorageTest.cs" />
+    <Compile Include="Tests\DateTimeUtcTest.cs" />
+    <Compile Include="Tests\MapperExceptionTest.cs" />
+    <Compile Include="Tests\TransactionTest.cs" />
+    <Compile Include="Tests\LoopTest.cs" />
+    <Compile Include="Tests\BulkTest.cs" />
+    <Compile Include="Tests\BsonTest.cs" />
+    <Compile Include="Tests\DbVersionTest.cs" />
+    <Compile Include="Tests\EncryptedTest.cs" />
+    <Compile Include="Tests\AutoIdTest.cs" />
+    <Compile Include="Tests\DropCollectionTest.cs" />
+    <Compile Include="Tests\DbRefIndexTest.cs" />
+    <Compile Include="Tests\MapperInterfaceTest.cs" />
+    <Compile Include="Tests\BsonFieldTest.cs" />
+    <Compile Include="Tests\PolymorphicTest.cs" />
+    <Compile Include="Tests\ObjectIdTest.cs" />
+    <Compile Include="Tests\DerivedTypesTest.cs" />
+    <Compile Include="Tests\MapperTest.cs" />
+    <Compile Include="Tests\ConcurrentTest.cs" />
+    <Compile Include="Tests\JsonTest.cs" />
+    <Compile Include="Tests\LinqTest.cs" />
+    <Compile Include="Tests\IncludeTest.cs" />
+    <Compile Include="Tests\ShellTest.cs" />
+    <Compile Include="Tests\StreamDbTest.cs" />
+    <Compile Include="Tests\TempFile.cs" />
+    <Compile Include="TestPlatform.cs" />
+    <Compile Include="Tests\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

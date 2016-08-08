@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,7 +31,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -51,35 +51,49 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Collections\Aggregate.cs" />
-    <Compile Include="Core\Collections\AutoId.cs" />
-    <Compile Include="Core\Collections\Stats.cs" />
-    <Compile Include="Core\Database\Collection.cs" />
-    <Compile Include="Core\Database\DbVersion.cs" />
-    <Compile Include="Core\Database\OnModelCreating.cs" />
+    <Compile Include="Core\Collections\GetCollectionInfo.cs" />
     <Compile Include="Core\Database\Shell.cs" />
+    <Compile Include="Core\LitePlataform.cs" />
+    <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
+    <Compile Include="DbEngine\Structures\CollectionInfo.cs" />
+    <Compile Include="DbEngine\Structures\IndexInfo.cs" />
+    <Compile Include="DbEngine\Structures\LiteTransaction.cs" />
+    <Compile Include="Platform\FileHandler.cs" />
+    <Compile Include="Utils\PreserveAttribute.cs" />
+    <Compile Include="Platform\LitePlatformFullDotNet.cs" />
+    <Compile Include="Platform\EmitReflectionHandler.cs" />
+    <Compile Include="Core\Database\Collection.cs" />
+    <Compile Include="Core\Database\Transaction.cs" />
     <Compile Include="Core\Database\Utils.cs" />
     <Compile Include="Core\Database\FileStorage.cs" />
-    <Compile Include="DbEngine\Actions\Shrink.cs" />
-    <Compile Include="DbEngine\Actions\Dump.cs" />
-    <Compile Include="DbEngine\Actions\Stats.cs" />
-    <Compile Include="DbEngine\Actions\DbParams.cs" />
-    <Compile Include="DbEngine\Disks\EncryptedDiskService.cs" />
+    <Compile Include="DbEngine\DbEngine\DbVersion.cs" />
+    <Compile Include="DbEngine\DbEngine\Shrink.cs" />
+    <Compile Include="DbEngine\DbEngine\Dump.cs" />
+    <Compile Include="DbEngine\DbEngine\Stats.cs" />
+    <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Disks\StreamDiskService.cs" />
-    <Compile Include="DbEngine\Disks\IDiskService.cs" />
-    <Compile Include="DbEngine\Actions\Delete.cs" />
-    <Compile Include="DbEngine\Actions\Find.cs" />
-    <Compile Include="DbEngine\Actions\Index.cs" />
-    <Compile Include="DbEngine\Actions\Collection.cs" />
-    <Compile Include="DbEngine\Actions\Aggregate.cs" />
-    <Compile Include="DbEngine\Actions\Update.cs" />
-    <Compile Include="DbEngine\Actions\Insert.cs" />
+    <Compile Include="Exceptions\PlatformNotInitializedException.cs" />
+    <Compile Include="Extensions\ByteArrayExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Interfaces\IEncryption.cs" />
+    <Compile Include="Interfaces\IDiskService.cs" />
+    <Compile Include="DbEngine\DbEngine\Delete.cs" />
+    <Compile Include="DbEngine\DbEngine\Find.cs" />
+    <Compile Include="DbEngine\DbEngine\Index.cs" />
+    <Compile Include="DbEngine\DbEngine\Collection.cs" />
+    <Compile Include="DbEngine\DbEngine\Aggregate.cs" />
+    <Compile Include="DbEngine\DbEngine\Update.cs" />
+    <Compile Include="DbEngine\DbEngine\Insert.cs" />
     <Compile Include="DbEngine\DbEngine.cs" />
     <Compile Include="DbEngine\Pages\EmptyPage.cs" />
-    <Compile Include="DbEngine\Structures\DbParams.cs" />
+    <Compile Include="Interfaces\IFileHandler.cs" />
+    <Compile Include="Interfaces\ILitePlatform.cs" />
+    <Compile Include="Interfaces\IReflectionHandler.cs" />
     <Compile Include="Query\Impl\QueryEmpty.cs" />
     <Compile Include="Serializer\Bson\BsonReader.cs" />
     <Compile Include="Serializer\Bson\BsonSerializer.cs" />
     <Compile Include="Serializer\Bson\BsonWriter.cs" />
+    <Compile Include="Serializer\Mapper\AutoId.cs" />
     <Compile Include="Serializer\Mapper\EntityBuilder.cs" />
     <Compile Include="Core\Collections\Include.cs" />
     <Compile Include="Document\ObjectId.cs" />
@@ -97,8 +111,8 @@
     <Compile Include="Query\Impl\QueryAll.cs" />
     <Compile Include="Serializer\Json\JsonReader.cs" />
     <Compile Include="Serializer\Json\JsonTokenizer.cs" />
-    <Compile Include="Serializer\Mapper\BsonIgnoreAttribute.cs" />
-    <Compile Include="Serializer\Mapper\BsonIdAttribute.cs" />
+    <Compile Include="Serializer\Mapper\Attributes\BsonIgnoreAttribute.cs" />
+    <Compile Include="Serializer\Mapper\Attributes\BsonIdAttribute.cs" />
     <Compile Include="Core\Collections\LiteCollection.cs" />
     <Compile Include="Core\Collections\Delete.cs" />
     <Compile Include="Core\Collections\Index.cs" />
@@ -118,8 +132,8 @@
     <Compile Include="Serializer\Mapper\BsonMapper.cs" />
     <Compile Include="Serializer\Mapper\BsonMapper.Serialize.cs" />
     <Compile Include="Serializer\Mapper\BsonMapper.Deserialize.cs" />
-    <Compile Include="Serializer\Mapper\BsonFieldAttribute.cs" />
-    <Compile Include="Serializer\Mapper\BsonIndexAttribute.cs" />
+    <Compile Include="Serializer\Mapper\Attributes\BsonFieldAttribute.cs" />
+    <Compile Include="Serializer\Mapper\Attributes\BsonIndexAttribute.cs" />
     <Compile Include="Serializer\Mapper\PropertyMapper.cs" />
     <Compile Include="Serializer\Mapper\Reflection.cs" />
     <Compile Include="Shell\Commands\Collections\Bulk.cs" />
@@ -137,15 +151,17 @@
     <Compile Include="Shell\Commands\Collections\Indexes.cs" />
     <Compile Include="Shell\Commands\Collections\Insert.cs" />
     <Compile Include="Shell\Commands\Collections\Update.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Delete.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Download.cs" />
-    <Compile Include="Shell\Commands\FileStoage\BaseFileStorage.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Find.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Update.cs" />
-    <Compile Include="Shell\Commands\FileStoage\Upload.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Delete.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Download.cs" />
+    <Compile Include="Shell\Commands\FileStorage\BaseFileStorage.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Find.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Update.cs" />
+    <Compile Include="Shell\Commands\FileStorage\Upload.cs" />
     <Compile Include="Shell\Commands\IShellCommand.cs" />
     <Compile Include="Shell\Commands\Others\Comment.cs" />
     <Compile Include="Shell\Commands\Others\DiskDump.cs" />
+    <Compile Include="Shell\Commands\Others\DbVersion.cs" />
+    <Compile Include="Shell\Commands\Others\Transaction.cs" />
     <Compile Include="Shell\Commands\Others\ShowCollections.cs" />
     <Compile Include="Shell\LiteShell.cs" />
     <Compile Include="DbEngine\Pages\DataPage.cs" />
@@ -162,29 +178,29 @@
     <Compile Include="DbEngine\Pages\ExtendPage.cs" />
     <Compile Include="DbEngine\Services\CacheService.cs" />
     <Compile Include="DbEngine\Services\PageService.cs" />
-    <Compile Include="DbEngine\Disks\FileDiskService.cs" />
     <Compile Include="DbEngine\Services\TransactionService.cs" />
     <Compile Include="Shell\Commands\Others\Shrink.cs" />
-    <Compile Include="Utils\StringExtensions.cs" />
-    <Compile Include="Utils\ExpressionExtensions.cs" />
-    <Compile Include="Utils\IndexNotFoundException.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Utils\LazyLoad.cs" />
-    <Compile Include="Utils\StreamExtensions.cs" />
+    <Compile Include="Extensions\ExpressionExtensions.cs" />
+    <Compile Include="Exceptions\IndexNotFoundException.cs" />
+    <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Utils\ByteReader.cs" />
     <Compile Include="Utils\ByteWriter.cs" />
     <Compile Include="Core\LiteDatabase.cs" />
     <Compile Include="DbEngine\Pages\BasePage.cs" />
     <Compile Include="DbEngine\Pages\HeaderPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\BinaryExtensions.cs" />
+    <Compile Include="Extensions\BinaryExtensions.cs" />
     <Compile Include="Utils\ConnectionString.cs" />
-    <Compile Include="Utils\IOExceptionExtensions.cs" />
+    <Compile Include="Extensions\IOExceptionExtensions.cs" />
     <Compile Include="Utils\MimeTypeConverter.cs" />
-    <Compile Include="Utils\DictionaryExtensions.cs" />
-    <Compile Include="Utils\LiteException.cs" />
+    <Compile Include="Extensions\DictionaryExtensions.cs" />
+    <Compile Include="Exceptions\LiteException.cs" />
     <Compile Include="Utils\Logger.cs" />
-    <Compile Include="Utils\SimpleAES.cs" />
+    <Compile Include="Platform\RijndaelEncryption.cs" />
     <Compile Include="Utils\StringScanner.cs" />
+    <Compile Include="Exceptions\TransactionCancelledException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LiteDB.snk" />

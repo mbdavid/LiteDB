@@ -15,7 +15,7 @@ namespace LiteDB
 
         private DbEngine _engine;
 
-        internal LiteFileStorage(DbEngine engine)
+        public LiteFileStorage(DbEngine engine)
         {
             _engine = engine;
         }
@@ -52,9 +52,10 @@ namespace LiteDB
             return this.Upload(new LiteFileInfo(id), stream);
         }
 
+
         public LiteFileInfo Upload(string id, string filename)
         {
-            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            using (var stream = LitePlatform.Platform.FileHandler.OpenFileAsStream(filename, true))
             {
                 return this.Upload(new LiteFileInfo(id, filename), stream);
             }
@@ -65,7 +66,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string filename)
         {
-            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            using (var stream = LitePlatform.Platform.FileHandler.OpenFileAsStream(filename, true))
             {
                 return this.Upload(new LiteFileInfo(Path.GetFileName(filename), filename), stream);
             }

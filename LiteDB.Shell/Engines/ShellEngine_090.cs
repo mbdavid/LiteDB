@@ -16,7 +16,12 @@ namespace LiteDB.Shell
 
         public bool Detect(string filename)
         {
-            return Helper.Try(() => new LiteEngine(filename));
+            using (var s = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var header = new byte[4096];
+                s.Read(header, 0, 4096);
+                return header[44] == 3; // FILE_VERSION
+            }
         }
 
         public void Open(string connectionString)

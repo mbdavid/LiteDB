@@ -1,4 +1,6 @@
-﻿namespace LiteDB.Shell.Commands
+﻿using System;
+
+namespace LiteDB.Shell.Commands
 {
     internal class CollectionStats : BaseCollection, IShellCommand
     {
@@ -11,7 +13,9 @@
         {
             var col = this.ReadCollection(engine, s);
 
-            return engine.Stats(col);
+            var mapper = new BsonMapper().UseCamelCase();
+
+            return mapper.ToDocument<CollectionInfo>(engine.Stats(col));
         }
     }
 }

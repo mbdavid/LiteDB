@@ -1,8 +1,6 @@
-﻿using System;
-
 namespace LiteDB
 {
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase
     {
         private LiteFileStorage _fs = null;
 
