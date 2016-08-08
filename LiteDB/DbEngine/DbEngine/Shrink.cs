@@ -42,6 +42,9 @@ namespace LiteDB
 
                             tempEngine.Insert(col.CollectionName,
                                 nodes.Select(node => BsonSerializer.Deserialize(_data.Read(node.DataBlock))));
+
+                            // then re-open the disk service as the previous Insert's auto-transaction just closed it.
+                            tempDisk.Open(false);
                         }
 
                         // get final header from temp engine
