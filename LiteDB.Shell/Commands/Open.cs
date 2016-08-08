@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    extern alias v104;
     extern alias v200;
 
     internal class Open : ConsoleCommand
