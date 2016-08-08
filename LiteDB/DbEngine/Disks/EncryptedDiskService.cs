@@ -33,24 +33,23 @@ namespace LiteDB
             return new HeaderPage() { Password = _password };
         }
 
+        protected override void ValidatePassword(byte[] passwordHash)
+        {
+            if (passwordHash.BinaryCompareTo(_password) != 0)
+            {
+                throw LiteException.DatabaseWrongPassword();
+            }
+        }
+
         /// <summary>
         /// Override read page decrypting data from disk
         /// </summary>
         public override byte[] ReadPage(uint pageID)
         {
             var buffer = base.ReadPage(pageID);
-
-            // when read header, checks passoword
+            
             if (pageID == 0)
             {
-                // I know, header page will be double read (it's the price for isolated concerns)
-                var header = (HeaderPage)BasePage.ReadPage(buffer);
-
-                if (header.Password.BinaryCompareTo(_password) != 0)
-                {
-                    throw LiteException.DatabaseWrongPassword();
-                }
-
                 return buffer;
             }
 
