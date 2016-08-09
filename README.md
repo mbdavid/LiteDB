@@ -37,6 +37,7 @@ This structure will be work more close to a DBMS (centralized database instance 
    - Stats
    - Dump
    - FileStorage (GridFS)
+   - Encryption
 - IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 
 ### Regions
