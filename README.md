@@ -17,20 +17,24 @@ This structure will be work more close to a DBMS (centralized database instance 
 - Console shell CLI must be always disconected?
 
 ### To think about
-- Be .NET 3.5 / portable `netstandard 1.4` (run .net 4.6, core, UWP 10, xamarin)
-- Write operation can be in an async Task? Will be rock in performance :)
+- Be .NET 3.5 / portable `netstandard 1.4` (run .net 4.6, core, UWP 10, xamarin) - Be more portable as possible (remove Emit, unsafe, ...)
+- Write operation can be in an async Task? Will boost performance :) (needs .NET 4)
 - Remove all "unnecessary" code (could be an plugin/add after more stable)
    - Shrink
    - Shell inside core
    - Stats
    - Dump
    - FileStorage (GridFS)
+- IQueryProvider
 
 ### Regions
    - Database
    - Document
+       - BsonSerializer
+       - JsonSerializer
    - Mapper
-       - Json/Bson/Mapper/Linq/Reflections
+       - Attributes
+       - Linq
    - Engine
        - Pages
        - Services
@@ -44,7 +48,10 @@ This structure will be work more close to a DBMS (centralized database instance 
 - BsonDocument as IDictionary<string, BsonValue>
 - Support from external mapper (like Json.net)
 - MultiKey index
-
+- Source: use Class.Method.cs in all partial classes
+- Source: do not have 2 files with same name
+- Remove auto index
+- No more index options like Trim/RemoveAccents => Only in Mapper (like EmptyStringToNull)
 
 =============================================================================
 
