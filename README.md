@@ -1,4 +1,5 @@
 # v-next
+### ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
 - DbEngine still lazy load (with lazy open file)
 - LiteDB will close datafile only when Dispose() LiteDatabase/DbEngine/IDiskService
@@ -16,8 +17,19 @@ This structure will be work more close to a DBMS (centralized database instance 
 - Will not support N application running in some datafile (like many desktops apps using a server datafile)
 - Console shell CLI must be always disconected?
 
-### To think about
+### must-have
 - Be .NET 3.5 / portable `netstandard 1.4` (run .net 4.6, core, UWP 10, xamarin) - Be more portable as possible (remove Emit, unsafe, ...)
+- Cache support with journal
+- BsonDocument as IDictionary<string, BsonValue>
+- Support from external mapper (like Json.net)
+- MultiKey index
+- Source: use Class.Method.cs in all partial classes
+- Source: do not have 2 files with same name
+- Remove auto create index
+- No more index options like Trim/RemoveAccents => Only in Mapper (like EmptyStringToNull)
+- Single LiteException class
+
+### To think about
 - Write operation can be in an async Task? Will boost performance :) (needs .NET 4)
 - Remove all "unnecessary" code (could be an plugin/add after more stable)
    - Shrink
@@ -25,10 +37,12 @@ This structure will be work more close to a DBMS (centralized database instance 
    - Stats
    - Dump
    - FileStorage (GridFS)
-- IQueryProvider
+- IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 
 ### Regions
    - Database
+       - Collections
+       - QueryProvider
    - Document
        - BsonSerializer
        - JsonSerializer
@@ -42,16 +56,6 @@ This structure will be work more close to a DBMS (centralized database instance 
        - Structures
        - Query
     - Utils
-
-### must-have
-- Cache support with journal
-- BsonDocument as IDictionary<string, BsonValue>
-- Support from external mapper (like Json.net)
-- MultiKey index
-- Source: use Class.Method.cs in all partial classes
-- Source: do not have 2 files with same name
-- Remove auto index
-- No more index options like Trim/RemoveAccents => Only in Mapper (like EmptyStringToNull)
 
 =============================================================================
 
