@@ -19,10 +19,32 @@ This structure will be work more close to a DBMS (centralized database instance 
 ### To think about
 - Be .NET 3.5 / portable `netstandard 1.4` (run .net 4.6, core, UWP 10, xamarin)
 - Write operation can be in an async Task? Will be rock in performance :)
-- Remove all "unnecessary" code (code that could be in another lib/exe)
+- Remove all "unnecessary" code (could be an plugin/add after more stable)
    - Shrink
    - Shell inside core
    - Stats
+   - Dump
+   - FileStorage (GridFS)
+
+### Regions
+   - Database
+   - Document
+   - Mapper
+       - Json/Bson/Mapper/Linq/Reflections
+   - Engine
+       - Pages
+       - Services
+       - Disks
+       - Structures
+       - Query
+    - Utils
+
+### must-have
+- Cache support with journal
+- BsonDocument as IDictionary<string, BsonValue>
+- Support from external mapper (like Json.net)
+- MultiKey index
+
 
 =============================================================================
 
