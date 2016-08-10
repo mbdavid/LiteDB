@@ -65,8 +65,11 @@ namespace LiteDB
                 _current = '\0';
                 this.EOF = true;
             }
-
-            _current = (char)c;
+            else
+            {
+                //get char value when it doesn't equal -1
+                _current = (char)c;
+            }
 
             return _current;
         }
