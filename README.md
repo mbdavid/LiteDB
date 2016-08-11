@@ -31,19 +31,11 @@ This structure will be work more close to a DBMS (centralized database instance 
 
 ### To think about
 - Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
-- Remove all "unnecessary" code (could be an plugin/add after more stable)
-   - Shrink
-   - Shell inside core (must be an extra tool)
-   - Stats
-   - Dump
-   - FileStorage (GridFS)
-   - Encryption (needs extra libs to netstandard)
 - IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 
 ### Regions
 - Database
    - Collections
-   - QueryProvider
 - Document
    - BsonSerializer
    - JsonSerializer
@@ -53,10 +45,11 @@ This structure will be work more close to a DBMS (centralized database instance 
    - Disks
    - Structures
    - Query
-- Mapper
-   - Attributes
-   - Linq
 - Utils
+- Plugins
+   - Mapper
+   - Shell
+   - FileStorage
 
 =============================================================================
 
