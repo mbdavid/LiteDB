@@ -242,26 +242,40 @@ namespace LiteDB
         private void DeserializeObject(Type type, object obj, BsonDocument value)
         {
             var props = this.GetPropertyMapper(type);
-
-            foreach (var prop in props.Values)
+            PropertyMapper property=null;
+            BsonValue bson_value=null;
+            try
             {
-                // property is read only
-                if (prop.Setter == null) continue;
 
-                var val = value[prop.FieldName];
-
-                if (!val.IsNull)
+                foreach (var prop in props.Values)
                 {
-                    // check if has a custom deserialize function
-                    if (prop.Deserialize != null)
+                    property = prop;
+                    // property is read only
+                    if (prop.Setter == null) continue;
+
+                    var val = value[prop.FieldName];
+                    bson_value = val;
+
+                    if (!val.IsNull)
                     {
-                        prop.Setter(obj, prop.Deserialize(val, this));
-                    }
-                    else
-                    {
-                        prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                        // check if has a custom deserialize function
+                        if (prop.Deserialize != null)
+                        {
+                            prop.Setter(obj, prop.Deserialize(val, this));
+
+                        }
+                        else
+                        {
+                            prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                        }
                     }
                 }
+            }
+            catch (InvalidCastException e)
+            {
+                var typename = property == null ? null : property.PropertyType.Name;
+                var msg = string.Format("Cast from '{0}' to '{1}' failed in document: {2}", bson_value, typename, value);
+                throw new InvalidCastException(msg, e);
             }
         }
     }
