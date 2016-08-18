@@ -22,12 +22,13 @@ This structure will be work more close to a DBMS (centralized database instance 
 - Cache support with journal
 - BsonDocument as IDictionary<string, BsonValue>
 - Support from external mapper (like Json.net)
-- MultiKey index
+- MultiKey index (as a plugin? using external methods do find/createindex?)
 - Source: use Class.Method.cs in all partial classes
 - Source: do not have 2 files with same name
 - Remove auto create index
 - No more index options like Trim/RemoveAccents => Only in Mapper (like EmptyStringToNull)
 - Single LiteException class
+- Write better bsonmapper exceptions error messages
 
 ### To think about
 - Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
@@ -49,6 +50,7 @@ This structure will be work more close to a DBMS (centralized database instance 
 - Plugins
    - Mapper
    - Shell
+   - Repository
    - FileStorage
 
 =============================================================================
