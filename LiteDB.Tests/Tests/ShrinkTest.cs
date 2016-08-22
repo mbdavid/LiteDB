@@ -13,8 +13,8 @@ namespace LiteDB.Tests
 
         public ShrinkTest()
         {
-            _customerName = $"Jo{new string('h', 1000)}n Doe";
-            _productName = $"Prod{new string('u', 1000)}ct";
+            _customerName = "Jo"+new string('h', 1000)+"n Doe";
+            _productName = "Prod"+new string('u', 1000)+"ct";
         }
 
         [TestMethod]
@@ -51,7 +51,7 @@ namespace LiteDB.Tests
                 {
                     var customers = db.GetCollection<Customer>("customers");
 
-                    Create(customers, id => new Customer { Id = id, Name = $"{_customerName}{id}" });
+                    Create(customers, id => new Customer { Id = id, Name = ""+_customerName+id });
 
                     sizeAfterInserts = GetLocalDbSizeMegabytes(tmp.Filename);
 
@@ -79,8 +79,8 @@ namespace LiteDB.Tests
                     var products = db.GetCollection<Product>("products");
                     var customers = db.GetCollection<Customer>("customers");
 
-                    Create(products, id => new Product { ProductId = id, Name = $"{_customerName}{id}" });
-                    Create(customers, id => new Customer { Id = id, Name = $"{_productName}{id}" });
+                    Create(products, id => new Product { ProductId = id, Name = ""+_customerName+id });
+                    Create(customers, id => new Customer { Id = id, Name = "" + _customerName + id });
 
                     sizeAfterInserts = GetLocalDbSizeMegabytes(tmp.Filename);
 

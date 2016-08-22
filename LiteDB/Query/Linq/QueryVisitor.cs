@@ -140,7 +140,7 @@ namespace LiteDB
             // check if left side is an enum and convert to string before return
             Func<Type, object, BsonValue> convert = (type, value) =>
             {
-                var enumType = (left as UnaryExpression)?.Operand.Type;
+                var enumType = (left as UnaryExpression) == null ? null : (left as UnaryExpression).Operand.Type;
 
                 if (enumType != null && enumType.GetTypeInfo().IsEnum)
                 {
