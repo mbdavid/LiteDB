@@ -29,7 +29,7 @@ namespace LiteDB
             )
             ;*
         )*$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace |
+            RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace |
             RegexOptions.ExplicitCapture
             );
         
