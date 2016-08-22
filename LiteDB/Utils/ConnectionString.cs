@@ -13,27 +13,65 @@ namespace LiteDB
     {
         private Dictionary<string, string> _values;
 
+        private static readonly Regex keyValuePairRegex = new Regex(
+        @"^(
+            ;*
+            (?<pair>
+                ((?<key>[a-zA-Z][a-zA-Z0-9-_]*)=)?
+                (?<value>
+                    (?<quotedValue>
+                        (?<quote>['""])
+                        ((\\\k<quote>)|((?!\k<quote>).))*
+                        \k<quote>?
+                    )
+                    |(?<simpleValue>[^\s]+)
+                )
+            )
+            ;*
+        )*$",
+            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace |
+            RegexOptions.ExplicitCapture
+            );
+        
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
-            // Create a dictionary from string name=value collection
-            if (connectionString.Contains("="))
+            _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Match match = keyValuePairRegex.Match(connectionString);
+            foreach (Capture pair in match.Groups["pair"].Captures)
             {
-                _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Split(new char[] { '=' }, 2))
-                    .ToDictionary(t => t[0].Trim().ToLower(), t => t.Length == 1 ? "" : t[1].Trim(), StringComparer.OrdinalIgnoreCase);
+                var key =
+                    match.Groups["key"].Captures.Cast<Capture>()
+                        .FirstOrDefault(
+                            keyMatch =>
+                                keyMatch.Index >= pair.Index && keyMatch.Index <= pair.Index + pair.Length);
+                var value =
+                    match.Groups["value"].Captures.Cast<Capture>()
+                        .FirstOrDefault(
+                            valueMatch =>
+                                valueMatch.Index >= pair.Index && valueMatch.Index <= pair.Index + pair.Length);
+                if (key == null && value != null)
+                {
+                    _values.Add(value.Value.Trim().Trim('"'), null);
+                }
+                if (key != null)
+                {
+                    _values.Add(key.Value.Trim().Trim('"'), value?.Value.Trim().Trim('"'));
+                }
             }
-            else
-            {
-                // If connectionstring is only a filename, set filename
-                _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-#if PCL
-                _values["filename"] = connectionString;
-#else
-                _values["filename"] = Path.GetFullPath(connectionString);
+
+            // return if there is more than one pair
+            //           or the only pair's name is 'filename'
+            //           or the only pair's value is not null
+            if (_values.Count > 1 || _values.ContainsKey("filename") || !_values.ContainsValue(null))
+                return;
+
+            _values["filename"] = (_values.Count > 0 ? _values.Keys.FirstOrDefault() : connectionString.Trim().Trim('"')) ??
+                                  string.Empty;
+#if !PCL
+            _values["filename"] = Path.GetFullPath(_values["filename"]);
 #endif
-            }
         }
 
         public T GetValue<T>(string key, T defaultValue)
