@@ -57,39 +57,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Tests\ConcurrentThreadTest.cs" />
-    <Compile Include="Tests\DatabasePerformanceTest.cs" />
-    <Compile Include="Tests\DataTableTest.cs" />
-    <Compile Include="Tests\Datafilev1Test.cs" />
-    <Compile Include="Tests\DiskFileTest.cs" />
-    <Compile Include="Tests\FileStorageTest.cs" />
-    <Compile Include="Tests\DateTimeUtcTest.cs" />
-    <Compile Include="Tests\MapperExceptionTest.cs" />
-    <Compile Include="Tests\TransactionTest.cs" />
-    <Compile Include="Tests\LoopTest.cs" />
-    <Compile Include="Tests\BulkTest.cs" />
-    <Compile Include="Tests\BsonTest.cs" />
-    <Compile Include="Tests\DbVersionTest.cs" />
-    <Compile Include="Tests\EncryptedTest.cs" />
-    <Compile Include="Tests\AutoIdTest.cs" />
-    <Compile Include="Tests\DropCollectionTest.cs" />
-    <Compile Include="Tests\DbRefIndexTest.cs" />
-    <Compile Include="Tests\MapperInterfaceTest.cs" />
-    <Compile Include="Tests\BsonFieldTest.cs" />
-    <Compile Include="Tests\PolymorphicTest.cs" />
-    <Compile Include="Tests\ObjectIdTest.cs" />
-    <Compile Include="Tests\DerivedTypesTest.cs" />
-    <Compile Include="Tests\MapperTest.cs" />
-    <Compile Include="Tests\ConcurrentTest.cs" />
-    <Compile Include="Tests\JsonTest.cs" />
-    <Compile Include="Tests\LinqTest.cs" />
-    <Compile Include="Tests\IncludeTest.cs" />
-    <Compile Include="Tests\ShellTest.cs" />
-    <Compile Include="Tests\StreamDbTest.cs" />
-    <Compile Include="Tests\TempFile.cs" />
-    <Compile Include="TestPlatform.cs" />
-    <Compile Include="Tests\IndexOrderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\EngineTest.cs" />
+    <Compile Include="Tests\TempFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">
@@ -97,6 +67,7 @@
       <Name>LiteDB</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

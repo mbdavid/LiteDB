@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
@@ -17,7 +18,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
-            // Create a dictionary from string name=value collection
+            // create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
                 _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
@@ -26,16 +27,16 @@ namespace LiteDB
             }
             else
             {
-                // If connectionstring is only a filename, set filename
+                // if connectionstring is only a filename, set filename
                 _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-#if PCL
-                _values["filename"] = connectionString;
-#else
+
                 _values["filename"] = Path.GetFullPath(connectionString);
-#endif
             }
         }
 
+        /// <summary>
+        /// Get value from _values and convert if exists
+        /// </summary>
         public T GetValue<T>(string key, T defaultValue)
         {
             try
@@ -49,6 +50,8 @@ namespace LiteDB
                 throw new LiteException("Invalid connection string value type for " + key);
             }
         }
+
+        #region Storage Unit converter from/to
 
         /// <summary>
         /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
@@ -87,5 +90,7 @@ namespace LiteDB
             double num = Math.Round(bytes / Math.Pow(1024, place), 1);
             return (Math.Sign(byteCount) * num).ToString() + suf[place];
         }
+
+        #endregion
     }
 }
