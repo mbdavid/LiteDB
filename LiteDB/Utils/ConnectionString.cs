@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -41,7 +42,8 @@ namespace LiteDB
             try
             {
                 return _values.ContainsKey(key) ?
-                    (T)Convert.ChangeType(_values[key], typeof(T)) :
+                    (T)TypeDescriptor.GetConverter(typeof(T))
+                        .ConvertFromString(_values[key]) :
                     defaultValue;
             }
             catch (Exception)
