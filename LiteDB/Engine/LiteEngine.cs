@@ -3,10 +3,10 @@
 namespace LiteDB
 {
     /// <summary>
-    /// A internal class that take care of all engine data structure access - it´s basic implementation of a NoSql database
-    /// Its isolated from complete solution - works on low level only
+    /// A public class that take care of all engine data structure access - it´s basic implementation of a NoSql database
+    /// Its isolated from complete solution - works on low level only (no linq, no poco... just Bson objects)
     /// </summary>
-    internal partial class Engine : IDisposable
+    public partial class LiteEngine : IDisposable
     {
         #region Services instances
 
@@ -24,10 +24,24 @@ namespace LiteDB
 
         private CollectionService _collections;
 
-        public Engine(IDiskService disk)
+        /// <summary>
+        /// Inicialize LiteEngine using default FileDiskService
+        /// </summary>
+        public LiteEngine(string filename, bool journal = true)
+            : this(new FileDiskService(filename, journal))
+        {
+        }
+
+        /// <summary>
+        /// Initialize LiteEngine using custom disk service implementation.
+        /// </summary>
+        public LiteEngine(IDiskService disk, Logger log = null)
         {
             _disk = disk;
-            _log = new Logger();
+            _log = log ?? new Logger();
+
+            // initialize datafile (create) and set log instance
+            _disk.Initialize(_log);
 
             // open datafile (or create)
             _disk.Open();
@@ -39,11 +53,11 @@ namespace LiteDB
             }
 
             // initialize all services
-            _pager = new PageService(_disk);
-            _indexer = new IndexService(_pager);
-            _data = new DataService(_pager);
-            _trans = new TransactionService(_disk, _pager);
-            _collections = new CollectionService(_pager, _indexer, _data, _trans);
+            _pager = new PageService(_disk, _log);
+            _indexer = new IndexService(_pager, _log);
+            _data = new DataService(_pager, _log);
+            _trans = new TransactionService(_disk, _pager, _log);
+            _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 
         #endregion Services instances

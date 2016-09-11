@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    internal partial class Engine
+    public partial class LiteEngine
     {
         /// <summary>
         /// Returns first value from an index (first is min value)

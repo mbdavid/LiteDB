@@ -1,6 +1,6 @@
 ﻿namespace LiteDB
 {
-    internal partial class Engine
+    public partial class LiteEngine
     {
         /// <summary>
         /// Implements delete based on a query result

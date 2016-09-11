@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// Implement NTFS File disk
     /// </summary>
-    internal class FileDiskService : IDiskService
+    public class FileDiskService : IDiskService
     {
         /// <summary>
         /// Position, on page, about page type
@@ -23,36 +23,27 @@ namespace LiteDB
         private bool _journalEnabled;
         private HashSet<uint> _journalPages = new HashSet<uint>();
 
-        private Logger _log;
-        private TimeSpan _timeout;
-        private long _initialSize;
-        private long _limitSize;
+        private Logger _log; // will be initialize in "Initialize()"
+        private TimeSpan _timeout = TimeSpan.FromMinutes(1);
 
         #region Initialize disk
 
-        public FileDiskService(ConnectionString conn, Logger log, TimeSpan timeout)
+        public FileDiskService(string filename, bool journal)
         {
-            _log = log;
-            _timeout = timeout;
+            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
 
-            // setting all class variables
-            _filename = conn.GetValue<string>("filename", "");
-            _journalEnabled = conn.GetValue<bool>("journal", true);
-            _initialSize = conn.GetFileSize("initial size", 0);
-            _limitSize = conn.GetFileSize("limit size", 0);
-
-            // simple validations
-            if (_filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
-            if (_initialSize > 0 && _initialSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("initial size too low");
-            if (_limitSize > 0 && _limitSize < BasePage.GetSizeOfPages(10)) throw new ArgumentException("limit size too low");
-            if (_initialSize > 0 && _limitSize > 0 && _initialSize > _limitSize) throw new ArgumentException("limit size less than initial size");
+            // setting class variables
+            _filename = filename;
+            _journalEnabled = journal;
 
             // journal filename
             _journalFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-journal" + Path.GetExtension(_filename));
         }
 
-        public void Open()
+        public void Initialize(Logger log)
         {
+            _log = log;
+
             // if file not exists, just create empty file
             if (!File.Exists(_filename))
             {
@@ -61,31 +52,22 @@ namespace LiteDB
                 {
                     _log.Write(Logger.DISK, "initialize new datafile");
 
-                    // if has a initial size, reserve this space
-                    if (_initialSize > 0)
-                    {
-                        _log.Write(Logger.DISK, "initial datafile size {0}", _initialSize);
-                        stream.SetLength(_initialSize);
-                    }
-
                     // create a new header page in bytes
-                    var bytes = this.CreateHeaderPage().WritePage();
+                    var bytes = new HeaderPage().WritePage();
 
                     // write bytes on page
                     stream.Write(bytes, 0, BasePage.PAGE_SIZE);
                 }
             }
-
-            // open file in exclusive mode
-            _stream = new FileStream(_filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
         }
 
-        /// <summary>
-        /// To be override in Encrypted disk
-        /// </summary>
-        protected virtual HeaderPage CreateHeaderPage()
+        public void Open()
         {
-            return new HeaderPage();
+            // try open file in exclusive mode
+            TryExec(() =>
+            {
+                _stream = new FileStream(_filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+            });
         }
 
         #endregion
@@ -154,9 +136,6 @@ namespace LiteDB
         /// </summary>
         public void SetLength(long fileSize)
         {
-            // checks if new fileSize will exceed limit size
-            if (_limitSize > 0 && fileSize > _limitSize) throw LiteException.FileSizeExceeded(_limitSize);
-
             // fileSize parameter tell me final size of data file - helpful to extend first datafile
             _stream.SetLength(fileSize);
         }
@@ -184,7 +163,10 @@ namespace LiteDB
                 // open journal file in EXCLUSIVE mode
                 _log.Write(Logger.JOURNAL, "create journal file");
 
-                _journal = new FileStream(_journalFilename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                TryExec(() =>
+                {
+                    _journal = new FileStream(_journalFilename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                });
             }
 
             _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
@@ -203,7 +185,10 @@ namespace LiteDB
             // check if exists journal file (if opended)
             if (_journal == null && File.Exists(_journalFilename))
             {
-                _journal = new FileStream(_journalFilename, FileMode.Open, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                TryExec(() =>
+                {
+                    _journal = new FileStream(_journalFilename, FileMode.Open, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                });
             }
 
             // no journal, exit
@@ -260,5 +245,42 @@ namespace LiteDB
         }
 
         #endregion
+
+        #region Utils
+
+        /// <summary>
+        /// Try run an operation over datafile - keep tring if locked
+        /// </summary>
+        private void TryExec(Action action)
+        {
+            var timer = DateTime.UtcNow.Add(_timeout);
+
+            while (DateTime.UtcNow < timer)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    //LitePlatform.Platform.WaitFor(250);
+                    //TODO: PCL wait 250ms
+                    // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
+                    System.Threading.Thread.Sleep(250);
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(250);
+                }
+            }
+
+            _log.Write(Logger.ERROR, "timeout disk access after {0}", _timeout);
+
+            throw LiteException.LockTimeout(_timeout);
+        }
+
+        #endregion
+
     }
 }

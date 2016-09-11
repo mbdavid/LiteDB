@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    internal partial class Engine
+    public partial class LiteEngine
     {
         /// <summary>
         /// Read DbVersion variable from header page

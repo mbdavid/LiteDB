@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal partial class Engine
+    public partial class LiteEngine
     {
         /// <summary>
         /// Create a new index (or do nothing if already exisits) to a collection/field

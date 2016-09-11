@@ -11,32 +11,37 @@ namespace LiteDB
         /// <summary>
         /// Max cache pages size - read or dirty. If Count pass this value cache will be clear on next checkpoint
         /// </summary>
-        public const int MAX_CACHE_SIZE = 5000;
+        public const int MAX_CACHE_SIZE = 50;
 
         private IDiskService _disk;
         private PageService _pager;
+        private Logger _log;
 
-        internal TransactionService(IDiskService disk, PageService pager)
+        internal TransactionService(IDiskService disk, PageService pager, Logger log)
         {
             _disk = disk;
             _pager = pager;
+            _log = log;
         }
 
         /// <summary>
         /// Checkpoint is a safe point to clear cache pages without loose pages references.
-        /// Is callled after each document insert/update/deleted/indexed/fetch from query
+        /// Is called after each document insert/update/deleted/indexed/fetch from query
         /// </summary>
         public void CheckPoint()
         {
-            if (_pager.CacheSize >= MAX_CACHE_SIZE)
+            // works only when journal are enabled
+            if (_disk.IsJournalEnabled && _pager.CacheSize >= MAX_CACHE_SIZE)
             {
-                // write all dirty pages in data file
+                _log.Write(Logger.JOURNAL, "reached checkpoint at {0} pages in cache", _pager.CacheSize);
+
+                // write all dirty pages in data file (journal 
                 foreach (var page in _pager.GetDirtyPages())
                 {
                     _disk.WritePage(page.PageID, page.WritePage());
                 }
 
-                // empty cache
+                // empty all cache pages
                 _pager.ClearCache(false);
             }
         }

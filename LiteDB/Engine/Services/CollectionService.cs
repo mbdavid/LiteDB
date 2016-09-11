@@ -10,13 +10,15 @@ namespace LiteDB
         private IndexService _indexer;
         private DataService _data;
         private TransactionService _trans;
+        private Logger _log;
 
-        public CollectionService(PageService pager, IndexService indexer, DataService data, TransactionService trans)
+        public CollectionService(PageService pager, IndexService indexer, DataService data, TransactionService trans, Logger log)
         {
             _pager = pager;
             _indexer = indexer;
             _data = data;
             _trans = trans;
+            _log = log;
         }
 
         /// <summary>
@@ -46,11 +48,10 @@ namespace LiteDB
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
             if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("Collection", name);
 
-            // get header marked as dirty because I will use header after (and NewPage can get another header instance)
-            var header = _pager.GetPage<HeaderPage>(0);
+            _log.Write(Logger.DISK, "creating new collection {0}", name);
 
-            //TODO: não me lembro bem porque tinha que setar como dirty aqui e não pode ser no commit. Ver comentario acima
-            _pager.SetDirty(header);
+            // get header marked as dirty because I will use header after (and NewPage can get another header instance)
+            var header = _pager.GetPage<HeaderPage>(0, true);
 
             // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
             if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)

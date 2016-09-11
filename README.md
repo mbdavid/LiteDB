@@ -10,6 +10,7 @@
 - Journal file will be deleted only when disk dispose (set length = 0 to reuse)
 - Still using journal file to cache memory control do not exceed 5000 pages
 - No more transaction control to user (will be document acid only)
+- Review Logger class = LogLevel be simpler? I want log VERBOSE
 
 This structure will be work more close to a DBMS (centralized database instance with a server running).
 

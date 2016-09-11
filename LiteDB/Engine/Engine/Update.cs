@@ -2,7 +2,7 @@
 
 namespace LiteDB
 {
-    internal partial class Engine
+    public partial class LiteEngine
     {
         /// <summary>
         /// Implement update command to a document inside a collection

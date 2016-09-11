@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal partial class Engine
+    public partial class LiteEngine
     {
         /// <summary>
         /// Returns all collection inside datafile

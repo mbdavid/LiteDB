@@ -8,12 +8,10 @@ namespace LiteDB.Tests
     public class TempFile : IDisposable
     {
         public string Filename { get; private set; }
-        public ConnectionString ConnectionString { get; private set; }
 
-        public TempFile(string connectionString = null, string ext = "db")
+        public TempFile(string ext = "db")
         {
             this.Filename = Path.GetFullPath(string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
-            this.ConnectionString = new ConnectionString("filename=" + this.Filename + ";" + connectionString);
         }
 
         public void Dispose()

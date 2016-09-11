@@ -6,10 +6,12 @@ namespace LiteDB
     internal class DataService
     {
         private PageService _pager;
+        private Logger _log;
 
-        public DataService(PageService pager)
+        public DataService(PageService pager, Logger log)
         {
             _pager = pager;
+            _log = log;
         }
 
         /// <summary>

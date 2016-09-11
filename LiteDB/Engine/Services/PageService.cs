@@ -7,12 +7,14 @@ namespace LiteDB
     internal class PageService
     {
         private IDiskService _disk;
+        private Logger _log;
 
         private Dictionary<uint, BasePage> _cache = new Dictionary<uint, BasePage>();
 
-        public PageService(IDiskService disk)
+        public PageService(IDiskService disk, Logger log)
         {
             _disk = disk;
+            _log = log;
         }
 
         /// <summary>
@@ -21,7 +23,7 @@ namespace LiteDB
         public T GetPage<T>(uint pageID, bool markAsDirty = false)
             where T : BasePage
         {
-            // lock concurrency access
+            // lock concurrency access (read access are not in a lock transaction)
             lock(_cache)
             {
                 var page = _cache.GetOrDefault(pageID);
@@ -48,8 +50,14 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
+            // if page already dirty, go away
             if (page.IsDirty) return;
 
+            // add page to cache (if is not yet - NewPage method)
+            // do not need lock because all write transaction already in a lock
+            _cache[page.PageID] = page;
+
+            // mark as dirty
             page.IsDirty = true;
 
             // if page has original bytes (from disk) save them to journal file
