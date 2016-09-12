@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Max cache pages size - read or dirty. If Count pass this value cache will be clear on next checkpoint
         /// </summary>
-        public const int MAX_CACHE_SIZE = 50;
+        public const int MAX_CACHE_SIZE = 5000;
 
         private IDiskService _disk;
         private PageService _pager;
@@ -33,7 +33,7 @@ namespace LiteDB
             // works only when journal are enabled
             if (_disk.IsJournalEnabled && _pager.CacheSize >= MAX_CACHE_SIZE)
             {
-                _log.Write(Logger.JOURNAL, "reached checkpoint at {0} pages in cache", _pager.CacheSize);
+                _log.Write(Logger.CACHE, "cache checkpoint reached at {0} pages in cache", _pager.CacheSize);
 
                 // write all dirty pages in data file (journal 
                 foreach (var page in _pager.GetDirtyPages())

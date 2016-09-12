@@ -24,17 +24,25 @@ namespace LiteDB
         private HashSet<uint> _journalPages = new HashSet<uint>();
 
         private Logger _log; // will be initialize in "Initialize()"
-        private TimeSpan _timeout = TimeSpan.FromMinutes(1);
+        private FileOptions _options;
 
         #region Initialize disk
 
-        public FileDiskService(string filename, bool journal)
+        public FileDiskService(string filename, bool journal = true)
+            : this(filename, new FileOptions { Journal = journal })
         {
+        }
+
+        public FileDiskService(string filename, FileOptions options)
+        {
+            // simple validations
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+            if (options.InitialSize > options.LimitSize) throw new ArgumentException("limit size less than initial size");
 
             // setting class variables
             _filename = filename;
-            _journalEnabled = journal;
+            _journalEnabled = options.Journal;
+            _options = options;
 
             // journal filename
             _journalFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-journal" + Path.GetExtension(_filename));
@@ -52,6 +60,9 @@ namespace LiteDB
                 {
                     _log.Write(Logger.DISK, "initialize new datafile");
 
+                    // set datafile initial size
+                    stream.SetLength(_options.InitialSize);
+
                     // create a new header page in bytes
                     var bytes = new HeaderPage().WritePage();
 
@@ -66,7 +77,9 @@ namespace LiteDB
             // try open file in exclusive mode
             TryExec(() =>
             {
-                _stream = new FileStream(_filename, FileMode.Open, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                _stream = new FileStream(_filename, FileMode.Open, 
+                    FileAccess.ReadWrite, FileShare.Read, 
+                    BasePage.PAGE_SIZE);
             });
         }
 
@@ -136,6 +149,9 @@ namespace LiteDB
         /// </summary>
         public void SetLength(long fileSize)
         {
+            // checks if new fileSize will exceed limit size
+            if (fileSize > _options.LimitSize) throw LiteException.FileSizeExceeded(_options.LimitSize);
+
             // fileSize parameter tell me final size of data file - helpful to extend first datafile
             _stream.SetLength(fileSize);
         }
@@ -178,7 +194,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Recovery journal file (if exists) - clear journal file after
+        /// Recovery journal file. This can happend when database initialize and in a rollback transaction.
         /// </summary>
         public void Recovery()
         {
@@ -187,7 +203,10 @@ namespace LiteDB
             {
                 TryExec(() =>
                 {
-                    _journal = new FileStream(_journalFilename, FileMode.Open, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                    _journal = new FileStream(_journalFilename, 
+                        FileMode.Open, 
+                        FileAccess.ReadWrite, FileShare.None, 
+                        BasePage.PAGE_SIZE);
                 });
             }
 
@@ -238,6 +257,8 @@ namespace LiteDB
         {
             if (_journal != null)
             {
+                _log.Write(Logger.JOURNAL, "cleaning journal file");
+
                 _journal.Seek(0, SeekOrigin.Begin);
                 _journal.SetLength(0);
                 _journalPages = new HashSet<uint>();
@@ -253,7 +274,7 @@ namespace LiteDB
         /// </summary>
         private void TryExec(Action action)
         {
-            var timer = DateTime.UtcNow.Add(_timeout);
+            var timer = DateTime.UtcNow.Add(_options.Timeout);
 
             while (DateTime.UtcNow < timer)
             {
@@ -275,9 +296,9 @@ namespace LiteDB
                 }
             }
 
-            _log.Write(Logger.ERROR, "timeout disk access after {0}", _timeout);
+            _log.Write(Logger.ERROR, "timeout disk access after {0}", _options.Timeout);
 
-            throw LiteException.LockTimeout(_timeout);
+            throw LiteException.LockTimeout(_options.Timeout);
         }
 
         #endregion

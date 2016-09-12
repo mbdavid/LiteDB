@@ -92,6 +92,7 @@
     <Compile Include="Engine\Structures\IndexInfo.cs" />
     <Compile Include="Engine\Structures\IndexOptions.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
+    <Compile Include="Utils\FileOptions.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />
     <Compile Include="Utils\PreserveAttribute.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtensions.cs" />

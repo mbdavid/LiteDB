@@ -80,12 +80,16 @@ namespace LiteDB
         /// </summary>
         public void ClearCache(bool dirtyOnly)
         {
+            _log.Write(Logger.CACHE, "clearing cache ({0})", dirtyOnly ? "dirty only" : "full");
+
             if (dirtyOnly)
             {
                 foreach(var pageID in this.GetDirtyPages().Select(x => x.PageID).ToArray())
                 {
                     _cache.Remove(pageID);
                 }
+
+                _log.Write(Logger.CACHE, "cache contains {0} clean pages", _cache.Count);
             }
             else
             {

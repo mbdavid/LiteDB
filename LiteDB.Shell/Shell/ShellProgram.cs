@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
@@ -6,7 +7,11 @@ namespace LiteDB.Shell
     {
         public static void Start(InputCommand input, Display display)
         {
-            IShellEngine engine = null;
+            LiteEngine engine = null;
+            var commands = new List<ICommand>();
+
+            // register commands
+            RegisterCommands(commands);
 
             display.TextWriters.Add(Console.Out);
 
@@ -22,14 +27,25 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, ref engine, display, input);
+                    var found = false;
+                    var s = new StringScanner(cmd);
 
-                    if (isConsoleCommand == false)
+                    foreach(var command in commands)
                     {
-                        if (engine == null) throw ShellExpcetion.NoDatabase();
+                        if (command.IsCommand(s))
+                        {
+                            var shell = command as IShellCommand;
+                            var console = command as IConsoleCommand;
 
-                        engine.Run(cmd, display);
+                            if (shell != null) shell.Execute(engine, s);
+                            if (console != null) console.Execute(ref engine, s, display, input);
+
+                            found = true;
+                            break;
+                        }
                     }
+
+                    if (!found) throw new ShellExpcetion("Command not found");
                 }
                 catch (Exception ex)
                 {
@@ -43,5 +59,14 @@ namespace LiteDB.Shell
             Console.ForegroundColor = ConsoleColor.DarkGreen;
             Console.WriteLine(msg);
         }
+
+        #region Register all commands
+
+        public static void RegisterCommands(List<ICommand> commands)
+        {
+            //TODO: register all commands (shell + console)
+        }
+
+        #endregion
     }
 }

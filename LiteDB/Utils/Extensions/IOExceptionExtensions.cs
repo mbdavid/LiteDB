@@ -15,6 +15,7 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
+                    //TODO: WaitFor
                     // LitePlatform.Platform.WaitFor(timer);
                 }
             }
