@@ -150,21 +150,21 @@ namespace LiteDB
         /// </summary>
         public static object CreateInstance(Type type)
         {
-            try
-            {
-                CreateObject c;
-                if (_cacheCtor.TryGetValue(type, out c))
-                {
-                    return c();
-                }
-            }
-            catch
-            {
-                throw LiteException.InvalidCtor(type);
-            }
-
             lock (_cacheCtor)
             {
+                try
+                {
+                    CreateObject c;
+                    if (_cacheCtor.TryGetValue(type, out c))
+                    {
+                        return c();
+                    }
+                }
+                catch
+                {
+                    throw LiteException.InvalidCtor(type);
+                }
+
                 try
                 {
                     CreateObject c = null;
