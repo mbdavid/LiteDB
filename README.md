@@ -1,4 +1,8 @@
 # v-next
+BsonArray as IList<BsonValue>
+Be shell works
+
+
 ### ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
 - DbEngine still lazy load (with lazy open file)
