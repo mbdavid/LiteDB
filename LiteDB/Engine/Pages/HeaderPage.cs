@@ -45,7 +45,7 @@ namespace LiteDB
         /// <summary>
         /// Database user version [2 bytes]
         /// </summary>
-        public ushort DbVersion = 0;
+        public ushort UserVersion = 0;
 
         /// <summary>
         /// Password hash in SHA1 [20 bytes]
@@ -65,7 +65,7 @@ namespace LiteDB
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
-            this.DbVersion = 0;
+            this.UserVersion = 0;
             this.Password = new byte[20];
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
@@ -92,7 +92,7 @@ namespace LiteDB
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
-            this.DbVersion = reader.ReadUInt16();
+            this.UserVersion = reader.ReadUInt16();
             this.Password = reader.ReadBytes(this.Password.Length);
 
             // read page collections references (position on end of page)
@@ -110,7 +110,7 @@ namespace LiteDB
             writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
-            writer.Write(this.DbVersion);
+            writer.Write(this.UserVersion);
             writer.Write(this.Password);
 
             writer.Write((byte)this.CollectionPages.Count);

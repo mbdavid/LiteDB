@@ -275,6 +275,7 @@ namespace LiteDB
         private void TryExec(Action action)
         {
             var timer = DateTime.UtcNow.Add(_options.Timeout);
+            var locked = false;
 
             while (DateTime.UtcNow < timer)
             {
@@ -285,6 +286,11 @@ namespace LiteDB
                 }
                 catch (UnauthorizedAccessException)
                 {
+                    if (locked == false)
+                    {
+                        locked = true;
+                        _log.Write(Logger.ERROR, "unauthorized file access, waiting for {0} timeout", _options.Timeout);
+                    }
                     //LitePlatform.Platform.WaitFor(250);
                     //TODO: PCL wait 250ms
                     // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
@@ -292,6 +298,12 @@ namespace LiteDB
                 }
                 catch (IOException ex)
                 {
+                    if (locked == false)
+                    {
+                        locked = true;
+                        _log.Write(Logger.ERROR, "locked file, waiting for {0} timeout", _options.Timeout);
+                    }
+
                     ex.WaitIfLocked(250);
                 }
             }

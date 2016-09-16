@@ -55,7 +55,7 @@
     <Compile Include="Engine\Disks\IDiskService.cs" />
     <Compile Include="Engine\Engine\Aggregate.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
-    <Compile Include="Engine\Engine\DbVersion.cs" />
+    <Compile Include="Engine\Engine\UserVersion.cs" />
     <Compile Include="Engine\Engine\Delete.cs" />
     <Compile Include="Engine\Engine\Find.cs" />
     <Compile Include="Engine\Engine\Index.cs" />

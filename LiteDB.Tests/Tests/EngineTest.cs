@@ -32,7 +32,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Engine_Task_Test()
+        public void Engine_InsertTask_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -59,5 +59,50 @@ namespace LiteDB.Tests
                 Assert.AreEqual(4000, db.Count("col", Query.EQ("thread", 2)));
             }
         }
+
+        [TestMethod]
+        public void Engine_InsertUpdateTask_Test()
+        {
+            const int N = 3000;
+
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                db.EnsureIndex("col", "updated", new IndexOptions());
+
+                Assert.AreEqual(0, db.Count("col", Query.EQ("updated", true)));
+
+                // insert basic document
+                var ta = Task.Factory.StartNew(() =>
+                {
+                    for (var i = 0; i < N; i++)
+                    {
+                        var doc = new BsonDocument().Add("_id", i);
+
+                        db.Insert("col", doc);
+                    }
+                });
+
+                // update _id=N
+                var tb = Task.Factory.StartNew(() =>
+                {
+                    var i = 0;
+                    while(i < N)
+                    {
+                        var doc = new BsonDocument()
+                            .Add("_id", i)
+                            .Add("updated", true)
+                            .Add("name", TempFile.LoremIpsum(5, 10, 1, 5, 1)); // to extend pages
+
+                        if(db.Update("col", doc)) i++;
+                    }
+                });
+
+                Task.WaitAll(ta, tb);
+
+                Assert.AreEqual(N, db.Count("col", Query.EQ("updated", true)));
+            }
+        }
+
     }
 }
