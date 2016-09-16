@@ -2,11 +2,11 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class DbVersion : IShellCommand
+    internal class UserVersion : IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"dbversion\s*").Length > 0;
+            return s.Scan(@"userversion\s*").Length > 0;
         }
 
         public BsonValue Execute(LiteEngine engine, StringScanner s)
@@ -16,12 +16,12 @@ namespace LiteDB.Shell.Commands
             if (ver.Length > 0)
             {
                 var v = Convert.ToUInt16(ver);
-                engine.WriteDbVersion(v);
+                engine.UserVersion = v;
                 return v;
             }
             else
             {
-                return engine.ReadDbVersion();
+                return engine.UserVersion;
             }
         }
     }

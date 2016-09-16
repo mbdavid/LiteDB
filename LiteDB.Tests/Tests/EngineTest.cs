@@ -16,8 +16,8 @@ namespace LiteDB.Tests
             {
                 using (var db = new LiteEngine(file.Filename))
                 {
-                    db.Insert("col1", new BsonDocument().Add("_id", 1).Add("name", "John"));
-                    db.Insert("col1", new BsonDocument().Add("_id", 2).Add("name", "Doe"));
+                    db.Insert("col1", new BsonDocument { { "_id", 1 } , { "name", "John" } });
+                    db.Insert("col1", new BsonDocument { { "_id", 2 }, { "name", "Doe" } });
                 }
 
                 using (var db = new LiteEngine(file.Filename))
@@ -43,14 +43,14 @@ namespace LiteDB.Tests
                 var ta = Task.Factory.StartNew(() =>
                 {
                     for(var i = 0; i < 5000; i++)
-                        db.Insert("col", new BsonDocument().Add("thread", 1));
+                        db.Insert("col", new BsonDocument { { "thread", 1 } });
                 });
 
                 // insert 4000 x thread=2
                 var tb = Task.Factory.StartNew(() =>
                 {
                     for (var i = 0; i < 4000; i++)
-                        db.Insert("col", new BsonDocument().Add("thread", 2));
+                        db.Insert("col", new BsonDocument { { "thread", 2 } });
                 });
 
                 Task.WaitAll(ta, tb);
@@ -77,7 +77,7 @@ namespace LiteDB.Tests
                 {
                     for (var i = 0; i < N; i++)
                     {
-                        var doc = new BsonDocument().Add("_id", i);
+                        var doc = new BsonDocument { { "_id", i } };
 
                         db.Insert("col", doc);
                     }
@@ -89,10 +89,12 @@ namespace LiteDB.Tests
                     var i = 0;
                     while(i < N)
                     {
-                        var doc = new BsonDocument()
-                            .Add("_id", i)
-                            .Add("updated", true)
-                            .Add("name", TempFile.LoremIpsum(5, 10, 1, 5, 1)); // to extend pages
+                        var doc = new BsonDocument
+                        {
+                            { "_id", i },
+                            { "updated", true },
+                            { "name", TempFile.LoremIpsum(5, 10, 1, 5, 1) }
+                        };
 
                         if(db.Update("col", doc)) i++;
                     }
