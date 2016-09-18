@@ -10,32 +10,10 @@ using System.Text;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class EngineTest
+    public class ConcurrencyTest
     {
         [TestMethod]
-        public void Engine_Insert_Test()
-        {
-            using (var file = new TempFile())
-            {
-                using (var db = new LiteEngine(file.Filename))
-                {
-                    db.Insert("col1", new BsonDocument { { "_id", 1 } , { "name", "John" } });
-                    db.Insert("col1", new BsonDocument { { "_id", 2 }, { "name", "Doe" } });
-                }
-
-                using (var db = new LiteEngine(file.Filename))
-                {
-                    var john = db.Find("col1", Query.EQ("_id", 1)).FirstOrDefault();
-                    var doe = db.Find("col1", Query.EQ("_id", 2)).FirstOrDefault();
-
-                    Assert.AreEqual("John", john["name"].AsString);
-                    Assert.AreEqual("Doe", doe["name"].AsString);
-                }
-            }
-        }
-
-        [TestMethod]
-        public void Engine_InsertTask_Test()
+        public void InsertTask_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -64,7 +42,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Engine_InsertUpdateTask_Test()
+        public void InsertUpdateTask_Test()
         {
             const int N = 3000;
 
@@ -106,37 +84,6 @@ namespace LiteDB.Tests
                 Task.WaitAll(ta, tb);
 
                 Assert.AreEqual(N, db.Count("col", Query.EQ("updated", true)));
-            }
-        }
-
-
-        [TestMethod]
-        public void Engine_InsertCache_Test()
-        {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
-            {
-                var log = new StringBuilder();
-                db.Log.Level = Logger.CACHE;
-                db.Log.Logging += (s) => log.AppendLine(s);
-
-                // insert basic 200.000 documents
-                db.Insert("col", GetDocs(200000));
-
-                Assert.IsTrue(log.ToString().Contains("checkpoint"));
-            }
-        }
-
-        private IEnumerable<BsonDocument> GetDocs(int count)
-        {
-            for(var i = 0; i < count; i++)
-            {
-                yield return new BsonDocument
-                {
-                    { "_id", i },
-                    { "name", Guid.NewGuid().ToString() },
-                    { "lorem", TempFile.LoremIpsum(3, 5, 2, 3, 3) }
-                };
             }
         }
     }

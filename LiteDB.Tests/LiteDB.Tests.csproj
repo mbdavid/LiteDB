@@ -57,8 +57,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Engine\EngineTest.cs" />
+    <Compile Include="Engine\ConcurrencyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tests\EngineTest.cs" />
+    <Compile Include="Engine\CacheTest.cs" />
     <Compile Include="TempFile.cs" />
   </ItemGroup>
   <ItemGroup>
