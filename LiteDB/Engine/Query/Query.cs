@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -141,6 +142,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Apply a predicate function in an index result. It's faster then runs over deserialized document.
+        /// </summary>
+        public static Query Func(string field, Func<BsonValue, bool> predicate)
+        {
+            return new QueryFunc(field, predicate);
+        }
+
+        /// <summary>
         /// Returns document that exists in BOTH queries results (Intersect).
         /// </summary>
         public static Query And(Query left, Query right)
@@ -173,7 +182,7 @@ namespace LiteDB
             // get index for this query
             var index = col.GetIndex(this.Field);
 
-            // no index? throw an index not found exception to auto-create in LiteDatabse
+            // no index? throw an index not found exception (should auto-created here? needs LiteEngine instance here)
             if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
 
             // execute query to get all IndexNodes

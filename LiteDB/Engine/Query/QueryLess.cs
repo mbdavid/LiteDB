@@ -17,11 +17,9 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
-            var value = _value.Normalize(index.Options);
-
             foreach (var node in indexer.FindAll(index, Query.Ascending))
             {
-                var diff = node.Key.CompareTo(value);
+                var diff = node.Key.CompareTo(_value);
 
                 if (diff == 1 || (!_equals && diff == 0)) break;
 

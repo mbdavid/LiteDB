@@ -71,8 +71,8 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue key)
         {
-            // call AddNode normalizing value
-            return this.AddNode(index, key.Normalize(index.Options), this.FlipCoin());
+            // call AddNode with key value
+            return this.AddNode(index, key, this.FlipCoin());
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace LiteDB
                     var diff = cache.Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
-                    if (diff == 0 && index.Options.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);
+                    if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);
 
                     if (diff == 1) break;
                 }
@@ -297,7 +297,7 @@ namespace LiteDB
                     if (diff == 0)
                     {
                         // if unique index has no duplicates - just return node
-                        if (index.Options.Unique) return next;
+                        if (index.Unique) return next;
 
                         return this.FindBoundary(index, next, value, order * -1, i);
                     }

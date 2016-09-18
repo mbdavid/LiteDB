@@ -8,20 +8,20 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exisits) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string colName, string field, IndexOptions options)
+        public bool EnsureIndex(string colName, string field, bool unique = false)
         {
             return this.Transaction<bool>(colName, true, (col) =>
             {
                 // check if index already exists
                 if (col.GetIndex(field) != null) return false;
 
-                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", colName, field, options.Unique);
+                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", colName, field, unique);
 
                 // create index head
                 var index = _indexer.CreateIndex(col);
 
                 index.Field = field;
-                index.Options = options;
+                index.Unique = unique;
 
                 // read all objects (read from PK index)
                 foreach (var node in new QueryAll("_id", Query.Ascending).Run(col, _indexer))

@@ -18,7 +18,7 @@ namespace LiteDB.Tests
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
-                db.EnsureIndex("col", "thread", new IndexOptions());
+                db.EnsureIndex("col", "thread");
 
                 // insert 5000 x thread=1
                 var ta = Task.Factory.StartNew(() =>
@@ -49,7 +49,7 @@ namespace LiteDB.Tests
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
-                db.EnsureIndex("col", "updated", new IndexOptions());
+                db.EnsureIndex("col", "updated");
 
                 Assert.AreEqual(0, db.Count("col", Query.EQ("updated", true)));
 

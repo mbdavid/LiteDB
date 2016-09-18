@@ -4,24 +4,21 @@ using System.Linq;
 
 namespace LiteDB
 {
-    /// <summary>
-    /// Contains query do not work with index, only full scan
-    /// </summary>
-    internal class QueryContains : Query
+    internal class QueryFunc : Query
     {
-        private BsonValue _value;
+        private Func<BsonValue, bool> _func;
 
-        public QueryContains(string field, BsonValue value)
+        public QueryFunc(string field, Func<BsonValue, bool> func)
             : base(field)
         {
-            _value = value;
+            _func = func;
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             return indexer
                 .FindAll(index, Query.Ascending)
-                .Where(x => x.Key.IsString && x.Key.AsString.Contains(_value));
+                .Where(i => _func(i.Key));
         }
     }
 }

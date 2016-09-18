@@ -18,15 +18,14 @@ namespace LiteDB
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
-            var value = _value.Normalize(index.Options);
-            var node = indexer.Find(index, value, true, Query.Ascending);
+            var node = indexer.Find(index, _value, true, Query.Ascending);
 
             if (node == null) yield break;
 
             // move until next is last
             while (node != null)
             {
-                var diff = node.Key.CompareTo(value);
+                var diff = node.Key.CompareTo(_value);
 
                 if (diff == 1 || (_equals && diff == 0))
                 {

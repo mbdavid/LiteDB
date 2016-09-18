@@ -81,17 +81,16 @@ namespace LiteDB
                 index.HeadNode = reader.ReadPageAddress();
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
-                index.Options.Unique = reader.ReadBoolean();
-                index.Options.IgnoreCase = reader.ReadBoolean();
-                index.Options.TrimWhitespace = reader.ReadBoolean();
-                index.Options.EmptyStringToNull = reader.ReadBoolean();
-                index.Options.RemoveAccents = reader.ReadBoolean();
+                index.Unique = reader.ReadBoolean();
+
+                // to keep compatible with FILE_VERSION = 6
+                // IgnoreCase, TrimWhitespace, EmptyStringToNull, RemoveAccents
+                reader.ReadBytes(4); 
             }
 
             // be compatible with v2_beta
             var longCount = reader.ReadInt64();
             this.DocumentCount = Math.Max(uintCount, longCount);
-
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -109,11 +108,11 @@ namespace LiteDB
                 writer.Write(index.HeadNode);
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);
-                writer.Write(index.Options.Unique);
-                writer.Write(index.Options.IgnoreCase);
-                writer.Write(index.Options.TrimWhitespace);
-                writer.Write(index.Options.EmptyStringToNull);
-                writer.Write(index.Options.RemoveAccents);
+                writer.Write(index.Unique);
+
+                // to keep compatible with FILE_VERSION = 6
+                // IgnoreCase, TrimWhitespace, EmptyStringToNull, RemoveAccents
+                writer.Write(new byte[4]);
             }
 
             // write all document count 8 bytes here

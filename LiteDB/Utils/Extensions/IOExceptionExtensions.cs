@@ -15,14 +15,26 @@ namespace LiteDB
             {
                 if (timer > 0)
                 {
-                    //TODO: WaitFor
-                    // LitePlatform.Platform.WaitFor(timer);
+                    WaitFor(250);
                 }
             }
             else
             {
                 throw ex;
             }
+        }
+
+        /// <summary>
+        /// WaitFor function used in NETFULL + PCL
+        /// </summary>
+        public static void WaitFor(int ms)
+        {
+            // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
+#if NETFULL
+            System.Threading.Thread.Sleep(250);
+#else
+            System.Threading.Tasks.Task.Delay(250).Wait()
+#endif
         }
     }
 }

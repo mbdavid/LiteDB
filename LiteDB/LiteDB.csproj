@@ -77,6 +77,7 @@
     <Compile Include="Engine\Query\QueryEmpty.cs" />
     <Compile Include="Engine\Query\QueryEquals.cs" />
     <Compile Include="Engine\Query\QueryGreater.cs" />
+    <Compile Include="Engine\Query\QueryFunc.cs" />
     <Compile Include="Engine\Query\QueryIn.cs" />
     <Compile Include="Engine\Query\QueryLess.cs" />
     <Compile Include="Engine\Query\QueryNot.cs" />
@@ -91,7 +92,6 @@
     <Compile Include="Engine\Structures\DataBlock.cs" />
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
-    <Compile Include="Engine\Structures\IndexOptions.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
     <Compile Include="Utils\FileOptions.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />

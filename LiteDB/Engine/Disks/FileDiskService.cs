@@ -286,15 +286,14 @@ namespace LiteDB
                 }
                 catch (UnauthorizedAccessException)
                 {
+                    // This exception can occurs when a single instance release file but Windows Filesystem are not fully released.
                     if (locked == false)
                     {
                         locked = true;
                         _log.Write(Logger.ERROR, "unauthorized file access, waiting for {0} timeout", _options.Timeout);
                     }
-                    //LitePlatform.Platform.WaitFor(250);
-                    //TODO: PCL wait 250ms
-                    // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
-                    System.Threading.Thread.Sleep(250);
+
+                    IOExceptionExtensions.WaitFor(250);
                 }
                 catch (IOException ex)
                 {

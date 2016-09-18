@@ -12,7 +12,7 @@ namespace LiteDB
         {
             this.Slot = index.Slot;
             this.Field = index.Field;
-            this.Options = index.Options.Clone();
+            this.Unique = index.Unique;
         }
 
         /// <summary>
@@ -26,8 +26,8 @@ namespace LiteDB
         public string Field { get; private set; }
 
         /// <summary>
-        /// Index options
+        /// Index is Unique?
         /// </summary>
-        public IndexOptions Options { get; private set; }
+        public bool Unique { get; private set; }
     }
 }

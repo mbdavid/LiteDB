@@ -558,7 +558,7 @@ namespace LiteDB
 
         #endregion
 
-        #region GetBytesCount, Normalize
+        #region GetBytesCount
 
         internal int? Length = null;
 
@@ -620,52 +620,6 @@ namespace LiteDB
                 1 + // CString 0x00
                 value.GetBytesCount(recalc) +
                 (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
-        }
-
-        /// <summary>
-        /// Normalize a string value using IndexOptions and returns a new BsonValue - if is not a string, returns some BsonValue instance
-        /// </summary>
-        internal BsonValue Normalize(IndexOptions options)
-        {
-            // if not string, do nothing
-            if (this.Type != BsonType.String) return this;
-
-            // removing whitespaces
-            var text = (String)RawValue;
-
-            if (options.TrimWhitespace) text = text.Trim();
-            if (options.IgnoreCase) text = text.ToLower();
-
-            // convert emptystring to null
-            if (text.Length == 0 && options.EmptyStringToNull)
-            {
-                return BsonValue.Null;
-            }
-
-            if (!options.RemoveAccents)
-            {
-                return text;
-            }
-
-            // removing accents
-#if PCL
-            return text; // TODO szurgot: Normalize doesn't seem to exist in PCL
-#else
-            var normalized = text.Normalize(NormalizationForm.FormD);
-            var sb = new StringBuilder();
-
-            for (int i = 0; i < normalized.Length; i++)
-            {
-                var c = normalized[i];
-
-                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-                {
-                    sb.Append(c);
-                }
-            }
-
-            return sb.ToString();
-#endif
         }
 
         #endregion
