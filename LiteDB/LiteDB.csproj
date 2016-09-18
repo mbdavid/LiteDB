@@ -50,6 +50,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\LiteEngine.cs" />
     <Compile Include="Engine\Disks\FileDiskService.cs" />
     <Compile Include="Engine\Disks\IDiskService.cs" />

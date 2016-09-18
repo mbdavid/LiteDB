@@ -17,7 +17,7 @@ namespace LiteDB.Tests
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
-            {
+            { 
                 var log = new StringBuilder();
                 db.Log.Level = Logger.CACHE;
                 db.Log.Logging += (s) => log.AppendLine(s);

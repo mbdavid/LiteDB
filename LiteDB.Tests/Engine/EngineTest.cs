@@ -33,5 +33,22 @@ namespace LiteDB.Tests
                 }
             }
         }
+
+        [TestMethod]
+        public void Engine_Upsert_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                var doc1 = new BsonDocument { { "_id", 1 }, { "name", "John" } };
+                var doc2 = new BsonDocument { { "_id", 2 }, { "name", "Doe" } };
+
+                var u1 = db.Upsert("col", doc1); // true
+                var u2 = db.Upsert("col", doc1); // false
+
+                Assert.AreEqual(true, u1);
+                Assert.AreEqual(false, u2);
+            }
+        }
     }
 }
