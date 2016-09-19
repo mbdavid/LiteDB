@@ -1,6 +1,20 @@
-# v-next
-BsonArray as IList<BsonValue>
-Be shell works
+# Changes to v3
+- Thread Safe
+- Lock file on open (single process access)
+- `LiteEngine`: new low data layer access
+- BsonDocument implements IDictionary, BsonArray implements IList
+- Remove shell from LiteDB (avaiable only in LiteDB.Shell tool)
+- Remove transaction control
+- Remove index options
+- Remove: Shrink, Encryption, ...
+- New QueryFunc
+- New Upsert
+- New FindIndex
+
+# TODO
+- netstandard 1.4
+- Vistual index fields
+- BsonMapper with external support (like JSON.NET)
 
 
 ### ThreadSafe
@@ -54,7 +68,7 @@ This structure will be work more close to a DBMS (centralized database instance 
 - Utils
 - Plugins
    - Mapper
-   - Shell
+   - Linq
    - Repository
    - FileStorage
 
