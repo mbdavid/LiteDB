@@ -18,6 +18,11 @@ namespace LiteDB.Shell.Commands
             if(engine == null) throw ShellExpcetion.NoDatabase();
 
             engine.Log.Level = enabled ? Logger.FULL : Logger.NONE;
+            engine.Log.Logging += (msg) =>
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.WriteLine(msg);
+            };
         }
     }
 }

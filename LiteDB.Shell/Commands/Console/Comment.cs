@@ -2,16 +2,15 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Comment : IShellCommand
+    internal class Comment : IConsoleCommand
     {
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"--");
         }
 
-        public BsonValue Execute(LiteEngine engine, StringScanner s)
+        public void Execute(ref LiteEngine engine, StringScanner s, Display display, InputCommand input)
         {
-            return BsonValue.Null;
         }
     }
 }

@@ -59,7 +59,9 @@
     <Compile Include="Commands\Collections\Delete.cs" />
     <Compile Include="Commands\Collections\Drop.cs" />
     <Compile Include="Commands\Collections\DropIndex.cs" />
+    <Compile Include="Commands\Collections\EnsureIndex.cs" />
     <Compile Include="Commands\Collections\Find.cs" />
+    <Compile Include="Commands\Collections\Indexes.cs" />
     <Compile Include="Commands\Collections\Insert.cs" />
     <Compile Include="Commands\Collections\Max.cs" />
     <Compile Include="Commands\Collections\Min.cs" />
@@ -79,9 +81,9 @@
     <Compile Include="Commands\IConsoleCommand.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\IShellCommand.cs" />
-    <Compile Include="Commands\Others\Comment.cs" />
-    <Compile Include="Commands\Others\DbVersion.cs" />
-    <Compile Include="Commands\Others\ShowCollections.cs" />
+    <Compile Include="Commands\Console\Comment.cs" />
+    <Compile Include="Commands\Console\UserVersion.cs" />
+    <Compile Include="Commands\Console\ShowCollections.cs" />
     <Compile Include="Shell\Display.cs" />
     <Compile Include="Shell\InputCommand.cs" />
     <Compile Include="Program.cs" />
@@ -116,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\FileStorage\" />
+    <Folder Include="Commands\Others\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

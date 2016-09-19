@@ -111,7 +111,7 @@ namespace LiteDB
 
         public IEnumerator<BsonValue> GetEnumerator()
         {
-            return this.GetEnumerator();
+            return this.RawValue.GetEnumerator();
         }
 
         public int IndexOf(BsonValue item)

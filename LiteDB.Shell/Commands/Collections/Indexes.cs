@@ -14,9 +14,12 @@ namespace LiteDB.Shell.Commands
         {
             var col = this.ReadCollection(engine, s);
             
-            var mapper = new BsonMapper().UseCamelCase();
-            
-            return new BsonArray(engine.GetIndexes(col).Select(x => mapper.ToDocument<IndexInfo>(x)));
+            return new BsonArray(engine.GetIndexes(col).Select(x => new BsonDocument
+            {
+                { "slot", x.Slot },
+                { "field", x.Field },
+                { "unique", x.Unique }
+            }));
         }
     }
 }
