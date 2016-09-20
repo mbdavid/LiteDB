@@ -13,60 +13,78 @@ namespace LiteDB
     {
         private Dictionary<string, string> _values;
 
-        private static readonly Regex keyValuePairRegex = new Regex(
-        @"^(
-            ;*
-            (?<pair>
-                ((?<key>[a-zA-Z][a-zA-Z0-9-_]*)=)?
-                (?<value>
-                    (?<quotedValue>
-                        (?<quote>['""])
-                        ((\\\k<quote>)|((?!\k<quote>).))*
-                        \k<quote>?
-                    )
-                    |(?<simpleValue>[^\s]+)
-                )
-            )
-            ;*
-        )*$",
-            RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace |
-            RegexOptions.ExplicitCapture
-            );
-        
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
             _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            Match match = keyValuePairRegex.Match(connectionString);
-            foreach (Capture pair in match.Groups["pair"].Captures)
+            var inClosure = false;
+            var inValue = false;
+            var key = string.Empty;
+            var value = string.Empty;
+            for (var i = 0; i < connectionString.Length; i++)
             {
-                var key =
-                    match.Groups["key"].Captures.Cast<Capture>()
-                        .FirstOrDefault(
-                            keyMatch =>
-                                keyMatch.Index >= pair.Index && keyMatch.Index <= pair.Index + pair.Length);
-                var value =
-                    match.Groups["value"].Captures.Cast<Capture>()
-                        .FirstOrDefault(
-                            valueMatch =>
-                                valueMatch.Index >= pair.Index && valueMatch.Index <= pair.Index + pair.Length);
-                if (key == null && value != null)
+                if (inValue)
                 {
-                    _values.Add(value.Value.Trim().Trim('"'), null);
+                    if (inClosure)
+                    {
+                        if (connectionString[i] == '"' && !(i > 0 && connectionString[i -1] == '\\'))
+                        {
+                            inClosure = false;
+                        }
+                        else
+                        {
+                            value += connectionString[i];
+                        }
+                    }
+                    else
+                    {
+                        if (connectionString[i] == '"' && !(i > 0 && connectionString[i - 1] == '\\'))
+                        {
+                            inClosure = true;
+                        }
+                        else if (connectionString[i] == ';')
+                        {
+                            _values.Add(key.Trim(), value);
+                            key = string.Empty;
+                            value = string.Empty;
+                            inValue = false;
+                        }
+                        else
+                        {
+                            value += connectionString[i];
+                        }
+                    }
                 }
-                if (key != null)
+                else
                 {
-                    _values.Add(key.Value.Trim().Trim('"'), value?.Value.Trim().Trim('"'));
+                    if (connectionString[i] == '=')
+                    {
+                        inValue = true;
+                    }
+                    else if (connectionString[i] == ';')
+                    {
+                        _values.Add(key.Trim(), string.Empty);
+                        key = string.Empty;
+                    }
+                    else
+                    {
+                        key += connectionString[i];
+                    }
                 }
+            }
+            if (!string.IsNullOrEmpty(key.Trim()))
+            {
+                _values.Add(key, value);
             }
 
             // return if there is more than one pair
             //           or the only pair's name is 'filename'
-            //           or the only pair's value is not null
-            if (_values.Count > 1 || _values.ContainsKey("filename") || !_values.ContainsValue(null))
+            //           or the only pair's value is not empty
+            if (_values.Count > 1 || _values.ContainsKey("filename") || !_values.ContainsValue(string.Empty))
                 return;
 
+            _values.Clear();
             _values["filename"] = (_values.Count > 0 ? _values.Keys.FirstOrDefault() : connectionString.Trim().Trim('"')) ??
                                   string.Empty;
 #if !PCL
