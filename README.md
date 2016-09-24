@@ -1,5 +1,26 @@
+<<<<<<< HEAD
 # v-next
 FileStorage will support OpenWrite("fileId") <= LiteFileStream
+=======
+# Changes to v3
+- Thread Safe
+- Lock file on open (single process access)
+- `LiteEngine`: new low data layer access
+- BsonDocument implements IDictionary, BsonArray implements IList
+- Remove shell from LiteDB (avaiable only in LiteDB.Shell tool)
+- Remove transaction control
+- Remove index options
+- Remove: Shrink, Encryption, ...
+- New QueryFunc
+- New Upsert
+- New FindIndex
+
+# TODO
+- netstandard 1.4
+- Vistual index fields
+- BsonMapper with external support (like JSON.NET)
+
+>>>>>>> cec99ac1a6a4d078ecafec65926a35a1e162c771
 
 ### ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
@@ -52,7 +73,7 @@ This structure will be work more close to a DBMS (centralized database instance 
 - Utils
 - Plugins
    - Mapper
-   - Shell
+   - Linq
    - Repository
    - FileStorage
 
