@@ -13,7 +13,7 @@ namespace LiteDB.Tests
     public class ConcurrencyTest
     {
         [TestMethod]
-        public void InsertTask_Test()
+        public void Concurrency_Insert_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -42,7 +42,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void InsertUpdateTask_Test()
+        public void Concurrency_InsertUpdate_Test()
         {
             const int N = 3000;
 
@@ -68,7 +68,7 @@ namespace LiteDB.Tests
                 var tb = Task.Factory.StartNew(() =>
                 {
                     var i = 0;
-                    while(i < N)
+                    while (i < N)
                     {
                         var doc = new BsonDocument
                         {
@@ -77,13 +77,66 @@ namespace LiteDB.Tests
                             { "name", TempFile.LoremIpsum(5, 10, 1, 5, 1) }
                         };
 
-                        if(db.Update("col", doc)) i++;
+                        if (db.Update("col", doc)) i++;
                     }
                 });
 
                 Task.WaitAll(ta, tb);
 
                 Assert.AreEqual(N, db.Count("col", Query.EQ("updated", true)));
+            }
+        }
+
+        [TestMethod]
+        public void Concurrency_InsertQuery_Test()
+        {
+            const int N = 3000;
+            var running = true;
+
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                db.Insert("col", new BsonDocument());
+
+                // insert basic document
+                var ta = Task.Factory.StartNew(() =>
+                {
+                    for (var i = 0; i < N; i++)
+                    {
+                        var doc = new BsonDocument { { "_id", i } };
+
+                        db.Insert("col", doc);
+                    }
+                    running = false;
+                });
+
+                // query while insert
+                var tb = Task.Factory.StartNew(() =>
+                {
+                    while (running)
+                    {
+                        db.Find("col", Query.All()).ToList();
+                    }
+                });
+
+                Task.WaitAll(ta, tb);
+
+                Assert.AreEqual(N + 1, db.Count("col", Query.All()));
+            }
+        }
+
+        [TestMethod]
+        public void Concurrency_UserVersionInc_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                Parallel.For(1, 3001, (i) =>
+                {
+                    db.UserVersionInc(1);
+                });
+
+                Assert.AreEqual(3000, db.UserVersion);
             }
         }
     }

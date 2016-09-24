@@ -50,5 +50,30 @@ namespace LiteDB.Tests
                 Assert.AreEqual(false, u2);
             }
         }
+
+        public void Engine_QueryUpdate_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                db.EnsureIndex("col", "name");
+
+                // insert 4 documents
+                db.Insert("col", new BsonDocument { { "_id", 1 } });
+                db.Insert("col", new BsonDocument { { "_id", 2 } });
+                db.Insert("col", new BsonDocument { { "_id", 3 } });
+                db.Insert("col", new BsonDocument { { "_id", 4 } });
+
+                // query all documents and update name
+                foreach(var d in db.Find("col", Query.All()))
+                {
+                    d["name"] = "john";
+                    db.Update("col", d);
+                }
+
+                // this simple test if same thread open a read mode and then open write lock mode
+                Assert.AreEqual(4, db.Count("col", Query.EQ("name", "john")));
+            }
+        }
     }
 }

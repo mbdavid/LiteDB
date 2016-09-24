@@ -11,36 +11,39 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            // get my collection page
-            var col = this.GetCollectionPage(colName, false);
-
-            // no collection, no documents
-            if (col == null) yield break;
-
-            // get nodes from query executor to get all IndexNodes
-            var nodes = query.Run(col, _indexer);
-
-            // skip first N nodes
-            if (skip > 0) nodes = nodes.Skip(skip);
-
-            // limit in M nodes
-            if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-            // for each document, read data and deserialize as document
-            foreach (var node in nodes)
+            using(_locker.Read())
             {
-                _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
+                // get my collection page
+                var col = this.GetCollectionPage(colName, false);
 
-                byte[] buffer;
-                BsonDocument doc;
+                // no collection, no documents
+                if (col == null) yield break;
 
-                // encapsulate read operation inside a try/catch (yeild do not support try/catch)
-                buffer = _data.Read(node.DataBlock);
-                doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                // get nodes from query executor to get all IndexNodes
+                var nodes = query.Run(col, _indexer);
 
-                yield return doc;
+                // skip first N nodes
+                if (skip > 0) nodes = nodes.Skip(skip);
 
-                _trans.CheckPoint();
+                // limit in M nodes
+                if (limit != int.MaxValue) nodes = nodes.Take(limit);
+
+                // for each document, read data and deserialize as document
+                foreach (var node in nodes)
+                {
+                    _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", colName, node.Key);
+
+                    byte[] buffer;
+                    BsonDocument doc;
+
+                    // encapsulate read operation inside a try/catch (yeild do not support try/catch)
+                    buffer = _data.Read(node.DataBlock);
+                    doc = BsonSerializer.Deserialize(buffer).AsDocument;
+
+                    yield return doc;
+
+                    _trans.CheckPoint();
+                }
             }
         }
 
@@ -49,29 +52,32 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonValue> FindIndex(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            // get my collection page
-            var col = this.GetCollectionPage(colName, false);
-
-            // no collection, no values
-            if (col == null) yield break;
-
-            // get nodes from query executor to get all IndexNodes
-            var nodes = query.Run(col, _indexer);
-
-            // skip first N nodes
-            if (skip > 0) nodes = nodes.Skip(skip);
-
-            // limit in M nodes
-            if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-            // for each document, read data and deserialize as document
-            foreach (var node in nodes)
+            using (_locker.Read())
             {
-                _log.Write(Logger.QUERY, "read index key on '{0}' :: key = {1}", colName, node.Key);
+                // get my collection page
+                var col = this.GetCollectionPage(colName, false);
 
-                yield return node.Key;
+                // no collection, no values
+                if (col == null) yield break;
 
-                _trans.CheckPoint();
+                // get nodes from query executor to get all IndexNodes
+                var nodes = query.Run(col, _indexer);
+
+                // skip first N nodes
+                if (skip > 0) nodes = nodes.Skip(skip);
+
+                // limit in M nodes
+                if (limit != int.MaxValue) nodes = nodes.Take(limit);
+
+                // for each document, read data and deserialize as document
+                foreach (var node in nodes)
+                {
+                    _log.Write(Logger.QUERY, "read index key on '{0}' :: key = {1}", colName, node.Key);
+
+                    yield return node.Key;
+
+                    _trans.CheckPoint();
+                }
             }
         }
     }

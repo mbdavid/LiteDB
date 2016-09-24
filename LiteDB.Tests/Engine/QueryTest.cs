@@ -29,13 +29,13 @@ namespace LiteDB.Tests
 
                 db.EnsureIndex("col", "name");
 
-                Func<Query, string> query = (q) => string.Join(",", db.FindIndex("col", q).Select(x => x.ToString()));
+                Func<Query, string> result = (q) => string.Join(",", db.FindIndex("col", q).Select(x => x.ToString()));
 
-                Assert.AreEqual("1", query(Query.EQ("_id", 1)));
-                Assert.AreEqual("4,5", query(Query.GTE("_id", 4)));
-                Assert.AreEqual("1", query(Query.LT("_id", 2)));
-                Assert.AreEqual("a,b,d,e", query(Query.Not("name", "c")));
-                Assert.AreEqual("2,4", query(Query.Func("_id", (v) => v.AsInt32 % 2 == 0)));
+                Assert.AreEqual("1", result(Query.EQ("_id", 1)));
+                Assert.AreEqual("4,5", result(Query.GTE("_id", 4)));
+                Assert.AreEqual("1", result(Query.LT("_id", 2)));
+                Assert.AreEqual("a,b,d,e", result(Query.Not("name", "c")));
+                Assert.AreEqual("2,4", result(Query.Func("_id", (v) => v.AsInt32 % 2 == 0)));
 
             }
         }

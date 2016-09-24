@@ -11,9 +11,12 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            var header = _pager.GetPage<HeaderPage>(0);
+            using (_locker.Read())
+            {
+                var header = _pager.GetPage<HeaderPage>(0);
 
-            return header.CollectionPages.Keys.AsEnumerable();
+                return header.CollectionPages.Keys.AsEnumerable();
+            }
         }
 
         /// <summary>

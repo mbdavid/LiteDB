@@ -12,6 +12,8 @@ namespace LiteDB
 
         private Logger _log;
 
+        private Locker _locker;
+
         private IDiskService _disk;
 
         private PageService _pager;
@@ -53,6 +55,7 @@ namespace LiteDB
             }
 
             // initialize all services
+            _locker = new Locker(new TimeSpan(0, 1, 0));
             _pager = new PageService(_disk, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
@@ -89,7 +92,7 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            lock (_disk)
+            using(_locker.Write())
             {
                 try
                 {

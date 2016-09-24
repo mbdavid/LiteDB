@@ -91,13 +91,16 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<IndexInfo> GetIndexes(string colName)
         {
-            var col = this.GetCollectionPage(colName, false);
-
-            if (col == null) yield break;
-
-            foreach (var index in col.GetIndexes(true))
+            using (_locker.Read())
             {
-                yield return new IndexInfo(index);
+                var col = this.GetCollectionPage(colName, false);
+
+                if (col == null) yield break;
+
+                foreach (var index in col.GetIndexes(true))
+                {
+                    yield return new IndexInfo(index);
+                }
             }
         }
     }
