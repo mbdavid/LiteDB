@@ -1,5 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace LiteDB.Tests
 {
@@ -63,6 +66,43 @@ namespace LiteDB.Tests
             Assert.AreEqual(c1.Impl.Name, k1.Impl.Name);
             Assert.AreEqual((c2.Impl as MyClassImpl).Name, (k2.Impl as MyClassImpl).Name);
             Assert.AreEqual(c3.Impl.Name, k3.Impl.Name);
+        }
+
+        [TestMethod]
+        public void ThreadedMappingShouldNotCauseConstructorException()
+        {
+            // arrange
+            var exceptionOccured = false;
+
+            var rand = new Random();
+            var mapper = new BsonMapper();
+            var list = new List<BsonDocument>();
+
+            for (var r = 0; r < rand.Next(10); r++)
+            {
+                var obj = new MyClassWithInterface {Id = r, Impl = new MyClassImpl {Name = $"Name_{r}"}};
+                list.Add(mapper.ToDocument(obj));
+            }
+            
+            // act
+            Parallel.ForEach(list, t =>
+            {
+                try
+                {
+                    mapper.ToObject<MyClassWithInterface>(t);
+                }
+                catch (LiteException exception)
+                {
+                    if (exception.ErrorCode == 202)
+                    {
+                        exceptionOccured = true;
+                    }
+                }
+            });
+
+            // assert
+            Assert.IsFalse(exceptionOccured);
+
         }
     }
 }
