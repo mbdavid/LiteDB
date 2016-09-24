@@ -37,7 +37,11 @@ namespace LiteDB.Platform
             var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
             var il = getter.GetILGenerator();
 
+#if !NETSTANDARD
             if (!type.IsClass) // structs
+#else
+            if (!type.GetTypeInfo().IsClass) // structs
+#endif
             {
                 var lv = il.DeclareLocal(type);
                 il.Emit(OpCodes.Ldarg_0);
@@ -45,16 +49,26 @@ namespace LiteDB.Platform
                 il.Emit(OpCodes.Stloc_0);
                 il.Emit(OpCodes.Ldloca_S, lv);
                 il.EmitCall(OpCodes.Call, getMethod, null);
+#if !NETSTANDARD
                 if (propertyInfo.PropertyType.IsValueType)
                     il.Emit(OpCodes.Box, propertyInfo.PropertyType);
+#else
+                if (propertyInfo.PropertyType.GetTypeInfo().IsValueType)
+                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
+#endif
             }
             else
             {
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
                 il.EmitCall(OpCodes.Callvirt, getMethod, null);
+#if !NETSTANDARD
                 if (propertyInfo.PropertyType.IsValueType)
                     il.Emit(OpCodes.Box, propertyInfo.PropertyType);
+#else
+                if (propertyInfo.PropertyType.GetTypeInfo().IsValueType)
+                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
+#endif
             }
 
             il.Emit(OpCodes.Ret);
@@ -71,7 +85,11 @@ namespace LiteDB.Platform
             var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
             var il = setter.GetILGenerator();
 
+#if !NETSTANDARD
             if (!type.IsClass) // structs
+#else
+            if (!type.GetTypeInfo().IsClass) // structs
+#endif
             {
                 var lv = il.DeclareLocal(type);
                 il.Emit(OpCodes.Ldarg_0);
@@ -79,7 +97,11 @@ namespace LiteDB.Platform
                 il.Emit(OpCodes.Stloc_0);
                 il.Emit(OpCodes.Ldloca_S, lv);
                 il.Emit(OpCodes.Ldarg_1);
+#if !NETSTANDARD
                 il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
+#else
+                il.Emit(propertyInfo.PropertyType.GetTypeInfo().IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
+#endif
                 il.EmitCall(OpCodes.Call, setMethod, null);
                 il.Emit(OpCodes.Ldloc_0);
                 il.Emit(OpCodes.Box, type);
@@ -89,7 +111,11 @@ namespace LiteDB.Platform
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
                 il.Emit(OpCodes.Ldarg_1);
+#if !NETSTANDARD
                 il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
+#else
+                il.Emit(propertyInfo.PropertyType.GetTypeInfo().IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
+#endif
                 il.EmitCall(OpCodes.Callvirt, setMethod, null);
                 il.Emit(OpCodes.Ldarg_0);
             }
