@@ -144,6 +144,10 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - One database **per account/user** data store
 - Few concurrent write operations
 
+## GUI Tools
+
+- [LiteDB Viewer](https://github.com/falahati/LiteDBViewer) from @falahati
+
 ## Changelog
 
 Change details for each release are documented in the [release notes](https://github.com/mbdavid/LiteDB/releases).
