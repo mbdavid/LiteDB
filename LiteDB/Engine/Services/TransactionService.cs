@@ -52,10 +52,7 @@ namespace LiteDB
         public void Commit()
         {
             // get header page
-            var header = _pager.GetPage<HeaderPage>(0, true);
-
-            // increase file changeID (back to 0 when overflow)
-            header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             // set final datafile length (optimize page writes)
             _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));

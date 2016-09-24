@@ -1,7 +1,5 @@
 # v-next
-BsonArray as IList<BsonValue>
-Be shell works
-
+FileStorage will support OpenWrite("fileId") <= LiteFileStream
 
 ### ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare

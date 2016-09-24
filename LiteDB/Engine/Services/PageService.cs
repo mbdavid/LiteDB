@@ -9,7 +9,7 @@ namespace LiteDB
         private IDiskService _disk;
         private Logger _log;
 
-        private Dictionary<uint, BasePage> _cache = new Dictionary<uint, BasePage>();
+        private SortedDictionary<uint, BasePage> _cache = new SortedDictionary<uint, BasePage>();
 
         public PageService(IDiskService disk, Logger log)
         {
