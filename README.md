@@ -1,7 +1,6 @@
-<<<<<<< HEAD
 # v-next
-FileStorage will support OpenWrite("fileId") <= LiteFileStream
-=======
+- FileStorage will support OpenWrite("fileId") <= LiteFileStream
+
 # Changes to v3
 - Thread Safe
 - Lock file on open (single process access)
@@ -14,13 +13,13 @@ FileStorage will support OpenWrite("fileId") <= LiteFileStream
 - New QueryFunc
 - New Upsert
 - New FindIndex
+- Remove ChangeID (avoid write Header Page all times)
+
 
 # TODO
 - netstandard 1.4
 - Vistual index fields
 - BsonMapper with external support (like JSON.NET)
-
->>>>>>> cec99ac1a6a4d078ecafec65926a35a1e162c771
 
 ### ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
