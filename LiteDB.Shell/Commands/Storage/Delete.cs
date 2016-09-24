@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileDelete : BaseFileStorage, IShellCommand
+    internal class FileDelete : BaseStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -11,7 +11,7 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteEngine engine, StringScanner s)
         {
-            var fs = new LiteFileStorage(engine);
+            var fs = new LiteStorage(engine);
             var id = this.ReadId(s);
 
             return fs.Delete(id);

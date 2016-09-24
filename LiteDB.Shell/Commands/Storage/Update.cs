@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileUpdate : BaseFileStorage, IShellCommand
+    internal class FileUpdate : BaseStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -11,9 +11,9 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteEngine engine, StringScanner s)
         {
-            var fs = new LiteFileStorage(engine);
+            var fs = new LiteStorage(engine);
             var id = this.ReadId(s);
-            var metadata = JsonSerializer.Deserialize(s).AsDocument;
+            var metadata = JsonSerializer.Deserialize(s.ToString()).AsDocument;
 
             return fs.SetMetadata(id, metadata);
         }

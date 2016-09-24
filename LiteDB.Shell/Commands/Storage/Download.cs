@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileDownload : BaseFileStorage, IShellCommand
+    internal class FileDownload : BaseStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -11,7 +11,7 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteEngine engine, StringScanner s)
         {
-            var fs = new LiteFileStorage(engine);
+            var fs = new LiteStorage(engine);
             var id = this.ReadId(s);
             var filename = s.Scan(@"\s*.*").Trim();
 

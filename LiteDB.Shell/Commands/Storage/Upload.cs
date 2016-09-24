@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileUpload : BaseFileStorage, IShellCommand
+    internal class FileUpload : BaseStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -11,13 +11,12 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteEngine engine, StringScanner s)
         {
-            var fs = new LiteFileStorage(engine);
+            var fs = new LiteStorage(engine);
             var id = this.ReadId(s);
-            var fileHandler = LitePlatform.Platform.FileHandler;
 
             var filename = s.Scan(@"\s*.*").Trim();
 
-            if (!fileHandler.FileExists(filename)) throw new IOException("File " + filename + " not found");
+            if (!File.Exists(filename)) throw new IOException("File " + filename + " not found");
 
             var file = fs.Upload(id, filename);
 

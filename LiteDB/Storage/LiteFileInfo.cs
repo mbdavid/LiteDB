@@ -55,7 +55,7 @@ namespace LiteDB
             this.Metadata = doc["metadata"].AsDocument;
         }
 
-        internal BsonDocument AsDocument
+        public BsonDocument AsDocument
         {
             get
             {

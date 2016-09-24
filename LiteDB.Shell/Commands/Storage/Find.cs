@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileFind : BaseFileStorage, IShellCommand
+    internal class FileFind : BaseStorage, IShellCommand
     {
         public bool IsCommand(StringScanner s)
         {
@@ -12,7 +12,7 @@ namespace LiteDB.Shell.Commands
 
         public BsonValue Execute(LiteEngine engine, StringScanner s)
         {
-            var fs = new LiteFileStorage(engine);
+            var fs = new LiteStorage(engine);
 
             if (s.HasTerminated)
             {

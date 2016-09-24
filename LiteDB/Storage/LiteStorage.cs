@@ -25,7 +25,7 @@ namespace LiteDB
         /// <summary>
         /// Open/Create new file storage and returns linked Stream to write operations
         /// </summary>
-        public LiteFileStream OpenWrite(string id, string filename)
+        public LiteFileStream OpenWrite(string id, string filename, BsonDocument metadata = null)
         {
             // checks if file exists
             var file = this.FindById(id);
@@ -38,47 +38,47 @@ namespace LiteDB
                 _engine.Insert(FILES, file.AsDocument);
             }
 
+            // update metadata if passed
+            if (metadata == null)
+            {
+                file.Metadata = metadata;
+            }
+
             return file.OpenWrite();
         }
 
-        // /// <summary>
-        // /// Insert a new file content inside datafile in _files collection
-        // /// </summary>
-        // public LiteFileInfo Upload(LiteFileInfo file, Stream stream)
-        // {
-        //     if (file == null) throw new ArgumentNullException("id");
-        //     if (stream == null) throw new ArgumentNullException("stream");
-        // 
-        //     var fstream = new LiteFileStream(_engine, file, FileAccess.Write);
-        // 
-        //     stream.CopyTo(fstream);
-        // 
-        //     return file;
-        // }
-        // 
-        // public LiteFileInfo Upload(string id, Stream stream)
-        // {
-        // }
-        // 
-        // 
-        // public LiteFileInfo Upload(string id, string filename)
-        // {
-        //     using (var stream = LitePlatform.Platform.FileHandler.OpenFileAsStream(filename, true))
-        //     {
-        //         return this.Upload(new LiteFileInfo(id, filename), stream);
-        //     }
-        // }
-        // 
-        // /// <summary>
-        // /// Upload a file to FileStorage using Path.GetFilename as file Id
-        // /// </summary>
-        // public LiteFileInfo Upload(string filename)
-        // {
-        //     using (var stream = LitePlatform.Platform.FileHandler.OpenFileAsStream(filename, true))
-        //     {
-        //         return this.Upload(new LiteFileInfo(Path.GetFileName(filename), filename), stream);
-        //     }
-        // }
+        /// <summary>
+        /// Upload a file based on stream data
+        /// </summary>
+        public LiteFileInfo Upload(string id, string filename, Stream stream)
+        {
+            // checks if file exists
+            var file = this.FindById(id);
+
+            if (file == null)
+            {
+                file = new LiteFileInfo(_engine, id, filename ?? id);
+
+                // insert if new
+                _engine.Insert(FILES, file.AsDocument);
+            }
+
+            // copy stream content to litedb file stream
+            stream.CopyTo(file.OpenWrite());
+
+            return file;
+        }
+
+        /// <summary>
+        /// Upload a file based on filesystem data
+        /// </summary>
+        public LiteFileInfo Upload(string id, string filename)
+        {
+            using (var stream = File.OpenRead(filename))
+            {
+                return this.Upload(id, Path.GetFileName(filename), stream);
+            }
+        }
 
         /// <summary>
         /// Update metada on a file. File must exisits

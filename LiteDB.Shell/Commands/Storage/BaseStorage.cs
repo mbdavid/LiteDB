@@ -2,7 +2,7 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class BaseFileStorage
+    internal class BaseStorage
     {
         public bool IsFileCommand(StringScanner s, string command)
         {

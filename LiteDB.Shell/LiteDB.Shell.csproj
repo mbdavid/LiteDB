@@ -84,6 +84,12 @@
     <Compile Include="Commands\Console\Comment.cs" />
     <Compile Include="Commands\Console\UserVersion.cs" />
     <Compile Include="Commands\Console\ShowCollections.cs" />
+    <Compile Include="Commands\Storage\BaseStorage.cs" />
+    <Compile Include="Commands\Storage\Delete.cs" />
+    <Compile Include="Commands\Storage\Download.cs" />
+    <Compile Include="Commands\Storage\Find.cs" />
+    <Compile Include="Commands\Storage\Update.cs" />
+    <Compile Include="Commands\Storage\Upload.cs" />
     <Compile Include="Shell\Display.cs" />
     <Compile Include="Shell\InputCommand.cs" />
     <Compile Include="Program.cs" />
@@ -117,7 +123,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Commands\FileStorage\" />
     <Folder Include="Commands\Others\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
