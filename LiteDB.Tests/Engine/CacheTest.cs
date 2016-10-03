@@ -36,19 +36,15 @@ namespace LiteDB.Tests
         {
             using (var file = new TempFile())
             {
-                // init with N docs
+                // init with N docs with type=1
                 using (var db = new LiteEngine(file.Filename))
                 {
                     db.EnsureIndex("col", "type");
-
-                    // insert N docs with type=1
-                    db.Insert("col", GetDocs(N, 1, false));
-
-                    // checks count
+                    db.Insert("col", GetDocs(N, type: 1));
                     Assert.AreEqual(N, db.Count("col", Query.EQ("type", 1)));
                 }
 
-                // re-open and type update
+                // re-open and try update all docs to type=2
                 using (var db = new LiteEngine(file.Filename))
                 {
                     var log = new StringBuilder();
@@ -58,8 +54,8 @@ namespace LiteDB.Tests
                     try
                     {
                         // try update all to "type=2"
-                        // but throws before finish
-                        db.Update("col", GetDocs(N, 2, false));
+                        // but throws exception before finish
+                        db.Update("col", GetDocs(N, type: 2, throwAtEnd: true));
                     }
                     catch (Exception ex)
                     {
@@ -70,15 +66,15 @@ namespace LiteDB.Tests
                     Assert.IsTrue(log.ToString().Contains("checkpoint"));
 
                     // re-check if all docs will be type=1
-                    Assert.AreEqual(0, db.Count("col", Query.EQ("type", 1)));
-                    Assert.AreEqual(N, db.Count("col", Query.EQ("type", 2)));
+                    Assert.AreEqual(N, db.Count("col", Query.EQ("type", 1)));
+                    Assert.AreEqual(0, db.Count("col", Query.EQ("type", 2)));
                 }
 
                 // re-open datafile the be sure contains only type=1
                 using (var db = new LiteEngine(file.Filename))
                 {
-                    Assert.AreEqual(0, db.Count("col", Query.EQ("type", 1)));
-                    Assert.AreEqual(N, db.Count("col", Query.EQ("type", 2)));
+                    Assert.AreEqual(N, db.Count("col", Query.EQ("type", 1)));
+                    Assert.AreEqual(0, db.Count("col", Query.EQ("type", 2)));
                 }
             }
         }

@@ -40,7 +40,7 @@ namespace LiteDB
                 {
                     _disk.WritePage(page.PageID, page.WritePage());
                 }
-
+                
                 // empty all cache pages
                 _pager.ClearCache(false);
             }

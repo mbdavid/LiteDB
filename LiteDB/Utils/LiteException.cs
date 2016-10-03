@@ -28,7 +28,6 @@ namespace LiteDB
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
         public const int DATABASE_WRONG_PASSWORD = 123;
         public const int PLATFORM_NOT_INITIALIZED = 124;
-        public const int TRANSACTION_CANCELLED_EXCEPTION = 125;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;

@@ -35,6 +35,13 @@ namespace LiteDB
                     page = BasePage.ReadPage(buffer);
                     _cache.Add(pageID, page);
                 }
+                // if cache contains EmptyPage for this pageID, convert EmptyPage to request T type
+                //TODO: Verificar se isso está correto
+                else if (page != null && page.PageType == PageType.Empty)
+                {
+                    page = BasePage.CreateInstance<T>(pageID);
+                    _cache[pageID] = page;
+                }
 
                 if (markAsDirty)
                 {
@@ -52,10 +59,6 @@ namespace LiteDB
         {
             // if page already dirty, go away
             if (page.IsDirty) return;
-
-            // add page to cache (if is not yet - NewPage method)
-            // do not need lock because all write transaction already in a lock
-            _cache[page.PageID] = page;
 
             // mark as dirty
             page.IsDirty = true;
@@ -148,6 +151,9 @@ namespace LiteDB
 
             var page = BasePage.CreateInstance<T>(pageID);
 
+            // add page to cache with correct T type (could be an old Empty page type)
+            _cache[pageID] = page;
+
             // mark new page as dirty as soon as possible
             this.SetDirty(page);
 
@@ -179,11 +185,17 @@ namespace LiteDB
             // adding all pages to FreeList
             foreach (var page in pages)
             {
-                // create a new empty page based on a normal page
-                var empty = new EmptyPage(page);
+                // mark old content page as dirty to write on journal if needed
+                this.SetDirty(page);
 
-                // mark page as dirty
-                this.SetDirty(empty);
+                // create a new empty page based on a normal page
+                var empty = new EmptyPage(page.PageID);
+
+                // empty page must be marked as dirty to be saved when commit
+                empty.IsDirty = true;
+                
+                // update cache with empty page marked as dirty
+                _cache[page.PageID] = empty;
 
                 // add to empty free list
                 this.AddOrRemoveToFreeList(true, empty, header, ref header.FreeEmptyPageID);

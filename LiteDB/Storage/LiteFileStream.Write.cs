@@ -23,7 +23,7 @@ namespace LiteDB
 
             _buffer.Write(buffer, offset, count);
 
-            if (_buffer.Length > MAX_CHUNK_SIZE)
+            if (_buffer.Length >= MAX_CHUNK_SIZE)
             {
                 this.WriteChunks();
             }
