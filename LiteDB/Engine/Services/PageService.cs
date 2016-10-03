@@ -35,13 +35,6 @@ namespace LiteDB
                     page = BasePage.ReadPage(buffer);
                     _cache.Add(pageID, page);
                 }
-                // if cache contains EmptyPage for this pageID, convert EmptyPage to request T type
-                //TODO: Verificar se isso está correto
-                else if (page != null && page.PageType == PageType.Empty)
-                {
-                    page = BasePage.CreateInstance<T>(pageID);
-                    _cache[pageID] = page;
-                }
 
                 if (markAsDirty)
                 {
@@ -133,6 +126,7 @@ namespace LiteDB
             // get header
             var header = this.GetPage<HeaderPage>(0, true);
             var pageID = (uint)0;
+            var diskData = new byte[0];
 
             // try get page from Empty free list
             if (header.FreeEmptyPageID != uint.MaxValue)
@@ -143,6 +137,13 @@ namespace LiteDB
                 this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
 
                 pageID = free.PageID;
+
+                // if used page has original disk data, copy to my new page
+                if (free.DiskData.Length > 0)
+                {
+                    diskData = new byte[BasePage.PAGE_SIZE];
+                    Buffer.BlockCopy(diskData, 0, diskData, 0, BasePage.PAGE_SIZE);
+                }
             }
             else
             {
@@ -150,6 +151,9 @@ namespace LiteDB
             }
 
             var page = BasePage.CreateInstance<T>(pageID);
+
+            // copy disk data from re-used page (or be an empty)
+            page.DiskData = diskData;
 
             // add page to cache with correct T type (could be an old Empty page type)
             _cache[pageID] = page;

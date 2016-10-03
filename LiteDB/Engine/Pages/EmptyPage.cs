@@ -19,6 +19,16 @@ namespace LiteDB
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
         }
 
+        public EmptyPage(BasePage page)
+            : base(page.PageID)
+        {
+            if(page.DiskData.Length > 0)
+            {
+                this.DiskData = new byte[BasePage.PAGE_SIZE];
+                Buffer.BlockCopy(page.DiskData, 0, this.DiskData, 0, BasePage.PAGE_SIZE);
+            }
+        }
+
         /// <summary>
         /// Update freebytes + items count
         /// </summary>
