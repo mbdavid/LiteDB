@@ -15,7 +15,7 @@ namespace LiteDB.Tests
         const int N = 60000;
 
         [TestMethod]
-        public void CacheCheckpoint_Test()
+        public void CacheCheckpointInsert_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -28,6 +28,28 @@ namespace LiteDB.Tests
                 db.Insert("col", GetDocs(N));
 
                 Assert.IsTrue(log.ToString().Contains("checkpoint"));
+            }
+        }
+
+        [TestMethod]
+        public void CacheCheckpointIndex_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                // insert basic N documents
+                db.Insert("col", GetDocs(N));
+
+                var log = new StringBuilder();
+                db.Log.Level = Logger.CACHE;
+                db.Log.Logging += (s) => log.AppendLine(s);
+
+                // create an index in col
+                db.EnsureIndex("col", "name");
+
+                Assert.IsTrue(log.ToString().Contains("checkpoint"));
+
+                Assert.AreEqual(N, db.Count("col", Query.All()));
             }
         }
 
