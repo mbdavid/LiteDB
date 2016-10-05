@@ -173,6 +173,9 @@ namespace LiteDB
             // test if this page is not in journal file
             if (_journalPages.Contains(pageID)) return;
 
+            // if no journal or no buffer, exit
+            if (_journalEnabled == false || buffer.Length == 0) return;
+
             // open journal file if not used yet
             if (_journal == null)
             {

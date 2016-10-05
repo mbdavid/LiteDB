@@ -116,8 +116,6 @@ namespace LiteDB
                         if (block.ExtendPageID != uint.MaxValue)
                         {
                             _pager.DeletePage(block.ExtendPageID, true);
-
-                            _trans.CheckPoint();
                         }
                     }
 
@@ -134,7 +132,6 @@ namespace LiteDB
             foreach (var pageID in pages)
             {
                 _pager.DeletePage(pageID);
-                _trans.CheckPoint();
             }
 
             // get header page to remove from collection list links

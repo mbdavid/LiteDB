@@ -42,7 +42,11 @@ namespace LiteDB
 
                     yield return doc;
 
-                    _trans.CheckPoint();
+                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
+                    if (_trans.CheckPoint())
+                    {
+                        col = this.GetCollectionPage(colName, false);
+                    }
                 }
             }
         }
@@ -76,7 +80,11 @@ namespace LiteDB
 
                     yield return node.Key;
 
-                    _trans.CheckPoint();
+                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
+                    if (_trans.CheckPoint())
+                    {
+                        col = this.GetCollectionPage(colName, false);
+                    }
                 }
             }
         }

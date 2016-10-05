@@ -27,15 +27,21 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
+                    // first try update document, if not found, insert
                     if(this.UpdateDocument(col, doc) == false)
                     {
                         this.InsertDocument(col, doc);
                         count++;
                     }
 
-                    _trans.CheckPoint();
+                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
+                    if (_trans.CheckPoint())
+                    {
+                        col = this.GetCollectionPage(colName, true);
+                    }
                 }
 
+                // returns how many document was inserted
                 return count;
             });
         }

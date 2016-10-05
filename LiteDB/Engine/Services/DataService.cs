@@ -20,7 +20,7 @@ namespace LiteDB
         public DataBlock Insert(CollectionPage col, byte[] data)
         {
             // set collection page as dirty before changes
-            _pager.SetDirty(col);
+            col.IsDirty = true;
 
             // need to extend (data is bigger than 1 page)
             var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
@@ -162,7 +162,7 @@ namespace LiteDB
             var block = page.DataBlocks[blockAddress.Index];
 
             // mark collection page as dirty
-            _pager.SetDirty(col);
+            col.IsDirty = true;
 
             // if there a extended page, delete all
             if (block.ExtendPageID != uint.MaxValue)

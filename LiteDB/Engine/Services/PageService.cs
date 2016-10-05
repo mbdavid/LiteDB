@@ -38,28 +38,10 @@ namespace LiteDB
 
                 if (markAsDirty)
                 {
-                    this.SetDirty(page);
+                    page.IsDirty = true;
                 }
 
                 return (T)page;
-            }
-        }
-
-        /// <summary>
-        /// Add a page to cache and mark them as dirty too. Must be marked as dirty BEFORE change page or just after create one
-        /// </summary>
-        public void SetDirty(BasePage page)
-        {
-            // if page already dirty, go away
-            if (page.IsDirty) return;
-
-            // mark as dirty
-            page.IsDirty = true;
-
-            // if page has original bytes (from disk) save them to journal file
-            if (page.DiskData.Length > 0 && _disk.IsJournalEnabled)
-            {
-                _disk.WriteJournal(page.PageID, page.DiskData);
             }
         }
 
@@ -158,13 +140,13 @@ namespace LiteDB
             // add page to cache with correct T type (could be an old Empty page type)
             _cache[pageID] = page;
 
-            // mark new page as dirty as soon as possible
-            this.SetDirty(page);
+            // mark new page as dirty
+            page.IsDirty = true;
 
             // if there a page before, just fix NextPageID pointer
             if (prevPage != null)
             {
-                this.SetDirty(prevPage);
+                prevPage.IsDirty = true;
                 page.PrevPageID = prevPage.PageID;
                 prevPage.NextPageID = page.PageID;
             }
@@ -190,7 +172,7 @@ namespace LiteDB
             foreach (var page in pages)
             {
                 // mark old content page as dirty to write on journal if needed
-                this.SetDirty(page);
+                page.IsDirty = true;
 
                 // create a new empty page based on a normal page
                 var empty = new EmptyPage(page.PageID);
@@ -225,8 +207,8 @@ namespace LiteDB
                 // first, test if there is space on this page
                 if (free >= size)
                 {
-                    //return this.GetPage<T>(startPageID);
-                    this.SetDirty(page);
+                    page.IsDirty = true;
+
                     return page;
                 }
             }
@@ -280,7 +262,7 @@ namespace LiteDB
             BasePage next = null;
 
             // base must be marked as dirty
-            this.SetDirty(page);
+            page.IsDirty = true;
 
             // let's page in desc order
             while (nextPageID != uint.MaxValue)
@@ -290,7 +272,7 @@ namespace LiteDB
                 if (free >= next.FreeBytes)
                 {
                     // mark next page as dirty
-                    this.SetDirty(next);
+                    next.IsDirty = true;
 
                     // assume my page in place of next page
                     page.PrevPageID = next.PrevPageID;
@@ -302,14 +284,14 @@ namespace LiteDB
                     // my page is the new first page on list
                     if (page.PrevPageID == 0)
                     {
-                        this.SetDirty(startPage);
+                        startPage.IsDirty = true;
                         fieldPageID = page.PageID;
                     }
                     else
                     {
                         // if not the first, ajust links from previous page (set as dirty)
                         var prev = this.GetPage<BasePage>(page.PrevPageID);
-                        this.SetDirty(prev);
+                        prev.IsDirty = true;
                         prev.NextPageID = page.PageID;
                     }
 
@@ -322,7 +304,7 @@ namespace LiteDB
             // empty list, be the first
             if (next == null)
             {
-                this.SetDirty(startPage);
+                startPage.IsDirty = true;
 
                 // it's first page on list
                 page.PrevPageID = 0;
@@ -330,11 +312,10 @@ namespace LiteDB
             }
             else
             {
-                this.SetDirty(next);
-
                 // it's last position on list (next = last page on list)
                 page.PrevPageID = next.PageID;
                 next.NextPageID = page.PageID;
+                next.IsDirty = true;
             }
         }
 
@@ -344,12 +325,12 @@ namespace LiteDB
         private void RemoveToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
         {
             // mark page that will be removed as dirty
-            this.SetDirty(page);
+            page.IsDirty = true;
 
             // this page is the first of list
             if (page.PrevPageID == 0)
             {
-                this.SetDirty(startPage);
+                startPage.IsDirty = true;
                 fieldPageID = page.NextPageID;
             }
             else

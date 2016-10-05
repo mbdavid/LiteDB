@@ -30,7 +30,7 @@ namespace LiteDB
                     var dataBlock = _data.GetBlock(node.DataBlock);
 
                     // mark datablock page as dirty
-                    _pager.SetDirty(dataBlock.Page);
+                    dataBlock.Page.IsDirty = true;
 
                     // read object
                     var doc = BsonSerializer.Deserialize(buffer).AsDocument;
@@ -46,7 +46,11 @@ namespace LiteDB
                     // link index node to datablock
                     newNode.DataBlock = dataBlock.Position;
 
-                    _trans.CheckPoint();
+                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
+                    if (_trans.CheckPoint())
+                    {
+                        col = this.GetCollectionPage(colName, true);
+                    }
                 }
 
                 return true;
@@ -66,7 +70,7 @@ namespace LiteDB
                 if (col == null) return false;
 
                 // mark collection page as dirty before changes
-                _pager.SetDirty(col);
+                col.IsDirty = true;
 
                 // search for index reference
                 var index = col.GetIndex(field);

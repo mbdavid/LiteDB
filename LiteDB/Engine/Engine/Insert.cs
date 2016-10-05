@@ -26,7 +26,11 @@ namespace LiteDB
                 {
                     InsertDocument(col, doc);
 
-                    _trans.CheckPoint();
+                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
+                    if (_trans.CheckPoint())
+                    {
+                        col = this.GetCollectionPage(colName, true);
+                    }
 
                     count++;
                 }

@@ -54,7 +54,7 @@ namespace LiteDB
                 }
 
                 // set page as dirty before any change
-                _pager.SetDirty(col);
+                col.IsDirty = true;
 
                 // change collection name and save
                 col.CollectionName = newName;

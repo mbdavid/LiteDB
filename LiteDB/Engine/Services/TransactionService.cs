@@ -28,7 +28,7 @@ namespace LiteDB
         /// Checkpoint is a safe point to clear cache pages without loose pages references.
         /// Is called after each document insert/update/deleted/indexed/fetch from query
         /// </summary>
-        public void CheckPoint()
+        public bool CheckPoint()
         {
             // works only when journal are enabled
             if (_disk.IsJournalEnabled && _pager.CacheSize >= MAX_CACHE_SIZE)
@@ -38,12 +38,20 @@ namespace LiteDB
                 // write all dirty pages in data file (journal 
                 foreach (var page in _pager.GetDirtyPages())
                 {
+                    // first write in journal file original data
+                    _disk.WriteJournal(page.PageID, page.DiskData);
+
+                    // then writes no datafile new changed pages
                     _disk.WritePage(page.PageID, page.WritePage());
                 }
                 
                 // empty all cache pages
                 _pager.ClearCache(false);
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -60,6 +68,10 @@ namespace LiteDB
             // write all dirty pages in data file
             foreach (var page in _pager.GetDirtyPages())
             {
+                // first write in journal file original data
+                _disk.WriteJournal(page.PageID, page.DiskData);
+
+                // then writes no datafile new changed pages
                 _disk.WritePage(page.PageID, page.WritePage());
 
                 // mark page as clear (is now saved in disk)
@@ -76,7 +88,7 @@ namespace LiteDB
         public void Rollback()
         {
             // clear all dirty pages from memory
-            _pager.ClearCache(true);
+            _pager.ClearCache(false);
 
             // recovery (if exists) journal file
             _disk.Recovery();
