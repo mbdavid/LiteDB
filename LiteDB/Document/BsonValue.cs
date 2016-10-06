@@ -139,7 +139,42 @@ namespace LiteDB
                 this.Type = v.Type;
                 this.RawValue = v.RawValue;
             }
-            else throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
+            else
+            {
+                // test for array or dictionary (document)
+                var enumerable = value as System.Collections.IEnumerable;
+                var dictionary = value as System.Collections.IDictionary;
+
+                // test first for dictionary (becasue IDictionary implement IEnumerable)
+                if (dictionary != null)
+                {
+                    var dict = new Dictionary<string, BsonValue>();
+
+                    foreach (var key in dictionary.Keys)
+                    {
+                        dict.Add(key.ToString(), new BsonValue(dictionary[key]));
+                    }
+
+                    this.Type = BsonType.Document;
+                    this.RawValue = dict;
+                }
+                else if (enumerable != null)
+                {
+                    var list = new List<BsonValue>();
+
+                    foreach (var x in enumerable)
+                    {
+                        list.Add(new BsonValue(x));
+                    }
+
+                    this.Type = BsonType.Array;
+                    this.RawValue = list;
+                }
+                else
+                {
+                    throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
+                }
+            }
         }
 
         #endregion

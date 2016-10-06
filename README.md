@@ -1,5 +1,6 @@
 # v-next
-- FileStorage will support OpenWrite("fileId") <= LiteFileStream
+- Review IsDirty = true
+- ReadOnly support
 
 # Changes to v3
 - Thread Safe
@@ -14,12 +15,26 @@
 - New Upsert
 - New FindIndex
 - Remove ChangeID (avoid write Header Page all times)
+- FileStorage will support OpenWrite("fileId") <= LiteFileStream
 
 
 # TODO
 - netstandard 1.4
 - Vistual index fields
 - BsonMapper with external support (like JSON.NET)
+- BsonMapper with ReadOnly / private setter options
+- Drop collection with checkpoint
+- Transaction using Action<LiteTransaction> + lock(_locker) { .. }
+```
+engine.Transaction((t) =>
+{ 
+	... 
+	t.Rollback();
+});
+
+```
+	
+
 
 ### ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
@@ -75,6 +90,8 @@ This structure will be work more close to a DBMS (centralized database instance 
    - Linq
    - Repository
    - FileStorage
+   - Capped Collection (#314)
+   - Full Text Search
 
 =============================================================================
 

@@ -46,7 +46,7 @@ namespace LiteDB
                 }
                 
                 // empty all cache pages
-                _pager.ClearCache(false);
+                _pager.ClearCache();
 
                 return true;
             }
@@ -72,9 +72,10 @@ namespace LiteDB
                 _disk.WriteJournal(page.PageID, page.DiskData);
 
                 // then writes no datafile new changed pages
+                // page.WritePage() updated DiskData with new rendered buffer
                 _disk.WritePage(page.PageID, page.WritePage());
 
-                // mark page as clear (is now saved in disk)
+                // mark page as clean (is now saved in disk)
                 page.IsDirty = false;
             }
 
@@ -88,7 +89,7 @@ namespace LiteDB
         public void Rollback()
         {
             // clear all dirty pages from memory
-            _pager.ClearCache(false);
+            _pager.ClearCache();
 
             // recovery (if exists) journal file
             _disk.Recovery();
