@@ -13,7 +13,8 @@ namespace LiteDB.Tests
     [TestClass]
     public class PerformanceTest
     {
-        const int N = 10000;
+        const int N1 = 10000;
+        const int N2 = 1000;
 
         [TestMethod]
         public void Performance_Test()
@@ -28,7 +29,7 @@ namespace LiteDB.Tests
                 var td = new Stopwatch();
 
                 ti.Start();
-                db.Insert("col", GetDocs(N));
+                db.Insert("col", GetDocs(N1));
                 ti.Stop();
 
                 tx.Start();
@@ -36,7 +37,7 @@ namespace LiteDB.Tests
                 tx.Stop();
 
                 tu.Start();
-                db.Update("col", GetDocs(N));
+                db.Update("col", GetDocs(N1));
                 tu.Stop();
 
                 td.Start();
@@ -50,6 +51,54 @@ namespace LiteDB.Tests
             }
         }
 
+        [TestMethod]
+        public void PerformanceSingleInsert_Test()
+        {
+            // test performance for 1.000 documents without bulk insert
+            SingleInsert(true);
+            SingleInsert(false);
+            // now with no instance re-use (similar to v2)
+            SingleInsertNewInstance(true);
+            SingleInsertNewInstance(false);
+        }
+
+        private void SingleInsert(bool journal)
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(new FileDiskService(file.Filename, journal)))
+            {
+                var ti = new Stopwatch();
+
+                foreach (var doc in GetDocs(N2))
+                {
+                    ti.Start();
+                    db.Insert("col", doc);
+                    ti.Stop();
+                }
+
+                Debug.Print("Insert time (" + (journal ? "" : "no ") + "journal): " + ti.ElapsedMilliseconds);
+            }
+        }
+
+        private void SingleInsertNewInstance(bool journal)
+        {
+            using (var file = new TempFile())
+            {
+                var ti = new Stopwatch();
+
+                foreach (var doc in GetDocs(N2))
+                {
+                    ti.Start();
+                    using (var db = new LiteEngine(new FileDiskService(file.Filename, journal)))
+                    {
+                        db.Insert("col", doc);
+                    }
+                    ti.Stop();
+                }
+
+                Debug.Print("Insert time using new instance (" + (journal ? "" : "no ") + "journal): " + ti.ElapsedMilliseconds);
+            }
+        }
         private IEnumerable<BsonDocument> GetDocs(int count)
         {
             var rnd = new Random();
