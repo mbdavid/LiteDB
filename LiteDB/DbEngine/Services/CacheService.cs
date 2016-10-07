@@ -91,18 +91,19 @@ namespace LiteDB
         {
             lock (_cache)
             {
-                // check if dirty pages pass limits, if pass, call dirty recicle and clear
-                if (_dirty.Count > MAX_CACHE_SIZE)
-                {
-                    DirtyRecicleAction();
-                    _dirty.Clear();
-                }
-
-                // check if read cache pass limits, just clean
-                if (_cache.Count > MAX_CACHE_SIZE)
-                {
-                    _cache.Clear();
-                }
+                // removed checkpoint after some bugs reported #315
+                // // check if dirty pages pass limits, if pass, call dirty recicle and clear
+                // if (_dirty.Count > MAX_CACHE_SIZE)
+                // {
+                //     DirtyRecicleAction();
+                //     _dirty.Clear();
+                // }
+                // 
+                // // check if read cache pass limits, just clean
+                // if (_cache.Count > MAX_CACHE_SIZE)
+                // {
+                //     _cache.Clear();
+                // }
             }
         }
 
