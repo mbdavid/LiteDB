@@ -133,11 +133,44 @@ namespace LiteDB.Tests
             {
                 Parallel.For(1, 3001, (i) =>
                 {
-                    db.UserVersionInc(1);
+                    db.BeginTrans();
+                    db.UserVersion = (ushort)(db.UserVersion + 1);
+                    db.Commit();
                 });
 
                 Assert.AreEqual(3000, db.UserVersion);
             }
         }
+
+        [TestMethod]
+        public void Concurrency_Transaction_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                // insert first document
+                db.Insert("col", new BsonDocument
+                {
+                    { "_id", 1 },
+                    { "count", 1 }
+                });
+
+                // use parallel 
+                Parallel.For(1, 10000, (i) =>
+                {
+                    db.BeginTrans();
+
+                    var doc = db.Find("col", Query.EQ("_id", 1)).Single();
+                    doc["count"] = doc["count"].AsInt32 + 1;
+                    db.Update("col", doc);
+
+                    db.Commit();
+                });
+
+                Assert.AreEqual(10000, db.Find("col", Query.EQ("_id", 1)).Single()["count"].AsInt32);
+            }
+        }
+
+
     }
 }

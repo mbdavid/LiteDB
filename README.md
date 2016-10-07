@@ -1,14 +1,16 @@
 # v-next
+- Transaction are not OK - Rollback must release all nested ExitLocker??
+	- If transaction will be implemented using Begin/Commit/Rollback how implement a efficient lock?
 - Review IsDirty = true
 - ReadOnly support
 
 # Changes to v3
-- Thread Safe
+- Thread Safe - uses 
 - Lock file on open (single process access)
 - `LiteEngine`: new low data layer access
 - BsonDocument implements IDictionary, BsonArray implements IList
 - Remove shell from LiteDB (avaiable only in LiteDB.Shell tool)
-- Remove transaction control
+- Transaction control
 - Remove index options
 - Remove: Shrink, Encryption, ...
 - New QueryFunc
@@ -24,13 +26,19 @@
 - BsonMapper with external support (like JSON.NET)
 - BsonMapper with ReadOnly / private setter options
 - Drop collection with checkpoint
-- Transaction using Action<LiteTransaction> + lock(_locker) { .. }
+- Use 
 ```
-engine.Transaction((t) =>
-{ 
-	... 
+engine.Begin();
+engine.Commit();
+engine.Rollback();
+
+db.Transaction((t) => 
+{
+	t.Commit();
 	t.Rollback();
-});
+})
+
+
 
 ```
 	

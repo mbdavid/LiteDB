@@ -31,16 +31,16 @@ namespace LiteDB
         public bool CheckPoint()
         {
             // works only when journal are enabled
-            if (_disk.IsJournalEnabled && _pager.CacheSize >= MAX_CACHE_SIZE)
+            if (_disk.IsJournalEnabled && _pager.PagesInCache >= MAX_CACHE_SIZE)
             {
-                _log.Write(Logger.CACHE, "cache checkpoint reached at {0} pages in cache", _pager.CacheSize);
+                _log.Write(Logger.CACHE, "cache checkpoint reached at {0} pages in cache", _pager.PagesInCache);
 
                 // write all dirty pages in data file (journal 
                 foreach (var page in _pager.GetDirtyPages())
                 {
                     // first write in journal file original data
                     _disk.WriteJournal(page.PageID, page.DiskData);
-
+                
                     // then writes no datafile new changed pages
                     _disk.WritePage(page.PageID, page.WritePage());
                 }

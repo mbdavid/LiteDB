@@ -55,7 +55,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Count all nodes from a query execution - do not deserialize documents to count
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
         public long Count(string colName, Query query)
         {

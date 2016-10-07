@@ -55,7 +55,13 @@ namespace LiteDB
 
                 var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + " [" + str + "] " + text;
 
-                this.Logging(msg);
+                try
+                {
+                    this.Logging(msg);
+                }
+                catch
+                {
+                }
             }
         }
     }

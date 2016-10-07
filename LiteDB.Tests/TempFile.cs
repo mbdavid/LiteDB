@@ -19,6 +19,11 @@ namespace LiteDB.Tests
             File.Delete(this.Filename);
         }
 
+        public long Size
+        {
+            get { return new FileInfo(this.Filename).Length; }
+        }
+
         #region LoremIpsum Generator
 
         public static string LoremIpsum(int minWords, int maxWords,

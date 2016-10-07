@@ -37,7 +37,15 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation.
         /// </summary>
-        public LiteEngine(IDiskService disk, Logger log = null)
+        public LiteEngine(IDiskService disk)
+            : this(disk, TimeSpan.FromMinutes(1), null)
+        {
+        }
+
+        /// <summary>
+        /// Initialize LiteEngine using custom disk service implementation.
+        /// </summary>
+        public LiteEngine(IDiskService disk, TimeSpan timeout, Logger log)
         {
             _disk = disk;
             _log = log ?? new Logger();
@@ -55,7 +63,7 @@ namespace LiteDB
             }
 
             // initialize all services
-            _locker = new Locker(new TimeSpan(0, 1, 0));
+            _locker = new Locker(timeout);
             _pager = new PageService(_disk, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
@@ -66,6 +74,11 @@ namespace LiteDB
         #endregion Services instances
 
         public Logger Log { get { return _log; } }
+
+        /// <summary>
+        /// Get number of pages in cache
+        /// </summary>
+        public int PagesInCache { get { return _pager.PagesInCache; } }
 
         /// <summary>
         /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
@@ -85,32 +98,6 @@ namespace LiteDB
             }
 
             return col;
-        }
-
-        /// <summary>
-        /// Encapsulate all write transaction operation
-        /// </summary>
-        private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
-        {
-            using(_locker.Write())
-            {
-                try
-                {
-                    var col = this.GetCollectionPage(colName, addIfNotExists);
-
-                    var result = action(col);
-
-                    _trans.Commit();
-
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    _log.Write(Logger.ERROR, ex.Message);
-                    _trans.Rollback();
-                    throw;
-                }
-            }
         }
 
         public void Dispose()

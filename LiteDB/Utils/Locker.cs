@@ -15,7 +15,7 @@ namespace LiteDB
 
         public Locker(TimeSpan timeout)
         {
-            _locker = new ReaderWriterLockSlim();
+            _locker = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
             _timeout = timeout;
         }
 
@@ -33,6 +33,27 @@ namespace LiteDB
         public LockControl Write()
         {
             return new LockControl(_locker, _timeout, true);
+        }
+
+        /// <summary>
+        /// Start exclusive lock statment (use to transaction control)
+        /// </summary>
+        public void BeginExclusiveLock()
+        {
+            _locker.TryEnterWriteLock(_timeout);
+        }
+
+        /// <summary>
+        /// Exists lock statment
+        /// </summary>
+        public void ExitExclusiveLock(bool recursive = false)
+        {
+            _locker.ExitWriteLock();
+
+            if (recursive)
+            {
+                while(_locker.IsWriteLockHeld) _locker.ExitWriteLock();
+            }
         }
 
         #endregion

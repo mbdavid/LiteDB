@@ -65,9 +65,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get cache size
+        /// Get how many pages are in cache
         /// </summary>
-        public int CacheSize { get { return _cache.Count; } }
+        public int PagesInCache { get { return _cache.Count; } }
 
         /// <summary>
         /// Read all sequences pages from a start pageID (using NextPageID)
