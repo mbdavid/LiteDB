@@ -1,4 +1,5 @@
 # v-next
+- Remove page references from pages/structures
 - Transaction are not OK - Rollback must release all nested ExitLocker??
 	- If transaction will be implemented using Begin/Commit/Rollback how implement a efficient lock?
 - Review IsDirty = true
