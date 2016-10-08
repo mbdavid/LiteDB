@@ -116,16 +116,13 @@ namespace LiteDB.Tests
                     db.Insert("col", GetDocs(1, 1000));
 
                     // initialize transaction
-                    //- db.BeginTrans();
+                    db.BeginTrans();
 
                     // insert a lot of docs inside a single collection (will do checkpoint in disk)
                     db.Insert("col", GetDocs(1001, N));
 
                     // update all documents
                     db.Update("col", GetDocs(1, N));
-
-                    // delete all docs
-                    //- db.Delete("col", Query.All());
 
                     // create new index
                     db.EnsureIndex("col", "type");
@@ -134,19 +131,18 @@ namespace LiteDB.Tests
                     Assert.IsTrue(log.ToString().Contains("checkpoint"));
 
                     // datafile must be big (because checkpoint expand file)
-                    //- Assert.IsTrue(file.Size > 30 * 1024 * 1024); // in MB
+                    Assert.IsTrue(file.Size > 30 * 1024 * 1024); // in MB\
 
-                    db.Delete("col", Query.GTE("_id", 1001));
+                    // delete all docs > 1000
+                    db.Delete("col", Query.GT("_id", 1000));
+
                     db.DropIndex("col", "type");
 
                     // let's rollback everything 
-                    //- db.Rollback();
-                // }
-                // using (var db = new LiteEngine(file.Filename))
-                // {
+                    db.Rollback();
 
                     // datafile must retorn to original size (less than 1.5MB for 1000 docs)
-                    //- Assert.IsTrue(file.Size < 1.5 * 1024 * 1024); // in MB
+                    Assert.IsTrue(file.Size < 1.5 * 1024 * 1024); // in MB
 
                     // test in my only doc exits
                     Assert.AreEqual(1000, db.Count("col", Query.All()));
@@ -154,7 +150,6 @@ namespace LiteDB.Tests
 
                     // test indexes (must have only _id index)
                     Assert.AreEqual(1, db.GetIndexes("col").Count());
-
                 }
             }
         }

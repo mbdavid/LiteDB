@@ -35,18 +35,18 @@ namespace LiteDB
             {
                 _log.Write(Logger.CACHE, "cache checkpoint reached at {0} pages in cache", _pager.PagesInCache);
 
-                //- // write all dirty pages in data file (journal 
-                //- foreach (var page in _pager.GetDirtyPages())
-                //- {
-                //-     // first write in journal file original data
-                //-     _disk.WriteJournal(page.PageID, page.DiskData);
-                //- 
-                //-     // then writes no datafile new changed pages
-                //-     _disk.WritePage(page.PageID, page.WritePage());
-                //- }
-                //- 
-                //- // empty all cache pages
-                //- _pager.ClearCache();
+                // write all dirty pages in data file (journal 
+                foreach (var page in _pager.GetDirtyPages())
+                {
+                    // first write in journal file original data
+                    _disk.WriteJournal(page.PageID, page.DiskData);
+                
+                    // then writes no datafile new changed pages
+                    _disk.WritePage(page.PageID, page.WritePage());
+                }
+                
+                // empty all cache pages
+                _pager.ClearCache();
 
                 return true;
             }

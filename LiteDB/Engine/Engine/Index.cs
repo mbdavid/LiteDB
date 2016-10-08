@@ -46,11 +46,11 @@ namespace LiteDB
                     // link index node to datablock
                     newNode.DataBlock = dataBlock.Position;
 
-                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
-                    if (_trans.CheckPoint())
-                    {
-                        col = this.GetCollectionPage(colName, true);
-                    }
+                    //- // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
+                    //- if (_trans.CheckPoint())
+                    //- {
+                    //-     col = this.GetCollectionPage(colName, true);
+                    //- }
                 }
 
                 return true;

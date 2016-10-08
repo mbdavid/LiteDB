@@ -5,6 +5,19 @@
 - Review IsDirty = true
 - ReadOnly support
 
+# Checkpoint
+- Usar SetDirty() sempre logo apos sujar a pagina
+- O SetDirty deve adcionar ao cache
+- SE NECESSARIO, remover referencia das paginas nos items (pode ser que não seja necessário)
+- A regra do SetDirty no local certo pode ser o grande diferencial
+- Acredito que não será mais necessário fazer "reload"
+
+# Transaction
+// - Neste momento, remover
+// - Acho que depois o certo vai ser implementar via Action pois garante que sai (com try-catch)
+// - Com action não tem suporte no shell
+// - O nested transaction deverá usar o contador da classe Locker
+
 # Changes to v3
 - Thread Safe - uses 
 - Lock file on open (single process access)
@@ -28,20 +41,6 @@
 - BsonMapper with ReadOnly / private setter options
 - Drop collection with checkpoint
 - Use 
-```
-engine.Begin();
-engine.Commit();
-engine.Rollback();
-
-db.Transaction((t) => 
-{
-	t.Commit();
-	t.Rollback();
-})
-
-
-
-```
 	
 
 
