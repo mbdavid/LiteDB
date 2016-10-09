@@ -52,11 +52,12 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void PerformanceSingleInsert_Test()
+        public void Performance_SingleInsert_Test()
         {
             // test performance for 1.000 documents without bulk insert
             SingleInsert(true);
             SingleInsert(false);
+
             // now with no instance re-use (similar to v2)
             SingleInsertNewInstance(true);
             SingleInsertNewInstance(false);
@@ -99,6 +100,7 @@ namespace LiteDB.Tests
                 Debug.Print("Insert time using new instance (" + (journal ? "" : "no ") + "journal): " + ti.ElapsedMilliseconds);
             }
         }
+
         private IEnumerable<BsonDocument> GetDocs(int count)
         {
             var rnd = new Random();

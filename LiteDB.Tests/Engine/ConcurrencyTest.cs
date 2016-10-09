@@ -170,7 +170,5 @@ namespace LiteDB.Tests
                 Assert.AreEqual(10000, db.Find("col", Query.EQ("_id", 1)).Single()["count"].AsInt32);
             }
         }
-
-
     }
 }

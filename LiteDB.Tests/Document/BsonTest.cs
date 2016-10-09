@@ -13,7 +13,7 @@ namespace LiteDB.Tests
     public class DocumentTest
     {
         [TestMethod]
-        public void DocumentImplicitConvert_Test()
+        public void Document_ImplicitConvert_Test()
         {
             var obj = new Dictionary<string, object>()
             {
@@ -32,7 +32,6 @@ namespace LiteDB.Tests
             var json = JsonSerializer.Serialize(doc, false, true);
 
             Assert.AreEqual("{\"int\":123,\"arr\":[3.0,2,1,\"zero\",false],\"doc\":{\"a\":\"a\",\"b\":[0]}}", json);
-
         }
     }
 }

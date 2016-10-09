@@ -10,12 +10,12 @@ using System.Text;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class CacheTest
+    public class CheckPointTest
     {
         const int N = 60000;
 
         [TestMethod]
-        public void CacheCheckpointInsert_Test()
+        public void Checkpoint_Insert_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -32,7 +32,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void CacheCheckpointIndex_Test()
+        public void Checkpoint_Index_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -54,7 +54,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Recovery_Test()
+        public void Checkpoint_Recovery_Test()
         {
             using (var file = new TempFile())
             {
@@ -102,7 +102,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void TransactionRecovery_Test()
+        public void Checkpoint_TransactionRecovery_Test()
         {
             using (var file = new TempFile())
             {
@@ -140,6 +140,9 @@ namespace LiteDB.Tests
 
                     // let's rollback everything 
                     db.Rollback();
+
+                    // be sure cache are empty
+                    Assert.AreEqual(0, db.PagesInCache);
 
                     // datafile must retorn to original size (less than 1.5MB for 1000 docs)
                     Assert.IsTrue(file.Size < 1.5 * 1024 * 1024); // in MB
