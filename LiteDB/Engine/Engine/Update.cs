@@ -28,11 +28,7 @@ namespace LiteDB
                 {
                     if (UpdateDocument(col, doc))
                     {
-                        // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
-                        if (_trans.CheckPoint())
-                        {
-                            col = this.GetCollectionPage(colName, false);
-                        }
+                        _trans.CheckPoint();
 
                         count++;
                     }
@@ -89,11 +85,11 @@ namespace LiteDB
                     // point my index to data object
                     newNode.DataBlock = dataBlock.Position;
 
-                    // set my block page as dirty before change
-                    dataBlock.Page.IsDirty = true;
-
                     // point my dataBlock
                     dataBlock.IndexRef[index.Slot] = newNode.Position;
+
+                    // set my block page as dirty
+                    _pager.SetDirty(dataBlock.Page);
                 }
             }
 

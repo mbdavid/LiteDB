@@ -50,6 +50,7 @@ namespace LiteDB
 
                     var result = action(col);
 
+                    // commit only if there is no nested transaction
                     if (_nested == 0) _trans.Commit();
 
                     return result;

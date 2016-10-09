@@ -53,17 +53,19 @@ namespace LiteDB
                     throw LiteException.AlreadyExistsCollectionName(newName);
                 }
 
-                // set page as dirty before any change
-                col.IsDirty = true;
-
                 // change collection name and save
                 col.CollectionName = newName;
 
+                // set collection page as dirty
+                _pager.SetDirty(col);
+
                 // update header collection reference
-                var header = _pager.GetPage<HeaderPage>(0, true);
+                var header = _pager.GetPage<HeaderPage>(0);
 
                 header.CollectionPages.Remove(colName);
                 header.CollectionPages.Add(newName, col.PageID);
+
+                _pager.SetDirty(header);
 
                 return true;
             });

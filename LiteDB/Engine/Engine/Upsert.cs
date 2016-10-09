@@ -34,11 +34,7 @@ namespace LiteDB
                         count++;
                     }
 
-                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
-                    if (_trans.CheckPoint())
-                    {
-                        col = this.GetCollectionPage(colName, true);
-                    }
+                    _trans.CheckPoint();
                 }
 
                 // returns how many document was inserted

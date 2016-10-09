@@ -50,7 +50,8 @@ namespace LiteDB
             // update freebytes + item count (for head)
             page.UpdateItemCount();
 
-            index.Page.IsDirty = true;
+            // set index page as dirty
+            _pager.SetDirty(index.Page);
 
             // add indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
@@ -139,7 +140,7 @@ namespace LiteDB
                     // cur = current (imediatte before - prev)
                     // node = new inserted node
                     // next = next node (where cur is poiting)
-                    cur.Page.IsDirty = true;
+                    _pager.SetDirty(cur.Page);
 
                     node.Next[i] = cur.Next[i];
                     node.Prev[i] = cur.Position;
@@ -149,8 +150,8 @@ namespace LiteDB
 
                     if (next != null)
                     {
-                        next.Page.IsDirty = true;
                         next.Prev[i] = node.Position;
+                        _pager.SetDirty(next.Page);
                     }
                 }
             }
@@ -169,8 +170,8 @@ namespace LiteDB
             var node = this.GetNode(nodeAddress);
             var page = node.Page;
 
-            // mark page as dirty
-            page.IsDirty = true;
+            // mark page as dirty here because, if deleted, page type will change
+            _pager.SetDirty(page);
 
             for (int i = node.Prev.Length - 1; i >= 0; i--)
             {
@@ -180,13 +181,13 @@ namespace LiteDB
 
                 if (prev != null)
                 {
-                    prev.Page.IsDirty = true;
                     prev.Next[i] = node.Next[i];
+                    _pager.SetDirty(prev.Page);
                 }
                 if (next != null)
                 {
-                    next.Page.IsDirty = true;
                     next.Prev[i] = node.Prev[i];
+                    _pager.SetDirty(next.Page);
                 }
             }
 

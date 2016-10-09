@@ -6,11 +6,12 @@
 - ReadOnly support
 
 # Checkpoint
-- Usar SetDirty() sempre logo apos sujar a pagina
+- Usar SetDirty() sempre logo apos sujar a pagina (e não no final do metodo!! pois pode ser delete)
 - O SetDirty deve adcionar ao cache
 - SE NECESSARIO, remover referencia das paginas nos items (pode ser que não seja necessário)
 - A regra do SetDirty no local certo pode ser o grande diferencial
 - Acredito que não será mais necessário fazer "reload"
+- Permitir parametrizar o tamanho de cache (hoje fixo em 5.000)
 
 # Transaction
 // - Neste momento, remover

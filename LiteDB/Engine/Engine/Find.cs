@@ -40,13 +40,9 @@ namespace LiteDB
                     buffer = _data.Read(node.DataBlock);
                     doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
-                    yield return doc;
+                    _trans.CheckPoint();
 
-                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
-                    if (_trans.CheckPoint())
-                    {
-                        col = this.GetCollectionPage(colName, false);
-                    }
+                    yield return doc;
                 }
             }
         }
@@ -78,13 +74,9 @@ namespace LiteDB
                 {
                     _log.Write(Logger.QUERY, "read index key on '{0}' :: key = {1}", colName, node.Key);
 
-                    yield return node.Key;
+                    _trans.CheckPoint();
 
-                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
-                    if (_trans.CheckPoint())
-                    {
-                        col = this.GetCollectionPage(colName, false);
-                    }
+                    yield return node.Key;
                 }
             }
         }

@@ -28,7 +28,7 @@ namespace LiteDB
         /// Checkpoint is a safe point to clear cache pages without loose pages references.
         /// Is called after each document insert/update/deleted/indexed/fetch from query
         /// </summary>
-        public bool CheckPoint()
+        public void CheckPoint()
         {
             // works only when journal are enabled
             if (_disk.IsJournalEnabled && _pager.PagesInCache >= MAX_CACHE_SIZE)
@@ -47,11 +47,7 @@ namespace LiteDB
                 
                 // empty all cache pages
                 _pager.ClearCache();
-
-                return true;
             }
-
-            return false;
         }
 
         /// <summary>

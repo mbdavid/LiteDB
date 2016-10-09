@@ -51,7 +51,7 @@ namespace LiteDB
             _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);
 
             // get header marked as dirty because I will use header after (and NewPage can get another header instance)
-            var header = _pager.GetPage<HeaderPage>(0, true);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
             if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)
@@ -66,6 +66,9 @@ namespace LiteDB
             header.CollectionPages.Add(name, col.PageID);
 
             col.CollectionName = name;
+
+            // set header page as dirty
+            _pager.SetDirty(header);
 
             // create PK index
             var pk = _indexer.CreateIndex(col);
@@ -119,6 +122,9 @@ namespace LiteDB
                         }
                     }
 
+                    // memory checkpoint
+                    _trans.CheckPoint();
+
                     // add index page to delete list page
                     pages.Add(node.Position.PageID);
                 }
@@ -131,13 +137,20 @@ namespace LiteDB
             // and now, lets delete all this pages
             foreach (var pageID in pages)
             {
+                // delete page
                 _pager.DeletePage(pageID);
+
+                // memory checkpoint
+                _trans.CheckPoint();
             }
 
             // get header page to remove from collection list links
             var header = _pager.GetPage<HeaderPage>(0);
 
             header.CollectionPages.Remove(col.CollectionName);
+
+            // set header as dirty after remove
+            _pager.SetDirty(header);
 
             _pager.DeletePage(col.PageID);
         }

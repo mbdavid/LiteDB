@@ -30,11 +30,7 @@
                     // remove object data
                     _data.Delete(col, node.DataBlock);
 
-                    // if checkpoint reached, re-load collection page from disk (contains page reference from cache)
-                    if (_trans.CheckPoint())
-                    {
-                        col = this.GetCollectionPage(colName, false);
-                    }
+                    _trans.CheckPoint();
 
                     count++;
                 }
