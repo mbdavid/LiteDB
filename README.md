@@ -1,24 +1,23 @@
 # v-next
-- Remove page references from pages/structures
-- Transaction are not OK - Rollback must release all nested ExitLocker??
-	- If transaction will be implemented using Begin/Commit/Rollback how implement a efficient lock?
-- Review IsDirty = true
 - ReadOnly support
-- CacheSize, CacheUsed
+- Encryption only in .NET full 3.5
 
 # Checkpoint
-- Usar SetDirty() sempre logo apos sujar a pagina (e não no final do metodo!! pois pode ser delete)
-- O SetDirty deve adcionar ao cache
-- SE NECESSARIO, remover referencia das paginas nos items (pode ser que não seja necessário)
-- A regra do SetDirty no local certo pode ser o grande diferencial
-- Acredito que não será mais necessário fazer "reload"
-- Permitir parametrizar o tamanho de cache (hoje fixo em 5.000)
+- Implementar checkpoint no EnsureIndex, DropCollection, DropIndex
+- Implementar Unit Test para os testes acimas
+
+# MultiKey
+- Implementar GetValues() retornando um IEnumerable<BsonValue> no BsonDocument
+- Usar IndexRef[] para um novo conjunto de ponteiros
+- Armazenar o array de ponteiros em um DataBlock
+- Remover DocumentCount++|-- de dentro do DataService e colocar no Insert.cs|Delete.cs
 
 # Transaction
-// - Neste momento, remover
-// - Acho que depois o certo vai ser implementar via Action pois garante que sai (com try-catch)
-// - Com action não tem suporte no shell
-// - O nested transaction deverá usar o contador da classe Locker
+Definir forma de transação no engine:
+- Obrigar sempre Commit() ou Rollback() [sem nested, sem lock]
+- Usar Action<LiteTransaction> (com nested e lock)
+- Usar BeginTrans() retornando uma classe (com nested e lock)
+- Begin/Commit/Rollback (com nested e lock)
 
 # Changes to v3
 - Thread Safe - uses 
@@ -35,18 +34,15 @@
 - Remove ChangeID (avoid write Header Page all times)
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
 
-
 # TODO
 - netstandard 1.4
-- Vistual index fields
-- BsonMapper with external support (like JSON.NET)
-- BsonMapper with ReadOnly / private setter options
-- Drop collection with checkpoint
-- Use 
-	
+- Virtual index fields
 
+# BsonMapper
+- Support interface IBsonMapper (like JSON.NET)
+- BsonMapper with ReadOnly / private setter options / Fields
 
-### ThreadSafe
+# ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
 - DbEngine still lazy load (with lazy open file)
 - LiteDB will close datafile only when Dispose() LiteDatabase/DbEngine/IDiskService
@@ -61,47 +57,14 @@
 
 This structure will be work more close to a DBMS (centralized database instance with a server running).
 
-## cons
+# Cons
 - Will not support N application running in some datafile (like many desktops apps using a server datafile)
 - Console shell CLI must be always disconected?
 
-### must-have
-- Be .NET 3.5 / portable `netstandard 1.4` (run .net 4.6, core, UWP 10, xamarin) - Be more portable as possible (remove Emit, unsafe, ...)
-- Cache support with journal
-- BsonDocument as IDictionary<string, BsonValue>
-- Support from external mapper (like Json.net)
-- MultiKey index (as a plugin? using external methods do find/createindex?)
-- Source: use Class.Method.cs in all partial classes
-- Source: do not have 2 files with same name
-- Remove auto create index
-- No more index options like Trim/RemoveAccents => Only in Mapper (like EmptyStringToNull)
-- Single LiteException class
-- Write better bsonmapper exceptions error messages
-
-### To think about
+# To think about
 - Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
 - IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 
-### Regions
-- Database
-   - Collections
-- Document
-   - BsonSerializer
-   - JsonSerializer
-- Engine
-   - Pages
-   - Services
-   - Disks
-   - Structures
-   - Query
-- Utils
-- Plugins
-   - Mapper
-   - Linq
-   - Repository
-   - FileStorage
-   - Capped Collection (#314)
-   - Full Text Search
 
 =============================================================================
 
