@@ -26,7 +26,7 @@ namespace LiteDB
 
         private CollectionService _collections;
 
-        private int _cacheSize = 5000;
+        private int _cacheSize;
 
         /// <summary>
         /// Inicialize LiteEngine using default FileDiskService
@@ -82,7 +82,7 @@ namespace LiteDB
         public Logger Log { get { return _log; } }
 
         /// <summary>
-        /// Get memory cache size limit. Works only with journal enabled (number in pages). If journal is disabled, pages in cache can exceed this limit.
+        /// Get memory cache size limit. Works only with journal enabled (number in pages). If journal is disabled, pages in cache can exceed this limit. Default is 5000 pages
         /// </summary>
         public int CacheSize { get { return _cacheSize; } }
 
