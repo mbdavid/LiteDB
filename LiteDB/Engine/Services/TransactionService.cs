@@ -8,19 +8,16 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService
     {
-        /// <summary>
-        /// Max cache pages size - read or dirty. If Count pass this value cache will be clear on next checkpoint
-        /// </summary>
-        public const int MAX_CACHE_SIZE = 5000;
-
         private IDiskService _disk;
         private PageService _pager;
         private Logger _log;
+        private int _cacheSize;
 
-        internal TransactionService(IDiskService disk, PageService pager, Logger log)
+        internal TransactionService(IDiskService disk, PageService pager, int cacheSize, Logger log)
         {
             _disk = disk;
             _pager = pager;
+            _cacheSize = cacheSize;
             _log = log;
         }
 
@@ -31,9 +28,9 @@ namespace LiteDB
         public void CheckPoint()
         {
             // works only when journal are enabled
-            if (_disk.IsJournalEnabled && _pager.PagesInCache >= MAX_CACHE_SIZE)
+            if (_disk.IsJournalEnabled && _pager.CachePageCount >= _cacheSize)
             {
-                _log.Write(Logger.CACHE, "cache checkpoint reached at {0} pages in cache", _pager.PagesInCache);
+                _log.Write(Logger.CACHE, "cache checkpoint reached at {0} pages in cache", _pager.CachePageCount);
 
                 // write all dirty pages in data file (journal 
                 foreach (var page in _pager.GetDirtyPages())

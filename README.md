@@ -4,6 +4,7 @@
 	- If transaction will be implemented using Begin/Commit/Rollback how implement a efficient lock?
 - Review IsDirty = true
 - ReadOnly support
+- CacheSize, CacheUsed
 
 # Checkpoint
 - Usar SetDirty() sempre logo apos sujar a pagina (e não no final do metodo!! pois pode ser delete)

@@ -142,7 +142,7 @@ namespace LiteDB.Tests
                     db.Rollback();
 
                     // be sure cache are empty
-                    Assert.AreEqual(0, db.PagesInCache);
+                    Assert.AreEqual(0, db.CacheUsed);
 
                     // datafile must retorn to original size (less than 1.5MB for 1000 docs)
                     Assert.IsTrue(file.Size < 1.5 * 1024 * 1024); // in MB

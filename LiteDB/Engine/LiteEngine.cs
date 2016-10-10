@@ -26,6 +26,8 @@ namespace LiteDB
 
         private CollectionService _collections;
 
+        private int _cacheSize = 5000;
+
         /// <summary>
         /// Inicialize LiteEngine using default FileDiskService
         /// </summary>
@@ -38,15 +40,16 @@ namespace LiteDB
         /// Initialize LiteEngine using custom disk service implementation.
         /// </summary>
         public LiteEngine(IDiskService disk)
-            : this(disk, TimeSpan.FromMinutes(1), null)
+            : this(disk, TimeSpan.FromMinutes(1))
         {
         }
 
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation.
         /// </summary>
-        public LiteEngine(IDiskService disk, TimeSpan timeout, Logger log)
+        public LiteEngine(IDiskService disk, TimeSpan timeout, int cacheSize = 5000, Logger log = null)
         {
+            _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
 
@@ -67,18 +70,26 @@ namespace LiteDB
             _pager = new PageService(_disk, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
-            _trans = new TransactionService(_disk, _pager, _log);
+            _trans = new TransactionService(_disk, _pager, _cacheSize, _log);
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 
         #endregion Services instances
 
+        /// <summary>
+        /// Get log instance for debug operations
+        /// </summary>
         public Logger Log { get { return _log; } }
 
         /// <summary>
-        /// Get number of pages in cache
+        /// Get memory cache size limit. Works only with journal enabled (number in pages). If journal is disabled, pages in cache can exceed this limit.
         /// </summary>
-        public int PagesInCache { get { return _pager.PagesInCache; } }
+        public int CacheSize { get { return _cacheSize; } }
+
+        /// <summary>
+        /// Get number of pages in memory cache (clean and dirty pages)
+        /// </summary>
+        public int CacheUsed { get { return _pager.CachePageCount; } }
 
         /// <summary>
         /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
