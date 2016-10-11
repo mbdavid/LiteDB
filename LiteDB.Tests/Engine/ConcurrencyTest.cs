@@ -134,7 +134,7 @@ namespace LiteDB.Tests
                 Parallel.For(1, 3001, (i) =>
                 {
                     // concurrency must be locked
-                    lock(db)
+                    using(db.LockWrite())
                     {
                         db.UserVersion = (ushort)(db.UserVersion + 1);
                     }
@@ -145,7 +145,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_Transaction_Test()
+        public void Concurrency_LockTransaction_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -160,7 +160,7 @@ namespace LiteDB.Tests
                 // use parallel 
                 Parallel.For(1, 10000, (i) =>
                 {
-                    lock(db)
+                    using(db.LockWrite())
                     {
                         var doc = db.Find("col", Query.EQ("_id", 1)).Single();
                         doc["count"] = doc["count"].AsInt32 + 1;

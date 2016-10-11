@@ -11,8 +11,6 @@ namespace LiteDB
         private ReaderWriterLockSlim _locker;
         private TimeSpan _timeout;
 
-        #region Initialize
-
         public Locker(TimeSpan timeout)
         {
             _locker = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -34,63 +32,40 @@ namespace LiteDB
         {
             return new LockControl(_locker, _timeout, true);
         }
+    }
 
-        /// <summary>
-        /// Start exclusive lock statment (use to transaction control)
-        /// </summary>
-        public void BeginExclusiveLock()
+    /// <summary>
+    /// Locker class that implement IDisposable to control lock
+    /// </summary>
+    public class LockControl : IDisposable
+    {
+        private ReaderWriterLockSlim _locker;
+        private bool _write = false;
+
+        internal LockControl(ReaderWriterLockSlim locker, TimeSpan timeout, bool write)
         {
-            _locker.TryEnterWriteLock(_timeout);
-        }
+            _locker = locker;
+            _write = write;
 
-        /// <summary>
-        /// Exists lock statment
-        /// </summary>
-        public void ExitExclusiveLock(bool recursive = false)
-        {
-            _locker.ExitWriteLock();
-
-            if (recursive)
+            if (write)
             {
-                while(_locker.IsWriteLockHeld) _locker.ExitWriteLock();
+                _locker.TryEnterWriteLock(timeout);
+            }
+            else
+            {
+                _locker.TryEnterReadLock(timeout);
             }
         }
 
-        #endregion
-
-        /// <summary>
-        /// Inner class that implement IDisposable to control lock 
-        /// </summary>
-        public class LockControl : IDisposable
+        public void Dispose()
         {
-            private ReaderWriterLockSlim _locker;
-            private bool _write = false;
-
-            public LockControl(ReaderWriterLockSlim locker, TimeSpan timeout, bool write)
+            if (_write)
             {
-                _locker = locker;
-                _write = write;
-
-                if (write)
-                {
-                    _locker.TryEnterWriteLock(timeout);
-                }
-                else
-                {
-                    _locker.TryEnterReadLock(timeout);
-                }
+                _locker.ExitWriteLock();
             }
-
-            public void Dispose()
+            else
             {
-                if (_write)
-                {
-                    _locker.ExitWriteLock();
-                }
-                else
-                {
-                    _locker.ExitReadLock();
-                }
+                _locker.ExitReadLock();
             }
         }
     }

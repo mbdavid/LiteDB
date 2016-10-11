@@ -29,6 +29,22 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get lock thread for write operations. Must be used inside an using(engine.LockWrite()) { ... }
+        /// </summary>
+        public LockControl LockWrite()
+        {
+            return _locker.Write();
+        }
+
+        /// <summary>
+        /// Get lock thread for read operations. Many threads can be locked to read, but when you get a write lock, no others can be read/write. Must be used inside an using(engine.LockRead()) { ... }
+        /// </summary>
+        public LockControl LockRead()
+        {
+            return _locker.Write();
+        }
+
+        /// <summary>
         /// Encapsulate all write transaction operation
         /// </summary>
         private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
