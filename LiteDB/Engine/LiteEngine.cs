@@ -28,6 +28,8 @@ namespace LiteDB
 
         private int _cacheSize;
 
+        private bool _autocommit;
+
         /// <summary>
         /// Inicialize LiteEngine using default FileDiskService
         /// </summary>
@@ -47,9 +49,10 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation.
         /// </summary>
-        public LiteEngine(IDiskService disk, TimeSpan timeout, int cacheSize = 5000, Logger log = null)
+        public LiteEngine(IDiskService disk, TimeSpan timeout, int cacheSize = 5000, bool autocommit = false, Logger log = null)
         {
             _cacheSize = cacheSize;
+            _autocommit = autocommit;
             _disk = disk;
             _log = log ?? new Logger();
 
@@ -92,6 +95,11 @@ namespace LiteDB
         public int CacheUsed { get { return _pager.CachePageCount; } }
 
         /// <summary>
+        /// Get if transaction managment is autocommit or not (default: false)
+        /// </summary>
+        public bool AutoCommit { get { return _autocommit; } }
+
+        /// <summary>
         /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
         /// </summary>
         private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
@@ -113,6 +121,10 @@ namespace LiteDB
 
         public void Dispose()
         {
+            // first, commit any possible dirty page
+            this.Commit();
+
+            // dispose datafile and journal file
             _disk.Dispose();
         }
     }

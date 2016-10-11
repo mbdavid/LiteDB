@@ -133,9 +133,11 @@ namespace LiteDB.Tests
             {
                 Parallel.For(1, 3001, (i) =>
                 {
-                    db.BeginTrans();
-                    db.UserVersion = (ushort)(db.UserVersion + 1);
-                    db.Commit();
+                    // concurrency must be locked
+                    lock(db)
+                    {
+                        db.UserVersion = (ushort)(db.UserVersion + 1);
+                    }
                 });
 
                 Assert.AreEqual(3000, db.UserVersion);
@@ -158,13 +160,12 @@ namespace LiteDB.Tests
                 // use parallel 
                 Parallel.For(1, 10000, (i) =>
                 {
-                    db.BeginTrans();
-
-                    var doc = db.Find("col", Query.EQ("_id", 1)).Single();
-                    doc["count"] = doc["count"].AsInt32 + 1;
-                    db.Update("col", doc);
-
-                    db.Commit();
+                    lock(db)
+                    {
+                        var doc = db.Find("col", Query.EQ("_id", 1)).Single();
+                        doc["count"] = doc["count"].AsInt32 + 1;
+                        db.Update("col", doc);
+                    }
                 });
 
                 Assert.AreEqual(10000, db.Find("col", Query.EQ("_id", 1)).Single()["count"].AsInt32);

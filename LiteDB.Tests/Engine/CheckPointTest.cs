@@ -115,8 +115,8 @@ namespace LiteDB.Tests
                     // initialize my "col" with 1000 docs without transaction
                     db.Insert("col", GetDocs(1, 1000));
 
-                    // initialize transaction
-                    db.BeginTrans();
+                    // commit now for intialize new transaction
+                    db.Commit();
 
                     // insert a lot of docs inside a single collection (will do checkpoint in disk)
                     db.Insert("col", GetDocs(1001, N));

@@ -2,39 +2,30 @@
 
 namespace LiteDB
 {
+    // Transactions are enabled by default. All operations occurs first in memory only (pages) and will be persist
+    // only when Commit calls or LiteEngine is dispoable. 
     public partial class LiteEngine : IDisposable
     {
-        /// <summary>
-        /// Nested transaction counter
-        /// </summary>
-        private int _nested = 0;
-
-        /// <summary>
-        /// Begins a new exclusive transaction (support nested transactions)
-        /// </summary>
-        public void BeginTrans()
-        {
-            _locker.BeginExclusiveLock();
-            _nested++;
-        }
-
         /// <summary>
         /// Commit current transaction
         /// </summary>
         public void Commit()
         {
-            if (--_nested <= 0) _trans.Commit();
-            _locker.ExitExclusiveLock();
+            using (_locker.Write())
+            {
+                _trans.Commit();
+            }
         }
 
         /// <summary>
-        /// Rollback current transaction and restore initial database state
+        /// Rollback current transaction and restore database from last commit
         /// </summary>
         public void Rollback()
         {
-            _trans.Rollback();
-            _nested = 0;
-            _locker.ExitExclusiveLock(true);
+            using (_locker.Write())
+            {
+                _trans.Rollback();
+            }
         }
 
         /// <summary>
@@ -50,16 +41,15 @@ namespace LiteDB
 
                     var result = action(col);
 
-                    // commit only if there is no nested transaction
-                    if (_nested == 0) _trans.Commit();
+                    if (_autocommit) _trans.Commit();
 
                     return result;
                 }
                 catch (Exception ex)
                 {
                     _log.Write(Logger.ERROR, ex.Message);
+                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
                     _trans.Rollback();
-                    _nested = 0;
                     throw;
                 }
             }
