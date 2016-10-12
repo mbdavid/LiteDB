@@ -1,10 +1,7 @@
 # v-next
 - ReadOnly support
 - Encryption only in .NET full 3.5
-
-# Checkpoint
-- Implementar checkpoint no EnsureIndex, DropCollection, DropIndex
-- Implementar Unit Test para os testes acimas
+- Autocommit problem: duplicate key throw rollback in all
 
 # MultiKey
 - Implementar GetValues() retornando um IEnumerable<BsonValue> no BsonDocument
@@ -12,20 +9,14 @@
 - Armazenar o array de ponteiros em um DataBlock
 - Remover DocumentCount++|-- de dentro do DataService e colocar no Insert.cs|Delete.cs
 
-# Transaction
-Definir forma de transação no engine:
-- Obrigar sempre Commit() ou Rollback() [sem nested, sem lock]
-- Usar Action<LiteTransaction> (com nested e lock)
-- Usar BeginTrans() retornando uma classe (com nested e lock)
-- Begin/Commit/Rollback (com nested e lock)
-
 # Changes to v3
-- Thread Safe - uses 
+- Thread Safe
 - Lock file on open (single process access)
 - `LiteEngine`: new low data layer access
 - BsonDocument implements IDictionary, BsonArray implements IList
 - Remove shell from LiteDB (avaiable only in LiteDB.Shell tool)
-- Transaction control
+- Checkpoint cache - CacheSize
+- Autocommit = false : Transaction control
 - Remove index options
 - Remove: Shrink, Encryption, ...
 - New QueryFunc
