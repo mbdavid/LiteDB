@@ -18,7 +18,7 @@ namespace LiteDB
         /// <summary>
         /// Datafile specification version
         /// </summary>
-        private const byte FILE_VERSION = 6;
+        private const byte FILE_VERSION = 7;
 
         /// <summary>
         /// Get/Set the pageID that start sequenece with a complete empty pages (can be used as a new page)

@@ -21,11 +21,11 @@
                     // read dataBlock (do not read all extend pages, i will not use)
                     var dataBlock = _data.GetBlock(node.DataBlock);
 
-                    // lets remove all indexes that point to this in dataBlock
-                    foreach (var index in col.GetIndexes(true))
-                    {
-                        _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
-                    }
+                    //** // lets remove all indexes that point to this in dataBlock
+                    //** foreach (var index in col.GetIndexes(true))
+                    //** {
+                    //**     _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
+                    //** }
 
                     // remove object data
                     _data.Delete(col, node.DataBlock);

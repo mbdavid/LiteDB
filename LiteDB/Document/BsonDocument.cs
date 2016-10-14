@@ -150,6 +150,49 @@ namespace LiteDB
             return this;
         }
 
+        /// <summary>
+        /// Get a collection of values from a path. Supports array values
+        /// </summary>
+        public IEnumerable<BsonValue> GetValues(string path)
+        {
+            // supports parent.child.array.name
+            var names = path.Split('.');
+
+            if (names.Length == 1)
+            {
+                if(this[path].IsArray)
+                {
+                    foreach(var item in this[path].AsArray)
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    yield return this[path];
+                }
+            }
+            throw new NotImplementedException();
+
+            //var value = this;
+            //
+            //for (var i = 0; i < names.Length - 1; i++)
+            //{
+            //    var name = names[i];
+            //
+            //    if (value[name].IsDocument)
+            //    {
+            //        value = value[name].AsDocument;
+            //    }
+            //    else
+            //    {
+            //        yield return BsonValue.Null;
+            //    }
+            //}
+            //
+            //return value[names.Last()];
+        }
+
         #endregion
 
         #region CompareTo / ToString

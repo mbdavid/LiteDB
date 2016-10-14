@@ -45,6 +45,6 @@ namespace LiteDB
             writer.Write(this.Data);
         }
 
-        #endregion Read/Write pages
+        #endregion
     }
 }

@@ -1,6 +1,7 @@
 # DEV-MK => MultiKey Index implementation
 
 # v-next
+- Create some "Reserved bytes" in index page
 - ReadOnly support
 - Encryption only in .NET full 3.5
 - Autocommit problem: duplicate key throw rollback in all

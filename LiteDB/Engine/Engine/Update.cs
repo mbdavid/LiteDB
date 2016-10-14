@@ -71,26 +71,26 @@ namespace LiteDB
             {
                 var key = doc.Get(index.Field);
 
-                var node = _indexer.GetNode(dataBlock.IndexRef[index.Slot]);
-
-                // check if my index node was changed
-                if (node.Key.CompareTo(key) != 0)
-                {
-                    // remove old index node
-                    _indexer.Delete(index, node.Position);
-
-                    // and add a new one
-                    var newNode = _indexer.AddNode(index, key);
-
-                    // point my index to data object
-                    newNode.DataBlock = dataBlock.Position;
-
-                    // point my dataBlock
-                    dataBlock.IndexRef[index.Slot] = newNode.Position;
-
-                    // set my block page as dirty
-                    _pager.SetDirty(dataBlock.Page);
-                }
+                //** var node = _indexer.GetNode(dataBlock.IndexRef[index.Slot]);
+                //** 
+                //** // check if my index node was changed
+                //** if (node.Key.CompareTo(key) != 0)
+                //** {
+                //**     // remove old index node
+                //**     _indexer.Delete(index, node.Position);
+                //** 
+                //**     // and add a new one
+                //**     var newNode = _indexer.AddNode(index, key);
+                //** 
+                //**     // point my index to data object
+                //**     newNode.DataBlock = dataBlock.Position;
+                //** 
+                //**     // point my dataBlock
+                //**     dataBlock.IndexRef[index.Slot] = newNode.Position;
+                //** 
+                //**     // set my block page as dirty
+                //**     _pager.SetDirty(dataBlock.Page);
+                //** }
             }
 
             return true;

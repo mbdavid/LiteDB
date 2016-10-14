@@ -67,7 +67,7 @@ namespace LiteDB
 
             // do links between index <-> data block
             pk.DataBlock = dataBlock.Position;
-            dataBlock.IndexRef[0] = pk.Position;
+            //**dataBlock.IndexRef[0] = pk.Position;
 
             // for each index, insert new IndexNode
             foreach (var index in col.GetIndexes(false))
@@ -80,7 +80,7 @@ namespace LiteDB
                 node.DataBlock = dataBlock.Position;
 
                 // point my dataBlock
-                dataBlock.IndexRef[index.Slot] = node.Position;
+                //**dataBlock.IndexRef[index.Slot] = node.Position;
             }
         }
     }

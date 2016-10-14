@@ -13,6 +13,7 @@ namespace LiteDB
             this.Slot = index.Slot;
             this.Field = index.Field;
             this.Unique = index.Unique;
+            this.MultiKey = index.MultiKey;
         }
 
         /// <summary>
@@ -29,5 +30,10 @@ namespace LiteDB
         /// Index is Unique?
         /// </summary>
         public bool Unique { get; private set; }
+
+        /// <summary>
+        /// Index is MultiKey (used in array values)
+        /// </summary>
+        public bool MultiKey { get; private set; }
     }
 }

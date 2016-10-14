@@ -38,7 +38,7 @@ namespace LiteDB
                     var newNode = _indexer.AddNode(index, key);
 
                     // adding this new index Node to indexRef
-                    dataBlock.IndexRef[index.Slot] = newNode.Position;
+                    //** dataBlock.IndexRef[index.Slot] = newNode.Position;
 
                     // mark datablock page as dirty
                     _pager.SetDirty(dataBlock.Page);
