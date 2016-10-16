@@ -216,6 +216,6 @@ namespace LiteDB
 
         protected abstract void WriteContent(ByteWriter writer);
 
-        #endregion Read/Write page
+        #endregion
     }
 }

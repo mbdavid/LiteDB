@@ -72,54 +72,36 @@ namespace LiteDB
         protected override void ReadContent(ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
+            this.DocumentCount = reader.ReadInt64();
             this.FreeDataPageID = reader.ReadUInt32();
-            var uintCount = reader.ReadUInt32(); // read as uint (4 bytes)
 
             foreach (var index in this.Indexes)
             {
                 index.Field = reader.ReadString();
+                index.Unique = reader.ReadBoolean();
                 index.HeadNode = reader.ReadPageAddress();
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
-                index.Unique = reader.ReadBoolean();
-
-                // to keep compatible with FILE_VERSION = 6
-                // IgnoreCase, TrimWhitespace, EmptyStringToNull, RemoveAccents
-                reader.ReadBytes(4); 
             }
-
-            // be compatible with v2_beta
-            var longCount = reader.ReadInt64();
-            this.DocumentCount = Math.Max(uintCount, longCount);
         }
 
         protected override void WriteContent(ByteWriter writer)
         {
             writer.Write(this.CollectionName);
+            writer.Write(this.DocumentCount);
             writer.Write(this.FreeDataPageID);
-
-            // to be compatible with v2_beta, write here only uint (4 bytes)
-            writer.Write(this.DocumentCount > uint.MaxValue ?
-                uint.MaxValue : (uint)this.DocumentCount);
 
             foreach (var index in this.Indexes)
             {
                 writer.Write(index.Field);
+                writer.Write(index.Unique);
                 writer.Write(index.HeadNode);
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);
-                writer.Write(index.Unique);
-
-                // to keep compatible with FILE_VERSION = 6
-                // IgnoreCase, TrimWhitespace, EmptyStringToNull, RemoveAccents
-                writer.Write(new byte[4]);
             }
-
-            // write all document count 8 bytes here
-            writer.Write(this.DocumentCount);
         }
 
-        #endregion Read/Write pages
+        #endregion
 
         #region Methods to work with index array
 
@@ -157,6 +139,6 @@ namespace LiteDB
             return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
         }
 
-        #endregion Methods to work with index array
+        #endregion
     }
 }

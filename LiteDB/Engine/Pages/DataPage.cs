@@ -52,12 +52,6 @@ namespace LiteDB
                 block.Page = this;
                 block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
                 block.ExtendPageID = reader.ReadUInt32();
-
-                for (var j = 0; j < CollectionIndex.INDEX_PER_COLLECTION; j++)
-                {
-                    block.IndexRef[j] = reader.ReadPageAddress();
-                }
-
                 var size = reader.ReadUInt16();
                 block.Data = reader.ReadBytes(size);
 
@@ -71,15 +65,11 @@ namespace LiteDB
             {
                 writer.Write(block.Position.Index);
                 writer.Write(block.ExtendPageID);
-                foreach (var idx in block.IndexRef)
-                {
-                    writer.Write(idx);
-                }
                 writer.Write((ushort)block.Data.Length);
                 writer.Write(block.Data);
             }
         }
 
-        #endregion Read/Write pages
+        #endregion
     }
 }

@@ -51,6 +51,24 @@ namespace LiteDB.Tests
             }
         }
 
+        [TestMethod]
+        public void Engine_Delete_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                var doc1 = new BsonDocument { { "_id", 1 }, { "name", "John" } };
+                var doc2 = new BsonDocument { { "_id", 2 }, { "name", "Doe" } };
+
+                db.Insert("col", doc1);
+                db.Insert("col", doc2);
+
+                db.Delete("col", Query.GTE("_id", 1));
+
+                db.Insert("col", doc1);
+            }
+        }
+
         public void Engine_QueryUpdate_Test()
         {
             using (var file = new TempFile())

@@ -70,8 +70,11 @@ namespace LiteDB
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
-                // count all nodes
-                return nodes.LongCount();
+                // count distinct nodes based on DataBlock
+                return nodes
+                    .Select(x => x.DataBlock)
+                    .Distinct()
+                    .LongCount();
             }
         }
 

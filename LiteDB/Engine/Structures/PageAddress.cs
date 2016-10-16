@@ -11,8 +11,14 @@ namespace LiteDB
 
         public static PageAddress Empty = new PageAddress(uint.MaxValue, ushort.MaxValue);
 
+        /// <summary>
+        /// PageID (4 bytes)
+        /// </summary>
         public uint PageID;
 
+        /// <summary>
+        /// Index inside page (2 bytes)
+        /// </summary>
         public ushort Index;
 
         public bool IsEmpty

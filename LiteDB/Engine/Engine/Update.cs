@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -55,41 +56,50 @@ namespace LiteDB
             _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = {1}", col.CollectionName, id);
 
             // find indexNode from pk index
-            var indexNode = _indexer.Find(col.PK, id, false, Query.Ascending);
+            var pkNode = _indexer.Find(col.PK, id, false, Query.Ascending);
 
             // if not found document, no updates
-            if (indexNode == null) return false;
+            if (pkNode == null) return false;
 
             // serialize document in bytes
             var bytes = BsonSerializer.Serialize(doc);
 
             // update data storage
-            var dataBlock = _data.Update(col, indexNode.DataBlock, bytes);
+            var dataBlock = _data.Update(col, pkNode.DataBlock, bytes);
+
+            // get all non-pk index nodes from this data block
+            var allNodes = _indexer.GetNodeList(pkNode, false).ToArray();
 
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
             {
-                var key = doc.Get(index.Field);
+                // using Distinct/ToArray because I will do many queries
+                var keys = doc.GetValues(index.Field, true, index.Unique).ToArray();
 
-                var node = _indexer.GetNode(dataBlock.IndexRef[index.Slot]);
+                // get a list of to delete nodes (using ToArray to resolve now)
+                var toDelete = allNodes
+                    .Where(x => x.Slot == index.Slot && !keys.Any(k => k == x.Key))
+                    .ToArray();
 
-                // check if my index node was changed
-                if (node.Key.CompareTo(key) != 0)
+                // get a list of to insert nodes (using ToArray to resolve now)
+                var toInsert = keys
+                    .Where(x => !allNodes.Any(k => k.Slot == index.Slot && k.Key == x))
+                    .ToArray();
+
+                // delete changed index nodes
+                foreach (var node in toDelete)
                 {
-                    // remove old index node
                     _indexer.Delete(index, node.Position);
+                }
 
+                // insert new nodes
+                foreach (var key in toInsert)
+                {
                     // and add a new one
-                    var newNode = _indexer.AddNode(index, key);
+                    var node = _indexer.AddNode(index, key, pkNode);
 
-                    // point my index to data object
-                    newNode.DataBlock = dataBlock.Position;
-
-                    // point my dataBlock
-                    dataBlock.IndexRef[index.Slot] = newNode.Position;
-
-                    // set my block page as dirty
-                    _pager.SetDirty(dataBlock.Page);
+                    // link my node to data block
+                    node.DataBlock = dataBlock.Position;
                 }
             }
 
