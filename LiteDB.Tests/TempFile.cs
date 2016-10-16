@@ -14,6 +14,11 @@ namespace LiteDB.Tests
             this.Filename = Path.GetFullPath(string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
         }
 
+        public IDiskService Disk(bool journal = true)
+        {
+            return new FileDiskService(Filename, journal);
+        }
+
         public void Dispose()
         {
             File.Delete(this.Filename);

@@ -159,29 +159,68 @@ namespace LiteDB
             if (singleValue)
             {
                 yield return this.Get(path);
-                yield break;
             }
-
-            // supports parent.child.array.name
-            var names = path.Split('.');
-
-            if (names.Length == 1)
+            // implement this first level here to avoid recursive calls do GetKeyValues for almost all documents
+            else if (path.IndexOf(".") == -1)
             {
-                if(this[path].IsArray)
+                var value = this[path];
+
+                if (value.IsArray)
                 {
-                    foreach(var item in this[path].AsArray)
+                    var items = this.GetKeyValues(value, path);
+
+                    foreach (var item in distinct ? items.Distinct() : items)
                     {
                         yield return item;
                     }
                 }
                 else
                 {
-                    yield return this.Get(path);
+                    yield return value;
                 }
-                yield break;
             }
+            else
+            {
+                // let's call GetKeyValues recursivly until get all base values
+                var items = this.GetKeyValues(this, path);
 
-            yield return this.Get(path);
+                foreach (var item in distinct ? items.Distinct() : items)
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get, recursivly, values inside a BsonValue respecting Arrays and Documents path
+        /// </summary>
+        private IEnumerable<BsonValue> GetKeyValues(BsonValue value, string path)
+        {
+            if (value.IsArray)
+            {
+                foreach(var item in value.AsArray)
+                {
+                    foreach(var v in this.GetKeyValues(item, path))
+                    {
+                        yield return v;
+                    }
+                }
+            }
+            else if (value.IsDocument)
+            {
+                var dot = path.IndexOf(".");
+                var docValue = value.AsDocument[dot == -1 ? path : path.Substring(0, dot)];
+                var rpath = dot == -1 ? null : path.Substring(dot + 1);
+
+                foreach(var v in this.GetKeyValues(docValue, rpath))
+                {
+                    yield return v;
+                }
+            }
+            else
+            {
+                yield return value;
+            }
         }
 
         #endregion

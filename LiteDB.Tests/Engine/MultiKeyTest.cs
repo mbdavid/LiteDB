@@ -17,44 +17,110 @@ namespace LiteDB.Tests
         {
             var doc = new BsonDocument
             {
-                { "int", new BsonArray { 1, 2, 3 } },
-                { "mix", new BsonArray { "a", 2, false } }
+                { "int", new BsonArray { 1, 2, 3, new BsonArray { 4, 5, new BsonArray { 6, 5, 4 } } } },
+                { "addr", new BsonArray {
+                    new BsonDocument { { "street", "av. protasio" } },
+                    new BsonDocument { { "street", "av. ipiranga" } }
+                } },
+                { "list", new BsonArray {
+                    new BsonDocument { {
+                        "phones", new BsonArray {
+                            new BsonDocument { { "number", "123" } },
+                            new BsonDocument { { "number", "456" } }
+                        } } },
+                    new BsonDocument { {
+                        "phones", new BsonArray {
+                            new BsonDocument { { "number", new BsonArray { "789", "***" } } },
+                        } } }
+                } },
+                { "say", new BsonDocument { { "my", new BsonDocument { { "name", "Heisenberg" } } } } }
             };
 
             var i = string.Join(",", doc.GetValues("int"));
-            var m = string.Join(",", doc.GetValues("mix"));
+            var i2 = string.Join(",", doc.GetValues("int", true));
+            var s = string.Join(",", doc.GetValues("addr.street"));
+            var p = string.Join(",", doc.GetValues("list.phones.number"));
+            var h = string.Join(",", doc.GetValues("say.my.name"));
+            var nf = string.Join(",", doc.GetValues("say.notfound"));
+
+            Assert.AreEqual("1,2,3,4,5,6,5,4", i);
+            Assert.AreEqual("1,2,3,4,5,6", i2);
+            Assert.AreEqual("av. protasio,av. ipiranga", s);
+            Assert.AreEqual("123,456,789,***", p);
+            Assert.AreEqual("Heisenberg", h);
+            Assert.AreEqual("(null)", nf);
         }
 
         [TestMethod]
-        public void MultiKey_Insert_Test()
+        public void MultiKey_InsertUpdate_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
                 db.Insert("col", GetDocs(1, 1, 1, 2, 3));
-                db.Insert("col", GetDocs(2, 1, 2, 2, 4));
-                db.Insert("col", GetDocs(3, 1, 3));
+                db.Insert("col", GetDocs(2, 2, 2, 2, 4));
+                db.Insert("col", GetDocs(3, 3, 3));
 
                 // create index afer documents are in collection
                 db.EnsureIndex("col", "list");
                 db.EnsureIndex("col", "rnd");
 
-                db.Update("col", GetDocs(2, 1, 9, 9));
+                db.Update("col", GetDocs(2, 2, 9, 9));
 
                 // try find
                 var r = string.Join(",", db.Find("col", Query.EQ("list", 2)).Select(x => x["_id"].ToString()));
 
                 Assert.AreEqual("1", r);
+                Assert.AreEqual(3, db.Count("col", null));
+                Assert.AreEqual(3, db.Count("col", Query.All()));
 
+                // 5 keys = [1, 2, 3],[3],[9]
+                var l = string.Join(",", db.FindIndex("col", Query.All("list")));
+
+                Assert.AreEqual("1,2,3,3,9", l);
+
+                // count should be count only documents - not index nodes
+                Assert.AreEqual(3, db.Count("col", Query.All("list")));
 
             }
         }
 
-        private IEnumerable<BsonDocument> GetDocs(int start, int count, params int[] args)
+        public void Multikey_Count_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Disk(), TimeSpan.FromMinutes(1), 10, true))
+            {
+                // create index before
+                db.EnsureIndex("col", "list");
+
+                db.Insert("col", GetDocs(1, 1000, 1, 2, 3));
+                db.Insert("col", GetDocs(1001, 2000, 2, 3));
+                db.Insert("col", GetDocs(2001, 2500, 4));
+
+                Assert.AreEqual(1000, db.Count("col", Query.All("list", 1)));
+                Assert.AreEqual(2000, db.Count("col", Query.All("list", 2)));
+                Assert.AreEqual(2000, db.Count("col", Query.All("list", 3)));
+                Assert.AreEqual(500, db.Count("col", Query.All("list", 4)));
+
+                // drop index
+                db.DropIndex("col", "list");
+
+                // re-create index
+                db.EnsureIndex("col", "list");
+
+                // count again
+                Assert.AreEqual(1000, db.Count("col", Query.All("list", 1)));
+                Assert.AreEqual(2000, db.Count("col", Query.All("list", 2)));
+                Assert.AreEqual(2000, db.Count("col", Query.All("list", 3)));
+                Assert.AreEqual(500, db.Count("col", Query.All("list", 4)));
+            }
+        }
+
+        private IEnumerable<BsonDocument> GetDocs(int start, int end, params int[] args)
         {
             var rnd = new Random();
 
-            for(var i = start; i < start + count; i++)
+            for(var i = start; i <= end; i++)
             {
                 yield return new BsonDocument
                 {
