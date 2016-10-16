@@ -40,6 +40,7 @@ namespace LiteDB
             {
                 Key = BsonValue.MinValue,
                 KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
+                Slot = (byte)index.Slot,
                 Page = page,
                 Position = new PageAddress(page.PageID, 0)
             };
@@ -60,7 +61,7 @@ namespace LiteDB
             index.HeadNode = head.Position;
 
             // insert tail node
-            var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH);
+            var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH, null);
 
             index.TailNode = tail.Position;
 
@@ -70,16 +71,16 @@ namespace LiteDB
         /// <summary>
         /// Insert a new node index inside an collection index. Flip coin to know level
         /// </summary>
-        public IndexNode AddNode(CollectionIndex index, BsonValue key)
+        public IndexNode AddNode(CollectionIndex index, BsonValue key, IndexNode last)
         {
             // call AddNode with key value
-            return this.AddNode(index, key, this.FlipCoin());
+            return this.AddNode(index, key, this.FlipCoin(), last);
         }
 
         /// <summary>
         /// Insert a new node index inside an collection index.
         /// </summary>
-        private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level)
+        private IndexNode AddNode(CollectionIndex index, BsonValue key, byte level, IndexNode last)
         {
             // calc key size
             var keyLength = key.GetBytesCount(false);
@@ -93,7 +94,8 @@ namespace LiteDB
             var node = new IndexNode(level)
             {
                 Key = key,
-                KeyLength = (ushort)keyLength
+                KeyLength = (ushort)keyLength,
+                Slot = (byte)index.Slot
             };
 
             // get a free page to insert my index node
@@ -159,7 +161,60 @@ namespace LiteDB
             // add/remove indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
+            // if last node exists, create a double link list
+            if (last != null)
+            {
+                // link new node with last node
+                if (last.NextNode.IsEmpty == false)
+                {
+                    // fix link pointer with has more nodes in list
+                    var next = this.GetNode(last.NextNode);
+                    next.PrevNode = node.Position;
+                    last.NextNode = node.Position;
+                    node.PrevNode = last.Position;
+                    node.NextNode = next.Position;
+
+                    _pager.SetDirty(next.Page);
+                }
+                else
+                {
+                    last.NextNode = node.Position;
+                    node.PrevNode = last.Position;
+                }
+
+                // set last node page as dirty
+                _pager.SetDirty(last.Page);
+            }
+
             return node;
+        }
+
+        /// <summary>
+        /// Get all node list from any index node (go fordward and backward)
+        /// </summary>
+        public IEnumerable<IndexNode> GetNodeList(IndexNode node, bool includeInitial)
+        {
+            var next = node.NextNode;
+            var prev = node.PrevNode;
+
+            // returns some inital node
+            if (includeInitial) yield return node;
+
+            // go fordward
+            while (next.IsEmpty == false)
+            {
+                var n = this.GetNode(next);
+                next = n.NextNode;
+                yield return n;
+            }
+
+            // go backward
+            while (prev.IsEmpty == false)
+            {
+                var p = this.GetNode(next);
+                prev = p.PrevNode;
+                yield return p;
+            }
         }
 
         /// <summary>
@@ -209,10 +264,25 @@ namespace LiteDB
                 // add or remove page from free list
                 _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
+
+            // now remove node from nodelist 
+            var prevNode = this.GetNode(node.PrevNode);
+            var nextNode = this.GetNode(node.NextNode);
+
+            if (prevNode != null)
+            {
+                prevNode.NextNode = node.NextNode;
+                _pager.SetDirty(prevNode.Page);
+            }
+            if (nextNode != null)
+            {
+                nextNode.PrevNode = node.PrevNode;
+                _pager.SetDirty(nextNode.Page);
+            }
         }
 
         /// <summary>
-        /// Drop all indexes pages
+        /// Drop all indexes pages. Each index use a single page sequence
         /// </summary>
         public void DropIndex(CollectionIndex index)
         {
@@ -223,6 +293,21 @@ namespace LiteDB
             foreach (var node in nodes)
             {
                 pages.Add(node.Position.PageID);
+
+                // for each node I need remove from node list datablock reference
+                var prevNode = this.GetNode(node.PrevNode);
+                var nextNode = this.GetNode(node.NextNode);
+
+                if (prevNode != null)
+                {
+                    prevNode.NextNode = node.NextNode;
+                    _pager.SetDirty(prevNode.Page);
+                }
+                if (nextNode != null)
+                {
+                    nextNode.PrevNode = node.PrevNode;
+                    _pager.SetDirty(nextNode.Page);
+                }
             }
 
             // now delete all pages

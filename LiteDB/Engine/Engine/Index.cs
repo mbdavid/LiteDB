@@ -24,27 +24,24 @@ namespace LiteDB
                 index.Unique = unique;
 
                 // read all objects (read from PK index)
-                foreach (var node in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
+                foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
                 {
-                    var buffer = _data.Read(node.DataBlock);
-                    var dataBlock = _data.GetBlock(node.DataBlock);
-
-                    // read object
+                    // read binary and deserialize document
+                    var buffer = _data.Read(pkNode.DataBlock);
                     var doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
-                    // adding index
-                    var key = doc.Get(field);
+                    // get distinct values from field in document
+                    var keys = doc.GetValues(field, true, unique);
 
-                    var newNode = _indexer.AddNode(index, key);
+                    // adding index node for each value
+                    foreach (var key in keys)
+                    {
+                        // insert new index node
+                        var node = _indexer.AddNode(index, key, pkNode);
 
-                    // adding this new index Node to indexRef
-                    //** dataBlock.IndexRef[index.Slot] = newNode.Position;
-
-                    // mark datablock page as dirty
-                    _pager.SetDirty(dataBlock.Page);
-
-                    // link index node to datablock
-                    newNode.DataBlock = dataBlock.Position;
+                        // link index node to datablock
+                        node.DataBlock = pkNode.DataBlock;
+                    }
 
                     // check memory usage
                     _trans.CheckPoint();

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -63,24 +64,27 @@ namespace LiteDB
             var dataBlock = _data.Insert(col, bytes);
 
             // store id in a PK index [0 array]
-            var pk = _indexer.AddNode(col.PK, id);
+            var pk = _indexer.AddNode(col.PK, id, null);
 
-            // do links between index <-> data block
+            // do link between index <-> data block
             pk.DataBlock = dataBlock.Position;
-            //**dataBlock.IndexRef[0] = pk.Position;
 
             // for each index, insert new IndexNode
             foreach (var index in col.GetIndexes(false))
             {
-                var key = doc.Get(index.Field);
+                // for each index, get all keys (support now multi-key) - gets distinct values only
+                // if index are unique, get single key only
+                var keys = doc.GetValues(index.Field, index.Unique);
 
-                var node = _indexer.AddNode(index, key);
+                // do a loop with all keys (multi-key supported)
+                foreach(var key in keys)
+                {
+                    // insert node
+                    var node = _indexer.AddNode(index, key, pk);
 
-                // point my index to data object
-                node.DataBlock = dataBlock.Position;
-
-                // point my dataBlock
-                //**dataBlock.IndexRef[index.Slot] = node.Position;
+                    // link my index node to data block address
+                    node.DataBlock = dataBlock.Position;
+                }
             }
         }
     }

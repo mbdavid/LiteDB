@@ -1,4 +1,6 @@
-﻿namespace LiteDB
+﻿using System.Linq;
+
+namespace LiteDB
 {
     public partial class LiteEngine
     {
@@ -18,14 +20,13 @@
                 {
                     _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
 
-                    // read dataBlock (do not read all extend pages, i will not use)
-                    var dataBlock = _data.GetBlock(node.DataBlock);
+                    // lets remove all indexes that point to this in dataBlock
+                    foreach (var linkNode in _indexer.GetNodeList(node, true).ToArray())
+                    {
+                        var index = col.Indexes[linkNode.Slot];
 
-                    //** // lets remove all indexes that point to this in dataBlock
-                    //** foreach (var index in col.GetIndexes(true))
-                    //** {
-                    //**     _indexer.Delete(index, dataBlock.IndexRef[index.Slot]);
-                    //** }
+                        _indexer.Delete(index, linkNode.Position);
+                    }
 
                     // remove object data
                     _data.Delete(col, node.DataBlock);

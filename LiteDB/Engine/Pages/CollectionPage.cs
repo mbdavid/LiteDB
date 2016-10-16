@@ -79,7 +79,6 @@ namespace LiteDB
             {
                 index.Field = reader.ReadString();
                 index.Unique = reader.ReadBoolean();
-                index.MultiKey = reader.ReadBoolean();
                 index.HeadNode = reader.ReadPageAddress();
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
@@ -96,7 +95,6 @@ namespace LiteDB
             {
                 writer.Write(index.Field);
                 writer.Write(index.Unique);
-                writer.Write(index.MultiKey);
                 writer.Write(index.HeadNode);
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);

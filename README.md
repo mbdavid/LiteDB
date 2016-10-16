@@ -1,5 +1,18 @@
 # DEV-MK => MultiKey Index implementation
 
+=> Thinks: WHY I need to specify MULTIKEY? Why multikey is not supported by all indexes? 
+	# GetValue() <= IEnumerable<BsonValue>
+	# If key is single, ok, index as a single value. If is an array, do for all items
+	# How update document ajusting all indexes?
+		- 1) Simple: delete/insert all - If I use this solution, I dont need Slot stored inside IndexNode! NOOOO - To delete an index I need this
+		- 2) Diff: Get all indexes keys in array, compare with document
+	# How delete a document from a Query (without using PK)?
+		- Now deleted required PK for first element on list 
+		- Spend 6 bytes to point DataBlock to PK? (or just query it?)
+
+= Needs Double Linked List in IndexNodes to drop an indexs (will be slow to drop indexes)
+		
+
 # v-next
 - Create some "Reserved bytes" in index page
 - ReadOnly support

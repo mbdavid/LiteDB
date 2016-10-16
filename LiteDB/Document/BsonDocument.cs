@@ -118,7 +118,7 @@ namespace LiteDB
 
             if (names.Length == 1)
             {
-                this[path] = value;
+                this[path] = value ?? BsonValue.Null;
                 return this;
             }
 
@@ -151,10 +151,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a collection of values from a path. Supports array values
+        /// Get a collection of values from a path. Supports array values. If SingleValue=true, returns BsonArray as a single value (BsonArray)
         /// </summary>
-        public IEnumerable<BsonValue> GetValues(string path)
+        public IEnumerable<BsonValue> GetValues(string path, bool distinct = false, bool singleValue = false)
         {
+            // if single key, use Get method
+            if (singleValue)
+            {
+                yield return this.Get(path);
+                yield break;
+            }
+
             // supports parent.child.array.name
             var names = path.Split('.');
 
@@ -169,28 +176,12 @@ namespace LiteDB
                 }
                 else
                 {
-                    yield return this[path];
+                    yield return this.Get(path);
                 }
+                yield break;
             }
-            throw new NotImplementedException();
 
-            //var value = this;
-            //
-            //for (var i = 0; i < names.Length - 1; i++)
-            //{
-            //    var name = names[i];
-            //
-            //    if (value[name].IsDocument)
-            //    {
-            //        value = value[name].AsDocument;
-            //    }
-            //    else
-            //    {
-            //        yield return BsonValue.Null;
-            //    }
-            //}
-            //
-            //return value[names.Last()];
+            yield return this.Get(path);
         }
 
         #endregion

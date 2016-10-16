@@ -13,7 +13,7 @@ namespace LiteDB
                                                  2 + // ValueLength (ushort)
                                                  1 + // BsonType (byte)
                                                  1 + // Slot (1 byte)
-                                                 PageAddress.SIZE + // Next Node (6 bytes)
+                                                 (PageAddress.SIZE * 2) + // Prev/Next Node (6 bytes)
                                                  PageAddress.SIZE; // DataBlock
 
         /// <summary>
@@ -32,17 +32,22 @@ namespace LiteDB
         public byte Slot { get; set; }
 
         /// <summary>
+        /// Prev node in same document list index nodes
+        /// </summary>
+        public PageAddress PrevNode { get; set; }
+
+        /// <summary>
         /// Next node in same document list index nodes
         /// </summary>
         public PageAddress NextNode { get; set; }
 
         /// <summary>
-        /// Pointer to prev value (used in skip lists - Prev.Length = Next.Length)
+        /// Link to prev value (used in skip lists - Prev.Length = Next.Length)
         /// </summary>
         public PageAddress[] Prev { get; set; }
 
         /// <summary>
-        /// Pointer to next value (used in skip lists - Prev.Length = Next.Length)
+        /// Link to next value (used in skip lists - Prev.Length = Next.Length)
         /// </summary>
         public PageAddress[] Next { get; set; }
 
@@ -98,6 +103,8 @@ namespace LiteDB
         public IndexNode(byte level)
         {
             this.Position = PageAddress.Empty;
+            this.PrevNode = PageAddress.Empty;
+            this.NextNode = PageAddress.Empty;
             this.DataBlock = PageAddress.Empty;
             this.Prev = new PageAddress[level];
             this.Next = new PageAddress[level];

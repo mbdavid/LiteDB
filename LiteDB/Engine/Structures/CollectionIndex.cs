@@ -28,11 +28,6 @@ namespace LiteDB
         public bool Unique { get; set; }
 
         /// <summary>
-        /// Indicate if this index multi keys values (used in array fields)
-        /// </summary>
-        public bool MultiKey { get; set; }
-
-        /// <summary>
         /// Head page address for this index
         /// </summary>
         public PageAddress HeadNode { get; set; }
@@ -72,7 +67,6 @@ namespace LiteDB
         {
             this.Field = string.Empty;
             this.Unique = false;
-            this.MultiKey = false;
             this.HeadNode = PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
         }

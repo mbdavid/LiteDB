@@ -56,11 +56,19 @@ namespace LiteDB.Tests
                 // insert basic document
                 var ta = Task.Factory.StartNew(() =>
                 {
+                    try
+                    {
+
                     for (var i = 0; i < N; i++)
                     {
                         var doc = new BsonDocument { { "_id", i } };
 
                         db.Insert("col", doc);
+                    }
+                    }
+                    catch(Exception ee)
+                    {
+                        ee.ToString();
                     }
                 });
 
