@@ -118,7 +118,7 @@ namespace LiteDB
 
             if (names.Length == 1)
             {
-                this[path] = value ?? BsonValue.Null;
+                this[path] = value;
                 return this;
             }
 

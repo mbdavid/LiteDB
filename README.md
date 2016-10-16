@@ -10,7 +10,7 @@
 - ReadOnly support
 - Encryption only in .NET full 3.5
 - Autocommit problem: duplicate key throw rollback in all
-- CheckIntegrity
+- CheckIntegrity, PageOverflow test
 
 # MultiKey
 - Implementar GetValues() retornando um IEnumerable<BsonValue> no BsonDocument
@@ -26,6 +26,8 @@
 - Remove shell from LiteDB (avaiable only in LiteDB.Shell tool)
 - Checkpoint cache - CacheSize
 - Autocommit = false : Transaction control
+- MultiKey support
+- Less 96 bytes per document (plus 13 bytes per index)
 - Remove index options
 - Remove: Shrink, Encryption, ...
 - New QueryFunc
@@ -33,6 +35,12 @@
 - New FindIndex
 - Remove ChangeID (avoid write Header Page all times)
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
+
+# Update datafile
+- Method: static Upgrade(string datafile, string password = null, bool backup = true)
+- IUpgrade
+- One implementation for each version
+- Read HeaderPage, CollectionPage, DataPage (I dont know how without reading IndexNodes) 
 
 # TODO
 - netstandard 1.4
