@@ -1,22 +1,25 @@
-# DEV-MK => MultiKey Index implementation
-
-= Review merge with dev
-= too easy to be true :)
-= Unit test: Delete, DropIndex
-		
-
 # v-next
+- Encryption using AES
+- Virtual index fields
+- Deep Includes
 - Create some "Reserved bytes" in index page
-- ReadOnly support
-- Encryption only in .NET full 3.5
+- BsonMapper with ReadOnly / private setter options / Fields
+- Support interface IBsonMapper (like JSON.NET)
+- netstandard 1.4
+
+# Update datafile
+- Method: static Upgrade(string datafile, string password = null, bool backup = true)
+- IUpgrade
+- One implementation for each version
+- Read HeaderPage, CollectionPage, DataPage (I dont know how without reading IndexNodes) 
+
+# To think about
+- Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
+- IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 - Autocommit problem: duplicate key throw rollback in all
 - CheckIntegrity, PageOverflow test
+- ReadOnly support
 
-# MultiKey
-- Implementar GetValues() retornando um IEnumerable<BsonValue> no BsonDocument
-- Usar IndexRef[] para um novo conjunto de ponteiros
-- Armazenar o array de ponteiros em um DataBlock
-- Remover DocumentCount++|-- de dentro do DataService e colocar no Insert.cs|Delete.cs
 
 # Changes to v3
 - Thread Safe
@@ -27,7 +30,7 @@
 - Checkpoint cache - CacheSize
 - Autocommit = false : Transaction control
 - MultiKey support
-- Less 96 bytes per document (plus 13 bytes per index)
+- Less 96 bytes per document (added 13 bytes per index)
 - Remove index options
 - Remove: Shrink, Encryption, ...
 - New QueryFunc
@@ -36,21 +39,9 @@
 - Remove ChangeID (avoid write Header Page all times)
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
 
-# Update datafile
-- Method: static Upgrade(string datafile, string password = null, bool backup = true)
-- IUpgrade
-- One implementation for each version
-- Read HeaderPage, CollectionPage, DataPage (I dont know how without reading IndexNodes) 
 
-# TODO
-- netstandard 1.4
-- Virtual index fields
+# ThreadSafe - How it's work in LiteDB
 
-# BsonMapper
-- Support interface IBsonMapper (like JSON.NET)
-- BsonMapper with ReadOnly / private setter options / Fields
-
-# ThreadSafe
 - LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
 - DbEngine still lazy load (with lazy open file)
 - LiteDB will close datafile only when Dispose() LiteDatabase/DbEngine/IDiskService
@@ -64,14 +55,6 @@
 - Review Logger class = LogLevel be simpler? I want log VERBOSE
 
 This structure will be work more close to a DBMS (centralized database instance with a server running).
-
-# Cons
-- Will not support N application running in some datafile (like many desktops apps using a server datafile)
-- Console shell CLI must be always disconected?
-
-# To think about
-- Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
-- IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 
 
 =============================================================================
