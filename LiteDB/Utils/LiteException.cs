@@ -56,22 +56,22 @@ namespace LiteDB
 
         internal static LiteException NoDatabase()
         {
-            return new LiteException(NO_DATABASE, "There is no database");
+            return new LiteException(NO_DATABASE, "There is no database.");
         }
 
         internal static LiteException FileNotFound(string fileId)
         {
-            return new LiteException(FILE_NOT_FOUND, "File '{0}' not found", fileId);
+            return new LiteException(FILE_NOT_FOUND, "File '{0}' not found.", fileId);
         }
 
         internal static LiteException FileCorrupted(string fileId)
         {
-            return new LiteException(FILE_CORRUPTED, "File '{0}' has no content or is corrupted", fileId);
+            return new LiteException(FILE_CORRUPTED, "File '{0}' has no content or is corrupted.", fileId);
         }
 
         internal static LiteException InvalidDatabase()
         {
-            return new LiteException(INVALID_DATABASE, "Datafile is not a LiteDB database");
+            return new LiteException(INVALID_DATABASE, "Datafile is not a LiteDB database.");
         }
 
         internal static LiteException InvalidDatabaseVersion(int version)
@@ -81,7 +81,8 @@ namespace LiteDB
 
         internal static LiteException FileSizeExceeded(long limit)
         {
-            return new LiteException(FILE_SIZE_EXCEEDED, "Database size exceeds limit of {0}", StorageUnitHelper.FormatFileSize(limit));
+            return new LiteException(FILE_SIZE_EXCEEDED, "Database size exceeds limit of {0}.", StorageUnitHelper.FormatFileSize(limit));
+
         }
 
         internal static LiteException CollectionLimitExceeded(int limit)
@@ -91,12 +92,12 @@ namespace LiteDB
 
         internal static LiteException JournalFileFound(string journal)
         {
-            return new LiteException(JOURNAL_FILE_FOUND, "Journal file found on '{0}'. Reopen database", journal);
+            return new LiteException(JOURNAL_FILE_FOUND, "Journal file found on '{0}'. Try to reopen the database.", journal);
         }
 
         internal static LiteException IndexDropId()
         {
-            return new LiteException(INDEX_DROP_IP, "Primary key index '_id' can't be dropped");
+            return new LiteException(INDEX_DROP_IP, "Primary key index '_id' can't be dropped.");
         }
 
         internal static LiteException IndexLimitExceeded(string collection)
@@ -106,37 +107,37 @@ namespace LiteDB
 
         internal static LiteException IndexDuplicateKey(string field, BsonValue key)
         {
-            return new LiteException(INDEX_DUPLICATE_KEY, "Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'", field, key);
+            return new LiteException(INDEX_DUPLICATE_KEY, "Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", field, key);
         }
 
         internal static LiteException IndexKeyTooLong()
         {
-            return new LiteException(INDEX_KEY_TOO_LONG, "Index key must be less than {0} bytes", IndexService.MAX_INDEX_LENGTH);
+            return new LiteException(INDEX_KEY_TOO_LONG, "Index key must be less than {0} bytes.", IndexService.MAX_INDEX_LENGTH);
         }
 
         internal static LiteException IndexNotFound(string colName, string field)
         {
-            return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'", colName, field);
+            return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'.", colName, field);
         }
 
         internal static LiteException LockTimeout(TimeSpan ts)
         {
-            return new LiteException(LOCK_TIMEOUT, "Timeout. Database is locked for more than {0}", ts.ToString());
+            return new LiteException(LOCK_TIMEOUT, "Timeout. Database is locked for more than {0}.", ts.ToString());
         }
 
         internal static LiteException InvalidCommand(string command)
         {
-            return new LiteException(INVALID_COMMAND, "Command '{0}' is not a valid shell command", command);
+            return new LiteException(INVALID_COMMAND, "Command '{0}' is not a valid shell command.", command);
         }
 
         internal static LiteException AlreadyExistsCollectionName(string newName)
         {
-            return new LiteException(ALREADY_EXISTS_COLLECTION_NAME, "New collection name '{0}' already exists", newName);
+            return new LiteException(ALREADY_EXISTS_COLLECTION_NAME, "New collection name '{0}' already exists.", newName);
         }
 
         internal static LiteException DatabaseWrongPassword()
         {
-            return new LiteException(DATABASE_WRONG_PASSWORD, "Invalid database password");
+            return new LiteException(DATABASE_WRONG_PASSWORD, "Invalid database password.");
         }
 
         #endregion Database Errors
@@ -150,12 +151,12 @@ namespace LiteDB
 
         internal static LiteException DocumentMaxDepth(int depth, Type type)
         {
-            return new LiteException(DOCUMENT_MAX_DEPTH, "Document has more than {0} nested documents in '{1}'. Check for circular references (use DbRef)", depth, type == null ? "-" : type.Name);
+            return new LiteException(DOCUMENT_MAX_DEPTH, "Document has more than {0} nested documents in '{1}'. Check for circular references (use DbRef).", depth, type == null ? "-" : type.Name);
         }
 
         internal static LiteException InvalidCtor(Type type)
         {
-            return new LiteException(INVALID_CTOR, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters", type.FullName, type.AssemblyQualifiedName);
+            return new LiteException(INVALID_CTOR, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters.", type.FullName, type.AssemblyQualifiedName);
         }
 
         internal static LiteException UnexpectedToken(string token)
@@ -165,24 +166,24 @@ namespace LiteDB
 
         internal static LiteException InvalidDataType(string field, BsonValue value)
         {
-            return new LiteException(INVALID_DATA_TYPE, "Invalid BSON data type '{0}' on field '{1}'", value.Type, field);
+            return new LiteException(INVALID_DATA_TYPE, "Invalid BSON data type '{0}' on field '{1}'.", value.Type, field);
         }
 
         public const int PROPERTY_READ_WRITE = 204;
 
         internal static LiteException PropertyReadWrite(PropertyInfo prop)
         {
-            return new LiteException(PROPERTY_READ_WRITE, "'{0}' property must have public get; set;", prop.Name);
+            return new LiteException(PROPERTY_READ_WRITE, "'{0}' property must have public getter and setter.", prop.Name);
         }
 
         internal static LiteException PropertyNotMapped(string name)
         {
-            return new LiteException(PROPERTY_NOT_MAPPED, "Property '{0}' was not mapped into BsonDocument", name);
+            return new LiteException(PROPERTY_NOT_MAPPED, "Property '{0}' was not mapped into BsonDocument.", name);
         }
 
         internal static LiteException InvalidTypedName(string type)
         {
-            return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName')", type);
+            return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName').", type);
         }
 
         #endregion Document/Mapper Errors
