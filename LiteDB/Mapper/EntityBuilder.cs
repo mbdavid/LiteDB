@@ -16,8 +16,6 @@ namespace LiteDB
 
         internal EntityBuilder(BsonMapper mapper)
         {
-            LitePlatform.ThrowIfNotInitialized();
-
             _mapper = mapper;
             _prop = mapper.GetPropertyMapper(typeof(T));
         }
@@ -63,18 +61,7 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                p.IndexOptions = new IndexOptions { Unique = unique };
-            });
-        }
-
-        /// <summary>
-        /// Define an index based in a property on entity
-        /// </summary>
-        public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, IndexOptions options)
-        {
-            return this.GetProperty(property, (p) =>
-            {
-                p.IndexOptions = options;
+                p.IndexUnique = unique;
             });
         }
 
@@ -83,22 +70,13 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index(string field, bool unique = false)
         {
-            return this.Index(field, new IndexOptions { Unique = unique });
-        }
-
-        /// <summary>
-        /// Define an index based in a field name on BsonDocument
-        /// </summary>
-        public EntityBuilder<T> Index(string field, IndexOptions options)
-        {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
-            if (options == null) throw new ArgumentNullException("options");
 
             var p = _prop.Values.FirstOrDefault(x => x.FieldName == field);
 
             if (p == null) throw new ArgumentException("field not found");
 
-            p.IndexOptions = options;
+            p.IndexUnique = unique;
 
             return this;
         }
@@ -144,9 +122,11 @@ namespace LiteDB
 
                 var id = idField.Getter(obj);
 
-                return new BsonDocument()
-                    .Add("$id", new BsonValue(id))
-                    .Add("$ref", collectionName);
+                return new BsonDocument
+                {
+                    { "$id", new BsonValue(id) },
+                    { "$ref", collectionName }
+                };
             };
 
             p.Deserialize = (bson, m) =>
@@ -156,7 +136,7 @@ namespace LiteDB
                 return m.Deserialize(itemType,
                     idRef.IsNull ?
                     bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
-                    new BsonDocument().Add("_id", idRef)); // if has $id, deserialize object using only _id object
+                    new BsonDocument { { "_id", idRef } }); // if has $id, deserialize object using only _id object
             };
         }
 
@@ -172,9 +152,11 @@ namespace LiteDB
 
                 foreach (var item in (IEnumerable)list)
                 {
-                    result.Add(new BsonDocument()
-                        .Add("$id", new BsonValue(idField.Getter(item)))
-                        .Add("$ref", collectionName));
+                    result.Add(new BsonDocument
+                    {
+                        { "$id", new BsonValue(idField.Getter(item)) },
+                        { "$ref", collectionName }
+                    });
                 }
 
                 return result;
@@ -200,7 +182,7 @@ namespace LiteDB
 
                     foreach (var item in array)
                     {
-                        arr.Add(new BsonDocument().Add("_id", item.AsDocument["$id"]));
+                        arr.Add(new BsonDocument { { "_id", item.AsDocument["$id"] } });
                     }
 
                     return m.Deserialize(listType, arr);

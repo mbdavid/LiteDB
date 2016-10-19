@@ -13,7 +13,7 @@ namespace LiteDB
         public int Count()
         {
             // do not use indexes - collections has DocumentCount property
-            return (int)_engine.Count(_name, null);
+            return (int)_engine.Value.Count(_name, null);
         }
 
         /// <summary>
@@ -28,14 +28,11 @@ namespace LiteDB
             {
                 try
                 {
-                    return (int)_engine.Count(_name, query);
+                    return (int)_engine.Value.Count(_name, query);
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
-
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
                 }
             }
         }
@@ -50,7 +47,7 @@ namespace LiteDB
             return this.Count(_visitor.Visit(predicate));
         }
 
-        #endregion Count
+        #endregion
 
         #region LongCount
 
@@ -60,7 +57,7 @@ namespace LiteDB
         public long LongCount()
         {
             // do not use indexes - collections has DocumentCount property
-            return _engine.Count(_name, null);
+            return _engine.Value.Count(_name, null);
         }
 
         /// <summary>
@@ -75,14 +72,11 @@ namespace LiteDB
             {
                 try
                 {
-                    return _engine.Count(_name, query);
+                    return _engine.Value.Count(_name, query);
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
-
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
                 }
             }
         }
@@ -97,7 +91,7 @@ namespace LiteDB
             return this.LongCount(_visitor.Visit(predicate));
         }
 
-        #endregion LongCount
+        #endregion
 
         #region Exists
 
@@ -113,14 +107,11 @@ namespace LiteDB
             {
                 try
                 {
-                    return _engine.Exists(_name, query);
+                    return _engine.Value.Exists(_name, query);
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
-
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
                 }
             }
         }
@@ -135,7 +126,7 @@ namespace LiteDB
             return this.Exists(_visitor.Visit(predicate));
         }
 
-        #endregion Exits
+        #endregion
 
         #region Min/Max
 
@@ -151,14 +142,11 @@ namespace LiteDB
             {
                 try
                 {
-                    return _engine.Min(_name, field);
+                    return _engine.Value.Min(_name, field);
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
-
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
                 }
             }
         }
@@ -195,14 +183,14 @@ namespace LiteDB
             {
                 try
                 {
-                    return _engine.Max(_name, field);
+                    return _engine.Value.Max(_name, field);
                 }
                 catch (IndexNotFoundException ex)
                 {
                     // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
+                    var unique = _mapper.GetIndexFromMapper<T>(ex.Field);
 
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, unique);
                 }
             }
         }
@@ -227,6 +215,6 @@ namespace LiteDB
             return this.Max(field);
         }
 
-        #endregion Min/Max
+        #endregion
     }
 }

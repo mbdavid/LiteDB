@@ -11,26 +11,15 @@ namespace LiteDB
         /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
         /// </summary>
         /// <param name="field">Document field name (case sensitive)</param>
-        /// <param name="options">All index options</param>
-        public bool EnsureIndex(string field, IndexOptions options)
+        /// <param name="unique">If is a unique index</param>
+        public bool EnsureIndex(string field, bool unique = false)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
-            if (options == null) throw new ArgumentNullException("options");
             if (field == "_id") return false; // always exists
 
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw LiteException.InvalidFormat("IndexField", field);
 
-            return _engine.EnsureIndex(_name, field, options);
-        }
-
-        /// <summary>
-        /// Create a new permanent index in all documents inside this collections if index not exists already. Returns true if index was created or false if already exits
-        /// </summary>
-        /// <param name="field">Document field name (case sensitive)</param>
-        /// <param name="unique">All index options</param>
-        public bool EnsureIndex(string field, bool unique = false)
-        {
-            return this.EnsureIndex(field, new IndexOptions { Unique = unique });
+            return _engine.Value.EnsureIndex(_name, field, unique);
         }
 
         /// <summary>
@@ -42,27 +31,15 @@ namespace LiteDB
         {
             var field = _visitor.GetBsonField(property);
 
-            return this.EnsureIndex(field, new IndexOptions { Unique = unique });
+            return this.EnsureIndex(field, unique);
         }
 
         /// <summary>
-        /// Create a new permanent index in all documents inside this collections if index not exists already.
+        /// Returns all indexes information
         /// </summary>
-        /// <param name="property">Property linq expression</param>
-        /// <param name="options">Use all indexes options</param>
-        public bool EnsureIndex<K>(Expression<Func<T, K>> property, IndexOptions options)
+        public IEnumerable<IndexInfo> GetIndexes()
         {
-            var field = _visitor.GetBsonField(property);
-
-            return this.EnsureIndex(field, options);
-        }
-
-        /// <summary>
-        /// Returns all indexes information, including index stats 
-        /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes(bool includeStats = false)
-        {
-            return _engine.GetIndexes(_name, includeStats);
+            return _engine.Value.GetIndexes(_name);
         }
 
         /// <summary>
@@ -72,7 +49,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            return _engine.DropIndex(_name, field);
+            return _engine.Value.DropIndex(_name, field);
         }
     }
 }

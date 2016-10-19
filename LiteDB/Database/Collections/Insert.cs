@@ -16,7 +16,7 @@ namespace LiteDB
 
             var doc = _mapper.ToDocument(document);
 
-            _engine.Insert(_name, new BsonDocument[] { doc });
+            _engine.Value.Insert(_name, new BsonDocument[] { doc });
 
             return doc["_id"];
         }
@@ -28,7 +28,7 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            return _engine.Insert(_name, this.GetBsonDocs(docs));
+            return _engine.Value.Insert(_name, this.GetBsonDocs(docs));
         }
 
         /// <summary>
@@ -40,9 +40,7 @@ namespace LiteDB
             {
                 _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
 
-                var doc = _mapper.ToDocument(document);
-
-                yield return doc;
+                yield return _mapper.ToDocument(document);
             }
         }
     }

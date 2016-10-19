@@ -19,15 +19,12 @@ namespace LiteDB
         /// </summary>
         public static PropertyInfo GetIdProperty(Type type)
         {
-#if PCL
-            return SelectProperty(type.GetRuntimeProperties(),
-#else
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
-#endif
 #if NETFULL
+            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
 #else
+            return SelectProperty(type.GetRuntimeProperties(),
                 x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
 #endif
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
@@ -54,7 +51,7 @@ namespace LiteDB
             return null;
         }
 
-        #endregion GetIdProperty
+        #endregion
 
         #region GetProperties
 
@@ -69,18 +66,17 @@ namespace LiteDB
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
-#if PCL
-            var props = type.GetRuntimeProperties();
-#else
+#if NETFULL
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+#else
+            var props = type.GetRuntimeProperties();
 #endif
             foreach (var prop in props)
             {
                 // ignore indexer property
                 if (prop.GetIndexParameters().Length > 0) continue;
 
-                // ignore not read/write
-                ////if (!prop.CanRead || !prop.CanWrite) continue;
+                // ignore write only
                 if (!prop.CanRead) continue;
 
                 // [BsonIgnore]
@@ -89,9 +85,9 @@ namespace LiteDB
                 // check if property has [BsonField]
                 var bsonField = prop.IsDefined(fieldAttr, false);
 
-                // create getter/setter IL function
-                var getter = LitePlatform.Platform.ReflectionHandler.CreateGenericGetter(type, prop, bsonField);
-                var setter = LitePlatform.Platform.ReflectionHandler.CreateGenericSetter(type, prop, bsonField);
+                // create getter/setter function
+                var getter = ReflectionHandler.CreateGenericGetter(type, prop, bsonField);
+                var setter = ReflectionHandler.CreateGenericSetter(type, prop, bsonField);
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;
@@ -132,7 +128,7 @@ namespace LiteDB
                     FieldName = name,
                     PropertyName = prop.Name,
                     PropertyType = prop.PropertyType,
-                    IndexOptions = index == null ? null : index.Options,
+                    IndexUnique = index == null ? null : (bool?)index.Unique,
                     Getter = getter,
                     Setter = setter
                 };
@@ -143,7 +139,7 @@ namespace LiteDB
             return dict;
         }
 
-        #endregion GetProperties
+        #endregion
 
         /// <summary>
         /// Create a new instance from a Type
@@ -171,7 +167,7 @@ namespace LiteDB
 
                     if (type.GetTypeInfo().IsClass)
                     {
-                        _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateClass(type));
+                        _cacheCtor.Add(type, c = ReflectionHandler.CreateClass(type));
                     }
                     else if (type.GetTypeInfo().IsInterface) // some know interfaces
                     {
@@ -189,12 +185,12 @@ namespace LiteDB
                         }
                         else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         {
-#if PCL
-                            var k = type.GetTypeInfo().GenericTypeArguments[0];
-                            var v = type.GetTypeInfo().GenericTypeArguments[1];
-#else
+#if NETFULL
                             var k = type.GetGenericArguments()[0];
                             var v = type.GetGenericArguments()[1];
+#else
+                            var k = type.GetTypeInfo().GenericTypeArguments[0];
+                            var v = type.GetTypeInfo().GenericTypeArguments[1];
 #endif
                             return CreateInstance(GetGenericDictionaryOfType(k, v));
                         }
@@ -205,7 +201,7 @@ namespace LiteDB
                     }
                     else // structs
                     {
-                        _cacheCtor.Add(type, c = LitePlatform.Platform.ReflectionHandler.CreateStruct(type));
+                        _cacheCtor.Add(type, c = ReflectionHandler.CreateStruct(type));
                     }
 
                     return c();
@@ -252,18 +248,18 @@ namespace LiteDB
             var type = list.GetType();
 
             if (type.IsArray) return type.GetElementType();
-#if PCL
-            foreach (var i in type.GetTypeInfo().ImplementedInterfaces)
-#else
+#if NETFULL
             foreach (var i in type.GetInterfaces())
+#else
+            foreach (var i in type.GetTypeInfo().ImplementedInterfaces)
 #endif
             {
                 if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-#if PCL
-                    return i.GetTypeInfo().GenericTypeArguments[0];
-#else
+#if NETFULL
                     return i.GetGenericArguments()[0];
+#else
+                    return i.GetTypeInfo().GenericTypeArguments[0];
 #endif
                 }
             }
@@ -278,10 +274,10 @@ namespace LiteDB
         {
             if (type.IsArray) return true;
 
-#if PCL
-            foreach (Type @interface in type.GetTypeInfo().ImplementedInterfaces)
+#if NETFULL
+            foreach (var @interface in type.GetInterfaces())
 #else
-            foreach (Type @interface in type.GetInterfaces())
+            foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
 #endif
             {
                 if (@interface.GetTypeInfo().IsGenericType)
@@ -297,6 +293,6 @@ namespace LiteDB
             return false;
         }
 
-        #endregion Utils
+        #endregion
     }
 }

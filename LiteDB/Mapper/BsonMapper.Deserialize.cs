@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Deserialize a BsonDocument to entity class
         /// </summary>
-        public object ToObject(Type type, BsonDocument doc)
+        public virtual object ToObject(Type type, BsonDocument doc)
         {
             if (doc == null) throw new ArgumentNullException("doc");
 
@@ -24,7 +24,7 @@ namespace LiteDB
         /// <summary>
         /// Deserialize a BsonDocument to entity class
         /// </summary>
-        public T ToObject<T>(BsonDocument doc)
+        public virtual T ToObject<T>(BsonDocument doc)
             where T : new()
         {
             return (T)this.ToObject(typeof(T), doc);
@@ -72,7 +72,7 @@ namespace LiteDB
             typeof(SByte)
         };
 
-        #endregion Basic direct .NET convert types
+        #endregion
 
         internal object Deserialize(Type type, BsonValue value)
         {
@@ -156,12 +156,12 @@ namespace LiteDB
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
-#if !NETFULL
-                    var k = type.GetTypeInfo().GenericTypeArguments[0];
-                    var t = type.GetTypeInfo().GenericTypeArguments[1];
-#else
+#if NETFULL
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
+#else
+                    var k = type.GetTypeInfo().GenericTypeArguments[0];
+                    var t = type.GetTypeInfo().GenericTypeArguments[1];
 #endif
 
                     this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
@@ -194,12 +194,12 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-#if PCL
+#if NETFULL
+            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+#else
 			var typeInfo = type.GetTypeInfo();
             var itemType = typeInfo.GenericTypeArguments.FirstOrDefault() 
                    ?? typeInfo.ImplementedInterfaces.First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetTypeInfo().GenericTypeArguments.First();
-#else
-            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
 #endif
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
@@ -213,12 +213,11 @@ namespace LiteDB
             }
             else
             {
-#if PCL
-                var addMethod = type.GetRuntimeMethod("Add", new Type[1] { itemType });
-#else
+#if NETFULL
                 var addMethod = type.GetMethod("Add");
+#else
+                var addMethod = type.GetRuntimeMethod("Add", new Type[1] { itemType });
 #endif
-
                 foreach (BsonValue item in value)
                 {
                     addMethod.Invoke(enumerable, new[] { Deserialize(itemType, item) });

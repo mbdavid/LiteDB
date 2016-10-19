@@ -1,11 +1,12 @@
 # v-next
 - Encryption using AES
 - Virtual index fields
-- Deep Includes
+- Deep Includes (when used . apply to sub query)
 - Create some "Reserved bytes" in index page
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
 - netstandard 1.4
+- better way to auto-create indexes? on LiteCollection<> ctor?
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)

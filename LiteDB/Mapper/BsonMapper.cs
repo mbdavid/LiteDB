@@ -110,7 +110,7 @@ namespace LiteDB
         /// <summary>
         /// Register a custom type serializer/deserialize function
         /// </summary>
-        public void RegisterType<T>(Func<T, BsonValue> serialize, Func<BsonValue, T> deserialize)
+        public virtual void RegisterType<T>(Func<T, BsonValue> serialize, Func<BsonValue, T> deserialize)
         {
             _customSerializer[typeof(T)] = (o) => serialize((T)o);
             _customDeserializer[typeof(T)] = (b) => (T)deserialize(b);
@@ -119,7 +119,7 @@ namespace LiteDB
         /// <summary>
         /// Register a custom Auto Id generator function for a type
         /// </summary>
-        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
+        public virtual void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
         {
             _autoId[typeof(T)] = new AutoId
             {
@@ -131,7 +131,7 @@ namespace LiteDB
         /// <summary>
         /// Set new Id in entity class if entity needs one
         /// </summary>
-        public void SetAutoId(object entity, LiteCollection<BsonDocument> col)
+        public virtual void SetAutoId(object entity, LiteCollection<BsonDocument> col)
         {
             // if object is BsonDocument, add _id as ObjectId
             if (entity is BsonDocument)
@@ -200,7 +200,7 @@ namespace LiteDB
             return this;
         }
 
-        #endregion Predefinded Property Resolvers
+        #endregion
 
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results
@@ -224,17 +224,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Search for [BsonIndex]/Entity.Index() in PropertyMapper. If not found, returns null
+        /// Search for [BsonIndex]/Entity.Index() in PropertyMapper. If not found, returns false
         /// </summary>
-        internal IndexOptions GetIndexFromMapper<T>(string field)
+        internal bool GetIndexFromMapper<T>(string field)
         {
             var props = this.GetPropertyMapper(typeof(T));
 
             // get index options if type has
             return props.Values
-                .Where(x => x.FieldName == field && x.IndexOptions != null)
-                .Select(x => x.IndexOptions)
-                .FirstOrDefault();
+                .Where(x => x.FieldName == field && x.IndexUnique != null)
+                .Select(x => x.IndexUnique)
+                .FirstOrDefault() ?? false;
         }
     }
 }

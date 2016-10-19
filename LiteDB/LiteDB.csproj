@@ -50,6 +50,16 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Database\Collections\Aggregate.cs" />
+    <Compile Include="Database\Collections\Delete.cs" />
+    <Compile Include="Database\Collections\Find.cs" />
+    <Compile Include="Database\Collections\Include.cs" />
+    <Compile Include="Database\Collections\Index.cs" />
+    <Compile Include="Database\Collections\Insert.cs" />
+    <Compile Include="Database\Collections\Update.cs" />
+    <Compile Include="Database\Database\Collection.cs" />
+    <Compile Include="Database\LiteCollection.cs" />
+    <Compile Include="Database\LiteDatabase.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
     <Compile Include="Engine\LiteEngine.cs" />
@@ -94,12 +104,27 @@
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
+    <Compile Include="Mapper\Attributes\BsonFieldAttribute.cs" />
+    <Compile Include="Mapper\Attributes\BsonIdAttribute.cs" />
+    <Compile Include="Mapper\Attributes\BsonIgnoreAttribute.cs" />
+    <Compile Include="Mapper\Attributes\BsonIndexAttribute.cs" />
+    <Compile Include="Mapper\AutoId.cs" />
+    <Compile Include="Mapper\BsonMapper.cs" />
+    <Compile Include="Mapper\BsonMapper.Deserialize.cs" />
+    <Compile Include="Mapper\BsonMapper.Serialize.cs" />
+    <Compile Include="Mapper\EntityBuilder.cs" />
+    <Compile Include="Mapper\Linq\QueryVisitor.cs" />
+    <Compile Include="Mapper\Reflection\ReflectionHandler.cs" />
+    <Compile Include="Mapper\Reflection\PropertyMapper.cs" />
+    <Compile Include="Mapper\Reflection\Reflection.cs" />
     <Compile Include="Storage\LiteFileInfo.cs" />
     <Compile Include="Storage\LiteFileStream.Write.cs" />
     <Compile Include="Storage\LiteFileStream.Read.cs" />
     <Compile Include="Storage\LiteStorage.cs" />
     <Compile Include="Storage\LiteFileStream.cs" />
+    <Compile Include="Utils\ConnectionString.cs" />
     <Compile Include="Utils\FileOptions.cs" />
+    <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\Locker.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />
     <Compile Include="Utils\PreserveAttribute.cs" />

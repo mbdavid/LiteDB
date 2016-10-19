@@ -7,7 +7,7 @@ namespace LiteDB
         where T : new()
     {
         private string _name;
-        private DbEngine _engine;
+        private LazyLoad<LiteEngine> _engine;
         private BsonMapper _mapper;
         private Logger _log;
         private List<Action<BsonDocument>> _includes;
@@ -18,7 +18,7 @@ namespace LiteDB
         /// </summary>
         public string Name { get { return _name; } }
 
-        public LiteCollection(string name, DbEngine engine, BsonMapper mapper, Logger log)
+        public LiteCollection(string name, LazyLoad<LiteEngine> engine, BsonMapper mapper, Logger log)
         {
             _name = name;
             _engine = engine;

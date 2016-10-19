@@ -10,7 +10,7 @@ namespace LiteDB
         /// <summary>
         /// Serialize a entity class to BsonDocument
         /// </summary>
-        public BsonDocument ToDocument(Type type, object entity)
+        public virtual BsonDocument ToDocument(Type type, object entity)
         {
             if (entity == null) throw new ArgumentNullException("entity");
 
@@ -23,7 +23,7 @@ namespace LiteDB
         /// <summary>
         /// Serialize a entity class to BsonDocument
         /// </summary>
-        public BsonDocument ToDocument<T>(T entity)
+        public virtual BsonDocument ToDocument<T>(T entity)
         {
             return this.ToDocument(typeof(T), entity).AsDocument;
         }
@@ -87,10 +87,10 @@ namespace LiteDB
             // for dictionary
             else if (obj is IDictionary)
             {
-#if PCL
-                var itemType = type.GetTypeInfo().GenericTypeArguments[1];
-#else
+#if NETFULL
                 var itemType = type.GetGenericArguments()[1];
+#else
+                var itemType = type.GetTypeInfo().GenericTypeArguments[1];
 #endif
 
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
@@ -107,7 +107,7 @@ namespace LiteDB
             }
         }
 
-        private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
+        protected virtual BsonArray SerializeArray(Type type, IEnumerable array, int depth)
         {
             var arr = new BsonArray();
 
@@ -119,7 +119,7 @@ namespace LiteDB
             return arr;
         }
 
-        private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
+        protected virtual BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
         {
             var o = new BsonDocument();
 
@@ -133,7 +133,7 @@ namespace LiteDB
             return o;
         }
 
-        private BsonDocument SerializeObject(Type type, object obj, int depth)
+        protected virtual BsonDocument SerializeObject(Type type, object obj, int depth)
         {
             var o = new BsonDocument();
             var t = obj.GetType();

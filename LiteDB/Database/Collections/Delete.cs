@@ -17,14 +17,11 @@ namespace LiteDB
             {
                 try
                 {
-                    return _engine.Delete(_name, query);
+                    return _engine.Value.Delete(_name, query);
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
-
-                    _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
                 }
             }
         }

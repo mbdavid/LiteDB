@@ -15,7 +15,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
-            return new LiteCollection<T>(name, _engine.Value, _mapper, _log);
+            return new LiteCollection<T>(name, _engine, _mapper, _log);
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
-            return new LiteCollection<BsonDocument>(name, _engine.Value, _mapper, _log);
+            return new LiteCollection<BsonDocument>(name, _engine, _mapper, _log);
         }
 
         /// <summary>

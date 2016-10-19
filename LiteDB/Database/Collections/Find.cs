@@ -27,7 +27,7 @@ namespace LiteDB
                 {
                     try
                     {
-                        var docs = _engine.Find(_name, query, skip, limit);
+                        var docs = _engine.Value.Find(_name, query, skip, limit);
 
                         enumerator = (IEnumerator<BsonDocument>)docs.GetEnumerator();
 
@@ -37,10 +37,7 @@ namespace LiteDB
                     }
                     catch (IndexNotFoundException ex)
                     {
-                        // if query returns this exception, let's auto create using mapper (or using default options)
-                        var options = _mapper.GetIndexFromMapper<T>(ex.Field) ?? new IndexOptions();
-
-                        _engine.EnsureIndex(ex.Collection, ex.Field, options);
+                        _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
                     }
                 }
 

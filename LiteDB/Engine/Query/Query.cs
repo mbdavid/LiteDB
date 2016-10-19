@@ -183,7 +183,7 @@ namespace LiteDB
             var index = col.GetIndex(this.Field);
 
             // no index? throw an index not found exception (should auto-created here? needs LiteEngine instance here)
-            if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
+            if (index == null) throw new IndexNotFoundException(col.CollectionName, this.Field);
 
             // execute query to get all IndexNodes
             return this.ExecuteIndex(indexer, index);

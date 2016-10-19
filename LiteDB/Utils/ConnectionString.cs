@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,37 +13,65 @@ namespace LiteDB
     /// </summary>
     public class ConnectionString
     {
+        public string Filename { get; private set; }
+
+        public bool Journal { get; private set; }
+
+        public string Password { get; private set; }
+
+        public int CacheSize { get; private set; }
+
+        public TimeSpan Timeout { get; private set; }
+
+        public bool AutoCommit { get; private set; }
+
+        public long InitialSize { get; private set; }
+
+        public long LimitSize { get; private set; }
+
+        public byte Log { get; private set; }
+
         private Dictionary<string, string> _values;
 
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             // create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
-                _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Split(new char[] { '=' }, 2))
                     .ToDictionary(t => t[0].Trim().ToLower(), t => t.Length == 1 ? "" : t[1].Trim(), StringComparer.OrdinalIgnoreCase);
             }
             else
             {
-                // if connectionstring is only a filename, set filename
-                _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-                _values["filename"] = Path.GetFullPath(connectionString);
+                values["filename"] = connectionString;
             }
+
+            // setting values to properties
+            this.Filename = GetValue(values, "filename", "");
+            this.Journal = GetValue(values, "journal", true);
+            this.Password = GetValue<string>(values, "password", null);
+            this.CacheSize = GetValue(values, "cache size", 5000);
+            this.Timeout = GetValue(values, "timeout", TimeSpan.FromMinutes(1));
+            this.AutoCommit = GetValue(values, "auto commit", true);
+            this.InitialSize = GetValue(values, "initial size", 0);
+            this.LimitSize = GetValue(values, "limit size", 0);
+            this.Log = GetValue<byte>(values, "log", 0);
         }
 
         /// <summary>
         /// Get value from _values and convert if exists
         /// </summary>
-        public T GetValue<T>(string key, T defaultValue)
+        private T GetValue<T>(Dictionary<string, string> values, string key, T defaultValue)
         {
             try
             {
-                return _values.ContainsKey(key) ?
-                    (T)Convert.ChangeType(_values[key], typeof(T)) :
+                return values.ContainsKey(key) ?
+                    (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromString(_values[key]) :
                     defaultValue;
             }
             catch (Exception)
@@ -51,17 +80,11 @@ namespace LiteDB
             }
         }
 
-        #region Storage Unit converter from/to
-
         /// <summary>
         /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
         /// </summary>
-        public long GetFileSize(string key, long defaultSize)
+        public long GetFileSize(string size)
         {
-            var size = this.GetValue<string>(key, "");
-
-            if (size.Length == 0) return defaultSize;
-
             var match = Regex.Match(size, @"^(\d+)\s*([tgmk])?(b|byte|bytes)?$", RegexOptions.IgnoreCase);
 
             if (!match.Success) return 0;
@@ -79,18 +102,5 @@ namespace LiteDB
 
             return 0;
         }
-
-        public static String FormatFileSize(long byteCount)
-        {
-            string[] suf = { "B", "KB", "MB", "GB", "TB" }; //Longs run out around EB
-            if (byteCount == 0)
-                return "0" + suf[0];
-            long bytes = Math.Abs(byteCount);
-            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
-            double num = Math.Round(bytes / Math.Pow(1024, place), 1);
-            return (Math.Sign(byteCount) * num).ToString() + suf[place];
-        }
-
-        #endregion
     }
 }
