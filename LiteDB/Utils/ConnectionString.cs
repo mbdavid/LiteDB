@@ -31,8 +31,6 @@ namespace LiteDB
 
         public byte Log { get; private set; }
 
-        private Dictionary<string, string> _values;
-
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
@@ -59,7 +57,7 @@ namespace LiteDB
             this.Timeout = GetValue(values, "timeout", TimeSpan.FromMinutes(1));
             this.AutoCommit = GetValue(values, "auto commit", true);
             this.InitialSize = GetValue(values, "initial size", 0);
-            this.LimitSize = GetValue(values, "limit size", 0);
+            this.LimitSize = GetValue(values, "limit size", long.MaxValue);
             this.Log = GetValue<byte>(values, "log", 0);
         }
 
@@ -71,7 +69,7 @@ namespace LiteDB
             try
             {
                 return values.ContainsKey(key) ?
-                    (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromString(_values[key]) :
+                    (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromString(values[key]) :
                     defaultValue;
             }
             catch (Exception)

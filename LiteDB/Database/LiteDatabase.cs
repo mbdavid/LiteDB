@@ -6,7 +6,7 @@ namespace LiteDB
     /// <summary>
     /// The LiteDB database. Used for create a LiteDB instance and use all storage resoures. It's the database connection
     /// </summary>
-    public partial class LiteDatabase
+    public partial class LiteDatabase : IDisposable
     {
         private LazyLoad<LiteEngine> _engine;
 

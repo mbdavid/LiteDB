@@ -5,8 +5,27 @@
 - Create some "Reserved bytes" in index page
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
-- netstandard 1.4
-- better way to auto-create indexes? on LiteCollection<> ctor?
+- netstandard 1.3
+- better way to auto-create indexes? on LiteCollection<> ctor? Use ThreadSafe?
+- Fix connection string to support "
+
+BsonMapper.Global.ReadOnly = true;
+BsonMapper.Global.Field = false;
+BsonMapper.Global.Private = false;
+
+Entity<Customer>()
+	.Key(x => x.CustomerKey)
+	.Field(x => x.CustomerName, x => new BsonValue(x.CustomerName), bson => bson["Customer"])
+	.Ignore(x => x.TotalAmount)
+	.Index(x => x.ProductName, unique)
+	.Index("my_index", x => x.ProductName)
+	.DbRef(x => x.Customer)
+
+col.Include(x => x.Customer)
+	.Include((b) => b)
+
+- To simplify mapper, why not remove "rename" PropertyName to BsonDocument field
+
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)

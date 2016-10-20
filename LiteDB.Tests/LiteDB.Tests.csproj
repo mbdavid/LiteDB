@@ -57,6 +57,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Database\AutoIdTest.cs" />
+    <Compile Include="Database\IncludeTest.cs" />
     <Compile Include="Document\BsonTest.cs" />
     <Compile Include="Engine\MultiKeyTest.cs" />
     <Compile Include="Engine\PerformanceTest.cs" />
