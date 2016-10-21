@@ -32,7 +32,7 @@ namespace LiteDB
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
+                    this.EnsureIndex(ex);
                 }
             }
         }
@@ -76,7 +76,7 @@ namespace LiteDB
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
+                    this.EnsureIndex(ex);
                 }
             }
         }
@@ -111,7 +111,7 @@ namespace LiteDB
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
+                    this.EnsureIndex(ex);
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace LiteDB
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
+                    this.EnsureIndex(ex);
                 }
             }
         }
@@ -187,10 +187,7 @@ namespace LiteDB
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    // if query returns this exception, let's auto create using mapper (or using default options)
-                    var unique = _mapper.GetIndexFromMapper<T>(ex.Field);
-
-                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, unique);
+                    this.EnsureIndex(ex);
                 }
             }
         }

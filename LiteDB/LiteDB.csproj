@@ -112,10 +112,10 @@
     <Compile Include="Mapper\BsonMapper.cs" />
     <Compile Include="Mapper\BsonMapper.Deserialize.cs" />
     <Compile Include="Mapper\BsonMapper.Serialize.cs" />
+    <Compile Include="Mapper\EntityMapper.cs" />
     <Compile Include="Mapper\EntityBuilder.cs" />
     <Compile Include="Mapper\Linq\QueryVisitor.cs" />
-    <Compile Include="Mapper\Reflection\ReflectionHandler.cs" />
-    <Compile Include="Mapper\Reflection\PropertyMapper.cs" />
+    <Compile Include="Mapper\PropertyMapper.cs" />
     <Compile Include="Mapper\Reflection\Reflection.cs" />
     <Compile Include="Storage\LiteFileInfo.cs" />
     <Compile Include="Storage\LiteFileStream.Write.cs" />

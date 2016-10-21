@@ -137,7 +137,7 @@ namespace LiteDB
         {
             var o = new BsonDocument();
             var t = obj.GetType();
-            var mapper = this.GetPropertyMapper(t);
+            var entity = this.GetEntityMapper(t);
             var dict = o.RawValue;
 
             // adding _type only where property Type is not same as object instance type
@@ -146,7 +146,7 @@ namespace LiteDB
                 dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
-            foreach (var prop in mapper.Values)
+            foreach (var prop in entity.Props)
             {
                 // get property value
                 var value = prop.Getter(obj);

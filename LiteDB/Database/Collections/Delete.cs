@@ -21,7 +21,7 @@ namespace LiteDB
                 }
                 catch (IndexNotFoundException ex)
                 {
-                    _engine.Value.EnsureIndex(ex.Collection, ex.Field, _mapper.GetIndexFromMapper<T>(ex.Field));
+                    this.EnsureIndex(ex);
                 }
             }
         }

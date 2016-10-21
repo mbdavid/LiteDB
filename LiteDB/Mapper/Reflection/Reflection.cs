@@ -1,16 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LiteDB
 {
+    #region Delegates
+
+    internal delegate object CreateObject();
+
+    internal delegate object GenericSetter(object target, object value);
+
+    internal delegate object GenericGetter(object obj);
+
+    #endregion
+
     /// <summary>
     /// Helper class to get entity properties and map as BsonValue
     /// </summary>
     internal class Reflection
     {
         private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
+
+        #region Reflection Handler
+
+        public static CreateObject CreateClass(Type type)
+        {
+            return Expression.Lambda<CreateObject>(Expression.New(type)).Compile();
+        }
+
+        public static CreateObject CreateStruct(Type type)
+        {
+            var newType = Expression.New(type);
+            var convert = Expression.Convert(newType, typeof(object));
+
+            return Expression.Lambda<CreateObject>(convert).Compile();
+        }
+
+        public static GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
+        {
+            var getMethod = propertyInfo.GetGetMethod(nonPublic);
+
+            if (getMethod == null)
+                return null;
+
+            return target => getMethod.Invoke(target, null);
+        }
+
+        public static GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
+        {
+            var setMethod = propertyInfo.GetSetMethod(nonPublic);
+
+            if (setMethod == null) return null;
+
+            return (target, value) => setMethod.Invoke(target, new[] { value });
+        }
+
+        #endregion
 
         #region GetIdProperty
 
@@ -53,93 +100,7 @@ namespace LiteDB
 
         #endregion
 
-        #region GetProperties
-
-        /// <summary>
-        /// Read all properties from a type - store in a static cache - exclude: Id and [BsonIgnore]
-        /// </summary>
-        public static Dictionary<string, PropertyMapper> GetProperties(Type type, Func<string, string> resolvePropertyName)
-        {
-            var dict = new Dictionary<string, PropertyMapper>(StringComparer.OrdinalIgnoreCase);
-            var id = GetIdProperty(type);
-            var ignore = typeof(BsonIgnoreAttribute);
-            var idAttr = typeof(BsonIdAttribute);
-            var fieldAttr = typeof(BsonFieldAttribute);
-            var indexAttr = typeof(BsonIndexAttribute);
-#if NETFULL
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-#else
-            var props = type.GetRuntimeProperties();
-#endif
-            foreach (var prop in props)
-            {
-                // ignore indexer property
-                if (prop.GetIndexParameters().Length > 0) continue;
-
-                // ignore write only
-                if (!prop.CanRead) continue;
-
-                // [BsonIgnore]
-                if (prop.IsDefined(ignore, false)) continue;
-
-                // check if property has [BsonField]
-                var bsonField = prop.IsDefined(fieldAttr, false);
-
-                // create getter/setter function
-                var getter = ReflectionHandler.CreateGenericGetter(type, prop, bsonField);
-                var setter = ReflectionHandler.CreateGenericSetter(type, prop, bsonField);
-
-                // if not getter or setter - no mapping
-                if (getter == null) continue;
-
-                if (dict.ContainsKey(prop.Name))
-                {
-                    // If the property is already in the dictionary, it's probably an override
-                    // Keep the first instance added
-
-                    continue;
-                }
-
-                var name = id != null && id.Equals(prop) ? "_id" : resolvePropertyName(prop.Name);
-
-                // check if property has [BsonField] with a custom field name
-                if (bsonField)
-                {
-                    var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
-                    if (field != null && field.Name != null) name = field.Name;
-                }
-
-                // check if property has [BsonId] to get with was setted AutoId = true
-                var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
-
-                // checks if this proerty has [BsonIndex]
-                var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
-
-                // if is _id field, do not accept index definition
-                if (name == "_id") index = null;
-
-                // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(prop.Name, name);
-
-                // create a property mapper
-                var p = new PropertyMapper
-                {
-                    AutoId = autoId == null ? true : autoId.AutoId,
-                    FieldName = name,
-                    PropertyName = prop.Name,
-                    PropertyType = prop.PropertyType,
-                    IndexUnique = index == null ? null : (bool?)index.Unique,
-                    Getter = getter,
-                    Setter = setter
-                };
-
-                dict.Add(prop.Name, p);
-            }
-
-            return dict;
-        }
-
-        #endregion
+        #region CreateInstance
 
         /// <summary>
         /// Create a new instance from a Type
@@ -167,7 +128,7 @@ namespace LiteDB
 
                     if (type.GetTypeInfo().IsClass)
                     {
-                        _cacheCtor.Add(type, c = ReflectionHandler.CreateClass(type));
+                        _cacheCtor.Add(type, c = CreateClass(type));
                     }
                     else if (type.GetTypeInfo().IsInterface) // some know interfaces
                     {
@@ -201,7 +162,7 @@ namespace LiteDB
                     }
                     else // structs
                     {
-                        _cacheCtor.Add(type, c = ReflectionHandler.CreateStruct(type));
+                        _cacheCtor.Add(type, c = CreateStruct(type));
                     }
 
                     return c();
@@ -212,6 +173,8 @@ namespace LiteDB
                 }
             }
         }
+
+        #endregion
 
         #region Utils
 

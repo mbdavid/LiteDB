@@ -12,12 +12,12 @@ namespace LiteDB
     public class EntityBuilder<T>
     {
         private BsonMapper _mapper;
-        private Dictionary<string, PropertyMapper> _prop;
+        private EntityMapper _entity;
 
         internal EntityBuilder(BsonMapper mapper)
         {
             _mapper = mapper;
-            _prop = mapper.GetPropertyMapper(typeof(T));
+            _entity = mapper.GetEntityMapper(typeof(T));
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                _prop.Remove(p.PropertyName);
+                _entity.Props.Remove(p);
             });
         }
 
@@ -61,8 +61,26 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                p.IndexUnique = unique;
+                p.IndexInfo = unique;
             });
+        }
+
+        /// <summary>
+        /// Define an index based in virtual property (getter function)
+        /// </summary>
+        public EntityBuilder<T> Index<K>(string indexName, Func<T, BsonValue> getter, bool unique = false)
+        {
+            _entity.Props.Add(new PropertyMapper
+            {
+                FieldName = indexName,
+                PropertyName = indexName,
+                Getter = x => (object)getter((T)x),
+                Setter = null,
+                PropertyType = typeof(BsonValue),
+                IndexInfo = unique
+            });
+
+            return this;
         }
 
         /// <summary>
@@ -72,11 +90,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            var p = _prop.Values.FirstOrDefault(x => x.FieldName == field);
+            var p = _entity.Props.FirstOrDefault(x => x.FieldName == field);
 
             if (p == null) throw new ArgumentException("field not found");
 
-            p.IndexUnique = unique;
+            p.IndexInfo = unique;
 
             return this;
         }
@@ -98,15 +116,15 @@ namespace LiteDB
                 if (Reflection.IsList(typeRef))
                 {
                     var itemType = typeRef.IsArray ? typeRef.GetElementType() : Reflection.UnderlyingTypeOf(typeRef);
-                    var mapper = _mapper.GetPropertyMapper(itemType);
+                    var entity = _mapper.GetEntityMapper(itemType);
 
-                    RegisterDbRefList(p, collectionName, typeRef, itemType, mapper);
+                    RegisterDbRefList(p, collectionName, typeRef, entity);
                 }
                 else
                 {
-                    var mapper = _mapper.GetPropertyMapper(typeRef);
+                    var entity = _mapper.GetEntityMapper(typeRef);
 
-                    RegisterDbRef(p, collectionName, typeRef, mapper);
+                    RegisterDbRef(p, collectionName, entity);
                 }
             });
         }
@@ -114,11 +132,11 @@ namespace LiteDB
         /// <summary>
         /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        internal static void RegisterDbRef(PropertyMapper p, string collectionName, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
+        internal static void RegisterDbRef(PropertyMapper p, string collectionName, EntityMapper itemEntity)
         {
             p.Serialize = (obj, m) =>
             {
-                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+                var idField = itemEntity.Id;
 
                 var id = idField.Getter(obj);
 
@@ -133,7 +151,7 @@ namespace LiteDB
             {
                 var idRef = bson.AsDocument["$id"];
 
-                return m.Deserialize(itemType,
+                return m.Deserialize(itemEntity.ForType,
                     idRef.IsNull ?
                     bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
                     new BsonDocument { { "_id", idRef } }); // if has $id, deserialize object using only _id object
@@ -143,12 +161,12 @@ namespace LiteDB
         /// <summary>
         /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        internal static void RegisterDbRefList(PropertyMapper p, string collectionName, Type listType, Type itemType, Dictionary<string, PropertyMapper> itemMapper)
+        internal static void RegisterDbRefList(PropertyMapper p, string collectionName, Type listType, EntityMapper itemEntity)
         {
             p.Serialize = (list, m) =>
             {
                 var result = new BsonArray();
-                var idField = itemMapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+                var idField = itemEntity.Id;
 
                 foreach (var item in (IEnumerable)list)
                 {
@@ -199,7 +217,7 @@ namespace LiteDB
         {
             if (expr == null) throw new ArgumentNullException("property");
 
-            var prop = _prop[expr.GetPath()];
+            var prop = _entity.Props.FirstOrDefault(x => x.PropertyName == expr.Body.GetPath());
 
             if (prop == null) throw new ArgumentNullException(expr.GetPath());
 

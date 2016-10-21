@@ -24,7 +24,7 @@ namespace LiteDB
         /// <summary>
         /// Mapping cache between Class/BsonDocument
         /// </summary>
-        private Dictionary<Type, Dictionary<string, PropertyMapper>> _mapper = new Dictionary<Type, Dictionary<string, PropertyMapper>>();
+        private Dictionary<Type, EntityMapper> _entities = new Dictionary<Type, EntityMapper>();
 
         /// <summary>
         /// Map serializer/deserialize for custom types
@@ -145,25 +145,22 @@ namespace LiteDB
             }
 
             // get fields mapper
-            var mapper = GetPropertyMapper(entity.GetType());
-
-            // it's not best way because is scan all properties - but Id propably is first field :)
-            var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+            var mapper = this.GetEntityMapper(entity.GetType());
 
             // if not id or no autoId = true
-            if (id == null || id.AutoId == false) return;
+            if (mapper.Id == null || mapper.Id.AutoId == false) return;
 
             AutoId autoId;
 
-            if (_autoId.TryGetValue(id.PropertyType, out autoId))
+            if (_autoId.TryGetValue(mapper.Id.PropertyType, out autoId))
             {
-                var value = id.Getter(entity);
+                var value = mapper.Id.Getter(entity);
 
                 if (value == null || autoId.IsEmpty(value) == true)
                 {
                     var newId = autoId.NewId(col);
 
-                    id.Setter(entity, newId);
+                    mapper.Id.Setter(entity, newId);
                 }
             }
         }
@@ -205,36 +202,23 @@ namespace LiteDB
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results
         /// </summary>
-        internal Dictionary<string, PropertyMapper> GetPropertyMapper(Type type)
+        internal EntityMapper GetEntityMapper(Type type)
         {
-            Dictionary<string, PropertyMapper> props;
+            //TODO: needs check if Type if BsonDocument? Returns empty EntityMapper?
+            EntityMapper mapper;
 
-            if (!_mapper.TryGetValue(type, out props))
+            if (!_entities.TryGetValue(type, out mapper))
             {
-                lock (_mapper)
+                lock (_entities)
                 {
-                    if (!_mapper.TryGetValue(type, out props))
+                    if (!_entities.TryGetValue(type, out mapper))
                     {
-                        return _mapper[type] = Reflection.GetProperties(type, this.ResolvePropertyName);
+                        return _entities[type] = new EntityMapper(type, this.ResolvePropertyName);
                     }
                 }
             }
 
-            return props;
-        }
-
-        /// <summary>
-        /// Search for [BsonIndex]/Entity.Index() in PropertyMapper. If not found, returns false
-        /// </summary>
-        internal bool GetIndexFromMapper<T>(string field)
-        {
-            var props = this.GetPropertyMapper(typeof(T));
-
-            // get index options if type has
-            return props.Values
-                .Where(x => x.FieldName == field && x.IndexUnique != null)
-                .Select(x => x.IndexUnique)
-                .FirstOrDefault() ?? false;
+            return mapper;
         }
     }
 }

@@ -240,9 +240,9 @@ namespace LiteDB
 
         private void DeserializeObject(Type type, object obj, BsonDocument value)
         {
-            var props = this.GetPropertyMapper(type);
+            var entity = this.GetEntityMapper(type);
 
-            foreach (var prop in props.Values)
+            foreach (var prop in entity.Props)
             {
                 // property is read only
                 if (prop.Setter == null) continue;

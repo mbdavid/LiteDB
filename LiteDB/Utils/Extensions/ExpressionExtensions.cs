@@ -6,35 +6,22 @@ namespace LiteDB
 {
     internal static class ExpressionExtensions
     {
-        public static string GetPath<T, K>(this Expression<Func<T, K>> expr)
+        /// <summary>
+        /// Get Path (better ToString) from an Expression.
+        /// Support multi levels: x => x.Customer.Address
+        /// Support list levels: x => x.Addresses(z => z.StreetName)
+        /// </summary>
+        public static string GetPath(this Expression expr)
         {
-            MemberExpression me;
+            // quick and dirty solution to support x.Name.SubName
+            // http://stackoverflow.com/questions/671968/retrieving-property-name-from-lambda-expression
 
-            switch (expr.Body.NodeType)
-            {
-                case ExpressionType.Convert:
-                case ExpressionType.ConvertChecked:
-                    var ue = expr.Body as UnaryExpression;
-                    me = ((ue != null) ? ue.Operand : null) as MemberExpression;
-                    break;
+            var str = expr.ToString(); // gives you: "o => o.Whatever"
+            var firstDelim = str.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
 
-                default:
-                    me = expr.Body as MemberExpression;
-                    break;
-            }
+            var path = firstDelim < 0 ? str : str.Substring(firstDelim + 1).TrimEnd(')');
 
-            var sb = new StringBuilder();
-
-            while (me != null)
-            {
-                var propertyName = me.Member.Name;
-
-                sb.Insert(0, propertyName + (sb.Length > 0 ? "." : ""));
-
-                me = me.Expression as MemberExpression;
-            }
-
-            return sb.ToString();
+            return path;
         }
     }
 }

@@ -20,7 +20,7 @@ namespace LiteDB
         public Func<BsonValue, BsonMapper, object> Deserialize { get; set; }
 
         // if this field has a [BsonIndex] store unique information
-        public bool? IndexUnique { get; set; }
+        public bool? IndexInfo { get; set; }
 
         // if this property is an DbRef to another class
         public bool IsDbRef { get; set; }

@@ -51,5 +51,20 @@ namespace LiteDB
 
             return _engine.Value.DropIndex(_name, field);
         }
+
+        /// <summary>
+        /// Create index based on a IndexNotFound exception
+        /// </summary>
+        private void EnsureIndex(IndexNotFoundException ex)
+        {
+            // check if property has an index mapped
+            var entity = _mapper.GetEntityMapper(typeof(T));
+            var unique = entity.Props
+                .Where(x => x.FieldName == ex.Field && x.IndexInfo != null)
+                .Select(x => x.IndexInfo)
+                .FirstOrDefault() ?? false;
+
+            _engine.Value.EnsureIndex(ex.Collection, ex.Field, unique);
+        }
     }
 }

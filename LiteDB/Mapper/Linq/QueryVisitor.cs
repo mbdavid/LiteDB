@@ -32,41 +32,41 @@ namespace LiteDB
             if (expr.NodeType == ExpressionType.Equal) // ==
             {
                 var bin = expr as BinaryExpression;
-                return new QueryEquals(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return new QueryEquals(this.GetBsonField(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr is MemberExpression && expr.Type == typeof(bool)) // x.Active
             {
-                return Query.EQ(this.VisitMember(expr), new BsonValue(true));
+                return Query.EQ(this.GetBsonField(expr), new BsonValue(true));
             }
             else if (expr.NodeType == ExpressionType.NotEqual) // !=
             {
                 var bin = expr as BinaryExpression;
-                return Query.Not(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.Not(this.GetBsonField(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.Not) // !x.Active
             {
                 var bin = expr as UnaryExpression;
-                return Query.EQ(this.VisitMember(bin), new BsonValue(false));
+                return Query.EQ(this.GetBsonField(bin), new BsonValue(false));
             }
             else if (expr.NodeType == ExpressionType.LessThan) // <
             {
                 var bin = expr as BinaryExpression;
-                return Query.LT(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.LT(this.GetBsonField(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.LessThanOrEqual) // <=
             {
                 var bin = expr as BinaryExpression;
-                return Query.LTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.LTE(this.GetBsonField(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.GreaterThan) // >
             {
                 var bin = expr as BinaryExpression;
-                return Query.GT(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.GT(this.GetBsonField(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr.NodeType == ExpressionType.GreaterThanOrEqual) // >=
             {
                 var bin = expr as BinaryExpression;
-                return Query.GTE(this.VisitMember(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.GTE(this.GetBsonField(bin.Left), this.VisitValue(bin.Right, bin.Left));
             }
             else if (expr is MethodCallExpression)
             {
@@ -78,21 +78,21 @@ namespace LiteDB
                 {
                     var value = this.VisitValue(met.Arguments[0], null);
 
-                    return Query.StartsWith(this.VisitMember(met.Object), value);
+                    return Query.StartsWith(this.GetBsonField(met.Object), value);
                 }
                 // Contains
                 else if (method == "Contains")
                 {
                     var value = this.VisitValue(met.Arguments[0], null);
 
-                    return Query.Contains(this.VisitMember(met.Object), value);
+                    return Query.Contains(this.GetBsonField(met.Object), value);
                 }
                 // Equals
                 else if (method == "Equals")
                 {
                     var value = this.VisitValue(met.Arguments[0], null);
 
-                    return Query.EQ(this.VisitMember(met.Object), value);
+                    return Query.EQ(this.GetBsonField(met.Object), value);
                 }
                 // System.Linq.Enumerable methods
                 else if (met.Method.DeclaringType.FullName == "System.Linq.Enumerable")
@@ -120,19 +120,6 @@ namespace LiteDB
             }
 
             throw new NotImplementedException("Not implemented Linq expression");
-        }
-
-        private string VisitMember(Expression expr)
-        {
-            // quick and dirty solution to support x.Name.SubName
-            // http://stackoverflow.com/questions/671968/retrieving-property-name-from-lambda-expression
-
-            var str = expr.ToString(); // gives you: "o => o.Whatever"
-            var firstDelim = str.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
-
-            var property = firstDelim < 0 ? str : str.Substring(firstDelim + 1).TrimEnd(')');
-
-            return this.GetBsonField(property);
         }
 
         private BsonValue VisitValue(Expression expr, Expression left)
@@ -182,63 +169,6 @@ namespace LiteDB
             return convert(typeof(object), getter());
         }
 
-        /// <summary>
-        /// Get a Bson field from a simple Linq expression: x => x.CustomerName
-        /// </summary>
-        public string GetBsonField<TK, K>(Expression<Func<TK, K>> expr)
-        {
-            var member = expr.Body as MemberExpression;
-
-            if (member == null)
-            {
-                throw new ArgumentException(string.Format("Expression '{0}' refers to a method, not a property.", expr.ToString()));
-            }
-
-            return this.VisitMember(member);
-        }
-
-        /// <summary>
-        /// Get a bson string field based on class PropertyInfo using BsonMapper class
-        /// Support Name1.Name2 dotted notation
-        /// </summary>
-        private string GetBsonField(string property)
-        {
-            var parts = property.Split('.');
-            var fields = new string[parts.Length];
-            var type = _type;
-            var isdbref = false;
-            PropertyMapper prop;
-
-            // loop "first.second.last"
-            for (var i = 0; i < parts.Length; i++)
-            {
-                var map = _mapper.GetPropertyMapper(type);
-                var part = parts[i];
-
-                if (map.TryGetValue(part, out prop))
-                {
-                    type = prop.PropertyType;
-
-                    fields[i] = prop.FieldName;
-
-                    if (prop.FieldName == "_id" && isdbref)
-                    {
-                        isdbref = false;
-                        fields[i] = "$id";
-                    }
-
-                    // if this property is DbRef, so if next property is _id, change to $id
-                    if (prop.IsDbRef) isdbref = true;
-                }
-                else
-                {
-                    throw LiteException.PropertyNotMapped(property);
-                }
-            }
-
-            return string.Join(".", fields);
-        }
-
         private Query CreateAndQuery(ref Query[] queries, int startIndex = 0)
         {
             var length = queries.Length - startIndex;
@@ -286,6 +216,44 @@ namespace LiteDB
                 return CreateAndQuery(ref queries);
 
             throw new NotImplementedException("Not implemented System.Linq.Enumerable method");
+        }
+
+        /// <summary>
+        /// Based on an expression, returns bson field mapped from class Property.
+        /// Support multi level dotted notation: x => x.Customer.Name
+        /// </summary>
+        public string GetBsonField(Expression expr)
+        {
+            var property = expr.GetPath();
+            var parts = property.Split('.');
+            var fields = new string[parts.Length];
+            var type = _type;
+            var isdbref = false;
+
+            // loop "first.second.last"
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var entity = _mapper.GetEntityMapper(type);
+                var part = parts[i];
+                var prop = entity.Props.Find(x => x.PropertyName == part);
+
+                if (prop == null) throw LiteException.PropertyNotMapped(property);
+
+                type = prop.PropertyType;
+
+                fields[i] = prop.FieldName;
+
+                if (prop.FieldName == "_id" && isdbref)
+                {
+                    isdbref = false;
+                    fields[i] = "$id";
+                }
+
+                // if this property is DbRef, so if next property is _id, change to $id
+                if (prop.IsDbRef) isdbref = true;
+            }
+
+            return string.Join(".", fields);
         }
     }
 }
