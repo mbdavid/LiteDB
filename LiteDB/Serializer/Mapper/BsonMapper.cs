@@ -58,17 +58,22 @@ namespace LiteDB
         /// </summary>
         private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
 
+
+        private readonly Func<Type, object> _typeInstanciator;
+
         /// <summary>
         /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
 
-        public BsonMapper()
+        public BsonMapper(Func<Type,object> customTypeInstanciator = null)
         {
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
             this.EmptyStringToNull = true;
             this.ResolvePropertyName = (s) => s;
+
+
 
             #region Register CustomTypes
 
@@ -105,6 +110,7 @@ namespace LiteDB
 
             #endregion  
 
+            _typeInstanciator = customTypeInstanciator ?? ((type) => Reflection.CreateInstance(type));
         }
 
         /// <summary>

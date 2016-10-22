@@ -152,7 +152,7 @@ namespace LiteDB
                     if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
                 }
 
-                var o = Reflection.CreateInstance(type);
+                var o = _typeInstanciator(type);
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
