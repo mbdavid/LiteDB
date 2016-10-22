@@ -30,13 +30,15 @@ namespace LiteDB.Platform
 
         public GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
+            var gMethod = propertyInfo.GetGetMethod(nonPublic);
+            if (gMethod == null) return null;
+
             DynamicMethod method = new DynamicMethod("_", typeof(object), new[] { typeof(object) }, true);
             ILGenerator generator = method.GetILGenerator();
             generator.DeclareLocal(typeof(object));
             generator.Emit(OpCodes.Ldarg_0);
 
-            var gMethod = propertyInfo.GetGetMethod(nonPublic);
-            if (gMethod == null) return null;
+           
             EmitTypeConversion(generator, propertyInfo.DeclaringType, true);
             EmitCall(generator, gMethod);
             if (propertyInfo.PropertyType.IsValueType)
