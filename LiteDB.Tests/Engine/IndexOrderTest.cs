@@ -5,38 +5,36 @@ using System.Linq;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class IndexOrderTest : TestBase
+    public class IndexOrderTest
     {
         [TestMethod]
         public void Index_Order()
         {
             using (var tmp = new TempFile())
-            using (var db = new LiteDatabase(tmp.ConnectionString))
+            using (var db = new LiteEngine(tmp.Filename))
             {
-                var col = db.GetCollection<BsonDocument>("order");
+                db.Insert("col", new BsonDocument { { "text", "D" } });
+                db.Insert("col", new BsonDocument { { "text", "A" } });
+                db.Insert("col", new BsonDocument { { "text", "E" } });
+                db.Insert("col", new BsonDocument { { "text", "C" } });
+                db.Insert("col", new BsonDocument { { "text", "B" } });
 
-                col.Insert(new BsonDocument().Add("text", "D"));
-                col.Insert(new BsonDocument().Add("text", "A"));
-                col.Insert(new BsonDocument().Add("text", "E"));
-                col.Insert(new BsonDocument().Add("text", "C"));
-                col.Insert(new BsonDocument().Add("text", "B"));
-
-                col.EnsureIndex("text");
+                db.EnsureIndex("col", "text");
 
                 var asc = string.Join("",
-                    col.Find(Query.All("text"))
+                    db.Find("col", Query.All("text"))
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
                 var desc = string.Join("",
-                    col.Find(Query.All("text", Query.Descending))
+                    db.Find("col", Query.All("text", Query.Descending))
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
                 Assert.AreEqual("ABCDE", asc);
                 Assert.AreEqual("EDCBA", desc);
 
-                var indexes = col.GetIndexes();
+                var indexes = db.GetIndexes("col");
 
                 Assert.AreEqual(1, indexes.Count(x => x.Field == "text"));
 

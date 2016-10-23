@@ -13,7 +13,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class MapperExceptionTest : TestBase
+    public class MapperExceptionTest
     {
         [TestMethod]
         public void MapperException_Test()

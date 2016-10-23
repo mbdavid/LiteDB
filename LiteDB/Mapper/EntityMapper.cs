@@ -12,10 +12,19 @@ namespace LiteDB
     /// </summary>
     internal class EntityMapper
     {
+        /// <summary>
+        /// List all type properties that will be mapped to/from BsonDocument
+        /// </summary>
         public List<PropertyMapper> Props { get; set; }
 
+        /// <summary>
+        /// Indicate which property is _id
+        /// </summary>
         public PropertyMapper Id { get; set; }
 
+        /// <summary>
+        /// Indicate which Type this entity mapper is
+        /// </summary>
         public Type ForType { get; set; }
 
         public EntityMapper(Type type, Func<string, string> resolvePropertyName)

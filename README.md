@@ -1,6 +1,5 @@
 # v-next
 - Encryption using AES
-- Virtual index fields
 - Deep Includes (when used . apply to sub query)
 - Create some "Reserved bytes" in index page
 - BsonMapper with ReadOnly / private setter options / Fields
@@ -58,6 +57,7 @@ col.Include(x => x.Customer)
 - New FindIndex
 - Remove ChangeID (avoid write Header Page all times)
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
+- Virtual index fields
 
 
 # ThreadSafe - How it's work in LiteDB

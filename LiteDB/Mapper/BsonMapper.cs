@@ -117,6 +117,15 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Register a custom type serializer/deserialize function
+        /// </summary>
+        public virtual void RegisterType(Type type, Func<object, BsonValue> serialize, Func<BsonValue, object> deserialize)
+        {
+            _customSerializer[type] = (o) => serialize(o);
+            _customDeserializer[type] = (b) => deserialize(b);
+        }
+
+        /// <summary>
         /// Register a custom Auto Id generator function for a type
         /// </summary>
         public virtual void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)

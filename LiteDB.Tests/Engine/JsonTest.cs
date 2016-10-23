@@ -4,7 +4,7 @@ using System;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class JsonTest : TestBase
+    public class JsonTest
     {
         private BsonDocument CreateDoc()
         {

@@ -4,35 +4,31 @@ using System.Linq;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class LoopTest : TestBase
+    public class LoopTest
     {
         [TestMethod]
         public void Loop_Test()
         {
             using (var tmp = new TempFile())
             {
-                using (var db = new LiteDatabase(tmp.ConnectionString))
+                using (var db = new LiteEngine(tmp.Filename))
                 {
-                    var col = db.GetCollection("b");
-
-                    col.Insert(new BsonDocument().Add("Number", 1));
-                    col.Insert(new BsonDocument().Add("Number", 2));
-                    col.Insert(new BsonDocument().Add("Number", 3));
-                    col.Insert(new BsonDocument().Add("Number", 4));
+                    db.Insert("col", new BsonDocument { { "Number", 1 } });
+                    db.Insert("col", new BsonDocument { { "Number", 2 } });
+                    db.Insert("col", new BsonDocument { { "Number", 3 } });
+                    db.Insert("col", new BsonDocument { { "Number", 4 } });
                 }
 
-                using (var db = new LiteDatabase(tmp.ConnectionString))
+                using (var db = new LiteEngine(tmp.Filename))
                 {
-                    var col = db.GetCollection("b");
-
-                    foreach (var doc in col.FindAll())
+                    foreach (var doc in db.Find("col", Query.All()))
                     {
                         doc["Name"] = "John";
-                        col.Update(doc);
+                        db.Update("col", doc);
                     }
 
-                    col.EnsureIndex("Name");
-                    var all = col.Find(Query.EQ("Name", "John"));
+                    db.EnsureIndex("col", "Name");
+                    var all = db.Find("col", Query.EQ("Name", "John"));
 
                     Assert.AreEqual(4, all.Count());
                 }

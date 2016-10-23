@@ -56,9 +56,9 @@ namespace LiteDB.Tests
         public byte MyByte { get; set; }
         public sbyte MySByte { get; set; }
         public TimeSpan MyTimespan { get; set; }
-        public KeyValuePair<string, int> MyKeyValuePair { get; set; }
+        // public KeyValuePair<string, int> MyKeyValuePair { get; set; }
 
-        [BsonIndex(ignoreCase: true)]
+        [BsonIndex]
         public decimal MyDecimal { get; set; }
 
         public decimal? MyDecimalNullable { get; set; }
@@ -78,11 +78,6 @@ namespace LiteDB.Tests
         public string MyWriteOnly { set; private get; }
         public string MyField = "DoNotSerializeThis";
         internal string MyInternalProperty { get; set; }
-
-#if NAMEVALUECOLLECTION
-        // special types
-        public NameValueCollection MyNameValueCollection { get; set; }
-#endif
 
         // lists
         public string[] MyStringArray { get; set; }
@@ -126,7 +121,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class MapperTest : TestBase
+    public class MapperTest
     {
         private MyClass CreateModel()
         {
@@ -142,9 +137,6 @@ namespace LiteDB.Tests
                 MyStringList = new List<string>() { "String-1", "String-2" },
                 MyWriteOnly = "write-only",
                 MyInternalProperty = "internal-field",
-#if NAMEVALUECOLLECTION
-                MyNameValueCollection = new NameValueCollection(),
-#endif
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
                 MyDictEnum = new Dictionary<StringComparison, string>() { { StringComparison.Ordinal, "ordinal" } },
                 MyStringArray = new string[] { "One", "Two" },
@@ -156,7 +148,7 @@ namespace LiteDB.Tests
                 MyByte = 255,
                 MySByte = -99,
                 MyTimespan = TimeSpan.FromDays(1),
-                MyKeyValuePair = new KeyValuePair<string, int>("my-key", 123),
+                // MyKeyValuePair = new KeyValuePair<string, int>("my-key", 123),
                 MyDecimal = 19.9m,
                 MyDecimalNullable = 25.5m,
 
@@ -170,10 +162,6 @@ namespace LiteDB.Tests
                 MyObjectList = new List<object>() { 1, "ola", new MyImpl { Name = "John" }, new Uri("http://www.cnn.com") }
             };
 
-#if NAMEVALUECOLLECTION
-            c.MyNameValueCollection["key-1"] = "value-1";
-            c.MyNameValueCollection["KeyNumber2"] = "value-2";
-#endif
             return c;
         }
 
@@ -181,36 +169,6 @@ namespace LiteDB.Tests
         {
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter('_');
-
-#if NAMEVALUECOLLECTION
-            mapper.RegisterType(
-               nv =>
-               {
-                   var doc = new BsonDocument();
-
-                   foreach (var key in nv.AllKeys)
-                   {
-                       doc[key] = nv[key];
-                   }
-
-                   return doc;
-               },
-
-               bson =>
-               {
-                   var nv = new NameValueCollection();
-                   var doc = bson.AsDocument;
-
-                   foreach (var key in doc.Keys)
-                   {
-                       nv[key] = doc[key].AsString;
-                   }
-
-                   return nv;
-               }
-            );
-#endif
-
             return mapper;
         }
 
@@ -243,13 +201,10 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MySByte, nobj.MySByte);
             Assert.AreEqual(obj.MyTimespan, nobj.MyTimespan);
-            Assert.AreEqual(obj.MyKeyValuePair, nobj.MyKeyValuePair);
+            // Assert.AreEqual(obj.MyKeyValuePair, nobj.MyKeyValuePair);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
-#if NAMEVALUECOLLECTION
-            Assert.AreEqual(obj.MyNameValueCollection["key-1"], nobj.MyNameValueCollection["key-1"]);
-            Assert.AreEqual(obj.MyNameValueCollection["KeyNumber2"], nobj.MyNameValueCollection["KeyNumber2"]);
-#endif
+
             // list
             Assert.AreEqual(obj.MyStringArray[0], nobj.MyStringArray[0]);
             Assert.AreEqual(obj.MyStringArray[1], nobj.MyStringArray[1]);
@@ -271,10 +226,6 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyObjectList[0], obj.MyObjectList[0]);
             Assert.AreEqual(obj.MyObjectList[1], obj.MyObjectList[1]);
             Assert.AreEqual(obj.MyObjectList[3], obj.MyObjectList[3]);
-
-#if !PCL
-            Assert.AreEqual(nobj.MyInternalProperty, null);
-#endif
         }
     }
 }

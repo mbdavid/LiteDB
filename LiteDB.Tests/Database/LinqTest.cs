@@ -49,12 +49,13 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class LinqTest : TestBase
+    public class LinqTest
     {
         [TestMethod]
         public void Linq_Test()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var file = new TempFile())
+            using (var db = new LiteDatabase(file.Filename))
             {
                 var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Xbox };
                 var c2 = new User { Id = 2, Name = "Malatruco", Active = false, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Win32NT };
@@ -86,7 +87,7 @@ namespace LiteDB.Tests
                 Assert.AreEqual(1, col.Count(x => x.Active));
 
                 // methods
-                Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("mal")));
+                Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("Mal")));
                 Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
                 Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
 
@@ -108,15 +109,16 @@ namespace LiteDB.Tests
 
 
                 // and/or
-                Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "MAURICIO"));
-                Assert.AreEqual(2, col.Count(x => x.Name == "malatruco" || x.Name == "MAURICIO"));
+                Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "Mauricio"));
+                Assert.AreEqual(2, col.Count(x => x.Name == "Malatruco" || x.Name == "Mauricio"));
             }
         }
 
         [TestMethod]
         public void EnumerableTest()
         {
-            using (var db = new LiteDatabase(new MemoryStream()))
+            using (var file = new TempFile())
+            using (var db = new LiteDatabase(file.Filename))
             {
                 var col = db.GetCollection<User>("Users");
 

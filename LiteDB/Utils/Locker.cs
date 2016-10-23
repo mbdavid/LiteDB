@@ -13,7 +13,7 @@ namespace LiteDB
 
         public Locker(TimeSpan timeout)
         {
-            _locker = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+            _locker = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
             _timeout = timeout;
         }
 
@@ -22,7 +22,14 @@ namespace LiteDB
         /// </summary>
         public LockControl Read()
         {
-            return new LockControl(_locker, _timeout, false);
+            // if current thread are in read mode, do nothing
+            if(_locker.IsReadLockHeld) return new LockControl(null);
+
+            // try enter in read mode
+            _locker.TryEnterReadLock(_timeout);
+
+            // when dispose, close read mode
+            return new LockControl(() => _locker.ExitReadLock());
         }
 
         /// <summary>
@@ -30,43 +37,46 @@ namespace LiteDB
         /// </summary>
         public LockControl Write()
         {
-            return new LockControl(_locker, _timeout, true);
+            // if current thread is already in write mode, do nothing
+            if (_locker.IsWriteLockHeld) return new LockControl(null);
+
+            // if current thread is in read mode, exit read mode first
+            if (_locker.IsReadLockHeld)
+            {
+                _locker.ExitReadLock();
+                _locker.TryEnterWriteLock(_timeout);
+
+                // when dispose write mode, enter again in read mode
+                return new LockControl(() =>
+                {
+                    _locker.ExitWriteLock();
+                    _locker.TryEnterReadLock(_timeout);
+                });
+            }
+
+            // try enter in write mode
+            _locker.TryEnterWriteLock(_timeout);
+
+            // and release when dispose
+            return new LockControl(() => _locker.ExitWriteLock());
         }
     }
 
     /// <summary>
-    /// Locker class that implement IDisposable to control lock
+    /// Locker class that implement IDisposable to realease lock mode
     /// </summary>
     public class LockControl : IDisposable
     {
-        private ReaderWriterLockSlim _locker;
-        private bool _write = false;
+        private Action _dispose;
 
-        internal LockControl(ReaderWriterLockSlim locker, TimeSpan timeout, bool write)
+        internal LockControl(Action dispose)
         {
-            _locker = locker;
-            _write = write;
-
-            if (write)
-            {
-                _locker.TryEnterWriteLock(timeout);
-            }
-            else
-            {
-                _locker.TryEnterReadLock(timeout);
-            }
+            _dispose = dispose;
         }
 
         public void Dispose()
         {
-            if (_write)
-            {
-                _locker.ExitWriteLock();
-            }
-            else
-            {
-                _locker.ExitReadLock();
-            }
+            if(_dispose != null) _dispose();
         }
     }
 }

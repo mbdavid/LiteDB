@@ -3,7 +3,7 @@
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class ObjectIdTest : TestBase
+    public class ObjectIdTest
     {
         [TestMethod]
         public void ObjectId_Test()

@@ -75,7 +75,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class BsonFieldTest : TestBase
+    public class MapperFieldTest
     {
         private MyBsonFieldTestClass CreateModel()
         {
@@ -94,7 +94,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void BsonField_Test()
+        public void MapperBsonField_Test()
         {
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter('_');
@@ -110,7 +110,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(doc["PRIVATE-PROPERTY"].AsString, obj.GetMyPrivatePropertyNamed());
             Assert.AreEqual(doc["PROTECTED-PROPERTY"].AsString, obj.GetMyProtectedPropertyNamed());
             Assert.AreEqual(obj.MyString, nobj.MyString);
-#if !PCL
+#if NETFULL
             //Internal
             Assert.AreEqual(obj.MyInternalPropertyNamed, nobj.MyInternalPropertyNamed);
             Assert.AreEqual(obj.MyInternalPropertySerializable, nobj.MyInternalPropertySerializable);

@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NAMEVALUECOLLECTION</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFULL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -58,10 +58,23 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Database\AutoIdTest.cs" />
-    <Compile Include="Database\IncludeTest.cs" />
+    <Compile Include="Database\LinqTest.cs" />
+    <Compile Include="Database\MapperFieldTest.cs" />
+    <Compile Include="Document\DocumentTest.cs" />
     <Compile Include="Document\BsonTest.cs" />
+    <Compile Include="Database\DerivedTypesTest.cs" />
+    <Compile Include="Engine\DropCollectionTest.cs" />
+    <Compile Include="Database\MapperExceptionTest.cs" />
+    <Compile Include="Database\MapperTest.cs" />
+    <Compile Include="Engine\UserVersionTest.cs" />
+    <Compile Include="Engine\IndexOrderTest.cs" />
+    <Compile Include="Engine\JsonTest.cs" />
+    <Compile Include="Engine\LoopTest.cs" />
+    <Compile Include="Engine\MapperInterfaceTest.cs" />
     <Compile Include="Engine\MultiKeyTest.cs" />
+    <Compile Include="Engine\ObjectIdTest.cs" />
     <Compile Include="Engine\PerformanceTest.cs" />
+    <Compile Include="Database\PolymorphicTest.cs" />
     <Compile Include="Engine\QueryTest.cs" />
     <Compile Include="Engine\EngineTest.cs" />
     <Compile Include="Engine\ConcurrencyTest.cs" />

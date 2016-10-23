@@ -184,7 +184,7 @@ namespace LiteDB
                 // let's call GetKeyValues recursivly until get all base values
                 var items = this.GetKeyValues(this, path);
 
-                foreach (var item in distinct ? items.Distinct() : items)
+                foreach (var item in /*distinct ? items.Distinct() :*/ items)
                 {
                     yield return item;
                 }
