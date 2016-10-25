@@ -23,7 +23,7 @@ namespace LiteDB
         public LockControl Read()
         {
             // if current thread are in read mode, do nothing
-            if(_locker.IsReadLockHeld) return new LockControl(null);
+            if(_locker.IsReadLockHeld || _locker.IsWriteLockHeld) return new LockControl(null);
 
             // try enter in read mode
             _locker.TryEnterReadLock(_timeout);

@@ -5,8 +5,8 @@
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
 - netstandard 1.3
-- better way to auto-create indexes? on LiteCollection<> ctor? Use ThreadSafe?
 - Fix connection string to support "
+- Support Linq to create index in multi key array (x => x.Addresses.Select(z => z.StreetName))
 
 BsonMapper.Global.ReadOnly = true;
 BsonMapper.Global.Field = false;
@@ -23,8 +23,6 @@ Entity<Customer>()
 col.Include(x => x.Customer)
 	.Include((b) => b)
 
-- To simplify mapper, why not remove "rename" PropertyName to BsonDocument field
-
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)
@@ -37,7 +35,7 @@ col.Include(x => x.Customer)
 - IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
 - Autocommit problem: duplicate key throw rollback in all
 - CheckIntegrity, PageOverflow test
-- ReadOnly support
+- ReadOnly datafile access support
 
 
 # Changes to v3

@@ -22,6 +22,13 @@ namespace LiteDB.Tests
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public Address MainAddress { get; set; }
+    }
+
+    public class Address
+    {
+        public int Id { get; set; }
+        public string StreetName { get; set; }
     }
 
     public class Product
@@ -48,19 +55,25 @@ namespace LiteDB.Tests
                .DbRef(x => x.Customer, "customers")
                .DbRef(x => x.CustomerNull, "customers");
 
+            mapper.Entity<Customer>()
+                .DbRef(x => x.MainAddress, "addresses");
+
             using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename))
+            using (var db = new LiteDatabase(file.Filename, mapper))
             {
-                var customer = new Customer { Name = "John Doe" };
+                var address = new Address { StreetName = "3600 S Las Vegas Blvd" };
+                var customer = new Customer { Name = "John Doe", MainAddress = address };
 
                 var product1 = new Product { Name = "TV", Price = 800 };
                 var product2 = new Product { Name = "DVD", Price = 200 };
 
                 var customers = db.GetCollection<Customer>("customers");
+                var addresses = db.GetCollection<Address>("addresses");
                 var products = db.GetCollection<Product>("products");
                 var orders = db.GetCollection<Order>("orders");
 
                 // insert ref documents
+                addresses.Insert(address);
                 customers.Insert(customer);
                 products.Insert(new Product[] { product1, product2 });
 
@@ -79,6 +92,7 @@ namespace LiteDB.Tests
 
                 var query = orders
                     .Include(x => x.Customer)
+                    .Include(x => x.Customer.MainAddress)
                     .Include(x => x.CustomerNull)
                     .Include(x => x.Products)
                     .Include(x => x.ProductArray)
@@ -88,6 +102,7 @@ namespace LiteDB.Tests
                     .FirstOrDefault();
 
                 Assert.AreEqual(customer.Name, query.Customer.Name);
+                Assert.AreEqual(customer.MainAddress.StreetName, query.Customer.MainAddress.StreetName);
                 Assert.AreEqual(product1.Price, query.Products[0].Price);
                 Assert.AreEqual(product2.Name, query.Products[1].Name);
                 Assert.AreEqual(product1.Name, query.ProductArray[0].Name);
