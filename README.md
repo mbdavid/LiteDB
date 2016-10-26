@@ -1,27 +1,20 @@
+# test
+- Encryption
+- Linq to multi index
+- Deep includes
+
 # v-next
-- Encryption using AES
-- Deep Includes (when used . apply to sub query)
 - Create some "Reserved bytes" in index page
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
 - netstandard 1.3
 - Fix connection string to support "
+- Shrink
+- Transaction
+
 - Support Linq to create index in multi key array (x => x.Addresses.Select(z => z.StreetName))
-
-BsonMapper.Global.ReadOnly = true;
-BsonMapper.Global.Field = false;
-BsonMapper.Global.Private = false;
-
-Entity<Customer>()
-	.Key(x => x.CustomerKey)
-	.Field(x => x.CustomerName, x => new BsonValue(x.CustomerName), bson => bson["Customer"])
-	.Ignore(x => x.TotalAmount)
-	.Index(x => x.ProductName, unique)
-	.Index("my_index", x => x.ProductName)
-	.DbRef(x => x.Customer)
-
-col.Include(x => x.Customer)
-	.Include((b) => b)
+- Encryption using AES
+- Deep Includes (when used . apply to sub query)
 
 
 # Update datafile

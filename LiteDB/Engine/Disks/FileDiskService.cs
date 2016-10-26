@@ -20,7 +20,6 @@ namespace LiteDB
 
         private Stream _journal;
         private string _journalFilename;
-        private bool _journalEnabled;
         private HashSet<uint> _journalPages = new HashSet<uint>();
 
         private Logger _log; // will be initialize in "Initialize()"
@@ -41,7 +40,6 @@ namespace LiteDB
 
             // setting class variables
             _filename = filename;
-            _journalEnabled = options.Journal;
             _options = options;
 
             // journal filename
@@ -64,7 +62,7 @@ namespace LiteDB
                     stream.SetLength(_options.InitialSize);
 
                     // create a new header page in bytes
-                    var bytes = new HeaderPage().WritePage();
+                    var bytes = InitializeHeaderPage().WritePage();
 
                     // write bytes on page
                     stream.Write(bytes, 0, BasePage.PAGE_SIZE);
@@ -72,7 +70,12 @@ namespace LiteDB
             }
         }
 
-        public void Open()
+        internal virtual HeaderPage InitializeHeaderPage()
+        {
+            return new HeaderPage();
+        }
+
+        public virtual void Open()
         {
             // try open file in exclusive mode
             TryExec(() =>
@@ -159,7 +162,7 @@ namespace LiteDB
         /// <summary>
         /// Returns if journal is enabled
         /// </summary>
-        public bool IsJournalEnabled { get { return _journalEnabled; } }
+        public bool IsJournalEnabled { get { return _options.Journal; } }
 
         #endregion
 
@@ -174,7 +177,7 @@ namespace LiteDB
             if (_journalPages.Contains(pageID)) return;
 
             // if no journal or no buffer, exit
-            if (_journalEnabled == false || buffer.Length == 0) return;
+            if (_options.Journal == false || buffer.Length == 0) return;
 
             // open journal file if not used yet
             if (_journal == null)

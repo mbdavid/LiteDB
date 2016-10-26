@@ -39,6 +39,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Inicialize LiteEngine using EncryptedDiskService
+        /// </summary>
+        public LiteEngine(string filename, string password, bool journal = true)
+            : this(new EncryptedDiskService(filename, password, journal))
+        {
+        }
+
+        /// <summary>
         /// Initialize LiteEngine using custom disk service implementation.
         /// </summary>
         public LiteEngine(IDiskService disk)

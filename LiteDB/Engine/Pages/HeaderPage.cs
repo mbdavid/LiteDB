@@ -41,6 +41,11 @@ namespace LiteDB
         public byte[] Password = new byte[20];
 
         /// <summary>
+        /// When using encryption, store salt for password
+        /// </summary>
+        public byte[] Salt = new byte[16];
+
+        /// <summary>
         /// Get a dictionary with all collection pages with pageID link
         /// </summary>
         public Dictionary<string, uint> CollectionPages { get; set; }
@@ -54,6 +59,7 @@ namespace LiteDB
             this.FreeBytes = 0; // no free bytes on header
             this.UserVersion = 0;
             this.Password = new byte[20];
+            this.Salt = new byte[16];
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -82,6 +88,7 @@ namespace LiteDB
             this.LastPageID = reader.ReadUInt32();
             this.UserVersion = reader.ReadUInt16();
             this.Password = reader.ReadBytes(this.Password.Length);
+            this.Salt = reader.ReadBytes(this.Salt.Length);
 
             // read page collections references (position on end of page)
             var cols = reader.ReadByte();
@@ -100,6 +107,7 @@ namespace LiteDB
             writer.Write(this.LastPageID);
             writer.Write(this.UserVersion);
             writer.Write(this.Password);
+            writer.Write(this.Salt);
 
             writer.Write((byte)this.CollectionPages.Count);
             foreach (var key in this.CollectionPages.Keys)

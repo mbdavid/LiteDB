@@ -36,6 +36,7 @@ namespace LiteDB.Tests
         public int ProductId { get; set; }
         public string Name { get; set; }
         public decimal Price { get; set; }
+        public Address SupplierAddress { get; set; }
     }
 
     [TestClass]
@@ -58,13 +59,16 @@ namespace LiteDB.Tests
             mapper.Entity<Customer>()
                 .DbRef(x => x.MainAddress, "addresses");
 
+            mapper.Entity<Product>()
+                .DbRef(x => x.SupplierAddress, "addresses");
+
             using (var file = new TempFile())
             using (var db = new LiteDatabase(file.Filename, mapper))
             {
                 var address = new Address { StreetName = "3600 S Las Vegas Blvd" };
                 var customer = new Customer { Name = "John Doe", MainAddress = address };
 
-                var product1 = new Product { Name = "TV", Price = 800 };
+                var product1 = new Product { Name = "TV", Price = 800, SupplierAddress = address };
                 var product2 = new Product { Name = "DVD", Price = 200 };
 
                 var customers = db.GetCollection<Customer>("customers");
