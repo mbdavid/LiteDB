@@ -67,6 +67,7 @@
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Database\MapperExceptionTest.cs" />
     <Compile Include="Database\MapperTest.cs" />
+    <Compile Include="Engine\EncryptedTest.cs" />
     <Compile Include="Engine\UserVersionTest.cs" />
     <Compile Include="Engine\IndexOrderTest.cs" />
     <Compile Include="Engine\JsonTest.cs" />

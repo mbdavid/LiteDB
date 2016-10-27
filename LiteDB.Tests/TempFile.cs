@@ -29,6 +29,11 @@ namespace LiteDB.Tests
             get { return new FileInfo(this.Filename).Length; }
         }
 
+        public string ReadAsText()
+        {
+            return File.ReadAllText(this.Filename);
+        }
+
         #region LoremIpsum Generator
 
         public static string LoremIpsum(int minWords, int maxWords,

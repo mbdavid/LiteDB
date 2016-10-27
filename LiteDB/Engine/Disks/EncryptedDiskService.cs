@@ -29,6 +29,7 @@ namespace LiteDB
 
         internal override HeaderPage InitializeHeaderPage()
         {
+            // creating header page with password in sha1 and salt key
             return new HeaderPage()
             {
                 Password = _sha1,
@@ -46,6 +47,7 @@ namespace LiteDB
             // compare header password with user password
             if (_sha1.BinaryCompareTo(header.Password) != 0)
             {
+                this.Dispose();
                 throw LiteException.DatabaseWrongPassword();
             }
 
