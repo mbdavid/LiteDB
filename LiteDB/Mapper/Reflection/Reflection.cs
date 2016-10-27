@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace LiteDB
 {
@@ -10,7 +11,7 @@ namespace LiteDB
 
     internal delegate object CreateObject();
 
-    internal delegate object GenericSetter(object target, object value);
+    internal delegate void GenericSetter(object target, object value);
 
     internal delegate object GenericGetter(object obj);
 
@@ -27,34 +28,85 @@ namespace LiteDB
 
         public static CreateObject CreateClass(Type type)
         {
-            return Expression.Lambda<CreateObject>(Expression.New(type)).Compile();
+            DynamicMethod dynamicMethod = new DynamicMethod("_", type, (Type[])null);
+            ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
+            ilGenerator.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
+            ilGenerator.Emit(OpCodes.Ret);
+            return (CreateObject)dynamicMethod.CreateDelegate(typeof(CreateObject));
         }
 
         public static CreateObject CreateStruct(Type type)
         {
-            var newType = Expression.New(type);
-            var convert = Expression.Convert(newType, typeof(object));
-
-            return Expression.Lambda<CreateObject>(convert).Compile();
+            DynamicMethod dynamicMethod = new DynamicMethod("_", typeof(object), (Type[])null);
+            ILGenerator ilGenerator = dynamicMethod.GetILGenerator();
+            LocalBuilder local = ilGenerator.DeclareLocal(type);
+            ilGenerator.Emit(OpCodes.Ldloca_S, local);
+            ilGenerator.Emit(OpCodes.Initobj, type);
+            ilGenerator.Emit(OpCodes.Ldloc_0);
+            ilGenerator.Emit(OpCodes.Box, type);
+            ilGenerator.Emit(OpCodes.Ret);
+            return (CreateObject)dynamicMethod.CreateDelegate(typeof(CreateObject));
         }
 
         public static GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            var getMethod = propertyInfo.GetGetMethod(nonPublic);
+            var gMethod = propertyInfo.GetGetMethod(nonPublic);
+            if (gMethod == null) return null;
 
-            if (getMethod == null)
-                return null;
+            DynamicMethod method = new DynamicMethod("_", typeof(object), new[] { typeof(object) }, true);
+            ILGenerator generator = method.GetILGenerator();
+            generator.DeclareLocal(typeof(object));
+            generator.Emit(OpCodes.Ldarg_0);
 
-            return target => getMethod.Invoke(target, null);
+
+            EmitTypeConversion(generator, propertyInfo.DeclaringType, true);
+            EmitCall(generator, gMethod);
+            if (propertyInfo.PropertyType.IsValueType)
+            {
+                generator.Emit(OpCodes.Box, propertyInfo.PropertyType);
+            }
+
+            generator.Emit(OpCodes.Ret);
+
+            return (GenericGetter)method.CreateDelegate(typeof(GenericGetter));
         }
 
         public static GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            var setMethod = propertyInfo.GetSetMethod(nonPublic);
-
+            MethodInfo setMethod = propertyInfo.GetSetMethod(nonPublic);
             if (setMethod == null) return null;
 
-            return (target, value) => setMethod.Invoke(target, new[] { value });
+            DynamicMethod method = new DynamicMethod("_", typeof(void), new[] { typeof(object), typeof(object) }, true);
+            ILGenerator generator = method.GetILGenerator();
+            generator.Emit(OpCodes.Ldarg_0);
+            EmitTypeConversion(generator, propertyInfo.DeclaringType, true);
+            generator.Emit(OpCodes.Ldarg_1);
+            EmitTypeConversion(generator, propertyInfo.PropertyType, false);
+            EmitCall(generator, setMethod);
+            generator.Emit(OpCodes.Ret);
+
+            return (GenericSetter)method.CreateDelegate(typeof(GenericSetter));
+        }
+
+        private static void EmitCall(ILGenerator generator, MethodInfo method)
+        {
+            OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
+            generator.EmitCall(opcode, method, null);
+        }
+
+        private static void EmitTypeConversion(ILGenerator generator, Type castType, bool isContainer)
+        {
+            if (castType == typeof(object))
+            {
+            }
+            else if (castType.IsValueType)
+            {
+                generator.Emit(isContainer ? OpCodes.Unbox : OpCodes.Unbox_Any, castType);
+            }
+            else
+            {
+                generator.Emit(OpCodes.Castclass, castType);
+            }
         }
 
         #endregion

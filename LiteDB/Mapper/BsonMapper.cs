@@ -34,6 +34,11 @@ namespace LiteDB
         private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
 
         /// <summary>
+        /// Get type initializator to support IoC
+        /// </summary>
+        private readonly Func<Type, object> _typeInstanciator;
+
+        /// <summary>
         /// A resolver name property
         /// </summary>
         public Func<string, string> ResolvePropertyName;
@@ -63,12 +68,14 @@ namespace LiteDB
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
 
-        public BsonMapper()
+        public BsonMapper(Func<Type, object> customTypeInstanciator = null)
         {
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
             this.EmptyStringToNull = true;
             this.ResolvePropertyName = (s) => s;
+
+            _typeInstanciator = customTypeInstanciator ?? Reflection.CreateInstance;
 
             #region Register CustomTypes
 

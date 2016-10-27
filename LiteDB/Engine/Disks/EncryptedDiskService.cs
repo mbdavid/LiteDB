@@ -47,7 +47,9 @@ namespace LiteDB
             // compare header password with user password
             if (_sha1.BinaryCompareTo(header.Password) != 0)
             {
+                // before throw exception, close datafile
                 this.Dispose();
+
                 throw LiteException.DatabaseWrongPassword();
             }
 
