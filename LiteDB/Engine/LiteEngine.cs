@@ -31,6 +31,30 @@ namespace LiteDB
         private bool _autocommit;
 
         /// <summary>
+        /// Get log instance for debug operations
+        /// </summary>
+        public Logger Log { get { return _log; } }
+
+        /// <summary>
+        /// Get memory cache size limit. Works only with journal enabled (number in pages). If journal is disabled, pages in cache can exceed this limit. Default is 5000 pages
+        /// </summary>
+        public int CacheSize { get { return _cacheSize; } }
+
+        /// <summary>
+        /// Get number of pages in memory cache (clean and dirty pages)
+        /// </summary>
+        public int CacheUsed { get { return _pager.CachePageCount; } }
+
+        /// <summary>
+        /// Get if transaction managment is autocommit or not (default: false)
+        /// </summary>
+        public bool AutoCommit { get { return _autocommit; } }
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
         /// Inicialize LiteEngine using default FileDiskService
         /// </summary>
         public LiteEngine(string filename, bool journal = true)
@@ -85,27 +109,7 @@ namespace LiteDB
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 
-        #endregion Services instances
-
-        /// <summary>
-        /// Get log instance for debug operations
-        /// </summary>
-        public Logger Log { get { return _log; } }
-
-        /// <summary>
-        /// Get memory cache size limit. Works only with journal enabled (number in pages). If journal is disabled, pages in cache can exceed this limit. Default is 5000 pages
-        /// </summary>
-        public int CacheSize { get { return _cacheSize; } }
-
-        /// <summary>
-        /// Get number of pages in memory cache (clean and dirty pages)
-        /// </summary>
-        public int CacheUsed { get { return _pager.CachePageCount; } }
-
-        /// <summary>
-        /// Get if transaction managment is autocommit or not (default: false)
-        /// </summary>
-        public bool AutoCommit { get { return _autocommit; } }
+        #endregion
 
         /// <summary>
         /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
