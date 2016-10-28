@@ -91,6 +91,7 @@ namespace LiteDB
         /// <returns></returns>
         public static byte[] Salt(int maxLength = 16)
         {
+#if NETFULL
             var random = new RNGCryptoServiceProvider();
 
             // empty salt array
@@ -101,6 +102,15 @@ namespace LiteDB
 
             // Return the string encoded salt
             return salt;
+#else
+            // simple solution for NETStandard
+            var rnd = new Random();
+            var salt = new byte[maxLength];
+
+            rnd.NextBytes(salt);
+
+            return salt;
+#endif
         }
 
         public void Dispose()

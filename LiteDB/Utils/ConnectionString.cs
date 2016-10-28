@@ -69,7 +69,7 @@ namespace LiteDB
             try
             {
                 return values.ContainsKey(key) ?
-                    (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromString(values[key]) :
+                    (T)Convert.ChangeType(values[key], typeof(T)) :
                     defaultValue;
             }
             catch (Exception)

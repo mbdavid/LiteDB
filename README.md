@@ -16,6 +16,11 @@
 - Encryption using AES
 - Deep Includes (when used . apply to sub query)
 
+# NETStandard
+- Keep same Reflection.cs for both NETStandard vs FULL or build 2 classes (Expression + IL)
+- 
+
+
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)

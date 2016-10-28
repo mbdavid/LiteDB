@@ -33,7 +33,7 @@ namespace LiteDB
 #if NETFULL
             System.Threading.Thread.Sleep(250);
 #else
-            System.Threading.Tasks.Task.Delay(250).Wait()
+            System.Threading.Tasks.Task.Delay(250).Wait();
 #endif
         }
     }
