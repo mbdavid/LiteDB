@@ -72,6 +72,8 @@ namespace LiteDB
 
                     header.Password = AesEncryption.HashSHA1(_options.Password);
                     header.Salt = AesEncryption.Salt();
+
+                    _crypto = new AesEncryption(_options.Password, header.Salt);
                 }
 
                 // write bytes on page
@@ -179,7 +181,7 @@ namespace LiteDB
                 _stream.Seek(position, SeekOrigin.Begin);
             }
 
-            _stream.Write(_crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer), 0, BasePage.PAGE_SIZE);
+            _stream.Write(_crypto != null && pageID > 0 ? _crypto.Encrypt(buffer) : buffer, 0, BasePage.PAGE_SIZE);
         }
 
         /// <summary>
@@ -230,7 +232,7 @@ namespace LiteDB
 
             // just write original bytes in order that are changed
             // if needs encrypt, do it now including header
-            _journal.Write(_crypto == null ? buffer : _crypto.Encrypt(buffer), 0, BasePage.PAGE_SIZE);
+            _journal.Write(_crypto != null ? _crypto.Encrypt(buffer) : buffer, 0, BasePage.PAGE_SIZE);
 
             _journalPages.Add(pageID);
         }

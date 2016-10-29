@@ -107,7 +107,7 @@ namespace LiteDB
             }
         }
 
-        protected virtual BsonArray SerializeArray(Type type, IEnumerable array, int depth)
+        private BsonArray SerializeArray(Type type, IEnumerable array, int depth)
         {
             var arr = new BsonArray();
 
@@ -119,7 +119,7 @@ namespace LiteDB
             return arr;
         }
 
-        protected virtual BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
+        private BsonDocument SerializeDictionary(Type type, IDictionary dict, int depth)
         {
             var o = new BsonDocument();
 
@@ -133,7 +133,7 @@ namespace LiteDB
             return o;
         }
 
-        protected virtual BsonDocument SerializeObject(Type type, object obj, int depth)
+        private BsonDocument SerializeObject(Type type, object obj, int depth)
         {
             var o = new BsonDocument();
             var t = obj.GetType();

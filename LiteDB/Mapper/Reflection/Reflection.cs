@@ -10,9 +10,9 @@ namespace LiteDB
 
     internal delegate object CreateObject();
 
-    internal delegate object GenericSetter(object target, object value);
+    public delegate object GenericSetter(object target, object value);
 
-    internal delegate object GenericGetter(object obj);
+    public delegate object GenericGetter(object obj);
 
     #endregion
 

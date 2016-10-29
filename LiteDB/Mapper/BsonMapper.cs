@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
@@ -117,7 +118,7 @@ namespace LiteDB
         /// <summary>
         /// Register a custom type serializer/deserialize function
         /// </summary>
-        public virtual void RegisterType<T>(Func<T, BsonValue> serialize, Func<BsonValue, T> deserialize)
+        public void RegisterType<T>(Func<T, BsonValue> serialize, Func<BsonValue, T> deserialize)
         {
             _customSerializer[typeof(T)] = (o) => serialize((T)o);
             _customDeserializer[typeof(T)] = (b) => (T)deserialize(b);
@@ -126,7 +127,7 @@ namespace LiteDB
         /// <summary>
         /// Register a custom type serializer/deserialize function
         /// </summary>
-        public virtual void RegisterType(Type type, Func<object, BsonValue> serialize, Func<BsonValue, object> deserialize)
+        public void RegisterType(Type type, Func<object, BsonValue> serialize, Func<BsonValue, object> deserialize)
         {
             _customSerializer[type] = (o) => serialize(o);
             _customDeserializer[type] = (b) => deserialize(b);
@@ -135,7 +136,7 @@ namespace LiteDB
         /// <summary>
         /// Register a custom Auto Id generator function for a type
         /// </summary>
-        public virtual void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
+        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
         {
             _autoId[typeof(T)] = new AutoId
             {
@@ -215,6 +216,8 @@ namespace LiteDB
 
         #endregion
 
+        #region GetEntityMapper
+
         /// <summary>
         /// Get property mapper between typed .NET class and BsonDocument - Cache results
         /// </summary>
@@ -229,12 +232,98 @@ namespace LiteDB
                 {
                     if (!_entities.TryGetValue(type, out mapper))
                     {
-                        return _entities[type] = new EntityMapper(type, this.ResolvePropertyName);
+                        return _entities[type] = BuildEntityMapper(type);
                     }
                 }
             }
 
             return mapper;
         }
+
+        /// <summary>
+        /// Use this method to override how your class can be, by defalut, mapped from entity to Bson document.
+        /// Returns an EntityMapper from each requested Type
+        /// </summary>
+        protected virtual EntityMapper BuildEntityMapper(Type type)
+        {
+            var mapper = new EntityMapper
+            {
+                Props = new List<PropertyMapper>(),
+                ForType = type
+            };
+
+            var id = Reflection.GetIdProperty(type);
+            var ignore = typeof(BsonIgnoreAttribute);
+            var idAttr = typeof(BsonIdAttribute);
+            var fieldAttr = typeof(BsonFieldAttribute);
+            var indexAttr = typeof(BsonIndexAttribute);
+#if NETFULL
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+#else
+            var props = type.GetRuntimeProperties();
+#endif
+            foreach (var prop in props)
+            {
+                // ignore indexer property
+                if (prop.GetIndexParameters().Length > 0) continue;
+
+                // ignore write only
+                if (!prop.CanRead) continue;
+
+                // [BsonIgnore]
+                if (prop.IsDefined(ignore, false)) continue;
+
+                // check if property has [BsonField]
+                var bsonField = prop.IsDefined(fieldAttr, false);
+
+                // create getter/setter function
+                var getter = Reflection.CreateGenericGetter(type, prop, bsonField);
+                var setter = Reflection.CreateGenericSetter(type, prop, bsonField);
+
+                // if not getter or setter - no mapping
+                if (getter == null) continue;
+
+                // if the property is already in the dictionary, it's probably an override - keep the first instance added
+                if (mapper.Props.Any(x => x.PropertyName == prop.Name)) continue;
+
+                // checks field name conversion
+                var name = id != null && id.Equals(prop) ? "_id" : this.ResolvePropertyName(prop.Name);
+
+                // check if property has [BsonField] with a custom field name
+                if (bsonField)
+                {
+                    var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
+                    if (field != null && field.Name != null) name = field.Name;
+                }
+
+                // check if property has [BsonId] to get with was setted AutoId = true
+                var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
+
+                // checks if this proerty has [BsonIndex]
+                var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
+
+                // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
+                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(prop.Name, name);
+
+                // create a property mapper
+                var p = new PropertyMapper
+                {
+                    AutoId = autoId == null ? true : autoId.AutoId,
+                    FieldName = name,
+                    PropertyName = prop.Name,
+                    PropertyType = prop.PropertyType,
+                    IndexInfo = index == null ? null : (bool?)index.Unique,
+                    Getter = getter,
+                    Setter = setter
+                };
+
+                // add to props list
+                mapper.Props.Add(p);
+            }
+
+            return mapper;
+        }
+
+        #endregion
     }
 }

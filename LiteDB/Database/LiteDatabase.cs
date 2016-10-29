@@ -41,15 +41,11 @@ namespace LiteDB
                 InitialSize = conn.InitialSize,
                 LimitSize = conn.LimitSize,
                 Journal = conn.Journal,
-                Timeout = conn.Timeout
+                Timeout = conn.Timeout,
+                Password = conn.Password
             };
 
-            _engine = new LazyLoad<LiteEngine>(() =>
-            {
-                var disk = conn.Password == null ? new FileDiskService(conn.Filename, options) : new EncryptedDiskService(conn.Filename, conn.Password, options);
-
-                return new LiteEngine(disk, conn.Timeout, conn.CacheSize, conn.AutoCommit, _log);
-            });
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(conn.Filename, options), conn.Timeout, conn.CacheSize, conn.AutoCommit, _log));
         }
 
         /// <summary>
