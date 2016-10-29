@@ -66,22 +66,14 @@ namespace LiteDB
         /// Inicialize LiteEngine using EncryptedDiskService
         /// </summary>
         public LiteEngine(string filename, string password, bool journal = true)
-            : this(new EncryptedDiskService(filename, password, journal))
+            : this(new FileDiskService(filename, new FileOptions { Password = password, Journal = journal }))
         {
         }
 
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation.
         /// </summary>
-        public LiteEngine(IDiskService disk)
-            : this(disk, TimeSpan.FromMinutes(1))
-        {
-        }
-
-        /// <summary>
-        /// Initialize LiteEngine using custom disk service implementation.
-        /// </summary>
-        public LiteEngine(IDiskService disk, TimeSpan timeout, int cacheSize = 5000, bool autocommit = false, Logger log = null)
+        public LiteEngine(IDiskService disk, TimeSpan? timeout = null, int cacheSize = 5000, bool autocommit = false, Logger log = null)
         {
             _cacheSize = cacheSize;
             _autocommit = autocommit;
@@ -91,9 +83,6 @@ namespace LiteDB
             // initialize datafile (create) and set log instance
             _disk.Initialize(_log);
 
-            // open datafile (or create)
-            _disk.Open();
-
             if (_disk.IsJournalEnabled)
             {
                 // try recovery if has journal file
@@ -101,7 +90,7 @@ namespace LiteDB
             }
 
             // initialize all services
-            _locker = new Locker(timeout);
+            _locker = new Locker(timeout ?? TimeSpan.FromMinutes(1));
             _pager = new PageService(_disk, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);

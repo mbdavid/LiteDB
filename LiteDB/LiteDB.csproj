@@ -60,7 +60,6 @@
     <Compile Include="Database\Database\Collection.cs" />
     <Compile Include="Database\LiteCollection.cs" />
     <Compile Include="Database\LiteDatabase.cs" />
-    <Compile Include="Engine\Disks\EncryptedDiskService.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
     <Compile Include="Engine\LiteEngine.cs" />
@@ -127,7 +126,7 @@
     <Compile Include="Utils\FileOptions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\Locker.cs" />
-    <Compile Include="Utils\SimpleAES.cs" />
+    <Compile Include="Utils\AesEncryption.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtensions.cs" />
     <Compile Include="Utils\Extensions\TypeExtensions.cs" />

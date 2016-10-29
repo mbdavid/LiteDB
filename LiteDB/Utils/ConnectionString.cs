@@ -56,7 +56,7 @@ namespace LiteDB
             this.CacheSize = GetValue(values, "cache size", 5000);
             this.Timeout = GetValue(values, "timeout", TimeSpan.FromMinutes(1));
             this.AutoCommit = GetValue(values, "auto commit", true);
-            this.InitialSize = GetValue(values, "initial size", 0);
+            this.InitialSize = GetValue(values, "initial size", BasePage.PAGE_SIZE);
             this.LimitSize = GetValue(values, "limit size", long.MaxValue);
             this.Log = GetValue<byte>(values, "log", 0);
         }

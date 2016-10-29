@@ -7,14 +7,9 @@ namespace LiteDB
     public interface IDiskService : IDisposable
     {
         /// <summary>
-        /// Initialize data file (creating if doest exists), getting Logger instance
+        /// Open data file (creating if doest exists) and validate header
         /// </summary>
         void Initialize(Logger log);
-
-        /// <summary>
-        /// Open datafile
-        /// </summary>
-        void Open();
 
         /// <summary>
         /// Read a page from disk datafile

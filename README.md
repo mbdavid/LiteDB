@@ -7,9 +7,16 @@
 - Create some "Reserved bytes" in index page + header page
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
-- Fix connection string to support "
+- Fix connection string to support " ConnectionStringDictionary
 - Shrink
 - Transaction
+
+# mapper
+- Export some Reflection.cs 
+- Export EntityMapper and PropertyMapper
+- Remove bussines from EntityMapper (use all code in BsonMapper)
+-
+
 
 - Support Linq to create index in multi key array (x => x.Addresses.Select(z => z.StreetName))
 - EncryptionAES

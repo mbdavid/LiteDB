@@ -8,13 +8,13 @@ using LiteDB;
 namespace LiteDB
 {
     /// <summary>
-    /// Simple AES wrapper to encrypt data pages
+    /// Encryption AES wrapper to encrypt data pages
     /// </summary>
-    internal class SimpleAES
+    internal class AesEncryption
     {
         private Aes _aes;
 
-        public SimpleAES(string password, byte[] salt)
+        public AesEncryption(string password, byte[] salt)
         {
             _aes = Aes.Create();
             _aes.Padding = PaddingMode.Zeros;

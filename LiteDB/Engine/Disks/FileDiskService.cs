@@ -23,6 +23,7 @@ namespace LiteDB
         private HashSet<uint> _journalPages = new HashSet<uint>();
 
         private Logger _log; // will be initialize in "Initialize()"
+        private AesEncryption _crypto;
         private FileOptions _options;
 
         #region Initialize disk
@@ -48,42 +49,66 @@ namespace LiteDB
 
         public void Initialize(Logger log)
         {
+            // get log instance to disk
             _log = log;
 
             // if file not exists, just create empty file
             if (!File.Exists(_filename))
             {
                 // open file as create mode
-                using (var stream = new FileStream(_filename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE))
+                _stream = new FileStream(_filename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+
+                _log.Write(Logger.DISK, "initialize new datafile");
+
+                // set datafile initial size
+                _stream.SetLength(_options.InitialSize);
+
+                // create a new header page in bytes
+                var header = new HeaderPage();
+
+                if(_options.Password != null)
                 {
-                    _log.Write(Logger.DISK, "initialize new datafile");
+                    _log.Write(Logger.DISK, "datafile encrypted");
 
-                    // set datafile initial size
-                    stream.SetLength(_options.InitialSize);
+                    header.Password = AesEncryption.HashSHA1(_options.Password);
+                    header.Salt = AesEncryption.Salt();
+                }
 
-                    // create a new header page in bytes
-                    var bytes = InitializeHeaderPage().WritePage();
+                // write bytes on page
+                this.WritePage(0, header.WritePage());
+            }
+            else
+            {
+                // try open file in exclusive mode
+                TryExec(() =>
+                {
+                    _stream = new FileStream(_filename, FileMode.Open,
+                        FileAccess.ReadWrite, FileShare.Read,
+                        BasePage.PAGE_SIZE);
+                });
 
-                    // write bytes on page
-                    stream.Write(bytes, 0, BasePage.PAGE_SIZE);
+                // read header page to check passoword
+                // read header here is not best place - will always double read header
+                var header = BasePage.ReadPage(this.ReadPage(0)) as HeaderPage;
+
+                // hash password with sha1 or keep as empty byte[20]
+                var sha1 = _options.Password == null ? new byte[20] : AesEncryption.HashSHA1(_options.Password);
+
+                // compare header password with user password even if not passed password (datafile can have password)
+                if (sha1.BinaryCompareTo(header.Password) != 0)
+                {
+                    // before throw exception, close datafile
+                    this.Dispose();
+
+                    throw LiteException.DatabaseWrongPassword();
+                }
+
+                // initialize crypto class if has password
+                if (_options.Password != null)
+                {
+                    _crypto = new AesEncryption(_options.Password, header.Salt);
                 }
             }
-        }
-
-        internal virtual HeaderPage InitializeHeaderPage()
-        {
-            return new HeaderPage();
-        }
-
-        public virtual void Open()
-        {
-            // try open file in exclusive mode
-            TryExec(() =>
-            {
-                _stream = new FileStream(_filename, FileMode.Open, 
-                    FileAccess.ReadWrite, FileShare.Read, 
-                    BasePage.PAGE_SIZE);
-            });
         }
 
         #endregion
@@ -102,6 +127,10 @@ namespace LiteDB
                 _log.Write(Logger.DISK, "close datafile '{0}'", Path.GetFileName(_filename));
                 _stream.Dispose();
                 _stream = null;
+            }
+            if (_crypto != null)
+            {
+                _crypto.Dispose();
             }
         }
 
@@ -124,6 +153,12 @@ namespace LiteDB
             // read bytes from data file
             _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
+            // if has password and are not header, decrypt before return
+            if(_crypto != null && pageID > 0)
+            {
+                buffer = _crypto.Decrypt(buffer);
+            }
+
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             return buffer;
@@ -144,7 +179,7 @@ namespace LiteDB
                 _stream.Seek(position, SeekOrigin.Begin);
             }
 
-            _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+            _stream.Write(_crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer), 0, BasePage.PAGE_SIZE);
         }
 
         /// <summary>
@@ -194,7 +229,8 @@ namespace LiteDB
             _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             // just write original bytes in order that are changed
-            _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
+            // if needs encrypt, do it now including header
+            _journal.Write(_crypto == null ? buffer : _crypto.Encrypt(buffer), 0, BasePage.PAGE_SIZE);
 
             _journalPages.Add(pageID);
         }
@@ -229,6 +265,12 @@ namespace LiteDB
             {
                 // read page bytes from journal file
                 _journal.Read(buffer, 0, BasePage.PAGE_SIZE);
+
+                // if encrypted, decrypt (in journal file, all pages - including header - are encrypted)
+                if (_crypto != null)
+                {
+                    buffer = _crypto.Decrypt(buffer);
+                }
 
                 // read pageID (first 4 bytes)
                 var pageID = BitConverter.ToUInt32(buffer, 0);
