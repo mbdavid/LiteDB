@@ -4,21 +4,22 @@
 - Deep includes
 
 # v-next
-- Create some "Reserved bytes" in index page
+- Create some "Reserved bytes" in index page + header page
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
-- netstandard 1.3
 - Fix connection string to support "
 - Shrink
 - Transaction
 
 - Support Linq to create index in multi key array (x => x.Addresses.Select(z => z.StreetName))
-- Encryption using AES
+- EncryptionAES
+- Test password in both disks (file and encryption). WHEN? Think in
+	DiskCheckIntegrety(HeaderPage page) { called once when first GetHeader } 
 - Deep Includes (when used . apply to sub query)
 
 # NETStandard
 - Keep same Reflection.cs for both NETStandard vs FULL or build 2 classes (Expression + IL)
-- 
+- Downgrade to 1.4
 
 
 
