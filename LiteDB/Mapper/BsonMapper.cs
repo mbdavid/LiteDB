@@ -252,7 +252,7 @@ namespace LiteDB
                 ForType = type
             };
 
-            var id = Reflection.GetIdProperty(type);
+            var id = this.GetIdProperty(type);
             var ignore = typeof(BsonIgnoreAttribute);
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
@@ -322,6 +322,24 @@ namespace LiteDB
             }
 
             return mapper;
+        }
+
+
+        /// <summary>
+        /// Gets PropertyInfo that refers to Id from a document object.
+        /// </summary>
+        protected PropertyInfo GetIdProperty(Type type)
+        {
+            // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
+#if NETFULL
+            return Reflection.SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
+                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+#else
+            return SelectProperty(type.GetRuntimeProperties(),
+                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
+#endif
+                x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
+                x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion

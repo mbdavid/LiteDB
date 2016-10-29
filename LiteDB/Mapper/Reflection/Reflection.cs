@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+#if NETFULL
+using System.Reflection.Emit;
+#endif
 
 namespace LiteDB
 {
@@ -19,11 +22,11 @@ namespace LiteDB
     /// <summary>
     /// Helper class to get entity properties and map as BsonValue
     /// </summary>
-    internal class Reflection
+    internal partial class Reflection
     {
         private static Dictionary<Type, CreateObject> _cacheCtor = new Dictionary<Type, CreateObject>();
 
-        #region Reflection Handler
+        #region Reflection
 
         public static CreateObject CreateClass(Type type)
         {
@@ -40,62 +43,65 @@ namespace LiteDB
 
         public static GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            var getMethod = propertyInfo.GetGetMethod(nonPublic);
+            if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
 
-            if (getMethod == null)
-                return null;
+            var obj = Expression.Parameter(typeof(object), "o");
+            var accessor = Expression.MakeMemberAccess(Expression.Convert(obj, propertyInfo.DeclaringType), propertyInfo);
 
-            return target => getMethod.Invoke(target, null);
+            return Expression.Lambda<GenericGetter>(Expression.Convert(accessor, typeof(object)), obj).Compile();
         }
 
         public static GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
+            // there is no Expression.Assign in .NET 3.5
+#if NETFULL
             var setMethod = propertyInfo.GetSetMethod(nonPublic);
 
             if (setMethod == null) return null;
 
-            return (target, value) => setMethod.Invoke(target, new[] { value });
-        }
+            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
+            var il = setter.GetILGenerator();
 
-        #endregion
-
-        #region GetIdProperty
-
-        /// <summary>
-        /// Gets PropertyInfo that refers to Id from a document object.
-        /// </summary>
-        public static PropertyInfo GetIdProperty(Type type)
-        {
-            // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-#if NETFULL
-            return SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
-                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
-#else
-            return SelectProperty(type.GetRuntimeProperties(),
-                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
-#endif
-                x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
-                x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static PropertyInfo SelectProperty(IEnumerable<PropertyInfo> props, params Func<PropertyInfo, bool>[] predicates)
-        {
-            foreach (var predicate in predicates)
+            if (!type.IsClass) // structs
             {
-                var prop = props.FirstOrDefault(predicate);
-
-                if (prop != null)
-                {
-                    if (!prop.CanRead || !prop.CanWrite)
-                    {
-                        throw LiteException.PropertyReadWrite(prop);
-                    }
-
-                    return prop;
-                }
+                var lv = il.DeclareLocal(type);
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Unbox_Any, type);
+                il.Emit(OpCodes.Stloc_0);
+                il.Emit(OpCodes.Ldloca_S, lv);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
+                il.EmitCall(OpCodes.Call, setMethod, null);
+                il.Emit(OpCodes.Ldloc_0);
+                il.Emit(OpCodes.Box, type);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
+                il.EmitCall(OpCodes.Callvirt, setMethod, null);
+                il.Emit(OpCodes.Ldarg_0);
             }
 
-            return null;
+            il.Emit(OpCodes.Ret);
+
+            return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
+#else
+            if (propertyInfo == null) throw new ArgumentNullException(nameof(propertyInfo));
+            
+            if (!propertyInfo.CanWrite)
+                return null;
+            
+            var obj = Expression.Parameter(typeof(object), "obj");
+            var value = Expression.Parameter(typeof(object), "val");
+            var accessor = Expression.Property(Expression.Convert(obj, propertyInfo.DeclaringType), propertyInfo);
+            var assign = Expression.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
+            var conv = Expression.Convert(assign, typeof(object));
+            
+            return Expression.Lambda<GenericSetter>(conv, obj, value).Compile();
+#endif
         }
 
         #endregion
@@ -254,6 +260,26 @@ namespace LiteDB
             }
 
             return false;
+        }
+
+        public static PropertyInfo SelectProperty(IEnumerable<PropertyInfo> props, params Func<PropertyInfo, bool>[] predicates)
+        {
+            foreach (var predicate in predicates)
+            {
+                var prop = props.FirstOrDefault(predicate);
+
+                if (prop != null)
+                {
+                    if (!prop.CanRead || !prop.CanWrite)
+                    {
+                        throw LiteException.PropertyReadWrite(prop);
+                    }
+
+                    return prop;
+                }
+            }
+
+            return null;
         }
 
         #endregion
