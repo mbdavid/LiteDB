@@ -115,9 +115,9 @@ namespace LiteDB
                     return c();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                throw LiteException.InvalidCtor(type);
+                throw LiteException.InvalidCtor(type, ex);
             }
 
             lock (_cacheCtor)
@@ -157,7 +157,7 @@ namespace LiteDB
                         }
                         else
                         {
-                            throw LiteException.InvalidCtor(type);
+                            throw LiteException.InvalidCtor(type, null);
                         }
                     }
                     else // structs
@@ -167,9 +167,9 @@ namespace LiteDB
 
                     return c();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    throw LiteException.InvalidCtor(type);
+                    throw LiteException.InvalidCtor(type, ex);
                 }
             }
         }

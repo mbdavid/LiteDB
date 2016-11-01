@@ -52,6 +52,12 @@ namespace LiteDB
             this.ErrorCode = code;
         }
 
+        internal LiteException (int code, Exception inner, string message, params object[] args)
+        : base (string.Format (message, args), inner)
+        {
+            this.ErrorCode = code;
+        }
+
         #region Database Errors
 
         internal static LiteException NoDatabase()
@@ -153,9 +159,9 @@ namespace LiteDB
             return new LiteException(DOCUMENT_MAX_DEPTH, "Document has more than {0} nested documents in '{1}'. Check for circular references (use DbRef).", depth, type == null ? "-" : type.Name);
         }
 
-        internal static LiteException InvalidCtor(Type type)
+        internal static LiteException InvalidCtor(Type type, Exception inner)
         {
-            return new LiteException(INVALID_CTOR, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters.", type.FullName, type.AssemblyQualifiedName);
+            return new LiteException(INVALID_CTOR, inner, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters.", type.FullName, type.AssemblyQualifiedName);
         }
 
         internal static LiteException UnexpectedToken(string token)
