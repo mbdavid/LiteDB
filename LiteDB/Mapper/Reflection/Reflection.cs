@@ -160,6 +160,8 @@ namespace LiteDB
 
         public static Type UnderlyingTypeOf(Type type)
         {
+            // works only for generics (if type is not generic, returns same type)
+            if (!type.IsGenericType) return type;
 #if NETFULL
             return type.GetGenericArguments()[0];
 #else

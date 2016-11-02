@@ -69,6 +69,7 @@ namespace LiteDB.Tests
 
                 col.EnsureIndex(x => x.Name, true);
                 col.EnsureIndex(x => x.OS, false);
+                col.EnsureIndex(x => x.Domains.Select(z => z.DomainName), false);
 
                 col.Insert(new User[] { c1, c2, c3, c4 });
 

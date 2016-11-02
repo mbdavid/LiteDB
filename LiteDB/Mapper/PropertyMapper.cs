@@ -56,5 +56,15 @@ namespace LiteDB
         /// Is this property an DbRef? Must implement Serialize/Deserialize delegates
         /// </summary>
         public bool IsDbRef { get; set; }
+
+        /// <summary>
+        /// Indicate that this property contains an array (IEnumerable) of itens
+        /// </summary>
+        public bool IsArray { get; set; }
+
+        /// <summary>
+        /// When property is an array of items, gets underlying type (otherwise is same type of PropertyType)
+        /// </summary>
+        public Type UnderlyingType { get; set; }
     }
 }

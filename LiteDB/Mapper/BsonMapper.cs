@@ -315,9 +315,15 @@ namespace LiteDB
                     PropertyName = prop.Name,
                     PropertyType = prop.PropertyType,
                     IndexInfo = index == null ? null : (bool?)index.Unique,
+                    IsArray = Reflection.IsList(prop.PropertyType),
                     Getter = getter,
                     Setter = setter
                 };
+
+                // set UnderlyingType when is array of elements
+                p.UnderlyingType  = p.IsArray ? 
+                    Reflection.UnderlyingTypeOf(p.PropertyType) : 
+                    p.PropertyType;
 
                 // add to props list
                 mapper.Props.Add(p);
