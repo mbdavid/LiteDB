@@ -35,7 +35,7 @@ namespace LiteDB.Tests
                 Assert.AreEqual("4,5", result(Query.GTE("_id", 4)));
                 Assert.AreEqual("1", result(Query.LT("_id", 2)));
                 Assert.AreEqual("a,b,d,e", result(Query.Not("name", "c")));
-                Assert.AreEqual("2,4", result(Query.Func("_id", (v) => v.AsInt32 % 2 == 0)));
+                Assert.AreEqual("2,4", result(Query.Where("_id", (v) => v.AsInt32 % 2 == 0)));
             }
         }
     }

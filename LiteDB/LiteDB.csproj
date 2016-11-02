@@ -88,7 +88,7 @@
     <Compile Include="Engine\Query\QueryEmpty.cs" />
     <Compile Include="Engine\Query\QueryEquals.cs" />
     <Compile Include="Engine\Query\QueryGreater.cs" />
-    <Compile Include="Engine\Query\QueryFunc.cs" />
+    <Compile Include="Engine\Query\QueryWhere.cs" />
     <Compile Include="Engine\Query\QueryIn.cs" />
     <Compile Include="Engine\Query\QueryLess.cs" />
     <Compile Include="Engine\Query\QueryNot.cs" />

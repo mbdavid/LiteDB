@@ -13,7 +13,7 @@ namespace LiteDB
         {
             if (dbref == null) throw new ArgumentNullException("dbref");
 
-            var path = _visitor.GetBsonField(dbref);
+            var path = _visitor.GetField(dbref);
 
             Action<BsonDocument> action = (bson) =>
             {

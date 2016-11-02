@@ -30,5 +30,26 @@ namespace LiteDB
 
             return path;
         }
+
+        /// <summary>
+        /// Implementation of Expression.Assign in .Net 3.5
+        /// http://stackoverflow.com/questions/10122856/implementation-of-expression-assign-in-net-3-5-with-same-signature
+        /// </summary>
+        public static BinaryExpression Assign(Expression left, Expression right)
+        {
+            var assign = typeof(Assigner<>).MakeGenericType(left.Type).GetMethod("Assign");
+
+            var assignExpr = Expression.Add(left, right, assign);
+
+            return assignExpr;
+        }
+
+        private static class Assigner<T>
+        {
+            public static T Assign(ref T left, T right)
+            {
+                return (left = right);
+            }
+        }
     }
 }

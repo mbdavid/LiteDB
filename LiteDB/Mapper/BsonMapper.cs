@@ -164,20 +164,22 @@ namespace LiteDB
             // get fields mapper
             var mapper = this.GetEntityMapper(entity.GetType());
 
+            var id = mapper.Id;
+
             // if not id or no autoId = true
-            if (mapper.Id == null || mapper.Id.AutoId == false) return;
+            if (id == null || id.AutoId == false) return;
 
             AutoId autoId;
 
-            if (_autoId.TryGetValue(mapper.Id.PropertyType, out autoId))
+            if (_autoId.TryGetValue(id.PropertyType, out autoId))
             {
-                var value = mapper.Id.Getter(entity);
+                var value = id.Getter(entity);
 
                 if (value == null || autoId.IsEmpty(value) == true)
                 {
                     var newId = autoId.NewId(col);
 
-                    mapper.Id.Setter(entity, newId);
+                    id.Setter(entity, newId);
                 }
             }
         }
@@ -258,7 +260,7 @@ namespace LiteDB
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
 #if NETFULL
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 #else
             var props = type.GetRuntimeProperties();
 #endif
@@ -277,8 +279,8 @@ namespace LiteDB
                 var bsonField = prop.IsDefined(fieldAttr, false);
 
                 // create getter/setter function
-                var getter = Reflection.CreateGenericGetter(type, prop, bsonField);
-                var setter = Reflection.CreateGenericSetter(type, prop, bsonField);
+                var getter = Reflection.CreateGenericGetter(type, prop);
+                var setter = Reflection.CreateGenericSetter(type, prop);
 
                 // if not getter or setter - no mapping
                 if (getter == null) continue;

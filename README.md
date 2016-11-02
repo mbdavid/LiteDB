@@ -1,9 +1,10 @@
 # test
-- Encryption
 - Linq to multi index
 - Deep includes
 
 # v-next
+- _visitor.GetBsonField (support Customer.Select(x => x.Name)
+
 - Create some "Reserved bytes" in index page + header page
 - BsonMapper with ReadOnly / private setter options / Fields
 - Support interface IBsonMapper (like JSON.NET)
@@ -11,18 +12,17 @@
 - Shrink
 - Transaction
 
-# mapper
-- Export some Reflection.cs 
-- Export EntityMapper and PropertyMapper
-- Remove bussines from EntityMapper (use all code in BsonMapper)
--
-
-
+# linq visitor
+- Rebuild QueryVisitor
 - Support Linq to create index in multi key array (x => x.Addresses.Select(z => z.StreetName))
-- EncryptionAES
-- Test password in both disks (file and encryption). WHEN? Think in
-	DiskCheckIntegrety(HeaderPage page) { called once when first GetHeader } 
-- Deep Includes (when used . apply to sub query)
+- Query.Not(Query)
+
+- https://github.com/schotime/NPoco/blob/master/src/NPoco/Expressions/SqlExpression.cs#L753
+- https://msdn.microsoft.com/en-us/library/bb882521(v=vs.90).aspx
+
+# mapper
+- BsonMapper map Fields? Change name "property" to "member", like EntityMapper.Members?
+
 
 # NETStandard
 - Keep same Reflection.cs for both NETStandard vs FULL or build 2 classes (Expression + IL)

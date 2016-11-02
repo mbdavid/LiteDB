@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace LiteDB.Tests
 {
@@ -23,8 +24,10 @@ namespace LiteDB.Tests
         public bool Active { get; set; }
         public int Age { get; set; }
         public PlatformID OS { get; set; }
-
         public UserDomain Domain { get; set; }
+
+        public List<string> Names { get; set; }
+        public List<UserDomain> Domains { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -73,10 +76,6 @@ namespace LiteDB.Tests
                 Func<string> GetNumeria = () => "Numeria";
                 var strNumeria = GetNumeria();
 
-                // sub-class
-                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
-                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == GetNumeria()));
-                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == strNumeria));
 
                 // == !=
                 Assert.AreEqual(1, col.Count(x => x.Id == 1));
@@ -86,16 +85,21 @@ namespace LiteDB.Tests
                 Assert.AreEqual(3, col.Count(x => !x.Active));
                 Assert.AreEqual(1, col.Count(x => x.Active));
 
-                // methods
-                Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("Mal")));
-                Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
-                Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
-
                 // > >= < <=
                 Assert.AreEqual(1, col.Count(x => x.Id > 3));
                 Assert.AreEqual(1, col.Count(x => x.Id >= 4));
                 Assert.AreEqual(1, col.Count(x => x.Id < 2));
                 Assert.AreEqual(1, col.Count(x => x.Id <= 1));
+
+                // sub-class
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == "Numeria"));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == GetNumeria()));
+                Assert.AreEqual(3, col.Count(x => x.Domain.DomainName == strNumeria));
+
+                // methods
+                Assert.AreEqual(1, col.Count(x => x.Name.StartsWith("Mal")));
+                Assert.AreEqual(1, col.Count(x => x.Name.Equals("Mauricio")));
+                Assert.AreEqual(1, col.Count(x => x.Name.Contains("cio")));
 
                 // enum
                 Assert.AreEqual(1, col.Count(x => x.OS == PlatformID.Xbox));

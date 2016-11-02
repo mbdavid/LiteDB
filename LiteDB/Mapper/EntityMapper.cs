@@ -26,5 +26,13 @@ namespace LiteDB
         /// Indicate which Type this entity mapper is
         /// </summary>
         public Type ForType { get; set; }
+
+        /// <summary>
+        /// Resolve expression to get property mapped
+        /// </summary>
+        public PropertyMapper GetProperty(Expression expr)
+        {
+            return this.Props.FirstOrDefault(x => x.PropertyName == expr.GetPath());
+        }
     }
 }

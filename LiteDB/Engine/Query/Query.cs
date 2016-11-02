@@ -118,7 +118,15 @@ namespace LiteDB
         /// </summary>
         public static Query Not(string field, BsonValue value)
         {
-            return new QueryNot(field, value ?? BsonValue.Null);
+            return new QueryNot(new QueryEquals(field, value ?? BsonValue.Null));
+        }
+
+        /// <summary>
+        /// Returns all documents that in query result
+        /// </summary>
+        public static Query Not(Query query)
+        {
+            return new QueryNot(query);
         }
 
         /// <summary>
@@ -142,11 +150,21 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns all documents that has value in values list (IN)
+        /// </summary>
+        public static Query In(string field, IEnumerable<BsonValue> values)
+        {
+            if (values == null) throw new ArgumentNullException("values");
+
+            return new QueryIn(field, values);
+        }
+
+        /// <summary>
         /// Apply a predicate function in an index result. It's faster then runs over deserialized document.
         /// </summary>
-        public static Query Func(string field, Func<BsonValue, bool> predicate)
+        public static Query Where(string field, Func<BsonValue, bool> predicate, int order = Query.Ascending)
         {
-            return new QueryFunc(field, predicate);
+            return new QueryWhere(field, predicate, order);
         }
 
         /// <summary>

@@ -41,7 +41,7 @@ namespace LiteDB
             return Expression.Lambda<CreateObject>(convert).Compile();
         }
 
-        public static GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
+        public static GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo)
         {
             if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
 
@@ -51,45 +51,9 @@ namespace LiteDB
             return Expression.Lambda<GenericGetter>(Expression.Convert(accessor, typeof(object)), obj).Compile();
         }
 
-        public static GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
+        public static GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo)
         {
-            // there is no Expression.Assign in .NET 3.5
-#if NETFULL
-            var setMethod = propertyInfo.GetSetMethod(nonPublic);
-
-            if (setMethod == null) return null;
-
-            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
-            var il = setter.GetILGenerator();
-
-            if (!type.IsClass) // structs
-            {
-                var lv = il.DeclareLocal(type);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Unbox_Any, type);
-                il.Emit(OpCodes.Stloc_0);
-                il.Emit(OpCodes.Ldloca_S, lv);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-                il.EmitCall(OpCodes.Call, setMethod, null);
-                il.Emit(OpCodes.Ldloc_0);
-                il.Emit(OpCodes.Box, type);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-                il.EmitCall(OpCodes.Callvirt, setMethod, null);
-                il.Emit(OpCodes.Ldarg_0);
-            }
-
-            il.Emit(OpCodes.Ret);
-
-            return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
-#else
-            if (propertyInfo == null) throw new ArgumentNullException(nameof(propertyInfo));
+            if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
             
             if (!propertyInfo.CanWrite)
                 return null;
@@ -97,11 +61,14 @@ namespace LiteDB
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "val");
             var accessor = Expression.Property(Expression.Convert(obj, propertyInfo.DeclaringType), propertyInfo);
+#if NETFULL
+            var assign = ExpressionExtensions.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
+#else
             var assign = Expression.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
+#endif
             var conv = Expression.Convert(assign, typeof(object));
             
             return Expression.Lambda<GenericSetter>(conv, obj, value).Compile();
-#endif
         }
 
         #endregion

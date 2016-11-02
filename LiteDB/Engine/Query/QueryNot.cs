@@ -9,17 +9,20 @@ namespace LiteDB
     /// </summary>
     internal class QueryNot : Query
     {
-        private BsonValue _value;
+        private Query _query;
 
-        public QueryNot(string field, BsonValue value)
-            : base(field)
+        public QueryNot(Query query)
+            : base("_id")
         {
-            _value = value;
+            _query = query;
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindAll(index, Query.Ascending).Where(x => x.Key.CompareTo(_value) != 0);
+            var result = _query.ExecuteIndex(indexer, index);
+
+            return indexer.FindAll(index, Query.Ascending)
+                .Except(result, new IndexNodeComparer());
         }
     }
 }

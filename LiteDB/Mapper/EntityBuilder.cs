@@ -217,7 +217,7 @@ namespace LiteDB
         {
             if (expr == null) throw new ArgumentNullException("property");
 
-            var prop = _entity.Props.FirstOrDefault(x => x.PropertyName == expr.Body.GetPath());
+            var prop = _entity.GetProperty(expr);
 
             if (prop == null) throw new ArgumentNullException(expr.GetPath());
 

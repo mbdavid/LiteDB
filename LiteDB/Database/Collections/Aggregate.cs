@@ -166,7 +166,7 @@ namespace LiteDB
         {
             if (property == null) throw new ArgumentNullException("property");
 
-            var field = _visitor.GetBsonField(property);
+            var field = _visitor.GetField(property);
 
             return this.Min(field);
         }
@@ -207,7 +207,7 @@ namespace LiteDB
         {
             if (property == null) throw new ArgumentNullException("property");
 
-            var field = _visitor.GetBsonField(property);
+            var field = _visitor.GetField(property);
 
             return this.Max(field);
         }

@@ -29,7 +29,7 @@ namespace LiteDB
         /// <param name="unique">Create a unique values index?</param>
         public bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false)
         {
-            var field = _visitor.GetBsonField(property);
+            var field = _visitor.GetField(property);
 
             return this.EnsureIndex(field, unique);
         }
