@@ -113,10 +113,10 @@ namespace LiteDB
                 return Convert.ChangeType(value.RawValue, type);
             }
 
-            // enum value is a string
+            // enum value is an int
             else if (type.GetTypeInfo().IsEnum)
             {
-                return Enum.Parse(type, value.AsString);
+                return value.AsInt32;
             }
 
             // test if has a custom type implementation

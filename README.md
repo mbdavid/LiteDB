@@ -1,16 +1,16 @@
 # test
 - Linq to multi index
 - Deep includes
+- Transaction
 
 # v-next
-- _visitor.GetBsonField (support Customer.Select(x => x.Name)
-
+- implement transaction
+- revert QueryVisitor (keep GetField + Query.Not)
 - Create some "Reserved bytes" in index page + header page
 - BsonMapper with ReadOnly / private setter options / Fields
-- Support interface IBsonMapper (like JSON.NET)
 - Fix connection string to support " ConnectionStringDictionary
 - Shrink
-- Transaction
+- MemoryStream disk impl
 
 # linq visitor
 - Rebuild QueryVisitor
@@ -25,7 +25,6 @@
 
 
 # NETStandard
-- Keep same Reflection.cs for both NETStandard vs FULL or build 2 classes (Expression + IL)
 - Downgrade to 1.4
 
 

@@ -58,9 +58,9 @@ namespace LiteDB
         public bool IsDbRef { get; set; }
 
         /// <summary>
-        /// Indicate that this property contains an array (IEnumerable) of itens
+        /// Indicate that this property contains an list of elements (IEnumerable)
         /// </summary>
-        public bool IsArray { get; set; }
+        public bool IsList { get; set; }
 
         /// <summary>
         /// When property is an array of items, gets underlying type (otherwise is same type of PropertyType)

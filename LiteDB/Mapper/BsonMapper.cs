@@ -315,13 +315,13 @@ namespace LiteDB
                     PropertyName = prop.Name,
                     PropertyType = prop.PropertyType,
                     IndexInfo = index == null ? null : (bool?)index.Unique,
-                    IsArray = Reflection.IsList(prop.PropertyType),
+                    IsList = Reflection.IsList(prop.PropertyType),
                     Getter = getter,
                     Setter = setter
                 };
 
-                // set UnderlyingType when is array of elements
-                p.UnderlyingType  = p.IsArray ? 
+                // set UnderlyingType when is list of elements
+                p.UnderlyingType  = p.IsList ? 
                     Reflection.UnderlyingTypeOf(p.PropertyType) : 
                     p.PropertyType;
 
@@ -331,7 +331,6 @@ namespace LiteDB
 
             return mapper;
         }
-
 
         /// <summary>
         /// Gets PropertyInfo that refers to Id from a document object.

@@ -13,6 +13,8 @@ namespace LiteDB.Tests
         public void LinqVisitor_Test()
         {
             var mapper = new BsonMapper();
+            mapper.ResolvePropertyName = (x) => x.ToLower();
+
             var qv = new QueryVisitor<User>(mapper);
 
             //var q1 = qv.Visit(x => x.Id == 1); // Query.EQ("_id", 1)
@@ -27,7 +29,7 @@ namespace LiteDB.Tests
             // enum
             var q4 = qv.Visit(x => x.OS == PlatformID.Unix);
 
-            //var q6 = qv.Visit(x => new int[] { 1, 2 }.Contains(x.Id));
+            var q6 = qv.Visit(x => new int[] { 1, 2 }.Contains(x.Id));
 
             //var q7 = qv.Visit(x => x.Names.Contains("John"));
 

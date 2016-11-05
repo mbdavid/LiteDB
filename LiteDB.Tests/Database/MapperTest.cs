@@ -66,10 +66,6 @@ namespace LiteDB.Tests
         [BsonIndex(true)]
         public Uri MyUri { get; set; }
 
-        // serialize this properties
-        [BsonField]
-        internal string MyProperty { get; set; }
-
         // do not serialize this properties
         [BsonIgnore]
         public string MyIgnore { get; set; }
@@ -77,7 +73,6 @@ namespace LiteDB.Tests
         public string MyReadOnly { get; private set; }
         public string MyWriteOnly { set; private get; }
         public string MyField = "DoNotSerializeThis";
-        internal string MyInternalProperty { get; set; }
 
         // lists
         public string[] MyStringArray { get; set; }
@@ -131,12 +126,12 @@ namespace LiteDB.Tests
                 MyString = "John",
                 MyGuid = Guid.NewGuid(),
                 MyDateTime = DateTime.Now,
-                MyProperty = "SerializeTHIS",
+                //MyProperty = "SerializeTHIS",
                 MyIgnore = "IgnoreTHIS",
                 MyIntNullable = 999,
                 MyStringList = new List<string>() { "String-1", "String-2" },
                 MyWriteOnly = "write-only",
-                MyInternalProperty = "internal-field",
+                //MyInternalProperty = "internal-field",
                 MyDict = new Dictionary<int, string>() { { 1, "Row1" }, { 2, "Row2" } },
                 MyDictEnum = new Dictionary<StringComparison, string>() { { StringComparison.Ordinal, "ordinal" } },
                 MyStringArray = new string[] { "One", "Two" },
@@ -191,7 +186,7 @@ namespace LiteDB.Tests
             // compare 2 objects
             Assert.AreEqual(obj.MyId, nobj.MyId);
             Assert.AreEqual(obj.MyString, nobj.MyString);
-            Assert.AreEqual(obj.MyProperty, nobj.MyProperty);
+            //Assert.AreEqual(obj.MyProperty, nobj.MyProperty);
             Assert.AreEqual(obj.MyGuid, nobj.MyGuid);
             Assert.AreEqual(obj.MyDateTime, nobj.MyDateTime);
             Assert.AreEqual(obj.MyDateTimeNullable, nobj.MyDateTimeNullable);

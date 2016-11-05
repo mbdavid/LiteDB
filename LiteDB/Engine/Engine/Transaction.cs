@@ -1,30 +1,61 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
-    // Transactions are enabled by default. All operations occurs first in memory only (pages) and will be persist
-    // only when Commit calls or LiteEngine is dispoable. 
     public partial class LiteEngine : IDisposable
     {
+        private Stack<LockControl> _transactions = new Stack<LockControl>();
+
         /// <summary>
-        /// Commit current transaction
+        /// Starts a new transaction keeping all changed from now in memory only until Commit() be executed.
+        /// </summary>
+        public void BeginTrans()
+        {
+            if (_autocommit == false) throw new NotSupportedException("Transaction are not supported when AutoCommit is False");
+
+            _transactions.Push(_locker.Write());
+        }
+
+        /// <summary>
+        /// Persist in disk all changed from last BeginTrans()
         /// </summary>
         public void Commit()
         {
-            using (_locker.Write())
+            // only do "real commit" if is last transaction in stack or if autocommit = false
+            if (_transactions.Count == 1)
             {
                 _trans.Commit();
+            }
+            else if (_autocommit == false)
+            {
+                // for autocommit must lock datafile
+                using (_locker.Write())
+                {
+                    _trans.Commit();
+                }
+            }
+
+            // if contains transactions on stack, remove top and dispose (only last transaction will release lock)
+            if (_transactions.Count > 0)
+            {
+                _transactions.Pop().Dispose();
             }
         }
 
         /// <summary>
-        /// Rollback current transaction and restore database from last commit
+        /// Discard all changes from last BeginTrans()
         /// </summary>
         public void Rollback()
         {
-            using (_locker.Write())
+            _trans.Rollback();
+
+            LockControl trans = null;
+
+            while((trans = _transactions.Pop()) != null)
             {
-                _trans.Rollback();
+                trans.Dispose();
             }
         }
 
@@ -41,15 +72,17 @@ namespace LiteDB
 
                     var result = action(col);
 
-                    if (_autocommit) _trans.Commit();
+                    if (_autocommit || _transactions.Count == 0) _trans.Commit();
 
                     return result;
                 }
                 catch (Exception ex)
                 {
                     _log.Write(Logger.ERROR, ex.Message);
+
                     // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
-                    _trans.Rollback();
+                    this.Rollback();
+
                     throw;
                 }
             }

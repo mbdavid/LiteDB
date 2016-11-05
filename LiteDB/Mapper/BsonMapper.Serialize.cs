@@ -54,7 +54,7 @@ namespace LiteDB
                 }
             }
             // basic Bson data types (cast datatype for better performance optimization)
-            else if (obj is Int32) return new BsonValue((Int32)obj);
+            else if (obj is Int32 || obj is Enum) return new BsonValue((Int32)obj);
             else if (obj is Int64) return new BsonValue((Int64)obj);
             else if (obj is Double) return new BsonValue((Double)obj);
             else if (obj is Byte[]) return new BsonValue((Byte[])obj);
@@ -75,7 +75,7 @@ namespace LiteDB
             {
                 return new BsonValue(Convert.ToDouble(obj));
             }
-            else if (obj is Char || obj is Enum)
+            else if (obj is Char)
             {
                 return new BsonValue(obj.ToString());
             }
