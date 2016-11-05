@@ -61,7 +61,6 @@
     <Compile Include="Database\LinqVisitorTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
-    <Compile Include="Database\StructTest.cs" />
     <Compile Include="Database\LinqTest.cs" />
     <Compile Include="Database\MapperFieldTest.cs" />
     <Compile Include="Document\DocumentTest.cs" />

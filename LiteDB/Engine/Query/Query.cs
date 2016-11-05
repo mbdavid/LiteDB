@@ -114,19 +114,19 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents that are not equals to value
+        /// Returns all documents that are not equals to value (not equals)
         /// </summary>
         public static Query Not(string field, BsonValue value)
         {
-            return new QueryNot(new QueryEquals(field, value ?? BsonValue.Null));
+            return new QueryNotEquals(field, value ?? BsonValue.Null);
         }
 
         /// <summary>
-        /// Returns all documents that in query result
+        /// Returns all documents that in query result (not result)
         /// </summary>
-        public static Query Not(Query query)
+        public static Query Not(Query query, int order = Query.Ascending)
         {
-            return new QueryNot(query);
+            return new QueryNot(query, order);
         }
 
         /// <summary>

@@ -10,19 +10,26 @@ namespace LiteDB
     internal class QueryNot : Query
     {
         private Query _query;
+        private int _order;
 
-        public QueryNot(Query query)
+        public QueryNot(Query query, int order)
             : base("_id")
         {
             _query = query;
+            _order = order;
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
-            var result = _query.ExecuteIndex(indexer, index);
+            throw new NotSupportedException();
+        }
 
-            return indexer.FindAll(index, Query.Ascending)
-                .Except(result, new IndexNodeComparer());
+        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        {
+            var result = _query.Run(col, indexer);
+            var all = new QueryAll("_id", _order).Run(col, indexer);
+
+            return all.Except(result);
         }
     }
 }

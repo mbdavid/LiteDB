@@ -51,11 +51,9 @@ namespace LiteDB
         {
             _trans.Rollback();
 
-            LockControl trans = null;
-
-            while((trans = _transactions.Pop()) != null)
+            while(_transactions.Count > 0)
             {
-                trans.Dispose();
+                _transactions.Pop().Dispose();
             }
         }
 
@@ -73,7 +71,7 @@ namespace LiteDB
                     var result = action(col);
 
                     // when autocommit is false, transaction count is always 0
-                    if (_transactions.Count == 0) _trans.Commit();
+                    if (_transactions.Count == 0 && _autocommit == true) _trans.Commit();
 
                     return result;
                 }

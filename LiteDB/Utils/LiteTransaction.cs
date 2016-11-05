@@ -30,7 +30,7 @@ namespace LiteDB
 
         public void Dispose()
         {
-            if(_dispose == true) _commit();
+            if(_dispose == true) _rollback();
         }
     }
 }

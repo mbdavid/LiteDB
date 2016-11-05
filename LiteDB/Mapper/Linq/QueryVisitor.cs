@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Expressions.ParameterExpression, LiteDB.BsonValue>;
 
 namespace LiteDB
 {
@@ -15,7 +14,6 @@ namespace LiteDB
     {
         private BsonMapper _mapper;
         private Type _type;
-        private ParameterDictionary _parameters = new ParameterDictionary();
 
         public QueryVisitor(BsonMapper mapper)
         {
@@ -40,17 +38,7 @@ namespace LiteDB
                     return VisitMemberAccess(expr as MemberExpression);
                 case ExpressionType.Constant:
                     return VisitConstant(expr as ConstantExpression);
-                case ExpressionType.Add:
-                case ExpressionType.AddChecked:
-                case ExpressionType.Subtract:
-                case ExpressionType.SubtractChecked:
-                case ExpressionType.Multiply:
-                case ExpressionType.MultiplyChecked:
-                case ExpressionType.Divide:
-                case ExpressionType.Modulo:
-                case ExpressionType.And:
                 case ExpressionType.AndAlso:
-                case ExpressionType.Or:
                 case ExpressionType.OrElse:
                 case ExpressionType.LessThan:
                 case ExpressionType.LessThanOrEqual:
@@ -58,29 +46,12 @@ namespace LiteDB
                 case ExpressionType.GreaterThanOrEqual:
                 case ExpressionType.Equal:
                 case ExpressionType.NotEqual:
-                case ExpressionType.Coalesce:
-                case ExpressionType.ArrayIndex:
-                case ExpressionType.RightShift:
-                case ExpressionType.LeftShift:
-                case ExpressionType.ExclusiveOr:
                     return VisitBinary(expr as BinaryExpression);
-                case ExpressionType.Conditional:
-                    return VisitConditional(expr as ConditionalExpression);
-                case ExpressionType.Negate:
-                case ExpressionType.NegateChecked:
                 case ExpressionType.Not:
                 case ExpressionType.Convert:
-                case ExpressionType.ConvertChecked:
-                case ExpressionType.ArrayLength:
-                case ExpressionType.Quote:
-                case ExpressionType.TypeAs:
                     return VisitUnary(expr as UnaryExpression);
-                case ExpressionType.Parameter:
-                    return VisitParameter(expr as ParameterExpression);
                 case ExpressionType.Call:
                     return VisitMethodCall(expr as MethodCallExpression);
-                case ExpressionType.New:
-                    return VisitNew(expr as NewExpression);
                 case ExpressionType.NewArrayInit:
                 case ExpressionType.NewArrayBounds:
                     return VisitNewArray(expr as NewArrayExpression);
@@ -91,16 +62,11 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Hiest level is lambda expression: "x => x.Id == 1"
+        /// Highest level is lambda expression: "x => x.Id == 1"
         /// </summary>
         private object VisitLambda(LambdaExpression lambda)
         {
             return VisitExpression(lambda.Body);
-        }
-
-        private object VisitNew(NewExpression newexpr)
-        {
-            return null;
         }
 
         /// <summary>
@@ -119,7 +85,7 @@ namespace LiteDB
             var left = VisitExpression(bin.Left);
             var right = VisitExpression(bin.Right);
 
-            switch(bin.NodeType)
+            switch (bin.NodeType)
             {
                 case ExpressionType.Equal: return Query.EQ(left as string, right as BsonValue);
                 case ExpressionType.NotEqual: return Query.Not(left as string, right as BsonValue);
@@ -134,11 +100,6 @@ namespace LiteDB
             }
         }
 
-        public object VisitConditional(ConditionalExpression conditional)
-        {
-            return null;
-        }
-
         /// <summary>
         /// Not expression like "!(x.Name == "John")" or "!x.Active"
         /// Convert expression "x.Platform (enum => int)
@@ -147,9 +108,11 @@ namespace LiteDB
         {
             var operand = this.VisitExpression(unary.Operand);
 
-            switch(unary.NodeType)
+            switch (unary.NodeType)
             {
-                case ExpressionType.Not: return Query.Not(operand as Query);
+                case ExpressionType.Not: return operand is string ? 
+                        Query.Not(operand as string, true) : // !x.Active 
+                        Query.Not(operand as Query); // !(x.Name == "John")
                 case ExpressionType.Convert: return operand;
                 default: throw new NotImplementedException("Expression not implemented: " + unary.ToString());
             }
@@ -161,7 +124,7 @@ namespace LiteDB
         private object VisitMethodCall(MethodCallExpression method)
         {
             // support for IEnumerable list as parameter (Query.In)
-            if(method.Method.DeclaringType.FullName == "System.Linq.Enumerable")
+            if (method.Method.DeclaringType.FullName == "System.Linq.Enumerable")
             {
                 return VisitEnumerable(method);
             }
@@ -169,18 +132,13 @@ namespace LiteDB
             var field = this.VisitExpression(method.Object) as string;
             var value = method.Arguments.Count >= 1 ? this.VisitExpression(method.Arguments[0]) as BsonValue : BsonValue.Null;
 
-            switch(method.Method.Name)
+            switch (method.Method.Name)
             {
                 case "StartsWith": return Query.StartsWith(field, value);
                 case "Contains": return Query.Contains(field, value);
                 case "Equals": return Query.EQ(field, value);
                 default: throw new NotImplementedException("Expression not implemented: " + method.ToString());
             }
-        }
-
-        private object VisitParameter(ParameterExpression parameter)
-        {
-            return null;
         }
 
         /// <summary>

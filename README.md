@@ -6,10 +6,10 @@
 # v-next
 - revert QueryVisitor (keep GetField + Query.Not)
 - Create some "Reserved bytes" in index page + header page
-- BsonMapper with ReadOnly / private setter options / Fields
 - Fix connection string to support " ConnectionStringDictionary
 - Shrink
 - MemoryStream disk impl
+- BsonMapper with ReadOnly / private setter options / Fields
 
 # linq visitor
 - Rebuild QueryVisitor
@@ -26,7 +26,8 @@
 # NETStandard
 - Downgrade to 1.4
 
-
+# Know Bugs
+- Linq using Enum are wrong (linq convert to int)
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)
