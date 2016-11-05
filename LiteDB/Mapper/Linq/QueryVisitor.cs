@@ -55,6 +55,8 @@ namespace LiteDB
                 case ExpressionType.NewArrayInit:
                 case ExpressionType.NewArrayBounds:
                     return VisitNewArray(expr as NewArrayExpression);
+                case ExpressionType.Invoke:
+                    return VisitInvoke(expr as InvocationExpression);
                 default: throw new NotImplementedException("Expression not implemented: " + expr.ToString());
             }
         }
@@ -66,7 +68,11 @@ namespace LiteDB
         /// </summary>
         private object VisitLambda(LambdaExpression lambda)
         {
-            return VisitExpression(lambda.Body);
+            var result = VisitExpression(lambda.Body);
+
+            // if result of lambda is just an string, is like "x.Active" only
+            return result is string ? 
+                Query.EQ(result as string, true) : result; 
         }
 
         /// <summary>
@@ -155,6 +161,18 @@ namespace LiteDB
         private object VisitConstant(ConstantExpression constant)
         {
             return new BsonValue(constant.Value);
+        }
+
+        /// <summary>
+        /// Return invoke method. x.Id == GetId()
+        /// </summary>
+        private object VisitInvoke(InvocationExpression invoke)
+        {
+            var objectMember = Expression.Convert(invoke, typeof(object));
+            var getterLambda = Expression.Lambda<Func<object>>(objectMember);
+            var getter = getterLambda.Compile();
+
+            return new BsonValue(getter());
         }
 
         /// <summary>
