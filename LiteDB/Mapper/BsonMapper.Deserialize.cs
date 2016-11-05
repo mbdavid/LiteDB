@@ -116,7 +116,7 @@ namespace LiteDB
             // enum value is an int
             else if (type.GetTypeInfo().IsEnum)
             {
-                return value.AsInt32;
+                return Enum.Parse(type, value.AsString);
             }
 
             // test if has a custom type implementation

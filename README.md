@@ -4,7 +4,6 @@
 - Transaction
 
 # v-next
-- implement transaction
 - revert QueryVisitor (keep GetField + Query.Not)
 - Create some "Reserved bytes" in index page + header page
 - BsonMapper with ReadOnly / private setter options / Fields

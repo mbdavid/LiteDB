@@ -72,7 +72,8 @@ namespace LiteDB
 
                     var result = action(col);
 
-                    if (_autocommit || _transactions.Count == 0) _trans.Commit();
+                    // when autocommit is false, transaction count is always 0
+                    if (_transactions.Count == 0) _trans.Commit();
 
                     return result;
                 }
