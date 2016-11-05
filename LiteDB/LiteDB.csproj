@@ -57,8 +57,7 @@
     <Compile Include="Database\Collections\Index.cs" />
     <Compile Include="Database\Collections\Insert.cs" />
     <Compile Include="Database\Collections\Update.cs" />
-    <Compile Include="Database\Database\Collection.cs" />
-    <Compile Include="Database\LiteCollection.cs" />
+    <Compile Include="Database\Collections\LiteCollection.cs" />
     <Compile Include="Database\LiteDatabase.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
@@ -103,6 +102,7 @@
     <Compile Include="Engine\Structures\DataBlock.cs" />
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
+    <Compile Include="Utils\LiteTransaction.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
     <Compile Include="Mapper\Attributes\BsonFieldAttribute.cs" />
     <Compile Include="Mapper\Attributes\BsonIdAttribute.cs" />
