@@ -29,7 +29,7 @@ namespace LiteDB
             var result = _query.Run(col, indexer);
             var all = new QueryAll("_id", _order).Run(col, indexer);
 
-            return all.Except(result);
+            return all.Except(result, new IndexNodeComparer());
         }
     }
 }
