@@ -1,33 +1,24 @@
+# must-have to beta
+- Create some "Reserved bytes" in index page + header page
+- Fix connection string to support " ConnectionStringDictionary
+- netstandard 1.4
+- Include BsonDocument.Add() with [Obsolete]
+
+# must-have to release
+- Shrink
+- MemoryStream disk impl
+- Upgrade datafile from v2
+
+# Wiki
+- Update current documents
+- LiteDatabase vs LiteEngine
+- Upgrade to v3
+- Query and Linq expressions (https://mongodb-documentation.readthedocs.io/en/latest/ecosystem/tutorial/use-linq-queries-with-csharp-driver.html)
+
 # test
 - Linq to multi index
 - Deep includes
 - Transaction
-
-# v-next
-- revert QueryVisitor (keep GetField + Query.Not)
-- Create some "Reserved bytes" in index page + header page
-- Fix connection string to support " ConnectionStringDictionary
-- Shrink
-- MemoryStream disk impl
-- BsonMapper with ReadOnly / private setter options / Fields
-
-# linq visitor
-- Rebuild QueryVisitor
-- Support Linq to create index in multi key array (x => x.Addresses.Select(z => z.StreetName))
-- Query.Not(Query)
-
-- https://github.com/schotime/NPoco/blob/master/src/NPoco/Expressions/SqlExpression.cs#L753
-- https://msdn.microsoft.com/en-us/library/bb882521(v=vs.90).aspx
-
-# mapper
-- BsonMapper map Fields? Change name "property" to "member", like EntityMapper.Members?
-
-
-# NETStandard
-- Downgrade to 1.4
-
-# Know Bugs
-- Linq using Enum are wrong (linq convert to int)
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)
@@ -37,11 +28,13 @@
 
 # To think about
 - Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
-- IQueryProvider to `db.Query<MyClass>("colName").Where(x => x.IdName == "John").ToPaged(1, 10);`
-- Autocommit problem: duplicate key throw rollback in all
 - CheckIntegrity, PageOverflow test
-- ReadOnly datafile access support
+- LiteRepository
+- BsonMapper map Fields? Change name "property" to "member", like EntityMapper.Members?
+- BsonMapper with ReadOnly / private setter options / Fields
 
+# Know bugs
+- Autocommit problem: duplicate key throw rollback in all
 
 # Changes to v3
 - Thread Safe
@@ -55,9 +48,9 @@
 - Less 96 bytes per document (added 13 bytes per index)
 - Remove index options
 - Remove: Shrink, Encryption, ...
-- New QueryFunc
 - New Upsert
 - New FindIndex
+- New Query.Not, Query.Where
 - Remove ChangeID (avoid write Header Page all times)
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
 - Virtual index fields
@@ -79,6 +72,9 @@
 
 This structure will be work more close to a DBMS (centralized database instance with a server running).
 
+# Linq references
+- https://github.com/schotime/NPoco/blob/master/src/NPoco/Expressions/SqlExpression.cs#L753
+- https://msdn.microsoft.com/en-us/library/bb882521(v=vs.90).aspx
 
 =============================================================================
 
@@ -241,3 +237,9 @@ Copyright (c) 2016 - Maurício David
 ## Thanks
 
 A special thanks to @negue and @szurgot helping with portable version.
+
+## Donation
+
+Is LiteDB helps you? Did you save time/money using LiteDB?
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=UZWC8F3FT9YTS&lc=BR&item_name=LiteDB&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
