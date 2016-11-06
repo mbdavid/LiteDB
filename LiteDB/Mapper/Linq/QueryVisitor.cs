@@ -30,61 +30,61 @@ namespace LiteDB
             return VisitExpression(lambda.Body);
         }
 
-        private Query VisitExpression(Expression expr)
+        private Query VisitExpression(Expression expr, string prefix = null)
         {
             // Single: x.Active
             if (expr is MemberExpression && expr.Type == typeof(bool))
             {
-                return Query.EQ(this.GetField(expr), new BsonValue(true));
+                return Query.EQ(this.GetField(expr, prefix), new BsonValue(true));
             }
             // Not: !x.Active or !(x.Id == 1)
             else if (expr.NodeType == ExpressionType.Not)
             {
                 var unary = expr as UnaryExpression;
-                return Query.Not(this.VisitExpression(unary.Operand));
+                return Query.Not(this.VisitExpression(unary.Operand, prefix));
             }
             // Equals: x.Id == 1
             else if (expr.NodeType == ExpressionType.Equal)
             {
                 var bin = expr as BinaryExpression;
-                return new QueryEquals(this.GetField(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return new QueryEquals(this.GetField(bin.Left, prefix), this.VisitValue(bin.Right, bin.Left));
             }
             // NotEquals: x.Id != 1
             else if (expr.NodeType == ExpressionType.NotEqual)
             {
                 var bin = expr as BinaryExpression;
-                return Query.Not(this.GetField(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.Not(this.GetField(bin.Left, prefix), this.VisitValue(bin.Right, bin.Left));
             }
             // LessThan: x.Id < 5
             else if (expr.NodeType == ExpressionType.LessThan)
             {
                 var bin = expr as BinaryExpression;
-                return Query.LT(this.GetField(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.LT(this.GetField(bin.Left, prefix), this.VisitValue(bin.Right, bin.Left));
             }
             // LessThanOrEqual: x.Id <= 5
             else if (expr.NodeType == ExpressionType.LessThanOrEqual)
             {
                 var bin = expr as BinaryExpression;
-                return Query.LTE(this.GetField(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.LTE(this.GetField(bin.Left, prefix), this.VisitValue(bin.Right, bin.Left));
             }
             // GreaterThan: x.Id > 5
             else if (expr.NodeType == ExpressionType.GreaterThan)
             {
                 var bin = expr as BinaryExpression;
-                return Query.GT(this.GetField(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.GT(this.GetField(bin.Left, prefix), this.VisitValue(bin.Right, bin.Left));
             }
             // GreaterThanOrEqual: x.Id >= 5
             else if (expr.NodeType == ExpressionType.GreaterThanOrEqual)
             {
                 var bin = expr as BinaryExpression;
-                return Query.GTE(this.GetField(bin.Left), this.VisitValue(bin.Right, bin.Left));
+                return Query.GTE(this.GetField(bin.Left, prefix), this.VisitValue(bin.Right, bin.Left));
             }
             // And: x.Id > 1 && x.Name == "John"
             else if (expr.NodeType == ExpressionType.AndAlso)
             {
                 var bin = expr as BinaryExpression;
-                var left = this.VisitExpression(bin.Left);
-                var right = this.VisitExpression(bin.Right);
+                var left = this.VisitExpression(bin.Left, prefix);
+                var right = this.VisitExpression(bin.Right, prefix);
 
                 return Query.And(left, right);
             }
@@ -102,42 +102,48 @@ namespace LiteDB
             {
                 var met = expr as MethodCallExpression;
                 var method = met.Method.Name;
+                var type = met.Method.ReflectedType;
+                var paramType = (met.Arguments[0] as MemberExpression)?.Expression.NodeType;
 
                 // StartsWith
                 if (method == "StartsWith")
                 {
                     var value = this.VisitValue(met.Arguments[0], null);
 
-                    return Query.StartsWith(this.GetField(met.Object), value);
-                }
-                // Contains
-                else if (method == "Contains")
-                {
-                    // String: x.Name.Contains("auricio")
-                    if (met.Method.ReflectedType == typeof(string))
-                    {
-                        var value = this.VisitValue(met.Arguments[0], null);
-
-                        return Query.Contains(this.GetField(met.Object), value);
-                    }
-                    // Enumerable: x.ListNumber.Contains(2)
-                    else if (met.Method.ReflectedType == typeof(Enumerable))
-                    {
-                        var field = this.GetField(met.Arguments[0]);
-                        var value = this.VisitValue(met.Arguments[1], null);
-
-                        return Query.EQ(field, value);
-                    }
+                    return Query.StartsWith(this.GetField(met.Object, prefix), value);
                 }
                 // Equals
                 else if (method == "Equals")
                 {
                     var value = this.VisitValue(met.Arguments[0], null);
 
-                    return Query.EQ(this.GetField(met.Object), value);
+                    return Query.EQ(this.GetField(met.Object, prefix), value);
                 }
-                // System.Linq.Enumerable methods
-                else if (met.Method.DeclaringType == typeof(Enumerable))
+                // Contains (String): x.Name.Contains("auricio")
+                else if (method == "Contains" &&  type == typeof(string))
+                {
+                    var value = this.VisitValue(met.Arguments[0], null);
+
+                    return Query.Contains(this.GetField(met.Object, prefix), value);
+                }
+                // Contains (Enumerable): x.ListNumber.Contains(2)
+                else if (method == "Contains" && type == typeof(Enumerable))
+                {
+                    var field = this.GetField(met.Arguments[0], prefix);
+                    var value = this.VisitValue(met.Arguments[1], null);
+
+                    return Query.EQ(field, value);
+                }
+                // Any (Enumerable): x.Customer.Any(z => z.Name.StartsWith("John"))
+                else if(method == "Any" && type == typeof(Enumerable) && paramType == ExpressionType.Parameter)
+                {
+                    var field = this.GetField(met.Arguments[0]);
+                    var lambda = met.Arguments[1] as LambdaExpression;
+
+                    return this.VisitExpression(lambda.Body, field + ".");
+                }
+                // System.Linq.Enumerable methods (constant list items)
+                else if (type == typeof(Enumerable))
                 {
                     return ParseEnumerableExpression(met);
                 }
@@ -258,10 +264,11 @@ namespace LiteDB
         /// <summary>
         /// Based on an expression, returns document field mapped from class Property.
         /// Support multi level dotted notation: x => x.Customer.Name
+        /// Prefix is used on array expression like: x => x.Customers.Any(z => z.Name == "John") (prefix = "Customers." 
         /// </summary>
-        public string GetField(Expression expr)
+        public string GetField(Expression expr, string prefix = "")
         {
-            var property = expr.GetPath();
+            var property = prefix + expr.GetPath();
             var parts = property.Split('.');
             var fields = new string[parts.Length];
             var type = _type;

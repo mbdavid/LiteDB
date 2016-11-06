@@ -27,9 +27,9 @@ namespace LiteDB.Tests
             //var q5 = qv.Visit(x => !x.Name.StartsWith("john")); // Query.Not(Query.StartsWith("John"))
 
             // enum
-            var q4 = qv.Visit(x => x.OS == PlatformID.Unix);
+            //var q4 = qv.Visit(x => x.OS == PlatformID.Unix);
 
-            var q6 = qv.Visit(x => new int[] { 1, 2 }.Contains(x.Id));
+            //var q6 = qv.Visit(x => new int[] { 1, 2 }.Contains(x.Id));
 
             //var q7 = qv.Visit(x => x.Names.Contains("John"));
 

@@ -48,13 +48,11 @@ namespace LiteDB.Tests
                 col.EnsureIndex(x => x.Keys);
                 col.EnsureIndex(x => x.Customers.Select(z => z.Name));
 
-                //col.EnsureIndex("Customers.Name");
+                // Query.EQ("Keys", 2)
+                Assert.AreEqual(2, col.Count(x => x.Keys.Contains(2)));
 
-                //Assert.AreEqual(2, col.Count(x => x.Keys.Contains(2)));
-
+                // Query.StartsWith("Customers.Name", "Ana");
                 Assert.AreEqual(2, col.Count(x => x.Customers.Any(z => z.Name.StartsWith("Ana"))));
-
-
 
             }
         }
