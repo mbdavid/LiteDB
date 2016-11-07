@@ -58,6 +58,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Database\AutoIdTest.cs" />
+    <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\LinqVisitorTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />

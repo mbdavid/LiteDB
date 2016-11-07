@@ -28,5 +28,70 @@ namespace LiteDB
 
             return defaultValue;
         }
+
+        public static void ParseKeyValue(this IDictionary<string, string> dict, string connectionString)
+        {
+            var inClosure = false;
+            var inValue = false;
+            var key = string.Empty;
+            var value = string.Empty;
+
+            for (var i = 0; i < connectionString.Length; i++)
+            {
+                if (inValue)
+                {
+                    if (inClosure)
+                    {
+                        if (connectionString[i] == '"' && !(i > 0 && connectionString[i - 1] == '\\'))
+                        {
+                            inClosure = false;
+                        }
+                        else
+                        {
+                            value += connectionString[i];
+                        }
+                    }
+                    else
+                    {
+                        if (connectionString[i] == '"' && !(i > 0 && connectionString[i - 1] == '\\'))
+                        {
+                            inClosure = true;
+                        }
+                        else if (connectionString[i] == ';')
+                        {
+                            dict.Add(key.Trim(), value);
+                            key = string.Empty;
+                            value = string.Empty;
+                            inValue = false;
+                        }
+                        else
+                        {
+                            value += connectionString[i];
+                        }
+                    }
+                }
+                else
+                {
+                    if (connectionString[i] == '=')
+                    {
+                        inValue = true;
+                    }
+                    else if (connectionString[i] == ';')
+                    {
+                        dict.Add(key.Trim(), string.Empty);
+                        key = string.Empty;
+                    }
+                    else
+                    {
+                        key += connectionString[i];
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(key.Trim()))
+            {
+                dict.Add(key.Trim(), value);
+            }
+        }
     }
 }
