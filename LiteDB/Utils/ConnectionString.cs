@@ -17,6 +17,8 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
+            _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             // Create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
@@ -25,7 +27,6 @@ namespace LiteDB
             else
             {
                 // If connectionstring is only a filename, set filename
-                _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 #if PCL
                 _values["filename"] = connectionString;
 #else
