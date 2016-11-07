@@ -20,9 +20,7 @@ namespace LiteDB
             // Create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
-                _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Split(new char[] { '=' }, 2))
-                    .ToDictionary(t => t[0].Trim().ToLower(), t => t.Length == 1 ? "" : t[1].Trim(), StringComparer.OrdinalIgnoreCase);
+                _values.ParseKeyValue(connectionString);
             }
             else
             {
