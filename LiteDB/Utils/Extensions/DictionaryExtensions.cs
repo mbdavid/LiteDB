@@ -31,66 +31,33 @@ namespace LiteDB
 
         public static void ParseKeyValue(this IDictionary<string, string> dict, string connectionString)
         {
-            var inClosure = false;
-            var inValue = false;
-            var key = string.Empty;
-            var value = string.Empty;
+            var s = new StringScanner(connectionString);
 
-            for (var i = 0; i < connectionString.Length; i++)
+            while(!s.HasTerminated)
             {
-                if (inValue)
+                var key = s.Scan(@"(.*?)=", 1).Trim();
+                var value = "";
+                s.Scan(@"\s*");
+
+                if (s.Match("\""))
                 {
-                    if (inClosure)
-                    {
-                        if (connectionString[i] == '"' && !(i > 0 && connectionString[i - 1] == '\\'))
-                        {
-                            inClosure = false;
-                        }
-                        else
-                        {
-                            value += connectionString[i];
-                        }
-                    }
-                    else
-                    {
-                        if (connectionString[i] == '"' && !(i > 0 && connectionString[i - 1] == '\\'))
-                        {
-                            inClosure = true;
-                        }
-                        else if (connectionString[i] == ';')
-                        {
-                            dict.Add(key.Trim(), value);
-                            key = string.Empty;
-                            value = string.Empty;
-                            inValue = false;
-                        }
-                        else
-                        {
-                            value += connectionString[i];
-                        }
-                    }
+                    // read a value inside an string " (remove escapes)
+                    value = s.Scan(@"""((?:\\""|.)*?)""", 1).Replace("\\\"", "\"");
+                    s.Scan(@"\s*;?\s*");
                 }
                 else
                 {
-                    if (connectionString[i] == '=')
+                    // read value
+                    value = s.Scan(@"(.*?);\s*", 1).Trim();
+
+                    // read last part
+                    if (value.Length == 0)
                     {
-                        inValue = true;
-                    }
-                    else if (connectionString[i] == ';')
-                    {
-                        dict.Add(key.Trim(), string.Empty);
-                        key = string.Empty;
-                    }
-                    else
-                    {
-                        key += connectionString[i];
+                        value = s.Scan(".*").Trim();
                     }
                 }
-            }
 
-            if (!string.IsNullOrEmpty(key.Trim()))
-            {
-                dict.Add(key.Trim(), value);
+                dict[key] = value;
             }
         }
     }
