@@ -66,7 +66,7 @@ namespace LiteDB
                 case BsonType.Binary:
                     var bytes = (byte[])value.RawValue;
                     this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(bytes, 0, bytes.Length
-#if NETFULL
+#if NET35
                         , Base64FormattingOptions.None
 #endif
                         ) : "-- " + bytes.Length + " bytes --");

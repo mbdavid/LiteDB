@@ -91,7 +91,7 @@ namespace LiteDB
         /// <returns></returns>
         public static byte[] Salt(int maxLength = 16)
         {
-#if NETFULL
+#if NET35
             var random = new RNGCryptoServiceProvider();
 
             // empty salt array

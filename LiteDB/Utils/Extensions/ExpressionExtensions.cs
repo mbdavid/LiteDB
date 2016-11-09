@@ -31,6 +31,7 @@ namespace LiteDB
             return path;
         }
 
+#if NET35
         /// <summary>
         /// Implementation of Expression.Assign in .Net 3.5
         /// http://stackoverflow.com/questions/10122856/implementation-of-expression-assign-in-net-3-5-with-same-signature
@@ -51,5 +52,6 @@ namespace LiteDB
                 return (left = right);
             }
         }
+#endif
     }
 }

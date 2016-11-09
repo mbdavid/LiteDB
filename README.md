@@ -8,6 +8,7 @@
 - Shrink
 - MemoryStream disk impl
 - Upgrade datafile from v2
+- LiteDB.NETStandard
 
 # Wiki
 - Update current documents

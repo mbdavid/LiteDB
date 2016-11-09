@@ -259,7 +259,7 @@ namespace LiteDB
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
-#if NETFULL
+#if NET35
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 #else
             var props = type.GetRuntimeProperties();
@@ -338,11 +338,11 @@ namespace LiteDB
         protected PropertyInfo GetIdProperty(Type type)
         {
             // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-#if NETFULL
+#if NET35
             return Reflection.SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
 #else
-            return SelectProperty(type.GetRuntimeProperties(),
+            return Reflection.SelectProperty(type.GetRuntimeProperties(),
                 x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
 #endif
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),

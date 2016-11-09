@@ -156,7 +156,7 @@ namespace LiteDB
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
-#if NETFULL
+#if NET35
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
 #else
@@ -194,7 +194,7 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-#if NETFULL
+#if NET35
             var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
 #else
 			var typeInfo = type.GetTypeInfo();
@@ -213,7 +213,7 @@ namespace LiteDB
             }
             else
             {
-#if NETFULL
+#if NET35
                 var addMethod = type.GetMethod("Add");
 #else
                 var addMethod = type.GetRuntimeMethod("Add", new Type[1] { itemType });

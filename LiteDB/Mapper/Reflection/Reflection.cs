@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-#if NETFULL
+#if NET35
 using System.Reflection.Emit;
 #endif
 
@@ -61,7 +61,7 @@ namespace LiteDB
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "val");
             var accessor = Expression.Property(Expression.Convert(obj, propertyInfo.DeclaringType), propertyInfo);
-#if NETFULL
+#if NET35
             var assign = ExpressionExtensions.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
 #else
             var assign = Expression.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
@@ -119,7 +119,7 @@ namespace LiteDB
                         }
                         else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         {
-#if NETFULL
+#if NET35
                             var k = type.GetGenericArguments()[0];
                             var v = type.GetGenericArguments()[1];
 #else
@@ -161,10 +161,13 @@ namespace LiteDB
         public static Type UnderlyingTypeOf(Type type)
         {
             // works only for generics (if type is not generic, returns same type)
+#if NET35
             if (!type.IsGenericType) return type;
-#if NETFULL
+
             return type.GetGenericArguments()[0];
 #else
+            if (!type.GetTypeInfo().IsGenericType) return type;
+
             return type.GetTypeInfo().GenericTypeArguments[0];
 #endif
         }
@@ -186,7 +189,7 @@ namespace LiteDB
             var type = list.GetType();
 
             if (type.IsArray) return type.GetElementType();
-#if NETFULL
+#if NET35
             foreach (var i in type.GetInterfaces())
 #else
             foreach (var i in type.GetTypeInfo().ImplementedInterfaces)
@@ -194,7 +197,7 @@ namespace LiteDB
             {
                 if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-#if NETFULL
+#if NET35
                     return i.GetGenericArguments()[0];
 #else
                     return i.GetTypeInfo().GenericTypeArguments[0];
@@ -212,7 +215,7 @@ namespace LiteDB
         {
             if (type.IsArray) return true;
 
-#if NETFULL
+#if NET35
             foreach (var @interface in type.GetInterfaces())
 #else
             foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)

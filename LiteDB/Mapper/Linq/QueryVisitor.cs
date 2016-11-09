@@ -102,7 +102,11 @@ namespace LiteDB
             {
                 var met = expr as MethodCallExpression;
                 var method = met.Method.Name;
+#if NET35
                 var type = met.Method.ReflectedType;
+#else
+                var type = met.Method.DeclaringType;
+#endif
                 var paramType = (met.Arguments[0] as MemberExpression)?.Expression.NodeType;
 
                 // StartsWith
@@ -120,7 +124,7 @@ namespace LiteDB
                     return Query.EQ(this.GetField(met.Object, prefix), value);
                 }
                 // Contains (String): x.Name.Contains("auricio")
-                else if (method == "Contains" &&  type == typeof(string))
+                else if (method == "Contains" && type == typeof(string))
                 {
                     var value = this.VisitValue(met.Arguments[0], null);
 

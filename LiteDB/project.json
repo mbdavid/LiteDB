@@ -1,0 +1,25 @@
+{
+  "version": "3.0.0-*",
+  "title": "LiteDB",
+  "description": "An embedded .NET NoSQL Document Store in a single data file",
+  "language": "en-US",
+  "authors": [ "Maurício David" ],
+  "packOptions": {
+    "projectUrl": "http://www.litedb.org",
+    "tags": [ "nosql", "database", "embedded" ],
+    "licenseUrl": "https://raw.githubusercontent.com/mbdavid/LiteDB/master/LICENSE",
+    "iconUrl": "http://www.litedb.org/img/logo_64x64.png",
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/mbdavid/LiteDB"
+    }
+  },
+  "supports": { },
+  "dependencies": {
+    "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
+    "NETStandard.Library": "1.6.0"
+  },
+  "frameworks": {
+    "netstandard1.4": { }
+  }
+}

@@ -87,7 +87,7 @@ namespace LiteDB
             // for dictionary
             else if (obj is IDictionary)
             {
-#if NETFULL
+#if NET35
                 var itemType = type.GetGenericArguments()[1];
 #else
                 var itemType = type.GetTypeInfo().GenericTypeArguments[1];
