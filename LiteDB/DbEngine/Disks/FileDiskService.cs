@@ -387,11 +387,11 @@ namespace LiteDB
                 }
                 catch (UnauthorizedAccessException)
                 {
-                        LitePlatform.Platform.WaitFor (10);
+                    LitePlatform.Platform.WaitFor (10);
                 }
                 catch (IOException ex)
                 {
-                        ex.WaitIfLocked (10);
+                    ex.WaitIfLocked (10);
                 }
             }
 
