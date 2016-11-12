@@ -99,8 +99,6 @@ namespace LiteDB
             return this;
         }
 
-        #region DbRef
-
         /// <summary>
         /// Define a subdocument (or a list of) as a reference
         /// </summary>
@@ -110,105 +108,9 @@ namespace LiteDB
 
             return this.GetProperty(property, (p) =>
             {
-                var typeRef = typeof(K);
-                p.IsDbRef = true;
-
-                if (Reflection.IsList(typeRef))
-                {
-                    var itemType = typeRef.IsArray ? typeRef.GetElementType() : Reflection.UnderlyingTypeOf(typeRef);
-                    var entity = _mapper.GetEntityMapper(itemType);
-
-                    RegisterDbRefList(p, collectionName, typeRef, entity);
-                }
-                else
-                {
-                    var entity = _mapper.GetEntityMapper(typeRef);
-
-                    RegisterDbRef(p, collectionName, entity);
-                }
+                BsonMapper.RegisterDbRef(_mapper, p, collectionName);
             });
         }
-
-        /// <summary>
-        /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
-        /// </summary>
-        internal static void RegisterDbRef(PropertyMapper p, string collectionName, EntityMapper itemEntity)
-        {
-            p.Serialize = (obj, m) =>
-            {
-                var idField = itemEntity.Id;
-
-                var id = idField.Getter(obj);
-
-                return new BsonDocument
-                {
-                    { "$id", new BsonValue(id) },
-                    { "$ref", collectionName }
-                };
-            };
-
-            p.Deserialize = (bson, m) =>
-            {
-                var idRef = bson.AsDocument["$id"];
-
-                return m.Deserialize(itemEntity.ForType,
-                    idRef.IsNull ?
-                    bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
-                    new BsonDocument { { "_id", idRef } }); // if has $id, deserialize object using only _id object
-            };
-        }
-
-        /// <summary>
-        /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
-        /// </summary>
-        internal static void RegisterDbRefList(PropertyMapper p, string collectionName, Type listType, EntityMapper itemEntity)
-        {
-            p.Serialize = (list, m) =>
-            {
-                var result = new BsonArray();
-                var idField = itemEntity.Id;
-
-                foreach (var item in (IEnumerable)list)
-                {
-                    result.Add(new BsonDocument
-                    {
-                        { "$id", new BsonValue(idField.Getter(item)) },
-                        { "$ref", collectionName }
-                    });
-                }
-
-                return result;
-            };
-
-            p.Deserialize = (bson, m) =>
-            {
-                var array = bson.AsArray;
-
-                if (array.Count == 0) return m.Deserialize(listType, array);
-
-                var hasIdRef = array[0].AsDocument["$id"].IsNull;
-
-                if (hasIdRef)
-                {
-                    // if no $id, deserialize as full (was loaded via Include)
-                    return m.Deserialize(listType, array);
-                }
-                else
-                {
-                    // copy array changing $id to _id
-                    var arr = new BsonArray();
-
-                    foreach (var item in array)
-                    {
-                        arr.Add(new BsonDocument { { "_id", item.AsDocument["$id"] } });
-                    }
-
-                    return m.Deserialize(listType, arr);
-                }
-            };
-        }
-
-        #endregion DbRef
 
         /// <summary>
         /// Get a property based on a expression. Eg.: 'x => x.UserId' return string "UserId"

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -259,6 +260,7 @@ namespace LiteDB
             var idAttr = typeof(BsonIdAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
+            var dbrefAttr = typeof(BsonRefAttribute);
 #if NET35
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 #else
@@ -322,8 +324,16 @@ namespace LiteDB
 
                 // set UnderlyingType when is list of elements
                 p.UnderlyingType  = p.IsList ? 
-                    Reflection.UnderlyingTypeOf(p.PropertyType) : 
+                    Reflection.GetListItemType(p.PropertyType) : 
                     p.PropertyType;
+
+                // check if property has [BsonRef]
+                var dbRef = (BsonRefAttribute)prop.GetCustomAttributes(dbrefAttr, false).FirstOrDefault();
+
+                if (dbRef != null)
+                {
+                    BsonMapper.RegisterDbRef(this, p, dbRef.Collection);
+                }
 
                 // add to props list
                 mapper.Props.Add(p);
@@ -347,6 +357,112 @@ namespace LiteDB
 #endif
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
                 x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
+        }
+
+        #endregion
+
+        #region Register DbRef
+
+        /// <summary>
+        /// Register a property mapper as DbRef to serialize/deserialize only document refenece _id
+        /// </summary>
+        public static void RegisterDbRef(BsonMapper mapper, PropertyMapper property, string collectionName)
+        {
+            property.IsDbRef = true;
+
+            if (property.IsList)
+            {
+                RegisterDbRefList(mapper, property, collectionName);
+            }
+            else
+            {
+                RegisterDbRefItem(mapper, property, collectionName);
+            }
+        }
+
+        /// <summary>
+        /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
+        /// </summary>
+        private static void RegisterDbRefItem(BsonMapper mapper, PropertyMapper property, string collectionName)
+        {
+            // get entity
+            var entity = mapper.GetEntityMapper(property.PropertyType);
+
+            property.Serialize = (obj, m) =>
+            {
+                var idField = entity.Id;
+
+                var id = idField.Getter(obj);
+
+                return new BsonDocument
+                {
+                    { "$id", new BsonValue(id) },
+                    { "$ref", collectionName }
+                };
+            };
+
+            property.Deserialize = (bson, m) =>
+            {
+                var idRef = bson.AsDocument["$id"];
+
+                return m.Deserialize(entity.ForType,
+                    idRef.IsNull ?
+                    bson : // if has no $id object was full loaded (via Include) - so deserialize using normal function
+                    new BsonDocument { { "_id", idRef } }); // if has $id, deserialize object using only _id object
+            };
+        }
+
+        /// <summary>
+        /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
+        /// </summary>
+        private static void RegisterDbRefList(BsonMapper mapper, PropertyMapper property, string collectionName)
+        {
+            // get entity from list item type
+            var entity = mapper.GetEntityMapper(property.UnderlyingType);
+
+            property.Serialize = (list, m) =>
+            {
+                var result = new BsonArray();
+                var idField = entity.Id;
+
+                foreach (var item in (IEnumerable)list)
+                {
+                    result.Add(new BsonDocument
+                    {
+                        { "$id", new BsonValue(idField.Getter(item)) },
+                        { "$ref", collectionName }
+                    });
+                }
+
+                return result;
+            };
+
+            property.Deserialize = (bson, m) =>
+            {
+                var array = bson.AsArray;
+
+                if (array.Count == 0) return m.Deserialize(property.PropertyType, array);
+
+                var hasIdRef = array[0].AsDocument["$id"].IsNull;
+
+                if (hasIdRef)
+                {
+                    // if no $id, deserialize as full (was loaded via Include)
+                    return m.Deserialize(property.PropertyType, array);
+                }
+                else
+                {
+                    // copy array changing $id to _id
+                    var arr = new BsonArray();
+
+                    foreach (var item in array)
+                    {
+                        arr.Add(new BsonDocument { { "_id", item.AsDocument["$id"] } });
+                    }
+
+                    return m.Deserialize(property.PropertyType, arr);
+                }
+            };
         }
 
         #endregion

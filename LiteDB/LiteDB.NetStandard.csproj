@@ -114,6 +114,7 @@
     <Compile Include="Mapper\Attributes\BsonIdAttribute.cs" />
     <Compile Include="Mapper\Attributes\BsonIgnoreAttribute.cs" />
     <Compile Include="Mapper\Attributes\BsonIndexAttribute.cs" />
+    <Compile Include="Mapper\Attributes\BsonRefAttribute.cs" />
     <Compile Include="Mapper\AutoId.cs" />
     <Compile Include="Mapper\BsonMapper.cs" />
     <Compile Include="Mapper\BsonMapper.Deserialize.cs" />

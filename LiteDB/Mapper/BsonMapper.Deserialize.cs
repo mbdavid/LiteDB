@@ -194,13 +194,7 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-#if NET35
-            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
-#else
-			var typeInfo = type.GetTypeInfo();
-            var itemType = typeInfo.GenericTypeArguments.FirstOrDefault() 
-                   ?? typeInfo.ImplementedInterfaces.First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetTypeInfo().GenericTypeArguments.First();
-#endif
+            var itemType = Reflection.GetListItemType(type);
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
 

@@ -158,6 +158,9 @@ namespace LiteDB
             return (g.Equals(typeof(Nullable<>)));
         }
 
+        /// <summary>
+        /// Get underlying get - using to get inner Type from Nullable type
+        /// </summary>
         public static Type UnderlyingTypeOf(Type type)
         {
             // works only for generics (if type is not generic, returns same type)
@@ -184,15 +187,16 @@ namespace LiteDB
             return listType.MakeGenericType(k, v);
         }
 
-        public static Type GetListItemType(object list)
+        /// <summary>
+        /// Get item type from a generic List or Array
+        /// </summary>
+        public static Type GetListItemType(Type listType)
         {
-            var type = list.GetType();
-
-            if (type.IsArray) return type.GetElementType();
+            if (listType.IsArray) return listType.GetElementType();
 #if NET35
-            foreach (var i in type.GetInterfaces())
+            foreach (var i in listType.GetInterfaces())
 #else
-            foreach (var i in type.GetTypeInfo().ImplementedInterfaces)
+            foreach (var i in listType.GetTypeInfo().ImplementedInterfaces)
 #endif
             {
                 if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))

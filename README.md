@@ -1,14 +1,15 @@
 # must-have to beta
 - Create some "Reserved bytes" in index page + header page
-- Fix connection string to support " ConnectionStringDictionary
-- netstandard 1.4
-- Include BsonDocument.Add() with [Obsolete]
+- Organize Unit Test (remove unused)
+- Update wiki
+- [BsonRef("customer")]
 
 # must-have to release
 - Shrink
 - MemoryStream disk impl
 - Upgrade datafile from v2
 - LiteDB.NETStandard
+- Cascade include works??
 
 # Wiki
 - Update current documents
@@ -20,6 +21,9 @@
 - Linq to multi index
 - Deep includes
 - Transaction
+
+# examples
+- Create project LiteDB-Examples?
 
 # Update datafile
 - Method: static Upgrade(string datafile, string password = null, bool backup = true)

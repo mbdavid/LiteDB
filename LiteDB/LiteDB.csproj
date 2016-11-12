@@ -104,6 +104,7 @@
     <Compile Include="Engine\Structures\DataBlock.cs" />
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
+    <Compile Include="Mapper\Attributes\BsonRefAttribute.cs" />
     <Compile Include="Utils\LiteTransaction.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
     <Compile Include="Mapper\Attributes\BsonFieldAttribute.cs" />
