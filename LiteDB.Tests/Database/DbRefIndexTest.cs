@@ -16,10 +16,10 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class DbRefIndexTest : TestBase
+    public class DbRefIndexTest
     {
         [TestMethod]
-        public void DbRefIndexe_Test()
+        public void DbRefIndex_Test()
         {
             var mapper = new BsonMapper();
 
@@ -44,6 +44,7 @@ namespace LiteDB.Tests
                 orders.Insert(order);
 
                 // create an index in Customer.Id ref
+                // x.Customer.Login == "Customer.$id"
                 orders.EnsureIndex(x => x.Customer.Login);
 
                 var query = orders

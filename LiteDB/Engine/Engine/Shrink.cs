@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace LiteDB
@@ -6,15 +7,17 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
-        /// Reduce disk size rearranging unused spaces.
+        /// Reduce disk size rearranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
         /// </summary>
-        public long Shrink(string password = null)
+        public long Shrink(string password = null, IDiskService temp = null)
         {
             var originalSize = _disk.FileLength;
 
-            IDiskService temp = null;
+            // if temp disk are not passed, use memory stream disk
+            temp = temp ?? new StreamDiskService(new MemoryStream());
 
-            using (var engine = new LiteEngine(temp))
+            using(_locker.Write())
+            using (var engine = new LiteEngine(temp, password))
             {
                 // read all collection
                 foreach (var collectionName in this.GetCollectionNames())
@@ -38,13 +41,19 @@ namespace LiteDB
                 // read new header page to start copy
                 var header = BasePage.ReadPage(temp.ReadPage(0)) as HeaderPage;
 
-                // copy all pages from temp disk to original disk
+                // copy (as is) all pages from temp disk to original disk
                 for (uint i = 0; i <= header.LastPageID; i++)
                 {
                     var page = temp.ReadPage(i);
 
                     _disk.WritePage(i, page);
                 }
+
+                // create/destroy crypto class
+                _crypto = password == null ? null : new AesEncryption(password, header.Salt);
+
+                // initialize all services again (crypto can be changed)
+                this.InitializeServices();
             }
 
             // return how many bytes are reduced

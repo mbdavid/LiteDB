@@ -60,6 +60,7 @@
     <Compile Include="Database\AutoIdTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />
+    <Compile Include="Database\DbRefIndexTest.cs" />
     <Compile Include="Database\LinqVisitorTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
@@ -67,10 +68,12 @@
     <Compile Include="Document\DocumentTest.cs" />
     <Compile Include="Document\BsonTest.cs" />
     <Compile Include="Database\DerivedTypesTest.cs" />
+    <Compile Include="Engine\ShrinkTest.cs" />
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Database\MapperExceptionTest.cs" />
     <Compile Include="Database\MapperTest.cs" />
     <Compile Include="Engine\EncryptedTest.cs" />
+    <Compile Include="Engine\MemoryStreamTest.cs" />
     <Compile Include="Engine\UserVersionTest.cs" />
     <Compile Include="Engine\IndexOrderTest.cs" />
     <Compile Include="Engine\JsonTest.cs" />

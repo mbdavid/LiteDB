@@ -67,6 +67,7 @@
     <Compile Include="Document\ObjectId.cs" />
     <Compile Include="Engine\Disks\FileDiskService.cs" />
     <Compile Include="Engine\Disks\IDiskService.cs" />
+    <Compile Include="Engine\Disks\StreamDiskService.cs" />
     <Compile Include="Engine\Engine\Aggregate.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
     <Compile Include="Engine\Engine\Delete.cs" />

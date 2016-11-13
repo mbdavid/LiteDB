@@ -60,6 +60,7 @@
     <Compile Include="Database\Collections\Update.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
     <Compile Include="Database\LiteDatabase.cs" />
+    <Compile Include="Engine\Disks\StreamDiskService.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
     <Compile Include="Engine\Engine\Shrink.cs" />

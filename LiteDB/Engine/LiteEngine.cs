@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace LiteDB
 {
@@ -32,6 +33,8 @@ namespace LiteDB
 
         private bool _autocommit;
 
+        private TimeSpan _timeout;
+
         /// <summary>
         /// Get log instance for debug operations
         /// </summary>
@@ -52,12 +55,17 @@ namespace LiteDB
         /// </summary>
         public bool AutoCommit { get { return _autocommit; } }
 
+        /// <summary>
+        /// Gets time waiting write lock operation before throw LiteException timeout
+        /// </summary>
+        public TimeSpan Timeout { get { return _timeout; } }
+
         #endregion
 
         #region Ctor
 
         /// <summary>
-        /// Inicialize LiteEngine using default FileDiskService
+        /// Initialize LiteEngine using default FileDiskService
         /// </summary>
         public LiteEngine(string filename, bool journal = true)
             : this(new FileDiskService(filename, journal))
@@ -65,7 +73,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Inicialize LiteEngine using EncryptedDiskService
+        /// Initialize LiteEngine width password encryption
         /// </summary>
         public LiteEngine(string filename, string password, bool journal = true)
             : this(new FileDiskService(filename, new FileOptions { Journal = journal }), password)
@@ -73,14 +81,24 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Initialize LiteEngine using StreamDiskService
+        /// </summary>
+        public LiteEngine(Stream stream, string password = null)
+            : this(new StreamDiskService(stream), password)
+        {
+        }
+
+        /// <summary>
         /// Initialize LiteEngine using custom disk service implementation and full engine options
         /// </summary>
-        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, bool autocommit = false, int cacheSize = 5000, Logger log = null)
+        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, bool autocommit = true, int cacheSize = 5000, Logger log = null)
         {
+            _timeout = timeout ?? TimeSpan.FromMinutes(1);
             _cacheSize = cacheSize;
             _autocommit = autocommit;
             _disk = disk;
             _log = log ?? new Logger();
+            _locker = new Locker(_timeout);
 
             // initialize datafile (create) and set log instance
             _disk.Initialize(_log, password);
@@ -106,18 +124,25 @@ namespace LiteDB
             }
 
             // initialize all services
-            _locker = new Locker(timeout ?? TimeSpan.FromMinutes(1));
-            _pager = new PageService(_disk, _crypto, _log);
-            _indexer = new IndexService(_pager, _log);
-            _data = new DataService(_pager, _log);
-            _trans = new TransactionService(_disk, _crypto, _pager, _cacheSize, _log);
-            _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
+            this.InitializeServices();
 
             if (_disk.IsJournalEnabled)
             {
                 // try recovery if has journal file
                 _trans.Recovery();
             }
+        }
+
+        /// <summary>
+        /// Create instances for all engine services
+        /// </summary>
+        private void InitializeServices()
+        {
+            _pager = new PageService(_disk, _crypto, _log);
+            _indexer = new IndexService(_pager, _log);
+            _data = new DataService(_pager, _log);
+            _trans = new TransactionService(_disk, _crypto, _pager, _cacheSize, _log);
+            _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 
         #endregion

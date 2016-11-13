@@ -56,12 +56,28 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Starts LiteDB database using a custom IDiskService
+        /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null)
+        public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null)
         {
             _mapper = mapper ?? BsonMapper.Global;
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, log: _log ));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream), password: password, log: _log));
+        }
+
+        /// <summary>
+        /// Starts LiteDB database using a custom IDiskService with all parameters avaiable
+        /// </summary>
+        /// <param name="diskService">Custom implementation of persist data layer</param>
+        /// <param name="mapper">Instance of BsonMapper that map poco classes to document</param>
+        /// <param name="password">Password to encrypt you datafile</param>
+        /// <param name="timeout">Locker timeout for concurrent access</param>
+        /// <param name="autocommit">If auto commit after any write operation</param>
+        /// <param name="cacheSize">Max memory pages used before flush data in Journal file (when avaiable)</param>
+        /// <param name="log">Custom log implementation</param>
+        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, bool autocommit = true, int cacheSize = 5000, Logger log = null)
+        {
+            _mapper = mapper ?? BsonMapper.Global;
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, autocommit: autocommit, cacheSize: cacheSize, log: _log ));
         }
 
         #endregion
@@ -103,45 +119,6 @@ namespace LiteDB
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
             return new LiteCollection<BsonDocument>(name, _engine, _mapper, _log);
-        }
-
-        /// <summary>
-        /// Get all collections name inside this database.
-        /// </summary>
-        public IEnumerable<string> GetCollectionNames()
-        {
-            return _engine.Value.GetCollectionNames();
-        }
-
-        /// <summary>
-        /// Checks if a collection exists on database. Collection name is case unsensitive
-        /// </summary>
-        public bool CollectionExists(string name)
-        {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
-
-            return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// Drop a collection and all data + indexes
-        /// </summary>
-        public bool DropCollection(string name)
-        {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
-
-            return _engine.Value.DropCollection(name);
-        }
-
-        /// <summary>
-        /// Rename a collection. Returns false if oldName does not exists or newName already exists
-        /// </summary>
-        public bool RenameCollection(string oldName, string newName)
-        {
-            if (oldName.IsNullOrWhiteSpace()) throw new ArgumentNullException("oldName");
-            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
-
-            return _engine.Value.RenameCollection(oldName, newName);
         }
 
         #endregion
