@@ -30,104 +30,66 @@ namespace LiteDB.Platform
 
         public GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            MethodInfo getMethod = propertyInfo.GetGetMethod(nonPublic);
-            if (getMethod == null)
-                return null;
+            var gMethod = propertyInfo.GetGetMethod(nonPublic);
+            if (gMethod == null) return null;
 
-            var getter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
-            var il = getter.GetILGenerator();
+            DynamicMethod method = new DynamicMethod("_", typeof(object), new[] { typeof(object) }, true);
+            ILGenerator generator = method.GetILGenerator();
+            generator.DeclareLocal(typeof(object));
+            generator.Emit(OpCodes.Ldarg_0);
 
-#if !NETSTANDARD
-            if (!type.IsClass) // structs
-#else
-            if (!type.GetTypeInfo().IsClass) // structs
-#endif
+           
+            EmitTypeConversion(generator, propertyInfo.DeclaringType, true);
+            EmitCall(generator, gMethod);
+            if (propertyInfo.PropertyType.IsValueType)
             {
-                var lv = il.DeclareLocal(type);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Unbox_Any, type);
-                il.Emit(OpCodes.Stloc_0);
-                il.Emit(OpCodes.Ldloca_S, lv);
-                il.EmitCall(OpCodes.Call, getMethod, null);
-#if !NETSTANDARD
-                if (propertyInfo.PropertyType.IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-#else
-                if (propertyInfo.PropertyType.GetTypeInfo().IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-#endif
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-                il.EmitCall(OpCodes.Callvirt, getMethod, null);
-#if !NETSTANDARD
-                if (propertyInfo.PropertyType.IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-#else
-                if (propertyInfo.PropertyType.GetTypeInfo().IsValueType)
-                    il.Emit(OpCodes.Box, propertyInfo.PropertyType);
-#endif
+                generator.Emit(OpCodes.Box, propertyInfo.PropertyType);
             }
 
-            il.Emit(OpCodes.Ret);
+            generator.Emit(OpCodes.Ret);
 
-            return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
+            return(GenericGetter)method.CreateDelegate(typeof(GenericGetter));
         }
-
-        private static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo, bool nonPublic)
+        static void EmitCall(ILGenerator generator, MethodInfo method)
         {
-            var setMethod = propertyInfo.GetSetMethod(nonPublic);
-
-            if (setMethod == null) return null;
-
-            var setter = new DynamicMethod("_", typeof(object), new Type[] { typeof(object), typeof(object) }, true);
-            var il = setter.GetILGenerator();
-
-#if !NETSTANDARD
-            if (!type.IsClass) // structs
-#else
-            if (!type.GetTypeInfo().IsClass) // structs
-#endif
+            OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
+            generator.EmitCall(opcode, method, null);
+        }
+        static void EmitTypeConversion(ILGenerator generator, Type castType, bool isContainer)
+        {
+            if (castType == typeof(object))
             {
-                var lv = il.DeclareLocal(type);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Unbox_Any, type);
-                il.Emit(OpCodes.Stloc_0);
-                il.Emit(OpCodes.Ldloca_S, lv);
-                il.Emit(OpCodes.Ldarg_1);
-#if !NETSTANDARD
-                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-#else
-                il.Emit(propertyInfo.PropertyType.GetTypeInfo().IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-#endif
-                il.EmitCall(OpCodes.Call, setMethod, null);
-                il.Emit(OpCodes.Ldloc_0);
-                il.Emit(OpCodes.Box, type);
+            }
+            else if (castType.IsValueType)
+            {
+                generator.Emit(isContainer ? OpCodes.Unbox : OpCodes.Unbox_Any, castType);
             }
             else
             {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
-                il.Emit(OpCodes.Ldarg_1);
-#if !NETSTANDARD
-                il.Emit(propertyInfo.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-#else
-                il.Emit(propertyInfo.PropertyType.GetTypeInfo().IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, propertyInfo.PropertyType);
-#endif
-                il.EmitCall(OpCodes.Callvirt, setMethod, null);
-                il.Emit(OpCodes.Ldarg_0);
+                generator.Emit(OpCodes.Castclass, castType);
             }
-
-            il.Emit(OpCodes.Ret);
-
-            return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
         }
 
         public GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo, bool nonPublic)
         {
-            return CreateSetMethod(type, propertyInfo, nonPublic);
+            MethodInfo setMethod = propertyInfo.GetSetMethod(nonPublic);
+            if (setMethod == null)
+            {
+
+                return null;
+
+            }
+
+            DynamicMethod method = new DynamicMethod("_", typeof(void), new[] { typeof(object), typeof(object) }, true);
+            ILGenerator generator = method.GetILGenerator();
+            generator.Emit(OpCodes.Ldarg_0);
+            EmitTypeConversion(generator, propertyInfo.DeclaringType, true);
+            generator.Emit(OpCodes.Ldarg_1);
+            EmitTypeConversion(generator, propertyInfo.PropertyType, false);
+            EmitCall(generator, setMethod);
+            generator.Emit(OpCodes.Ret);
+
+            return (GenericSetter)method.CreateDelegate(typeof(GenericSetter));
         }
     }
 }

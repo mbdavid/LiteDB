@@ -5,7 +5,7 @@ namespace LiteDB
 {
     public delegate object CreateObject();
 
-    public delegate object GenericSetter(object target, object value);
+    public delegate void GenericSetter(object target, object value);
 
     public delegate object GenericGetter(object obj);
 
