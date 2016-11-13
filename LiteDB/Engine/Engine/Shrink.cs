@@ -10,7 +10,7 @@ namespace LiteDB
         /// </summary>
         public long Shrink(string password = null)
         {
-            var originalSize = _disk.FileSize;
+            var originalSize = _disk.FileLength;
 
             IDiskService temp = null;
 
@@ -33,7 +33,7 @@ namespace LiteDB
                 engine.UserVersion = this.UserVersion;
 
                 // set current disk size to exact new disk usage
-                _disk.SetLength(temp.FileSize);
+                _disk.SetLength(temp.FileLength);
 
                 // read new header page to start copy
                 var header = BasePage.ReadPage(temp.ReadPage(0)) as HeaderPage;
@@ -48,7 +48,7 @@ namespace LiteDB
             }
 
             // return how many bytes are reduced
-            return originalSize - temp.FileSize;
+            return originalSize - temp.FileLength;
         }
     }
 }

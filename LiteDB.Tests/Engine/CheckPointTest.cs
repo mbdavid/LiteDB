@@ -106,7 +106,7 @@ namespace LiteDB.Tests
         {
             using (var file = new TempFile())
             {
-                using (var db = new LiteEngine(new FileDiskService(file.Filename), TimeSpan.FromMinutes(1), autocommit: false ))
+                using (var db = new LiteEngine(new FileDiskService(file.Filename), autocommit: false ))
                 {
                     var log = new StringBuilder();
                     db.Log.Level = Logger.CACHE;

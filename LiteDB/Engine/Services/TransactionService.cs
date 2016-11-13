@@ -9,13 +9,15 @@ namespace LiteDB
     internal class TransactionService
     {
         private IDiskService _disk;
+        private AesEncryption _crypto;
         private PageService _pager;
         private Logger _log;
         private int _cacheSize;
 
-        internal TransactionService(IDiskService disk, PageService pager, int cacheSize, Logger log)
+        internal TransactionService(IDiskService disk, AesEncryption crypto, PageService pager, int cacheSize, Logger log)
         {
             _disk = disk;
+            _crypto = crypto;
             _pager = pager;
             _cacheSize = cacheSize;
             _log = log;
@@ -66,7 +68,7 @@ namespace LiteDB
 
                 // then writes no datafile new changed pages
                 // page.WritePage() updated DiskData with new rendered buffer
-                _disk.WritePage(page.PageID, page.WritePage());
+                _disk.WritePage(page.PageID, _crypto == null || page.PageID == 0 ? page.WritePage() : _crypto.Encrypt(page.WritePage()));
 
                 // mark page as clean (is now saved in disk)
                 page.IsDirty = false;
@@ -85,7 +87,44 @@ namespace LiteDB
             _pager.ClearCache();
 
             // recovery (if exists) journal file
-            _disk.Recovery();
+            this.Recovery();
+        }
+
+        /// <summary>
+        /// Try recovery journal file (if exists). Restore original datafile
+        /// Journal file are NOT encrypted (even when datafile are encrypted)
+        /// </summary>
+        public void Recovery()
+        {
+            var fileSize = _disk.FileLength;
+
+            // read all journal pages
+            foreach (var buffer in _disk.ReadJournal())
+            {
+                // read pageID (first 4 bytes)
+                var pageID = BitConverter.ToUInt32(buffer, 0);
+
+                _log.Write(Logger.RECOVERY, "recover page #{0:0000}", pageID);
+
+                // if header, read all byte (to get original filesize)
+                if (pageID == 0)
+                {
+                    var header = (HeaderPage)BasePage.ReadPage(buffer);
+
+                    fileSize = BasePage.GetSizeOfPages(header.LastPageID + 1);
+                }
+
+                // write in stream (encrypt if datafile is encrypted)
+                _disk.WritePage(pageID, _crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer));
+            }
+
+            _log.Write(Logger.RECOVERY, "resize datafile to {0} bytes", fileSize);
+
+            // redim filesize if grow more than original before rollback
+            _disk.SetLength(fileSize);
+
+            // empty journal file
+            _disk.ClearJournal();
         }
     }
 }

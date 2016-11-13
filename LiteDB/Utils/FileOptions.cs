@@ -14,7 +14,6 @@ namespace LiteDB
         public long InitialSize { get; set; }
         public long LimitSize { get; set; }
         public TimeSpan Timeout { get; set; }
-        public string Password { get; set; }
 
         public FileOptions()
         {
@@ -22,7 +21,6 @@ namespace LiteDB
             this.InitialSize = BasePage.PAGE_SIZE;
             this.LimitSize = long.MaxValue;
             this.Timeout = TimeSpan.FromMinutes(1);
-            this.Password = null;
         }
     }
 }

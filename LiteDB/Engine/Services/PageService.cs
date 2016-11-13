@@ -7,13 +7,15 @@ namespace LiteDB
     internal class PageService
     {
         private IDiskService _disk;
+        private AesEncryption _crypto;
         private Logger _log;
 
         private SortedDictionary<uint, BasePage> _cache = new SortedDictionary<uint, BasePage>();
 
-        public PageService(IDiskService disk, Logger log)
+        public PageService(IDiskService disk, AesEncryption crypto, Logger log)
         {
             _disk = disk;
+            _crypto = crypto;
             _log = log;
         }
 
@@ -32,6 +34,13 @@ namespace LiteDB
                 if (page == null)
                 {
                     var buffer = _disk.ReadPage(pageID);
+
+                    // if datafile are encrypted, decrypt buffer (header are not encrypted)
+                    if(_crypto != null && pageID > 0)
+                    {
+                        buffer = _crypto.Decrypt(buffer);
+                    }
+
                     page = BasePage.ReadPage(buffer);
                     _cache.Add(pageID, page);
                 }

@@ -9,7 +9,7 @@ namespace LiteDB
         /// <summary>
         /// Open data file (creating if doest exists) and validate header
         /// </summary>
-        void Initialize(Logger log);
+        void Initialize(Logger log, string password);
 
         /// <summary>
         /// Read a page from disk datafile
@@ -27,24 +27,24 @@ namespace LiteDB
         void SetLength(long fileSize);
 
         /// <summary>
+        /// Gets file length in bytes
+        /// </summary>
+        long FileLength { get; }
+
+        /// <summary>
         /// Indicate if journal are enabled/implemented
         /// </summary>
         bool IsJournalEnabled { get; }
 
         /// <summary>
-        /// Gets file length in bytes
+        /// Read journal file returning IEnumerable of pages
         /// </summary>
-        long FileSize { get; }
+        IEnumerable<byte[]> ReadJournal();
 
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
         void WriteJournal(uint pageID, byte[] page);
-
-        /// <summary>
-        /// Recovery journal file (if exists) - clear journal file after
-        /// </summary>
-        void Recovery();
 
         /// <summary>
         /// Clear jounal file

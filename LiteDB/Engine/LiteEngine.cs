@@ -26,6 +26,8 @@ namespace LiteDB
 
         private CollectionService _collections;
 
+        private AesEncryption _crypto;
+
         private int _cacheSize;
 
         private bool _autocommit;
@@ -66,14 +68,14 @@ namespace LiteDB
         /// Inicialize LiteEngine using EncryptedDiskService
         /// </summary>
         public LiteEngine(string filename, string password, bool journal = true)
-            : this(new FileDiskService(filename, new FileOptions { Password = password, Journal = journal }))
+            : this(new FileDiskService(filename, new FileOptions { Journal = journal }), password)
         {
         }
 
         /// <summary>
-        /// Initialize LiteEngine using custom disk service implementation.
+        /// Initialize LiteEngine using custom disk service implementation and full engine options
         /// </summary>
-        public LiteEngine(IDiskService disk, TimeSpan? timeout = null, int cacheSize = 5000, bool autocommit = false, Logger log = null)
+        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, bool autocommit = false, int cacheSize = 5000, Logger log = null)
         {
             _cacheSize = cacheSize;
             _autocommit = autocommit;
@@ -81,21 +83,41 @@ namespace LiteDB
             _log = log ?? new Logger();
 
             // initialize datafile (create) and set log instance
-            _disk.Initialize(_log);
+            _disk.Initialize(_log, password);
 
-            if (_disk.IsJournalEnabled)
+            // read header page
+            var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
+
+            // hash password with sha1 or keep as empty byte[20]
+            var sha1 = password == null ? new byte[20] : AesEncryption.HashSHA1(password);
+
+            // compare header password with user password even if not passed password (datafile can have password)
+            if (sha1.BinaryCompareTo(header.Password) != 0)
             {
-                // try recovery if has journal file
-                _disk.Recovery();
+                // explicit dispose
+                _disk.Dispose();
+                throw LiteException.DatabaseWrongPassword();
+            }
+
+            // initialize AES encryptor
+            if (password != null)
+            {
+                _crypto = new AesEncryption(password, header.Salt);
             }
 
             // initialize all services
             _locker = new Locker(timeout ?? TimeSpan.FromMinutes(1));
-            _pager = new PageService(_disk, _log);
+            _pager = new PageService(_disk, _crypto, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
-            _trans = new TransactionService(_disk, _pager, _cacheSize, _log);
+            _trans = new TransactionService(_disk, _crypto, _pager, _cacheSize, _log);
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
+
+            if (_disk.IsJournalEnabled)
+            {
+                // try recovery if has journal file
+                _trans.Recovery();
+            }
         }
 
         #endregion
@@ -127,6 +149,9 @@ namespace LiteDB
 
             // dispose datafile and journal file
             _disk.Dispose();
+
+            // dispose crypto
+            if (_crypto != null) _crypto.Dispose();
         }
     }
 }

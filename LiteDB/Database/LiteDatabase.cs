@@ -49,11 +49,10 @@ namespace LiteDB
                 InitialSize = conn.InitialSize,
                 LimitSize = conn.LimitSize,
                 Journal = conn.Journal,
-                Timeout = conn.Timeout,
-                Password = conn.Password
+                Timeout = conn.Timeout
             };
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(conn.Filename, options), conn.Timeout, conn.CacheSize, conn.AutoCommit, _log));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(conn.Filename, options), conn.Password, conn.Timeout, conn.AutoCommit, conn.CacheSize, _log));
         }
 
         /// <summary>
@@ -62,7 +61,7 @@ namespace LiteDB
         public LiteDatabase(IDiskService diskService, BsonMapper mapper = null)
         {
             _mapper = mapper ?? BsonMapper.Global;
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, TimeSpan.FromMinutes(1), log: _log ));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, log: _log ));
         }
 
         #endregion
