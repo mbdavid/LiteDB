@@ -32,6 +32,11 @@ namespace LiteDB
         bool IsJournalEnabled { get; }
 
         /// <summary>
+        /// Gets file length in bytes
+        /// </summary>
+        long FileSize { get; }
+
+        /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
         void WriteJournal(uint pageID, byte[] page);

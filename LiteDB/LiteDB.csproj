@@ -62,6 +62,7 @@
     <Compile Include="Database\LiteDatabase.cs" />
     <Compile Include="Engine\Engine\Upsert.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
+    <Compile Include="Engine\Engine\Shrink.cs" />
     <Compile Include="Engine\LiteEngine.cs" />
     <Compile Include="Engine\Disks\FileDiskService.cs" />
     <Compile Include="Engine\Disks\IDiskService.cs" />

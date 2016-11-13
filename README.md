@@ -2,13 +2,12 @@
 - Create some "Reserved bytes" in index page + header page
 - Organize Unit Test (remove unused)
 - Update wiki
-- [BsonRef("customer")]
+- Remove Encryption from Disk. Must be implemented inside LiteEngine (to be used in any disk impl)
 
 # must-have to release
 - Shrink
 - MemoryStream disk impl
 - Upgrade datafile from v2
-- LiteDB.NETStandard
 - Cascade include works??
 
 # Wiki
@@ -59,6 +58,7 @@
 - Remove ChangeID (avoid write Header Page all times)
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
 - Virtual index fields
+- [BsonRefAttribute]
 
 
 # ThreadSafe - How it's work in LiteDB

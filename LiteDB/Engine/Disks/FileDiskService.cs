@@ -201,6 +201,11 @@ namespace LiteDB
         /// </summary>
         public bool IsJournalEnabled { get { return _options.Journal; } }
 
+        /// <summary>
+        /// Returns file length
+        /// </summary>
+        public long FileSize { get { return _stream.Length; } }
+
         #endregion
 
         #region Journal file
