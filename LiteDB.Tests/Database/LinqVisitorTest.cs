@@ -13,7 +13,7 @@ namespace LiteDB.Tests
         public void LinqVisitor_Test()
         {
             var mapper = new BsonMapper();
-            mapper.ResolvePropertyName = (x) => x.ToLower();
+            mapper.ResolveFieldName = (x) => x.ToLower();
 
             var qv = new QueryVisitor<User>(mapper);
 

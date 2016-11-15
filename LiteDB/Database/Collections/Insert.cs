@@ -16,7 +16,7 @@ namespace LiteDB
 
             var doc = _mapper.ToDocument(document);
 
-            _engine.Value.Insert(_name, new BsonDocument[] { doc });
+            _engine.Value.Insert(_name, doc);
 
             return doc["_id"];
         }

@@ -146,7 +146,7 @@ namespace LiteDB
                 dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
-            foreach (var prop in entity.Props)
+            foreach (var prop in entity.Members)
             {
                 // get property value
                 var value = prop.Getter(obj);
@@ -160,7 +160,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    dict[prop.FieldName] = this.Serialize(prop.PropertyType, value, depth);
+                    dict[prop.FieldName] = this.Serialize(prop.DataType, value, depth);
                 }
             }
 

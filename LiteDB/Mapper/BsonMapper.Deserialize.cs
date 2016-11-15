@@ -236,7 +236,7 @@ namespace LiteDB
         {
             var entity = this.GetEntityMapper(type);
 
-            foreach (var prop in entity.Props)
+            foreach (var prop in entity.Members)
             {
                 // property is read only
                 if (prop.Setter == null) continue;
@@ -252,7 +252,7 @@ namespace LiteDB
                     }
                     else
                     {
-                        prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                        prop.Setter(obj, this.Deserialize(prop.DataType, val));
                     }
                 }
             }

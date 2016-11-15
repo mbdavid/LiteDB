@@ -13,7 +13,29 @@ namespace LiteDB
             return this.Transaction<bool>(colName, true, (col) =>
             {
                 // check if index already exists
-                if (col.GetIndex(field) != null) return false;
+                var current = col.GetIndex(field);
+
+                // if already exists, checks if changed unique
+                if (current != null)
+                {
+                    // change from unique to non-unique (just update)
+                    if (current.Unique == true && unique == false)
+                    {
+                        current.Unique = false;
+                        _pager.SetDirty(col);
+                        return true;
+                    }
+                    // change from non-unique to unique (need be re-created)
+                    else if (current.Unique == false && unique == true)
+                    {
+                        _indexer.DropIndex(current);
+                        current.Clear();
+                    }
+                    else
+                    {
+                        return false; // no changes
+                    }
+                }
 
                 _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", colName, field, unique);
 

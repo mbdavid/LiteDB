@@ -124,7 +124,7 @@
     <Compile Include="Mapper\EntityBuilder.cs" />
     <Compile Include="Mapper\EntityMapper.cs" />
     <Compile Include="Mapper\Linq\QueryVisitor.cs" />
-    <Compile Include="Mapper\PropertyMapper.cs" />
+    <Compile Include="Mapper\MemberMapper.cs" />
     <Compile Include="Mapper\Reflection\Reflection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\LiteFileInfo.cs" />

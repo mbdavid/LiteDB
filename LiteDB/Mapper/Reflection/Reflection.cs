@@ -41,30 +41,37 @@ namespace LiteDB
             return Expression.Lambda<CreateObject>(convert).Compile();
         }
 
-        public static GenericGetter CreateGenericGetter(Type type, PropertyInfo propertyInfo)
+        public static GenericGetter CreateGenericGetter(Type type, MemberInfo memberInfo)
         {
-            if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
+            if (memberInfo == null) throw new ArgumentNullException("memberInfo");
 
             var obj = Expression.Parameter(typeof(object), "o");
-            var accessor = Expression.MakeMemberAccess(Expression.Convert(obj, propertyInfo.DeclaringType), propertyInfo);
+            var accessor = Expression.MakeMemberAccess(Expression.Convert(obj, memberInfo.DeclaringType), memberInfo);
 
             return Expression.Lambda<GenericGetter>(Expression.Convert(accessor, typeof(object)), obj).Compile();
         }
 
-        public static GenericSetter CreateGenericSetter(Type type, PropertyInfo propertyInfo)
+        public static GenericSetter CreateGenericSetter(Type type, MemberInfo memberInfo)
         {
-            if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
+            if (memberInfo == null) throw new ArgumentNullException("propertyInfo");
             
-            if (!propertyInfo.CanWrite)
-                return null;
-            
+            // if has no write
+            if (memberInfo is PropertyInfo && (memberInfo as PropertyInfo).CanWrite == false) return null;
+
+            var dataType =
+                (memberInfo as PropertyInfo)?.PropertyType ??
+                (memberInfo as FieldInfo)?.FieldType ??
+                typeof(object);
+
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "val");
-            var accessor = Expression.Property(Expression.Convert(obj, propertyInfo.DeclaringType), propertyInfo);
+            var accessor =
+                memberInfo is PropertyInfo ? Expression.Property(Expression.Convert(obj, memberInfo.DeclaringType), memberInfo as PropertyInfo) :
+                memberInfo is FieldInfo ? Expression.Field(Expression.Convert(obj, memberInfo.DeclaringType), memberInfo as FieldInfo) : null;
 #if NET35
-            var assign = ExpressionExtensions.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
+            var assign = ExpressionExtensions.Assign(accessor, Expression.Convert(value, dataType));
 #else
-            var assign = Expression.Assign(accessor, Expression.Convert(value, propertyInfo.PropertyType));
+            var assign = Expression.Assign(accessor, Expression.Convert(value, dataType));
 #endif
             var conv = Expression.Convert(assign, typeof(object));
             

@@ -283,7 +283,7 @@ namespace LiteDB
             {
                 var entity = _mapper.GetEntityMapper(type);
                 var part = parts[i];
-                var prop = entity.Props.Find(x => x.PropertyName == part);
+                var prop = entity.Members.Find(x => x.MemberName == part);
 
                 if (prop == null) throw LiteException.PropertyNotMapped(property);
 

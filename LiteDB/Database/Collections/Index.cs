@@ -59,10 +59,8 @@ namespace LiteDB
         {
             // check if property has an index mapped
             var entity = _mapper.GetEntityMapper(typeof(T));
-            var unique = entity.Props
-                .Where(x => x.FieldName == ex.Field && x.IndexInfo != null)
-                .Select(x => x.IndexInfo)
-                .FirstOrDefault() ?? false;
+            var member = entity.Members.FirstOrDefault(x => x.FieldName == ex.Field);
+            var unique = member == null ? false : member.IsUnique;
 
             _engine.Value.EnsureIndex(ex.Collection, ex.Field, unique);
         }

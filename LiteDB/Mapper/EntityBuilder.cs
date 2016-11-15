@@ -27,7 +27,7 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                _entity.Props.Remove(p);
+                _entity.Members.Remove(p);
             });
         }
 
@@ -61,7 +61,7 @@ namespace LiteDB
         {
             return this.GetProperty(property, (p) =>
             {
-                p.IndexInfo = unique;
+                p.IsUnique = unique;
             });
         }
 
@@ -70,14 +70,14 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index<K>(string indexName, Func<T, BsonValue> getter, bool unique = false)
         {
-            _entity.Props.Add(new PropertyMapper
+            _entity.Members.Add(new MemberMapper
             {
                 FieldName = indexName,
-                PropertyName = indexName,
+                MemberName = indexName,
                 Getter = x => (object)getter((T)x),
                 Setter = null,
-                PropertyType = typeof(BsonValue),
-                IndexInfo = unique
+                DataType = typeof(BsonValue),
+                IsUnique = unique
             });
 
             return this;
@@ -90,11 +90,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            var p = _entity.Props.FirstOrDefault(x => x.FieldName == field);
+            var p = _entity.Members.FirstOrDefault(x => x.FieldName == field);
 
             if (p == null) throw new ArgumentException("field not found");
 
-            p.IndexInfo = unique;
+            p.IsUnique = unique;
 
             return this;
         }
@@ -115,11 +115,11 @@ namespace LiteDB
         /// <summary>
         /// Get a property based on a expression. Eg.: 'x => x.UserId' return string "UserId"
         /// </summary>
-        private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> expr, Action<PropertyMapper> action)
+        private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> expr, Action<MemberMapper> action)
         {
             if (expr == null) throw new ArgumentNullException("property");
 
-            var prop = _entity.GetProperty(expr);
+            var prop = _entity.GetMember(expr);
 
             if (prop == null) throw new ArgumentNullException(expr.GetPath());
 

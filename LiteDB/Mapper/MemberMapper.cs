@@ -1,26 +1,27 @@
 ﻿using System;
+using System.Reflection;
 
 namespace LiteDB
 {
     /// <summary>
-    /// Internal representation for a .NET Property mapped to BsonDocument
+    /// Internal representation for a .NET member mapped to BsonDocument
     /// </summary>
-    public class PropertyMapper
+    public class MemberMapper
     {
         /// <summary>
-        /// If property is Id, indicate that are AutoId
+        /// If member is Id, indicate that are AutoId
         /// </summary>
         public bool AutoId { get; set; }
 
         /// <summary>
-        /// Property name
+        /// Member name
         /// </summary>
-        public string PropertyName { get; set; }
+        public string MemberName { get; set; }
 
         /// <summary>
-        /// Property data type
+        /// Member returns data type
         /// </summary>
-        public Type PropertyType { get; set; }
+        public Type DataType { get; set; }
 
         /// <summary>
         /// Converted document field name
@@ -48,9 +49,9 @@ namespace LiteDB
         public Func<BsonValue, BsonMapper, object> Deserialize { get; set; }
 
         /// <summary>
-        /// Has this property an index? Null - No index, False - Non unique index, True - Unique index
+        /// Indicate field has an unique index
         /// </summary>
-        public bool? IndexInfo { get; set; }
+        public bool IsUnique { get; set; }
 
         /// <summary>
         /// Is this property an DbRef? Must implement Serialize/Deserialize delegates

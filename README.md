@@ -2,13 +2,18 @@
 - Create some "Reserved bytes" in index page + header page
 - Organize Unit Test (remove unused)
 - Update wiki
-- Remove Encryption from Disk. Must be implemented inside LiteEngine (to be used in any disk impl)
+
+- Initialize indexes when create collection - how detect collection created?
+- engine.EnsureIndex("col", "myindex", unique) once per GetCollection<> on Insert/Update?
+
+# bsonmapper
+- Unit test for field
+- Unit test for ResolveMember
 
 # must-have to release
-- Shrink
-- MemoryStream disk impl
 - Upgrade datafile from v2
 - Cascade include works??
+- LiteDatabase.Obsolete methods
 
 # Wiki
 - Update current documents
@@ -59,6 +64,7 @@
 - FileStorage will support OpenWrite("fileId") <= LiteFileStream
 - Virtual index fields
 - [BsonRefAttribute]
+- Shrink with change password
 
 
 # ThreadSafe - How it's work in LiteDB

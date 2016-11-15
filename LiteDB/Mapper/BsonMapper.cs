@@ -23,6 +23,8 @@ namespace LiteDB
     {
         private const int MAX_DEPTH = 20;
 
+        #region Properties
+
         /// <summary>
         /// Mapping cache between Class/BsonDocument
         /// </summary>
@@ -41,9 +43,19 @@ namespace LiteDB
         private readonly Func<Type, object> _typeInstanciator;
 
         /// <summary>
-        /// A resolver name property
+        /// Map for autoId type based functions
         /// </summary>
-        public Func<string, string> ResolvePropertyName;
+        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
+
+        /// <summary>
+        /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
+        /// </summary>
+        public static BsonMapper Global = new BsonMapper();
+
+        /// <summary>
+        /// A resolver name for field
+        /// </summary>
+        public Func<string, string> ResolveFieldName;
 
         /// <summary>
         /// Indicate that mapper do not serialize null values
@@ -61,21 +73,25 @@ namespace LiteDB
         public bool EmptyStringToNull { get; set; }
 
         /// <summary>
-        /// Map for autoId type based functions
+        /// Get/Set that mapper must include fields (default: false)
         /// </summary>
-        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
+        public bool IncludeFields { get; set; }
 
         /// <summary>
-        /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
+        /// A custom callback to change how member will be modified by user when mapping a type member to member mapper
         /// </summary>
-        public static BsonMapper Global = new BsonMapper();
+        public Action<Type, MemberInfo, MemberMapper> ResolveMember;
+
+        #endregion
 
         public BsonMapper(Func<Type, object> customTypeInstanciator = null)
         {
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
             this.EmptyStringToNull = true;
-            this.ResolvePropertyName = (s) => s;
+            this.IncludeFields = false;
+            this.ResolveFieldName = (s) => s;
+            this.ResolveMember = (t, mi, mm) => { };
 
             _typeInstanciator = customTypeInstanciator ?? Reflection.CreateInstance;
 
@@ -116,6 +132,8 @@ namespace LiteDB
 
         }
 
+        #region Register CustomType
+
         /// <summary>
         /// Register a custom type serializer/deserialize function
         /// </summary>
@@ -133,6 +151,10 @@ namespace LiteDB
             _customSerializer[type] = (o) => serialize(o);
             _customDeserializer[type] = (b) => deserialize(b);
         }
+
+        #endregion
+
+        #region AutoId
 
         /// <summary>
         /// Register a custom Auto Id generator function for a type
@@ -172,7 +194,7 @@ namespace LiteDB
 
             AutoId autoId;
 
-            if (_autoId.TryGetValue(id.PropertyType, out autoId))
+            if (_autoId.TryGetValue(id.DataType, out autoId))
             {
                 var value = id.Getter(entity);
 
@@ -184,6 +206,8 @@ namespace LiteDB
                 }
             }
         }
+
+        #endregion
 
         /// <summary>
         /// Map your entity class to BsonDocument using fluent API
@@ -200,7 +224,7 @@ namespace LiteDB
         /// </summary>
         public BsonMapper UseCamelCase()
         {
-            this.ResolvePropertyName = (s) => char.ToLower(s[0]) + s.Substring(1);
+            this.ResolveFieldName = (s) => char.ToLower(s[0]) + s.Substring(1);
 
             return this;
         }
@@ -212,7 +236,7 @@ namespace LiteDB
         /// </summary>
         public BsonMapper UseLowerCaseDelimiter(char delimiter = '_')
         {
-            this.ResolvePropertyName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
+            this.ResolveFieldName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
 
             return this;
         }
@@ -251,112 +275,134 @@ namespace LiteDB
         {
             var mapper = new EntityMapper
             {
-                Props = new List<PropertyMapper>(),
+                Members = new List<MemberMapper>(),
                 ForType = type
             };
 
-            var id = this.GetIdProperty(type);
-            var ignore = typeof(BsonIgnoreAttribute);
             var idAttr = typeof(BsonIdAttribute);
+            var ignoreAttr = typeof(BsonIgnoreAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
-#if NET35
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-#else
-            var props = type.GetRuntimeProperties();
-#endif
-            foreach (var prop in props)
+
+            foreach (var memberInfo in this.GetTypeMembers(type))
             {
-                // ignore indexer property
-                if (prop.GetIndexParameters().Length > 0) continue;
-
-                // ignore write only
-                if (!prop.CanRead) continue;
-
-                // [BsonIgnore]
-                if (prop.IsDefined(ignore, false)) continue;
-
-                // check if property has [BsonField]
-                var bsonField = prop.IsDefined(fieldAttr, false);
-
-                // create getter/setter function
-                var getter = Reflection.CreateGenericGetter(type, prop);
-                var setter = Reflection.CreateGenericSetter(type, prop);
-
-                // if not getter or setter - no mapping
-                if (getter == null) continue;
-
-                // if the property is already in the dictionary, it's probably an override - keep the first instance added
-                if (mapper.Props.Any(x => x.PropertyName == prop.Name)) continue;
+                // checks [BsonIgnore]
+                if (memberInfo.IsDefined(ignoreAttr, true)) continue;
 
                 // checks field name conversion
-                var name = id != null && id.Equals(prop) ? "_id" : this.ResolvePropertyName(prop.Name);
+                var name = this.ResolveFieldName(memberInfo.Name);
 
-                // check if property has [BsonField] with a custom field name
-                if (bsonField)
+                // checks if is _id
+                if (this.IsMemberId(type, memberInfo))
                 {
-                    var field = (BsonFieldAttribute)prop.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
-                    if (field != null && field.Name != null) name = field.Name;
+                    name = "_id";
                 }
 
-                // check if property has [BsonId] to get with was setted AutoId = true
-                var autoId = (BsonIdAttribute)prop.GetCustomAttributes(idAttr, false).FirstOrDefault();
+                // check if property has [BsonField]
+                var field = (BsonFieldAttribute)memberInfo.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
 
-                // checks if this proerty has [BsonIndex]
-                var index = (BsonIndexAttribute)prop.GetCustomAttributes(indexAttr, false).FirstOrDefault();
+                // check if property has [BsonField] with a custom field name
+                if (field != null && field.Name != null)
+                {
+                    name = field.Name;
+                }
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(prop.Name, name);
+                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(memberInfo.Name, name);
+
+                // create getter/setter function
+                var getter = Reflection.CreateGenericGetter(type, memberInfo);
+                var setter = Reflection.CreateGenericSetter(type, memberInfo);
+
+                // check if property has [BsonId] to get with was setted AutoId = true
+                var autoId = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
+
+                // checks if this proerty has [BsonIndex]
+                var index = (BsonIndexAttribute)memberInfo.GetCustomAttributes(indexAttr, false).FirstOrDefault();
+
+                // get data type
+                var dataType = 
+                    (memberInfo as PropertyInfo)?.PropertyType ??
+                    (memberInfo as FieldInfo)?.FieldType ??
+                    typeof(object);
+
+                // check if datatype is list/array
+                var isList = Reflection.IsList(dataType);
 
                 // create a property mapper
-                var p = new PropertyMapper
+                var member = new MemberMapper
                 {
                     AutoId = autoId == null ? true : autoId.AutoId,
                     FieldName = name,
-                    PropertyName = prop.Name,
-                    PropertyType = prop.PropertyType,
-                    IndexInfo = index == null ? null : (bool?)index.Unique,
-                    IsList = Reflection.IsList(prop.PropertyType),
+                    MemberName = memberInfo.Name,
+                    DataType = dataType,
+                    IsUnique = index == null ? false : index.Unique,
+                    IsList = isList,
+                    UnderlyingType = isList ? Reflection.GetListItemType(dataType) : dataType,
                     Getter = getter,
                     Setter = setter
                 };
 
-                // set UnderlyingType when is list of elements
-                p.UnderlyingType  = p.IsList ? 
-                    Reflection.GetListItemType(p.PropertyType) : 
-                    p.PropertyType;
-
                 // check if property has [BsonRef]
-                var dbRef = (BsonRefAttribute)prop.GetCustomAttributes(dbrefAttr, false).FirstOrDefault();
+                var dbRef = (BsonRefAttribute)memberInfo.GetCustomAttributes(dbrefAttr, false).FirstOrDefault();
 
-                if (dbRef != null)
+                if (dbRef != null && memberInfo is PropertyInfo)
                 {
-                    BsonMapper.RegisterDbRef(this, p, dbRef.Collection);
+                    BsonMapper.RegisterDbRef(this, member, dbRef.Collection);
                 }
 
-                // add to props list
-                mapper.Props.Add(p);
+                // support callback to user modify member mapper
+                if (this.ResolveMember != null)
+                {
+                    this.ResolveMember(type, memberInfo, member);
+                }
+
+                // test if has name and there is no duplicate field
+                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName == name) == false)
+                {
+                    mapper.Members.Add(member);
+                }
             }
 
             return mapper;
         }
 
         /// <summary>
-        /// Gets PropertyInfo that refers to Id from a document object.
+        /// Checks if this member is Id field based on member name (Id) or [BsonId] attribute
         /// </summary>
-        protected PropertyInfo GetIdProperty(Type type)
+        protected bool IsMemberId(Type type, MemberInfo member)
         {
-            // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
+            return member.IsDefined(typeof(BsonIdAttribute), false) ||
+                member.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
+                member.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase) ||
+                false;
+        }
+
+        /// <summary>
+        /// Returns all member that will be have mapper between POCO class to document
+        /// </summary>
+        protected virtual IEnumerable<MemberInfo> GetTypeMembers(Type type)
+        {
+            var members = new List<MemberInfo>();
+
 #if NET35
-            return Reflection.SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
-                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+            members.AddRange(type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanRead).Select(x => x as MemberInfo));
+
+            if(this.IncludeFields)
+            {
+                members.AddRange(type.GetFields(BindingFlags.Public | BindingFlags.Instance));
+            }
 #else
-            return Reflection.SelectProperty(type.GetRuntimeProperties(),
-                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
+            members.AddRange(type.GetRuntimeProperties().Where(x => x.CanRead).Select(x => x as MemberInfo));
+
+            if(this.IncludeFields)
+            {
+                members.AddRange(type.GetRuntimeFields());
+            }
 #endif
-                x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
-                x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
+
+            return members;
         }
 
         #endregion
@@ -366,29 +412,29 @@ namespace LiteDB
         /// <summary>
         /// Register a property mapper as DbRef to serialize/deserialize only document refenece _id
         /// </summary>
-        public static void RegisterDbRef(BsonMapper mapper, PropertyMapper property, string collectionName)
+        public static void RegisterDbRef(BsonMapper mapper, MemberMapper member, string collectionName)
         {
-            property.IsDbRef = true;
+            member.IsDbRef = true;
 
-            if (property.IsList)
+            if (member.IsList)
             {
-                RegisterDbRefList(mapper, property, collectionName);
+                RegisterDbRefList(mapper, member, collectionName);
             }
             else
             {
-                RegisterDbRefItem(mapper, property, collectionName);
+                RegisterDbRefItem(mapper, member, collectionName);
             }
         }
 
         /// <summary>
         /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        private static void RegisterDbRefItem(BsonMapper mapper, PropertyMapper property, string collectionName)
+        private static void RegisterDbRefItem(BsonMapper mapper, MemberMapper member, string collectionName)
         {
             // get entity
-            var entity = mapper.GetEntityMapper(property.PropertyType);
+            var entity = mapper.GetEntityMapper(member.DataType);
 
-            property.Serialize = (obj, m) =>
+            member.Serialize = (obj, m) =>
             {
                 var idField = entity.Id;
 
@@ -401,7 +447,7 @@ namespace LiteDB
                 };
             };
 
-            property.Deserialize = (bson, m) =>
+            member.Deserialize = (bson, m) =>
             {
                 var idRef = bson.AsDocument["$id"];
 
@@ -415,12 +461,12 @@ namespace LiteDB
         /// <summary>
         /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        private static void RegisterDbRefList(BsonMapper mapper, PropertyMapper property, string collectionName)
+        private static void RegisterDbRefList(BsonMapper mapper, MemberMapper member, string collectionName)
         {
             // get entity from list item type
-            var entity = mapper.GetEntityMapper(property.UnderlyingType);
+            var entity = mapper.GetEntityMapper(member.UnderlyingType);
 
-            property.Serialize = (list, m) =>
+            member.Serialize = (list, m) =>
             {
                 var result = new BsonArray();
                 var idField = entity.Id;
@@ -437,18 +483,18 @@ namespace LiteDB
                 return result;
             };
 
-            property.Deserialize = (bson, m) =>
+            member.Deserialize = (bson, m) =>
             {
                 var array = bson.AsArray;
 
-                if (array.Count == 0) return m.Deserialize(property.PropertyType, array);
+                if (array.Count == 0) return m.Deserialize(member.DataType, array);
 
                 var hasIdRef = array[0].AsDocument["$id"].IsNull;
 
                 if (hasIdRef)
                 {
                     // if no $id, deserialize as full (was loaded via Include)
-                    return m.Deserialize(property.PropertyType, array);
+                    return m.Deserialize(member.DataType, array);
                 }
                 else
                 {
@@ -460,7 +506,7 @@ namespace LiteDB
                         arr.Add(new BsonDocument { { "_id", item.AsDocument["$id"] } });
                     }
 
-                    return m.Deserialize(property.PropertyType, arr);
+                    return m.Deserialize(member.DataType, arr);
                 }
             };
         }
