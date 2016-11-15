@@ -16,9 +16,20 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
-            var filename = s.Scan(@".+").TrimToNull();
+            var connectionString = new ConnectionString(s.Scan(@".+").TrimToNull());
 
-            env.Filename = filename;
+            env.Filename = connectionString.Filename;
+            env.Password = connectionString.Password;
+            env.Journal = connectionString.Journal;
+
+            // create file if not exits
+            if(!File.Exists(env.Filename))
+            {
+                using (var e = env.CreateEngine(DataAccess.Write))
+                {
+                }
+            }
+
         }
     }
 }

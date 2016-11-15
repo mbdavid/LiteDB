@@ -9,7 +9,17 @@ namespace LiteDB.Shell
         public string Filename { get; set; }
         public string Password { get; set; }
         public bool Journal { get; set; }
-        public bool Log { get; set; }
+        public Logger Log { get; set; }
+
+        public Env()
+        {
+            this.Log = new Logger();
+            this.Log.Logging += (msg) =>
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.WriteLine(msg);
+            };
+        }
 
         public LiteEngine CreateEngine(DataAccess access)
         {
@@ -22,19 +32,7 @@ namespace LiteDB.Shell
                     Journal = this.Journal
                 });
 
-            var engine = new LiteEngine(disk, this.Password);
-
-            if (this.Log)
-            {
-                engine.Log.Level = Logger.FULL;
-                engine.Log.Logging += (msg) =>
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkGreen;
-                    Console.WriteLine(msg);
-                };
-            }
-
-            return engine;
+            return new LiteEngine(disk, password: this.Password, log: this.Log);
         }
     }
 }

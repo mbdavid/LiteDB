@@ -1,15 +1,10 @@
 # must-have to beta
-- Create some "Reserved bytes" in index page + header page
-- Organize Unit Test (remove unused)
 - Update wiki
 
 - LiteDatabase: Add EnsureIndex on initialize first insert/update collection + tests (keeps LiteDatabase with this track?)
 
 # new shell
-- shell open/close per operation
-- open datafile as read-only when query
 - import/export tool
-- ICommamnd { IsCommand(scanner); ReadOnly?; Execute(scanner, engine; display; input) }
 
 # must-have to release
 - Upgrade datafile from v2
