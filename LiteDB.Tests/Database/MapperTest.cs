@@ -70,9 +70,8 @@ namespace LiteDB.Tests
         [BsonIgnore]
         public string MyIgnore { get; set; }
 
-        public string MyReadOnly { get; private set; }
+        public string MyReadOnly { get { return "read only"; } }
         public string MyWriteOnly { set; private get; }
-        public string MyField = "DoNotSerializeThis";
 
         // lists
         public string[] MyStringArray { get; set; }
@@ -95,6 +94,10 @@ namespace LiteDB.Tests
         public object MyObjectInt { get; set; }
         public object MyObjectImpl { get; set; }
         public List<object> MyObjectList { get; set; }
+
+        // fields
+        public string MyField;
+
     }
 
     public interface IMyInterface
@@ -142,6 +145,7 @@ namespace LiteDB.Tests
                 MyUri = new Uri("http://www.numeria.com.br"),
                 MyByte = 255,
                 MySByte = -99,
+                MyField = "Field test",
                 MyTimespan = TimeSpan.FromDays(1),
                 // MyKeyValuePair = new KeyValuePair<string, int>("my-key", 123),
                 MyDecimal = 19.9m,
@@ -164,6 +168,7 @@ namespace LiteDB.Tests
         {
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter('_');
+            mapper.IncludeFields = true;
             return mapper;
         }
 
@@ -175,6 +180,9 @@ namespace LiteDB.Tests
             var doc = mapper.ToDocument(obj);
 
             var json = JsonSerializer.Serialize(doc, true);
+
+            // test read-only
+            Assert.AreEqual(obj.MyReadOnly, doc["my_read_only"].AsString);
 
             var nobj = mapper.ToObject<MyClass>(doc);
 
@@ -195,6 +203,7 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MyChar, nobj.MyChar);
             Assert.AreEqual(obj.MyByte, nobj.MyByte);
             Assert.AreEqual(obj.MySByte, nobj.MySByte);
+            Assert.AreEqual(obj.MyField, nobj.MyField);
             Assert.AreEqual(obj.MyTimespan, nobj.MyTimespan);
             // Assert.AreEqual(obj.MyKeyValuePair, nobj.MyKeyValuePair);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);

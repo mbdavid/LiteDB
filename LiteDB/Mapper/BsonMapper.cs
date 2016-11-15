@@ -77,6 +77,13 @@ namespace LiteDB
         /// </summary>
         public bool IncludeFields { get; set; }
 
+#if NET35
+        /// <summary>
+        /// Get/Set that mapper must include non public (private, protected and internal) (default: false)
+        /// </summary>
+        public bool IncludeNonPublic { get; set; }
+#endif
+
         /// <summary>
         /// A custom callback to change how member will be modified by user when mapping a type member to member mapper
         /// </summary>
@@ -89,9 +96,11 @@ namespace LiteDB
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
             this.EmptyStringToNull = true;
-            this.IncludeFields = false;
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
+#if NET35
+            this.IncludeFields = false;
+#endif
 
             _typeInstanciator = customTypeInstanciator ?? Reflection.CreateInstance;
 
@@ -387,11 +396,15 @@ namespace LiteDB
             var members = new List<MemberInfo>();
 
 #if NET35
-            members.AddRange(type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanRead).Select(x => x as MemberInfo));
+            var flags = this.IncludeNonPublic ?
+                (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) :
+                (BindingFlags.Public | BindingFlags.Instance);
+
+            members.AddRange(type.GetProperties(flags).Where(x => x.CanRead).Select(x => x as MemberInfo));
 
             if(this.IncludeFields)
             {
-                members.AddRange(type.GetFields(BindingFlags.Public | BindingFlags.Instance));
+                members.AddRange(type.GetFields(flags));
             }
 #else
             members.AddRange(type.GetRuntimeProperties().Where(x => x.CanRead).Select(x => x as MemberInfo));

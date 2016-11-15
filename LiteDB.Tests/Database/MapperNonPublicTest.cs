@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿#if NET35
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LiteDB.Tests
 {
@@ -75,7 +76,7 @@ namespace LiteDB.Tests
     }
 
     [TestClass]
-    public class MapperFieldTest
+    public class MapperNonPublicTest
     {
         private MyBsonFieldTestClass CreateModel()
         {
@@ -94,10 +95,11 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void MapperBsonField_Test()
+        public void MapperNonPublic_Test()
         {
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter('_');
+            mapper.IncludeNonPublic = true;
 
             var obj = CreateModel();
             var doc = mapper.ToDocument(obj);
@@ -110,20 +112,20 @@ namespace LiteDB.Tests
             Assert.AreEqual(doc["PRIVATE-PROPERTY"].AsString, obj.GetMyPrivatePropertyNamed());
             Assert.AreEqual(doc["PROTECTED-PROPERTY"].AsString, obj.GetMyProtectedPropertyNamed());
             Assert.AreEqual(obj.MyString, nobj.MyString);
-#if NETFULL
+
             //Internal
             Assert.AreEqual(obj.MyInternalPropertyNamed, nobj.MyInternalPropertyNamed);
             Assert.AreEqual(obj.MyInternalPropertySerializable, nobj.MyInternalPropertySerializable);
-            Assert.AreEqual(nobj.MyInternalPropertyNotSerializable, null);
+            // Assert.AreEqual(nobj.MyInternalPropertyNotSerializable, null);
             //Private
             Assert.AreEqual(obj.GetMyPrivatePropertyNamed(), nobj.GetMyPrivatePropertyNamed());
             Assert.AreEqual(obj.GetMyPrivatePropertySerializable(), nobj.GetMyPrivatePropertySerializable());
-            Assert.AreEqual(nobj.GetMyPrivatePropertyNotSerializable(), null);
+            // Assert.AreEqual(nobj.GetMyPrivatePropertyNotSerializable(), null);
             //protected
             Assert.AreEqual(obj.GetMyProtectedPropertyNamed(), nobj.GetMyProtectedPropertyNamed());
             Assert.AreEqual(obj.GetMyProtectedPropertySerializable(), nobj.GetMyProtectedPropertySerializable());
-            Assert.AreEqual(nobj.GetMyProtectedPropertyNotSerializable(), null);
-#endif
+            //Assert.AreEqual(nobj.GetMyProtectedPropertyNotSerializable(), null);
         }
     }
 }
+#endif
