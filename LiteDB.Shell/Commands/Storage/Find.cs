@@ -3,14 +3,16 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileFind : BaseStorage, IShellCommand
+    internal class FileFind : BaseStorage, ICommand
     {
+        public DataAccess Access { get { return DataAccess.Read; } }
+
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "find");
         }
 
-        public BsonValue Execute(LiteEngine engine, StringScanner s)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var fs = new LiteStorage(engine);
 
@@ -18,7 +20,7 @@ namespace LiteDB.Shell.Commands
             {
                 var files = fs.FindAll().Select(x => x.AsDocument);
 
-                return new BsonArray(files);
+                display.WriteResult(new BsonArray(files));
             }
             else
             {
@@ -26,7 +28,7 @@ namespace LiteDB.Shell.Commands
 
                 var files = fs.Find(id).Select(x => x.AsDocument);
 
-                return new BsonArray(files);
+                display.WriteResult(new BsonArray(files));
             }
         }
     }

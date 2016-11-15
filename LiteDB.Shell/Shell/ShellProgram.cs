@@ -10,8 +10,8 @@ namespace LiteDB.Shell
     {
         public static void Start(InputCommand input, Display display)
         {
-            LiteEngine engine = null;
             var commands = new List<ICommand>();
+            var env = new Env();
 
             // register commands
             RegisterCommands(commands);
@@ -30,22 +30,30 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    var found = false;
                     var s = new StringScanner(cmd);
 
-                    foreach(var command in commands)
+                    var found = false;
+
+                    // test all commands
+                    foreach (var command in commands)
                     {
-                        if (command.IsCommand(s))
+                        if (!command.IsCommand(s)) continue;
+
+                        // test if command it's only shell command
+                        if (command.Access == DataAccess.None)
                         {
-                            var shell = command as IShellCommand;
-                            var console = command as IConsoleCommand;
-
-                            if (shell != null) display.WriteResult(shell.Execute(engine, s));
-                            if (console != null) console.Execute(ref engine, s, display, input);
-
-                            found = true;
-                            break;
+                            command.Execute(null, s, display, input, env);
                         }
+                        else
+                        {
+                            using (var engine = env.CreateEngine(command.Access))
+                            {
+                                command.Execute(engine, s, display, input, env);
+                            }
+                        }
+
+                        found = true;
+                        break;
                     }
 
                     if (!found) throw new ShellExpcetion("Command not found");

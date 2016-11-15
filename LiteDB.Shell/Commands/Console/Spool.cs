@@ -3,16 +3,18 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Spool : IConsoleCommand
+    internal class Spool : ICommand
     {
         private TextWriter _writer;
+
+        public DataAccess Access { get { return DataAccess.None; } }
 
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"spo(ol)?\s*").Length > 0;
         }
 
-        public void Execute(ref LiteEngine engine, StringScanner s, Display display, InputCommand input)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             if (s.Scan("false|off").Length > 0 && _writer != null)
             {

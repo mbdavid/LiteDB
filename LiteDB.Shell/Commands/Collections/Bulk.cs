@@ -4,14 +4,16 @@ using System.Text;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class CollectionBulk : BaseCollection, IShellCommand
+    internal class CollectionBulk : BaseCollection, ICommand
     {
+        public DataAccess Access { get { return DataAccess.Write; } }
+
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "bulk");
         }
 
-        public BsonValue Execute(LiteEngine engine, StringScanner s)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var col = this.ReadCollection(engine, s);
             var filename = s.Scan(@".*");
@@ -20,7 +22,7 @@ namespace LiteDB.Shell.Commands
             {
                 var docs = JsonSerializer.DeserializeArray(sr);
 
-                return engine.Insert(col, docs.Select(x => x.AsDocument));
+                display.WriteResult(engine.Insert(col, docs.Select(x => x.AsDocument)));
             }
         }
     }

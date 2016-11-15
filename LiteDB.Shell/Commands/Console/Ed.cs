@@ -4,14 +4,16 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Ed : IConsoleCommand
+    internal class Ed : ICommand
     {
+        public DataAccess Access { get { return DataAccess.None; } }
+
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"ed$");
         }
 
-        public void Execute(ref LiteEngine engine, StringScanner s, Display display, InputCommand input)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var temp = Path.GetTempPath() + "LiteDB.Shell.txt";
 

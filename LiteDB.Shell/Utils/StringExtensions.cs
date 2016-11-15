@@ -13,5 +13,12 @@ namespace LiteDB.Shell
 
             return str;
         }
+
+        public static string TrimToNull(this string str)
+        {
+            var v = str.Trim();
+
+            return v.Length == 0 ? null : v;
+        }
     }
 }

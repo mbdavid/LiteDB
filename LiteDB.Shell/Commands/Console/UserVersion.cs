@@ -2,14 +2,16 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class UserVersion : IConsoleCommand
+    internal class UserVersion : ICommand
     {
+        public DataAccess Access { get { return DataAccess.Write; } }
+
         public bool IsCommand(StringScanner s)
         {
             return s.Scan(@"userversion\s*").Length > 0;
         }
 
-        public void Execute(ref LiteEngine engine, StringScanner s, Display display, InputCommand input)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var ver = s.Scan(@"\d*");
 

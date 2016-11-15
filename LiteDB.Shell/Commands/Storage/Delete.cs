@@ -2,19 +2,21 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class FileDelete : BaseStorage, IShellCommand
+    internal class FileDelete : BaseStorage, ICommand
     {
+        public DataAccess Access { get { return DataAccess.Read; } }
+
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "delete");
         }
 
-        public BsonValue Execute(LiteEngine engine, StringScanner s)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var fs = new LiteStorage(engine);
             var id = this.ReadId(s);
 
-            return fs.Delete(id);
+            display.WriteResult(fs.Delete(id));
         }
     }
 }

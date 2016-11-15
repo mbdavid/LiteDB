@@ -2,14 +2,16 @@
 
 namespace LiteDB.Shell.Commands
 {
-    internal class CollectionEnsureIndex : BaseCollection, IShellCommand
+    internal class CollectionEnsureIndex : BaseCollection, ICommand
     {
+        public DataAccess Access { get { return DataAccess.Write; } }
+
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "ensure[iI]ndex");
         }
 
-        public BsonValue Execute(LiteEngine engine, StringScanner s)
+        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var col = this.ReadCollection(engine, s);
             var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field name");
@@ -31,7 +33,7 @@ namespace LiteDB.Shell.Commands
                 }
             }
 
-            return engine.EnsureIndex(col, field, unique);
+            display.WriteResult(engine.EnsureIndex(col, field, unique));
         }
     }
 }

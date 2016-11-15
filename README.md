@@ -6,7 +6,6 @@
 - LiteDatabase: Add EnsureIndex on initialize first insert/update collection + tests (keeps LiteDatabase with this track?)
 
 # new shell
-- read only in FileOptions
 - shell open/close per operation
 - open datafile as read-only when query
 - import/export tool
