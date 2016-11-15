@@ -3,8 +3,7 @@
 - Organize Unit Test (remove unused)
 - Update wiki
 
-- Initialize indexes when create collection - how detect collection created?
-- engine.EnsureIndex("col", "myindex", unique) once per GetCollection<> on Insert/Update?
+- Add EnsureIndex on initialize first insert/update collection + tests (keeps LiteDatabase with this track?)
 
 # bsonmapper
 - Unit test for field

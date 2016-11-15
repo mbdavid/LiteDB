@@ -25,7 +25,6 @@ namespace LiteDB
         /// Deserialize a BsonDocument to entity class
         /// </summary>
         public virtual T ToObject<T>(BsonDocument doc)
-            where T : new()
         {
             return (T)this.ToObject(typeof(T), doc);
         }

@@ -103,7 +103,6 @@ namespace LiteDB
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<T> GetCollection<T>(string name)
-            where T : new()
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 

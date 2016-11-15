@@ -4,7 +4,6 @@ using System.Collections.Generic;
 namespace LiteDB
 {
     public sealed partial class LiteCollection<T>
-        where T : new()
     {
         private string _name;
         private LazyLoad<LiteEngine> _engine;
