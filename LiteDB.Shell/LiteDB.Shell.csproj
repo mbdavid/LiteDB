@@ -84,6 +84,7 @@
     <Compile Include="Commands\Console\Comment.cs" />
     <Compile Include="Commands\Console\UserVersion.cs" />
     <Compile Include="Commands\Console\ShowCollections.cs" />
+    <Compile Include="Commands\Others\Dump.cs" />
     <Compile Include="Commands\Storage\BaseStorage.cs" />
     <Compile Include="Commands\Storage\Delete.cs" />
     <Compile Include="Commands\Storage\Download.cs" />
@@ -115,9 +116,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Commands\Others\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">
       <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>

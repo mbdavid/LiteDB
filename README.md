@@ -3,11 +3,14 @@
 - Organize Unit Test (remove unused)
 - Update wiki
 
-- Add EnsureIndex on initialize first insert/update collection + tests (keeps LiteDatabase with this track?)
+- LiteDatabase: Add EnsureIndex on initialize first insert/update collection + tests (keeps LiteDatabase with this track?)
 
-# bsonmapper
-- Unit test for field
-- Unit test for ResolveMember
+# new shell
+- read only in FileOptions
+- shell open/close per operation
+- open datafile as read-only when query
+- import/export tool
+- ICommamnd { IsCommand(scanner); ReadOnly?; Execute(scanner, engine; display; input) }
 
 # must-have to release
 - Upgrade datafile from v2
@@ -64,6 +67,8 @@
 - Virtual index fields
 - [BsonRefAttribute]
 - Shrink with change password
+- BsonMapper Fields and NonPublic
+- ReadOnly mode
 
 
 # ThreadSafe - How it's work in LiteDB

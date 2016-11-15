@@ -27,7 +27,7 @@ namespace LiteDB
         public const int INVALID_COMMAND = 121;
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
         public const int DATABASE_WRONG_PASSWORD = 123;
-        public const int PLATFORM_NOT_INITIALIZED = 124;
+        public const int READ_ONLY_DATABASE = 125;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -143,6 +143,11 @@ namespace LiteDB
         internal static LiteException DatabaseWrongPassword()
         {
             return new LiteException(DATABASE_WRONG_PASSWORD, "Invalid database password.");
+        }
+
+        internal static LiteException ReadOnlyDatabase()
+        {
+            return new LiteException(READ_ONLY_DATABASE, "This action are not supported because database was opened in read only mode.");
         }
 
         #endregion Database Errors

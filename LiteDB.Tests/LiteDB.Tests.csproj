@@ -69,6 +69,7 @@
     <Compile Include="Document\DocumentTest.cs" />
     <Compile Include="Document\BsonTest.cs" />
     <Compile Include="Database\DerivedTypesTest.cs" />
+    <Compile Include="Engine\ReadOnlyTest.cs" />
     <Compile Include="Engine\ShrinkTest.cs" />
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Database\MapperExceptionTest.cs" />

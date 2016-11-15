@@ -14,7 +14,6 @@ namespace LiteDB.Shell
         /// --exec "command"   : Execute an shell command (can be multiples --exec)
         /// --run script.txt   : Run script commands file 
         /// --pretty           : Show JSON in multiline + idented
-        /// --upgrade newdb.db : Upgrade database to lastest version
         /// --exit             : Exit after last command
         /// </summary>
         private static void Main(string[] args)

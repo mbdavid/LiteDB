@@ -25,6 +25,8 @@ namespace LiteDB
 
         public bool AutoCommit { get; private set; }
 
+        public bool ReadOnly { get; private set; }
+
         public long InitialSize { get; private set; }
 
         public long LimitSize { get; private set; }
@@ -54,6 +56,7 @@ namespace LiteDB
             this.CacheSize = GetValue(values, "cache size", 5000);
             this.Timeout = GetValue(values, "timeout", TimeSpan.FromMinutes(1));
             this.AutoCommit = GetValue(values, "auto commit", true);
+            this.ReadOnly = GetValue(values, "read only", true);
             this.InitialSize = GetFileSize(GetValue(values, "initial size", BasePage.PAGE_SIZE.ToString()));
             this.LimitSize = GetFileSize(GetValue(values, "limit size", long.MaxValue.ToString()));
             this.Log = GetValue<byte>(values, "log", 0);

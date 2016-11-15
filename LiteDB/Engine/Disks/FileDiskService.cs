@@ -54,8 +54,15 @@ namespace LiteDB
             // if file not exists, just create empty file
             if (!File.Exists(_filename))
             {
+                // readonly 
+                if (_options.ReadOnly) throw LiteException.ReadOnlyDatabase();
+
                 // open file as create mode
-                _stream = new FileStream(_filename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
+                _stream = new FileStream(_filename, 
+                    FileMode.CreateNew, 
+                    FileAccess.ReadWrite, 
+                    FileShare.Read, 
+                    BasePage.PAGE_SIZE);
 
                 _log.Write(Logger.DISK, "initialize new datafile");
 
@@ -81,8 +88,10 @@ namespace LiteDB
                 // try open file in exclusive mode
                 TryExec(() =>
                 {
-                    _stream = new FileStream(_filename, FileMode.Open,
-                        FileAccess.ReadWrite, FileShare.Read,
+                    _stream = new FileStream(_filename, 
+                        FileMode.Open,
+                        _options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
+                        _options.ReadOnly ? FileShare.ReadWrite : FileShare.Read,
                         BasePage.PAGE_SIZE);
                 });
             }
@@ -136,6 +145,8 @@ namespace LiteDB
         /// </summary>
         public virtual void WritePage(uint pageID, byte[] buffer)
         {
+            if (_options.ReadOnly) throw LiteException.ReadOnlyDatabase();
+
             var position = BasePage.GetSizeOfPages(pageID);
 
             _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
@@ -154,6 +165,9 @@ namespace LiteDB
         /// </summary>
         public void SetLength(long fileSize)
         {
+            // if readonly, do nothing
+            if (_options.ReadOnly) return;
+
             // checks if new fileSize will exceed limit size
             if (fileSize > _options.LimitSize) throw LiteException.FileSizeExceeded(_options.LimitSize);
 
@@ -180,6 +194,8 @@ namespace LiteDB
         /// </summary>
         public void WriteJournal(uint pageID, byte[] buffer)
         {
+            if (_options.ReadOnly) throw LiteException.ReadOnlyDatabase();
+
             // test if this page is not in journal file
             if (_journalPages.Contains(pageID)) return;
 
@@ -211,6 +227,9 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<byte[]> ReadJournal()
         {
+            // if datafile is readonly there is not journal to read
+            if (_options.ReadOnly) yield break;
+
             // check if exists journal file (if opended)
             if (_journal == null && File.Exists(_journalFilename))
             {
