@@ -8,11 +8,11 @@ namespace LiteDB
     /// <summary>
     /// Encrypted implementation of FileDiskService
     /// Header page is not encrypted to simple checks (contains SHA1 hash password for validate)
-    /// Uses SimpleAES - Rijndael implementation for symmetric encrypt. There is not password change
+    /// Uses AES - Rijndael implementation for symmetric encrypt. There is not password change
     /// </summary>
     internal class EncryptedDiskService : FileDiskService
     {
-        private SimpleAES _crypto;
+        private IEncryption _crypto;
 
         private byte[] _password;
 
@@ -22,20 +22,23 @@ namespace LiteDB
             // initialize AES with passoword
             var password = conn.GetValue<string>("password", null);
 
-            // hash password to store in header to check
-            _password = SimpleAES.HashSHA1(password);
+            // hash password to store in header to check if password is correct
+            _crypto = LitePlatform.Platform.GetEncryption(password);
 
-            _crypto = new SimpleAES(password);
+            _password = _crypto.HashSHA1(password);
         }
 
-        /// <summary>
-        /// Create new database - empty header with password
-        /// </summary>
-        public override void CreateNew()
+        protected override HeaderPage CreateHeaderPage()
         {
-            var header = new HeaderPage();
-            header.DbParams.Password = _password;
-            this.WritePage(0, header.WritePage());
+            return new HeaderPage() { Password = _password };
+        }
+
+        protected override void ValidatePassword(byte[] passwordHash)
+        {
+            if (passwordHash.BinaryCompareTo(_password) != 0)
+            {
+                throw LiteException.DatabaseWrongPassword();
+            }
         }
 
         /// <summary>
@@ -44,18 +47,9 @@ namespace LiteDB
         public override byte[] ReadPage(uint pageID)
         {
             var buffer = base.ReadPage(pageID);
-
-            // when read header, checks passoword
-            if(pageID == 0)
+            
+            if (pageID == 0)
             {
-                // I know, header page will be double read (it's the price for isolated concerns)
-                var header = (HeaderPage)BasePage.ReadPage(buffer);
-
-                if(header.DbParams.Password.BinaryCompareTo(_password) != 0)
-                {
-                    throw LiteException.DatabaseWrongPassword();
-                }
-
                 return buffer;
             }
 
@@ -67,7 +61,7 @@ namespace LiteDB
         /// </summary>
         public override void WritePage(uint pageID, byte[] buffer)
         {
-            if(pageID == 0)
+            if (pageID == 0)
             {
                 base.WritePage(pageID, buffer);
             }

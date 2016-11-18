@@ -459,7 +459,7 @@ namespace LiteDB
                 // if both values are number, convert them to Double to compare
                 if (this.IsNumber && other.IsNumber)
                 {
-                    return Convert.ToDouble(this.RawValue).CompareTo(Convert.ToDouble(this.RawValue));
+                    return Convert.ToDouble(this.RawValue).CompareTo(Convert.ToDouble(other.RawValue));
                 }
                 // if not, order by sort type order
                 else
@@ -490,7 +490,12 @@ namespace LiteDB
                 case BsonType.Guid: return ((Guid)this.RawValue).CompareTo((Guid)other.RawValue);
 
                 case BsonType.Boolean: return ((Boolean)this.RawValue).CompareTo((Boolean)other.RawValue);
-                case BsonType.DateTime: return ((DateTime)this.RawValue).CompareTo((DateTime)other.RawValue);
+                case BsonType.DateTime:
+                    var d0 = (DateTime)this.RawValue;
+                    var d1 = (DateTime)other.RawValue;
+                    if (d0.Kind != DateTimeKind.Utc) d0 = d0.ToUniversalTime();
+                    if (d1.Kind != DateTimeKind.Utc) d1 = d1.ToUniversalTime();
+                    return d0.CompareTo(d1);
 
                 default: throw new NotImplementedException();
             }
@@ -641,9 +646,12 @@ namespace LiteDB
             {
                 return text;
             }
-
             // removing accents
+#if PCL
+            var normalized = text; // TODO szurgot: Normalize doesn't seem to exist in PCL
+#else
             var normalized = text.Normalize(NormalizationForm.FormD);
+#endif
             var sb = new StringBuilder();
 
             for (int i = 0; i < normalized.Length; i++)

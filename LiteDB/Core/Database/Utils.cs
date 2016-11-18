@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace LiteDB
 {
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Reduce datafile size re-creating all collection in another datafile - return how many bytes are reduced.
@@ -32,9 +32,17 @@ namespace LiteDB
         /// <summary>
         /// Convert an entity class instance into a BsonDocument using BsonMapper rules
         /// </summary>
-        public BsonDocument ToDocument(object entity)
+        public BsonDocument ToDocument<T>(T entity)
         {
             return _mapper.ToDocument(entity);
+        }
+
+        /// <summary>
+        /// Convert an entity class instance into a BsonDocument using BsonMapper rules
+        /// </summary>
+        public BsonDocument ToDocument(Type type, object entity)
+        {
+            return _mapper.ToDocument(type, entity);
         }
     }
 }

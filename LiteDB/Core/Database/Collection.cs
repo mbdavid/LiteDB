@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB
 {
-    public partial class LiteDatabase : IDisposable
+    public partial class LiteDatabase
     {
         /// <summary>
         /// Get a collection using a entity class as strong typed document. If collection does not exits, create a new one.

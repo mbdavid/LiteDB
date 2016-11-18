@@ -1,4 +1,4 @@
-﻿using LiteDB.Shell;
+using LiteDB.Shell;
 using System;
 using System.Text.RegularExpressions;
 

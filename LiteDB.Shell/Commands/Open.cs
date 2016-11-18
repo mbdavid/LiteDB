@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
+    extern alias v200;
+
     internal class Open : ConsoleCommand
     {
         public override bool IsCommand(StringScanner s)
@@ -60,25 +62,12 @@ namespace LiteDB.Shell.Commands
         /// </summary>
         private string GetFilename(string connectionString)
         {
-            Dictionary<string, string> values;
+            var filename = new v200::LiteDB.ConnectionString(connectionString).GetValue<string>("filename", null);
 
-            // Create a dictionary from string name=value collection
-            if (connectionString.Contains("="))
-            {
-                values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Split(new char[] { '=' }, 2))
-                    .ToDictionary(t => t[0].Trim().ToLower(), t => t.Length == 1 ? "" : t[1].Trim(), StringComparer.OrdinalIgnoreCase);
-            }
-            else
-            {
-                // If connectionstring is only a filename, set filename
-                values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                values["filename"] = Path.GetFullPath(connectionString);
-            }
+            if (filename == null)
+                throw new ShellExpcetion("Invalid connection string. Missing filename");
 
-            if(!values.ContainsKey("filename")) throw new ShellExpcetion("Invalid connection string. Missing filename");
-
-            return values["filename"];
+            return filename;
         }
     }
 }

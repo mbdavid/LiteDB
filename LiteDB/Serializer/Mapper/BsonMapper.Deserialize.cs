@@ -68,7 +68,8 @@ namespace LiteDB
             typeof(Single),
             typeof(Decimal),
             typeof(Char),
-            typeof(Byte)
+            typeof(Byte),
+            typeof(SByte)
         };
 
         #endregion Basic direct .NET convert types
@@ -113,7 +114,7 @@ namespace LiteDB
             }
 
             // enum value is a string
-            else if (type.IsEnum)
+            else if (type.GetTypeInfo().IsEnum)
             {
                 return Enum.Parse(type, value.AsString);
             }
@@ -147,14 +148,21 @@ namespace LiteDB
                 if (doc.RawValue.TryGetValue("_type", out typeField))
                 {
                     type = Type.GetType(typeField.AsString);
+
+                    if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
                 }
 
                 var o = Reflection.CreateInstance(type);
 
-                if (o is IDictionary && type.IsGenericType)
+                if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
+#if !NETFULL
+                    var k = type.GetTypeInfo().GenericTypeArguments[0];
+                    var t = type.GetTypeInfo().GenericTypeArguments[1];
+#else
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
+#endif
 
                     this.DeserializeDictionary(k, t, (IDictionary)o, value.AsDocument);
                 }
@@ -186,7 +194,13 @@ namespace LiteDB
 
         private object DeserializeList(Type type, BsonArray value)
         {
-            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+#if PCL
+			var typeInfo = type.GetTypeInfo();
+            var itemType = typeInfo.GenericTypeArguments.FirstOrDefault() 
+                   ?? typeInfo.ImplementedInterfaces.First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetTypeInfo().GenericTypeArguments.First();
+#else
+            var itemType = type.GetGenericArguments().FirstOrDefault() ?? type.GetInterfaces().First(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).GetGenericArguments().First();
+#endif
             var enumerable = (IEnumerable)Reflection.CreateInstance(type);
             var list = enumerable as IList;
 
@@ -199,7 +213,11 @@ namespace LiteDB
             }
             else
             {
+#if PCL
+                var addMethod = type.GetRuntimeMethod("Add", new Type[1] { itemType });
+#else
                 var addMethod = type.GetMethod("Add");
+#endif
 
                 foreach (BsonValue item in value)
                 {
@@ -214,7 +232,7 @@ namespace LiteDB
         {
             foreach (var key in value.Keys)
             {
-                var k = Convert.ChangeType(key, K);
+                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, key) : Convert.ChangeType(key, K);
                 var v = this.Deserialize(T, value[key]);
 
                 dict.Add(k, v);
@@ -224,26 +242,40 @@ namespace LiteDB
         private void DeserializeObject(Type type, object obj, BsonDocument value)
         {
             var props = this.GetPropertyMapper(type);
-
-            foreach (var prop in props.Values)
+            PropertyMapper property=null;
+            BsonValue bson_value=null;
+            try
             {
-                // property is read only
-                if (prop.Setter == null) continue;
 
-                var val = value[prop.FieldName];
-
-                if (!val.IsNull)
+                foreach (var prop in props.Values)
                 {
-                    // check if has a custom deserialize function
-                    if (prop.Deserialize != null)
+                    property = prop;
+                    // property is read only
+                    if (prop.Setter == null) continue;
+
+                    var val = value[prop.FieldName];
+                    bson_value = val;
+
+                    if (!val.IsNull)
                     {
-                        prop.Setter(obj, prop.Deserialize(val, this));
-                    }
-                    else
-                    {
-                        prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                        // check if has a custom deserialize function
+                        if (prop.Deserialize != null)
+                        {
+                            prop.Setter(obj, prop.Deserialize(val, this));
+
+                        }
+                        else
+                        {
+                            prop.Setter(obj, this.Deserialize(prop.PropertyType, val));
+                        }
                     }
                 }
+            }
+            catch (InvalidCastException e)
+            {
+                var typename = property == null ? null : property.PropertyType.Name;
+                var msg = string.Format("Cast from '{0}' to '{1}' failed in document: {2}", bson_value, typename, value);
+                throw new InvalidCastException(msg, e);
             }
         }
     }

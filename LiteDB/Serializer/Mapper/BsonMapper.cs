@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -54,6 +53,16 @@ namespace LiteDB
         /// </summary>
         public bool EmptyStringToNull { get; set; }
 
+        /// <summary>
+        /// Map for autoId type based functions
+        /// </summary>
+        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
+
+        /// <summary>
+        /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
+        /// </summary>
+        public static BsonMapper Global = new BsonMapper();
+
         public BsonMapper()
         {
             this.SerializeNullValues = false;
@@ -63,41 +72,39 @@ namespace LiteDB
 
             #region Register CustomTypes
 
-            // register custom types
-            this.RegisterType<Uri>
+            RegisterType(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
+            RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
+            RegisterType<TimeSpan>(value => new BsonValue(value.Ticks), bson => new TimeSpan(bson.AsInt64));
+
+            #endregion Register CustomTypes
+
+            #region Register AutoId
+
+            // register AutoId for ObjectId, Guid and Int32
+            RegisterAutoId
             (
-                serialize: (uri) => uri.AbsoluteUri,
-                deserialize: (bson) => new Uri(bson.AsString)
+                v => v.Equals(ObjectId.Empty),
+                c => ObjectId.NewObjectId()
             );
 
-            this.RegisterType<NameValueCollection>
+            RegisterAutoId
             (
-                serialize: (nv) =>
+                v => v == Guid.Empty,
+                c => Guid.NewGuid()
+            );
+
+            RegisterAutoId
+            (
+                v => v == 0,
+                c =>
                 {
-                    var doc = new BsonDocument();
-
-                    foreach (var key in nv.AllKeys)
-                    {
-                        doc[key] = nv[key];
-                    }
-
-                    return doc;
-                },
-                deserialize: (bson) =>
-                {
-                    var nv = new NameValueCollection();
-                    var doc = bson.AsDocument;
-
-                    foreach (var key in doc.Keys)
-                    {
-                        nv[key] = doc[key].AsString;
-                    }
-
-                    return nv;
+                    var max = c.Max();
+                    return max.IsMaxValue ? 1 : (max + 1);
                 }
             );
 
-            #endregion Register CustomTypes
+            #endregion  
+
         }
 
         /// <summary>
@@ -110,6 +117,58 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Register a custom Auto Id generator function for a type
+        /// </summary>
+        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
+        {
+            _autoId[typeof(T)] = new AutoId
+            {
+                IsEmpty = o => isEmpty((T)o),
+                NewId = c => newId(c)
+            };
+        }
+
+        /// <summary>
+        /// Set new Id in entity class if entity needs one
+        /// </summary>
+        public void SetAutoId(object entity, LiteCollection<BsonDocument> col)
+        {
+            // if object is BsonDocument, add _id as ObjectId
+            if (entity is BsonDocument)
+            {
+                var doc = entity as BsonDocument;
+                if (!doc.RawValue.ContainsKey("_id"))
+                {
+                    doc["_id"] = ObjectId.NewObjectId();
+                }
+                return;
+            }
+
+            // get fields mapper
+            var mapper = GetPropertyMapper(entity.GetType());
+
+            // it's not best way because is scan all properties - but Id propably is first field :)
+            var id = mapper.Select(x => x.Value).FirstOrDefault(x => x.FieldName == "_id");
+
+            // if not id or no autoId = true
+            if (id == null || id.AutoId == false) return;
+
+            AutoId autoId;
+
+            if (_autoId.TryGetValue(id.PropertyType, out autoId))
+            {
+                var value = id.Getter(entity);
+
+                if (value == null || autoId.IsEmpty(value) == true)
+                {
+                    var newId = autoId.NewId(col);
+
+                    id.Setter(entity, newId);
+                }
+            }
+        }
+
+        /// <summary>
         /// Map your entity class to BsonDocument using fluent API
         /// </summary>
         public EntityBuilder<T> Entity<T>()
@@ -119,16 +178,26 @@ namespace LiteDB
 
         #region Predefinded Property Resolvers
 
-        public void UseCamelCase()
+        /// <summary>
+        /// Use lower camel case resolution for convert property names to field names
+        /// </summary>
+        public BsonMapper UseCamelCase()
         {
             this.ResolvePropertyName = (s) => char.ToLower(s[0]) + s.Substring(1);
+
+            return this;
         }
 
         private Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])");
 
-        public void UseLowerCaseDelimiter(char delimiter = '_')
+        /// <summary>
+        /// Use lower camel case with delemiter resolution for convert property names to field names
+        /// </summary>
+        public BsonMapper UseLowerCaseDelimiter(char delimiter = '_')
         {
             this.ResolvePropertyName = (s) => _lowerCaseDelimiter.Replace(s, delimiter + "$2").ToLower();
+
+            return this;
         }
 
         #endregion Predefinded Property Resolvers

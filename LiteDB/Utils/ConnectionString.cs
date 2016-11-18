@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// Manage ConnectionString to connect and create databases. Connection string are NameValue using Name1=Value1; Name2=Value2
     /// </summary>
-    internal class ConnectionString
+    public class ConnectionString
     {
         private Dictionary<string, string> _values;
 
@@ -17,18 +17,21 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
+            _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             // Create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
-                _values = connectionString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Split(new char[] { '=' }, 2))
-                    .ToDictionary(t => t[0].Trim().ToLower(), t => t.Length == 1 ? "" : t[1].Trim(), StringComparer.OrdinalIgnoreCase);
+                _values.ParseKeyValue(connectionString);
             }
             else
             {
                 // If connectionstring is only a filename, set filename
-                _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+#if PCL
+                _values["filename"] = connectionString;
+#else
                 _values["filename"] = Path.GetFullPath(connectionString);
+#endif
             }
         }
 

@@ -16,7 +16,12 @@ namespace LiteDB.Shell
 
         public bool Detect(string filename)
         {
-            return Helper.Try(() => new LiteDatabase(filename).CollectionExists("dummy"));
+            using (var s = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var header = new byte[4096];
+                s.Read(header, 0, 4096);
+                return header[52] >= 5; // FILE_VERSION
+            }
         }
 
         public void Open(string connectionString)
@@ -44,19 +49,21 @@ namespace LiteDB.Shell
 
         public void Dump(TextWriter writer)
         {
+            var mapper = new BsonMapper().UseCamelCase();
+
             foreach (var name in _db.GetCollectionNames())
             {
                 var col = _db.GetCollection(name);
-                var indexes = col.GetIndexes().Where(x => x["field"] != "_id");
+                var indexes = col.GetIndexes().Where(x => x.Field != "_id");
 
                 writer.WriteLine("-- Collection '{0}'", name);
 
                 foreach (var index in indexes)
                 {
-                    writer.WriteLine("db.{0}.ensureIndex {1} {2}", 
-                        name, 
-                        index["field"].AsString, 
-                        JsonSerializer.Serialize(index["options"].AsDocument));
+                    writer.WriteLine("db.{0}.ensureIndex {1} {2}",
+                        name,
+                        index.Field,
+                        JsonSerializer.Serialize(mapper.ToDocument<IndexOptions>(index.Options)));
                 }
 
                 foreach (var doc in col.Find(Query.All()))
@@ -102,6 +109,5 @@ namespace LiteDB.Shell
         }
 
         #endregion
-
     }
 }

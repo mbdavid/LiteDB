@@ -177,7 +177,7 @@ namespace LiteDB
             if (r != 0) return r;
 
             r = this.Pid.CompareTo(other.Pid);
-            if (r != 0) return r;
+            if (r != 0) return r < 0 ? -1 : 1;
 
             return this.Increment.CompareTo(other.Increment);
         }
@@ -258,7 +258,13 @@ namespace LiteDB
         // static constructor
         static ObjectId()
         {
-            _machine = (GetMachineHash() + AppDomain.CurrentDomain.Id) & 0x00ffffff;
+            _machine = (GetMachineHash() +
+#if NETFULL
+                AppDomain.CurrentDomain.Id
+#else
+                10000 // Magic number
+#endif   
+                ) & 0x00ffffff;
             _increment = (new Random()).Next();
 
             try
@@ -274,12 +280,21 @@ namespace LiteDB
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static int GetCurrentProcessId()
         {
+#if NETFULL
             return Process.GetCurrentProcess().Id;
+#else
+            return 1000; // Magic number
+#endif
         }
 
         private static int GetMachineHash()
         {
-            var hostName = Environment.MachineName; // use instead of Dns.HostName so it will work offline
+            var hostName =
+#if NETFULL
+                Environment.MachineName; // use instead of Dns.HostName so it will work offline
+#else
+                "SOMENAME";
+#endif
             return 0x00ffffff & hostName.GetHashCode(); // use first 3 bytes of hash
         }
 

@@ -132,19 +132,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Save file content to a external file
-        /// </summary>
-        public void SaveAs(string filename, bool overwritten = true)
-        {
-            if (_engine == null) throw LiteException.NoDatabase();
-
-            using (var file = new FileStream(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
-            {
-                this.OpenRead().CopyTo(file);
-            }
-        }
-
-        /// <summary>
         /// Copy file content to another stream
         /// </summary>
         public void CopyTo(Stream stream)
@@ -152,6 +139,17 @@ namespace LiteDB
             using (var reader = this.OpenRead())
             {
                 reader.CopyTo(stream);
+            }
+        }
+
+        /// <summary>
+        /// Save file content to a external file
+        /// </summary>
+        public void SaveAs(string filename, bool overwritten = true)
+        {
+            using (var file = LitePlatform.Platform.FileHandler.CreateFile(filename, overwritten))
+            {
+                OpenRead().CopyTo(file);
             }
         }
     }
