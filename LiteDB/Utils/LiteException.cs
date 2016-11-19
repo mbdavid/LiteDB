@@ -150,7 +150,7 @@ namespace LiteDB
             return new LiteException(READ_ONLY_DATABASE, "This action are not supported because database was opened in read only mode.");
         }
 
-        #endregion Database Errors
+        #endregion
 
         #region Document/Mapper Errors
 
@@ -196,6 +196,6 @@ namespace LiteDB
             return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName').", type);
         }
 
-        #endregion Document/Mapper Errors
+        #endregion
     }
 }
