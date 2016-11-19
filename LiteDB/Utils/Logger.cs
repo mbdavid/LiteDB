@@ -14,7 +14,8 @@ namespace LiteDB
         public const byte COMMAND = 4;
         public const byte QUERY = 16;
         public const byte JOURNAL = 32;
-        public const byte DISK = 64;
+        public const byte CACHE = 64;
+        public const byte DISK = 128;
         public const byte FULL = 255;
 
         /// <summary>
@@ -48,11 +49,19 @@ namespace LiteDB
                     level == RECOVERY ? "RECOVERY" :
                     level == COMMAND ? "COMMAND" :
                     level == JOURNAL ? "JOURNAL" :
-                    level == DISK ? "DISK" : "QUERY";
+                    level == QUERY ? "QUERY" :
+                    level == CACHE ? "CACHE" : 
+                    level == DISK ? "DISK" : "";
 
                 var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + " [" + str + "] " + text;
 
-                this.Logging(msg);
+                try
+                {
+                    this.Logging(msg);
+                }
+                catch
+                {
+                }
             }
         }
     }

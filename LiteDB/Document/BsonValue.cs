@@ -71,25 +71,25 @@ namespace LiteDB
 
         public BsonValue(Dictionary<string, BsonValue> value)
         {
-            this.Type = BsonType.Document;
+            this.Type = value == null ? BsonType.Null : BsonType.Document;
             this.RawValue = value;
         }
 
         public BsonValue(List<BsonValue> value)
         {
-            this.Type = BsonType.Array;
+            this.Type = value == null ? BsonType.Null : BsonType.Array;
             this.RawValue = value;
         }
 
         public BsonValue(Byte[] value)
         {
-            this.Type = BsonType.Binary;
+            this.Type = value == null ? BsonType.Null : BsonType.Binary;
             this.RawValue = value;
         }
 
         public BsonValue(ObjectId value)
         {
-            this.Type = BsonType.ObjectId;
+            this.Type = value == null ? BsonType.Null : BsonType.ObjectId;
             this.RawValue = value;
         }
 
@@ -113,7 +113,7 @@ namespace LiteDB
 
         public BsonValue(BsonValue value)
         {
-            this.Type = value.Type;
+            this.Type = value == null ? BsonType.Null : value.Type;
             this.RawValue = value.RawValue;
         }
 
@@ -139,10 +139,45 @@ namespace LiteDB
                 this.Type = v.Type;
                 this.RawValue = v.RawValue;
             }
-            else throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
+            else
+            {
+                // test for array or dictionary (document)
+                var enumerable = value as System.Collections.IEnumerable;
+                var dictionary = value as System.Collections.IDictionary;
+
+                // test first for dictionary (becasue IDictionary implement IEnumerable)
+                if (dictionary != null)
+                {
+                    var dict = new Dictionary<string, BsonValue>();
+
+                    foreach (var key in dictionary.Keys)
+                    {
+                        dict.Add(key.ToString(), new BsonValue(dictionary[key]));
+                    }
+
+                    this.Type = BsonType.Document;
+                    this.RawValue = dict;
+                }
+                else if (enumerable != null)
+                {
+                    var list = new List<BsonValue>();
+
+                    foreach (var x in enumerable)
+                    {
+                        list.Add(new BsonValue(x));
+                    }
+
+                    this.Type = BsonType.Array;
+                    this.RawValue = list;
+                }
+                else
+                {
+                    throw new InvalidCastException("Value is not a valid BSON data type - Use Mapper.ToDocument for more complex types converts");
+                }
+            }
         }
 
-        #endregion Constructor
+        #endregion
 
         #region Convert types
 
@@ -227,7 +262,7 @@ namespace LiteDB
             get { return this.Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
         }
 
-        #endregion Convert types
+        #endregion
 
         #region IsTypes
 
@@ -306,7 +341,7 @@ namespace LiteDB
             get { return this.Type == BsonType.MaxValue; }
         }
 
-        #endregion IsTypes
+        #endregion
 
         #region Implicit Ctor
 
@@ -319,7 +354,7 @@ namespace LiteDB
         // Int32
         public static implicit operator BsonValue(Int32 value)
         {
-            return new BsonValue { Type = BsonType.Int32, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Int64
@@ -331,7 +366,7 @@ namespace LiteDB
         // Int64
         public static implicit operator BsonValue(Int64 value)
         {
-            return new BsonValue { Type = BsonType.Int64, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Double
@@ -343,7 +378,7 @@ namespace LiteDB
         // Double
         public static implicit operator BsonValue(Double value)
         {
-            return new BsonValue { Type = BsonType.Double, RawValue = value };
+            return new BsonValue(value);
         }
 
         // String
@@ -355,7 +390,7 @@ namespace LiteDB
         // String
         public static implicit operator BsonValue(String value)
         {
-            return new BsonValue { Type = BsonType.String, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Document
@@ -367,7 +402,7 @@ namespace LiteDB
         // Document
         public static implicit operator BsonValue(Dictionary<string, BsonValue> value)
         {
-            return new BsonValue { Type = BsonType.Document, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Array
@@ -379,7 +414,7 @@ namespace LiteDB
         // Array
         public static implicit operator BsonValue(List<BsonValue> value)
         {
-            return new BsonValue { Type = BsonType.Array, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Binary
@@ -391,7 +426,7 @@ namespace LiteDB
         // Binary
         public static implicit operator BsonValue(Byte[] value)
         {
-            return new BsonValue { Type = BsonType.Binary, RawValue = value };
+            return new BsonValue(value);
         }
 
         // ObjectId
@@ -403,7 +438,7 @@ namespace LiteDB
         // ObjectId
         public static implicit operator BsonValue(ObjectId value)
         {
-            return new BsonValue { Type = BsonType.ObjectId, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Guid
@@ -415,7 +450,7 @@ namespace LiteDB
         // Guid
         public static implicit operator BsonValue(Guid value)
         {
-            return new BsonValue { Type = BsonType.Guid, RawValue = value };
+            return new BsonValue(value);
         }
 
         // Boolean
@@ -427,7 +462,7 @@ namespace LiteDB
         // Boolean
         public static implicit operator BsonValue(Boolean value)
         {
-            return new BsonValue { Type = BsonType.Boolean, RawValue = value };
+            return new BsonValue(value);
         }
 
         // DateTime
@@ -439,7 +474,7 @@ namespace LiteDB
         // DateTime
         public static implicit operator BsonValue(DateTime value)
         {
-            return new BsonValue { Type = BsonType.DateTime, RawValue = value };
+            return new BsonValue(value);
         }
 
         public override string ToString()
@@ -447,7 +482,7 @@ namespace LiteDB
             return this.IsNull ? "(null)" : this.RawValue.ToString();
         }
 
-        #endregion Implicit Ctor
+        #endregion
 
         #region IComparable<BsonValue>, IEquatable<BsonValue>
 
@@ -506,7 +541,7 @@ namespace LiteDB
             return this.CompareTo(other) == 0;
         }
 
-        #endregion IComparable<BsonValue>, IEquatable<BsonValue>
+        #endregion
 
         #region Operators
 
@@ -556,9 +591,9 @@ namespace LiteDB
             return hash;
         }
 
-        #endregion Operators
+        #endregion
 
-        #region GetBytesCount, Normalize
+        #region GetBytesCount
 
         internal int? Length = null;
 
@@ -622,51 +657,6 @@ namespace LiteDB
                 (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
         }
 
-        /// <summary>
-        /// Normalize a string value using IndexOptions and returns a new BsonValue - if is not a string, returns some BsonValue instance
-        /// </summary>
-        internal BsonValue Normalize(IndexOptions options)
-        {
-            // if not string, do nothing
-            if (this.Type != BsonType.String) return this;
-
-            // removing whitespaces
-            var text = (String)RawValue;
-
-            if (options.TrimWhitespace) text = text.Trim();
-            if (options.IgnoreCase) text = text.ToLower();
-
-            // convert emptystring to null
-            if (text.Length == 0 && options.EmptyStringToNull)
-            {
-                return BsonValue.Null;
-            }
-
-            if (!options.RemoveAccents)
-            {
-                return text;
-            }
-            // removing accents
-#if PCL
-            var normalized = text; // TODO szurgot: Normalize doesn't seem to exist in PCL
-#else
-            var normalized = text.Normalize(NormalizationForm.FormD);
-#endif
-            var sb = new StringBuilder();
-
-            for (int i = 0; i < normalized.Length; i++)
-            {
-                var c = normalized[i];
-
-                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-                {
-                    sb.Append(c);
-                }
-            }
-
-            return sb.ToString();
-        }
-
-        #endregion GetBytesCount, Normalize
+        #endregion
     }
 }

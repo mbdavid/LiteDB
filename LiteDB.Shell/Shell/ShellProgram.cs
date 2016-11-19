@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using LiteDB.Shell.Commands;
 
 namespace LiteDB.Shell
 {
@@ -6,7 +10,11 @@ namespace LiteDB.Shell
     {
         public static void Start(InputCommand input, Display display)
         {
-            IShellEngine engine = null;
+            var commands = new List<ICommand>();
+            var env = new Env();
+
+            // register commands
+            RegisterCommands(commands);
 
             display.TextWriters.Add(Console.Out);
 
@@ -22,14 +30,33 @@ namespace LiteDB.Shell
 
                 try
                 {
-                    var isConsoleCommand = ConsoleCommand.TryExecute(cmd, ref engine, display, input);
+                    var s = new StringScanner(cmd);
 
-                    if (isConsoleCommand == false)
+                    var found = false;
+
+                    // test all commands
+                    foreach (var command in commands)
                     {
-                        if (engine == null) throw ShellExpcetion.NoDatabase();
+                        if (!command.IsCommand(s)) continue;
 
-                        engine.Run(cmd, display);
+                        // test if command it's only shell command
+                        if (command.Access == DataAccess.None)
+                        {
+                            command.Execute(null, s, display, input, env);
+                        }
+                        else
+                        {
+                            using (var engine = env.CreateEngine(command.Access))
+                            {
+                                command.Execute(engine, s, display, input, env);
+                            }
+                        }
+
+                        found = true;
+                        break;
                     }
+
+                    if (!found) throw new ShellExpcetion("Command not found");
                 }
                 catch (Exception ex)
                 {
@@ -38,10 +65,21 @@ namespace LiteDB.Shell
             }
         }
 
-        public static void LogMessage(string msg)
+        #region Register all commands
+
+        public static void RegisterCommands(List<ICommand> commands)
         {
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.WriteLine(msg);
+            var type = typeof(ICommand);
+            var types = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(p => type.IsAssignableFrom(p) && p.IsClass);
+
+            foreach(var cmd in types)
+            {
+                commands.Add(Activator.CreateInstance(cmd) as ICommand);
+            }
         }
+
+        #endregion
     }
 }

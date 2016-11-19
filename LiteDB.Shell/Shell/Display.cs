@@ -56,6 +56,39 @@ namespace LiteDB.Shell
             }
         }
 
+        public void WriteResult(BsonValue result)
+        {
+            var index = 0;
+
+            if (result.IsNull) return;
+
+            if (result.IsDocument)
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+            }
+            else if (result.IsArray)
+            {
+                foreach (var doc in result.AsArray)
+                {
+                    this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
+                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(doc, this.Pretty, false));
+                }
+
+                if (index == 0)
+                {
+                    this.WriteLine(ConsoleColor.DarkCyan, "no documents");
+                }
+            }
+            else if (result.IsString)
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
+            }
+            else
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+            }
+        }
+
         #region Print public methods
 
         public void Write(string text)

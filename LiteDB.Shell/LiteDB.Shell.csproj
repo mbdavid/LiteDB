@@ -48,36 +48,45 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LiteDB090">
-      <HintPath>Resources\LiteDB090.dll</HintPath>
-      <Aliases>v090</Aliases>
-    </Reference>
-    <Reference Include="LiteDB104">
-      <HintPath>Resources\LiteDB104.dll</HintPath>
-      <Aliases>v104</Aliases>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\Debug.cs" />
-    <Compile Include="Commands\Dump.cs" />
-    <Compile Include="Commands\Version.cs" />
-    <Compile Include="Commands\Help.cs" />
-    <Compile Include="Commands\Open.cs" />
-    <Compile Include="Commands\Timer.cs" />
-    <Compile Include="Commands\Run.cs" />
-    <Compile Include="Commands\Ed.cs" />
-    <Compile Include="Engines\ShellEngine_200.cs" />
-    <Compile Include="Engines\ShellEngine_104.cs" />
-    <Compile Include="Engines\ShellEngine_090.cs" />
-    <Compile Include="Engines\IShellEngine.cs" />
-    <Compile Include="Shell\ConsoleCommand.cs" />
-    <Compile Include="Commands\Close.cs" />
-    <Compile Include="Commands\Pretty.cs" />
-    <Compile Include="Commands\Quit.cs" />
-    <Compile Include="Commands\Spool.cs" />
+    <Compile Include="Commands\Collections\BaseCollection.cs" />
+    <Compile Include="Commands\Collections\Bulk.cs" />
+    <Compile Include="Commands\Collections\Count.cs" />
+    <Compile Include="Commands\Collections\Delete.cs" />
+    <Compile Include="Commands\Collections\Drop.cs" />
+    <Compile Include="Commands\Collections\DropIndex.cs" />
+    <Compile Include="Commands\Collections\EnsureIndex.cs" />
+    <Compile Include="Commands\Collections\Find.cs" />
+    <Compile Include="Commands\Collections\Indexes.cs" />
+    <Compile Include="Commands\Collections\Insert.cs" />
+    <Compile Include="Commands\Collections\Max.cs" />
+    <Compile Include="Commands\Collections\Min.cs" />
+    <Compile Include="Commands\Collections\Rename.cs" />
+    <Compile Include="Commands\Collections\Update.cs" />
+    <Compile Include="Commands\Console\Comment.cs" />
+    <Compile Include="Commands\Console\Debug.cs" />
+    <Compile Include="Commands\Console\Ed.cs" />
+    <Compile Include="Commands\Console\Help.cs" />
+    <Compile Include="Commands\Console\Open.cs" />
+    <Compile Include="Commands\Console\Pretty.cs" />
+    <Compile Include="Commands\Console\Quit.cs" />
+    <Compile Include="Commands\Console\Run.cs" />
+    <Compile Include="Commands\Console\ShowCollections.cs" />
+    <Compile Include="Commands\Console\Spool.cs" />
+    <Compile Include="Commands\Console\Timer.cs" />
+    <Compile Include="Commands\Console\UserVersion.cs" />
+    <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\Storage\BaseStorage.cs" />
+    <Compile Include="Commands\Storage\Delete.cs" />
+    <Compile Include="Commands\Storage\Download.cs" />
+    <Compile Include="Commands\Storage\Find.cs" />
+    <Compile Include="Commands\Storage\Update.cs" />
+    <Compile Include="Commands\Storage\Upload.cs" />
+    <Compile Include="Shell\Env.cs" />
     <Compile Include="Shell\Display.cs" />
     <Compile Include="Shell\InputCommand.cs" />
     <Compile Include="Program.cs" />
@@ -85,6 +94,7 @@
     <Compile Include="Shell\ShellException.cs" />
     <Compile Include="Shell\ShellProgram.cs" />
     <Compile Include="Utils\OptionSet.cs" />
+    <Compile Include="Utils\StringExtensions.cs" />
     <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -102,15 +112,11 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\LiteDB090.dll" />
-    <EmbeddedResource Include="Resources\LiteDB104.dll" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">
       <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
       <Name>LiteDB</Name>
-      <Aliases>v200</Aliases>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

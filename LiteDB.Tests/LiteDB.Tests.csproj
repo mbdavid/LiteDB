@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LiteDB.Tests</RootNamespace>
     <AssemblyName>LiteDB.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NAMEVALUECOLLECTION</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NET35</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -57,40 +57,42 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Tests\ConcurrentThreadTest.cs" />
-    <Compile Include="Tests\DatabasePerformanceTest.cs" />
-    <Compile Include="Tests\DataTableTest.cs" />
-    <Compile Include="Tests\Datafilev1Test.cs" />
-    <Compile Include="Tests\DiskFileTest.cs" />
-    <Compile Include="Tests\FileStorageTest.cs" />
-    <Compile Include="Tests\DateTimeUtcTest.cs" />
-    <Compile Include="Tests\MapperExceptionTest.cs" />
-    <Compile Include="Tests\ShrinkTest.cs" />
-    <Compile Include="Tests\TransactionTest.cs" />
-    <Compile Include="Tests\LoopTest.cs" />
-    <Compile Include="Tests\BulkTest.cs" />
-    <Compile Include="Tests\BsonTest.cs" />
-    <Compile Include="Tests\DbVersionTest.cs" />
-    <Compile Include="Tests\EncryptedTest.cs" />
-    <Compile Include="Tests\AutoIdTest.cs" />
-    <Compile Include="Tests\DropCollectionTest.cs" />
-    <Compile Include="Tests\DbRefIndexTest.cs" />
-    <Compile Include="Tests\MapperInterfaceTest.cs" />
-    <Compile Include="Tests\BsonFieldTest.cs" />
-    <Compile Include="Tests\PolymorphicTest.cs" />
-    <Compile Include="Tests\ObjectIdTest.cs" />
-    <Compile Include="Tests\DerivedTypesTest.cs" />
-    <Compile Include="Tests\MapperTest.cs" />
-    <Compile Include="Tests\ConcurrentTest.cs" />
-    <Compile Include="Tests\JsonTest.cs" />
-    <Compile Include="Tests\LinqTest.cs" />
-    <Compile Include="Tests\IncludeTest.cs" />
-    <Compile Include="Tests\ShellTest.cs" />
-    <Compile Include="Tests\StreamDbTest.cs" />
-    <Compile Include="Tests\TempFile.cs" />
-    <Compile Include="TestPlatform.cs" />
-    <Compile Include="Tests\IndexOrderTest.cs" />
+    <Compile Include="Database\AutoIdTest.cs" />
+    <Compile Include="Database\ConnectionStringTest.cs" />
+    <Compile Include="Database\AttributeMapperTest.cs" />
+    <Compile Include="Database\DbRefIndexTest.cs" />
+    <Compile Include="Database\LinqVisitorTest.cs" />
+    <Compile Include="Database\MapperNonPublicTest.cs" />
+    <Compile Include="Database\MultiKeyMapperTest.cs" />
+    <Compile Include="Database\IncludeTest.cs" />
+    <Compile Include="Database\LinqTest.cs" />
+    <Compile Include="Database\StructTest.cs" />
+    <Compile Include="Document\DocumentTest.cs" />
+    <Compile Include="Document\BsonTest.cs" />
+    <Compile Include="Database\DerivedTypesTest.cs" />
+    <Compile Include="Engine\ReadOnlyTest.cs" />
+    <Compile Include="Engine\ShrinkTest.cs" />
+    <Compile Include="Engine\DropCollectionTest.cs" />
+    <Compile Include="Database\MapperExceptionTest.cs" />
+    <Compile Include="Database\MapperTest.cs" />
+    <Compile Include="Engine\EncryptedTest.cs" />
+    <Compile Include="Engine\MemoryStreamTest.cs" />
+    <Compile Include="Engine\UserVersionTest.cs" />
+    <Compile Include="Engine\IndexOrderTest.cs" />
+    <Compile Include="Engine\JsonTest.cs" />
+    <Compile Include="Engine\LoopTest.cs" />
+    <Compile Include="Engine\MapperInterfaceTest.cs" />
+    <Compile Include="Engine\MultiKeyTest.cs" />
+    <Compile Include="Engine\ObjectIdTest.cs" />
+    <Compile Include="Engine\PerformanceTest.cs" />
+    <Compile Include="Database\PolymorphicTest.cs" />
+    <Compile Include="Engine\QueryTest.cs" />
+    <Compile Include="Engine\EngineTest.cs" />
+    <Compile Include="Engine\ConcurrencyTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Engine\CheckPointTest.cs" />
+    <Compile Include="Storage\StorageStreamTest.cs" />
+    <Compile Include="TempFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">

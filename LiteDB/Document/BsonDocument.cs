@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB
 {
-    public class BsonDocument : BsonValue
+    public class BsonDocument : BsonValue, IDictionary<string, BsonValue>
     {
         public const int MAX_DOCUMENT_SIZE = 256 * BasePage.PAGE_AVAILABLE_BYTES; // limits in 1.044.224b max document size to avoid large documents, memory usage and slow performance
 
@@ -44,62 +45,6 @@ namespace LiteDB
             }
         }
 
-        #region Methods
-
-        /// <summary>
-        /// Add fields in fluent api
-        /// </summary>
-        public BsonDocument Add(string key, BsonValue value)
-        {
-            this[key] = value;
-            return this;
-        }
-
-        /// <summary>
-        /// Returns all object keys with _id in first order
-        /// </summary>
-        public IEnumerable<string> Keys
-        {
-            get
-            {
-                var keys = this.RawValue.Keys;
-
-                if (keys.Contains("_id")) yield return "_id";
-
-                foreach (var key in keys.Where(x => x != "_id"))
-                {
-                    yield return key;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns how many fields this object contains
-        /// </summary>
-        public int Count
-        {
-            get
-            {
-                return this.RawValue.Count;
-            }
-        }
-
-        /// <summary>
-        /// Returns if object contains a named property
-        /// </summary>
-        public bool ContainsKey(string name)
-        {
-            return this.RawValue.ContainsKey(name);
-        }
-
-        /// <summary>
-        /// Remove a specific key on object
-        /// </summary>
-        public bool RemoveKey(string key)
-        {
-            return this.RawValue.Remove(key);
-        }
-
         /// <summary>
         /// Test if field name is a valid string: only [\w$]+(\w-$)*
         /// </summary>
@@ -128,8 +73,6 @@ namespace LiteDB
 
             return true;
         }
-
-        #endregion Methods
 
         #region Get/Set methods
 
@@ -207,7 +150,80 @@ namespace LiteDB
             return this;
         }
 
-        #endregion Get/Set methods
+        /// <summary>
+        /// Get a collection of values from a path. Supports array values. If SingleValue=true, returns BsonArray as a single value (BsonArray)
+        /// </summary>
+        public IEnumerable<BsonValue> GetValues(string path, bool distinct = false, bool singleValue = false)
+        {
+            // if single key, use Get method
+            if (singleValue)
+            {
+                yield return this.Get(path);
+            }
+            // implement this first level here to avoid recursive calls do GetKeyValues for almost all documents
+            else if (path.IndexOf(".") == -1)
+            {
+                var value = this[path];
+
+                if (value.IsArray)
+                {
+                    var items = this.GetKeyValues(value, path);
+
+                    foreach (var item in distinct ? items.Distinct() : items)
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    yield return value;
+                }
+            }
+            else
+            {
+                // let's call GetKeyValues recursivly until get all base values
+                var items = this.GetKeyValues(this, path);
+
+                foreach (var item in /*distinct ? items.Distinct() :*/ items)
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get, recursivly, values inside a BsonValue respecting Arrays and Documents path
+        /// </summary>
+        private IEnumerable<BsonValue> GetKeyValues(BsonValue value, string path)
+        {
+            if (value.IsArray)
+            {
+                foreach(var item in value.AsArray)
+                {
+                    foreach(var v in this.GetKeyValues(item, path))
+                    {
+                        yield return v;
+                    }
+                }
+            }
+            else if (value.IsDocument)
+            {
+                var dot = path.IndexOf(".");
+                var docValue = value.AsDocument[dot == -1 ? path : path.Substring(0, dot)];
+                var rpath = dot == -1 ? null : path.Substring(dot + 1);
+
+                foreach(var v in this.GetKeyValues(docValue, rpath))
+                {
+                    yield return v;
+                }
+            }
+            else
+            {
+                yield return value;
+            }
+        }
+
+        #endregion
 
         #region CompareTo / ToString
 
@@ -243,6 +259,99 @@ namespace LiteDB
             return JsonSerializer.Serialize(this, false, true);
         }
 
-        #endregion CompareTo / ToString
+        #endregion
+
+        #region IDictionary
+
+        public ICollection<string> Keys
+        {
+            get
+            {
+                return this.RawValue.Keys
+                    .OrderBy(x => x == "_id" ? 1 : 2)
+                    .ToList();
+            }
+        }
+
+        public ICollection<BsonValue> Values
+        {
+            get
+            {
+                return this.RawValue.Values;
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                return this.RawValue.Count;
+            }
+        }
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return this.RawValue.ContainsKey(key);
+        }
+
+        public void Add(string key, BsonValue value)
+        {
+            this[key] = value;
+        }
+
+        public bool Remove(string key)
+        {
+            return this.RawValue.Remove(key);
+        }
+
+        public bool TryGetValue(string key, out BsonValue value)
+        {
+            return this.TryGetValue(key, out value);
+        }
+
+        public void Add(KeyValuePair<string, BsonValue> item)
+        {
+            this[item.Key] = item.Value;
+        }
+
+        public void Clear()
+        {
+            this.RawValue.Clear();
+        }
+
+        public bool Contains(KeyValuePair<string, BsonValue> item)
+        {
+            return this.RawValue.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(KeyValuePair<string, BsonValue> item)
+        {
+            return this.RawValue.Remove(item.Key);
+        }
+
+        public IEnumerator<KeyValuePair<string, BsonValue>> GetEnumerator()
+        {
+            return this.RawValue.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.RawValue.GetEnumerator();
+        }
+
+        #endregion
     }
 }

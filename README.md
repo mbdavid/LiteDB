@@ -6,7 +6,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 in a single DLL (less than 200kb)
+- 100% C# code for .NET 3.5 / NETStandard 1.4 in a single DLL (less than 200kb)
 - Support for Portable UWP/PCL (thanks to @negue and @szurgot)
 - ACID transactions
 - Data recovery after write failure (journal mode)
@@ -19,20 +19,24 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Shell command line - [try this online version](http://www.litedb.org/#shell)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
-- Install portable version from NuGet: `Install-Package LiteDB.Core`
 
-## New features in v2
-- Generic data access - can use any `Stream` as datafile
-- Better mapping of classes from your entity to `BsonDocument` (like EntityFramework)
-- Better cross reference with `DbRef` mapping
-- Lazy engine load (open the datafile only when running a command)
-- Reduce your database size with shrink
-- Support for `Initial Size` and `Limit Size` databases
-- Complete re-write of engine classes with full debug logger
-- Complete re-write disk operation to be more safe
-- Transaction control
-- `BsonMapper.Global` class mapper definition
-- See more examples at http://www.litedb.org/ and unit tests
+## New features in v3
+- Thread Safe - share your `LiteDatabase` instance across threads
+- MultiKey index - support index in array field
+- Faster than ever - [compare results with SQLite here](https://github.com/mbdavid/LiteDB-Perf)
+- `LiteEngine` - new simple class to access your documents
+- New checkpoint cache to support large transactions using journal file
+- BsonDocument implements IDictionary, BsonArray implements IList
+- Autocommit disabled support
+- Less 96 bytes per document
+- New: `Upsert`, `FindIndex`, `Query.Not(Query)`, `Query.Where(Func<>)`
+- New `BsonMapper` class: support Fields and NonPublic members
+- FileStorage now supports OpenWrite("fileId")
+- Virtual index fields -`.Index("total", x => x.Products.Sum(p => p.Price))`
+- [BsonRefAttribute]
+- Shrink with change password
+- Open datafile in ReadOnly mode
+- LiteDB.Core was removed - LiteDB.dll is now NETStandard 1.4 (Supports UWP, Xamarin, Core, Mono)  
 
 ## Try online
 
@@ -143,10 +147,6 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - Small web applications
 - One database **per account/user** data store
 - Few concurrent write operations
-
-## GUI Tools
-
-- [LiteDB Viewer](https://github.com/falahati/LiteDBViewer) from @falahati
 
 ## Changelog
 
