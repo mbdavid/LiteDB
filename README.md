@@ -21,21 +21,22 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Install from NuGet: `Install-Package LiteDB`
 
 ## New features in v3
-- Thread Safe: share your `LiteDatabase` instance over threads
-- MultiKey index: support index in array field
-- `LiteEngine`: new low data layer access
-- New checkpoint cache: support large transactions using journal file
+- Thread Safe - share your `LiteDatabase` instance across threads
+- MultiKey index - support index in array field
+- Faster than ever - [compare results with SQLite here](https://github.com/mbdavid/LiteDB-Perf)
+- `LiteEngine` - new simple class to access your documents
+- New checkpoint cache to support large transactions using journal file
 - BsonDocument implements IDictionary, BsonArray implements IList
-- Autocommit: 
+- Autocommit disabled support
 - Less 96 bytes per document
 - New: `Upsert`, `FindIndex`, `Query.Not(Query)`, `Query.Where(Func<>)`
 - New `BsonMapper` class: support Fields and NonPublic members
 - FileStorage now supports OpenWrite("fileId")
-- Virtual index fields: `.Index("total", x => x.Products.Sum(p => p.Price))`
+- Virtual index fields -`.Index("total", x => x.Products.Sum(p => p.Price))`
 - [BsonRefAttribute]
 - Shrink with change password
 - Open datafile in ReadOnly mode
-- LiteDB.Core was removed - LiteDB is now NETStandard 1.4
+- LiteDB.Core was removed - LiteDB.dll is now NETStandard 1.4 (Supports UWP, Xamarin, Core, Mono)  
 
 ## Try online
 
