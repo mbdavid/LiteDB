@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace LiteDB.Tests
 {
-    public struct StructValue
+    public class StructValue
     {
-        public string Field { get; set; }
+        public string Property { get; set; }
     }
 
     public class ContainerValue
@@ -22,19 +22,24 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Struct_Test()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename))
+            var mapper = new BsonMapper();
+            mapper.IncludeFields = true;
+
+            var obj = new ContainerValue
             {
-                var col = db.GetCollection<ContainerValue>("col1");
+                Id = Guid.NewGuid(),
+                Struct = new StructValue
+                {
+                    Property = "PropertyValue"
+                }
+            };
 
-                var id = Guid.NewGuid();
+            var doc = mapper.ToDocument(obj);
+            var nobj = mapper.Deserialize<ContainerValue>(doc);
 
-                col.Insert(new ContainerValue { Id = id, Struct = new StructValue { Field = "FieldValue" } });
+            Assert.AreEqual(obj.Id, nobj.Id);
+            Assert.AreEqual(obj.Struct.Property, nobj.Struct.Property);
 
-                var item = col.FindById(id);
-
-                Assert.AreEqual("FieldValue", item.Struct.Field);
-            }
         }
     }
 }

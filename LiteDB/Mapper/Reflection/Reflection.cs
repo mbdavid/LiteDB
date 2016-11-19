@@ -13,7 +13,7 @@ namespace LiteDB
 
     internal delegate object CreateObject();
 
-    public delegate object GenericSetter(object target, object value);
+    public delegate void GenericSetter(object target, object value);
 
     public delegate object GenericGetter(object obj);
 
@@ -58,29 +58,52 @@ namespace LiteDB
             // if has no write
             if (memberInfo is PropertyInfo && (memberInfo as PropertyInfo).CanWrite == false) return null;
 
+#if NET35
+            // do not use Expression in Structs (there is no Expression.Unbox in NET3.5)
+            if (type.IsValueType)
+            {
+                // if member is property, use GetSetMethod
+                if(memberInfo is PropertyInfo)
+                {
+                    var setMethod = (memberInfo as PropertyInfo).GetSetMethod();
+
+                    return (t, v) => setMethod.Invoke(t, new[] { v });
+                }
+                else return null; // no field on Structs
+            }
+#endif
             var dataType =
                 (memberInfo as PropertyInfo)?.PropertyType ??
                 (memberInfo as FieldInfo)?.FieldType ??
                 typeof(object);
 
-            var obj = Expression.Parameter(typeof(object), "obj");
+            var target = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "val");
-            var accessor =
-                memberInfo is PropertyInfo ? Expression.Property(Expression.Convert(obj, memberInfo.DeclaringType), memberInfo as PropertyInfo) :
-                memberInfo is FieldInfo ? Expression.Field(Expression.Convert(obj, memberInfo.DeclaringType), memberInfo as FieldInfo) : null;
+
 #if NET35
-            var assign = ExpressionExtensions.Assign(accessor, Expression.Convert(value, dataType));
+            var castTarget = Expression.Convert(target, type);
 #else
-            var assign = Expression.Assign(accessor, Expression.Convert(value, dataType));
+            var castTarget = Expression.Unbox(target, type);
+#endif
+
+            var castValue = Expression.ConvertChecked(value, dataType);
+
+            var accessor =
+                memberInfo is PropertyInfo ? Expression.Property(castTarget, memberInfo as PropertyInfo) :
+                memberInfo is FieldInfo ? Expression.Field(castTarget, memberInfo as FieldInfo) : null;
+#if NET35
+            var assign = ExpressionExtensions.Assign(accessor, castValue);
+#else
+            var assign = Expression.Assign(accessor, castValue);
 #endif
             var conv = Expression.Convert(assign, typeof(object));
             
-            return Expression.Lambda<GenericSetter>(conv, obj, value).Compile();
+            return Expression.Lambda<GenericSetter>(conv, target, value).Compile();
         }
 
-        #endregion
+#endregion
 
-        #region CreateInstance
+#region CreateInstance
 
         /// <summary>
         /// Create a new instance from a Type
@@ -154,9 +177,9 @@ namespace LiteDB
             }
         }
 
-        #endregion
+#endregion
 
-        #region Utils
+#region Utils
 
         public static bool IsNullable(Type type)
         {
@@ -265,6 +288,6 @@ namespace LiteDB
             return null;
         }
 
-        #endregion
+#endregion
     }
 }

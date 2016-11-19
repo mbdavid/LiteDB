@@ -1,92 +1,3 @@
-# must-have to beta
-- Update wiki
-
-- LiteDatabase: Add EnsureIndex on initialize first insert/update collection + tests (keeps LiteDatabase with this track?)
-
-# new shell
-- import/export tool
-
-# must-have to release
-- Upgrade datafile from v2
-- Cascade include works??
-- LiteDatabase.Obsolete methods
-
-# Wiki
-- Update current documents
-- LiteDatabase vs LiteEngine
-- Upgrade to v3
-- Query and Linq expressions (https://mongodb-documentation.readthedocs.io/en/latest/ecosystem/tutorial/use-linq-queries-with-csharp-driver.html)
-
-# test
-- Linq to multi index
-- Deep includes
-- Transaction
-
-# examples
-- Create project LiteDB-Examples?
-
-# Update datafile
-- Method: static Upgrade(string datafile, string password = null, bool backup = true)
-- IUpgrade
-- One implementation for each version
-- Read HeaderPage, CollectionPage, DataPage (I dont know how without reading IndexNodes) 
-
-# To think about
-- Write operation can be in an async Task? Will boost performance :) (needs .NET 4 or works with Thread)
-- CheckIntegrity, PageOverflow test
-- LiteRepository
-- BsonMapper map Fields? Change name "property" to "member", like EntityMapper.Members?
-- BsonMapper with ReadOnly / private setter options / Fields
-
-# Know bugs
-- Autocommit problem: duplicate key throw rollback in all
-
-# Changes to v3
-- Thread Safe
-- Lock file on open (single process access)
-- `LiteEngine`: new low data layer access
-- BsonDocument implements IDictionary, BsonArray implements IList
-- Remove shell from LiteDB (avaiable only in LiteDB.Shell tool)
-- Checkpoint cache - CacheSize
-- Autocommit = false : Transaction control
-- MultiKey support
-- Less 96 bytes per document (added 13 bytes per index)
-- Remove index options
-- Remove: Shrink, Encryption, ...
-- New Upsert
-- New FindIndex
-- New Query.Not, Query.Where
-- Remove ChangeID (avoid write Header Page all times)
-- FileStorage will support OpenWrite("fileId") <= LiteFileStream
-- Virtual index fields
-- [BsonRefAttribute]
-- Shrink with change password
-- BsonMapper Fields and NonPublic
-- ReadOnly mode
-
-
-# ThreadSafe - How it's work in LiteDB
-
-- LiteDB will be single process (ThreadSafe) - when a process open datafile will be opened with NoShare
-- DbEngine still lazy load (with lazy open file)
-- LiteDB will close datafile only when Dispose() LiteDatabase/DbEngine/IDiskService
-- All write method DbEngine will be inside a `lock`
-- Cache must be `locked` to support concurrent queries
-- Cache will be keeped after read/writes :)
-- No more check header page in each operation :)
-- Journal file will be deleted only when disk dispose (set length = 0 to reuse)
-- Still using journal file to cache memory control do not exceed 5000 pages
-- No more transaction control to user (will be document acid only)
-- Review Logger class = LogLevel be simpler? I want log VERBOSE
-
-This structure will be work more close to a DBMS (centralized database instance with a server running).
-
-# Linq references
-- https://github.com/schotime/NPoco/blob/master/src/NPoco/Expressions/SqlExpression.cs#L753
-- https://msdn.microsoft.com/en-us/library/bb882521(v=vs.90).aspx
-
-=============================================================================
-
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
 [![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb)
@@ -95,7 +6,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 in a single DLL (less than 200kb)
+- 100% C# code for .NET 3.5 / NETStandard 1.4 in a single DLL (less than 200kb)
 - Support for Portable UWP/PCL (thanks to @negue and @szurgot)
 - ACID transactions
 - Data recovery after write failure (journal mode)
@@ -108,20 +19,23 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Shell command line - [try this online version](http://www.litedb.org/#shell)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
-- Install portable version from NuGet: `Install-Package LiteDB.Core`
 
-## New features in v2
-- Generic data access - can use any `Stream` as datafile
-- Better mapping of classes from your entity to `BsonDocument` (like EntityFramework)
-- Better cross reference with `DbRef` mapping
-- Lazy engine load (open the datafile only when running a command)
-- Reduce your database size with shrink
-- Support for `Initial Size` and `Limit Size` databases
-- Complete re-write of engine classes with full debug logger
-- Complete re-write disk operation to be more safe
-- Transaction control
-- `BsonMapper.Global` class mapper definition
-- See more examples at http://www.litedb.org/ and unit tests
+## New features in v3
+- Thread Safe: share your `LiteDatabase` instance over threads
+- MultiKey index: support index in array field
+- `LiteEngine`: new low data layer access
+- New checkpoint cache: support large transactions using journal file
+- BsonDocument implements IDictionary, BsonArray implements IList
+- Autocommit: 
+- Less 96 bytes per document
+- New: `Upsert`, `FindIndex`, `Query.Not(Query)`, `Query.Where(Func<>)`
+- New `BsonMapper` class: support Fields and NonPublic members
+- FileStorage now supports OpenWrite("fileId")
+- Virtual index fields: `.Index("total", x => x.Products.Sum(p => p.Price))`
+- [BsonRefAttribute]
+- Shrink with change password
+- Open datafile in ReadOnly mode
+- LiteDB.Core was removed - LiteDB is now NETStandard 1.4
 
 ## Try online
 
@@ -246,9 +160,3 @@ Copyright (c) 2016 - Maurício David
 ## Thanks
 
 A special thanks to @negue and @szurgot helping with portable version.
-
-## Donation
-
-Is LiteDB helps you? Did you save time/money using LiteDB?
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=UZWC8F3FT9YTS&lc=BR&item_name=LiteDB&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)

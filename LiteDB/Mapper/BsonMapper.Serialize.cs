@@ -146,21 +146,21 @@ namespace LiteDB
                 dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
-            foreach (var prop in entity.Members)
+            foreach (var member in entity.Members)
             {
-                // get property value
-                var value = prop.Getter(obj);
+                // get member value
+                var value = member.Getter(obj);
 
-                if (value == null && this.SerializeNullValues == false && prop.FieldName != "_id") continue;
+                if (value == null && this.SerializeNullValues == false && member.FieldName != "_id") continue;
 
-                // if prop has a custom serialization, use it
-                if (prop.Serialize != null)
+                // if member has a custom serialization, use it
+                if (member.Serialize != null)
                 {
-                    dict[prop.FieldName] = prop.Serialize(value, this);
+                    dict[member.FieldName] = member.Serialize(value, this);
                 }
                 else
                 {
-                    dict[prop.FieldName] = this.Serialize(prop.DataType, value, depth);
+                    dict[member.FieldName] = this.Serialize(member.DataType, value, depth);
                 }
             }
 

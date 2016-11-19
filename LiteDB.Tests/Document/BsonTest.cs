@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.IO;
+using System.IO.Compression;
 
 namespace LiteDB.Tests
 {

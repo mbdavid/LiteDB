@@ -235,23 +235,23 @@ namespace LiteDB
         {
             var entity = this.GetEntityMapper(type);
 
-            foreach (var prop in entity.Members)
+            foreach (var member in entity.Members)
             {
-                // property is read only
-                if (prop.Setter == null) continue;
+                // member is read only
+                if (member.Setter == null) continue;
 
-                var val = value[prop.FieldName];
+                var val = value[member.FieldName];
 
                 if (!val.IsNull)
                 {
                     // check if has a custom deserialize function
-                    if (prop.Deserialize != null)
+                    if (member.Deserialize != null)
                     {
-                        prop.Setter(obj, prop.Deserialize(val, this));
+                        member.Setter(obj, member.Deserialize(val, this));
                     }
                     else
                     {
-                        prop.Setter(obj, this.Deserialize(prop.DataType, val));
+                        member.Setter(obj, this.Deserialize(member.DataType, val));
                     }
                 }
             }
