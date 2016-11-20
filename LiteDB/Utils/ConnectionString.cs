@@ -13,24 +13,54 @@ namespace LiteDB
     /// </summary>
     public class ConnectionString
     {
+        /// <summary>
+        /// "filename": Full path or relative path from DLL directory
+        /// </summary>
         public string Filename { get; private set; }
 
+        /// <summary>
+        /// "journal": Enabled or disable double write check to ensure durability (default: true)
+        /// </summary>
         public bool Journal { get; private set; }
 
+        /// <summary>
+        /// "password": Encrypt (using AES) your datafile with a password (defult: null - no encryption)
+        /// </summary>
         public string Password { get; private set; }
 
+        /// <summary>
+        /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (defult: 5000)
+        /// </summary>
         public int CacheSize { get; private set; }
 
+        /// <summary>
+        /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
+        /// </summary>
         public TimeSpan Timeout { get; private set; }
 
+        /// <summary>
+        /// "autocommit": If disabed, all changes will be made in-memory only until you call `Commit` or `Dispose` (default: false)
+        /// </summary>
         public bool AutoCommit { get; private set; }
 
+        /// <summary>
+        /// "read only": Open database with only support to query (defult: false)
+        /// </summary>
         public bool ReadOnly { get; private set; }
 
+        /// <summary>
+        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (defult: null)
+        /// </summary>
         public long InitialSize { get; private set; }
 
+        /// <summary>
+        /// "limit size": Max limit of datafile - support KB, MB, GB (defult: null)
+        /// </summary>
         public long LimitSize { get; private set; }
 
+        /// <summary>
+        /// "log": Debug messages from database - use `LiteDatabase.Log` (defult: Logger.NONE)
+        /// </summary>
         public byte Log { get; private set; }
 
         public ConnectionString(string connectionString)
