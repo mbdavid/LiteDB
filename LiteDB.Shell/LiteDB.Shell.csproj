@@ -112,7 +112,6 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">
       <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
