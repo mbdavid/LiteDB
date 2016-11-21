@@ -7,7 +7,7 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
-        /// Reduce disk size rearranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
+        /// Reduce disk size re-arranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
         /// </summary>
         public long Shrink(string password = null, IDiskService temp = null)
         {

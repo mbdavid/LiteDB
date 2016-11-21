@@ -12,9 +12,10 @@ namespace LiteDB
     {
         #region Properties
 
-        private LazyLoad<LiteEngine> _engine;
-        private BsonMapper _mapper;
+        private LazyLoad<LiteEngine> _engine = null;
+        private BsonMapper _mapper = BsonMapper.Global;
         private Logger _log = new Logger();
+        private ConnectionString _connectionString = null;
 
         /// <summary>
         /// Get logger class instance
@@ -40,19 +41,19 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(string connectionString, BsonMapper mapper = null)
         {
-            var conn = new ConnectionString(connectionString);
+            _connectionString = new ConnectionString(connectionString);
 
             _mapper = mapper ?? BsonMapper.Global;
 
             var options = new FileOptions
             {
-                InitialSize = conn.InitialSize,
-                LimitSize = conn.LimitSize,
-                Journal = conn.Journal,
-                Timeout = conn.Timeout
+                InitialSize = _connectionString.InitialSize,
+                LimitSize = _connectionString.LimitSize,
+                Journal = _connectionString.Journal,
+                Timeout = _connectionString.Timeout
             };
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(conn.Filename, options), conn.Password, conn.Timeout, conn.AutoCommit, conn.CacheSize, _log));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.AutoCommit, _connectionString.CacheSize, _log));
         }
 
         /// <summary>
@@ -132,6 +133,94 @@ namespace LiteDB
         public LiteStorage FileStorage
         {
             get { return _fs ?? (_fs = new LiteStorage(_engine.Value)); }
+        }
+
+        #endregion
+
+        #region Shortcut
+
+        /// <summary>
+        /// Get all collections name inside this database.
+        /// </summary>
+        public IEnumerable<string> GetCollectionNames()
+        {
+            return _engine.Value.GetCollectionNames();
+        }
+
+        /// <summary>
+        /// Checks if a collection exists on database. Collection name is case unsensitive
+        /// </summary>
+        public bool CollectionExists(string name)
+        {
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
+
+            return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Drop a collection and all data + indexes
+        /// </summary>
+        public bool DropCollection(string name)
+        {
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
+
+            return _engine.Value.DropCollection(name);
+        }
+
+        /// <summary>
+        /// Rename a collection. Returns false if oldName does not exists or newName already exists
+        /// </summary>
+        public bool RenameCollection(string oldName, string newName)
+        {
+            if (oldName.IsNullOrWhiteSpace()) throw new ArgumentNullException("oldName");
+            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
+
+            return _engine.Value.RenameCollection(oldName, newName);
+        }
+
+        #endregion
+
+        #region Shrink
+
+        /// <summary>
+        /// Reduce disk size re-arranging unused spaces.
+        /// </summary>
+        public long Shrink()
+        {
+            return this.Shrink(_connectionString?.Password);
+        }
+
+        /// <summary>
+        /// Reduce disk size re-arranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
+        /// </summary>
+        public long Shrink(string password)
+        {
+            // if has connection string, use same path
+            if (_connectionString != null)
+            {
+                // get temp file ("-temp" sufix)
+                var tempFile = Path.Combine(Path.GetDirectoryName(_connectionString.Filename), Path.GetFileNameWithoutExtension(_connectionString.Filename) + "-temp" + Path.GetExtension(_connectionString.Filename));
+
+                // if temp file exists, just delete (if is in-use exception will be throwed)
+                if(File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+
+                // get temp disk based on temp file
+                var tempDisk = new FileDiskService(tempFile, false);
+
+                var reduced = _engine.Value.Shrink(password);
+
+                // delete temp file
+                File.Delete(tempFile);
+
+                return reduced;
+            }
+            else
+            {
+                return _engine.Value.Shrink(password);
+            }
         }
 
         #endregion

@@ -67,6 +67,7 @@
     <Compile Include="Database\IncludeTest.cs" />
     <Compile Include="Database\LinqTest.cs" />
     <Compile Include="Database\FindAllTest.cs" />
+    <Compile Include="Database\ShrinkDatabaseTest.cs" />
     <Compile Include="Database\StructTest.cs" />
     <Compile Include="Document\DocumentTest.cs" />
     <Compile Include="Document\BsonTest.cs" />
