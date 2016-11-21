@@ -32,7 +32,7 @@ namespace LiteDB.Tests
 
                 using (var db = new LiteDatabase(f.Filename))
                 {
-                    var p = db.GetCollection<Person>("Person").Find(Query.All("Name", Query.Ascending));
+                    var p = db.GetCollection<Person>("Person").Find(Query.All("Fullname", Query.Ascending));
 
                     Assert.AreEqual(4, p.Count());
                 }

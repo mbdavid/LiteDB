@@ -83,7 +83,9 @@ namespace LiteDB
 #if NET35
             var castTarget = Expression.Convert(target, type);
 #else
-            var castTarget = Expression.Unbox(target, type);
+            var castTarget = type.GetTypeInfo().IsValueType ? 
+                Expression.Unbox(target, type) :
+                Expression.Convert(target, type);
 #endif
 
             var castValue = Expression.ConvertChecked(value, dataType);
@@ -103,7 +105,7 @@ namespace LiteDB
 
 #endregion
 
-#region CreateInstance
+        #region CreateInstance
 
         /// <summary>
         /// Create a new instance from a Type
@@ -177,9 +179,9 @@ namespace LiteDB
             }
         }
 
-#endregion
+        #endregion
 
-#region Utils
+        #region Utils
 
         public static bool IsNullable(Type type)
         {
@@ -288,6 +290,6 @@ namespace LiteDB
             return null;
         }
 
-#endregion
+        #endregion
     }
 }
