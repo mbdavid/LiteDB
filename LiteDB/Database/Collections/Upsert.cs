@@ -7,7 +7,7 @@ namespace LiteDB
     public partial class LiteCollection<T>
     {
         /// <summary>
-        /// Insert or Update a document in this collection. Returns false if not found document in collection
+        /// Insert or Update a document in this collection.
         /// </summary>
         public bool Upsert(T document)
         {
@@ -20,7 +20,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Insert or Update a document in this collection. Returns false if not found document in collection
+        /// Insert or Update a document in this collection.
         /// </summary>
         public bool Upsert(BsonValue id, T document)
         {

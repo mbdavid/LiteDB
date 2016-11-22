@@ -43,7 +43,7 @@ namespace LiteDB
             _options = options;
 
             // journal filename
-            _journalFilename = Path.Combine(Path.GetDirectoryName(_filename), Path.GetFileNameWithoutExtension(_filename) + "-journal" + Path.GetExtension(_filename));
+            _journalFilename = FileHelper.GetTempFile(_filename, "-journal", false);
         }
 
         public void Initialize(Logger log, string password)

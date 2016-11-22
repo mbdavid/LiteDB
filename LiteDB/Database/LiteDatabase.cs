@@ -199,13 +199,7 @@ namespace LiteDB
             if (_connectionString != null)
             {
                 // get temp file ("-temp" sufix)
-                var tempFile = Path.Combine(Path.GetDirectoryName(_connectionString.Filename), Path.GetFileNameWithoutExtension(_connectionString.Filename) + "-temp" + Path.GetExtension(_connectionString.Filename));
-
-                // if temp file exists, just delete (if is in-use exception will be throwed)
-                if(File.Exists(tempFile))
-                {
-                    File.Delete(tempFile);
-                }
+                var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
 
                 // get temp disk based on temp file
                 var tempDisk = new FileDiskService(tempFile, false);
