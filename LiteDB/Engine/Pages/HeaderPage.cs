@@ -22,6 +22,7 @@ namespace LiteDB
 
         /// <summary>
         /// Get/Set the pageID that start sequenece with a complete empty pages (can be used as a new page)
+        /// Must be a field to be used as "ref"
         /// </summary>
         public uint FreeEmptyPageID;
 
@@ -33,17 +34,17 @@ namespace LiteDB
         /// <summary>
         /// Database user version [2 bytes]
         /// </summary>
-        public ushort UserVersion = 0;
+        public ushort UserVersion { get; set; }
 
         /// <summary>
         /// Password hash in SHA1 [20 bytes]
         /// </summary>
-        public byte[] Password = new byte[20];
+        public byte[] Password { get; set; }
 
         /// <summary>
         /// When using encryption, store salt for password
         /// </summary>
-        public byte[] Salt = new byte[16];
+        public byte[] Salt { get; set; }
 
         /// <summary>
         /// Get a dictionary with all collection pages with pageID link

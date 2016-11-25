@@ -72,10 +72,9 @@ namespace LiteDB
                 else return null; // no field on Structs
             }
 #endif
-            var dataType =
-                (memberInfo as PropertyInfo)?.PropertyType ??
-                (memberInfo as FieldInfo)?.FieldType ??
-                typeof(object);
+            var dataType = memberInfo is PropertyInfo ?
+                (memberInfo as PropertyInfo).PropertyType :
+                (memberInfo as FieldInfo).FieldType;
 
             var target = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "val");

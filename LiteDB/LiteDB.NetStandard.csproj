@@ -151,6 +151,7 @@
     <Compile Include="Utils\Extensions\StreamExtensions.cs" />
     <Compile Include="Utils\Extensions\StringExtensions.cs" />
     <Compile Include="Utils\Extensions\TypeExtensions.cs" />
+    <Compile Include="Utils\FileHelper.cs" />
     <Compile Include="Utils\FileOptions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\LazyLoad.cs" />

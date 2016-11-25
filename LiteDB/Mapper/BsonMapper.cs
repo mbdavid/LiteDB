@@ -331,10 +331,9 @@ namespace LiteDB
                 var index = (BsonIndexAttribute)memberInfo.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
                 // get data type
-                var dataType = 
-                    (memberInfo as PropertyInfo)?.PropertyType ??
-                    (memberInfo as FieldInfo)?.FieldType ??
-                    typeof(object);
+                var dataType = memberInfo is PropertyInfo ?
+                    (memberInfo as PropertyInfo).PropertyType :
+                    (memberInfo as FieldInfo).FieldType;
 
                 // check if datatype is list/array
                 var isList = Reflection.IsList(dataType);

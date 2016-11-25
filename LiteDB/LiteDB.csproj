@@ -26,6 +26,7 @@
     <NoWarn>1591</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -57,6 +58,7 @@
     <Compile Include="Database\Collections\Include.cs" />
     <Compile Include="Database\Collections\Index.cs" />
     <Compile Include="Database\Collections\Insert.cs" />
+    <Compile Include="Database\Collections\Upsert.cs" />
     <Compile Include="Database\Collections\Update.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
     <Compile Include="Database\LiteDatabase.cs" />
@@ -107,6 +109,7 @@
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
     <Compile Include="Mapper\Attributes\BsonRefAttribute.cs" />
+    <Compile Include="Utils\FileHelper.cs" />
     <Compile Include="Utils\LiteTransaction.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
     <Compile Include="Mapper\Attributes\BsonFieldAttribute.cs" />

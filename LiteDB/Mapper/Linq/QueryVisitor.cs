@@ -107,7 +107,9 @@ namespace LiteDB
 #else
                 var type = met.Method.DeclaringType;
 #endif
-                var paramType = (met.Arguments[0] as MemberExpression)?.Expression.NodeType;
+                var paramType = met.Arguments[0] is MemberExpression ? 
+                    (ExpressionType?)(met.Arguments[0] as MemberExpression).Expression.NodeType :
+                    null;
 
                 // StartsWith
                 if (method == "StartsWith")

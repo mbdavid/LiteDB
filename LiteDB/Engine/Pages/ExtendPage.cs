@@ -16,7 +16,7 @@ namespace LiteDB
         /// <summary>
         /// Represent the part or full of the object - if this page has NextPageID the object is bigger than this page
         /// </summary>
-        public Byte[] Data { get; set; }
+        public byte[] Data { get; set; }
 
         public ExtendPage(uint pageID)
             : base(pageID)
