@@ -22,7 +22,7 @@ namespace LiteDB.Update.V6
     {
         public string CollectionName { get; set; }
         public long DocumentCount { get; set; }
-        public PageAddress HeaderNode { get; set; }
+        public PageAddress HeadNode { get; set; }
         public Dictionary<string, bool> Indexes { get; set; }
     }
 

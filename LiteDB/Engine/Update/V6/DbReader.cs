@@ -68,7 +68,7 @@ namespace LiteDB.Update.V6
         {
             var page = new HeaderPage_v6();
 
-            reader.Skip(100);
+            reader.Skip(60); // HEADER_INFO + FILE_VERSION + ChangeID + FreeEmptyPageID + LastPageID + DbVersion + Password 
 
             var cols = reader.ReadByte();
             for (var i = 0; i < cols; i++)
@@ -84,14 +84,58 @@ namespace LiteDB.Update.V6
         /// </summary>
         private CollectionPage_v6 ReadCollectionPage(ByteReader reader)
         {
-            var page = new CollectionPage_v6();
+            var page = new CollectionPage_v6 { Indexes = new Dictionary<string, bool>() };
 
             page.CollectionName = reader.ReadString();
-            page.DocumentCount = reader.ReadInt64();
             reader.ReadUInt32(); // FreeDataPageID
+            page.DocumentCount = reader.ReadUInt32();
+            reader.ReadString(); // _id
+            page.HeadNode = reader.ReadPageAddress(); // _id headnode
+            reader.Skip(15); // all index info from _id headnode
 
-            page.Indexes = new Dictionary<string, bool>();
+            for (var i = 1; i < 15; i++)
+            {
+                var field = reader.ReadString();
+                reader.Skip(16); // HeadNode + TailNode + FreeIndexPageID 
+                var unique = reader.ReadBoolean();
+                reader.Skip(4); // IgnoreCase + TrimWhitespace + EmptyStringToNull + RemoveAccents
 
+                if (!string.IsNullOrEmpty(field))
+                {
+                    page.Indexes.Add(field, unique);
+                }
+            }
+
+            return page;
+        }
+        /// <summary>
+        /// Read Index page from ByteReader
+        /// </summary>
+        private IndexPage_v6 ReadIndexPage(ByteReader reader, int itemCount)
+        {
+            var page = new IndexPage_v6 { Nodes = new Dictionary<ushort, IndexNode_v6>(itemCount) };
+
+            for (var i = 0; i < itemCount; i++)
+            {
+                var index = reader.ReadUInt16();
+                var levels = reader.ReadByte();
+
+                var node = new IndexNode_v6(levels);
+
+                node.Page = this;
+                node.Position = new PageAddress(this.PageID, index);
+                node.KeyLength = reader.ReadUInt16();
+                node.Key = reader.ReadBsonValue(node.KeyLength);
+                node.DataBlock = reader.ReadPageAddress();
+
+                for (var j = 0; j < node.Prev.Length; j++)
+                {
+                    node.Prev[j] = reader.ReadPageAddress();
+                    node.Next[j] = reader.ReadPageAddress();
+                }
+
+                this.Nodes.Add(node.Position.Index, node);
+            }
 
             return page;
         }
