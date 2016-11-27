@@ -57,10 +57,15 @@ namespace LiteDB
         /// </summary>
         private void EnsureIndex(IndexNotFoundException ex)
         {
-            // check if property has an index mapped
-            var entity = _mapper.GetEntityMapper(typeof(T));
-            var member = entity.Members.FirstOrDefault(x => x.FieldName == ex.Field);
-            var unique = member == null ? false : member.IsUnique;
+            var unique = false;
+
+            // try get if field are mapped as unique index (only if T isn't BsonDocument)
+            if (typeof(T) != typeof(BsonDocument))
+            {
+                var entity = _mapper.GetEntityMapper(typeof(T));
+                var member = entity.Members.FirstOrDefault(x => x.FieldName == ex.Field);
+                unique = member == null ? false : member.IsUnique;
+            }
 
             _engine.Value.EnsureIndex(ex.Collection, ex.Field, unique);
         }

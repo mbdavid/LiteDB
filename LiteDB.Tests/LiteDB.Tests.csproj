@@ -57,6 +57,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Database\AutoIndex.cs" />
     <Compile Include="Database\AutoIdTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />
