@@ -39,7 +39,7 @@ namespace LiteDB
             }
 
             // update metadata if passed
-            if (metadata == null)
+            if (metadata != null)
             {
                 file.Metadata = metadata;
             }

@@ -314,7 +314,7 @@ namespace LiteDB
 
         public bool TryGetValue(string key, out BsonValue value)
         {
-            return this.TryGetValue(key, out value);
+            return this.RawValue.TryGetValue(key, out value);
         }
 
         public void Add(KeyValuePair<string, BsonValue> item)
