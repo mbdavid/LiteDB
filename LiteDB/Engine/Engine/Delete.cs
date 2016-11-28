@@ -20,8 +20,11 @@ namespace LiteDB
                 {
                     _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
 
+                    // get all indexes nodes from this data block
+                    var allNodes = _indexer.GetNodeList(node, true).ToArray();
+
                     // lets remove all indexes that point to this in dataBlock
-                    foreach (var linkNode in _indexer.GetNodeList(node, true).ToArray())
+                    foreach (var linkNode in allNodes)
                     {
                         var index = col.Indexes[linkNode.Slot];
 

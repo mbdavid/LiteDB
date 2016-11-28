@@ -211,7 +211,7 @@ namespace LiteDB
             // go backward
             while (prev.IsEmpty == false)
             {
-                var p = this.GetNode(next);
+                var p = this.GetNode(prev);
                 prev = p.PrevNode;
                 yield return p;
             }
