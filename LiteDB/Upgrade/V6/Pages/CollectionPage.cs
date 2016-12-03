@@ -11,13 +11,6 @@ namespace LiteDB_V6
     internal class CollectionPage : BasePage
     {
         /// <summary>
-        /// Represent maximun bytes that all collections names can be used in header
-        /// </summary>
-        public const ushort MAX_COLLECTIONS_SIZE = 3000;
-
-        public static Regex NamePattern = new Regex(@"^[\w-]{1,30}$");
-
-        /// <summary>
         /// Page type = Collection
         /// </summary>
         public override PageType PageType { get { return PageType.Collection; } }
@@ -49,7 +42,6 @@ namespace LiteDB_V6
             this.FreeDataPageID = uint.MaxValue;
             this.DocumentCount = 0;
             this.ItemCount = 1; // fixed for CollectionPage
-            this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
             this.Indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
 
             for (var i = 0; i < Indexes.Length; i++)
@@ -58,7 +50,7 @@ namespace LiteDB_V6
             }
         }
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(LiteDB.ByteReader reader)
         {
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
@@ -87,13 +79,5 @@ namespace LiteDB_V6
         /// Get primary key index (_id index)
         /// </summary>
         public CollectionIndex PK { get { return this.Indexes[0]; } }
-
-        /// <summary>
-        /// Returns all used indexes
-        /// </summary>
-        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
-        {
-            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
-        }
     }
 }

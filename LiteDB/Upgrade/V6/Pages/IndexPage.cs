@@ -10,11 +10,6 @@ namespace LiteDB_V6
         /// </summary>
         public override PageType PageType { get { return PageType.Index; } }
 
-        /// <summary>
-        /// If a Index Page has less that this free space, it's considered full page for new items.
-        /// </summary>
-        public const int INDEX_RESERVED_BYTES = 100;
-
         public Dictionary<ushort, IndexNode> Nodes { get; set; }
 
         public IndexPage(uint pageID)
@@ -23,7 +18,7 @@ namespace LiteDB_V6
             this.Nodes = new Dictionary<ushort, IndexNode>();
         }
 		
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(LiteDB.ByteReader reader)
         {
             this.Nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
@@ -35,7 +30,7 @@ namespace LiteDB_V6
                 var node = new IndexNode(levels);
 
                 node.Page = this;
-                node.Position = new PageAddress(this.PageID, index);
+                node.Position = new LiteDB.PageAddress(this.PageID, index);
                 node.KeyLength = reader.ReadUInt16();
                 node.Key = reader.ReadBsonValue(node.KeyLength);
                 node.DataBlock = reader.ReadPageAddress();

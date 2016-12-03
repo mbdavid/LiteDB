@@ -57,19 +57,15 @@ namespace LiteDB_V6
             this.ChangeID = 0;
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
-            this.FreeBytes = 0; // no free bytes on header
             this.DbVersion = 0;
             this.Password = new byte[20];
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(LiteDB.ByteReader reader)
         {
             var info = reader.ReadString(HEADER_INFO.Length);
             var ver = reader.ReadByte();
-
-            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
-            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
             this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();

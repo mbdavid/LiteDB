@@ -97,6 +97,18 @@ namespace LiteDB
 
                 return Query.Or(left, right);
             }
+            // Constant: do nothing (at this point it's useful only to PredicateBuilder)
+            else if (expr.NodeType == ExpressionType.Constant)
+            {
+                return new QueryEmpty();
+            }
+            // Invoke: call inner Lambda expression (used in PredicateBuilder)
+            else if (expr.NodeType == ExpressionType.Invoke)
+            {
+                var invocation = expr as InvocationExpression;
+                var lambda = invocation.Expression as LambdaExpression;
+                return this.VisitExpression(lambda.Body);
+            }
             // MethodCall: x.Name.StartsWith("John")
             else if (expr is MethodCallExpression)
             {

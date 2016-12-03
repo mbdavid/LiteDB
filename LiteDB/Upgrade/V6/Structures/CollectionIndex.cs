@@ -30,25 +30,17 @@ namespace LiteDB_V6
         /// <summary>
         /// Head page address for this index
         /// </summary>
-        public PageAddress HeadNode { get; set; }
+        public LiteDB.PageAddress HeadNode { get; set; }
 
         /// <summary>
         /// A link pointer to tail node
         /// </summary>
-        public PageAddress TailNode { get; set; }
+        public LiteDB.PageAddress TailNode { get; set; }
 
         /// <summary>
         /// Get a reference for the free list index page - its private list per collection/index (must be a Field to be used as reference parameter)
         /// </summary>
         public uint FreeIndexPageID;
-
-        /// <summary>
-        /// Returns if this index slot is empty and can be used as new index
-        /// </summary>
-        public bool IsEmpty
-        {
-            get { return string.IsNullOrEmpty(this.Field); }
-        }
 
         /// <summary>
         /// Get a reference for page
@@ -57,17 +49,9 @@ namespace LiteDB_V6
 
         public CollectionIndex()
         {
-            this.Clear();
-        }
-
-        /// <summary>
-        /// Clear all index information
-        /// </summary>
-        public void Clear()
-        {
             this.Field = string.Empty;
             this.Options = new IndexOptions();
-            this.HeadNode = PageAddress.Empty;
+            this.HeadNode = LiteDB.PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
         }
     }

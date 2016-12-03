@@ -25,7 +25,7 @@ namespace LiteDB_V6
         /// <summary>
         /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
         /// </summary>
-        public IndexNode GetNode(PageAddress address)
+        public IndexNode GetNode(LiteDB.PageAddress address)
         {
             if (address.IsEmpty) return null;
             var page = _pager.GetPage<IndexPage>(address.PageID);
@@ -34,7 +34,7 @@ namespace LiteDB_V6
 
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
+            var cur = this.GetNode(order == LiteDB.Query.Ascending ? index.HeadNode : index.TailNode);
 
             while (!cur.NextPrev(0, order).IsEmpty)
             {

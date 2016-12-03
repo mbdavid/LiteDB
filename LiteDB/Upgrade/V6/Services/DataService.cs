@@ -15,7 +15,7 @@ namespace LiteDB_V6
         /// <summary>
         /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage.
         /// </summary>
-        public byte[] Read(PageAddress blockAddress)
+        public byte[] Read(LiteDB.PageAddress blockAddress)
         {
             var block = this.GetBlock(blockAddress);
 
@@ -31,7 +31,7 @@ namespace LiteDB_V6
         /// <summary>
         /// Get a data block from a DataPage using address
         /// </summary>
-        public DataBlock GetBlock(PageAddress blockAddress)
+        public DataBlock GetBlock(LiteDB.PageAddress blockAddress)
         {
             var page = _pager.GetPage<DataPage>(blockAddress.PageID);
             return page.DataBlocks[blockAddress.Index];

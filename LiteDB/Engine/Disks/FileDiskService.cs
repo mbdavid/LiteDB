@@ -94,6 +94,11 @@ namespace LiteDB
                         _options.ReadOnly ? FileShare.ReadWrite : FileShare.Read,
                         BasePage.PAGE_SIZE);
                 });
+
+                // if upgrade = true, test if datafile are old version
+                if(_options.Upgrade)
+                {
+                }
             }
         }
 

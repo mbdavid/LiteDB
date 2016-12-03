@@ -2,7 +2,7 @@
 
 namespace LiteDB_V6
 {
-    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
+    internal enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 
     internal abstract class BasePage
     {
@@ -51,20 +51,12 @@ namespace LiteDB_V6
         /// </summary>
         public int ItemCount { get; set; }
 
-        /// <summary>
-        /// Used to find a free page using only header search [used in FreeList] [2 bytes]
-        /// Its Int32 but writes in UInt16
-        /// Its updated when a page modify content length (add/remove items)
-        /// </summary>
-        public int FreeBytes { get; set; }
-
         public BasePage(uint pageID)
         {
             this.PageID = pageID;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
             this.ItemCount = 0;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES;
         }
 
         /// <summary>
@@ -106,27 +98,24 @@ namespace LiteDB_V6
         /// </summary>
         public static BasePage ReadPage(byte[] buffer)
         {
-            var reader = new ByteReader(buffer);
+            var reader = new LiteDB.ByteReader(buffer);
 
             var pageID = reader.ReadUInt32();
             var pageType = (PageType)reader.ReadByte();
-
-            if (pageID == 0 && (byte)pageType > 5)
-            {
-                throw LiteException.InvalidDatabase();
-            }
-
             var page = CreateInstance(pageID, pageType);
 
             page.ReadHeader(reader);
             page.ReadContent(reader);
 
-            page.DiskData = buffer;
-
             return page;
         }
 
-        private void ReadHeader(ByteReader reader)
+        public static long GetSizeOfPages(uint pageCount)
+        {
+            return checked((long)pageCount * BasePage.PAGE_SIZE);
+        }
+
+        private void ReadHeader(LiteDB.ByteReader reader)
         {
             // first 5 bytes (pageID + pageType) was readed before class create
             // this.PageID
@@ -135,10 +124,10 @@ namespace LiteDB_V6
             this.PrevPageID = reader.ReadUInt32();
             this.NextPageID = reader.ReadUInt32();
             this.ItemCount = reader.ReadUInt16();
-            this.FreeBytes = reader.ReadUInt16();
+            reader.ReadUInt16(); // FreeBytes;
             reader.Skip(8); // reserved 8 bytes
         }
 
-        protected abstract void ReadContent(ByteReader reader);
+        protected abstract void ReadContent(LiteDB.ByteReader reader);
     }
 }

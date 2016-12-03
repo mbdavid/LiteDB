@@ -50,7 +50,8 @@ namespace LiteDB
                 InitialSize = _connectionString.InitialSize,
                 LimitSize = _connectionString.LimitSize,
                 Journal = _connectionString.Journal,
-                Timeout = _connectionString.Timeout
+                Timeout = _connectionString.Timeout,
+                Upgrade = _connectionString.Upgrade
             };
 
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.AutoCommit, _connectionString.CacheSize, _log));

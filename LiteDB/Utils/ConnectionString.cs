@@ -63,6 +63,11 @@ namespace LiteDB
         /// </summary>
         public byte Log { get; private set; }
 
+        /// <summary>
+        /// "upgrade": Test if database is in old version and update if needed (default: false)
+        /// </summary>
+        public bool Upgrade { get; private set; }
+
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
@@ -90,6 +95,7 @@ namespace LiteDB
             this.InitialSize = GetFileSize(GetValue(values, "initial size", BasePage.PAGE_SIZE.ToString()));
             this.LimitSize = GetFileSize(GetValue(values, "limit size", long.MaxValue.ToString()));
             this.Log = GetValue<byte>(values, "log", 0);
+            this.Upgrade = GetValue(values, "upgrade", false);
         }
 
         /// <summary>

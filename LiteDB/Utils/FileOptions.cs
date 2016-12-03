@@ -15,6 +15,7 @@ namespace LiteDB
         public long LimitSize { get; set; }
         public TimeSpan Timeout { get; set; }
         public bool ReadOnly { get; set; }
+        public bool Upgrade { get; set; }
 
         public FileOptions()
         {
@@ -23,6 +24,7 @@ namespace LiteDB
             this.LimitSize = long.MaxValue;
             this.Timeout = TimeSpan.FromMinutes(1);
             this.ReadOnly = false;
+            this.Upgrade = false;
         }
     }
 }
