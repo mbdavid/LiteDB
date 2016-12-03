@@ -62,6 +62,7 @@
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />
     <Compile Include="Database\DbRefIndexTest.cs" />
+    <Compile Include="Database\TransactionTest.cs" />
     <Compile Include="Database\DeleteByNameTest.cs" />
     <Compile Include="Database\LinqVisitorTest.cs" />
     <Compile Include="Database\MapperNonPublicTest.cs" />
