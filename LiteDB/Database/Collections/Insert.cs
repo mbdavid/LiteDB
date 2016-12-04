@@ -12,7 +12,7 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
+            _mapper.SetAutoId(document, _engine.Value, _name);
 
             var doc = _mapper.ToDocument(document);
 
@@ -36,11 +36,11 @@ namespace LiteDB
         /// </summary>
         private IEnumerable<BsonDocument> GetBsonDocs(IEnumerable<T> docs)
         {
-            foreach (var document in docs)
+            foreach (var doc in docs)
             {
-                _mapper.SetAutoId(document, new LiteCollection<BsonDocument>(_name, _engine, _mapper, _log));
+                _mapper.SetAutoId(doc, _engine.Value, _name);
 
-                yield return _mapper.ToDocument(document);
+                yield return _mapper.ToDocument(doc);
             }
         }
     }

@@ -117,22 +117,22 @@ namespace LiteDB
             // register AutoId for ObjectId, Guid and Int32
             RegisterAutoId
             (
-                v => v.Equals(ObjectId.Empty),
-                c => ObjectId.NewObjectId()
+                value => value.Equals(ObjectId.Empty),
+                (db, col) => ObjectId.NewObjectId()
             );
 
             RegisterAutoId
             (
-                v => v == Guid.Empty,
-                c => Guid.NewGuid()
+                value => value == Guid.Empty,
+                (db, col) => Guid.NewGuid()
             );
 
             RegisterAutoId
             (
-                v => v == 0,
-                c =>
+                value => value == 0,
+                (db, col) =>
                 {
-                    var max = c.Max();
+                    var max = db.Max(col, "_id");
                     return max.IsMaxValue ? 1 : (max + 1);
                 }
             );
@@ -168,19 +168,19 @@ namespace LiteDB
         /// <summary>
         /// Register a custom Auto Id generator function for a type
         /// </summary>
-        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteCollection<BsonDocument>, T> newId)
+        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteEngine, string, T> newId)
         {
             _autoId[typeof(T)] = new AutoId
             {
                 IsEmpty = o => isEmpty((T)o),
-                NewId = c => newId(c)
+                NewId = (db, col) => newId(db, col)
             };
         }
 
         /// <summary>
         /// Set new Id in entity class if entity needs one
         /// </summary>
-        public virtual void SetAutoId(object entity, LiteCollection<BsonDocument> col)
+        public virtual void SetAutoId(object entity, LiteEngine engine, string collection)
         {
             // if object is BsonDocument, add _id as ObjectId
             if (entity is BsonDocument)
@@ -209,7 +209,7 @@ namespace LiteDB
 
                 if (value == null || autoId.IsEmpty(value) == true)
                 {
-                    var newId = autoId.NewId(col);
+                    var newId = autoId.NewId(engine, collection);
 
                     id.Setter(entity, newId);
                 }

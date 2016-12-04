@@ -12,6 +12,6 @@ namespace LiteDB
         /// <summary>
         /// Function that implements how generate a new Id for this type
         /// </summary>
-        public Func<LiteCollection<BsonDocument>, object> NewId { get; set; }
+        public Func<LiteEngine, string, object> NewId { get; set; }
     }
 }

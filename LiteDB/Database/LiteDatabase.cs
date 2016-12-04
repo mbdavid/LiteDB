@@ -63,6 +63,7 @@ namespace LiteDB
         public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null)
         {
             _mapper = mapper ?? BsonMapper.Global;
+
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream), password: password, log: _log));
         }
 
@@ -79,6 +80,7 @@ namespace LiteDB
         public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, bool autocommit = true, int cacheSize = 5000, Logger log = null)
         {
             _mapper = mapper ?? BsonMapper.Global;
+
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, autocommit: autocommit, cacheSize: cacheSize, log: _log ));
         }
 
