@@ -23,9 +23,9 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
-            // ignore QueryEmpty on AND expression (in both sides)
-            if (_left is QueryEmpty) return _right.Run(col, indexer);
-            if (_right is QueryEmpty) return _left.Run(col, indexer);
+            // ignore QueryAll on AND expression (in both sides)
+            if (_left is QueryAll) return _right.Run(col, indexer);
+            if (_right is QueryAll) return _left.Run(col, indexer);
 
             var left = _left.Run(col, indexer);
             var right = _right.Run(col, indexer);

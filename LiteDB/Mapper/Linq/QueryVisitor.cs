@@ -100,7 +100,14 @@ namespace LiteDB
             // Constant: do nothing (at this point it's useful only to PredicateBuilder)
             else if (expr.NodeType == ExpressionType.Constant)
             {
-                return new QueryEmpty();
+                var constant = expr as ConstantExpression;
+
+                if (constant.Value is bool)
+                {
+                    var value = (bool)constant.Value;
+
+                    return value ? Query.All() : new QueryEmpty();
+                }
             }
             // Invoke: call inner Lambda expression (used in PredicateBuilder)
             else if (expr.NodeType == ExpressionType.Invoke)
