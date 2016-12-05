@@ -35,18 +35,5 @@ namespace LiteDB_V6
 
             return null;
         }
-
-        /// <summary>
-        /// Get all collections pages
-        /// </summary>
-        public IEnumerable<CollectionPage> GetAll()
-        {
-            var header = _pager.GetPage<HeaderPage>(0);
-
-            foreach (var pageID in header.CollectionPages.Values)
-            {
-                yield return _pager.GetPage<CollectionPage>(pageID);
-            }
-        }
     }
 }
