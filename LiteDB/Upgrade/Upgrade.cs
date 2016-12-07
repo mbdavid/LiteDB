@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Upgrade datafile from v6 to new v7 format used in LiteDB 3
         /// </summary>
-        public static bool Upgrade(string filename, string password = null, bool backup = true)
+        public static bool Upgrade(string filename, string password = null, bool backup = true, int batchSize = 5000)
         {
             // if not exists, just exit
             if (!File.Exists(filename)) return false;
@@ -39,8 +39,16 @@ namespace LiteDB
                             engine.EnsureIndex(col, index.Key, index.Value);
                         }
 
-                        // now copy documents
-                        engine.Insert(col, reader.GetDocuments(col));
+                        // now copy documents in 5000 groups
+                        var docs = reader.GetDocuments(col);
+
+                        foreach(var batch in docs.Batch(batchSize))
+                        {
+                            engine.Insert(col, batch);
+
+                            // just clear pages
+                            engine.Rollback();
+                        }
                     }
                 }
             }

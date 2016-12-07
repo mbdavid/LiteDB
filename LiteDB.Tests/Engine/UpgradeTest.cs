@@ -9,13 +9,13 @@ using System.Text;
 
 namespace LiteDB.Tests
 {
-    [TestClass]
+    // [TestClass]
     public class UpgradeTest
     {
-        [TestMethod]
+        // [TestMethod]
         public void Upgrade_Test()
         {
-            // LiteEngine.Upgrade(@"C:\Git\LiteDB\LiteDB.Tests\Upgrade\data_v6.db");
+            LiteEngine.Upgrade(@"C:\Temp\app.db", null, true);
         }
     }
 }

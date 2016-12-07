@@ -128,6 +128,7 @@
     <Compile Include="Upgrade\V6\Structures\IndexNode.cs" />
     <Compile Include="Upgrade\V6\Structures\IndexOptions.cs" />
     <Compile Include="Upgrade\V6\Structures\RijndaelEncryption.cs" />
+    <Compile Include="Utils\Extensions\LinqExtensions.cs" />
     <Compile Include="Utils\FileHelper.cs" />
     <Compile Include="Utils\LiteTransaction.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />

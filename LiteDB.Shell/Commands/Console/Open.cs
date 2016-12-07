@@ -29,7 +29,6 @@ namespace LiteDB.Shell.Commands
                 {
                 }
             }
-
         }
     }
 }

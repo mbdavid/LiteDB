@@ -43,6 +43,11 @@ namespace LiteDB
         {
             _connectionString = new ConnectionString(connectionString);
 
+            if (_connectionString.Upgrade)
+            {
+                LiteEngine.Upgrade(_connectionString.Filename, _connectionString.Password);
+            }
+
             _mapper = mapper ?? BsonMapper.Global;
 
             var options = new FileOptions
@@ -50,8 +55,7 @@ namespace LiteDB
                 InitialSize = _connectionString.InitialSize,
                 LimitSize = _connectionString.LimitSize,
                 Journal = _connectionString.Journal,
-                Timeout = _connectionString.Timeout,
-                Upgrade = _connectionString.Upgrade
+                Timeout = _connectionString.Timeout
             };
 
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.AutoCommit, _connectionString.CacheSize, _log));

@@ -78,6 +78,7 @@
     <Compile Include="Commands\Console\ShowCollections.cs" />
     <Compile Include="Commands\Console\Spool.cs" />
     <Compile Include="Commands\Console\Timer.cs" />
+    <Compile Include="Commands\Console\Upgrade.cs" />
     <Compile Include="Commands\Console\UserVersion.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\Storage\BaseStorage.cs" />
