@@ -102,7 +102,7 @@ namespace LiteDB
         /// </summary>
         public void AvoidDirtyRead()
         {
-            _log.Write(Logger.CACHE, "checking to avoid dirty read");
+            _log.Write(Logger.CACHE, "checking disk to avoid dirty read");
 
             var memory = _cache.GetPage(0) as HeaderPage;
 
@@ -113,7 +113,7 @@ namespace LiteDB
             // if header change, clear cache and add new header
             if (memory.ChangeID != disk.ChangeID)
             {
-                _log.Write(Logger.CACHE, "datafile changed from other process");
+                _log.Write(Logger.CACHE, "file changed from another process");
 
                 _cache.ClearPages();
                 _cache.AddPage(disk);

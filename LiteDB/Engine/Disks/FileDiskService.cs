@@ -15,14 +15,6 @@ namespace LiteDB
         /// </summary>
         private const int PAGE_TYPE_POSITION = 4;
 
-        /// <summary>
-        /// Lock position/length of all lock state.
-        /// </summary>
-        private const int LOCK_SHARED_LENGTH = 100;
-        private const int LOCK_SHARED_POSITION = BasePage.PAGE_SIZE - LOCK_SHARED_LENGTH;
-        private const int LOCK_RESERVED_POSITION = BasePage.PAGE_SIZE - LOCK_SHARED_LENGTH - 1;
-        private const int LOCK_EXCLUSIVE_POSITION = BasePage.PAGE_SIZE - LOCK_SHARED_LENGTH;
-
         private FileStream _stream;
         private string _filename;
 
@@ -32,10 +24,15 @@ namespace LiteDB
         private Logger _log; // will be initialize in "Initialize()"
         private FileOptions _options;
 
-        private Random _sharedLockRandom = new Random();
+        /// <summary>
+        /// Lock position/length of all lock state.
+        /// </summary>
+        private const int LOCK_SHARED_LENGTH = 1000;
+        private const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
+
         private LockPosition _lockShared = LockPosition.Empty; // will be random each call
-        private LockPosition _lockReserved = new LockPosition(LOCK_RESERVED_POSITION, 1);
-        private LockPosition _lockExclusive = new LockPosition(LOCK_EXCLUSIVE_POSITION, LOCK_SHARED_LENGTH);
+        private LockPosition _lockReserved = new LockPosition(LOCK_POSITION + LOCK_SHARED_LENGTH + 1, 1); // reserved at end position
+        private LockPosition _lockExclusive = new LockPosition(LOCK_POSITION, LOCK_SHARED_LENGTH); // all shared range
 
         #region Initialize/Dispose disk
 
@@ -78,8 +75,8 @@ namespace LiteDB
                 // set datafile initial size
                 _stream.SetLength(_options.InitialSize);
 
-                // create a new header page in bytes
-                var header = new HeaderPage();
+                // create a new header page in bytes (keep second page empty)
+                var header = new HeaderPage() { LastPageID = 1 };
 
                 if(password != null)
                 {
@@ -91,6 +88,9 @@ namespace LiteDB
 
                 // write bytes on page
                 this.WritePage(0, header.WritePage());
+
+                // write second page empty just to use as lock control
+                this.WritePage(1, new byte[BasePage.PAGE_SIZE]);
             }
         }
 
@@ -130,8 +130,7 @@ namespace LiteDB
             }
 
             // read bytes from data file
-            // do not read lasts bytes from header page (can be locked)
-            _stream.Read(buffer, 0, pageID == 0 ? BasePage.PAGE_SIZE - LOCK_RESERVED_POSITION - 10 : BasePage.PAGE_SIZE);
+            _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -296,7 +295,7 @@ namespace LiteDB
             if (_options.FileMode != FileOpenMode.Shared) return;
 
             var pos = 
-                state == LockState.Shared ? _lockShared = new LockPosition(_sharedLockRandom.Next(LOCK_SHARED_POSITION, LOCK_SHARED_POSITION + LOCK_SHARED_LENGTH), 1) :
+                state == LockState.Shared ? _lockShared = LockPosition.Random(LOCK_POSITION, LOCK_SHARED_LENGTH) :
                 state == LockState.Reserved ? _lockReserved :
                 state == LockState.Exclusive ? _lockExclusive : LockPosition.Empty;
 
@@ -321,6 +320,5 @@ namespace LiteDB
         }
 
         #endregion
-
     }
 }
