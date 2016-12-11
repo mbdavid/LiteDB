@@ -127,7 +127,7 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public void WriteJournal(IEnumerable<byte[]> pages, int pageCount)
+        public void WriteJournal(ICollection<byte[]> pages)
         {
         }
 

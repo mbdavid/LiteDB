@@ -44,7 +44,7 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        void WriteJournal(IEnumerable<byte[]> pages, int pageCount);
+        void WriteJournal(ICollection<byte[]> pages);
 
         /// <summary>
         /// Clear jounal file

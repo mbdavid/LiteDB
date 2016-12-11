@@ -10,10 +10,10 @@ using System.Text;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class ConcurrencyTest
+    public class MultiThreadTest
     {
         [TestMethod]
-        public void Concurrency_Insert_Test()
+        public void MultiThread_Insert_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -42,7 +42,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_InsertUpdate_Test()
+        public void MultiThread_InsertUpdate_Test()
         {
             const int N = 3000;
 
@@ -88,7 +88,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_InsertQuery_Test()
+        public void MultiThread_InsertQuery_Test()
         {
             const int N = 3000;
             var running = true;
@@ -126,7 +126,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_UserVersionInc_Test()
+        public void MultiThread_UserVersionInc_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -145,7 +145,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_LockTransaction_Test()
+        public void MultiThread_LockTransaction_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))

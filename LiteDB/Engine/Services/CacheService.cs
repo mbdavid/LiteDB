@@ -129,6 +129,7 @@ namespace LiteDB
         {
             lock(_clean)
             {
+                _log.Write(Logger.CACHE, "cleaning cache");
                 _clean.Clear();
             }
         }

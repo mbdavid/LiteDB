@@ -9,8 +9,10 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min(string colName, string field)
         {
-            using (_locker.Shared())
+            using (var l = _locker.Shared())
             {
+                if (l.IsNewLock) _trans.AvoidDirtyRead();
+
                 var col = GetCollectionPage(colName, false);
 
                 if (col == null) return BsonValue.MinValue;
@@ -34,8 +36,10 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max(string colName, string field)
         {
-            using (_locker.Shared())
+            using (var l = _locker.Shared())
             {
+                if (l.IsNewLock) _trans.AvoidDirtyRead();
+
                 var col = GetCollectionPage(colName, false);
 
                 if (col == null) return BsonValue.MaxValue;
@@ -59,8 +63,10 @@ namespace LiteDB
         /// </summary>
         public long Count(string colName, Query query)
         {
-            using (_locker.Shared())
+            using (var l = _locker.Shared())
             {
+                if (l.IsNewLock) _trans.AvoidDirtyRead();
+
                 var col = GetCollectionPage(colName, false);
 
                 if (col == null) return 0;
@@ -83,8 +89,10 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string colName, Query query)
         {
-            using (_locker.Shared())
+            using (var l = _locker.Shared())
             {
+                if (l.IsNewLock) _trans.AvoidDirtyRead();
+
                 var col = GetCollectionPage(colName, false);
 
                 if (col == null) return false;

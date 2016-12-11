@@ -56,7 +56,10 @@ namespace LiteDB
             _pager.SetDirty(header);
 
             // write journal file
-            _disk.WriteJournal(_cache.GetDirtyPages().Select(x => x.DiskData), _cache.DirtyUsed);
+            _disk.WriteJournal(_cache.GetDirtyPages()
+                .Select(x => x.DiskData)
+                .Where(x => x.Length > 0)
+                .ToList());
 
             // enter in exclusive lock mode to write on disk
             using (_locker.Exclusive())
@@ -99,6 +102,8 @@ namespace LiteDB
         /// </summary>
         public void AvoidDirtyRead()
         {
+            _log.Write(Logger.CACHE, "checking to avoid dirty read");
+
             var memory = _cache.GetPage(0) as HeaderPage;
 
             if (memory == null) return;
@@ -108,6 +113,8 @@ namespace LiteDB
             // if header change, clear cache and add new header
             if (memory.ChangeID != disk.ChangeID)
             {
+                _log.Write(Logger.CACHE, "datafile changed from other process");
+
                 _cache.ClearPages();
                 _cache.AddPage(disk);
             }
@@ -120,6 +127,7 @@ namespace LiteDB
         public void Recovery()
         {
             var fileSize = _disk.FileLength;
+            var pages = 0;
 
             // read all journal pages
             foreach (var buffer in _disk.ReadJournal())
@@ -139,7 +147,12 @@ namespace LiteDB
 
                 // write in stream (encrypt if datafile is encrypted)
                 _disk.WritePage(pageID, _crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer));
+
+                pages++;
             }
+
+            // no pages, no recovery
+            if (pages ==  0) return;
 
             _log.Write(Logger.RECOVERY, "resize datafile to {0} bytes", fileSize);
 

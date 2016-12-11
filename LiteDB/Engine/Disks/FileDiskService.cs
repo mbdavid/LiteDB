@@ -130,7 +130,8 @@ namespace LiteDB
             }
 
             // read bytes from data file
-            _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+            // do not read lasts bytes from header page (can be locked)
+            _stream.Read(buffer, 0, pageID == 0 ? BasePage.PAGE_SIZE - LOCK_RESERVED_POSITION - 10 : BasePage.PAGE_SIZE);
 
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -184,7 +185,7 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        public void WriteJournal(IEnumerable<byte[]> pages, int pageCount)
+        public void WriteJournal(ICollection<byte[]> pages)
         {
             if (_journal == null)
             {
@@ -203,7 +204,7 @@ namespace LiteDB
             _journal.Seek(0, SeekOrigin.Begin);
 
             // set journal file length before write
-            _journal.SetLength(BasePage.GetSizeOfPages(pageCount));
+            _journal.SetLength(pages.Count);
 
             foreach(var buffer in pages)
             {
@@ -240,9 +241,10 @@ namespace LiteDB
                 {
                     yield break;
                 }
-                catch(IOException)
+                catch(IOException ex)
                 {
-                    yield break;
+                    if(ex.IsLocked()) yield break;
+                    throw;
                 }
             }
 
@@ -307,6 +309,9 @@ namespace LiteDB
         /// </summary>
         public void Unlock(LockState state)
         {
+            // only shared mode lock datafile
+            if (_options.FileMode != FileOpenMode.Shared) return;
+
             var pos =
                 state == LockState.Shared ? _lockShared :
                 state == LockState.Reserved ? _lockReserved :
