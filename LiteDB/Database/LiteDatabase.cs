@@ -58,7 +58,7 @@ namespace LiteDB
                 Timeout = _connectionString.Timeout
             };
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.AutoCommit, _connectionString.CacheSize, _log));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.CacheSize, _log));
         }
 
         /// <summary>
@@ -81,11 +81,11 @@ namespace LiteDB
         /// <param name="autocommit">If auto commit after any write operation</param>
         /// <param name="cacheSize">Max memory pages used before flush data in Journal file (when avaiable)</param>
         /// <param name="log">Custom log implementation</param>
-        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, bool autocommit = true, int cacheSize = 5000, Logger log = null)
+        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
         {
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, autocommit: autocommit, cacheSize: cacheSize, log: _log ));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, cacheSize: cacheSize, log: _log ));
         }
 
         #endregion
@@ -99,7 +99,7 @@ namespace LiteDB
         {
             _engine.Value.BeginTrans();
 
-            return new LiteTransaction(_engine.Value.Commit, _engine.Value.Rollback);
+            return new LiteTransaction(() => _engine.Value.Commit(), _engine.Value.Rollback);
         }
 
         #endregion

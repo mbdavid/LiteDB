@@ -52,12 +52,12 @@ namespace LiteDB
             }
         }
 
-        #endregion
-
         public virtual void Dispose()
         {
             // do nothing - keeps stream opened
         }
+
+        #endregion
 
         #region Read/Write
 
@@ -117,7 +117,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Journal file
+        #region Not implemented in Stream
 
         /// <summary>
         /// No journal implemented
@@ -127,7 +127,7 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public void WriteJournal(uint pageID, byte[] buffer)
+        public void WriteJournal(IEnumerable<byte[]> pages, int pageCount)
         {
         }
 
@@ -143,6 +143,20 @@ namespace LiteDB
         /// No journal implemented
         /// </summary>
         public void ClearJournal()
+        {
+        }
+
+        /// <summary>
+        /// No lock implemented
+        /// </summary>
+        public void Lock(LockState state)
+        {
+        }
+
+        /// <summary>
+        /// No lock implemented
+        /// </summary>
+        public void Unlock(LockState state)
         {
         }
 

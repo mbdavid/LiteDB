@@ -14,7 +14,7 @@ namespace LiteDB
         public long InitialSize { get; set; }
         public long LimitSize { get; set; }
         public TimeSpan Timeout { get; set; }
-        public bool ReadOnly { get; set; }
+        public FileOpenMode FileMode { get; set; }
 
         public FileOptions()
         {
@@ -22,7 +22,14 @@ namespace LiteDB
             this.InitialSize = BasePage.PAGE_SIZE;
             this.LimitSize = long.MaxValue;
             this.Timeout = TimeSpan.FromMinutes(1);
-            this.ReadOnly = false;
+            this.FileMode = FileOpenMode.Shared;
         }
+    }
+
+    public enum FileOpenMode
+    {
+        Shared,
+        ReadOnly,
+        Exclusive
     }
 }

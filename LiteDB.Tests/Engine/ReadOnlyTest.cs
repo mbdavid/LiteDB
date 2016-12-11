@@ -22,7 +22,7 @@ namespace LiteDB.Tests
                     // open datafile as readonly mode
                     Task.Factory.StartNew(() =>
                     {
-                        using (var r = new LiteEngine(new FileDiskService(file.Filename, new FileOptions { ReadOnly = true })))
+                        using (var r = new LiteEngine(new FileDiskService(file.Filename, new FileOptions { FileMode = FileOpenMode.ReadOnly })))
                         {
                             var doc = r.Find("col", Query.EQ("_id", 1)).FirstOrDefault();
 
@@ -82,7 +82,7 @@ namespace LiteDB.Tests
                 // here there is no open datafile
 
                 // open as read-only
-                using (var r = new LiteEngine(new FileDiskService(file.Filename, new FileOptions { ReadOnly = true })))
+                using (var r = new LiteEngine(new FileDiskService(file.Filename, new FileOptions { FileMode = FileOpenMode.ReadOnly })))
                 {
                     // just query
                     var d = r.Find("col", Query.EQ("_id", 1)).FirstOrDefault();

@@ -44,11 +44,21 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        void WriteJournal(uint pageID, byte[] page);
+        void WriteJournal(IEnumerable<byte[]> pages, int pageCount);
 
         /// <summary>
         /// Clear jounal file
         /// </summary>
         void ClearJournal();
+
+        /// <summary>
+        /// Lock datafile returing lock position
+        /// </summary>
+        void Lock(LockState state);
+
+        /// <summary>
+        /// Unlock datafile based on last state
+        /// </summary>
+        void Unlock(LockState state);
     }
 }

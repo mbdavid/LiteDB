@@ -99,6 +99,8 @@
     <Compile Include="Engine\Query\QueryNot.cs" />
     <Compile Include="Engine\Query\QueryOr.cs" />
     <Compile Include="Engine\Query\QueryStartsWith.cs" />
+    <Compile Include="Engine\Services\LockService.cs" />
+    <Compile Include="Engine\Services\CacheService.cs" />
     <Compile Include="Engine\Services\CollectionService.cs" />
     <Compile Include="Engine\Services\DataService.cs" />
     <Compile Include="Engine\Services\IndexService.cs" />
@@ -153,7 +155,9 @@
     <Compile Include="Utils\ConnectionString.cs" />
     <Compile Include="Utils\FileOptions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
-    <Compile Include="Utils\Locker.cs" />
+    <Compile Include="Utils\LockPosition.cs" />
+    <Compile Include="Utils\LockState.cs" />
+    <Compile Include="Utils\LockControl.cs" />
     <Compile Include="Utils\AesEncryption.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtensions.cs" />

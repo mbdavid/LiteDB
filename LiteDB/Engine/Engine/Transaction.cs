@@ -10,31 +10,31 @@ namespace LiteDB
 
         /// <summary>
         /// Starts a new transaction keeping all changed from now in memory only until Commit() be executed.
+        /// Returns true if new lock request was made
         /// </summary>
-        public void BeginTrans()
+        public bool BeginTrans()
         {
-            if (_autocommit == false) throw new NotSupportedException("Transaction are not supported when AutoCommit is False");
+            // lock as reserved mode
+            var locker = _locker.Reserved();
 
-            _transactions.Push(_locker.Write());
+            _transactions.Push(locker);
+
+            return locker.IsNewLock;
         }
 
         /// <summary>
         /// Persist in disk all changed from last BeginTrans()
+        /// Returns true if real commit was done (false to nested commit only)
         /// </summary>
-        public void Commit()
+        public bool Commit()
         {
+            var commit = false;
+
             // only do "real commit" if is last transaction in stack or if autocommit = false
             if (_transactions.Count == 1)
             {
                 _trans.Commit();
-            }
-            else if (_autocommit == false)
-            {
-                // for autocommit must lock datafile
-                using (_locker.Write())
-                {
-                    _trans.Commit();
-                }
+                commit = true;
             }
 
             // if contains transactions on stack, remove top and dispose (only last transaction will release lock)
@@ -42,6 +42,8 @@ namespace LiteDB
             {
                 _transactions.Pop().Dispose();
             }
+
+            return commit;
         }
 
         /// <summary>
@@ -62,28 +64,29 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            using(_locker.Write())
+            if(this.BeginTrans())
             {
-                try
-                {
-                    var col = this.GetCollectionPage(colName, addIfNotExists);
+                _trans.AvoidDirtyRead();
+            }
 
-                    var result = action(col);
+            try
+            {
+                var col = this.GetCollectionPage(colName, addIfNotExists);
 
-                    // when autocommit is false, transaction count is always 0
-                    if (_transactions.Count == 0 && _autocommit == true) _trans.Commit();
+                var result = action(col);
 
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    _log.Write(Logger.ERROR, ex.Message);
+                this.Commit();
 
-                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
-                    this.Rollback();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
 
-                    throw;
-                }
+                // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
+                this.Rollback();
+
+                throw;
             }
         }
     }

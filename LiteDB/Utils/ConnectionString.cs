@@ -39,14 +39,9 @@ namespace LiteDB
         public TimeSpan Timeout { get; private set; }
 
         /// <summary>
-        /// "autocommit": If disabed, all changes will be made in-memory only until you call `Commit` or `Dispose` (default: false)
+        /// "mode": Define if datafile will be shared, exclusive or read only access (default: Shared)
         /// </summary>
-        public bool AutoCommit { get; private set; }
-
-        /// <summary>
-        /// "read only": Open database with only support to query (defult: false)
-        /// </summary>
-        public bool ReadOnly { get; private set; }
+        public FileOpenMode Mode { get; private set; }
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (defult: null)
@@ -90,8 +85,7 @@ namespace LiteDB
             this.Password = GetValue<string>(values, "password", null);
             this.CacheSize = GetValue(values, "cache size", 5000);
             this.Timeout = GetValue(values, "timeout", TimeSpan.FromMinutes(1));
-            this.AutoCommit = GetValue(values, "auto commit", true);
-            this.ReadOnly = GetValue(values, "read only", true);
+            this.Mode = GetValue(values, "mode", FileOpenMode.Shared);
             this.InitialSize = GetFileSize(GetValue(values, "initial size", BasePage.PAGE_SIZE.ToString()));
             this.LimitSize = GetFileSize(GetValue(values, "limit size", long.MaxValue.ToString()));
             this.Log = GetValue<byte>(values, "log", 0);
