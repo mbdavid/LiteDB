@@ -11,7 +11,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            using(var l = _locker.Shared())
+            lock (_locker)
+            using (var l = _locker.Shared())
             {
                 if (l.IsNewLock) _trans.AvoidDirtyRead();
 

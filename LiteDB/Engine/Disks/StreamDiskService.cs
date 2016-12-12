@@ -120,6 +120,11 @@ namespace LiteDB
         #region Not implemented in Stream
 
         /// <summary>
+        /// Single process only
+        /// </summary>
+        public bool IsShared { get { return false; } }
+
+        /// <summary>
         /// No journal implemented
         /// </summary>
         public bool IsJournalEnabled { get { return false; } }

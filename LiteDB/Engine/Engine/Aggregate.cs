@@ -9,6 +9,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min(string colName, string field)
         {
+            lock(_locker)
             using (var l = _locker.Shared())
             {
                 if (l.IsNewLock) _trans.AvoidDirtyRead();
@@ -36,6 +37,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max(string colName, string field)
         {
+            lock (_locker)
             using (var l = _locker.Shared())
             {
                 if (l.IsNewLock) _trans.AvoidDirtyRead();
@@ -63,6 +65,7 @@ namespace LiteDB
         /// </summary>
         public long Count(string colName, Query query)
         {
+            lock (_locker)
             using (var l = _locker.Shared())
             {
                 if (l.IsNewLock) _trans.AvoidDirtyRead();
@@ -89,6 +92,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string colName, Query query)
         {
+            lock (_locker)
             using (var l = _locker.Shared())
             {
                 if (l.IsNewLock) _trans.AvoidDirtyRead();

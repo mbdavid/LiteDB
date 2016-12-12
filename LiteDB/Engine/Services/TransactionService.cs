@@ -102,16 +102,23 @@ namespace LiteDB
         /// </summary>
         public void AvoidDirtyRead()
         {
+            // if disk does not support multi proccess, do not run avoid read
+            if (!_disk.IsShared) return;
+
             _log.Write(Logger.CACHE, "checking disk to avoid dirty read");
 
-            var memory = _cache.GetPage(0) as HeaderPage;
+            // empty cache? just exit
+            if (_cache.CleanUsed == 0) return;
 
-            if (memory == null) return;
+            // get ChangeID from cache
+            var header = _cache.GetPage(0) as HeaderPage;
+            var changeID = header == null ? 0 : header.ChangeID;
 
+            // and get header from disk
             var disk = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
 
-            // if header change, clear cache and add new header
-            if (memory.ChangeID != disk.ChangeID)
+            // if header change, clear cache and add new header to cache
+            if (disk.ChangeID != changeID)
             {
                 _log.Write(Logger.CACHE, "file changed from another process");
 

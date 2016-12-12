@@ -19,6 +19,16 @@ namespace LiteDB.Tests
             return new FileDiskService(Filename, journal);
         }
 
+        public IDiskService Disk(FileOptions options)
+        {
+            return new FileDiskService(Filename, options);
+        }
+
+        public string Conn(string connectionString)
+        {
+            return "filename=\"" + this.Filename + "\";" + connectionString;
+        }
+
         public void Dispose()
         {
             File.Delete(this.Filename);

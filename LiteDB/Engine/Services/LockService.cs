@@ -43,6 +43,7 @@ namespace LiteDB
                 _log.Write(Logger.DISK, "enter in shared lock mode");
 
                 _disk.Lock(LockState.Shared);
+
                 _state = LockState.Shared;
                 _shared = true;
 
@@ -52,6 +53,7 @@ namespace LiteDB
 
                     _shared = false;
                     _state = LockState.Unlocked;
+
                     _disk.Unlock(LockState.Shared);
                 });
             }
@@ -72,6 +74,7 @@ namespace LiteDB
                 _log.Write(Logger.DISK, "enter in reserved lock mode");
 
                 _disk.Lock(LockState.Reserved);
+
                 _state = LockState.Reserved;
 
                 // is new lock only when not came from a shared lock

@@ -23,21 +23,21 @@ namespace LiteDB.Tests
                 // insert 5000 x thread=1
                 var ta = Task.Factory.StartNew(() =>
                 {
-                    for(var i = 0; i < 5000; i++)
+                    for (var i = 0; i < 1000; i++)
                         db.Insert("col", new BsonDocument { { "thread", 1 } });
                 });
 
                 // insert 4000 x thread=2
                 var tb = Task.Factory.StartNew(() =>
                 {
-                    for (var i = 0; i < 4000; i++)
+                    for (var i = 0; i < 700; i++)
                         db.Insert("col", new BsonDocument { { "thread", 2 } });
                 });
 
                 Task.WaitAll(ta, tb);
 
-                Assert.AreEqual(5000, db.Count("col", Query.EQ("thread", 1)));
-                Assert.AreEqual(4000, db.Count("col", Query.EQ("thread", 2)));
+                Assert.AreEqual(1000, db.Count("col", Query.EQ("thread", 1)));
+                Assert.AreEqual(700, db.Count("col", Query.EQ("thread", 2)));
             }
         }
 

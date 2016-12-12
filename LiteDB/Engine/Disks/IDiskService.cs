@@ -32,6 +32,11 @@ namespace LiteDB
         long FileLength { get; }
 
         /// <summary>
+        /// Indicate that disk support multi process
+        /// </summary>
+        bool IsShared { get; }
+
+        /// <summary>
         /// Indicate if journal are enabled/implemented
         /// </summary>
         bool IsJournalEnabled { get; }

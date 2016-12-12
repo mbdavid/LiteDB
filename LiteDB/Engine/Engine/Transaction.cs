@@ -64,29 +64,32 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            if(this.BeginTrans())
+            lock(_locker)
             {
-                _trans.AvoidDirtyRead();
-            }
+                if(this.BeginTrans())
+                {
+                    _trans.AvoidDirtyRead();
+                }
 
-            try
-            {
-                var col = this.GetCollectionPage(colName, addIfNotExists);
+                try
+                {
+                    var col = this.GetCollectionPage(colName, addIfNotExists);
 
-                var result = action(col);
+                    var result = action(col);
 
-                this.Commit();
+                    this.Commit();
 
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _log.Write(Logger.ERROR, ex.Message);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
 
-                // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
-                this.Rollback();
+                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
+                    this.Rollback();
 
-                throw;
+                    throw;
+                }
             }
         }
     }

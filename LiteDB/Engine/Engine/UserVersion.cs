@@ -11,6 +11,7 @@ namespace LiteDB
         {
             get
             {
+                lock (_locker)
                 using (var l = _locker.Shared())
                 {
                     if (l.IsNewLock) _trans.AvoidDirtyRead();

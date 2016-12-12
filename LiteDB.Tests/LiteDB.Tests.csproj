@@ -57,6 +57,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Concurrency\MultiProcessTest.cs" />
     <Compile Include="Database\AutoIndex.cs" />
     <Compile Include="Database\AutoIdTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />

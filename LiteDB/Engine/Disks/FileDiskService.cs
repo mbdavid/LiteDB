@@ -283,6 +283,11 @@ namespace LiteDB
         #region Lock / Unlock
 
         /// <summary>
+        /// Indicate disk can be access by multiples processes
+        /// </summary>
+        public bool IsShared { get { return _options.FileMode != FileOpenMode.Exclusive; } }
+
+        /// <summary>
         /// Implement datafile lock/unlock
         /// Lock use last LOCK_LENGTH bytes from header page lock control
         /// - first byte is to reserved lock
