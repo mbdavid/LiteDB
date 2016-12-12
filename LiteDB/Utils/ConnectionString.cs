@@ -13,6 +13,8 @@ namespace LiteDB
     /// </summary>
     public class ConnectionString
     {
+        private Dictionary<string, string> _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
         /// </summary>
@@ -41,7 +43,7 @@ namespace LiteDB
         /// <summary>
         /// "mode": Define if datafile will be shared, exclusive or read only access (default: Shared)
         /// </summary>
-        public FileOpenMode Mode { get; private set; }
+        public FileMode Mode { get; private set; }
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (defult: null)
@@ -63,71 +65,73 @@ namespace LiteDB
         /// </summary>
         public bool Upgrade { get; private set; }
 
+
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
             // create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
-                values.ParseKeyValue(connectionString);
+                _values.ParseKeyValue(connectionString);
             }
             else
             {
-                values["filename"] = connectionString;
+                _values["filename"] = connectionString;
             }
 
             // setting values to properties
-            this.Filename = GetValue(values, "filename", "");
-            this.Journal = GetValue(values, "journal", true);
-            this.Password = GetValue<string>(values, "password", null);
-            this.CacheSize = GetValue(values, "cache size", 5000);
-            this.Timeout = GetValue(values, "timeout", TimeSpan.FromMinutes(1));
-            this.Mode = GetValue(values, "mode", FileOpenMode.Shared);
-            this.InitialSize = GetFileSize(GetValue(values, "initial size", BasePage.PAGE_SIZE.ToString()));
-            this.LimitSize = GetFileSize(GetValue(values, "limit size", long.MaxValue.ToString()));
-            this.Log = GetValue<byte>(values, "log", 0);
-            this.Upgrade = GetValue(values, "upgrade", false);
+            this.Filename = GetValue("filename", "");
+            this.Journal = GetValue("journal", true);
+            this.Password = GetValue<string>("password", null);
+            this.CacheSize = GetValue(@"cache size", 5000);
+            this.Timeout = GetValue("timeout", TimeSpan.FromMinutes(1));
+            this.Mode = GetValue("mode", FileMode.Shared);
+            this.InitialSize = GetFileSize(@"initial size", BasePage.PAGE_SIZE * 2);
+            this.LimitSize = GetFileSize(@"limit size", long.MaxValue);
+            this.Log = GetValue<byte>("log", 0);
+            this.Upgrade = GetValue("upgrade", false);
         }
 
         /// <summary>
         /// Get value from _values and convert if exists
         /// </summary>
-        private T GetValue<T>(Dictionary<string, string> values, string key, T defaultValue)
+        private T GetValue<T>(string key, T defaultValue)
         {
             try
             {
                 string value;
 
-                if (values.TryGetValue(key, out value))
+                if (_values.TryGetValue(key, out value) == false) return defaultValue;
+
+                if (typeof(T) == typeof(TimeSpan))
                 {
-                    if (typeof(T) == typeof(TimeSpan))
-                    {
-                        return (T)(object)TimeSpan.Parse(value);
-                    }
-                    else
-                    {
-                        return (T)Convert.ChangeType(values[key], typeof(T));
-                    }
+                    return (T)(object)TimeSpan.Parse(value);
+                }
+                else if (typeof(T).GetTypeInfo().IsEnum)
+                {
+                    return (T)Enum.Parse(typeof(T), value, true);
                 }
                 else
                 {
-                    return defaultValue;
+                    return (T)Convert.ChangeType(value, typeof(T));
                 }
             }
             catch (Exception)
             {
-                throw new LiteException("Invalid connection string value type for " + key);
+                throw new LiteException("Invalid connection string value type for [" + key + "]");
             }
         }
 
         /// <summary>
         /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
         /// </summary>
-        public long GetFileSize(string size)
+        private long GetFileSize(string key, long defaultValue)
         {
+            var size = this.GetValue<string>(key, null);
+
+            if (size == null) return defaultValue;
+
             var match = Regex.Match(size, @"^(\d+)\s*([tgmk])?(b|byte|bytes)?$", RegexOptions.IgnoreCase);
 
             if (!match.Success) return 0;

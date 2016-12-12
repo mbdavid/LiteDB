@@ -62,9 +62,9 @@ namespace LiteDB
 
             // open/create file using readonly/exclusive options
             _stream = new FileStream(_filename,
-                FileMode.OpenOrCreate,
-                _options.FileMode == FileOpenMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                _options.FileMode == FileOpenMode.Exclusive ? FileShare.None : FileShare.ReadWrite,
+                System.IO.FileMode.OpenOrCreate,
+                _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
+                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite,
                 BasePage.PAGE_SIZE);
 
             // if file is new, initialize
@@ -190,7 +190,7 @@ namespace LiteDB
             {
                 // open or create datafile if not exists
                 _journal = new FileStream(_journalFilename,
-                    FileMode.OpenOrCreate,
+                    System.IO.FileMode.OpenOrCreate,
                     FileAccess.ReadWrite,
                     FileShare.ReadWrite,
                     BasePage.PAGE_SIZE);
@@ -229,7 +229,7 @@ namespace LiteDB
                 try
                 {
                     _journal = new FileStream(_journalFilename,
-                        FileMode.Open,
+                        System.IO.FileMode.Open,
                         FileAccess.ReadWrite,
                         FileShare.ReadWrite,
                         BasePage.PAGE_SIZE);
@@ -285,7 +285,7 @@ namespace LiteDB
         /// <summary>
         /// Indicate disk can be access by multiples processes
         /// </summary>
-        public bool IsShared { get { return _options.FileMode != FileOpenMode.Exclusive; } }
+        public bool IsShared { get { return _options.FileMode != FileMode.Exclusive; } }
 
         /// <summary>
         /// Implement datafile lock/unlock
@@ -297,7 +297,7 @@ namespace LiteDB
         public void Lock(LockState state)
         {
             // only shared mode lock datafile
-            if (_options.FileMode != FileOpenMode.Shared) return;
+            if (_options.FileMode != FileMode.Shared) return;
 
             var pos = 
                 state == LockState.Shared ? _lockShared = LockPosition.Random(LOCK_POSITION, LOCK_SHARED_LENGTH) :
@@ -314,7 +314,7 @@ namespace LiteDB
         public void Unlock(LockState state)
         {
             // only shared mode lock datafile
-            if (_options.FileMode != FileOpenMode.Shared) return;
+            if (_options.FileMode != FileMode.Shared) return;
 
             var pos =
                 state == LockState.Shared ? _lockShared :

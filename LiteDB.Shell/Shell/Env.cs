@@ -28,7 +28,7 @@ namespace LiteDB.Shell
             var disk = new FileDiskService(this.Filename,
                 new FileOptions
                 {
-                    FileMode = FileOpenMode.Shared,
+                    FileMode = FileMode.Shared,
                     Journal = this.Journal
                 });
 
