@@ -41,13 +41,21 @@ namespace LiteDB.Tests
             using (var db = new LiteEngine(file.Filename))
             {
                 var doc1 = new BsonDocument { { "_id", 1 }, { "name", "John" } };
-                var doc2 = new BsonDocument { { "_id", 2 }, { "name", "Doe" } };
 
-                var u1 = db.Upsert("col", doc1); // true
-                var u2 = db.Upsert("col", doc1); // false
+                var u1 = db.Upsert("col", doc1); // true (insert)
+
+                doc1["name"] = "changed";
+
+                var u2 = db.Upsert("col", doc1); // false (update)
 
                 Assert.AreEqual(true, u1);
                 Assert.AreEqual(false, u2);
+
+                // get data from db
+                var r = db.Find("col", Query.EQ("_id", 1)).Single();
+
+                // test changed value
+                Assert.AreEqual(doc1["name"].AsString, r["name"].AsString);
             }
         }
 
