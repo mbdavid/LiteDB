@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell.Commands
@@ -72,7 +73,7 @@ namespace LiteDB.Shell.Commands
         {
             var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field name");
             var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between|contains)").ThrowIfEmpty("Invalid query operator");
-            var value = JsonSerializer.Deserialize(s.ToString());
+            var value = JsonSerializer.Deserialize(s);
 
             switch (oper)
             {

@@ -99,7 +99,6 @@
     <Compile Include="Shell\ShellProgram.cs" />
     <Compile Include="Utils\OptionSet.cs" />
     <Compile Include="Utils\StringExtensions.cs" />
-    <Compile Include="Utils\StringScanner.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
