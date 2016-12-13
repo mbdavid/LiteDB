@@ -5,6 +5,14 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
+        /// Implement delete command based on _id value. Returns true if deleted
+        /// </summary>
+        public bool Delete(string colName, BsonValue id)
+        {
+            return this.Delete(colName, Query.EQ("_id", id)) == 1;
+        }
+
+        /// <summary>
         /// Implements delete based on a query result
         /// </summary>
         public int Delete(string colName, Query query)

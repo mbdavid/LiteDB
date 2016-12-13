@@ -116,8 +116,13 @@ namespace LiteDB.Tests
                     // keeping delete all
                     var tb = Task.Factory.StartNew(() =>
                     {
-                        Task.Delay(500).Wait();
+                        // while before starts insert
+                        while (dbB.Count("col", Query.EQ("process", 1)) == 0)
+                        {
+                            Task.Delay(50).Wait();
+                        }
 
+                        // while until has docs
                         while (dbB.Count("col", Query.EQ("process", 1)) > 0)
                         {
                             dbB.Delete("col", Query.All());
