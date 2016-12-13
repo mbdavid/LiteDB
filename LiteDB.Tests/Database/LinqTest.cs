@@ -49,6 +49,7 @@ namespace LiteDB.Tests
     public class UserDomain
     {
         public string DomainName { get; set; }
+        public int Age { get; set; }
     }
 
     [TestClass]
@@ -70,6 +71,14 @@ namespace LiteDB.Tests
                 col.EnsureIndex(x => x.Name, true);
                 col.EnsureIndex(x => x.OS, false);
                 col.EnsureIndex(x => x.Domains.Select(z => z.DomainName), false);
+                col.EnsureIndex(x => x.Domains[0].Age, false);
+
+                var idx = col.GetIndexes().Select(x => x.Field).ToArray();
+
+                Assert.AreEqual("Name", idx[1]);
+                Assert.AreEqual("OS", idx[2]);
+                Assert.AreEqual("Domains.DomainName", idx[3]);
+                Assert.AreEqual("Domains.Age", idx[4]);
 
                 col.Insert(new User[] { c1, c2, c3, c4 });
 

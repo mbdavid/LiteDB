@@ -9,6 +9,7 @@ namespace LiteDB
     {
         // more dirty as possible: removing ".Select(x => x." sentence
         private static Regex _removeSelect = new Regex(@"\.Select\s*\(\s*\w+\s*=>\s*\w+\.");
+        private static Regex _removeArray = new Regex(@"\.get_Item\(\d+\)");
 
         /// <summary>
         /// Get Path (better ToString) from an Expression.
@@ -25,6 +26,7 @@ namespace LiteDB
 
             var path = firstDelim < 0 ? str : str.Substring(firstDelim + 1).TrimEnd(')');
 
+            path = _removeArray.Replace(path, "");
             path = _removeSelect.Replace(path, ".")
                 .Replace(")", "");
 
