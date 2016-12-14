@@ -109,9 +109,11 @@
     <Compile Include="Engine\Query\QueryOr.cs" />
     <Compile Include="Engine\Query\QueryStartsWith.cs" />
     <Compile Include="Engine\Query\QueryWhere.cs" />
+    <Compile Include="Engine\Services\CacheService.cs" />
     <Compile Include="Engine\Services\CollectionService.cs" />
     <Compile Include="Engine\Services\DataService.cs" />
     <Compile Include="Engine\Services\IndexService.cs" />
+    <Compile Include="Engine\Services\LockService.cs" />
     <Compile Include="Engine\Services\PageService.cs" />
     <Compile Include="Engine\Services\TransactionService.cs" />
     <Compile Include="Engine\Structures\CollectionIndex.cs" />
@@ -177,7 +179,10 @@
     <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Utils\LiteException.cs" />
     <Compile Include="Utils\LiteTransaction.cs" />
-    <Compile Include="Utils\Locker.cs" />
+    <Compile Include="Utils\LockControl.cs" />
+    <Compile Include="Utils\LockFile.cs" />
+    <Compile Include="Utils\LockPosition.cs" />
+    <Compile Include="Utils\LockState.cs" />
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Utils\MimeTypeConverter.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />

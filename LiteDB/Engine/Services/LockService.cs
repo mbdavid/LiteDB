@@ -28,6 +28,8 @@ namespace LiteDB
             _state = LockState.Unlocked;
         }
 
+        public LockState State { get { return _state; } }
+
         /// <summary>
         /// Try enter in shared lock (read)
         /// </summary>

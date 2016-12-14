@@ -55,6 +55,9 @@ namespace LiteDB
         /// </summary>
         public TimeSpan Timeout { get { return _timeout; } }
 
+        // tests proposes
+        internal LockService Locker { get { return _locker; } }
+
         #endregion
 
         #region Ctor

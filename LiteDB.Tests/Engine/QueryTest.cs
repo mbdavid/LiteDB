@@ -38,5 +38,29 @@ namespace LiteDB.Tests
                 Assert.AreEqual("2,4", result(Query.Where("_id", (v) => v.AsInt32 % 2 == 0)));
             }
         }
+
+        [TestMethod]
+        public void QueryFirst_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteEngine(file.Filename))
+            {
+                db.Insert("col", new BsonDocument[]
+                {
+                    new BsonDocument { { "_id", 1 }, { "name", "e" } },
+                    new BsonDocument { { "_id", 2 }, { "name", "d" } },
+                    new BsonDocument { { "_id", 3 }, { "name", "c" } },
+                    new BsonDocument { { "_id", 4 }, { "name", "b" } },
+                    new BsonDocument { { "_id", 5 }, { "name", "a" } }
+                });
+
+                var first = db.Find("col", Query.All()).First();
+
+                Assert.AreEqual("e", first["name"].AsString);
+
+                Assert.AreEqual(LockState.Unlocked, db.Locker.State);
+
+            }
+        }
     }
 }
