@@ -102,8 +102,8 @@ namespace LiteDB
         /// </summary>
         public void AvoidDirtyRead()
         {
-            // if disk does not support multi proccess, do not run avoid read
-            if (!_disk.IsShared) return;
+            // if disk are exclusive dont need check dirty read
+            if (_disk.IsExclusive) return;
 
             _log.Write(Logger.CACHE, "checking disk to avoid dirty read");
 

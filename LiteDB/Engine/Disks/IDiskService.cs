@@ -32,9 +32,9 @@ namespace LiteDB
         long FileLength { get; }
 
         /// <summary>
-        /// Indicate that disk support multi process
+        /// Indicate that disk/instance are data access exclusive (no other process can access)
         /// </summary>
-        bool IsShared { get; }
+        bool IsExclusive { get; }
 
         /// <summary>
         /// Indicate if journal are enabled/implemented

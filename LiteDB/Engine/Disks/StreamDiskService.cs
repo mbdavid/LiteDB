@@ -122,7 +122,7 @@ namespace LiteDB
         /// <summary>
         /// Single process only
         /// </summary>
-        public bool IsShared { get { return false; } }
+        public bool IsExclusive { get { return true; } }
 
         /// <summary>
         /// No journal implemented

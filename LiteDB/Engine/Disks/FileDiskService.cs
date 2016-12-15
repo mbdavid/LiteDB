@@ -60,9 +60,12 @@ namespace LiteDB
             // get log instance to disk
             _log = log;
 
+            // if is readonly, journal must be disabled
+            if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
+
             // open/create file using readonly/exclusive options
             _stream = new FileStream(_filename,
-                System.IO.FileMode.OpenOrCreate,
+                _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
                 _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite,
                 BasePage.PAGE_SIZE);
@@ -196,9 +199,10 @@ namespace LiteDB
                     BasePage.PAGE_SIZE);
             }
 
+#if NET35
             // lock first byte
             _journal.Lock(0, 1);
-
+#endif
             // go to initial file position
             _journal.Seek(0, SeekOrigin.Begin);
 
@@ -234,7 +238,10 @@ namespace LiteDB
                         FileShare.ReadWrite,
                         BasePage.PAGE_SIZE);
 
+#if NET35
+                    // lock journal file during reading
                     _journal.Lock(0, 1);
+#endif
                 }
                 catch(FileNotFoundException)
                 {
@@ -242,7 +249,7 @@ namespace LiteDB
                 }
                 catch(IOException ex)
                 {
-                    if(ex.IsLocked()) yield break;
+                    if (ex.IsLocked()) yield break;
                     throw;
                 }
             }
@@ -260,8 +267,10 @@ namespace LiteDB
                 yield return buffer;
             }
 
+#if NET35
             // unlock journal file
             _journal.Unlock(0, 1);
+#endif
         }
 
         /// <summary>
@@ -283,9 +292,9 @@ namespace LiteDB
         #region Lock / Unlock
 
         /// <summary>
-        /// Indicate disk can be access by multiples processes
+        /// Indicate disk can be access by multiples processes or not
         /// </summary>
-        public bool IsShared { get { return _options.FileMode != FileMode.Exclusive; } }
+        public bool IsExclusive { get { return _options.FileMode == FileMode.Exclusive; } }
 
         /// <summary>
         /// Implement datafile lock/unlock

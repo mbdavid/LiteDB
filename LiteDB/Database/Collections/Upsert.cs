@@ -13,6 +13,9 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
+            // set autoId if there is not Id
+            _mapper.SetAutoId(document, _engine.Value, _name);
+
             // get BsonDocument from object
             var doc = _mapper.ToDocument(document);
 
@@ -43,7 +46,7 @@ namespace LiteDB
         {
             if (documents == null) throw new ArgumentNullException("document");
 
-            return _engine.Value.Upsert(_name, documents.Select(x => _mapper.ToDocument(x)));
+            return _engine.Value.Upsert(_name, this.GetBsonDocs(documents));
         }
     }
 }
