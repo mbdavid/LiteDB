@@ -501,7 +501,7 @@ namespace LiteDB
 
                 if (array.Count == 0) return m.Deserialize(member.DataType, array);
 
-                var hasIdRef = array[0].AsDocument["$id"].IsNull;
+                var hasIdRef = array[0].AsDocument == null || array[0].AsDocument["$id"].IsNull;
 
                 if (hasIdRef)
                 {

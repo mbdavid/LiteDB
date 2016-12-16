@@ -21,7 +21,6 @@ namespace LiteDB.Tests.Database
     public class NullRefTests
     {
         [TestMethod]
-        [ExpectedException(typeof(NullReferenceException))]
         public void DbRef_ToDeleted_ThrowsNullReferenceException()
         {
             var mapper = new BsonMapper();
@@ -43,7 +42,11 @@ namespace LiteDB.Tests.Database
 
                 jobCollection.Delete(job.Id);
 
-                var thisWillThrow = db.GetCollection<Pipeline>("pipelines").Include(p => p.Jobs).FindAll().ToArray();
+                var pipelines = db.GetCollection<Pipeline>("pipelines").Include(p => p.Jobs).FindAll().ToArray();
+                Assert.AreEqual(1, pipelines.Length);
+
+                pipeline = pipelines.Single();
+                Assert.AreEqual(0, pipeline.Jobs.Count);
             }
         }
     }
