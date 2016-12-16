@@ -37,7 +37,9 @@ namespace LiteDB
         {
             try
             {
+#if NET35
                 stream.Unlock(position, length);
+#endif
                 return true;
             }
             catch (IOException)
@@ -53,11 +55,13 @@ namespace LiteDB
         {
             var timer = DateTime.UtcNow.Add(timeout);
 
-            while (DateTime.UtcNow < timer)
+            do
             {
                 try
                 {
+#if NET35
                     stream.Lock(position, length);
+#endif
                     return;
                 }
                 catch (IOException ex)
@@ -65,6 +69,7 @@ namespace LiteDB
                     ex.WaitIfLocked(25);
                 }
             }
+            while (DateTime.UtcNow < timer);
 
             throw LiteException.LockTimeout(timeout);
         }

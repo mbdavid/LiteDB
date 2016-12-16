@@ -63,6 +63,10 @@ namespace LiteDB
             // if is readonly, journal must be disabled
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
+#if NET35
+            // do not support Shared mode in NetStandard yet (no FileStream.Lock)
+            if (_options.FileMode == FileMode.Shared) _options.FileMode = FileMode.Exclusive;
+#endif
             // open/create file using readonly/exclusive options
             _stream = new FileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
@@ -114,9 +118,9 @@ namespace LiteDB
             }
         }
 
-        #endregion
+#endregion
 
-        #region Read/Write
+#region Read/Write
 
         /// <summary>
         /// Read page bytes from disk
@@ -175,9 +179,9 @@ namespace LiteDB
         /// </summary>
         public long FileLength { get { return _stream.Length; } }
 
-        #endregion
+#endregion
 
-        #region Journal file
+#region Journal file
 
         /// <summary>
         /// Returns if journal is enabled
@@ -199,10 +203,9 @@ namespace LiteDB
                     BasePage.PAGE_SIZE);
             }
 
-#if NET35
             // lock first byte
-            _journal.Lock(0, 1);
-#endif
+            _journal.TryLock(0, 1, TimeSpan.Zero);
+
             // go to initial file position
             _journal.Seek(0, SeekOrigin.Begin);
 
@@ -238,10 +241,8 @@ namespace LiteDB
                         FileShare.ReadWrite,
                         BasePage.PAGE_SIZE);
 
-#if NET35
                     // lock journal file during reading
-                    _journal.Lock(0, 1);
-#endif
+                    _journal.TryLock(0, 1, TimeSpan.Zero);
                 }
                 catch(FileNotFoundException)
                 {
@@ -267,10 +268,8 @@ namespace LiteDB
                 yield return buffer;
             }
 
-#if NET35
             // unlock journal file
-            _journal.Unlock(0, 1);
-#endif
+            _journal.TryUnlock(0, 1);
         }
 
         /// <summary>
@@ -287,9 +286,9 @@ namespace LiteDB
             }
         }
 
-        #endregion
+#endregion
 
-        #region Lock / Unlock
+#region Lock / Unlock
 
         /// <summary>
         /// Indicate disk can be access by multiples processes or not
@@ -330,9 +329,9 @@ namespace LiteDB
                 state == LockState.Reserved ? _lockReserved :
                 state == LockState.Exclusive ? _lockExclusive : LockPosition.Empty;
 
-            _stream.Unlock(pos.Position, pos.Length);
+            _stream.TryUnlock(pos.Position, pos.Length);
         }
 
-        #endregion
+#endregion
     }
 }

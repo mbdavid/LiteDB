@@ -26,6 +26,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\netstandard1.4\LiteDB.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,6 +36,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\netstandard1.4\LiteDB.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -59,6 +61,7 @@
     <Compile Include="Database\Collections\Insert.cs" />
     <Compile Include="Database\Collections\LiteCollection.cs" />
     <Compile Include="Database\Collections\Update.cs" />
+    <Compile Include="Database\Collections\Upsert.cs" />
     <Compile Include="Database\LiteDatabase.cs" />
     <Compile Include="Document\BsonArray.cs" />
     <Compile Include="Document\BsonDocument.cs" />
