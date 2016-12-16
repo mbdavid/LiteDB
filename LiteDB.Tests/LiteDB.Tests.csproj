@@ -64,6 +64,7 @@
     <Compile Include="Database\DbRefIndexTest.cs" />
     <Compile Include="Database\DeleteByNameTest.cs" />
     <Compile Include="Database\NonIdPocoTest.cs" />
+    <Compile Include="Database\NullRefTests.cs" />
     <Compile Include="Database\PredicateBuilderTest.cs" />
     <Compile Include="Database\LinqVisitorTest.cs" />
     <Compile Include="Database\MapperNonPublicTest.cs" />
