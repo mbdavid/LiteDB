@@ -27,8 +27,8 @@ namespace LiteDB
         /// <summary>
         /// Lock position/length of all lock state.
         /// </summary>
-        private const int LOCK_SHARED_LENGTH = 1000;
-        private const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
+        internal const int LOCK_SHARED_LENGTH = 1000;
+        internal const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
 
         private LockPosition _lockShared = LockPosition.Empty; // will be random each call
         private LockPosition _lockReserved = new LockPosition(LOCK_POSITION + LOCK_SHARED_LENGTH + 1, 1); // reserved at end position
@@ -63,10 +63,6 @@ namespace LiteDB
             // if is readonly, journal must be disabled
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
-#if NET35
-            // do not support Shared mode in NetStandard yet (no FileStream.Lock)
-            if (_options.FileMode == FileMode.Shared) _options.FileMode = FileMode.Exclusive;
-#endif
             // open/create file using readonly/exclusive options
             _stream = new FileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
@@ -118,9 +114,9 @@ namespace LiteDB
             }
         }
 
-#endregion
+        #endregion
 
-#region Read/Write
+        #region Read/Write
 
         /// <summary>
         /// Read page bytes from disk
@@ -179,9 +175,9 @@ namespace LiteDB
         /// </summary>
         public long FileLength { get { return _stream.Length; } }
 
-#endregion
+        #endregion
 
-#region Journal file
+        #region Journal file
 
         /// <summary>
         /// Returns if journal is enabled
@@ -286,9 +282,9 @@ namespace LiteDB
             }
         }
 
-#endregion
+        #endregion
 
-#region Lock / Unlock
+        #region Lock / Unlock
 
         /// <summary>
         /// Indicate disk can be access by multiples processes or not
@@ -332,6 +328,6 @@ namespace LiteDB
             _stream.TryUnlock(pos.Position, pos.Length);
         }
 
-#endregion
+        #endregion
     }
 }

@@ -61,6 +61,21 @@ namespace LiteDB
                 {
 #if NET35
                     stream.Lock(position, length);
+#else
+                    var lockFile = FileHelper.GetTempFile(stream.Name, "-lock");
+
+                    if (length == FileDiskService.LOCK_SHARED_LENGTH || position == 0)
+                    {
+                        // exclusive
+                    }
+                    else if (position == FileDiskService.LOCK_POSITION + FileDiskService.LOCK_SHARED_LENGTH + 1)
+                    {
+                        // reserved
+                    }
+                    else
+                    {
+                        // read
+                    }
 #endif
                     return;
                 }
