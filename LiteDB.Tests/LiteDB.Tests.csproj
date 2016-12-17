@@ -57,7 +57,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Concurrency\MultiProcessTest.cs" />
+    <Compile Include="Concurrency\ProcessTest.cs" />
     <Compile Include="Database\AutoIndex.cs" />
     <Compile Include="Database\AutoIdTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
@@ -78,7 +78,7 @@
     <Compile Include="Document\BsonTest.cs" />
     <Compile Include="Database\DerivedTypesTest.cs" />
     <Compile Include="Engine\UpgradeTest.cs" />
-    <Compile Include="Concurrency\ReadOnlyTest.cs" />
+    <Compile Include="Engine\ReadOnlyTest.cs" />
     <Compile Include="Engine\ShrinkTest.cs" />
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Database\MapperExceptionTest.cs" />
@@ -96,7 +96,7 @@
     <Compile Include="Database\PolymorphicTest.cs" />
     <Compile Include="Engine\QueryTest.cs" />
     <Compile Include="Engine\EngineTest.cs" />
-    <Compile Include="Concurrency\MultiThreadTest.cs" />
+    <Compile Include="Concurrency\ThreadTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\BigFileTest.cs" />
     <Compile Include="Storage\StorageStreamTest.cs" />

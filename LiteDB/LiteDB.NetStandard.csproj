@@ -123,6 +123,7 @@
     <Compile Include="Engine\Structures\DataBlock.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
     <Compile Include="Engine\Structures\IndexNode.cs" />
+    <Compile Include="Engine\Structures\FileStreamLock.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
     <Compile Include="Mapper\Attributes\BsonFieldAttribute.cs" />
     <Compile Include="Mapper\Attributes\BsonIdAttribute.cs" />
@@ -182,10 +183,8 @@
     <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Utils\LiteException.cs" />
     <Compile Include="Utils\LiteTransaction.cs" />
-    <Compile Include="Utils\LockControl.cs" />
-    <Compile Include="Utils\LockFile.cs" />
-    <Compile Include="Utils\LockPosition.cs" />
-    <Compile Include="Utils\LockState.cs" />
+    <Compile Include="Engine\Structures\LockControl.cs" />
+    <Compile Include="Engine\Structures\LockState.cs" />
     <Compile Include="Utils\Logger.cs" />
     <Compile Include="Utils\MimeTypeConverter.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />

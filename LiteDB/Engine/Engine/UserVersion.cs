@@ -11,11 +11,9 @@ namespace LiteDB
         {
             get
             {
-                lock (_locker)
-                using (var l = _locker.Shared())
+                using (_locker.Read())
+                using (_locker.Shared(_trans.AvoidDirtyRead))
                 {
-                    if (l.IsNewLock) _trans.AvoidDirtyRead();
-
                     var header = _pager.GetPage<HeaderPage>(0);
 
                     return header.UserVersion;

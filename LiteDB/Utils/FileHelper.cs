@@ -47,5 +47,29 @@ namespace LiteDB
                 return false;
             }
         }
+
+        /// <summary>
+        /// Try execute some action while has lock exception
+        /// </summary>
+        public static void TryExec(Action action, TimeSpan timeout)
+        {
+            var timer = DateTime.UtcNow.Add(timeout);
+
+            do
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(25);
+                }
+            }
+            while (DateTime.UtcNow < timer);
+
+            throw LiteException.LockTimeout(timeout);
+        }
     }
 }

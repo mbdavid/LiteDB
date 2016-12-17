@@ -53,40 +53,12 @@ namespace LiteDB
         /// </summary>
         public static void TryLock(this FileStream stream, long position, long length, TimeSpan timeout)
         {
-            var timer = DateTime.UtcNow.Add(timeout);
-
-            do
+            FileHelper.TryExec(() =>
             {
-                try
-                {
 #if NET35
-                    stream.Lock(position, length);
-#else
-                    var lockFile = FileHelper.GetTempFile(stream.Name, "-lock");
-
-                    if (length == FileDiskService.LOCK_SHARED_LENGTH || position == 0)
-                    {
-                        // exclusive
-                    }
-                    else if (position == FileDiskService.LOCK_POSITION + FileDiskService.LOCK_SHARED_LENGTH + 1)
-                    {
-                        // reserved
-                    }
-                    else
-                    {
-                        // read
-                    }
+                stream.Lock(position, length);
 #endif
-                    return;
-                }
-                catch (IOException ex)
-                {
-                    ex.WaitIfLocked(25);
-                }
-            }
-            while (DateTime.UtcNow < timer);
-
-            throw LiteException.LockTimeout(timeout);
+            }, timeout);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace LiteDB.Tests
     public class MultiProcessTest
     {
         [TestMethod]
-        public void MultiProcess_Insert_Test()
+        public void Process_Insert_Test()
         {
             using (var file = new TempFile())
             {
@@ -53,7 +53,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void MultiProcess_InsertQuery_Test()
+        public void Process_InsertQuery_Test()
         {
             using (var file = new TempFile())
             {
@@ -95,7 +95,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void MultiProcess_InsertDelete_Test()
+        public void Process_InsertDelete_Test()
         {
             using (var file = new TempFile())
             {

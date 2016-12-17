@@ -110,6 +110,8 @@
     <Compile Include="Engine\Structures\DataBlock.cs" />
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
+    <Compile Include="Utils\LockControl.cs" />
+    <Compile Include="Utils\LockState.cs" />
     <Compile Include="Mapper\Attributes\BsonRefAttribute.cs" />
     <Compile Include="Upgrade\Upgrade.cs" />
     <Compile Include="Upgrade\IDbReader.cs" />
@@ -155,9 +157,6 @@
     <Compile Include="Utils\ConnectionString.cs" />
     <Compile Include="Utils\FileOptions.cs" />
     <Compile Include="Utils\IndexNotFoundException.cs" />
-    <Compile Include="Utils\LockPosition.cs" />
-    <Compile Include="Utils\LockState.cs" />
-    <Compile Include="Utils\LockControl.cs" />
     <Compile Include="Utils\AesEncryption.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtensions.cs" />

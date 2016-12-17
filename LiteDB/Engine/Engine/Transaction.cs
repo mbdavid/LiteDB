@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace LiteDB
 {
@@ -10,16 +11,14 @@ namespace LiteDB
 
         /// <summary>
         /// Starts a new transaction keeping all changed from now in memory only until Commit() be executed.
-        /// Returns true if new lock request was made
+        /// Lock thread in write mode to not accept other transaction
         /// </summary>
-        public bool BeginTrans()
+        public void BeginTrans()
         {
             // lock as reserved mode
-            var locker = _locker.Reserved();
+            var locker = _locker.Reserved(_trans.AvoidDirtyRead);
 
             _transactions.Push(locker);
-
-            return locker.IsNewLock;
         }
 
         /// <summary>
@@ -28,22 +27,25 @@ namespace LiteDB
         /// </summary>
         public bool Commit()
         {
-            var commit = false;
-
-            // only do "real commit" if is last transaction in stack or if autocommit = false
-            if (_transactions.Count == 1)
+            lock(_locker)
             {
-                _trans.Commit();
-                commit = true;
-            }
+                var commit = false;
 
-            // if contains transactions on stack, remove top and dispose (only last transaction will release lock)
-            if (_transactions.Count > 0)
-            {
-                _transactions.Pop().Dispose();
-            }
+                // only do "real commit" if is last transaction in stack or if autocommit = false
+                if (_transactions.Count == 1)
+                {
+                    _trans.Commit();
+                    commit = true;
+                }
 
-            return commit;
+                // if contains transactions on stack, remove top and dispose (only last transaction will release lock)
+                if (_transactions.Count > 0)
+                {
+                    _transactions.Pop().Dispose();
+                }
+
+                return commit;
+            }
         }
 
         /// <summary>
@@ -51,11 +53,14 @@ namespace LiteDB
         /// </summary>
         public void Rollback()
         {
-            _trans.Rollback();
-
-            while(_transactions.Count > 0)
+            lock(_locker)
             {
-                _transactions.Pop().Dispose();
+                _trans.Rollback();
+
+                while (_transactions.Count > 0)
+                {
+                    _transactions.Pop().Dispose();
+                }
             }
         }
 
@@ -64,12 +69,9 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            lock(_locker)
+            using (_locker.Write())
             {
-                if(this.BeginTrans())
-                {
-                    _trans.AvoidDirtyRead();
-                }
+                this.BeginTrans();
 
                 try
                 {
