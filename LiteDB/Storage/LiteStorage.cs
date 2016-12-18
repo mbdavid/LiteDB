@@ -64,7 +64,11 @@ namespace LiteDB
             }
 
             // copy stream content to litedb file stream
-            stream.CopyTo(file.OpenWrite());
+            var writer = file.OpenWrite();
+
+            stream.CopyTo(writer);
+
+            writer.Flush();
 
             return file;
         }
@@ -113,7 +117,7 @@ namespace LiteDB
         /// <summary>
         /// Copy all file content to a steam
         /// </summary>
-        public void Download(string id, Stream stream)
+        public LiteFileInfo Download(string id, Stream stream)
         {
             if (stream == null) throw new ArgumentNullException("stream");
 
@@ -122,6 +126,8 @@ namespace LiteDB
             if (file == null) throw LiteException.FileNotFound(id);
 
             file.CopyTo(stream);
+
+            return file;
         }
 
         #endregion

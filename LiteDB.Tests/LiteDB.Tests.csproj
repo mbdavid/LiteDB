@@ -99,6 +99,7 @@
     <Compile Include="Concurrency\ThreadTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\BigFileTest.cs" />
+    <Compile Include="Storage\LocalFileTest.cs" />
     <Compile Include="Storage\StorageStreamTest.cs" />
     <Compile Include="Utils\TempFile.cs" />
   </ItemGroup>
