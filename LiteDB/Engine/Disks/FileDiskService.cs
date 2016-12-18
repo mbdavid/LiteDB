@@ -95,6 +95,11 @@ namespace LiteDB
                 // write second page empty just to use as lock control
                 this.WritePage(1, new byte[BasePage.PAGE_SIZE]);
             }
+
+#if !NET35
+            // there is no Lock in NetStandard (1.x) - no shared mode
+            if (_options.FileMode == FileMode.Shared) _options.FileMode = FileMode.Exclusive;
+#endif
         }
 
         public virtual void Dispose()
@@ -303,9 +308,9 @@ namespace LiteDB
                 state == LockState.Shared ? _lockSharedPosition = _lockSharedRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_SHARED_LENGTH) :
                 state == LockState.Reserved ? LOCK_RESERVED_POSITION :
                 state == LockState.Exclusive ? LOCK_POSITION : 0;
-
+            
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
-
+            
             _stream.TryLock(position, length, _options.Timeout);
         }
 
@@ -321,9 +326,9 @@ namespace LiteDB
                 state == LockState.Shared ? _lockSharedPosition :
                 state == LockState.Reserved ? LOCK_RESERVED_POSITION :
                 state == LockState.Exclusive ? LOCK_POSITION : 0;
-
+            
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
-
+            
             _stream.TryUnlock(position, length);
         }
 

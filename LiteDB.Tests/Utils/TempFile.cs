@@ -29,10 +29,38 @@ namespace LiteDB.Tests
             return "filename=\"" + this.Filename + "\";" + connectionString;
         }
 
+        #region Dispose
+
+        private bool _disposed;
+
         public void Dispose()
         {
-            File.Delete(this.Filename);
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+
+        ~TempFile()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                // free other managed objects that implement
+                // IDisposable only
+            }
+
+            File.Delete(this.Filename);
+
+            _disposed = true;
+        }
+
+        #endregion
 
         public long Size
         {
