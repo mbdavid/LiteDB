@@ -201,7 +201,11 @@ namespace LiteDB
             {
                 foreach (BsonValue item in value)
                 {
-                    list.Add(Deserialize(itemType, item));
+                    var deserializedItem = Deserialize(itemType, item);
+                    if (deserializedItem != null)
+                    {
+                        list.Add(deserializedItem);
+                    }
                 }
             }
             else
