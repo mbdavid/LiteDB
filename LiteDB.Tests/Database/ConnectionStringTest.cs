@@ -34,19 +34,19 @@ namespace LiteDB.Tests
                 @"filename=""c:\only;file\""d\""emo.db""; 
                   journal =false;
                   password =   ""john-doe "" ;
-                  cache size = 1000 ;
+                  cache SIZE = 1000 ;
                   timeout = 00:05:00 ;
-                  auto commit = true ;
                   initial size = 10 MB ;
-                  limit size = 20mb;
+                  mode =  excluSIVE ;
+                  limit SIZE = 20mb;
                   log = 255");
 
             Assert.AreEqual(@"c:\only;file""d""emo.db", full.Filename);
             Assert.AreEqual(false, full.Journal);
             Assert.AreEqual("john-doe ", full.Password);
             Assert.AreEqual(1000, full.CacheSize);
+            Assert.AreEqual(FileMode.Exclusive, full.Mode);
             Assert.AreEqual(TimeSpan.FromMinutes(5), full.Timeout);
-            Assert.AreEqual(true, full.AutoCommit);
             Assert.AreEqual(10 * 1024 * 1024, full.InitialSize);
             Assert.AreEqual(20 * 1024 * 1024, full.LimitSize);
             Assert.AreEqual(255, full.Log);

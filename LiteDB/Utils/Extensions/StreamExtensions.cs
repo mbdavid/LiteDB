@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace LiteDB
 {
@@ -27,6 +28,37 @@ namespace LiteDB
             {
                 output.Write(buffer, 0, bytesRead);
             }
+        }
+
+        /// <summary>
+        /// Try unlock stream segment. Do nothing if was not possible (it's not locked)
+        /// </summary>
+        public static bool TryUnlock(this FileStream stream, long position, long length)
+        {
+            try
+            {
+#if NET35
+                stream.Unlock(position, length);
+#endif
+                return true;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try lock a stream segment during timeout.
+        /// </summary>
+        public static void TryLock(this FileStream stream, long position, long length, TimeSpan timeout)
+        {
+            FileHelper.TryExec(() =>
+            {
+#if NET35
+                stream.Lock(position, length);
+#endif
+            }, timeout);
         }
     }
 }

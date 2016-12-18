@@ -104,7 +104,7 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
-            using (var file = File.Open(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
+            using (var file = File.Open(filename, overwritten ? System.IO.FileMode.Create : System.IO.FileMode.CreateNew))
             {
                 OpenRead().CopyTo(file);
             }

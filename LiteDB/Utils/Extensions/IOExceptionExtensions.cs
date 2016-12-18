@@ -8,14 +8,24 @@ namespace LiteDB
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION = 33;
 
-        public static void WaitIfLocked(this IOException ex, int timer)
+        /// <summary>
+        /// Detect if exception is an Locked exception
+        /// </summary>
+        public static bool IsLocked(this IOException ex)
         {
             var errorCode = Marshal.GetHRForException(ex) & ((1 << 16) - 1);
-            if (errorCode == ERROR_SHARING_VIOLATION || errorCode == ERROR_LOCK_VIOLATION)
+
+            return errorCode == ERROR_SHARING_VIOLATION ||
+                errorCode == ERROR_LOCK_VIOLATION;
+        }
+
+        public static void WaitIfLocked(this IOException ex, int timer)
+        {
+            if (ex.IsLocked())
             {
                 if (timer > 0)
                 {
-                    WaitFor(250);
+                    WaitFor(timer);
                 }
             }
             else
@@ -31,9 +41,9 @@ namespace LiteDB
         {
             // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
 #if NET35
-            System.Threading.Thread.Sleep(250);
+            System.Threading.Thread.Sleep(ms);
 #else
-            System.Threading.Tasks.Task.Delay(250).Wait();
+            System.Threading.Tasks.Task.Delay(ms).Wait();
 #endif
         }
     }

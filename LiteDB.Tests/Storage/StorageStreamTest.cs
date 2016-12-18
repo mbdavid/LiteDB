@@ -31,6 +31,12 @@ namespace LiteDB.Tests
                         sw.Write(HELLO1);
                     }
                 }
+
+                // test if was updated Length in _files collectin
+                var doc = db.Find("_files", Query.EQ("_id", "f1")).Single();
+
+                Assert.AreEqual(HELLO1.Length, doc["length"].AsInt32);
+
                 using (var stream = sto.OpenRead("f1"))
                 {
                     var sr = new StreamReader(stream);

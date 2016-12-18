@@ -21,6 +21,11 @@ namespace LiteDB
         private const byte FILE_VERSION = 7;
 
         /// <summary>
+        /// Last modified transaction. Used to detect when other process change datafile and cache are not valid anymore
+        /// </summary>
+        public ushort ChangeID { get; set; }
+
+        /// <summary>
         /// Get/Set the pageID that start sequenece with a complete empty pages (can be used as a new page)
         /// Must be a field to be used as "ref"
         /// </summary>
@@ -54,6 +59,7 @@ namespace LiteDB
         public HeaderPage()
             : base(0)
         {
+            this.ChangeID = 0;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
@@ -83,8 +89,7 @@ namespace LiteDB
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            reader.ReadUInt16(); // to be compatible with old "ChangeID"
-
+            this.ChangeID = reader.ReadUInt16();
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.UserVersion = reader.ReadUInt16();
@@ -103,7 +108,7 @@ namespace LiteDB
         {
             writer.Write(HEADER_INFO, HEADER_INFO.Length);
             writer.Write(FILE_VERSION);
-            writer.Write((ushort)0); // to be compatible with old "ChangeID"
+            writer.Write(this.ChangeID);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.UserVersion);

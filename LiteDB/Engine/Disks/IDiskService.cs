@@ -32,6 +32,11 @@ namespace LiteDB
         long FileLength { get; }
 
         /// <summary>
+        /// Indicate that disk/instance are data access exclusive (no other process can access)
+        /// </summary>
+        bool IsExclusive { get; }
+
+        /// <summary>
         /// Indicate if journal are enabled/implemented
         /// </summary>
         bool IsJournalEnabled { get; }
@@ -44,11 +49,21 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        void WriteJournal(uint pageID, byte[] page);
+        void WriteJournal(ICollection<byte[]> pages);
 
         /// <summary>
         /// Clear jounal file
         /// </summary>
         void ClearJournal();
+
+        /// <summary>
+        /// Lock datafile returing lock position
+        /// </summary>
+        void Lock(LockState state);
+
+        /// <summary>
+        /// Unlock datafile based on last state
+        /// </summary>
+        void Unlock(LockState state);
     }
 }

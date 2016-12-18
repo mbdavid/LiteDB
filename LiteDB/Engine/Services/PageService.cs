@@ -6,47 +6,44 @@ namespace LiteDB
 {
     internal class PageService
     {
+        private CacheService _cache;
         private IDiskService _disk;
         private AesEncryption _crypto;
         private Logger _log;
 
-        private SortedDictionary<uint, BasePage> _cache = new SortedDictionary<uint, BasePage>();
-
-        public PageService(IDiskService disk, AesEncryption crypto, Logger log)
+        public PageService(IDiskService disk, AesEncryption crypto, CacheService cache, Logger log)
         {
             _disk = disk;
             _crypto = crypto;
+            _cache = cache;
             _log = log;
         }
 
         /// <summary>
-        /// Get a page from cache or from disk (and put on cache)
+        /// Get a page from cache or from disk (get from cache or from disk)
         /// </summary>
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
-            // lock concurrency access (read access are not in a lock transaction)
-            lock(_cache)
+            var page = _cache.GetPage(pageID);
+
+            // is not on cache? load from disk
+            if (page == null)
             {
-                var page = _cache.GetOrDefault(pageID);
+                var buffer = _disk.ReadPage(pageID);
 
-                // is not on cache? load from disk
-                if (page == null)
+                // if datafile are encrypted, decrypt buffer (header are not encrypted)
+                if (_crypto != null && pageID > 0)
                 {
-                    var buffer = _disk.ReadPage(pageID);
-
-                    // if datafile are encrypted, decrypt buffer (header are not encrypted)
-                    if(_crypto != null && pageID > 0)
-                    {
-                        buffer = _crypto.Decrypt(buffer);
-                    }
-
-                    page = BasePage.ReadPage(buffer);
-                    _cache.Add(pageID, page);
+                    buffer = _crypto.Decrypt(buffer);
                 }
 
-                return (T)page;
+                page = BasePage.ReadPage(buffer);
+
+                _cache.AddPage(page);
             }
+
+            return (T)page;
         }
 
         /// <summary>
@@ -55,33 +52,8 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
-            page.IsDirty = true;
-            _cache[page.PageID] = page;
+            _cache.SetDirty(page);
         }
-
-        /// <summary>
-        /// Return all dirty pages
-        /// </summary>
-        public IEnumerable<BasePage> GetDirtyPages()
-        {
-            return _cache.Values.Where(x => x.IsDirty);
-        }
-
-        /// <summary>
-        /// Clear all pages from cache memory
-        /// </summary>
-        public void ClearCache()
-        {
-            _log.Write(Logger.CACHE, "clearing cache");
-
-            // cache must be cleared all pages (pages reference problem when dirty pages only)
-            _cache.Clear();
-        }
-
-        /// <summary>
-        /// Get how many pages are in cache
-        /// </summary>
-        public int CachePageCount { get { return _cache.Count; } }
 
         /// <summary>
         /// Read all sequences pages from a start pageID (using NextPageID)

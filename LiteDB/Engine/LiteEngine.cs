@@ -13,9 +13,11 @@ namespace LiteDB
 
         private Logger _log;
 
-        private Locker _locker;
+        private LockService _locker;
 
         private IDiskService _disk;
+
+        private CacheService _cache;
 
         private PageService _pager;
 
@@ -31,8 +33,6 @@ namespace LiteDB
 
         private int _cacheSize;
 
-        private bool _autocommit;
-
         private TimeSpan _timeout;
 
         /// <summary>
@@ -46,19 +46,17 @@ namespace LiteDB
         public int CacheSize { get { return _cacheSize; } }
 
         /// <summary>
-        /// Get number of pages in memory cache (clean and dirty pages)
+        /// Get how many pages are on cache
         /// </summary>
-        public int CacheUsed { get { return _pager.CachePageCount; } }
-
-        /// <summary>
-        /// Get if transaction managment is autocommit or not (default: false)
-        /// </summary>
-        public bool AutoCommit { get { return _autocommit; } }
+        public int CacheUsed { get { return _cache.CleanUsed; } }
 
         /// <summary>
         /// Gets time waiting write lock operation before throw LiteException timeout
         /// </summary>
         public TimeSpan Timeout { get { return _timeout; } }
+
+        // tests proposes
+        internal LockService Locker { get { return _locker; } }
 
         #endregion
 
@@ -91,14 +89,12 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation and full engine options
         /// </summary>
-        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, bool autocommit = true, int cacheSize = 5000, Logger log = null)
+        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
         {
             _timeout = timeout ?? TimeSpan.FromMinutes(1);
             _cacheSize = cacheSize;
-            _autocommit = autocommit;
             _disk = disk;
             _log = log ?? new Logger();
-            _locker = new Locker(_timeout);
 
             // initialize datafile (create) and set log instance
             _disk.Initialize(_log, password);
@@ -126,6 +122,7 @@ namespace LiteDB
             // initialize all services
             this.InitializeServices();
 
+            // try recovery data only if journal are enabled
             if (_disk.IsJournalEnabled)
             {
                 // try recovery if has journal file
@@ -138,10 +135,12 @@ namespace LiteDB
         /// </summary>
         private void InitializeServices()
         {
-            _pager = new PageService(_disk, _crypto, _log);
+            _cache = new CacheService(_disk, _log);
+            _locker = new LockService(_disk, _timeout, _log);
+            _pager = new PageService(_disk, _crypto, _cache, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
-            _trans = new TransactionService(_disk, _crypto, _pager, _cacheSize, _log);
+            _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _cacheSize, _log);
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 

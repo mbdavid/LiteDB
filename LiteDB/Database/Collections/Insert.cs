@@ -20,6 +20,21 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Insert a new document to this collection using passed id value.
+        /// </summary>
+        public void Insert(BsonValue id, T document)
+        {
+            if (document == null) throw new ArgumentNullException("document");
+            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+
+            var doc = _mapper.ToDocument(document);
+
+            doc["_id"] = id;
+
+            _engine.Value.Insert(_name, doc);
+        }
+
+        /// <summary>
         /// Insert an array of new documents to this collection. Document Id must be a new value in collection. Can be set buffer size to commit at each N documents
         /// </summary>
         public int Insert(IEnumerable<T> docs)

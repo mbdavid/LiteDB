@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LiteDB
 {
@@ -14,7 +11,7 @@ namespace LiteDB
         public long InitialSize { get; set; }
         public long LimitSize { get; set; }
         public TimeSpan Timeout { get; set; }
-        public bool ReadOnly { get; set; }
+        public FileMode FileMode { get; set; }
 
         public FileOptions()
         {
@@ -22,7 +19,14 @@ namespace LiteDB
             this.InitialSize = BasePage.PAGE_SIZE;
             this.LimitSize = long.MaxValue;
             this.Timeout = TimeSpan.FromMinutes(1);
-            this.ReadOnly = false;
+            this.FileMode = FileMode.Shared;
         }
+    }
+
+    public enum FileMode
+    {
+        Shared,
+        ReadOnly,
+        Exclusive
     }
 }

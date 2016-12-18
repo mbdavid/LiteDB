@@ -11,7 +11,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
-            using(_locker.Read())
+            using (_locker.Read())
+            using (_locker.Shared(_trans.AvoidDirtyRead))
             {
                 // get my collection page
                 var col = this.GetCollectionPage(colName, false);
@@ -53,6 +54,7 @@ namespace LiteDB
         public IEnumerable<BsonValue> FindIndex(string colName, Query query, int skip = 0, int limit = int.MaxValue)
         {
             using (_locker.Read())
+            using (_locker.Shared(_trans.AvoidDirtyRead))
             {
                 // get my collection page
                 var col = this.GetCollectionPage(colName, false);

@@ -112,6 +112,7 @@ namespace LiteDB
         public IEnumerable<IndexInfo> GetIndexes(string colName)
         {
             using (_locker.Read())
+            using (_locker.Shared(_trans.AvoidDirtyRead))
             {
                 var col = this.GetCollectionPage(colName, false);
 

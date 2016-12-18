@@ -88,7 +88,7 @@ namespace LiteDB.Tests
         public void Multikey_Count_Test()
         {
             using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Disk(), cacheSize: 10, autocommit: true))
+            using (var db = new LiteEngine(file.Disk(), cacheSize: 10))
             {
                 // create index before
                 db.EnsureIndex("col", "list");

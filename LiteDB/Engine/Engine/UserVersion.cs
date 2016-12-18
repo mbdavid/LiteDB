@@ -12,6 +12,7 @@ namespace LiteDB
             get
             {
                 using (_locker.Read())
+                using (_locker.Shared(_trans.AvoidDirtyRead))
                 {
                     var header = _pager.GetPage<HeaderPage>(0);
 

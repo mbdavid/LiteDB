@@ -10,39 +10,39 @@ using System.Text;
 namespace LiteDB.Tests
 {
     [TestClass]
-    public class ConcurrencyTest
+    public class MultiThreadTest
     {
         [TestMethod]
-        public void Concurrency_Insert_Test()
+        public void Thread_Insert_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
                 db.EnsureIndex("col", "thread");
 
-                // insert 5000 x thread=1
+                // insert 1000 x thread=1
                 var ta = Task.Factory.StartNew(() =>
                 {
-                    for(var i = 0; i < 5000; i++)
+                    for (var i = 0; i < 1000; i++)
                         db.Insert("col", new BsonDocument { { "thread", 1 } });
                 });
 
-                // insert 4000 x thread=2
+                // insert 700 x thread=2
                 var tb = Task.Factory.StartNew(() =>
                 {
-                    for (var i = 0; i < 4000; i++)
+                    for (var i = 0; i < 700; i++)
                         db.Insert("col", new BsonDocument { { "thread", 2 } });
                 });
 
                 Task.WaitAll(ta, tb);
 
-                Assert.AreEqual(5000, db.Count("col", Query.EQ("thread", 1)));
-                Assert.AreEqual(4000, db.Count("col", Query.EQ("thread", 2)));
+                Assert.AreEqual(1000, db.Count("col", Query.EQ("thread", 1)));
+                Assert.AreEqual(700, db.Count("col", Query.EQ("thread", 2)));
             }
         }
 
         [TestMethod]
-        public void Concurrency_InsertUpdate_Test()
+        public void Thread_InsertUpdate_Test()
         {
             const int N = 3000;
 
@@ -88,7 +88,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_InsertQuery_Test()
+        public void Thread_InsertQuery_Test()
         {
             const int N = 3000;
             var running = true;
@@ -126,7 +126,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_UserVersionInc_Test()
+        public void Thread_UserVersionInc_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -145,7 +145,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Concurrency_LockTransaction_Test()
+        public void Thread_Transaction_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -160,7 +160,7 @@ namespace LiteDB.Tests
                 // use parallel 
                 Parallel.For(1, 10000, (i) =>
                 {
-                    lock(db)
+                    lock (db)
                     {
                         var doc = db.Find("col", Query.EQ("_id", 1)).Single();
                         doc["count"] = doc["count"].AsInt32 + 1;

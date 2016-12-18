@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// A simple file helper tool with static methods
     /// </summary>
-    internal class FileHelper
+    internal static class FileHelper
     {
         /// <summary>
         /// Create a temp filename based on original filename - checks if file exists (if exists, append counter number)
@@ -30,6 +30,46 @@ namespace LiteDB
             }
 
             return temp;
+        }
+
+        /// <summary>
+        /// Try delete a file that can be in use by another
+        /// </summary>
+        public static bool TryDelete(string filename)
+        {
+            try
+            {
+                File.Delete(filename);
+                return true;
+            }
+            catch(IOException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try execute some action while has lock exception
+        /// </summary>
+        public static void TryExec(Action action, TimeSpan timeout)
+        {
+            var timer = DateTime.UtcNow.Add(timeout);
+
+            do
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(25);
+                }
+            }
+            while (DateTime.UtcNow < timer);
+
+            throw LiteException.LockTimeout(timeout);
         }
     }
 }

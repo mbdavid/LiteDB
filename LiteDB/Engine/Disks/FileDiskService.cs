@@ -15,17 +15,26 @@ namespace LiteDB
         /// </summary>
         private const int PAGE_TYPE_POSITION = 4;
 
-        private Stream _stream;
+        /// <summary>
+        /// Map lock positions
+        /// </summary>
+        internal const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
+        internal const int LOCK_SHARED_LENGTH = 1000;
+        internal const int LOCK_RESERVED_POSITION = LOCK_POSITION + LOCK_SHARED_LENGTH + 1;
+
+        private FileStream _stream;
         private string _filename;
 
-        private Stream _journal;
+        private FileStream _journal;
         private string _journalFilename;
-        private HashSet<uint> _journalPages = new HashSet<uint>();
 
         private Logger _log; // will be initialize in "Initialize()"
         private FileOptions _options;
 
-        #region Initialize disk
+        private int _lockSharedPosition = 0;
+        private Random _lockSharedRandom = new Random();
+
+        #region Initialize/Dispose disk
 
         public FileDiskService(string filename, bool journal = true)
             : this(filename, new FileOptions { Journal = journal })
@@ -51,26 +60,26 @@ namespace LiteDB
             // get log instance to disk
             _log = log;
 
-            // if file not exists, just create empty file
-            if (!File.Exists(_filename))
+            // if is readonly, journal must be disabled
+            if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
+
+            // open/create file using readonly/exclusive options
+            _stream = new FileStream(_filename,
+                _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
+                _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
+                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite,
+                BasePage.PAGE_SIZE);
+
+            // if file is new, initialize
+            if (_stream.Length == 0)
             {
-                // readonly 
-                if (_options.ReadOnly) throw LiteException.ReadOnlyDatabase();
-
-                // open file as create mode
-                _stream = new FileStream(_filename, 
-                    FileMode.CreateNew, 
-                    FileAccess.ReadWrite, 
-                    FileShare.Read, 
-                    BasePage.PAGE_SIZE);
-
                 _log.Write(Logger.DISK, "initialize new datafile");
 
                 // set datafile initial size
                 _stream.SetLength(_options.InitialSize);
 
-                // create a new header page in bytes
-                var header = new HeaderPage();
+                // create a new header page in bytes (keep second page empty)
+                var header = new HeaderPage() { LastPageID = 1 };
 
                 if(password != null)
                 {
@@ -82,22 +91,16 @@ namespace LiteDB
 
                 // write bytes on page
                 this.WritePage(0, header.WritePage());
-            }
-            else
-            {
-                // try open file in exclusive mode
-                TryExec(() =>
-                {
-                    _stream = new FileStream(_filename, 
-                        FileMode.Open,
-                        _options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                        _options.ReadOnly ? FileShare.ReadWrite : FileShare.Read,
-                        BasePage.PAGE_SIZE);
-                });
-            }
-        }
 
-        #endregion
+                // write second page empty just to use as lock control
+                this.WritePage(1, new byte[BasePage.PAGE_SIZE]);
+            }
+
+#if !NET35
+            // there is no Lock in NetStandard (1.x) - no shared mode
+            if (_options.FileMode == FileMode.Shared) _options.FileMode = FileMode.Exclusive;
+#endif
+        }
 
         public virtual void Dispose()
         {
@@ -106,7 +109,7 @@ namespace LiteDB
                 _log.Write(Logger.DISK, "close journal file '{0}'", Path.GetFileName(_journalFilename));
                 _journal.Dispose();
                 _journal = null;
-                File.Delete(_journalFilename);
+                FileHelper.TryDelete(_journalFilename);
             }
             if (_stream != null)
             {
@@ -115,6 +118,8 @@ namespace LiteDB
                 _stream = null;
             }
         }
+
+        #endregion
 
         #region Read/Write
 
@@ -145,8 +150,6 @@ namespace LiteDB
         /// </summary>
         public virtual void WritePage(uint pageID, byte[] buffer)
         {
-            if (_options.ReadOnly) throw LiteException.ReadOnlyDatabase();
-
             var position = BasePage.GetSizeOfPages(pageID);
 
             _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
@@ -165,9 +168,6 @@ namespace LiteDB
         /// </summary>
         public void SetLength(long fileSize)
         {
-            // if readonly, do nothing
-            if (_options.ReadOnly) return;
-
             // checks if new fileSize will exceed limit size
             if (fileSize > _options.LimitSize) throw LiteException.FileSizeExceeded(_options.LimitSize);
 
@@ -192,34 +192,38 @@ namespace LiteDB
         /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        public void WriteJournal(uint pageID, byte[] buffer)
+        public void WriteJournal(ICollection<byte[]> pages)
         {
-            if (_options.ReadOnly) throw LiteException.ReadOnlyDatabase();
-
-            // test if this page is not in journal file
-            if (_journalPages.Contains(pageID)) return;
-
-            // if no journal or no buffer, exit
-            if (_options.Journal == false || buffer.Length == 0) return;
-
-            // open journal file if not used yet
             if (_journal == null)
             {
-                // open journal file in EXCLUSIVE mode
-                _log.Write(Logger.JOURNAL, "create journal file");
-
-                TryExec(() =>
-                {
-                    _journal = new FileStream(_journalFilename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE);
-                });
+                // open or create datafile if not exists
+                _journal = new FileStream(_journalFilename,
+                    System.IO.FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite,
+                    FileShare.ReadWrite,
+                    BasePage.PAGE_SIZE);
             }
 
-            _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
+            // lock first byte
+            _journal.TryLock(0, 1, TimeSpan.Zero);
 
-            // just write original bytes in order that are changed
-            _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
+            // go to initial file position
+            _journal.Seek(0, SeekOrigin.Begin);
 
-            _journalPages.Add(pageID);
+            // set journal file length before write
+            _journal.SetLength(pages.Count);
+
+            foreach(var buffer in pages)
+            {
+                // read pageID and pageType from buffer
+                var pageID = BitConverter.ToUInt32(buffer, 0);
+                var pageType = (PageType)buffer[PAGE_TYPE_POSITION];
+
+                _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, pageType);
+
+                // write page bytes
+                _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
+            }
         }
 
         /// <summary>
@@ -227,23 +231,30 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<byte[]> ReadJournal()
         {
-            // if datafile is readonly there is not journal to read
-            if (_options.ReadOnly) yield break;
-
             // check if exists journal file (if opended)
-            if (_journal == null && File.Exists(_journalFilename))
+            if (_journal == null)
             {
-                TryExec(() =>
+                try
                 {
-                    _journal = new FileStream(_journalFilename, 
-                        FileMode.Open, 
-                        FileAccess.ReadWrite, FileShare.None, 
+                    _journal = new FileStream(_journalFilename,
+                        System.IO.FileMode.Open,
+                        FileAccess.ReadWrite,
+                        FileShare.ReadWrite,
                         BasePage.PAGE_SIZE);
-                });
-            }
 
-            // no journal, exit
-            if (_journal == null) yield break;
+                    // lock journal file during reading
+                    _journal.TryLock(0, 1, TimeSpan.Zero);
+                }
+                catch(FileNotFoundException)
+                {
+                    yield break;
+                }
+                catch(IOException ex)
+                {
+                    if (ex.IsLocked()) yield break;
+                    throw;
+                }
+            }
 
             var buffer = new byte[BasePage.PAGE_SIZE];
 
@@ -257,6 +268,9 @@ namespace LiteDB
 
                 yield return buffer;
             }
+
+            // unlock journal file
+            _journal.TryUnlock(0, 1);
         }
 
         /// <summary>
@@ -267,61 +281,57 @@ namespace LiteDB
             if (_journal != null)
             {
                 _log.Write(Logger.JOURNAL, "cleaning journal file");
-
+                _journal.TryUnlock(0, 1);
                 _journal.Seek(0, SeekOrigin.Begin);
                 _journal.SetLength(0);
-                _journalPages = new HashSet<uint>();
             }
         }
 
         #endregion
 
-        #region Utils
+        #region Lock / Unlock
 
         /// <summary>
-        /// Try run an operation over datafile - keep tring if locked
+        /// Indicate disk can be access by multiples processes or not
         /// </summary>
-        private void TryExec(Action action)
+        public bool IsExclusive { get { return _options.FileMode == FileMode.Exclusive; } }
+
+        /// <summary>
+        /// Implement datafile lock/unlock
+        /// </summary>
+        public void Lock(LockState state)
         {
-            var timer = DateTime.UtcNow.Add(_options.Timeout);
-            var locked = false;
+            // only shared mode lock datafile
+            if (_options.FileMode != FileMode.Shared) return;
 
-            while (DateTime.UtcNow < timer)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    // this exception can occurs when a single instance release file but Windows Filesystem are not fully released.
-                    if (locked == false)
-                    {
-                        locked = true;
-                        _log.Write(Logger.ERROR, "unauthorized file access, waiting for {0} timeout", _options.Timeout);
-                    }
+            var position =
+                state == LockState.Shared ? _lockSharedPosition = _lockSharedRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_SHARED_LENGTH) :
+                state == LockState.Reserved ? LOCK_RESERVED_POSITION :
+                state == LockState.Exclusive ? LOCK_POSITION : 0;
+            
+            var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+            
+            _stream.TryLock(position, length, _options.Timeout);
+        }
 
-                    IOExceptionExtensions.WaitFor(250);
-                }
-                catch (IOException ex)
-                {
-                    if (locked == false)
-                    {
-                        locked = true;
-                        _log.Write(Logger.ERROR, "locked file, waiting for {0} timeout", _options.Timeout);
-                    }
+        /// <summary>
+        /// Unlock datafile based on state
+        /// </summary>
+        public void Unlock(LockState state)
+        {
+            // only shared mode lock datafile
+            if (_options.FileMode != FileMode.Shared) return;
 
-                    ex.WaitIfLocked(250);
-                }
-            }
-
-            _log.Write(Logger.ERROR, "timeout disk access after {0}", _options.Timeout);
-
-            throw LiteException.LockTimeout(_options.Timeout);
+            var position =
+                state == LockState.Shared ? _lockSharedPosition :
+                state == LockState.Reserved ? LOCK_RESERVED_POSITION :
+                state == LockState.Exclusive ? LOCK_POSITION : 0;
+            
+            var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+            
+            _stream.TryUnlock(position, length);
         }
 
         #endregion
-
     }
 }

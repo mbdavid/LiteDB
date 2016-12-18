@@ -13,6 +13,8 @@ namespace LiteDB.Shell
             var commands = new List<ICommand>();
             var env = new Env();
 
+            LiteEngine engine = null;
+
             // register commands
             RegisterCommands(commands);
 
@@ -39,17 +41,11 @@ namespace LiteDB.Shell
                     {
                         if (!command.IsCommand(s)) continue;
 
-                        // test if command it's only shell command
-                        if (command.Access == DataAccess.None)
+                        command.Execute(engine, s, display, input, env);
+
+                        if(env.Filename != null && engine == null)
                         {
-                            command.Execute(null, s, display, input, env);
-                        }
-                        else
-                        {
-                            using (var engine = env.CreateEngine(command.Access))
-                            {
-                                command.Execute(engine, s, display, input, env);
-                            }
+                            engine = env.CreateEngine(DataAccess.Write);
                         }
 
                         found = true;

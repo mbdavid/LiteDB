@@ -28,7 +28,7 @@ namespace LiteDB.Shell
             var disk = new FileDiskService(this.Filename,
                 new FileOptions
                 {
-                    ReadOnly = access == DataAccess.Read,
+                    FileMode = FileMode.Shared,
                     Journal = this.Journal
                 });
 

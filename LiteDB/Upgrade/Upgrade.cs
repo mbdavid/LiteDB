@@ -20,7 +20,7 @@ namespace LiteDB
             var tempFile = FileHelper.GetTempFile(filename);
 
             // open fiel as stream and test if is V6
-            using(var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            using(var stream = new FileStream(filename, System.IO.FileMode.Open, FileAccess.Read))
             {
                 IDbReader reader = new LiteDB_V6.DbReader();
 
