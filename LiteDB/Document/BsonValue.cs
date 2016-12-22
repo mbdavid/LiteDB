@@ -63,6 +63,12 @@ namespace LiteDB
             this.RawValue = value;
         }
 
+        public BsonValue(Decimal value)
+        {
+            this.Type = BsonType.Decimal;
+            this.RawValue = value;
+        }
+
         public BsonValue(String value)
         {
             this.Type = value == null ? BsonType.Null : BsonType.String;
@@ -125,6 +131,7 @@ namespace LiteDB
             else if (value is Int32) this.Type = BsonType.Int32;
             else if (value is Int64) this.Type = BsonType.Int64;
             else if (value is Double) this.Type = BsonType.Double;
+            else if (value is Decimal) this.Type = BsonType.Decimal;
             else if (value is String) this.Type = BsonType.String;
             else if (value is Dictionary<string, BsonValue>) this.Type = BsonType.Document;
             else if (value is List<BsonValue>) this.Type = BsonType.Array;
@@ -247,6 +254,11 @@ namespace LiteDB
             get { return this.IsNumber ? Convert.ToDouble(this.RawValue) : default(Double); }
         }
 
+        public decimal AsDecimal
+        {
+            get { return this.IsNumber ? Convert.ToDecimal(this.RawValue) : default(Decimal); }
+        }
+
         public DateTime AsDateTime
         {
             get { return this.Type == BsonType.DateTime ? (DateTime)this.RawValue : default(DateTime); }
@@ -296,9 +308,14 @@ namespace LiteDB
             get { return this.Type == BsonType.Double; }
         }
 
+        public bool IsDecimal
+        {
+            get { return this.Type == BsonType.Decimal; }
+        }
+
         public bool IsNumber
         {
-            get { return this.IsInt32 || this.IsInt64 || this.IsDouble; }
+            get { return this.IsInt32 || this.IsInt64 || this.IsDouble || this.IsDecimal; }
         }
 
         public bool IsBinary
@@ -377,6 +394,18 @@ namespace LiteDB
 
         // Double
         public static implicit operator BsonValue(Double value)
+        {
+            return new BsonValue(value);
+        }
+
+        // Decimal
+        public static implicit operator Decimal(BsonValue value)
+        {
+            return (Decimal)value.RawValue;
+        }
+
+        // Decimal
+        public static implicit operator BsonValue(Decimal value)
         {
             return new BsonValue(value);
         }
@@ -491,10 +520,11 @@ namespace LiteDB
             // first, test if types are diferentes
             if (this.Type != other.Type)
             {
-                // if both values are number, convert them to Double to compare
+                // if both values are number, convert them to Decimal (128 bits) to compare
+                // it's the slowest way, but more secure
                 if (this.IsNumber && other.IsNumber)
                 {
-                    return Convert.ToDouble(this.RawValue).CompareTo(Convert.ToDouble(other.RawValue));
+                    return Convert.ToDecimal(this.RawValue).CompareTo(Convert.ToDecimal(other.RawValue));
                 }
                 // if not, order by sort type order
                 else
@@ -514,6 +544,7 @@ namespace LiteDB
                 case BsonType.Int32: return ((Int32)this.RawValue).CompareTo((Int32)other.RawValue);
                 case BsonType.Int64: return ((Int64)this.RawValue).CompareTo((Int64)other.RawValue);
                 case BsonType.Double: return ((Double)this.RawValue).CompareTo((Double)other.RawValue);
+                case BsonType.Decimal: return ((Decimal)this.RawValue).CompareTo((Decimal)other.RawValue);
 
                 case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue);
 
@@ -614,6 +645,7 @@ namespace LiteDB
                 case BsonType.Int32: this.Length = 4; break;
                 case BsonType.Int64: this.Length = 8; break;
                 case BsonType.Double: this.Length = 8; break;
+                case BsonType.Decimal: this.Length = 16; break;
 
                 case BsonType.String: this.Length = Encoding.UTF8.GetByteCount((string)this.RawValue); break;
 

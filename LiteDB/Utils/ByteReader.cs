@@ -89,6 +89,16 @@ namespace LiteDB
             return BitConverter.ToDouble(_buffer, _pos - 8);
         }
 
+        public Decimal ReadDecimal()
+        {
+            _pos += 16;
+            var a = BitConverter.ToInt32(_buffer, _pos - 16);
+            var b = BitConverter.ToInt32(_buffer, _pos - 12);
+            var c = BitConverter.ToInt32(_buffer, _pos - 8);
+            var d = BitConverter.ToInt32(_buffer, _pos - 4);
+            return new Decimal(new int[] {  a, b, c, d });
+        }
+
         public Byte[] ReadBytes(int count)
         {
             var buffer = new byte[count];

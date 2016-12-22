@@ -76,6 +76,7 @@
     <Compile Include="Database\FindAllTest.cs" />
     <Compile Include="Database\ShrinkDatabaseTest.cs" />
     <Compile Include="Database\StructTest.cs" />
+    <Compile Include="Document\DecimalTest.cs" />
     <Compile Include="Document\DocumentTest.cs" />
     <Compile Include="Document\BsonTest.cs" />
     <Compile Include="Database\DerivedTypesTest.cs" />

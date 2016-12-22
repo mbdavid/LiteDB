@@ -157,6 +157,7 @@ namespace LiteDB
                 case "$guid": val = new BsonValue(new Guid(value)); break;
                 case "$date": val = new BsonValue(DateTime.Parse(value).ToLocalTime()); break;
                 case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
+                case "$numberDecimal": val = new BsonValue(Convert.ToDecimal(value)); break;
                 case "$minValue": val = BsonValue.MinValue; break;
                 case "$maxValue": val = BsonValue.MaxValue; break;
 

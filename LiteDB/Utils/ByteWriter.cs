@@ -149,6 +149,16 @@ namespace LiteDB
             _pos += 8;
         }
 
+        public void Write(Decimal value)
+        {
+            var array = Decimal.GetBits(value);
+
+            this.Write(array[0]);
+            this.Write(array[1]);
+            this.Write(array[2]);
+            this.Write(array[3]);
+        }
+
         public void Write(Byte[] value)
         {
             System.Buffer.BlockCopy(value, 0, _buffer, _pos, value.Length);

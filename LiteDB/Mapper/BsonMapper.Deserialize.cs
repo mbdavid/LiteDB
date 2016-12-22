@@ -54,7 +54,8 @@ namespace LiteDB
             typeof(DateTime),
             typeof(Byte[]),
             typeof(ObjectId),
-            typeof(Double)
+            typeof(Double),
+            typeof(Decimal)
         };
 
         // simple convert types
@@ -65,7 +66,6 @@ namespace LiteDB
             typeof(UInt32),
             typeof(UInt64),
             typeof(Single),
-            typeof(Decimal),
             typeof(Char),
             typeof(Byte),
             typeof(SByte)

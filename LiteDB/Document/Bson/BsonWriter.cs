@@ -135,6 +135,12 @@ namespace LiteDB
                     writer.Write((Int64)value.RawValue);
                     break;
 
+                case BsonType.Decimal:
+                    writer.Write((byte)0x13);
+                    this.WriteCString(writer, key);
+                    writer.Write((Decimal)value.RawValue);
+                    break;
+
                 case BsonType.MinValue:
                     writer.Write((byte)0xFF);
                     this.WriteCString(writer, key);

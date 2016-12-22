@@ -57,6 +57,7 @@ namespace LiteDB
             else if (obj is Int32) return new BsonValue((Int32)obj);
             else if (obj is Int64) return new BsonValue((Int64)obj);
             else if (obj is Double) return new BsonValue((Double)obj);
+            else if (obj is Decimal) return new BsonValue((Decimal)obj);
             else if (obj is Byte[]) return new BsonValue((Byte[])obj);
             else if (obj is ObjectId) return new BsonValue((ObjectId)obj);
             else if (obj is Guid) return new BsonValue((Guid)obj);

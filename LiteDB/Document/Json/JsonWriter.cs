@@ -88,6 +88,10 @@ namespace LiteDB
                     this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString());
                     break;
 
+                case BsonType.Decimal:
+                    this.WriteExtendDataType("$numberDecimal", ((Decimal)value.RawValue).ToString());
+                    break;
+
                 case BsonType.MinValue:
                     this.WriteExtendDataType("$minValue", "1");
                     break;
