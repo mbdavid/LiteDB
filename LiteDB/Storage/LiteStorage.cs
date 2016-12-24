@@ -52,6 +52,8 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string id, string filename, Stream stream)
         {
+            if (stream == null) throw new ArgumentNullException("stream");
+
             // checks if file exists
             var file = this.FindById(id);
 
@@ -78,6 +80,8 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string id, string filename)
         {
+            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+
             using (var stream = File.OpenRead(filename))
             {
                 return this.Upload(id, Path.GetFileName(filename), stream);
@@ -105,8 +109,6 @@ namespace LiteDB
         /// </summary>
         public LiteFileStream OpenRead(string id)
         {
-            if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
-
             var file = this.FindById(id);
 
             if (file == null) throw LiteException.FileNotFound(id);
@@ -139,7 +141,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo FindById(string id)
         {
-            if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
+            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
 
             var doc = _engine.Find(FILES, Query.EQ("_id", id)).FirstOrDefault();
 
@@ -153,7 +155,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<LiteFileInfo> Find(string startsWith)
         {
-            var query = string.IsNullOrEmpty(startsWith) ?
+            var query = startsWith.IsNullOrWhiteSpace() ?
                 Query.All() :
                 Query.StartsWith("_id", startsWith);
 
@@ -170,6 +172,8 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string id)
         {
+            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
+
             return _engine.Exists(FILES, Query.EQ("_id", id));
         }
 
@@ -190,16 +194,22 @@ namespace LiteDB
         /// </summary>
         public bool Delete(string id)
         {
-            if (string.IsNullOrEmpty(id)) throw new ArgumentNullException("id");
+            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
 
             // remove file reference in _files
-            var d = _engine.Delete(FILES, Query.EQ("_id", id));
+            var deleted = _engine.Delete(FILES, id);
 
             // if not found, just return false
-            if (d == 0) return false;
+            if (!deleted) return false;
 
-            // delete all files content based on _id string
-            _engine.Delete(LiteStorage.CHUNKS, Query.StartsWith("_id", id + "\\"));
+            // delete all files chunks based on _id string
+            var index = 0;
+
+            // delete one-by-one to avoid all pages files dirty in memory
+            while(deleted)
+            {
+                deleted = _engine.Delete(CHUNKS, LiteFileStream.GetChunckId(id, index++)); // index zero based
+            }
 
             return true;
         }

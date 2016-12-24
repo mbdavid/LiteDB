@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -7,17 +8,20 @@ namespace LiteDB
         /// <summary>
         /// Implement delete command based on _id value. Returns true if deleted
         /// </summary>
-        public bool Delete(string colName, BsonValue id)
+        public bool Delete(string collection, BsonValue id)
         {
-            return this.Delete(colName, Query.EQ("_id", id)) == 1;
+            return this.Delete(collection, Query.EQ("_id", id)) == 1;
         }
 
         /// <summary>
         /// Implements delete based on a query result
         /// </summary>
-        public int Delete(string colName, Query query)
+        public int Delete(string collection, Query query)
         {
-            return this.Transaction<int>(colName, false, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (query == null) throw new ArgumentNullException("query");
+
+            return this.Transaction<int>(collection, false, (col) =>
             {
                 if (col == null) return 0;
 
@@ -26,7 +30,7 @@ namespace LiteDB
 
                 foreach (var node in nodes)
                 {
-                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", colName, node.Key);
+                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", collection, node.Key);
 
                     // get all indexes nodes from this data block
                     var allNodes = _indexer.GetNodeList(node, true).ToArray();

@@ -10,8 +10,6 @@ namespace LiteDB
         /// </summary>
         public int Delete(Query query)
         {
-            if (query == null) throw new ArgumentNullException("query");
-
             // keep trying execute query to auto-create indexes when not found
             while (true)
             {

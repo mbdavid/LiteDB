@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -7,12 +8,15 @@ namespace LiteDB
         /// <summary>
         /// Returns first value from an index (first is min value)
         /// </summary>
-        public BsonValue Min(string colName, string field)
+        public BsonValue Min(string collection, string field)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+
             using (_locker.Read())
             using (_locker.Shared(_trans.AvoidDirtyRead))
             {
-                var col = GetCollectionPage(colName, false);
+                var col = GetCollectionPage(collection, false);
 
                 if (col == null) return BsonValue.MinValue;
 
@@ -33,12 +37,15 @@ namespace LiteDB
         /// <summary>
         /// Returns last value from an index (last is max value)
         /// </summary>
-        public BsonValue Max(string colName, string field)
+        public BsonValue Max(string collection, string field)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+
             using (_locker.Read())
             using (_locker.Shared(_trans.AvoidDirtyRead))
             {
-                var col = GetCollectionPage(colName, false);
+                var col = GetCollectionPage(collection, false);
 
                 if (col == null) return BsonValue.MaxValue;
 
@@ -59,12 +66,14 @@ namespace LiteDB
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public long Count(string colName, Query query = null)
+        public long Count(string collection, Query query = null)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+
             using (_locker.Read())
             using (_locker.Shared(_trans.AvoidDirtyRead))
             {
-                var col = GetCollectionPage(colName, false);
+                var col = GetCollectionPage(collection, false);
 
                 if (col == null) return 0;
 
@@ -84,12 +93,15 @@ namespace LiteDB
         /// <summary>
         /// Check if has at least one node in a query execution - do not deserialize documents to check
         /// </summary>
-        public bool Exists(string colName, Query query)
+        public bool Exists(string collection, Query query)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (query == null) throw new ArgumentNullException("query");
+
             using (_locker.Read())
             using (_locker.Shared(_trans.AvoidDirtyRead))
             {
-                var col = GetCollectionPage(colName, false);
+                var col = GetCollectionPage(collection, false);
 
                 if (col == null) return false;
 

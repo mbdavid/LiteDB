@@ -36,6 +36,8 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Field<K>(Expression<Func<T, K>> property, string field)
         {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+
             return this.GetProperty(property, (p) =>
             {
                 p.FieldName = field;
@@ -70,6 +72,8 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index<K>(string indexName, Func<T, BsonValue> getter, bool unique = false)
         {
+            if (indexName.IsNullOrWhiteSpace()) throw new ArgumentNullException("indexName");
+
             _entity.Members.Add(new MemberMapper
             {
                 FieldName = indexName,
@@ -88,7 +92,7 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Index(string field, bool unique = false)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
             var p = _entity.Members.FirstOrDefault(x => x.FieldName == field);
 
@@ -102,26 +106,26 @@ namespace LiteDB
         /// <summary>
         /// Define a subdocument (or a list of) as a reference
         /// </summary>
-        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collectionName)
+        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collection)
         {
-            if (string.IsNullOrEmpty(collectionName)) throw new ArgumentNullException("collectionName");
+            if (string.IsNullOrEmpty(collection)) throw new ArgumentNullException("collection");
 
             return this.GetProperty(property, (p) =>
             {
-                BsonMapper.RegisterDbRef(_mapper, p, collectionName);
+                BsonMapper.RegisterDbRef(_mapper, p, collection);
             });
         }
 
         /// <summary>
         /// Get a property based on a expression. Eg.: 'x => x.UserId' return string "UserId"
         /// </summary>
-        private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> expr, Action<MemberMapper> action)
+        private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> property, Action<MemberMapper> action)
         {
-            if (expr == null) throw new ArgumentNullException("property");
+            if (property == null) throw new ArgumentNullException("property");
 
-            var prop = _entity.GetMember(expr);
+            var prop = _entity.GetMember(property);
 
-            if (prop == null) throw new ArgumentNullException(expr.GetPath());
+            if (prop == null) throw new ArgumentNullException(property.GetPath());
 
             action(prop);
 

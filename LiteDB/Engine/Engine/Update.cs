@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB
@@ -8,17 +9,22 @@ namespace LiteDB
         /// <summary>
         /// Implement update command to a document inside a collection. Returns true if document was updated
         /// </summary>
-        public bool Update(string colName, BsonDocument doc)
+        public bool Update(string collection, BsonDocument doc)
         {
-            return this.Update(colName, new BsonDocument[] { doc }) == 1;
+            if (doc == null) throw new ArgumentNullException("doc");
+
+            return this.Update(collection, new BsonDocument[] { doc }) == 1;
         }
 
         /// <summary>
         /// Implement update command to a document inside a collection. Return number of documents updated
         /// </summary>
-        public int Update(string colName, IEnumerable<BsonDocument> docs)
+        public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, false, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (docs == null) throw new ArgumentNullException("docs");
+
+            return this.Transaction<int>(collection, false, (col) =>
             {
                 // no collection, no updates
                 if (col == null) return 0;

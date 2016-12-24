@@ -38,7 +38,7 @@ namespace LiteDB
         {
             // check if there is no more chunks in this file
             var chunk = _engine
-                .Find(LiteStorage.CHUNKS, Query.EQ("_id", this.GetChunckId(index)))
+                .Find(LiteStorage.CHUNKS, Query.EQ("_id", GetChunckId(_file.Id, index)))
                 .FirstOrDefault();
 
             // if chunk is null there is no more chunks

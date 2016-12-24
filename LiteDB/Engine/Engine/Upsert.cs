@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LiteDB
 {
@@ -9,9 +10,11 @@ namespace LiteDB
         /// then any documents not updated are then attempted to insert.
         /// This will have the side effect of throwing if duplicate items are attempted to be inserted. Returns true if document is inserted
         /// </summary>
-        public bool Upsert(string colName, BsonDocument doc)
+        public bool Upsert(string collection, BsonDocument doc)
         {
-            return this.Upsert(colName, new BsonDocument[] { doc }) == 1;
+            if (doc == null) throw new ArgumentNullException("doc");
+
+            return this.Upsert(collection, new BsonDocument[] { doc }) == 1;
         }
 
         /// <summary>
@@ -19,9 +22,12 @@ namespace LiteDB
         /// then any documents not updated are then attempted to insert.
         /// This will have the side effect of throwing if duplicate items are attempted to be inserted.
         /// </summary>
-        public int Upsert(string colName, IEnumerable<BsonDocument> docs)
+        public int Upsert(string collection, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, true, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (docs == null) throw new ArgumentNullException("docs");
+
+            return this.Transaction<int>(collection, true, (col) =>
             {
                 var count = 0;
 

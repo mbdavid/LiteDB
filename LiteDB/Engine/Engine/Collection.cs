@@ -23,13 +23,15 @@ namespace LiteDB
         /// <summary>
         /// Drop collection including all documents, indexes and extended pages
         /// </summary>
-        public bool DropCollection(string colName)
+        public bool DropCollection(string collection)
         {
-            return this.Transaction<bool>(colName, false, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+
+            return this.Transaction<bool>(collection, false, (col) =>
             {
                 if (col == null) return false;
 
-                _log.Write(Logger.COMMAND, "drop collection {0}", colName);
+                _log.Write(Logger.COMMAND, "drop collection {0}", collection);
 
                 _collections.Drop(col);
 
@@ -40,13 +42,16 @@ namespace LiteDB
         /// <summary>
         /// Rename a collection
         /// </summary>
-        public bool RenameCollection(string colName, string newName)
+        public bool RenameCollection(string collection, string newName)
         {
-            return this.Transaction<bool>(colName, false, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
+
+            return this.Transaction<bool>(collection, false, (col) =>
             {
                 if (col == null) return false;
 
-                _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", colName, newName);
+                _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", collection, newName);
 
                 // check if newName already exists
                 if (this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))
@@ -63,7 +68,7 @@ namespace LiteDB
                 // update header collection reference
                 var header = _pager.GetPage<HeaderPage>(0);
 
-                header.CollectionPages.Remove(colName);
+                header.CollectionPages.Remove(collection);
                 header.CollectionPages.Add(newName, col.PageID);
 
                 _pager.SetDirty(header);

@@ -60,6 +60,11 @@ namespace LiteDB.Tests
 
                     Assert.AreEqual(HELLO2, hello);
                 }
+
+                // now delete all
+                sto.Delete("f1");
+
+                Assert.IsFalse(sto.Exists("f1"));
             }
         }
     }

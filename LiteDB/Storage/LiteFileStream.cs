@@ -67,9 +67,9 @@ namespace LiteDB
             set { throw new NotSupportedException(); }
         }
 
-        private string GetChunckId(int index)
+        internal static string GetChunckId(string id, int index)
         {
-            return string.Format("{0}\\{1:00000}", _file.Id, index);
+            return string.Format("{0}\\{1:00000}", id, index);
         }
 
         #region Not supported operations

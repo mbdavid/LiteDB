@@ -58,17 +58,17 @@ namespace LiteDB
         public Func<string, string> ResolveFieldName;
 
         /// <summary>
-        /// Indicate that mapper do not serialize null values
+        /// Indicate that mapper do not serialize null values (default false)
         /// </summary>
         public bool SerializeNullValues { get; set; }
 
         /// <summary>
-        /// Apply .Trim() in strings
+        /// Apply .Trim() in strings when serialize (default true)
         /// </summary>
         public bool TrimWhitespace { get; set; }
 
         /// <summary>
-        /// Convert EmptyString to Null
+        /// Convert EmptyString to Null (default true)
         /// </summary>
         public bool EmptyStringToNull { get; set; }
 
@@ -85,7 +85,8 @@ namespace LiteDB
 #endif
 
         /// <summary>
-        /// A custom callback to change how member will be modified by user when mapping a type member to member mapper
+        /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
+        /// Use mapper.ResolveMember(Type entity, MemberInfo property, MemberMapper documentMappedField)
         /// </summary>
         public Action<Type, MemberInfo, MemberMapper> ResolveMember;
 
@@ -170,6 +171,9 @@ namespace LiteDB
         /// </summary>
         public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteEngine, string, T> newId)
         {
+            if (isEmpty == null) throw new ArgumentNullException("isEmpty");
+            if (newId == null) throw new ArgumentNullException("newId");
+
             _autoId[typeof(T)] = new AutoId
             {
                 IsEmpty = o => isEmpty((T)o),
@@ -182,6 +186,10 @@ namespace LiteDB
         /// </summary>
         public virtual void SetAutoId(object entity, LiteEngine engine, string collection)
         {
+            if (entity == null) throw new ArgumentNullException("entity");
+            if (engine == null) throw new ArgumentNullException("engine");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+
             // if object is BsonDocument, add _id as ObjectId
             if (entity is BsonDocument)
             {
@@ -424,24 +432,24 @@ namespace LiteDB
         /// <summary>
         /// Register a property mapper as DbRef to serialize/deserialize only document reference _id
         /// </summary>
-        public static void RegisterDbRef(BsonMapper mapper, MemberMapper member, string collectionName)
+        internal static void RegisterDbRef(BsonMapper mapper, MemberMapper member, string collection)
         {
             member.IsDbRef = true;
 
             if (member.IsList)
             {
-                RegisterDbRefList(mapper, member, collectionName);
+                RegisterDbRefList(mapper, member, collection);
             }
             else
             {
-                RegisterDbRefItem(mapper, member, collectionName);
+                RegisterDbRefItem(mapper, member, collection);
             }
         }
 
         /// <summary>
         /// Register a property as a DbRef - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        private static void RegisterDbRefItem(BsonMapper mapper, MemberMapper member, string collectionName)
+        private static void RegisterDbRefItem(BsonMapper mapper, MemberMapper member, string collection)
         {
             // get entity
             var entity = mapper.GetEntityMapper(member.DataType);
@@ -455,7 +463,7 @@ namespace LiteDB
                 return new BsonDocument
                 {
                     { "$id", new BsonValue(id) },
-                    { "$ref", collectionName }
+                    { "$ref", collection }
                 };
             };
 
@@ -473,7 +481,7 @@ namespace LiteDB
         /// <summary>
         /// Register a property as a DbRefList - implement a custom Serialize/Deserialize actions to convert entity to $id, $ref only
         /// </summary>
-        private static void RegisterDbRefList(BsonMapper mapper, MemberMapper member, string collectionName)
+        private static void RegisterDbRefList(BsonMapper mapper, MemberMapper member, string collection)
         {
             // get entity from list item type
             var entity = mapper.GetEntityMapper(member.UnderlyingType);
@@ -488,7 +496,7 @@ namespace LiteDB
                     result.Add(new BsonDocument
                     {
                         { "$id", new BsonValue(idField.Getter(item)) },
-                        { "$ref", collectionName }
+                        { "$ref", collection }
                     });
                 }
 

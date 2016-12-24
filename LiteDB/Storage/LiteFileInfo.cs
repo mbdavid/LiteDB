@@ -93,6 +93,8 @@ namespace LiteDB
         /// </summary>
         public void CopyTo(Stream stream)
         {
+            if (stream == null) throw new ArgumentNullException("stream");
+
             using (var reader = this.OpenRead())
             {
                 reader.CopyTo(stream);
@@ -104,6 +106,8 @@ namespace LiteDB
         /// </summary>
         public void SaveAs(string filename, bool overwritten = true)
         {
+            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+
             using (var file = File.Open(filename, overwritten ? System.IO.FileMode.Create : System.IO.FileMode.CreateNew))
             {
                 OpenRead().CopyTo(file);

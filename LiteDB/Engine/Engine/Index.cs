@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB
@@ -8,9 +9,12 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string colName, string field, bool unique = false)
+        public bool EnsureIndex(string collection, string field, bool unique = false)
         {
-            return this.Transaction<bool>(colName, true, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+
+            return this.Transaction<bool>(collection, true, (col) =>
             {
                 // check if index already exists
                 var current = col.GetIndex(field);
@@ -37,7 +41,7 @@ namespace LiteDB
                     }
                 }
 
-                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", colName, field, unique);
+                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", collection, field, unique);
 
                 // create index head
                 var index = _indexer.CreateIndex(col);
@@ -76,11 +80,14 @@ namespace LiteDB
         /// <summary>
         /// Drop an index from a collection
         /// </summary>
-        public bool DropIndex(string colName, string field)
+        public bool DropIndex(string collection, string field)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+
             if (field == "_id") throw LiteException.IndexDropId();
 
-            return this.Transaction<bool>(colName, false, (col) =>
+            return this.Transaction<bool>(collection, false, (col) =>
             {
                 // no collection, no index
                 if (col == null) return false;
@@ -91,7 +98,7 @@ namespace LiteDB
                 // no index, no drop
                 if (index == null) return false;
 
-                _log.Write(Logger.COMMAND, "drop index on '{0}' :: '{1}'", colName, field);
+                _log.Write(Logger.COMMAND, "drop index on '{0}' :: '{1}'", collection, field);
 
                 // delete all data pages + indexes pages
                 _indexer.DropIndex(index);
@@ -109,12 +116,14 @@ namespace LiteDB
         /// <summary>
         /// List all indexes inside a collection
         /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes(string colName)
+        public IEnumerable<IndexInfo> GetIndexes(string collection)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+
             using (_locker.Read())
             using (_locker.Shared(_trans.AvoidDirtyRead))
             {
-                var col = this.GetCollectionPage(colName, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) yield break;
 

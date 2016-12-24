@@ -42,7 +42,7 @@ namespace LiteDB
             {
                 var chunk = new BsonDocument
                 {
-                    { "_id", this.GetChunckId(_file.Chunks++) } // index zero based
+                    { "_id", GetChunckId(_file.Id, _file.Chunks++) } // index zero based
                 };
 
                 // get chunk byte array part

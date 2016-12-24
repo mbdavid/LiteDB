@@ -10,7 +10,7 @@ namespace LiteDB.Shell.Commands
         public Regex FieldPattern = new Regex(@"[\w$\.-]+\s*");
 
         /// <summary>
-        /// Read collection name from db.(colname).(command)
+        /// Read collection name from db.(collection).(command)
         /// </summary>
         public string ReadCollection(LiteEngine db, StringScanner s)
         {

@@ -55,7 +55,7 @@ namespace LiteDB
         /// </summary>
         public TimeSpan Timeout { get { return _timeout; } }
 
-        // tests proposes
+        // unit tests only
         internal LockService Locker { get { return _locker; } }
 
         #endregion
@@ -91,6 +91,8 @@ namespace LiteDB
         /// </summary>
         public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
         {
+            if (disk == null) throw new ArgumentNullException("disk");
+
             _timeout = timeout ?? TimeSpan.FromMinutes(1);
             _cacheSize = cacheSize;
             _disk = disk;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiteDB
@@ -8,18 +9,23 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - returns _id value
         /// </summary>
-        public BsonValue Insert(string colName, BsonDocument doc)
+        public BsonValue Insert(string collection, BsonDocument doc)
         {
-            this.Insert(colName, new BsonDocument[] { doc });
+            if (doc == null) throw new ArgumentNullException("doc");
+
+            this.Insert(collection, new BsonDocument[] { doc });
             return doc["_id"];
         }
 
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int Insert(string colName, IEnumerable<BsonDocument> docs)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs)
         {
-            return this.Transaction<int>(colName, true, (col) =>
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (docs == null) throw new ArgumentNullException("docs");
+
+            return this.Transaction<int>(collection, true, (col) =>
             {
                 var count = 0;
 

@@ -47,8 +47,6 @@ namespace LiteDB
         /// </summary>
         public bool DropIndex(string field)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
-
             return _engine.Value.DropIndex(_name, field);
         }
 

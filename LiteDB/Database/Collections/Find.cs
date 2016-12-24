@@ -14,8 +14,6 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
         {
-            if (query == null) throw new ArgumentNullException("query");
-
             IEnumerator<BsonDocument> enumerator = null;
             var more = true;
 
@@ -84,7 +82,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
-            return this.Find(Query.EQ("_id", id)).SingleOrDefault();
+            return this.Find(Query.EQ("_id", id)).FirstOrDefault();
         }
 
         /// <summary>

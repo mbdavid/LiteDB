@@ -67,7 +67,7 @@ namespace LiteDB
         /// <summary>
         /// Encapsulate all write transaction operation
         /// </summary>
-        private T Transaction<T>(string colName, bool addIfNotExists, Func<CollectionPage, T> action)
+        private T Transaction<T>(string collection, bool addIfNotExists, Func<CollectionPage, T> action)
         {
             using (_locker.Write())
             {
@@ -75,7 +75,7 @@ namespace LiteDB
 
                 try
                 {
-                    var col = this.GetCollectionPage(colName, addIfNotExists);
+                    var col = this.GetCollectionPage(collection, addIfNotExists);
 
                     var result = action(col);
 
