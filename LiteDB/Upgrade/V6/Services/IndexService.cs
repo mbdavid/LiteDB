@@ -10,7 +10,7 @@ namespace LiteDB_V6
     internal class IndexService
     {
         /// <summary>
-        /// Max size of a index entry - usde for string, binary, array and documents
+        /// Max size of a index entry - used for string, binary, array and documents
         /// </summary>
         public const int MAX_INDEX_LENGTH = 512;
 

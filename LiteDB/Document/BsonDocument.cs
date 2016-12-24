@@ -229,7 +229,7 @@ namespace LiteDB
 
         public override int CompareTo(BsonValue other)
         {
-            // if types are diferent, returns sort type order
+            // if types are different, returns sort type order
             if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
 
             var thisKeys = this.Keys.ToArray();
@@ -246,10 +246,10 @@ namespace LiteDB
             for (; 0 == result && i < stop; i++)
                 result = this[thisKeys[i]].CompareTo(otherDoc[thisKeys[i]]);
 
-            // are diferents
+            // are different
             if (result != 0) return result;
 
-            // test keys length to check wich is bigger
+            // test keys length to check which is bigger
             if (i == thisLength) return i == otherLength ? 0 : -1;
             return 1;
         }

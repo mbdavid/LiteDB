@@ -36,7 +36,7 @@ namespace LiteDB.Shell
 
             var cmd = this.ReadLine();
 
-            // suport for multiline command
+            // support for multiline command
             if (cmd.StartsWith("/"))
             {
                 cmd = cmd.Substring(1);

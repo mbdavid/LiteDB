@@ -27,12 +27,12 @@ namespace LiteDB
         public bool Journal { get; private set; }
 
         /// <summary>
-        /// "password": Encrypt (using AES) your datafile with a password (defult: null - no encryption)
+        /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
         /// </summary>
         public string Password { get; private set; }
 
         /// <summary>
-        /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (defult: 5000)
+        /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (default: 5000)
         /// </summary>
         public int CacheSize { get; private set; }
 
@@ -47,17 +47,17 @@ namespace LiteDB
         public FileMode Mode { get; private set; }
 
         /// <summary>
-        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (defult: null)
+        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
         /// </summary>
         public long InitialSize { get; private set; }
 
         /// <summary>
-        /// "limit size": Max limit of datafile - support KB, MB, GB (defult: null)
+        /// "limit size": Max limit of datafile - support KB, MB, GB (default: null)
         /// </summary>
         public long LimitSize { get; private set; }
 
         /// <summary>
-        /// "log": Debug messages from database - use `LiteDatabase.Log` (defult: Logger.NONE)
+        /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
         /// </summary>
         public byte Log { get; private set; }
 

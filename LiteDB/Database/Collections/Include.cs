@@ -49,7 +49,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    // for BsonDocument, get property value e update with full object refence
+                    // for BsonDocument, get property value update with full object reference
                     var doc = value.AsDocument;
                     var col = new LiteCollection<BsonDocument>(doc["$ref"], _engine, _mapper, _log);
                     var obj = col.FindById(doc["$id"]);

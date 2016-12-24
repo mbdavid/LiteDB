@@ -11,7 +11,7 @@ namespace LiteDB
     internal class CollectionPage : BasePage
     {
         /// <summary>
-        /// Represent maximun bytes that all collections names can be used in header
+        /// Represent maximum bytes that all collections names can be used in header
         /// </summary>
         public const ushort MAX_COLLECTIONS_SIZE = 3000;
 

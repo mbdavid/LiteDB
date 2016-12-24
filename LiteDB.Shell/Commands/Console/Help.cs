@@ -50,7 +50,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> dump > <filename.dmp>", "Export all documents to an external file script");
                 d.WriteHelp("> dump < <filename.dmp>", "Import all documents inside a script dump file");
                 d.WriteHelp("> timer", "Show timer before prompt");
-                d.WriteHelp("> ed", "Open nodepad with last command to edit and execute");
+                d.WriteHelp("> ed", "Open notepad with last command to edit and execute");
                 d.WriteHelp("> spool on|off", "Spool all output in a spool file");
                 d.WriteHelp("> -- comment", "Do nothing, its just a comment");
                 d.WriteHelp("> /<command>/", "Support for multi line command");

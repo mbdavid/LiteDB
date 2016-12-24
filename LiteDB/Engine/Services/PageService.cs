@@ -156,7 +156,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns a page that contains space enouth to data to insert new object - if not exits, create a new Page
+        /// Returns a page that contains space enough to data to insert new object - if one does not exit, creates a new page.
         /// </summary>
         public T GetFreePage<T>(uint startPageID, int size)
             where T : BasePage
@@ -200,7 +200,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    // othersie this page is already in this list, lets move do put in free size desc order
+                    // otherwise this page is already in this list, lets move do put in free size desc order
                     this.MoveToFreeList(page, startPage, ref fieldPageID);
                 }
             }
@@ -302,7 +302,7 @@ namespace LiteDB
                 this.SetDirty(prevPage);
             }
 
-            // if my page is not the last on sequence, ajust the last page (set as dirty)
+            // if my page is not the last on sequence, adjust the last page (set as dirty)
             if (page.NextPageID != uint.MaxValue)
             {
                 var nextPage = this.GetPage<BasePage>(page.NextPageID);
@@ -317,7 +317,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// When a page is already on a list it's more efficient just move comparing with sinblings
+        /// When a page is already on a list it's more efficient just move comparing with siblings
         /// </summary>
         private void MoveToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
         {

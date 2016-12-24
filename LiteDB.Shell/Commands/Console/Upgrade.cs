@@ -26,7 +26,7 @@ namespace LiteDB.Shell.Commands
             }
             else
             {
-                throw new ShellExpcetion("File format do not support upgrade (" + connectionString.Filename + ")");
+                throw new ShellException("File format do not support upgrade (" + connectionString.Filename + ")");
             }
         }
     }

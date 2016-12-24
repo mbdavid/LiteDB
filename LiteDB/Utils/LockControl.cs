@@ -4,7 +4,7 @@ using System.Threading;
 namespace LiteDB
 {
     /// <summary>
-    /// A class to control dispose locking. Can be a "new lock" - when a lock are not comming form other lock state
+    /// A class to control locking disposal. Can be a "new lock" - when a lock is not not coming from other lock state
     /// </summary>
     public class LockControl : IDisposable
     {

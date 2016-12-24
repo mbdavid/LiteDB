@@ -14,17 +14,17 @@ namespace LiteDB
         /// <summary>
         /// Create a temp filename based on original filename - checks if file exists (if exists, append counter number)
         /// </summary>
-        public static string GetTempFile(string filename, string sufix = "-temp", bool checkIfExists = true)
+        public static string GetTempFile(string filename, string suffix = "-temp", bool checkIfExists = true)
         {
             var count = 0;
             var temp = Path.Combine(Path.GetDirectoryName(filename), 
-                Path.GetFileNameWithoutExtension(filename) + sufix + 
+                Path.GetFileNameWithoutExtension(filename) + suffix + 
                 Path.GetExtension(filename));
 
             while(checkIfExists && File.Exists(temp))
             {
                 temp = Path.Combine(Path.GetDirectoryName(filename),
-                    Path.GetFileNameWithoutExtension(filename) + sufix +
+                    Path.GetFileNameWithoutExtension(filename) + suffix +
                     "-" + (++count) +
                     Path.GetExtension(filename));
             }

@@ -139,9 +139,9 @@ namespace LiteDB
 
                 if (i <= (level - 1)) // level == length
                 {
-                    // cur = current (imediatte before - prev)
+                    // cur = current (immediately before - prev)
                     // node = new inserted node
-                    // next = next node (where cur is poiting)
+                    // next = next node (where cur is pointing)
                     _pager.SetDirty(cur.Page);
 
                     node.Next[i] = cur.Next[i];
@@ -190,17 +190,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get all node list from any index node (go fordward and backward)
+        /// Gets all node list from any index node (go forward and backward)
         /// </summary>
         public IEnumerable<IndexNode> GetNodeList(IndexNode node, bool includeInitial)
         {
             var next = node.NextNode;
             var prev = node.PrevNode;
 
-            // returns some inital node
+            // returns some initial node
             if (includeInitial) yield return node;
 
-            // go fordward
+            // go forward
             while (next.IsEmpty == false)
             {
                 var n = this.GetNode(next);
@@ -218,7 +218,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Delete indexNode from a Index  ajust Next/Prev nodes
+        /// Deletes an indexNode from a Index and adjust Next/Prev nodes
         /// </summary>
         public void Delete(CollectionIndex index, PageAddress nodeAddress)
         {
@@ -230,7 +230,7 @@ namespace LiteDB
 
             for (int i = node.Prev.Length - 1; i >= 0; i--)
             {
-                // get previus and next nodes (between my deleted node)
+                // get previous and next nodes (between my deleted node)
                 var prev = this.GetNode(node.Prev[i]);
                 var next = this.GetNode(node.Next[i]);
 
@@ -394,7 +394,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Go first/last occurence of this index value
+        /// Goto the first/last occurrence of this index value
         /// </summary>
         private IndexNode FindBoundary(CollectionIndex index, IndexNode cur, BsonValue value, int order, int level)
         {

@@ -86,7 +86,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Generate an Salt key that will storaged inside first page database
+        /// Generate a salt key that will be stored inside first page database
         /// </summary>
         /// <returns></returns>
         public static byte[] Salt(int maxLength = 16)

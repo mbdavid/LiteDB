@@ -6,7 +6,7 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
-        /// Create a new index (or do nothing if already exisits) to a collection/field
+        /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
         public bool EnsureIndex(string colName, string field, bool unique = false)
         {

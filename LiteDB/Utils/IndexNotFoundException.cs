@@ -3,7 +3,7 @@
 namespace LiteDB
 {
     /// <summary>
-    /// A specific exception when a query didnt found an index
+    /// A specific exception when a query didn't found an index
     /// </summary>
     internal class IndexNotFoundException : LiteException
     {

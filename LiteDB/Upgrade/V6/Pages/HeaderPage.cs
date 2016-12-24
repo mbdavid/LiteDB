@@ -21,12 +21,12 @@ namespace LiteDB_V6
         private const byte FILE_VERSION = 6;
 
         /// <summary>
-        /// Get/Set the changeID of data. When a client read pages, all pages are in the same version. But when OpenTransaction, we need validade that current changeID is the sabe that we have in cache
+        /// Get/Set the changeID of data. When a client read pages, all pages are in the same version. But when OpenTransaction, we need validate that current changeID is the same that we have in cache
         /// </summary>
         public ushort ChangeID { get; set; }
 
         /// <summary>
-        /// Get/Set the pageID that start sequenece with a complete empty pages (can be used as a new page)
+        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page)
         /// </summary>
         public uint FreeEmptyPageID;
 

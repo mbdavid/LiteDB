@@ -144,7 +144,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Eat all whitespaces - used before a valid token
+        /// Eat all whitespace - used before a valid token
         /// </summary>
         private void EatWhitespace()
         {
@@ -247,15 +247,15 @@ namespace LiteDB
             return p1 + p2 + p3 + p4;
         }
 
-        private uint ParseSingleChar(char c1, uint multipliyer)
+        private uint ParseSingleChar(char c1, uint multiplier)
         {
             uint p1 = 0;
             if (c1 >= '0' && c1 <= '9')
-                p1 = (uint)(c1 - '0') * multipliyer;
+                p1 = (uint)(c1 - '0') * multiplier;
             else if (c1 >= 'A' && c1 <= 'F')
-                p1 = (uint)((c1 - 'A') + 10) * multipliyer;
+                p1 = (uint)((c1 - 'A') + 10) * multiplier;
             else if (c1 >= 'a' && c1 <= 'f')
-                p1 = (uint)((c1 - 'a') + 10) * multipliyer;
+                p1 = (uint)((c1 - 'a') + 10) * multiplier;
             return p1;
         }
     }

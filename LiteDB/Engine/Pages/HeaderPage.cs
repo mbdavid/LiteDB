@@ -26,7 +26,7 @@ namespace LiteDB
         public ushort ChangeID { get; set; }
 
         /// <summary>
-        /// Get/Set the pageID that start sequenece with a complete empty pages (can be used as a new page)
+        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page)
         /// Must be a field to be used as "ref"
         /// </summary>
         public uint FreeEmptyPageID;

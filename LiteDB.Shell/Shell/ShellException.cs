@@ -2,16 +2,16 @@
 
 namespace LiteDB.Shell
 {
-    internal class ShellExpcetion : Exception
+    internal class ShellException : Exception
     {
-        public ShellExpcetion(string message)
+        public ShellException(string message)
             : base(message)
         {
         }
 
-        public static ShellExpcetion NoDatabase()
+        public static ShellException NoDatabase()
         {
-            return new ShellExpcetion("No open database");
+            return new ShellException("No open database");
         }
     }
 }

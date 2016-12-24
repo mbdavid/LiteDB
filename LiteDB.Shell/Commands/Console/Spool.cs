@@ -26,7 +26,7 @@ namespace LiteDB.Shell.Commands
             }
             else if (_writer == null)
             {
-                if (engine == null) throw ShellExpcetion.NoDatabase();
+                if (engine == null) throw ShellException.NoDatabase();
 
                 var path = Path.GetFullPath(string.Format("LiteDB-spool-{0:yyyy-MM-dd-HH-mm}.txt", DateTime.Now));
 

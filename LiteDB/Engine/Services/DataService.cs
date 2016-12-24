@@ -15,14 +15,14 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Insert data inside a datapage. Returns dataPageID that idicates the first page
+        /// Insert data inside a datapage. Returns dataPageID that indicates the first page
         /// </summary>
         public DataBlock Insert(CollectionPage col, byte[] data)
         {
             // need to extend (data is bigger than 1 page)
             var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
 
-            // if extend, just search for a page with BLOCK_SIZE avaiable
+            // if extend, just search for a page with BLOCK_SIZE available
             var dataPage = _pager.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
@@ -62,7 +62,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Update data inside a datapage. If new data can be used in same datapage, just update. Otherside, copy content to a new ExtendedPage
+        /// Update data inside a datapage. If new data can be used in same datapage, just update. Otherwise, copy content to a new ExtendedPage
         /// </summary>
         public DataBlock Update(CollectionPage col, PageAddress blockAddress, byte[] data)
         {

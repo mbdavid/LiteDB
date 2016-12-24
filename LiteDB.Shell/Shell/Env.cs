@@ -23,7 +23,7 @@ namespace LiteDB.Shell
 
         public LiteEngine CreateEngine(DataAccess access)
         {
-            if (this.Filename == null) throw new ShellExpcetion("No database");
+            if (this.Filename == null) throw new ShellException("No database");
 
             var disk = new FileDiskService(this.Filename,
                 new FileOptions

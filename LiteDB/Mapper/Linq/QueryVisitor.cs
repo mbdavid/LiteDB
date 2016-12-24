@@ -308,7 +308,7 @@ namespace LiteDB
 
                 if (prop == null) throw LiteException.PropertyNotMapped(property);
 
-                // if property is a IEnumerable, gets underlayer type (otherwise, gets PropertyType)
+                // if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
                 type = prop.UnderlyingType;
 
                 fields[i] = prop.FieldName;
