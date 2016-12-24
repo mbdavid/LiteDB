@@ -23,6 +23,7 @@ namespace LiteDB
         public const int INDEX_DUPLICATE_KEY = 110;
         public const int INDEX_KEY_TOO_LONG = 111;
         public const int INDEX_NOT_FOUND = 112;
+        public const int INVALID_DBREF = 113;
         public const int LOCK_TIMEOUT = 120;
         public const int INVALID_COMMAND = 121;
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
@@ -148,6 +149,11 @@ namespace LiteDB
         internal static LiteException ReadOnlyDatabase()
         {
             return new LiteException(READ_ONLY_DATABASE, "This action are not supported because database was opened in read only mode.");
+        }
+
+        internal static LiteException InvalidDbRef(string path)
+        {
+            return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path \"{0}\". Value must be document like {{ $ref: \"?\", $id: ? }}", path);
         }
 
         #endregion

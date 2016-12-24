@@ -39,22 +39,36 @@ namespace LiteDB
                     var array = value.AsArray;
                     if (array.Count == 0) return;
 
-                    // all doc refs in an array must be same collection, lets take first only
-                    var col = new LiteCollection<BsonDocument>(array[0].AsDocument["$ref"], _engine, _mapper, _log);
-
                     for (var i = 0; i < array.Count; i++)
                     {
-                        var obj = col.FindById(array[i].AsDocument["$id"]);
+                        var doc = array[i];
+                        var colRef = doc.AsDocument["$ref"];
+                        var colId = doc.AsDocument["$id"];
+
+                        if (!colRef.IsString || colId.IsNull) throw LiteException.InvalidDbRef(path);
+
+                        var obj = _engine.Value.Find(colRef, Query.EQ("_id", colId)).FirstOrDefault();
+
                         array[i] = obj;
                     }
                 }
-                else
+                else if(value.IsDocument)
                 {
                     // for BsonDocument, get property value update with full object reference
                     var doc = value.AsDocument;
-                    var col = new LiteCollection<BsonDocument>(doc["$ref"], _engine, _mapper, _log);
-                    var obj = col.FindById(doc["$id"]);
+
+                    var colRef = doc["$ref"];
+                    var colId = doc["$id"];
+
+                    if (!colRef.IsString || colId.IsNull) throw LiteException.InvalidDbRef(path);
+
+                    var obj = _engine.Value.Find(colRef, Query.EQ("_id", colId)).FirstOrDefault();
+
                     bson.Set(path, obj);
+                }
+                else
+                {
+                    throw LiteException.InvalidDbRef(path);
                 }
             };
 

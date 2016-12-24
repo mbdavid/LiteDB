@@ -100,6 +100,7 @@ namespace LiteDB.Tests
                     .FindAll()
                     .FirstOrDefault();
 
+                // r0 not working as expected
 
                 var result = orders
                     .Include(x => x.Customer)
