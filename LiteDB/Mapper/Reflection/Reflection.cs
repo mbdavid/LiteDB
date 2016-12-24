@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -221,6 +222,7 @@ namespace LiteDB
         public static Type GetListItemType(Type listType)
         {
             if (listType.IsArray) return listType.GetElementType();
+
 #if NET35
             foreach (var i in listType.GetInterfaces())
 #else
@@ -233,6 +235,14 @@ namespace LiteDB
                     return i.GetGenericArguments()[0];
 #else
                     return i.GetTypeInfo().GenericTypeArguments[0];
+#endif
+                }
+                else if(listType.IsGenericType && i == typeof(IEnumerable))
+                {
+#if NET35
+                    return listType.GetGenericArguments()[0];
+#else
+                    return listType.GetTypeInfo().GenericTypeArguments[0];
 #endif
                 }
             }

@@ -42,6 +42,7 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <Choose>
@@ -69,7 +70,7 @@
     <Compile Include="Database\NullRefTests.cs" />
     <Compile Include="Database\PredicateBuilderTest.cs" />
     <Compile Include="Database\LinqVisitorTest.cs" />
-    <Compile Include="Database\MapperNonPublicTest.cs" />
+    <Compile Include="Mapper\MapperNonPublicTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
     <Compile Include="Database\LinqTest.cs" />
@@ -84,8 +85,8 @@
     <Compile Include="Engine\ReadOnlyTest.cs" />
     <Compile Include="Engine\ShrinkTest.cs" />
     <Compile Include="Engine\DropCollectionTest.cs" />
-    <Compile Include="Database\MapperExceptionTest.cs" />
-    <Compile Include="Database\MapperTest.cs" />
+    <Compile Include="Mapper\MapperExceptionTest.cs" />
+    <Compile Include="Mapper\MapperTest.cs" />
     <Compile Include="Engine\EncryptedTest.cs" />
     <Compile Include="Engine\MemoryStreamTest.cs" />
     <Compile Include="Engine\UserVersionTest.cs" />
@@ -96,7 +97,7 @@
     <Compile Include="Engine\MultiKeyTest.cs" />
     <Compile Include="Engine\ObjectIdTest.cs" />
     <Compile Include="Concurrency\PerformanceTest.cs" />
-    <Compile Include="Database\PolymorphicTest.cs" />
+    <Compile Include="Mapper\PolymorphicTest.cs" />
     <Compile Include="Engine\QueryTest.cs" />
     <Compile Include="Engine\EngineTest.cs" />
     <Compile Include="Concurrency\ThreadTest.cs" />

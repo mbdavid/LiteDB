@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Drawing;
 
 namespace LiteDB.Tests
 {
@@ -56,7 +57,6 @@ namespace LiteDB.Tests
         public byte MyByte { get; set; }
         public sbyte MySByte { get; set; }
         public TimeSpan MyTimespan { get; set; }
-        // public KeyValuePair<string, int> MyKeyValuePair { get; set; }
 
         [BsonIndex]
         public decimal MyDecimal { get; set; }
@@ -81,6 +81,11 @@ namespace LiteDB.Tests
         public CustomStringEnumerable CustomStringEnumerable { get; set; }
         public Dictionary<int, string> MyDict { get; set; }
         public Dictionary<StringComparison, string> MyDictEnum { get; set; }
+
+        // list of structs
+        public ICollection<Point> MyCollectionPoint { get; set; }
+        public IList<Point> MyListPoint { get; set; }
+        public IEnumerable<Point> MyEnumerablePoint { get; set; }
 
         // interfaces
         public IMyInterface MyInterface { get; set; }
@@ -140,6 +145,12 @@ namespace LiteDB.Tests
                 MyStringArray = new string[] { "One", "Two" },
                 MyStringEnumerable = new string[] { "One", "Two" },
                 CustomStringEnumerable = new CustomStringEnumerable(new string[] { "One", "Two" }),
+
+                // list of structs
+                MyCollectionPoint = new List<Point> { new Point(1, 1), Point.Empty },
+                MyListPoint = new List<Point> { new Point(1, 1), Point.Empty },
+                MyEnumerablePoint = new [] { new Point(1, 1), Point.Empty },
+
                 MyEnumProp = MyEnum.Second,
                 MyChar = 'Y',
                 MyUri = new Uri("http://www.numeria.com.br"),
@@ -147,7 +158,6 @@ namespace LiteDB.Tests
                 MySByte = -99,
                 MyField = "Field test",
                 MyTimespan = TimeSpan.FromDays(1),
-                // MyKeyValuePair = new KeyValuePair<string, int>("my-key", 123),
                 MyDecimal = 19.9m,
                 MyDecimalNullable = 25.5m,
 
@@ -194,7 +204,6 @@ namespace LiteDB.Tests
             // compare 2 objects
             Assert.AreEqual(obj.MyId, nobj.MyId);
             Assert.AreEqual(obj.MyString, nobj.MyString);
-            //Assert.AreEqual(obj.MyProperty, nobj.MyProperty);
             Assert.AreEqual(obj.MyGuid, nobj.MyGuid);
             Assert.AreEqual(obj.MyDateTime, nobj.MyDateTime);
             Assert.AreEqual(obj.MyDateTimeNullable, nobj.MyDateTimeNullable);
@@ -205,7 +214,6 @@ namespace LiteDB.Tests
             Assert.AreEqual(obj.MySByte, nobj.MySByte);
             Assert.AreEqual(obj.MyField, nobj.MyField);
             Assert.AreEqual(obj.MyTimespan, nobj.MyTimespan);
-            // Assert.AreEqual(obj.MyKeyValuePair, nobj.MyKeyValuePair);
             Assert.AreEqual(obj.MyDecimal, nobj.MyDecimal);
             Assert.AreEqual(obj.MyUri, nobj.MyUri);
 
@@ -217,6 +225,11 @@ namespace LiteDB.Tests
             Assert.AreEqual(true, obj.CustomStringEnumerable.SequenceEqual(nobj.CustomStringEnumerable));
             Assert.AreEqual(obj.MyDict[2], nobj.MyDict[2]);
             Assert.AreEqual(obj.MyDictEnum[StringComparison.Ordinal], nobj.MyDictEnum[StringComparison.Ordinal]);
+
+            // list of structs
+            Assert.AreEqual(obj.MyCollectionPoint.First(), nobj.MyCollectionPoint.First());
+            Assert.AreEqual(obj.MyListPoint.First(), nobj.MyListPoint.First());
+            Assert.AreEqual(obj.MyEnumerablePoint.First(), nobj.MyEnumerablePoint.First());
 
             // interfaces
             Assert.AreEqual(obj.MyInterface.Name, nobj.MyInterface.Name);
