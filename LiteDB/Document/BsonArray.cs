@@ -144,7 +144,7 @@ namespace LiteDB
 
         public override int CompareTo(BsonValue other)
         {
-            // if types are diferent, returns sort type order
+            // if types are different, returns sort type order
             if (other.Type != BsonType.Document) return this.Type.CompareTo(other.Type);
 
             var otherArray = other.AsArray;

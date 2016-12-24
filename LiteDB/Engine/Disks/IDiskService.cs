@@ -52,12 +52,12 @@ namespace LiteDB
         void WriteJournal(ICollection<byte[]> pages);
 
         /// <summary>
-        /// Clear jounal file
+        /// Clear journal file
         /// </summary>
         void ClearJournal();
 
         /// <summary>
-        /// Lock datafile returing lock position
+        /// Lock datafile returning lock position
         /// </summary>
         void Lock(LockState state);
 

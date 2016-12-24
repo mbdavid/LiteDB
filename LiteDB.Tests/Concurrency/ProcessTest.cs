@@ -71,7 +71,7 @@ namespace LiteDB.Tests
                         }
                     });
 
-                    // keep quering until found 1000 docs
+                    // keep querying until found 1000 docs
                     var tb = Task.Factory.StartNew(() =>
                     {
                         var count = 0L;

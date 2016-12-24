@@ -37,7 +37,7 @@ namespace LiteDB
                     byte[] buffer;
                     BsonDocument doc;
 
-                    // encapsulate read operation inside a try/catch (yeild do not support try/catch)
+                    // encapsulate read operation inside a try/catch (yield do not support try/catch)
                     buffer = _data.Read(node.DataBlock);
                     doc = BsonSerializer.Deserialize(buffer).AsDocument;
 

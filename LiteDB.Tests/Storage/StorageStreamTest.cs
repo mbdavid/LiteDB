@@ -32,7 +32,7 @@ namespace LiteDB.Tests
                     }
                 }
 
-                // test if was updated Length in _files collectin
+                // test if was updated Length in _files collection
                 var doc = db.Find("_files", Query.EQ("_id", "f1")).Single();
 
                 Assert.AreEqual(HELLO1.Length, doc["length"].AsInt32);

@@ -34,7 +34,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    break; // if not more startswith, stop scanning
+                    break; // if no more starts with, stop scanning
                 }
 
                 node = indexer.GetNode(node.Next[0]);

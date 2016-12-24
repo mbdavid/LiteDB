@@ -147,7 +147,7 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Get the collection page only when nedded. Gets from pager always to garantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
+        /// Get the collection page only when needed. Gets from pager always to grantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
         /// </summary>
         private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
         {

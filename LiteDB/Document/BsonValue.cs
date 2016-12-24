@@ -152,7 +152,7 @@ namespace LiteDB
                 var enumerable = value as System.Collections.IEnumerable;
                 var dictionary = value as System.Collections.IDictionary;
 
-                // test first for dictionary (becasue IDictionary implement IEnumerable)
+                // test first for dictionary (because IDictionary implements IEnumerable)
                 if (dictionary != null)
                 {
                     var dict = new Dictionary<string, BsonValue>();
@@ -517,7 +517,7 @@ namespace LiteDB
 
         public virtual int CompareTo(BsonValue other)
         {
-            // first, test if types are diferentes
+            // first, test if types are different
             if (this.Type != other.Type)
             {
                 // if both values are number, convert them to Decimal (128 bits) to compare
@@ -533,7 +533,7 @@ namespace LiteDB
                 }
             }
 
-            // for both values with same datatype just compare
+            // for both values with same data type just compare
             switch (this.Type)
             {
                 case BsonType.Null:

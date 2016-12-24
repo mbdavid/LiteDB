@@ -19,7 +19,7 @@ namespace LiteDB
         public const int PAGE_HEADER_SIZE = 25;
 
         /// <summary>
-        /// Bytes avaiable to store data removing page header size - 4071 bytes
+        /// Bytes available to store data removing page header size - 4071 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
@@ -46,7 +46,7 @@ namespace LiteDB
         public uint NextPageID { get; set; }
 
         /// <summary>
-        /// Used for all pages to count itens inside this page(bytes, nodes, blocks, ...) [2 bytes]
+        /// Used for all pages to count items inside this page(bytes, nodes, blocks, ...) [2 bytes]
         /// Its Int32 but writes in UInt16
         /// </summary>
         public int ItemCount { get; set; }
@@ -59,7 +59,7 @@ namespace LiteDB
         public int FreeBytes { get; set; }
 
         /// <summary>
-        /// Indicate that this page is dirty (was modified) and must persist when commited [not-persistable]
+        /// Indicate that this page is dirty (was modified) and must persist when committed [not-persistable]
         /// </summary>
         public bool IsDirty { get; set; }
 
@@ -79,7 +79,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Every page must imeplement this ItemCount + FreeBytes
+        /// Every page must implement this ItemCount + FreeBytes
         /// Must be called after Items are updates (insert/deletes) to keep variables ItemCount and FreeBytes synced
         /// </summary>
         public abstract void UpdateItemCount();

@@ -54,7 +54,7 @@ namespace LiteDB_V6
             // read bytes from data file
             _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
-            // when read header, checks passoword
+            // when reading the header, check the password
             if (pageID == 0 && _crypto != null)
             {
                 // I know, header page will be double read (it's the price for isolated concerns)

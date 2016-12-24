@@ -52,7 +52,7 @@ namespace LiteDB.Shell
                         break;
                     }
 
-                    if (!found) throw new ShellExpcetion("Command not found");
+                    if (!found) throw new ShellException("Command not found");
                 }
                 catch (Exception ex)
                 {

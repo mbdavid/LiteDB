@@ -6,7 +6,7 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// The LiteDB database. Used for create a LiteDB instance and use all storage resoures. It's the database connection
+    /// The LiteDB database. Used for create a LiteDB instance and use all storage resources. It's the database connection
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
@@ -37,7 +37,7 @@ namespace LiteDB
         #region Ctor
 
         /// <summary>
-        /// Starts LiteDB database using a connection string for filesystem database
+        /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteDatabase(string connectionString, BsonMapper mapper = null)
         {
@@ -72,14 +72,13 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Starts LiteDB database using a custom IDiskService with all parameters avaiable
+        /// Starts LiteDB database using a custom IDiskService with all parameters available
         /// </summary>
         /// <param name="diskService">Custom implementation of persist data layer</param>
         /// <param name="mapper">Instance of BsonMapper that map poco classes to document</param>
         /// <param name="password">Password to encrypt you datafile</param>
         /// <param name="timeout">Locker timeout for concurrent access</param>
-        /// <param name="autocommit">If auto commit after any write operation</param>
-        /// <param name="cacheSize">Max memory pages used before flush data in Journal file (when avaiable)</param>
+        /// <param name="cacheSize">Max memory pages used before flush data in Journal file (when available)</param>
         /// <param name="log">Custom log implementation</param>
         public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
         {
@@ -155,7 +154,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if a collection exists on database. Collection name is case unsensitive
+        /// Checks if a collection exists on database. Collection name is case insensitive
         /// </summary>
         public bool CollectionExists(string name)
         {
@@ -198,14 +197,14 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Reduce disk size re-arranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
+        /// Reduce disk size re-arranging unused space. Can change password. If a temporary disk was not provided, use MemoryStream temp disk
         /// </summary>
         public long Shrink(string password)
         {
             // if has connection string, use same path
             if (_connectionString != null)
             {
-                // get temp file ("-temp" sufix)
+                // get temp file ("-temp" suffix)
                 var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
 
                 // get temp disk based on temp file

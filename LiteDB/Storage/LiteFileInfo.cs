@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 namespace LiteDB
 {
     /// <summary>
-    /// Represets a file inside storage collection
+    /// Represents a file inside storage collection
     /// </summary>
     public class LiteFileInfo
     {

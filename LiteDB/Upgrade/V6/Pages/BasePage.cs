@@ -19,7 +19,7 @@ namespace LiteDB_V6
         public const int PAGE_HEADER_SIZE = 25;
 
         /// <summary>
-        /// Bytes avaiable to store data removing page header size - 4071 bytes
+        /// Bytes available to store data removing page header size - 4071 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
@@ -46,7 +46,7 @@ namespace LiteDB_V6
         public uint NextPageID { get; set; }
 
         /// <summary>
-        /// Used for all pages to count itens inside this page(bytes, nodes, blocks, ...) [2 bytes]
+        /// Used for all pages to count items inside this page(bytes, nodes, blocks, ...) [2 bytes]
         /// Its Int32 but writes in UInt16
         /// </summary>
         public int ItemCount { get; set; }

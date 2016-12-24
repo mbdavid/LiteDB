@@ -128,7 +128,9 @@ namespace LiteDB
         #region Equals/CompareTo/ToString
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Checks if this ObjectId is equal to the given object. Returns true
+        /// if the given object is equal to the value of this instance. 
+        /// Returns false otherwise.
         /// </summary>
         public bool Equals(ObjectId other)
         {

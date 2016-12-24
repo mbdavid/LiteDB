@@ -5,7 +5,7 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Manage all transaction and garantee concurrency and recovery
+    /// Manages all transactions and grantees concurrency and recovery
     /// </summary>
     internal class TransactionService
     {
@@ -102,7 +102,7 @@ namespace LiteDB
         /// </summary>
         public void AvoidDirtyRead()
         {
-            // if disk are exclusive dont need check dirty read
+            // if disk are exclusive don't need check dirty read
             if (_disk.IsExclusive) return;
 
             _log.Write(Logger.CACHE, "checking disk to avoid dirty read");

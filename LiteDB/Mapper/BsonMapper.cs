@@ -38,9 +38,9 @@ namespace LiteDB
         private Dictionary<Type, Func<BsonValue, object>> _customDeserializer = new Dictionary<Type, Func<BsonValue, object>>();
 
         /// <summary>
-        /// Get type initializator to support IoC
+        /// Type instantiator function to support IoC
         /// </summary>
-        private readonly Func<Type, object> _typeInstanciator;
+        private readonly Func<Type, object> _typeInstantiator;
 
         /// <summary>
         /// Map for autoId type based functions
@@ -91,7 +91,7 @@ namespace LiteDB
 
         #endregion
 
-        public BsonMapper(Func<Type, object> customTypeInstanciator = null)
+        public BsonMapper(Func<Type, object> customTypeInstantiator = null)
         {
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
@@ -102,7 +102,7 @@ namespace LiteDB
             this.IncludeFields = false;
 #endif
 
-            _typeInstanciator = customTypeInstanciator ?? Reflection.CreateInstance;
+            _typeInstantiator = customTypeInstantiator ?? Reflection.CreateInstance;
 
             #region Register CustomTypes
 
@@ -241,7 +241,7 @@ namespace LiteDB
         private Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])");
 
         /// <summary>
-        /// Use lower camel case with delemiter resolution for convert property names to field names
+        /// Uses lower camel case with delimiter to convert property names to field names
         /// </summary>
         public BsonMapper UseLowerCaseDelimiter(char delimiter = '_')
         {
@@ -277,7 +277,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Use this method to override how your class can be, by defalut, mapped from entity to Bson document.
+        /// Use this method to override how your class can be, by default, mapped from entity to Bson document.
         /// Returns an EntityMapper from each requested Type
         /// </summary>
         protected virtual EntityMapper BuildEntityMapper(Type type)
@@ -327,7 +327,7 @@ namespace LiteDB
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
 
-                // checks if this proerty has [BsonIndex]
+                // checks if this property has [BsonIndex]
                 var index = (BsonIndexAttribute)memberInfo.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
                 // get data type
@@ -422,7 +422,7 @@ namespace LiteDB
         #region Register DbRef
 
         /// <summary>
-        /// Register a property mapper as DbRef to serialize/deserialize only document refenece _id
+        /// Register a property mapper as DbRef to serialize/deserialize only document reference _id
         /// </summary>
         public static void RegisterDbRef(BsonMapper mapper, MemberMapper member, string collectionName)
         {

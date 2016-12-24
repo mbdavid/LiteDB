@@ -60,10 +60,10 @@ namespace LiteDB
             // get log instance to disk
             _log = log;
 
-            // if is readonly, journal must be disabled
+            // if is read only, journal must be disabled
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
-            // open/create file using readonly/exclusive options
+            // open/create file using read only/exclusive options
             _stream = new FileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
@@ -231,7 +231,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<byte[]> ReadJournal()
         {
-            // check if exists journal file (if opended)
+            // check if exists journal file (if opened)
             if (_journal == null)
             {
                 try
@@ -274,7 +274,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Clear jounal file (set size to 0 length)
+        /// Clear journal file (set size to 0 length)
         /// </summary>
         public void ClearJournal()
         {

@@ -74,7 +74,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Upload a file based on filesystem data
+        /// Upload a file based on file system data
         /// </summary>
         public LiteFileInfo Upload(string id, string filename)
         {
@@ -85,7 +85,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Update metada on a file. File must exisits
+        /// Update metadata on a file. File must exist.
         /// </summary>
         public bool SetMetadata(string id, BsonDocument metadata)
         {

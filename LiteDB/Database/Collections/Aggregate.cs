@@ -17,7 +17,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
+        /// Count documents matching a query. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
         public int Count(Query query)
         {
@@ -38,7 +38,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
+        /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
         public int Count(Expression<Func<T, bool>> predicate)
         {
@@ -61,7 +61,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
+        /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
         public long LongCount(Query query)
         {
@@ -82,7 +82,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Count documnets with a query. This method does not deserialize any document. Needs indexes on query expression
+        /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
         public long LongCount(Expression<Func<T, bool>> predicate)
         {

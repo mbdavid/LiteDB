@@ -14,7 +14,7 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
-            if (engine == null) throw ShellExpcetion.NoDatabase();
+            if (engine == null) throw ShellException.NoDatabase();
 
             var filename = s.Scan(@".+").Trim();
 
