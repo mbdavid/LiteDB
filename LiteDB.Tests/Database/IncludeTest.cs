@@ -94,6 +94,13 @@ namespace LiteDB.Tests
 
                 orders.Insert(order);
 
+                var r0 = orders
+                    .Include(x => x.Products)
+                    .Include(x => x.Products[0].SupplierAddress)
+                    .FindAll()
+                    .FirstOrDefault();
+
+
                 var result = orders
                     .Include(x => x.Customer)
                     .Include("Customer.MainAddress")

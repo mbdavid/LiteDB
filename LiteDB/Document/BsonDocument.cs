@@ -206,7 +206,7 @@ namespace LiteDB
                     }
                 }
             }
-            else if (value.IsDocument)
+            else if (value.IsDocument && path != null)
             {
                 var dot = path.IndexOf(".");
                 var docValue = value.AsDocument[dot == -1 ? path : path.Substring(0, dot)];
