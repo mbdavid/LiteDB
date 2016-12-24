@@ -94,25 +94,32 @@ namespace LiteDB.Tests
 
                 orders.Insert(order);
 
-                var query = orders
+                var result = orders
                     .Include(x => x.Customer)
-                    .Include(x => x.Customer.MainAddress)
+                    .Include("Customer.MainAddress")
                     .Include(x => x.CustomerNull)
                     .Include(x => x.Products)
                     .Include(x => x.ProductArray)
                     .Include(x => x.ProductColl)
                     .Include(x => x.ProductsNull)
+                    // not supported yet
+                    .Include(x => x.Products[0].SupplierAddress)
                     .FindAll()
                     .FirstOrDefault();
 
-                Assert.AreEqual(customer.Name, query.Customer.Name);
-                Assert.AreEqual(customer.MainAddress.StreetName, query.Customer.MainAddress.StreetName);
-                Assert.AreEqual(product1.Price, query.Products[0].Price);
-                Assert.AreEqual(product2.Name, query.Products[1].Name);
-                Assert.AreEqual(product1.Name, query.ProductArray[0].Name);
-                Assert.AreEqual(product2.Price, query.ProductColl.ElementAt(0).Price);
-                Assert.AreEqual(null, query.ProductsNull);
-                Assert.AreEqual(0, query.ProductEmpty.Count);
+                Assert.AreEqual(customer.Name, result.Customer.Name);
+                Assert.AreEqual(customer.MainAddress.StreetName, result.Customer.MainAddress.StreetName);
+                Assert.AreEqual(product1.Price, result.Products[0].Price);
+                Assert.AreEqual(product2.Name, result.Products[1].Name);
+                Assert.AreEqual(product1.Name, result.ProductArray[0].Name);
+                Assert.AreEqual(product2.Price, result.ProductColl.ElementAt(0).Price);
+                Assert.AreEqual(null, result.ProductsNull);
+                Assert.AreEqual(0, result.ProductEmpty.Count);
+
+                // not support yet
+                //Assert.AreEqual(product1.SupplierAddress.StreetName, result.Products[0].SupplierAddress.StreetName);
+                //Assert.AreEqual(null, result.Products[1].SupplierAddress);
+
             }
         }
     }

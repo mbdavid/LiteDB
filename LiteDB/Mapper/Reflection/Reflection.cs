@@ -136,33 +136,30 @@ namespace LiteDB
                     }
                     else if (type.GetTypeInfo().IsInterface) // some know interfaces
                     {
-                        if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
+                        if(type.GetTypeInfo().IsGenericType)
                         {
-                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                        }
-                        else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
-                        {
-                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                        }
-                        else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                        {
-                            return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
-                        }
-                        else if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                        {
+                            var typeDef = type.GetGenericTypeDefinition();
+
+                            if (typeDef == typeof(IList<>) || 
+                                typeDef == typeof(ICollection<>) ||
+                                typeDef == typeof(IEnumerable<>))
+                            {
+                                return CreateInstance(GetGenericListOfType(UnderlyingTypeOf(type)));
+                            }
+                            else if (typeDef == typeof(IDictionary<,>))
+                            {
 #if NET35
-                            var k = type.GetGenericArguments()[0];
-                            var v = type.GetGenericArguments()[1];
+                                var k = type.GetGenericArguments()[0];
+                                var v = type.GetGenericArguments()[1];
 #else
-                            var k = type.GetTypeInfo().GenericTypeArguments[0];
-                            var v = type.GetTypeInfo().GenericTypeArguments[1];
+                                var k = type.GetTypeInfo().GenericTypeArguments[0];
+                                var v = type.GetTypeInfo().GenericTypeArguments[1];
 #endif
-                            return CreateInstance(GetGenericDictionaryOfType(k, v));
+                                return CreateInstance(GetGenericDictionaryOfType(k, v));
+                            }
                         }
-                        else
-                        {
-                            throw LiteException.InvalidCtor(type, null);
-                        }
+
+                        throw LiteException.InvalidCtor(type, null);
                     }
                     else // structs
                     {
