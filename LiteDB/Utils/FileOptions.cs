@@ -19,14 +19,18 @@ namespace LiteDB
             this.InitialSize = BasePage.PAGE_SIZE;
             this.LimitSize = long.MaxValue;
             this.Timeout = TimeSpan.FromMinutes(1);
+#if NET35
             this.FileMode = FileMode.Shared;
+#endif
         }
     }
 
     public enum FileMode
     {
+#if NET35
         Shared,
-        ReadOnly,
-        Exclusive
+#endif
+        Exclusive,
+        ReadOnly
     }
 }

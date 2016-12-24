@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LiteDB.Tests</RootNamespace>
     <AssemblyName>LiteDB.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET35</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -108,9 +108,9 @@
     <Compile Include="Utils\TempFile.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB\LiteDB.csproj">
-      <Project>{E808051A-83B7-4FA9-B004-D064EA162B60}</Project>
-      <Name>LiteDB</Name>
+    <ProjectReference Include="..\LiteDB\LiteDB.NetStandard.csproj">
+      <Project>{59ba13e6-c19b-4d8b-b504-fb5d0a1e27f3}</Project>
+      <Name>LiteDB.NetStandard</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

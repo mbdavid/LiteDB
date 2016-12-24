@@ -31,8 +31,10 @@ namespace LiteDB
         private Logger _log; // will be initialize in "Initialize()"
         private FileOptions _options;
 
+#if NET35
         private int _lockSharedPosition = 0;
         private Random _lockSharedRandom = new Random();
+#endif
 
         #region Initialize/Dispose disk
 
@@ -95,11 +97,6 @@ namespace LiteDB
                 // write second page empty just to use as lock control
                 this.WritePage(1, new byte[BasePage.PAGE_SIZE]);
             }
-
-#if !NET35
-            // there is no Lock in NetStandard (1.x) - no shared mode
-            if (_options.FileMode == FileMode.Shared) _options.FileMode = FileMode.Exclusive;
-#endif
         }
 
         public virtual void Dispose()
@@ -301,6 +298,7 @@ namespace LiteDB
         /// </summary>
         public void Lock(LockState state)
         {
+#if NET35
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return;
 
@@ -312,6 +310,7 @@ namespace LiteDB
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
             
             _stream.TryLock(position, length, _options.Timeout);
+#endif
         }
 
         /// <summary>
@@ -319,6 +318,7 @@ namespace LiteDB
         /// </summary>
         public void Unlock(LockState state)
         {
+#if NET35
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return;
 
@@ -330,6 +330,7 @@ namespace LiteDB
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
             
             _stream.TryUnlock(position, length);
+#endif
         }
 
         #endregion

@@ -21,21 +21,21 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\netstandard1.4\</OutputPath>
+    <OutputPath>bin\Debug\netstandard\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\netstandard1.4\LiteDB.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard\LiteDB.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\netstandard1.4\</OutputPath>
+    <OutputPath>bin\Release\netstandard\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\netstandard1.4\LiteDB.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\netstandard\LiteDB.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -50,9 +50,6 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LiteDB\Properties\AssemblyInfo.cs">
-      <Link>Properties\AssemblyInfo.cs</Link>
-    </Compile>
     <Compile Include="Database\Collections\Aggregate.cs" />
     <Compile Include="Database\Collections\Delete.cs" />
     <Compile Include="Database\Collections\Find.cs" />

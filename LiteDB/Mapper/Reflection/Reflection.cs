@@ -239,7 +239,7 @@ namespace LiteDB
                 }
                 // if interface is IEnumerable (non-generic), let's get from listType and not from interface
                 // from #395
-                else if(listType.IsGenericType && i == typeof(IEnumerable))
+                else if(listType.GetTypeInfo().IsGenericType && i == typeof(IEnumerable))
                 {
 #if NET35
                     return listType.GetGenericArguments()[0];

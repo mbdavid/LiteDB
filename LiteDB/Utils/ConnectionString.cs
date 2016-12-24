@@ -87,7 +87,11 @@ namespace LiteDB
             this.Password = GetValue<string>("password", null);
             this.CacheSize = GetValue(@"cache size", 5000);
             this.Timeout = GetValue("timeout", TimeSpan.FromMinutes(1));
+#if NET35
             this.Mode = GetValue("mode", FileMode.Shared);
+#else
+            this.Mode = GetValue("mode", FileMode.Exclusive);
+#endif
             this.InitialSize = GetFileSize(@"initial size", BasePage.PAGE_SIZE * 2);
             this.LimitSize = GetFileSize(@"limit size", long.MaxValue);
             this.Log = GetValue<byte>("log", 0);
