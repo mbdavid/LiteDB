@@ -64,7 +64,6 @@ namespace LiteDB
             typeof(Int16),
             typeof(UInt16),
             typeof(UInt32),
-            typeof(UInt64),
             typeof(Single),
             typeof(Char),
             typeof(Byte),
@@ -110,6 +109,12 @@ namespace LiteDB
             else if (_basicTypes.Contains(type))
             {
                 return Convert.ChangeType(value.RawValue, type);
+            }
+
+            // special cast to UInt64 to Int64
+            else if (type == typeof(UInt64))
+            {
+                return unchecked((UInt64)((Int64)value.RawValue));
             }
 
             // enum value is an int

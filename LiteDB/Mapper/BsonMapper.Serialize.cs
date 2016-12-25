@@ -68,11 +68,18 @@ namespace LiteDB
             {
                 return new BsonValue(Convert.ToInt32(obj));
             }
-            else if (obj is UInt32 || obj is UInt64)
+            else if (obj is UInt32)
             {
                 return new BsonValue(Convert.ToInt64(obj));
             }
-            else if (obj is Single || obj is Decimal)
+            else if (obj is UInt64)
+            {
+                var ulng = ((UInt64)obj);
+                var lng = unchecked((Int64)ulng);
+
+                return new BsonValue(lng);
+            }
+            else if (obj is Single)
             {
                 return new BsonValue(Convert.ToDouble(obj));
             }
