@@ -52,5 +52,17 @@ namespace LiteDB.Tests
             Assert.AreEqual(255, full.Log);
 
         }
+
+        [TestMethod]
+        public void LiteDatabase_FromConnectionString_SetsLogLevel()
+        {
+            var connectionString = "filename=foo;";
+            var db = new LiteDatabase(connectionString);
+            Assert.AreEqual(0, db.Log.Level);
+
+            connectionString = "filename=foo;log=" + Logger.FULL;
+            db = new LiteDatabase(connectionString);
+            Assert.AreEqual(Logger.FULL, db.Log.Level);
+        }
     }
 }
