@@ -36,12 +36,13 @@ namespace LiteDB
 
         #region Ctor
 
-        /// <summary>
-        /// Starts LiteDB database using a connection string for file system database
-        /// </summary>
-        public LiteDatabase(string connectionString, BsonMapper mapper = null)
+        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
         {
-            _connectionString = new ConnectionString(connectionString);
+            if (connectionString == null)
+            {
+                throw new ArgumentNullException("connectionString");
+            }
+            _connectionString = connectionString;
             _log.Level = _connectionString.Log;
 
             if (_connectionString.Upgrade)
@@ -60,6 +61,13 @@ namespace LiteDB
             };
 
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.CacheSize, _log));
+        }
+
+        /// <summary>
+        /// Starts LiteDB database using a connection string for file system database
+        /// </summary>
+        public LiteDatabase(string connectionString, BsonMapper mapper = null) : this(new ConnectionString(connectionString), mapper)
+        {
         }
 
         /// <summary>
@@ -89,7 +97,7 @@ namespace LiteDB
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, cacheSize: cacheSize, log: _log ));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, cacheSize: cacheSize, log: _log));
         }
 
         #endregion
