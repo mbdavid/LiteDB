@@ -42,6 +42,7 @@ namespace LiteDB
         public LiteDatabase(string connectionString, BsonMapper mapper = null)
         {
             _connectionString = new ConnectionString(connectionString);
+            _log.Level = _connectionString.Log;
 
             if (_connectionString.Upgrade)
             {
