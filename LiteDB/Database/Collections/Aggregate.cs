@@ -21,18 +21,11 @@ namespace LiteDB
         /// </summary>
         public int Count(Query query)
         {
-            // keep trying execute query to auto-create indexes when not found
-            while (true)
-            {
-                try
-                {
-                    return (int)_engine.Value.Count(_name, query);
-                }
-                catch (IndexNotFoundException ex)
-                {
-                    this.EnsureIndex(ex);
-                }
-            }
+            if (query == null) throw new ArgumentNullException("query");
+
+            query.IndexFactory((c, f) => IndexFactory(f));
+
+            return (int)_engine.Value.Count(_name, query);
         }
 
         /// <summary>
@@ -65,18 +58,9 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            // keep trying execute query to auto-create indexes when not found
-            while (true)
-            {
-                try
-                {
-                    return _engine.Value.Count(_name, query);
-                }
-                catch (IndexNotFoundException ex)
-                {
-                    this.EnsureIndex(ex);
-                }
-            }
+            query.IndexFactory((c, f) => IndexFactory(f));
+
+            return _engine.Value.Count(_name, query);
         }
 
         /// <summary>
@@ -100,18 +84,9 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            // keep trying execute query to auto-create indexes when not found
-            while (true)
-            {
-                try
-                {
-                    return _engine.Value.Exists(_name, query);
-                }
-                catch (IndexNotFoundException ex)
-                {
-                    this.EnsureIndex(ex);
-                }
-            }
+            query.IndexFactory((c, f) => IndexFactory(f));
+
+            return _engine.Value.Exists(_name, query);
         }
 
         /// <summary>
@@ -135,18 +110,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            // keep trying execute query to auto-create indexes when not found
-            while (true)
-            {
-                try
-                {
-                    return _engine.Value.Min(_name, field);
-                }
-                catch (IndexNotFoundException ex)
-                {
-                    this.EnsureIndex(ex);
-                }
-            }
+            return _engine.Value.Min(_name, field);
         }
 
         /// <summary>
@@ -176,18 +140,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-            // keep trying execute query to auto-create indexes when not found
-            while (true)
-            {
-                try
-                {
-                    return _engine.Value.Max(_name, field);
-                }
-                catch (IndexNotFoundException ex)
-                {
-                    this.EnsureIndex(ex);
-                }
-            }
+            return _engine.Value.Max(_name, field);
         }
 
         /// <summary>

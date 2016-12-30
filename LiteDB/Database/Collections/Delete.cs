@@ -10,18 +10,11 @@ namespace LiteDB
         /// </summary>
         public int Delete(Query query)
         {
-            // keep trying execute query to auto-create indexes when not found
-            while (true)
-            {
-                try
-                {
-                    return _engine.Value.Delete(_name, query);
-                }
-                catch (IndexNotFoundException ex)
-                {
-                    this.EnsureIndex(ex);
-                }
-            }
+            if (query == null) throw new ArgumentNullException("query");
+
+            query.IndexFactory((c, f) => IndexFactory(f));
+
+            return _engine.Value.Delete(_name, query);
         }
 
         /// <summary>

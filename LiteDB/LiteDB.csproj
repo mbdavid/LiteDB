@@ -156,7 +156,6 @@
     <Compile Include="Storage\LiteFileStream.cs" />
     <Compile Include="Utils\ConnectionString.cs" />
     <Compile Include="Utils\FileOptions.cs" />
-    <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\AesEncryption.cs" />
     <Compile Include="Utils\StorageUnitHelper.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtensions.cs" />

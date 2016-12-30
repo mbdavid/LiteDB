@@ -55,8 +55,10 @@ namespace LiteDB
         /// </summary>
         public TimeSpan Timeout { get { return _timeout; } }
 
-        // unit tests only
-        internal LockService Locker { get { return _locker; } }
+        /// <summary>
+        /// Instance of locker control
+        /// </summary>
+        public LockService Locker { get { return _locker; } }
 
         #endregion
 

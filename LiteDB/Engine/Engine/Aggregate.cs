@@ -79,6 +79,9 @@ namespace LiteDB
 
                 if (query == null) return col.DocumentCount;
 
+                // define auto-index create factory if not exists
+                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
+
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
@@ -104,6 +107,9 @@ namespace LiteDB
                 var col = GetCollectionPage(collection, false);
 
                 if (col == null) return false;
+
+                // define auto-index create factory if not exists
+                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
 
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);

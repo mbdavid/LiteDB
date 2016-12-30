@@ -35,6 +35,25 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Internal ensure index for auto-create index when needed
+        /// It's override LiteEngine define index because in LiteDatabase we have index definition in BsonMapper
+        /// </summary>
+        private void IndexFactory(string field)
+        {
+            var unique = false;
+
+            // try get if field are mapped as unique index (only if T isn't BsonDocument)
+            if (typeof(T) != typeof(BsonDocument))
+            {
+                var entity = _mapper.GetEntityMapper(typeof(T));
+                var member = entity.Members.FirstOrDefault(x => x.FieldName == field);
+                unique = member == null ? false : member.IsUnique;
+            }
+
+            _engine.Value.EnsureIndex(_name, field, unique);
+        }
+
+        /// <summary>
         /// Returns all indexes information
         /// </summary>
         public IEnumerable<IndexInfo> GetIndexes()
@@ -48,24 +67,6 @@ namespace LiteDB
         public bool DropIndex(string field)
         {
             return _engine.Value.DropIndex(_name, field);
-        }
-
-        /// <summary>
-        /// Create index based on a IndexNotFound exception
-        /// </summary>
-        private void EnsureIndex(IndexNotFoundException ex)
-        {
-            var unique = false;
-
-            // try get if field are mapped as unique index (only if T isn't BsonDocument)
-            if (typeof(T) != typeof(BsonDocument))
-            {
-                var entity = _mapper.GetEntityMapper(typeof(T));
-                var member = entity.Members.FirstOrDefault(x => x.FieldName == ex.Field);
-                unique = member == null ? false : member.IsUnique;
-            }
-
-            _engine.Value.EnsureIndex(ex.Collection, ex.Field, unique);
         }
     }
 }

@@ -10,56 +10,29 @@ namespace LiteDB
         #region Find
 
         /// <summary>
-        /// Find documents inside a collection using Query object. Must have indexes in query expression
+        /// Find documents inside a collection using Query object.
         /// </summary>
         public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
         {
-            IEnumerator<BsonDocument> enumerator = null;
-            var more = true;
+            if (query == null) throw new ArgumentNullException("query");
 
-            try
+            // define index factory based on mapper definitions
+            query.IndexFactory((c, f) => IndexFactory(f));
+
+            var docs = _engine.Value.Find(_name, query, skip, limit);
+
+            foreach(var doc in docs)
             {
-                // keep trying execute query to auto-create indexes when not found
-                // must try get first doc inside try/catch to get index not found (yield returns are not supported inside try/catch)
-                while (true)
+                // executing all includes in BsonDocument
+                foreach (var action in _includes)
                 {
-                    try
-                    {
-                        var docs = _engine.Value.Find(_name, query, skip, limit);
-
-                        enumerator = (IEnumerator<BsonDocument>)docs.GetEnumerator();
-
-                        more = enumerator.MoveNext();
-
-                        break;
-                    }
-                    catch (IndexNotFoundException ex)
-                    {
-                        this.EnsureIndex(ex);
-                    }
+                    action(doc);
                 }
 
-                if (more == false) yield break;
+                // get object from BsonDocument
+                var obj = _mapper.ToObject<T>(doc);
 
-                // do...while
-                do
-                {
-                    // executing all includes in BsonDocument
-                    foreach (var action in _includes)
-                    {
-                        action(enumerator.Current);
-                    }
-
-                    // get object from BsonDocument
-                    var obj = _mapper.ToObject<T>(enumerator.Current);
-
-                    yield return obj;
-                }
-                while (more = enumerator.MoveNext());
-            }
-            finally
-            {
-                if (enumerator != null) enumerator.Dispose();
+                yield return obj;
             }
         }
 
@@ -82,7 +55,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException("id");
 
-            return this.Find(Query.EQ("_id", id)).FirstOrDefault();
+            return this.Find(Query.EQ("_id", id)).SingleOrDefault();
         }
 
         /// <summary>

@@ -59,7 +59,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Concurrency\ProcessTest.cs" />
-    <Compile Include="Database\AutoIndex.cs" />
+    <Compile Include="Database\AutoIndexDatabaseTest.cs" />
+    <Compile Include="Engine\AutoIndexEngineTest.cs" />
     <Compile Include="Database\AutoIdTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />

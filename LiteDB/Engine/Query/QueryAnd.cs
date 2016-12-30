@@ -16,6 +16,12 @@ namespace LiteDB
             _right = right;
         }
 
+        internal override void IndexFactory(Action<string, string> createIndex)
+        {
+            _left.IndexFactory(createIndex);
+            _right.IndexFactory(createIndex);
+        }
+
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             throw new NotSupportedException();

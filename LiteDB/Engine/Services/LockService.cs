@@ -12,7 +12,7 @@ namespace LiteDB
     /// Reserved -> Exclusive => !Reserved
     /// [Thread Safe]
     /// </summary>
-    internal class LockService
+    public class LockService
     {
         private TimeSpan _timeout;
         private IDiskService _disk;
@@ -29,9 +29,9 @@ namespace LiteDB
             _state = LockState.Unlocked;
         }
 
-        #region Process lock control
-
         public LockState State { get { return _state; } }
+
+        #region Process lock control
 
         /// <summary>
         /// Try enter in shared lock (read) - Call action if request a new lock

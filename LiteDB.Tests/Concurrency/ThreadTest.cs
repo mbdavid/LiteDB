@@ -173,21 +173,47 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Thread_FindUpsert_Test()
+        public void Thread_FindUpsertEngine_Test()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
                 var tasks = new List<Task>();
 
-                for (var i = 0; i < 100; i++) // Change 1000 to whatever value spams it enough.
+                for (var i = 0; i < 1000; i++) // Change 1000 to whatever value spams it enough.
                 {
-                    int ind = i % 50;
+                    var ind = i % 50;
                     var t1 = Task.Factory.StartNew(() => { db.FindById("col", BitConverter.GetBytes(ind)); });
                     var t2 = Task.Factory.StartNew(() =>
                     {
-                        var doc = new BsonDocument { { "_id", BitConverter.GetBytes(ind) } };;
+                        var doc = new BsonDocument { { "_id", BitConverter.GetBytes(ind) } }; ;
                         db.Upsert("col", doc);
+                    });
+
+                    tasks.AddRange(new[] { t1, t2 });
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+        }
+
+        [TestMethod]
+        public void Thread_FindUpsertDatabase_Test()
+        {
+            using (var file = new TempFile())
+            using (var db = new LiteDatabase(file.Filename))
+            {
+                var tasks = new List<Task>();
+                var col = db.GetCollection("col");
+
+                for (var i = 0; i < 1000; i++) // Change 1000 to whatever value spams it enough.
+                {
+                    var ind = i % 50;
+                    var t1 = Task.Factory.StartNew(() => { col.FindById(BitConverter.GetBytes(ind)); });
+                    var t2 = Task.Factory.StartNew(() =>
+                    {
+                        var doc = new BsonDocument { { "_id", BitConverter.GetBytes(ind) } };;
+                        col.Upsert(doc);
                     });
 
                     tasks.AddRange(new [] { t1, t2 });
