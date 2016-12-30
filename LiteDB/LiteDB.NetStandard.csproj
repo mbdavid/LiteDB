@@ -175,7 +175,6 @@
     <Compile Include="Utils\Extensions\TypeExtensions.cs" />
     <Compile Include="Utils\FileHelper.cs" />
     <Compile Include="Utils\FileOptions.cs" />
-    <Compile Include="Utils\IndexNotFoundException.cs" />
     <Compile Include="Utils\LazyLoad.cs" />
     <Compile Include="Utils\LiteException.cs" />
     <Compile Include="Utils\LiteTransaction.cs" />
