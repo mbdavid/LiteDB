@@ -58,6 +58,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Concurrency\LockerTest.cs" />
+    <Compile Include="Concurrency\AutoIdConcurrencyTest.cs" />
     <Compile Include="Concurrency\ProcessTest.cs" />
     <Compile Include="Database\AutoIndexDatabaseTest.cs" />
     <Compile Include="Engine\AutoIndexEngineTest.cs" />

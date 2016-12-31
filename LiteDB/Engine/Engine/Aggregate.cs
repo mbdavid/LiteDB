@@ -13,8 +13,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 var col = GetCollectionPage(collection, false);
 
@@ -42,8 +41,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 var col = GetCollectionPage(collection, false);
 
@@ -70,8 +68,7 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 var col = GetCollectionPage(collection, false);
 
@@ -101,8 +98,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 var col = GetCollectionPage(collection, false);
 

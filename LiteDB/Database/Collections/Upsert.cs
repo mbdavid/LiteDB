@@ -14,7 +14,7 @@ namespace LiteDB
             if (document == null) throw new ArgumentNullException("document");
 
             // use locker because needs by SetAutoId be isolated
-            using (_engine.Value.Locker.Write())
+            using (_engine.Value.Locker.Reserved())
             {
                 // set autoId if there is no Id
                 _mapper.SetAutoId(document, _engine.Value, _name);
@@ -50,7 +50,10 @@ namespace LiteDB
         {
             if (documents == null) throw new ArgumentNullException("document");
 
-            return _engine.Value.Upsert(_name, this.GetBsonDocs(documents));
+            using (_engine.Value.Locker.Reserved())
+            {
+                return _engine.Value.Upsert(_name, this.GetBsonDocs(documents));
+            }
         }
     }
 }

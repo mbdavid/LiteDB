@@ -98,36 +98,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if cache still valid (if datafile was changed by another process reset cache)
-        /// </summary>
-        public void AvoidDirtyRead()
-        {
-            // if disk are exclusive don't need check dirty read
-            if (_disk.IsExclusive) return;
-
-            _log.Write(Logger.CACHE, "checking disk to avoid dirty read");
-
-            // empty cache? just exit
-            if (_cache.CleanUsed == 0) return;
-
-            // get ChangeID from cache
-            var header = _cache.GetPage(0) as HeaderPage;
-            var changeID = header == null ? 0 : header.ChangeID;
-
-            // and get header from disk
-            var disk = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
-
-            // if header change, clear cache and add new header to cache
-            if (disk.ChangeID != changeID)
-            {
-                _log.Write(Logger.CACHE, "file changed from another process");
-
-                _cache.ClearPages();
-                _cache.AddPage(disk);
-            }
-        }
-
-        /// <summary>
         /// Try recovery journal file (if exists). Restore original datafile
         /// Journal file are NOT encrypted (even when datafile are encrypted)
         /// </summary>

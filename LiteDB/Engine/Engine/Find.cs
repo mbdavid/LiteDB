@@ -14,8 +14,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 // get my collection page
                 var col = this.GetCollectionPage(collection, false);
@@ -62,8 +61,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 // get my collection page
                 var col = this.GetCollectionPage(collection, false);

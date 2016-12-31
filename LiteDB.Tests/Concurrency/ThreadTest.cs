@@ -103,9 +103,7 @@ namespace LiteDB.Tests
                 {
                     for (var i = 0; i < N; i++)
                     {
-                        var doc = new BsonDocument { { "_id", i } };
-
-                        db.Insert("col", doc);
+                        db.Insert("col", new BsonDocument { { "_id", i } });
                     }
                     running = false;
                 });
@@ -180,17 +178,14 @@ namespace LiteDB.Tests
             {
                 var tasks = new List<Task>();
 
-                for (var i = 0; i < 1000; i++) // Change 1000 to whatever value spams it enough.
+                for (var i = 0; i < 50; i++) // Change 1000 to whatever value spams it enough.
                 {
                     var ind = i % 50;
-                    var t1 = Task.Factory.StartNew(() => { db.FindById("col", BitConverter.GetBytes(ind)); });
-                    var t2 = Task.Factory.StartNew(() =>
-                    {
-                        var doc = new BsonDocument { { "_id", BitConverter.GetBytes(ind) } }; ;
-                        db.Upsert("col", doc);
-                    });
 
-                    tasks.AddRange(new[] { t1, t2 });
+                    var tFind = Task.Factory.StartNew(() => { db.FindById("col", BitConverter.GetBytes(ind)); });
+                    var tUpsert = Task.Factory.StartNew(() => { db.Upsert("col", new BsonDocument { { "_id", BitConverter.GetBytes(ind) } }); });
+
+                    tasks.AddRange(new[] { tFind, tUpsert });
                 }
 
                 Task.WaitAll(tasks.ToArray());

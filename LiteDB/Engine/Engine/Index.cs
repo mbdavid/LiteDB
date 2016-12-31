@@ -120,8 +120,7 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
 
-            using (_locker.Read())
-            using (_locker.Shared(_trans.AvoidDirtyRead))
+            using (_locker.Shared())
             {
                 var col = this.GetCollectionPage(collection, false);
 

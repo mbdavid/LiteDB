@@ -140,7 +140,7 @@ namespace LiteDB
         private void InitializeServices()
         {
             _cache = new CacheService(_disk, _log);
-            _locker = new LockService(_disk, _timeout, _log);
+            _locker = new LockService(_disk, _cache, _timeout, _log);
             _pager = new PageService(_disk, _crypto, _cache, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);

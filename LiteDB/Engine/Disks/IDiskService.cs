@@ -59,7 +59,7 @@ namespace LiteDB
         /// <summary>
         /// Lock datafile returning lock position
         /// </summary>
-        void Lock(LockState state);
+        void Lock(LockState state, TimeSpan timeout);
 
         /// <summary>
         /// Unlock datafile based on last state

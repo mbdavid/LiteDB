@@ -296,7 +296,7 @@ namespace LiteDB
         /// <summary>
         /// Implement datafile lock/unlock
         /// </summary>
-        public void Lock(LockState state)
+        public void Lock(LockState state, TimeSpan timeout)
         {
 #if NET35
             // only shared mode lock datafile
@@ -309,7 +309,7 @@ namespace LiteDB
             
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
             
-            _stream.TryLock(position, length, _options.Timeout);
+            _stream.TryLock(position, length, timeout);
 #endif
         }
 

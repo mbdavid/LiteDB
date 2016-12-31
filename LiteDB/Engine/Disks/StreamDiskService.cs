@@ -154,7 +154,7 @@ namespace LiteDB
         /// <summary>
         /// No lock implemented
         /// </summary>
-        public void Lock(LockState state)
+        public void Lock(LockState state, TimeSpan timeout)
         {
         }
 

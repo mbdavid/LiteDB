@@ -16,7 +16,7 @@ namespace LiteDB
         public void BeginTrans()
         {
             // lock as reserved mode
-            var locker = _locker.Reserved(_trans.AvoidDirtyRead);
+            var locker = _locker.Reserved();
 
             _transactions.Push(locker);
         }
@@ -27,25 +27,22 @@ namespace LiteDB
         /// </summary>
         public bool Commit()
         {
-            lock(_locker)
+            var commit = false;
+
+            // only do "real commit" if is last transaction in stack or if autocommit = false
+            if (_transactions.Count == 1)
             {
-                var commit = false;
-
-                // only do "real commit" if is last transaction in stack or if autocommit = false
-                if (_transactions.Count == 1)
-                {
-                    _trans.Commit();
-                    commit = true;
-                }
-
-                // if contains transactions on stack, remove top and dispose (only last transaction will release lock)
-                if (_transactions.Count > 0)
-                {
-                    _transactions.Pop().Dispose();
-                }
-
-                return commit;
+                _trans.Commit();
+                commit = true;
             }
+
+            // if contains transactions on stack, remove top and dispose (only last transaction will release lock)
+            if (_transactions.Count > 0)
+            {
+                _transactions.Pop().Dispose();
+            }
+
+            return commit;
         }
 
         /// <summary>
@@ -53,14 +50,11 @@ namespace LiteDB
         /// </summary>
         public void Rollback()
         {
-            lock(_locker)
-            {
-                _trans.Rollback();
+            _trans.Rollback();
 
-                while (_transactions.Count > 0)
-                {
-                    _transactions.Pop().Dispose();
-                }
+            while (_transactions.Count > 0)
+            {
+                _transactions.Pop().Dispose();
             }
         }
 
@@ -69,29 +63,26 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string collection, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            using (_locker.Write())
+            this.BeginTrans();
+
+            try
             {
-                this.BeginTrans();
+                var col = this.GetCollectionPage(collection, addIfNotExists);
 
-                try
-                {
-                    var col = this.GetCollectionPage(collection, addIfNotExists);
+                var result = action(col);
 
-                    var result = action(col);
+                this.Commit();
 
-                    this.Commit();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
 
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    _log.Write(Logger.ERROR, ex.Message);
+                // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
+                this.Rollback();
 
-                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
-                    this.Rollback();
-
-                    throw;
-                }
+                throw;
             }
         }
     }
