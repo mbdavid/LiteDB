@@ -94,7 +94,6 @@ namespace LiteDB
         {
             lock (_disk)
             {
-                if (_state == LockState.Exclusive) throw new InvalidOperationException("Lock state cann't be exclusive");
                 if (_state != LockState.Unlocked) return () => { };
 
                 _log.Write(Logger.DISK, "enter in shared lock mode");
@@ -125,7 +124,6 @@ namespace LiteDB
         {
             lock (_disk)
             {
-                if (_state == LockState.Exclusive) throw new InvalidOperationException("Lock state cann't be exclusive");
                 if (_state == LockState.Reserved) return () => { };
 
                 _log.Write(Logger.DISK, "enter in reserved lock mode");

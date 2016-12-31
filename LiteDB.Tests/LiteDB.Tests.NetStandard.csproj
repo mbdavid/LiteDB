@@ -58,9 +58,11 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Concurrency\AutoIdConcurrencyTest.cs" />
+    <Compile Include="Concurrency\LockerTest.cs" />
     <Compile Include="Concurrency\ProcessTest.cs" />
-    <Compile Include="Database\AutoIndex.cs" />
     <Compile Include="Database\AutoIdTest.cs" />
+    <Compile Include="Database\AutoIndexDatabaseTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />
     <Compile Include="Database\UniqueIndexMapperTest.cs" />
@@ -70,6 +72,7 @@
     <Compile Include="Database\NullRefTests.cs" />
     <Compile Include="Database\PredicateBuilderTest.cs" />
     <Compile Include="Database\LinqVisitorTest.cs" />
+    <Compile Include="Engine\AutoIndexEngineTest.cs" />
     <Compile Include="Mapper\MapperNonPublicTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
