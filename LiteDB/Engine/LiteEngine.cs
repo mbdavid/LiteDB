@@ -172,8 +172,11 @@ namespace LiteDB
 
         public void Dispose()
         {
-            // first, commit any possible dirty page
-            this.Commit();
+            // if there is any open transaction, rollback
+            if (_transactions.Count > 0)
+            {
+                this.Rollback();
+            }
 
             // dispose datafile and journal file
             _disk.Dispose();
