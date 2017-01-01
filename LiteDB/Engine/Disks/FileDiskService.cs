@@ -221,6 +221,8 @@ namespace LiteDB
                 // write page bytes
                 _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
             }
+
+            // journal file will be unlocked only in ClearJournal
         }
 
         /// <summary>
@@ -238,6 +240,9 @@ namespace LiteDB
                         FileAccess.ReadWrite,
                         FileShare.ReadWrite,
                         BasePage.PAGE_SIZE);
+
+                    // just avoid initialize recovery if journal is empty
+                    if (_journal.Length == 0) yield break;
 
                     // lock journal file during reading
                     _journal.TryLock(0, 1, TimeSpan.Zero);
