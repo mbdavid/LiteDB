@@ -34,13 +34,13 @@ namespace LiteDB
         {
             if (_disposed) return;
 
+            _disposed = true;
+
             if (disposing)
             {
             }
 
             if (_dispose != null) _dispose();
-
-            _disposed = true;
         }
     }
 }
