@@ -8,8 +8,8 @@ namespace LiteDB
     internal static class ExpressionExtensions
     {
         // more dirty as possible: removing ".Select(x => x." sentence
-        private static Regex _removeSelect = new Regex(@"\.Select\s*\(\s*\w+\s*=>\s*\w+\.");
-        private static Regex _removeArray = new Regex(@"\.get_Item\(\d+\)");
+        private static Regex _removeSelect = new Regex(@"\.Select\s*\(\s*\w+\s*=>\s*\w+\.", RegexOptions.Compiled);
+        private static Regex _removeArray = new Regex(@"\.get_Item\(\d+\)", RegexOptions.Compiled);
 
         /// <summary>
         /// Get Path (better ToString) from an Expression.
