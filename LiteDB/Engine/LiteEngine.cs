@@ -126,12 +126,8 @@ namespace LiteDB
             // initialize all services
             this.InitializeServices();
 
-            // try recovery data only if journal are enabled
-            if (_disk.IsJournalEnabled)
-            {
-                // try recovery if has journal file
-                _trans.Recovery();
-            }
+            // try recovery if has journal file
+            _trans.Recovery();
         }
 
         /// <summary>

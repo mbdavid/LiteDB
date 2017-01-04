@@ -127,11 +127,6 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public bool IsJournalEnabled { get { return false; } }
-
-        /// <summary>
-        /// No journal implemented
-        /// </summary>
         public void WriteJournal(ICollection<byte[]> pages)
         {
         }

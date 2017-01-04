@@ -182,15 +182,14 @@ namespace LiteDB
         #region Journal file
 
         /// <summary>
-        /// Returns if journal is enabled
-        /// </summary>
-        public bool IsJournalEnabled { get { return _options.Journal; } }
-
-        /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
         public void WriteJournal(ICollection<byte[]> pages)
         {
+            // write journal only if enabled
+            if (_options.Journal == false) return;
+
+            // if no journal already open, do it now
             if (_journal == null)
             {
                 // open or create datafile if not exists
@@ -230,6 +229,9 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<byte[]> ReadJournal()
         {
+            // if journal are not enabled, just return empty result
+            if (_options.Journal == false) yield break;
+
             // check if exists journal file (if opened)
             if (_journal == null)
             {

@@ -37,11 +37,6 @@ namespace LiteDB
         bool IsExclusive { get; }
 
         /// <summary>
-        /// Indicate if journal are enabled/implemented
-        /// </summary>
-        bool IsJournalEnabled { get; }
-
-        /// <summary>
         /// Read journal file returning IEnumerable of pages
         /// </summary>
         IEnumerable<byte[]> ReadJournal();
