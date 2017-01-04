@@ -26,6 +26,10 @@ namespace LiteDB.Tests
             // and test if no duplicate key will be throwed
             using (var file = new TempFile())
             {
+                using (var dbInit = new LiteDatabase(file.Filename))
+                {
+                }
+
                 using (var dbA = new LiteDatabase(file.Filename))
                 using (var dbB = new LiteDatabase(file.Filename))
                 {
