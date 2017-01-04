@@ -246,7 +246,7 @@ namespace LiteDB
             return this;
         }
 
-        private Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])");
+        private Regex _lowerCaseDelimiter = new Regex("(?!(^[A-Z]))([A-Z])", RegexOptions.Compiled);
 
         /// <summary>
         /// Uses lower camel case with delimiter to convert property names to field names

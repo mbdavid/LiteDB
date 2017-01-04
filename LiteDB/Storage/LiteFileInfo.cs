@@ -15,7 +15,7 @@ namespace LiteDB
         /// </summary>
         public const string ID_PATTERN = @"^[\w-$@!+%;\.]+(\/[\w-$@!+%;\.]+)*$";
 
-        private static Regex IdPattern = new Regex(ID_PATTERN);
+        private static Regex IdPattern = new Regex(ID_PATTERN, RegexOptions.Compiled);
 
         public string Id { get; private set; }
         public string Filename { get; private set; }
