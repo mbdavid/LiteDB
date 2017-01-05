@@ -8,38 +8,15 @@ namespace LiteDB
     /// </summary>
     public class LockControl : IDisposable
     {
-        // dispose based on
-        // https://lostechies.com/chrispatterson/2012/11/29/idisposable-done-right/
-
         private Action _dispose;
-        private bool _disposed;
 
         internal LockControl(Action dispose)
         {
             _dispose = dispose;
         }
 
-        ~LockControl()
-        {
-            Dispose(false);
-        }
-
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            _disposed = true;
-
-            if (disposing)
-            {
-            }
-
             if (_dispose != null) _dispose();
         }
     }
