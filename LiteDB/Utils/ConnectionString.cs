@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
@@ -14,8 +9,6 @@ namespace LiteDB
     /// </summary>
     public class ConnectionString
     {
-        private Dictionary<string, string> _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
         /// </summary>
@@ -66,48 +59,59 @@ namespace LiteDB
         /// </summary>
         public bool Upgrade { get; private set; }
 
+        internal ConnectionString(ConnectionStringBuilder builder)
+        {
+            this.Filename = builder.Filename;
+            this.Journal = builder.Journal;
+            this.Password = builder.Password;
+            this.CacheSize = builder.CacheSize;
+            this.Timeout = builder.Timeout;
+            this.Mode = builder.Mode;
+            this.InitialSize = builder.InitialSize;
+            this.LimitSize = builder.LimitSize;
+            this.Log = builder.Log;
+            this.Upgrade = builder.Upgrade;
+        }
 
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
 
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             // create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
-                _values.ParseKeyValue(connectionString);
+                values.ParseKeyValue(connectionString);
             }
             else
             {
-                _values["filename"] = connectionString;
+                values["filename"] = connectionString;
             }
 
             // setting values to properties
-            this.Filename = GetValue("filename", "");
-            this.Journal = GetValue("journal", true);
-            this.Password = GetValue<string>("password", null);
-            this.CacheSize = GetValue(@"cache size", 5000);
-            this.Timeout = GetValue("timeout", TimeSpan.FromMinutes(1));
-#if NET35
-            this.Mode = GetValue("mode", FileMode.Shared);
-#else
-            this.Mode = GetValue("mode", FileMode.Exclusive);
-#endif
-            this.InitialSize = GetFileSize(@"initial size", BasePage.PAGE_SIZE * 2);
-            this.LimitSize = GetFileSize(@"limit size", long.MaxValue);
-            this.Log = GetValue<byte>("log", 0);
-            this.Upgrade = GetValue("upgrade", false);
+            this.Filename = GetValue(values, "filename", "");
+            this.Journal = GetValue(values, "journal", ConnectionStringBuilder.DefaultJournal);
+            this.Password = GetValue<string>(values, "password", null);
+            this.CacheSize = GetValue(values, @"cache size", ConnectionStringBuilder.DefaultCacheSize);
+            this.Timeout = GetValue(values, "timeout", ConnectionStringBuilder.DefaultTimeOut);
+            this.Mode = GetValue(values, "mode", ConnectionStringBuilder.DefaultFileMode);
+            this.InitialSize = GetFileSize(values, @"initial size", ConnectionStringBuilder.DefaultInitialSize);
+            this.LimitSize = GetFileSize(values, @"limit size", ConnectionStringBuilder.DefaultLimitSize);
+            this.Log = GetValue<byte>(values, "log", ConnectionStringBuilder.DefaultLogLevel);
+            this.Upgrade = GetValue(values, "upgrade", ConnectionStringBuilder.DefaultUpgrade);
         }
 
         /// <summary>
         /// Get value from _values and convert if exists
         /// </summary>
-        private T GetValue<T>(string key, T defaultValue)
+        private T GetValue<T>(IDictionary<string, string> values, string key, T defaultValue)
         {
             try
             {
                 string value;
 
-                if (_values.TryGetValue(key, out value) == false) return defaultValue;
+                if (values.TryGetValue(key, out value) == false) return defaultValue;
 
                 if (typeof(T) == typeof(TimeSpan))
                 {
@@ -131,9 +135,9 @@ namespace LiteDB
         /// <summary>
         /// Get a value from a key converted in file size format: "1gb", "10 mb", "80000"
         /// </summary>
-        private long GetFileSize(string key, long defaultValue)
+        private long GetFileSize(IDictionary<string, string> values, string key, long defaultValue)
         {
-            var size = this.GetValue<string>(key, null);
+            var size = this.GetValue<string>(values, key, null);
 
             if (size == null) return defaultValue;
 
