@@ -418,7 +418,10 @@ namespace LiteDB
 
             if(this.IncludeFields)
             {
-                members.AddRange(type.GetRuntimeFields());
+                // in fields:
+                // - remove when name ends with k__BackingField (Automatic Property syntax)
+                // - remove static properties
+                members.AddRange(type.GetRuntimeFields().Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false));
             }
 #endif
 

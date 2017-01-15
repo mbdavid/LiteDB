@@ -244,11 +244,8 @@ namespace LiteDB
         {
             var entity = this.GetEntityMapper(type);
 
-            foreach (var member in entity.Members)
+            foreach (var member in entity.Members.Where(x => x.Setter != null))
             {
-                // member is read only
-                if (member.Setter == null) continue;
-
                 var val = value[member.FieldName];
 
                 if (!val.IsNull)

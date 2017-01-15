@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace LiteDB.Tests
 {
-    public class StructValue
+    public struct StructValue
     {
         public string Property { get; set; }
     }
@@ -35,7 +35,7 @@ namespace LiteDB.Tests
             };
 
             var doc = mapper.ToDocument(obj);
-            var nobj = mapper.Deserialize<ContainerValue>(doc);
+            var nobj = mapper.ToObject<ContainerValue>(doc);
 
             Assert.AreEqual(obj.Id, nobj.Id);
             Assert.AreEqual(obj.Struct.Property, nobj.Struct.Property);

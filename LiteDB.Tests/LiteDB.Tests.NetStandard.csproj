@@ -71,7 +71,6 @@
     <Compile Include="Database\NonIdPocoTest.cs" />
     <Compile Include="Database\NullRefTests.cs" />
     <Compile Include="Database\PredicateBuilderTest.cs" />
-    <Compile Include="Database\LinqVisitorTest.cs" />
     <Compile Include="Engine\AutoIndexEngineTest.cs" />
     <Compile Include="Mapper\MapperNonPublicTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />

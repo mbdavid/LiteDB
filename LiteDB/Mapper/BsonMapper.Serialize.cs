@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace LiteDB
@@ -154,7 +155,7 @@ namespace LiteDB
                 dict["_type"] = new BsonValue(t.FullName + ", " + t.GetTypeInfo().Assembly.GetName().Name);
             }
 
-            foreach (var member in entity.Members)
+            foreach (var member in entity.Members.Where(x => x.Getter != null))
             {
                 // get member value
                 var value = member.Getter(obj);

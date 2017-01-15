@@ -149,7 +149,7 @@ namespace LiteDB.Tests
                 // list of structs
                 MyCollectionPoint = new List<Point> { new Point(1, 1), Point.Empty },
                 MyListPoint = new List<Point> { new Point(1, 1), Point.Empty },
-                MyEnumerablePoint = new [] { new Point(1, 1), Point.Empty },
+                MyEnumerablePoint = new[] { new Point(1, 1), Point.Empty },
 
                 MyEnumProp = MyEnum.Second,
                 MyChar = 'Y',

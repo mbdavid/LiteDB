@@ -135,6 +135,8 @@
     <Compile Include="Mapper\Linq\QueryVisitor.cs" />
     <Compile Include="Mapper\MemberMapper.cs" />
     <Compile Include="Mapper\Reflection\Reflection.cs" />
+    <Compile Include="Mapper\Reflection\Reflection.Emit.cs" />
+    <Compile Include="Mapper\Reflection\Reflection.Expression.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\LiteFileInfo.cs" />
     <Compile Include="Storage\LiteFileStream.cs" />

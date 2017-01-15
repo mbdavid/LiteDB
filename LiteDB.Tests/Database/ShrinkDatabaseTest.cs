@@ -37,7 +37,7 @@ namespace LiteDB.Tests
                 var r = db.Shrink();
 
                 // only header page
-                Assert.AreEqual(BasePage.PAGE_SIZE, size - r);
+                Assert.AreEqual(4096, size - r);
             }
         }
 

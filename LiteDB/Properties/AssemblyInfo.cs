@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Maurício David")]
 [assembly: AssemblyProduct("LiteDB")]
-[assembly: AssemblyCopyright("MIT © 2016")]
+[assembly: AssemblyCopyright("MIT © 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
@@ -16,5 +16,3 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyVersion("3.0.0.0")]
 [assembly: AssemblyFileVersion("3.0.0.0")]
 [assembly: NeutralResourcesLanguage("en")]
-
-[assembly: InternalsVisibleTo("LiteDB.Tests")]
