@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\net35\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET35</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NET35 UNITY3D</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -110,6 +110,7 @@
     <Compile Include="Engine\Structures\DataBlock.cs" />
     <Compile Include="Engine\Structures\IndexNode.cs" />
     <Compile Include="Engine\Structures\IndexInfo.cs" />
+    <Compile Include="Mapper\Reflection\Reflection.Unity3D.cs" />
     <Compile Include="Mapper\Reflection\Reflection.Expression.cs" />
     <Compile Include="Mapper\Reflection\Reflection.Emit.cs" />
     <Compile Include="Utils\LockControl.cs" />

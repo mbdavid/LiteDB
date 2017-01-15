@@ -1,4 +1,4 @@
-﻿#if NET35
+﻿#if NET35 && !UNITY3D
 using System;
 using System.Collections;
 using System.Collections.Generic;
