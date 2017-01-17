@@ -22,7 +22,7 @@ namespace LiteDB
                 // no collection, no documents
                 if (col == null) yield break;
 
-                // is there is not create index factory, create new here
+                // if there is no create index factory, create new here
                 query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
 
                 // get nodes from query executor to get all IndexNodes

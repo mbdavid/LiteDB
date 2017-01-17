@@ -77,13 +77,12 @@ namespace LiteDB
                     _disk.WritePage(page.PageID, buffer);
                 }
 
+                // mark all dirty pages in clean pages (all are persisted in disk and are valid pages)
+                _cache.MarkDirtyAsClean();
+
                 // discard journal file
                 _disk.ClearJournal();
             }
-
-            // mark all dirty pages in clean pages (all are persisted in disk and are valid pages)
-            _cache.MarkDirtyAsClean();
-
         }
 
         /// <summary>

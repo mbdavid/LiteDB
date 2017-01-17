@@ -27,39 +27,29 @@ namespace LiteDB
 
         /// <summary>
         /// Get a page from cache or from disk (and put on cache)
-        /// [Non - ThreadSafe]
+        /// [ThreadSafe]
         /// </summary>
         public BasePage GetPage(uint pageID)
         {
-            // lock concurrency access (read access are not in a lock transaction)
-            lock (_clean)
-            {
-                // try get page from clean cache or from dirty list
-                return 
-                    _clean.GetOrDefault(pageID) ??
-                    _dirty.GetOrDefault(pageID);
-            }
+            // try get page from clean cache or from dirty list
+            return 
+                _clean.GetOrDefault(pageID) ??
+                _dirty.GetOrDefault(pageID);
         }
 
         /// <summary>
         /// Add page to cache
-        /// [Non - ThreadSafe]
+        /// [ThreadSafe]
         /// </summary>
         public void AddPage(BasePage page)
         {
             if (page.IsDirty)
             {
-                lock(_dirty)
-                {
-                    _dirty[page.PageID] = page;
-                }
+                _dirty[page.PageID] = page;
             }
             else
             {
-                lock(_clean)
-                {
-                    _clean[page.PageID] = page;
-                }
+                _clean[page.PageID] = page;
             }
         }
 
@@ -123,7 +113,7 @@ namespace LiteDB
 
         /// <summary>
         /// Remove from cache all clean pages
-        /// [ThreadSafe]
+        /// [Non - ThreadSafe]
         /// </summary>
         public void ClearPages()
         {

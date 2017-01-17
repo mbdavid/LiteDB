@@ -25,25 +25,28 @@ namespace LiteDB
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
-            var page = _cache.GetPage(pageID);
-
-            // is not on cache? load from disk
-            if (page == null)
+            lock(_disk)
             {
-                var buffer = _disk.ReadPage(pageID);
+                var page = _cache.GetPage(pageID);
 
-                // if datafile are encrypted, decrypt buffer (header are not encrypted)
-                if (_crypto != null && pageID > 0)
+                // is not on cache? load from disk
+                if (page == null)
                 {
-                    buffer = _crypto.Decrypt(buffer);
+                    var buffer = _disk.ReadPage(pageID);
+
+                    // if datafile are encrypted, decrypt buffer (header are not encrypted)
+                    if (_crypto != null && pageID > 0)
+                    {
+                        buffer = _crypto.Decrypt(buffer);
+                    }
+
+                    page = BasePage.ReadPage(buffer);
+
+                    _cache.AddPage(page);
                 }
 
-                page = BasePage.ReadPage(buffer);
-
-                _cache.AddPage(page);
+                return (T)page;
             }
-
-            return (T)page;
         }
 
         /// <summary>
