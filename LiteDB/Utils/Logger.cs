@@ -12,11 +12,25 @@ namespace LiteDB
         public const byte ERROR = 1;
         public const byte RECOVERY = 2;
         public const byte COMMAND = 4;
+        public const byte LOCK = 8;
         public const byte QUERY = 16;
         public const byte JOURNAL = 32;
         public const byte CACHE = 64;
         public const byte DISK = 128;
         public const byte FULL = 255;
+
+        /// <summary>
+        /// Initialize logger class using a custom logging level (see Logger.NONE to Logger.FULL)
+        /// </summary>
+        public Logger(byte level = NONE, Action<string> logging = null)
+        {
+            this.Level = level;
+
+            if (logging != null)
+            {
+                this.Logging += logging;
+            }
+        }
 
         /// <summary>
         /// Event when log writes a message. Fire on each log message
@@ -49,6 +63,7 @@ namespace LiteDB
                     level == RECOVERY ? "RECOVERY" :
                     level == COMMAND ? "COMMAND" :
                     level == JOURNAL ? "JOURNAL" :
+                    level == LOCK ? "LOCK" :
                     level == QUERY ? "QUERY" :
                     level == CACHE ? "CACHE" : 
                     level == DISK ? "DISK" : "";

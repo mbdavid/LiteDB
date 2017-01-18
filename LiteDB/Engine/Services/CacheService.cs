@@ -43,14 +43,9 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page)
         {
-            if (page.IsDirty)
-            {
-                _dirty[page.PageID] = page;
-            }
-            else
-            {
-                _clean[page.PageID] = page;
-            }
+            if (page.IsDirty) throw new NotSupportedException("Page can't be dirty");
+
+            _clean[page.PageID] = page;
         }
 
         /// <summary>

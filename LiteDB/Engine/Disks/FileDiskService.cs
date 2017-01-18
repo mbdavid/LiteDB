@@ -315,6 +315,8 @@ namespace LiteDB
                 state == LockState.Exclusive ? LOCK_POSITION : 0;
             
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+
+            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
             
             _stream.TryLock(position, length, timeout);
 #endif
@@ -335,7 +337,9 @@ namespace LiteDB
                 state == LockState.Exclusive ? LOCK_POSITION : 0;
             
             var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
-            
+
+            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
+
             _stream.TryUnlock(position, length);
 #endif
         }
