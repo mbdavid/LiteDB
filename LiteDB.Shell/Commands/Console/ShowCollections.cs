@@ -14,6 +14,12 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
+            if(engine == null)
+            {
+                display.WriteError("No database file currently open.");
+                return;
+            }
+
             var cols = engine.GetCollectionNames().OrderBy(x => x).ToArray();
 
             if (cols.Length > 0)

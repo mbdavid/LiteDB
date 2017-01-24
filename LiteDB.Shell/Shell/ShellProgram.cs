@@ -66,9 +66,9 @@ namespace LiteDB.Shell
         public static void RegisterCommands(List<ICommand> commands)
         {
             var type = typeof(ICommand);
-            var types = Assembly.GetExecutingAssembly()
+            var types = typeof(ShellProgram).GetTypeInfo().Assembly
                 .GetTypes()
-                .Where(p => type.IsAssignableFrom(p) && p.IsClass);
+                .Where(p => type.IsAssignableFrom(p) && p.GetTypeInfo().IsClass);
 
             foreach(var cmd in types)
             {
