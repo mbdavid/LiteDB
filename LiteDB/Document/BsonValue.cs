@@ -410,6 +410,18 @@ namespace LiteDB
             return new BsonValue(value);
         }
 
+        // UInt64 (to avoid ambigous between Double-Decimal)
+        public static implicit operator UInt64(BsonValue value)
+        {
+            return (UInt64)value.RawValue;
+        }
+
+        // Decimal
+        public static implicit operator BsonValue(UInt64 value)
+        {
+            return new BsonValue((Double)value);
+        }
+
         // String
         public static implicit operator String(BsonValue value)
         {

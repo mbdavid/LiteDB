@@ -69,6 +69,7 @@
     <Compile Include="Concurrency\AutoIdConcurrencyTest.cs" />
     <Compile Include="Concurrency\ProcessTest.cs" />
     <Compile Include="Database\AutoIndexDatabaseTest.cs" />
+    <Compile Include="Document\ImplicitTest.cs" />
     <Compile Include="Engine\AutoIndexEngineTest.cs" />
     <Compile Include="Database\AutoIdTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />

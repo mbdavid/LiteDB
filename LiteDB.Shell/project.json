@@ -1,21 +1,15 @@
 ﻿{
-  "version": "1.0.0-*",
+  "version": "3.0.0-*",
   "buildOptions": {
     "debugType": "portable",
     "emitEntryPoint": true
   },
   "dependencies": {
-    "LiteDB": "3.0.0"
+    "LiteDB": "3.0.0",
+    "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
+    "NETStandard.Library": "1.6.0"
   },
   "frameworks": {
-    "netcoreapp1.0": {
-      "dependencies": {
-        "Microsoft.NETCore.App": {
-          "type": "platform",
-          "version": "1.0.1"
-        }
-      },
-      "imports": "dnxcore50"
-    }
+    "netstandard1.4": {}
   }
 }
