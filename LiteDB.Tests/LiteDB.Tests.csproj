@@ -96,6 +96,7 @@
     <Compile Include="Engine\ShrinkTest.cs" />
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Mapper\MapperExceptionTest.cs" />
+    <Compile Include="Mapper\DictListTest.cs" />
     <Compile Include="Mapper\MaxValueTest.cs" />
     <Compile Include="Mapper\MapperTest.cs" />
     <Compile Include="Engine\EncryptedTest.cs" />

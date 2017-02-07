@@ -39,9 +39,11 @@ namespace LiteDB
                     var array = value.AsArray;
                     if (array.Count == 0) return;
 
-                    for (var i = 0; i < array.Count; i++)
+                    var docs = array.ToArray();
+                    array.Clear();
+
+                    foreach (var doc in docs)
                     {
-                        var doc = array[i];
                         var colRef = doc.AsDocument["$ref"];
                         var colId = doc.AsDocument["$id"];
 
@@ -49,7 +51,11 @@ namespace LiteDB
 
                         var obj = _engine.Value.Find(colRef, Query.EQ("_id", colId)).FirstOrDefault();
 
-                        array[i] = obj;
+                        // include only object that exists in external ref
+                        if(obj != null)
+                        {
+                            array.Add(obj);
+                        }
                     }
                 }
                 else if(value.IsDocument)
