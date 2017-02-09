@@ -297,7 +297,6 @@ namespace LiteDB
             };
 
             var idAttr = typeof(BsonIdAttribute);
-            var ignoreAttr = typeof(BsonIgnoreAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
@@ -305,7 +304,7 @@ namespace LiteDB
             foreach (var memberInfo in this.GetTypeMembers(type))
             {
                 // checks [BsonIgnore]
-                if (memberInfo.IsDefined(ignoreAttr, true)) continue;
+                if (IsIgnorableMember(memberInfo)) continue;
 
                 // checks field name conversion
                 var name = this.ResolveFieldName(memberInfo.Name);
@@ -395,6 +394,16 @@ namespace LiteDB
                 false;
         }
 
+        /// <summary>
+        /// Override this method to fine tune what should fields should be mapped and what not.
+        /// By default it ignores only the fields with BsonIgnoreAttribute.
+        /// </summary>
+        protected virtual bool IsIgnorableMember(MemberInfo memberInfo)
+        {
+            var ignoreAttr = typeof(BsonIgnoreAttribute);
+            return memberInfo.IsDefined(ignoreAttr, true);
+        }
+        
         /// <summary>
         /// Returns all member that will be have mapper between POCO class to document
         /// </summary>
