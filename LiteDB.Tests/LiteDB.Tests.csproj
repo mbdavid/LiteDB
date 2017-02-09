@@ -80,6 +80,7 @@
     <Compile Include="Database\NonIdPocoTest.cs" />
     <Compile Include="Database\NullRefTests.cs" />
     <Compile Include="Database\PredicateBuilderTest.cs" />
+    <Compile Include="Database\IndexSortAndFilterTest.cs" />
     <Compile Include="Mapper\MapperNonPublicTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
