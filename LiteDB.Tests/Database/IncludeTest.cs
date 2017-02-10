@@ -95,14 +95,27 @@ namespace LiteDB.Tests
 
                 orders.Insert(order);
 
-                var r0 = orders
-                    .Include(x => x.Products)
-                    .Include(x => x.Products[0].SupplierAddress)
-                    .FindAll()
+                //var r0 = orders
+                //    .Include(x => x.Products)
+                //    .Include(x => x.Products[0].SupplierAddress)
+                //    .FindAll()
+                //    .FirstOrDefault();
+                
+                orders.EnsureIndex(x => x.Customer.Id);
+
+                // query orders using customer $id
+                // include customer data and customer address
+                var r1 = orders
+                    .Include(x => x.Customer)
+                    .Include(x => x.Customer.MainAddress)
+                    .Find(x => x.Customer.Id == 1)
                     .FirstOrDefault();
 
-                // r0 not working as expected
+                Assert.AreEqual(order.Id, r1.Id);
+                Assert.AreEqual(order.Customer.Name, r1.Customer.Name);
+                Assert.AreEqual(order.Customer.MainAddress.StreetName, r1.Customer.MainAddress.StreetName);
 
+                // include all 
                 var result = orders
                     .Include(x => x.Customer)
                     .Include("Customer.MainAddress")
