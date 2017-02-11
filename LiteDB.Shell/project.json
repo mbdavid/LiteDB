@@ -1,5 +1,5 @@
 ﻿{
-  "version": "3.0.0-*",
+  "version": "3.0.1-*",
   "buildOptions": {
     "debugType": "portable",
     "emitEntryPoint": true
@@ -10,6 +10,12 @@
     "NETStandard.Library": "1.6.0"
   },
   "frameworks": {
-    "netstandard1.4": {}
+    "netstandard1.4": { }
+  },
+  "runtimes": {
+    "win": { },
+    "win-anycpu": { },
+    "win-x86": { },
+    "win-x64": { }
   }
 }
