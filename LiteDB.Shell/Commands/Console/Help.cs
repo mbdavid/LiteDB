@@ -47,8 +47,6 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> close", "Close current database");
                 d.WriteHelp("> run <filename>", "Run commands inside filename");
                 d.WriteHelp("> pretty on|off", "Turns on/off pretty json format");
-                d.WriteHelp("> dump > <filename.dmp>", "Export all documents to an external file script");
-                d.WriteHelp("> dump < <filename.dmp>", "Import all documents inside a script dump file");
                 d.WriteHelp("> timer", "Show timer before prompt");
                 d.WriteHelp("> ed", "Open notepad with last command to edit and execute");
                 d.WriteHelp("> spool on|off", "Spool all output in a spool file");
@@ -105,7 +103,6 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> rollback", "Rollback a transaction");
                 d.WriteHelp("> dbversion [N]", "Get/Set user database file version");
                 d.WriteHelp("> shrink", "Reduce database removing empty pages");
-                d.WriteHelp("> diskdump [n m]", "Display database disk pages strucutre (from N page to M page)");
             }
         }
     }
