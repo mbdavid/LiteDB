@@ -8,7 +8,7 @@ namespace LiteDB.Shell.Commands
 
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"userversion\s*").Length > 0;
+            return s.Scan(@"db.userversion\s*").Length > 0;
         }
 
         public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)

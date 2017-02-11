@@ -82,6 +82,7 @@
     <Compile Include="Commands\Console\Shrink.cs" />
     <Compile Include="Commands\Console\Timer.cs" />
     <Compile Include="Commands\Console\Upgrade.cs" />
+    <Compile Include="Commands\Console\Version.cs" />
     <Compile Include="Commands\Console\UserVersion.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\Storage\BaseStorage.cs" />

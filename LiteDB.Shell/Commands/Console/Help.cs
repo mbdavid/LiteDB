@@ -100,9 +100,9 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> upgrade <connectionString>", "Upgrade old datafile (LiteDB v2) to new LiteDB v3 format");
-                d.WriteHelp("> userversion [N]", "Get/Set user database file version");
-                d.WriteHelp("> shrink [password]", "Reduce database removing empty pages and change password (optional)");
+                d.WriteHelp("> db.upgrade <connectionString>", "Upgrade old datafile (LiteDB v2) to new LiteDB v3 format");
+                d.WriteHelp("> db.userversion [N]", "Get/Set user database file version");
+                d.WriteHelp("> db.shrink [password]", "Reduce database removing empty pages and change password (optional)");
             }
         }
     }
