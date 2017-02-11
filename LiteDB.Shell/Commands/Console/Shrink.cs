@@ -8,19 +8,18 @@ namespace LiteDB.Shell.Commands
 
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"shrink\s*").Length > 0;
+            return s.Scan(@"db.shrink\s*").Length > 0;
         }
 
         public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
         {
             var password = s.Scan(".*").TrimToNull();
 
-            display.WriteLine("Shrinking datafile..." + (password == "" ? "(no encryption)" : password));
+            display.WriteLine("Shrinking datafile...");
 
-            if (password != null)
-            {
-                display.WriteLine("Encrypting datafile using password: " + password);
-            }
+            display.WriteLine(password == null ?
+                "No encryption" :
+                "Encrypting datafile using password: " + password);
 
             display.WriteLine("Reduced: " + engine.Shrink(password) + " bytes");
         }

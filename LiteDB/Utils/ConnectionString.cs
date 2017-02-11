@@ -64,6 +64,16 @@ namespace LiteDB
         /// </summary>
         public bool Upgrade { get; set; }
 
+        /// <summary>
+        /// Initialize empty connection string
+        /// </summary>
+        public ConnectionString()
+        {
+        }
+
+        /// <summary>
+        /// Initialize connection string parsing string in "key1=value1;key2=value2;...." format or only "filename" as default (when no ; char found)
+        /// </summary>
         public ConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
