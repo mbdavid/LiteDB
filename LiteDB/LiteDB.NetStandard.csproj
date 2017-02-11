@@ -39,7 +39,7 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
@@ -160,7 +160,6 @@
     <Compile Include="Upgrade\V6\Structures\CollectionIndex.cs" />
     <Compile Include="Upgrade\V6\Structures\DataBlock.cs" />
     <Compile Include="Upgrade\V6\Structures\IndexNode.cs" />
-    <Compile Include="Upgrade\V6\Structures\IndexOptions.cs" />
     <Compile Include="Upgrade\V6\Structures\RijndaelEncryption.cs" />
     <Compile Include="Utils\AesEncryption.cs" />
     <Compile Include="Utils\ByteReader.cs" />
