@@ -84,12 +84,12 @@ namespace LiteDB_V6
         {
             switch (pageType)
             {
-                case PageType.Header: return new HeaderPage();
                 case PageType.Collection: return new CollectionPage(pageID);
                 case PageType.Index: return new IndexPage(pageID);
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);
-                default: throw new Exception("Invalid pageType");
+                // use Header as default, because header page will read fixed HEADER_INFO and validate file format (if is not valid datafile)
+                default: return new HeaderPage();
             }
         }
 
