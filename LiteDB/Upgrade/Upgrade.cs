@@ -31,22 +31,20 @@ namespace LiteDB
                 {
                     foreach(var col in reader.GetCollections())
                     {
-                        // first, create all indexes
-                        var indexes = reader.GetIndexes(col);
-
-                        foreach(var index in indexes)
+                        // first, create all unique indexes
+                        foreach(var field in reader.GetUniqueIndexes(col))
                         {
-                            engine.EnsureIndex(col, index.Key, index.Value);
+                            engine.EnsureIndex(col, field, true);
                         }
 
-                        // now copy documents in 5000 groups
+                        // now copy 5000 documents per batch
                         var docs = reader.GetDocuments(col);
 
                         foreach(var batch in docs.Batch(batchSize))
                         {
                             engine.Insert(col, batch);
 
-                            // just clear pages
+                            // just clear pages/cache
                             engine.Rollback();
                         }
                     }

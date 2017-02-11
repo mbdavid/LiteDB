@@ -44,14 +44,6 @@ namespace LiteDB_V6
         public IndexPage Page { get; set; }
 
         /// <summary>
-        /// Returns Next (order == 1) OR Prev (order == -1)
-        /// </summary>
-        public LiteDB.PageAddress NextPrev(int index, int order)
-        {
-            return order == LiteDB.Query.Ascending ? this.Next[index] : this.Prev[index];
-        }
-
-        /// <summary>
         /// Returns if this node is header or tail from collection Index
         /// </summary>
         public bool IsHeadTail(CollectionIndex index)

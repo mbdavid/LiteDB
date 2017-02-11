@@ -5,17 +5,10 @@ namespace LiteDB_V6
 {
     /// <summary>
     /// Implement a Index service - Add/Remove index nodes on SkipList
-    /// Based on: http://igoro.com/archive/skip-lists-are-fascinating/
     /// </summary>
     internal class IndexService
     {
-        /// <summary>
-        /// Max size of a index entry - used for string, binary, array and documents
-        /// </summary>
-        public const int MAX_INDEX_LENGTH = 512;
-
         private PageService _pager;
-        private Random _rand = new Random();
 
         public IndexService(PageService pager)
         {
@@ -32,13 +25,13 @@ namespace LiteDB_V6
             return page.Nodes[address.Index];
         }
 
-        public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
+        public IEnumerable<IndexNode> FindAll(CollectionIndex index)
         {
-            var cur = this.GetNode(order == LiteDB.Query.Ascending ? index.HeadNode : index.TailNode);
+            var cur = this.GetNode(index.HeadNode);
 
-            while (!cur.NextPrev(0, order).IsEmpty)
+            while (!cur.Next[0].IsEmpty)
             {
-                cur = this.GetNode(cur.NextPrev(0, order));
+                cur = this.GetNode(cur.Next[0]);
 
                 // stop if node is head/tail
                 if (cur.IsHeadTail(index)) yield break;

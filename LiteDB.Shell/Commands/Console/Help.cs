@@ -53,6 +53,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> -- comment", "Do nothing, its just a comment");
                 d.WriteHelp("> /<command>/", "Support for multi line command");
                 d.WriteHelp("> debug on|off", "Enabled debug messages from dbengine");
+                d.WriteHelp("> upgrade <connectionString>", "Upgrade an old datafile (LiteDB v2) to new LiteDB v3 format.");
                 d.WriteHelp("> version", "Show LiteDB version");
                 d.WriteHelp("> exit", "Close LiteDB shell");
 
@@ -100,7 +101,6 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> db.upgrade <connectionString>", "Upgrade old datafile (LiteDB v2) to new LiteDB v3 format");
                 d.WriteHelp("> db.userversion [N]", "Get/Set user database file version");
                 d.WriteHelp("> db.shrink [password]", "Reduce database removing empty pages and change password (optional)");
             }

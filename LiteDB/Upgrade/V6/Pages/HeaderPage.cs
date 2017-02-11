@@ -5,49 +5,15 @@ namespace LiteDB_V6
 {
     internal class HeaderPage : BasePage
     {
-        /// <summary>
-        /// Page type = Header
-        /// </summary>
-        public override PageType PageType { get { return PageType.Header; } }
-
-        /// <summary>
-        /// Header info the validate that datafile is a LiteDB file (27 bytes)
-        /// </summary>
         private const string HEADER_INFO = "** This is a LiteDB file **";
-
-        /// <summary>
-        /// Datafile specification version
-        /// </summary>
         private const byte FILE_VERSION = 6;
 
-        /// <summary>
-        /// Get/Set the changeID of data. When a client read pages, all pages are in the same version. But when OpenTransaction, we need validate that current changeID is the same that we have in cache
-        /// </summary>
+        public override PageType PageType { get { return PageType.Header; } }
         public ushort ChangeID { get; set; }
-
-        /// <summary>
-        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page)
-        /// </summary>
         public uint FreeEmptyPageID;
-
-        /// <summary>
-        /// Last created page - Used when there is no free page inside file
-        /// </summary>
         public uint LastPageID { get; set; }
-
-        /// <summary>
-        /// Database user version [2 bytes]
-        /// </summary>
         public ushort DbVersion = 0;
-
-        /// <summary>
-        /// Password hash in SHA1 [20 bytes]
-        /// </summary>
         public byte[] Password = new byte[20];
-
-        /// <summary>
-        /// Get a dictionary with all collection pages with pageID link
-        /// </summary>
         public Dictionary<string, uint> CollectionPages { get; set; }
 
         public HeaderPage()

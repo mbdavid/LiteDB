@@ -13,7 +13,7 @@ namespace LiteDB
     {
         bool Initialize(Stream stream, string password);
         IEnumerable<string> GetCollections();
-        IEnumerable<KeyValuePair<string, bool>> GetIndexes(string collection);
+        IEnumerable<string> GetUniqueIndexes(string collection);
         IEnumerable<BsonDocument> GetDocuments(string collection);
     }
 }

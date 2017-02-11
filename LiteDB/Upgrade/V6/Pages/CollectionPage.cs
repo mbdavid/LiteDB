@@ -10,30 +10,10 @@ namespace LiteDB_V6
     /// </summary>
     internal class CollectionPage : BasePage
     {
-        /// <summary>
-        /// Page type = Collection
-        /// </summary>
         public override PageType PageType { get { return PageType.Collection; } }
-
-        /// <summary>
-        /// Name of collection
-        /// </summary>
         public string CollectionName { get; set; }
-
-        /// <summary>
-        /// Get a reference for the free list data page - its private list per collection - each DataPage contains only data for 1 collection (no mixing)
-        /// Must to be a Field to be used as parameter reference
-        /// </summary>
         public uint FreeDataPageID;
-
-        /// <summary>
-        /// Get the number of documents inside this collection
-        /// </summary>
         public long DocumentCount { get; set; }
-
-        /// <summary>
-        /// Get all indexes from this collection - includes non-used indexes
-        /// </summary>
         public CollectionIndex[] Indexes { get; set; }
 
         public CollectionPage(uint pageID)
@@ -62,17 +42,16 @@ namespace LiteDB_V6
                 index.HeadNode = reader.ReadPageAddress();
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
-                index.Options.Unique = reader.ReadBoolean();
-                index.Options.IgnoreCase = reader.ReadBoolean();
-                index.Options.TrimWhitespace = reader.ReadBoolean();
-                index.Options.EmptyStringToNull = reader.ReadBoolean();
-                index.Options.RemoveAccents = reader.ReadBoolean();
+                index.Unique = reader.ReadBoolean();
+                reader.ReadBoolean(); // IgnoreCase
+                reader.ReadBoolean(); // TrimWhitespace
+                reader.ReadBoolean(); // EmptyStringToNull
+                reader.ReadBoolean(); // RemoveAccents
             }
 
             // be compatible with v2_beta
             var longCount = reader.ReadInt64();
             this.DocumentCount = Math.Max(uintCount, longCount);
-
         }
 
         /// <summary>

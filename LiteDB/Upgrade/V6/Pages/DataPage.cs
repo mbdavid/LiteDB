@@ -8,14 +8,7 @@ namespace LiteDB_V6
     /// </summary>
     internal class DataPage : BasePage
     {
-        /// <summary>
-        /// Page type = Extend
-        /// </summary>
         public override PageType PageType { get { return PageType.Data; } }
-
-        /// <summary>
-        /// Returns all data blocks - Each block has one object
-        /// </summary>
         public Dictionary<ushort, DataBlock> DataBlocks { get; set; }
 
         public DataPage(uint pageID)

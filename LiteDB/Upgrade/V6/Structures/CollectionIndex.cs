@@ -23,9 +23,9 @@ namespace LiteDB_V6
         public string Field { get; set; }
 
         /// <summary>
-        /// Index options like unique and ignore case
+        /// Unique index
         /// </summary>
-        public IndexOptions Options { get; set; }
+        public bool Unique { get; set; }
 
         /// <summary>
         /// Head page address for this index
@@ -50,7 +50,7 @@ namespace LiteDB_V6
         public CollectionIndex()
         {
             this.Field = string.Empty;
-            this.Options = new IndexOptions();
+            this.Unique = false;
             this.HeadNode = LiteDB.PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
         }

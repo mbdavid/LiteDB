@@ -27,7 +27,7 @@ namespace LiteDB_V6
             _pager = new PageService(_disk);
             _indexer = new IndexService(_pager);
             _data = new DataService(_pager);
-            _collections = new CollectionService(_pager, _indexer, _data);
+            _collections = new CollectionService(_pager);
 
             return true;
         }
@@ -43,15 +43,15 @@ namespace LiteDB_V6
         }
 
         /// <summary>
-        /// List all indexes keys with unique information
+        /// List all unique indexes (excluding _id index)
         /// </summary>
-        public IEnumerable<KeyValuePair<string, bool>> GetIndexes(string collection)
+        public IEnumerable<string> GetUniqueIndexes(string collection)
         {
             var col = _collections.Get(collection);
 
-            foreach(var index in col.Indexes.Where(x => x.Field != "_id" && string.IsNullOrEmpty(x.Field) == false))
+            foreach(var index in col.Indexes.Where(x => x.Field != "_id" && x.Unique))
             {
-                yield return new KeyValuePair<string, bool>(index.Field, index.Options.Unique);
+                yield return index.Field;
             }
         }
 
@@ -62,7 +62,7 @@ namespace LiteDB_V6
         {
             var col = _collections.Get(collection);
 
-            foreach(var node in _indexer.FindAll(col.PK, Query.Ascending))
+            foreach(var node in _indexer.FindAll(col.PK))
             {
                 var bytes = _data.Read(node.DataBlock);
 

@@ -7,14 +7,10 @@ namespace LiteDB_V6
     internal class CollectionService
     {
         private PageService _pager;
-        private IndexService _indexer;
-        private DataService _data;
 
-        public CollectionService(PageService pager, IndexService indexer, DataService data)
+        public CollectionService(PageService pager)
         {
             _pager = pager;
-            _indexer = indexer;
-            _data = data;
         }
 
         /// <summary>
@@ -33,7 +29,7 @@ namespace LiteDB_V6
                 return _pager.GetPage<CollectionPage>(pageID);
             }
 
-            return null;
+            throw new Exception("Collection not found: " + name);
         }
     }
 }

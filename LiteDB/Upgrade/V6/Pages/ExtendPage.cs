@@ -8,14 +8,7 @@ namespace LiteDB_V6
     /// </summary>
     internal class ExtendPage : BasePage
     {
-        /// <summary>
-        /// Page type = Extend
-        /// </summary>
         public override PageType PageType { get { return PageType.Extend; } }
-
-        /// <summary>
-        /// Represent the part or full of the object - if this page has NextPageID the object is bigger than this page
-        /// </summary>
         public Byte[] Data { get; set; }
 
         public ExtendPage(uint pageID)
