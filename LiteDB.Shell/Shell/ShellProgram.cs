@@ -41,11 +41,19 @@ namespace LiteDB.Shell
                     {
                         if (!command.IsCommand(s)) continue;
 
+                        // open datafile before execute
+                        if (command.Access != DataAccess.None)
+                        {
+                            engine = env.CreateEngine(command.Access);
+                        }
+
                         command.Execute(engine, s, display, input, env);
 
-                        if(env.Filename != null && engine == null)
+                        // close datafile to be always disconnected
+                        if (engine != null)
                         {
-                            engine = env.CreateEngine(DataAccess.Write);
+                            engine.Dispose();
+                            engine = null;
                         }
 
                         found = true;

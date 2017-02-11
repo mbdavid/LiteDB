@@ -21,6 +21,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Basic Shell Commands - try `help full` for all commands");
                 d.WriteHelp("=======================================================");
 
+                d.WriteHelp("> open <filename>|<connectionString>", "Open/Crete a new database");
                 d.WriteHelp("> show collections", "List all collections inside database");
                 d.WriteHelp("> db.<collection>.insert <jsonDoc>", "Insert a new document into collection");
                 d.WriteHelp("> db.<collection>.update <jsonDoc>", "Update a document inside collection");
@@ -43,8 +44,7 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Shell commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> open <filename>", "Open a new database");
-                d.WriteHelp("> close", "Close current database");
+                d.WriteHelp("> open <filename>|<connectionString>", "Open a new database");
                 d.WriteHelp("> run <filename>", "Run commands inside filename");
                 d.WriteHelp("> pretty on|off", "Turns on/off pretty json format");
                 d.WriteHelp("> timer", "Show timer before prompt");
@@ -81,6 +81,8 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("<jsonDoc> = {_id: ... , key: value, key1: value1 }", "Represent a json (extended version) for a BsonDocument. See special data types");
                 d.WriteHelp("Json Date", "{ field: { $date :\"2015-01-01T23:59:59Z\"} }");
                 d.WriteHelp("Json Guid", "{ field: { $guid :\"3a1c34b3-9f66-4d8e-975a-d545d898a4ba\"} }");
+                d.WriteHelp("Json Int64", "{ field: { $numberLong :\"1234556788997\"} }");
+                d.WriteHelp("Json Decimal", "{ field: { $numberDecimal :\"123.456789\"} }");
                 d.WriteHelp("Json Binary", "{ field: { $binary :\"base64 byte array\"} }");
 
                 d.WriteHelp();
@@ -98,11 +100,9 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("Other commands");
                 d.WriteHelp("==============");
 
-                d.WriteHelp("> begin", "Begin an exclusive transaction");
-                d.WriteHelp("> commit", "Commit transaction");
-                d.WriteHelp("> rollback", "Rollback a transaction");
-                d.WriteHelp("> dbversion [N]", "Get/Set user database file version");
-                d.WriteHelp("> shrink", "Reduce database removing empty pages");
+                d.WriteHelp("> upgrade <connectionString>", "Upgrade old datafile (LiteDB v2) to new LiteDB v3 format");
+                d.WriteHelp("> userversion [N]", "Get/Set user database file version");
+                d.WriteHelp("> shrink [password]", "Reduce database removing empty pages and change password (optional)");
             }
         }
     }

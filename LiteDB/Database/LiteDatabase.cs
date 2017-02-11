@@ -40,8 +40,18 @@ namespace LiteDB
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteDatabase(string connectionString, BsonMapper mapper = null)
+            : this(new ConnectionString(connectionString), mapper)
         {
-            _connectionString = new ConnectionString(connectionString);
+        }
+
+        /// <summary>
+        /// Starts LiteDB database using a connection string for file system database
+        /// </summary>
+        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
+        {
+            if (connectionString == null) throw new ArgumentNullException("connectionString");
+
+            _connectionString = connectionString;
             _log.Level = _connectionString.Log;
 
             if (_connectionString.Upgrade)

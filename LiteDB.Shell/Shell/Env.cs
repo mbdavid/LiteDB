@@ -6,13 +6,12 @@ namespace LiteDB.Shell
 {
     public class Env
     {
-        public string Filename { get; set; }
-        public string Password { get; set; }
-        public bool Journal { get; set; }
+        public ConnectionString ConnectionString { get; set; }
         public Logger Log { get; set; }
 
         public Env()
         {
+            this.ConnectionString = null;
             this.Log = new Logger();
             this.Log.Logging += (msg) =>
             {
@@ -23,20 +22,11 @@ namespace LiteDB.Shell
 
         public LiteEngine CreateEngine(DataAccess access)
         {
-            if (this.Filename == null) throw new ShellException("No database");
+            if (this.ConnectionString == null) throw new ShellException("No database");
 
-            var disk = new FileDiskService(this.Filename,
-                new FileOptions
-                {
-                    #if NET35
-                        FileMode = FileMode.Shared,
-                    #else
-                        FileMode = FileMode.Exclusive,                    
-                    #endif
-                    Journal = this.Journal
-                });
+            var db = new LiteDatabase(this.ConnectionString);
 
-            return new LiteEngine(disk, password: this.Password, log: this.Log);
+            return db.Engine;
         }
     }
 }

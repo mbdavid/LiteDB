@@ -69,8 +69,6 @@
     <Compile Include="Commands\Collections\Min.cs" />
     <Compile Include="Commands\Collections\Rename.cs" />
     <Compile Include="Commands\Collections\Update.cs" />
-    <Compile Include="Commands\Console\Rollback.cs" />
-    <Compile Include="Commands\Console\Commit.cs" />
     <Compile Include="Commands\Console\Comment.cs" />
     <Compile Include="Commands\Console\Debug.cs" />
     <Compile Include="Commands\Console\Ed.cs" />
@@ -81,9 +79,9 @@
     <Compile Include="Commands\Console\Run.cs" />
     <Compile Include="Commands\Console\ShowCollections.cs" />
     <Compile Include="Commands\Console\Spool.cs" />
+    <Compile Include="Commands\Console\Shrink.cs" />
     <Compile Include="Commands\Console\Timer.cs" />
     <Compile Include="Commands\Console\Upgrade.cs" />
-    <Compile Include="Commands\Console\BeginTrans.cs" />
     <Compile Include="Commands\Console\UserVersion.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\Storage\BaseStorage.cs" />
