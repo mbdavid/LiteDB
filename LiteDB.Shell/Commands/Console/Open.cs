@@ -18,10 +18,30 @@ namespace LiteDB.Shell.Commands
         {
             env.ConnectionString = new ConnectionString(s.Scan(@".+").TrimToNull());
 
-            // create file if not exits
-            if(!File.Exists(env.ConnectionString.Filename))
+            // if needs upgrade, do it now
+            if (env.ConnectionString.Upgrade)
             {
-                using (var e = env.CreateEngine(DataAccess.Write))
+                display.WriteLine("Upgrading datafile...");
+
+                var result = LiteEngine.Upgrade(env.ConnectionString.Filename, env.ConnectionString.Password);
+
+                if (result)
+                {
+                    display.WriteLine("Datafile upgraded to V7 format (LiteDB v.3.x)");
+                }
+                else
+                {
+                    throw new ShellException("File format do not support upgrade (" + env.ConnectionString.Filename + ")");
+                }
+
+                env.ConnectionString.Upgrade = false;
+            }
+            else
+            {
+                var isNew = File.Exists(env.ConnectionString.Filename);
+
+                // open datafile just to test if it's ok (or to create new)
+                using (var e = env.CreateEngine(isNew ? DataAccess.Write : DataAccess.Read))
                 {
                 }
             }
