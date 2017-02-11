@@ -30,7 +30,7 @@ namespace LiteDB.Tests
                 {
                     db.UserVersion = 99;
                     db.EnsureIndex("col", "name", true);
-                    db.Insert("col", GetDocs(1, 30000));
+                    db.Insert("col", GetDocs(1, 40000));
                     db.Delete("col", Query.GT("_id", 1)); // delete 29.999 docs
 
                     Assert.AreEqual(1, db.Count("col", null));
