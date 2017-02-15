@@ -49,6 +49,10 @@ namespace LiteDB
                 try
                 {
                     CreateObject c = null;
+                    if (_cacheCtor.TryGetValue(type, out c))
+                    {
+                        return c();
+                    }
 
                     if (type.GetTypeInfo().IsClass)
                     {
