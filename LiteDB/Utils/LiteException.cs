@@ -29,6 +29,7 @@ namespace LiteDB
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
         public const int DATABASE_WRONG_PASSWORD = 123;
         public const int READ_ONLY_DATABASE = 125;
+        public const int TRANSACTION_NOT_SUPPORTED = 126;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -154,6 +155,11 @@ namespace LiteDB
         internal static LiteException InvalidDbRef(string path)
         {
             return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path \"{0}\". Value must be document like {{ $ref: \"?\", $id: ? }}", path);
+        }
+
+        internal static LiteException TransactionNotSupported(string method)
+        {
+            return new LiteException(TRANSACTION_NOT_SUPPORTED, "Transactions are not supported here: " + method);
         }
 
         #endregion

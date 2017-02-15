@@ -27,7 +27,9 @@ namespace LiteDB
             _file = file;
             _mode = mode;
 
-            if(mode == FileAccess.Read)
+            if (_engine.TransactionCount > 0) throw LiteException.TransactionNotSupported("LiteFileStream");
+
+            if (mode == FileAccess.Read)
             {
                 // initialize first data block
                 _currentChunkData = this.GetChunkData(_currentChunkIndex);
@@ -39,7 +41,14 @@ namespace LiteDB
                 // delete chunks content if needed
                 if (file.Length > 0)
                 {
-                    _engine.Delete(LiteStorage.CHUNKS, Query.StartsWith("_id", _file.Id + "\\"));
+                    var index = 0;
+                    var deleted = true;
+
+                    // delete one-by-one to avoid all pages files dirty in memory
+                    while (deleted)
+                    {
+                        deleted = _engine.Delete(LiteStorage.CHUNKS, LiteFileStream.GetChunckId(_file.Id, index++)); // index zero based
+                    }
                 }
 
                 // clear size counters

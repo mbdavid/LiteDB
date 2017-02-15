@@ -10,6 +10,11 @@ namespace LiteDB
         private Stack<LockControl> _transactions = new Stack<LockControl>();
 
         /// <summary>
+        /// Get transaction stack count. If returns 0, there is no transaction.
+        /// </summary>
+        internal int TransactionCount { get { return _transactions.Count; } }
+
+        /// <summary>
         /// Starts a new transaction keeping all changed from now in memory only until Commit() be executed.
         /// Lock thread in write mode to not accept other transaction
         /// </summary>
