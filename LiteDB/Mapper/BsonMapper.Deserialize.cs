@@ -132,6 +132,11 @@ namespace LiteDB
             // if value is array, deserialize as array
             else if (value.IsArray)
             {
+                // when array are from an object (like in Dictionary<string, object> { ["array"] = new string[] { "a", "b" } 
+                if (type == typeof(object))
+                {
+                    return this.DeserializeArray(typeof(object), value.AsArray);
+                }
                 if (type.IsArray)
                 {
                     return this.DeserializeArray(type.GetElementType(), value.AsArray);
@@ -154,6 +159,11 @@ namespace LiteDB
                     type = Type.GetType(typeField.AsString);
 
                     if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
+                }
+                // when complex type has no definition (== typeof(object)) use Dictionary<string, object> to better set values
+                else if (type == typeof(object))
+                {
+                    type = typeof(Dictionary<string, object>);
                 }
 
                 var o = _typeInstantiator(type);
