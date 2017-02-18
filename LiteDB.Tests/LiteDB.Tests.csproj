@@ -115,6 +115,7 @@
     <Compile Include="Engine\EngineTest.cs" />
     <Compile Include="Concurrency\ThreadTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repository\RepoTest.cs" />
     <Compile Include="Storage\BigFileTest.cs" />
     <Compile Include="Storage\LocalFileTest.cs" />
     <Compile Include="Storage\StorageStreamTest.cs" />

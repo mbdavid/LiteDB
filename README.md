@@ -22,6 +22,10 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
+## New in 3.1
+- New `LiteRepository` class to simple repository pattern data access [see here](https://github.com/mbdavid/LiteDB/wiki/LiteRepository)
+- Collection names could be `null` and will be resolved by `BsonMapper.ResolveCollectionName` user function (default:  `typeof(T).Name`)
+
 ## Try online
 
 [Try LiteDB Web Shell](http://www.litedb.org/#shell). For security reasons, in the online version not all commands are available. Try the offline version for full feature tests.

@@ -90,6 +90,11 @@ namespace LiteDB
         /// </summary>
         public Action<Type, MemberInfo, MemberMapper> ResolveMember;
 
+        /// <summary>
+        /// Custom resolve name collection based on Type 
+        /// </summary>
+        public Func<Type, string> ResolveCollectionName;
+
         #endregion
 
         public BsonMapper(Func<Type, object> customTypeInstantiator = null)
@@ -99,6 +104,8 @@ namespace LiteDB
             this.EmptyStringToNull = true;
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
+            this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;
+
 #if NET35
             this.IncludeFields = false;
 #endif
@@ -365,7 +372,7 @@ namespace LiteDB
 
                 if (dbRef != null && memberInfo is PropertyInfo)
                 {
-                    BsonMapper.RegisterDbRef(this, member, dbRef.Collection);
+                    BsonMapper.RegisterDbRef(this, member, dbRef.Collection ?? this.ResolveCollectionName((memberInfo as PropertyInfo).PropertyType));
                 }
 
                 // support callback to user modify member mapper

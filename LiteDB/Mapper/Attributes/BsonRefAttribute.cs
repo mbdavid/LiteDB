@@ -13,5 +13,10 @@ namespace LiteDB
         {
             this.Collection = collection;
         }
+
+        public BsonRefAttribute()
+        {
+            this.Collection = null;
+        }
     }
 }
