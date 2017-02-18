@@ -122,11 +122,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return entity by _id key. Returns null if not found. Ignore any Where/Skip/Limit before
+        /// Return entity by _id key. Throws InvalidOperationException if no document
         /// </summary>
-        public T FirstById(BsonValue id)
+        public T SingleById(BsonValue id)
         {
-            return _collection.FindById(id);
+            return _collection.Find(Query.EQ("_id", id)).Single();
         }
 
         #endregion
