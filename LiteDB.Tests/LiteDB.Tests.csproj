@@ -77,6 +77,7 @@
     <Compile Include="Database\AttributeMapperTest.cs" />
     <Compile Include="Database\UniqueIndexMapperTest.cs" />
     <Compile Include="Database\DbRefIndexTest.cs" />
+    <Compile Include="Database\TransactionTest.cs" />
     <Compile Include="Database\DeleteByNameTest.cs" />
     <Compile Include="Database\NonIdPocoTest.cs" />
     <Compile Include="Database\NullRefTests.cs" />
