@@ -247,7 +247,8 @@ namespace LiteDB
                     if (_journal.Length == 0) yield break;
 
                     // lock journal file during reading
-                    _journal.TryLock(0, 1, TimeSpan.Zero);
+                    // using `Lock` to throw IOException when in use
+                    _journal.Lock(0, 1);
                 }
                 catch(FileNotFoundException)
                 {
