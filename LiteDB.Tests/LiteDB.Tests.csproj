@@ -111,6 +111,7 @@
     <Compile Include="Engine\MultiKeyTest.cs" />
     <Compile Include="Engine\ObjectIdTest.cs" />
     <Compile Include="Concurrency\PerformanceTest.cs" />
+    <Compile Include="Mapper\InterfaceBaseTest.cs" />
     <Compile Include="Mapper\PolymorphicTest.cs" />
     <Compile Include="Engine\QueryTest.cs" />
     <Compile Include="Engine\EngineTest.cs" />

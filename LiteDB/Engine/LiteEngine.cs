@@ -99,6 +99,7 @@ namespace LiteDB
             _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
+
             try
             {
                 // initialize datafile (create) and set log instance
