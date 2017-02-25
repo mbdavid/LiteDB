@@ -99,35 +99,41 @@ namespace LiteDB
             _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
+            try
+            {
+                // initialize datafile (create) and set log instance
+                _disk.Initialize(_log, password);
 
-            // initialize datafile (create) and set log instance
-            _disk.Initialize(_log, password);
+                // read header page
+                var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
 
-            // read header page
-            var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
+                // hash password with sha1 or keep as empty byte[20]
+                var sha1 = password == null ? new byte[20] : AesEncryption.HashSHA1(password);
 
-            // hash password with sha1 or keep as empty byte[20]
-            var sha1 = password == null ? new byte[20] : AesEncryption.HashSHA1(password);
+                // compare header password with user password even if not passed password (datafile can have password)
+                if (sha1.BinaryCompareTo(header.Password) != 0)
+                {
+                    throw LiteException.DatabaseWrongPassword();
+                }
 
-            // compare header password with user password even if not passed password (datafile can have password)
-            if (sha1.BinaryCompareTo(header.Password) != 0)
+                // initialize AES encryptor
+                if (password != null)
+                {
+                    _crypto = new AesEncryption(password, header.Salt);
+                }
+
+                // initialize all services
+                this.InitializeServices();
+
+                // try recovery if has journal file
+                _trans.Recovery();
+            }
+            catch (Exception)
             {
                 // explicit dispose
                 _disk.Dispose();
-                throw LiteException.DatabaseWrongPassword();
+                throw;
             }
-
-            // initialize AES encryptor
-            if (password != null)
-            {
-                _crypto = new AesEncryption(password, header.Salt);
-            }
-
-            // initialize all services
-            this.InitializeServices();
-
-            // try recovery if has journal file
-            _trans.Recovery();
         }
 
         /// <summary>
