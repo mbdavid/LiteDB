@@ -132,7 +132,7 @@ namespace LiteDB
             catch (Exception)
             {
                 // explicit dispose
-                _disk.Dispose();
+                Dispose();
                 throw;
             }
         }
