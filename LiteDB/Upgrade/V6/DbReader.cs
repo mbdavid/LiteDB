@@ -69,5 +69,13 @@ namespace LiteDB_V6
                 yield return BsonSerializer.Deserialize(bytes);
             }
         }
+
+        public void Dispose()
+        {
+            if (_disk != null)
+            {
+                _disk.Dispose();
+            }
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// Interface to implement old datafile format reader. Implements V6
     /// </summary>
-    internal interface IDbReader
+    internal interface IDbReader : IDisposable
     {
         bool Initialize(Stream stream, string password);
         IEnumerable<string> GetCollections();

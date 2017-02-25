@@ -19,35 +19,37 @@ namespace LiteDB
             // use a temp file to copy/convert data from
             var tempFile = FileHelper.GetTempFile(filename);
 
-            // open fiel as stream and test if is V6
+            // open file as stream and test if is V6
             using(var stream = new FileStream(filename, System.IO.FileMode.Open, FileAccess.Read))
             {
-                IDbReader reader = new LiteDB_V6.DbReader();
-
-                if (reader.Initialize(stream, password) == false) return false;
-
-                // open new datafile to copy data from
-                using (var engine = new LiteEngine(tempFile, false))
+                using (IDbReader reader = new LiteDB_V6.DbReader())
                 {
-                    foreach(var col in reader.GetCollections())
+                    if (reader.Initialize(stream, password) == false) return false;
+
+                    // open new datafile to copy data from
+                    using (var engine = new LiteEngine(tempFile, false))
                     {
-                        // first, create all unique indexes
-                        foreach(var field in reader.GetUniqueIndexes(col))
+                        foreach (var col in reader.GetCollections())
                         {
-                            engine.EnsureIndex(col, field, true);
-                        }
+                            // first, create all unique indexes
+                            foreach (var field in reader.GetUniqueIndexes(col))
+                            {
+                                engine.EnsureIndex(col, field, true);
+                            }
 
-                        // now copy 5000 documents per batch
-                        var docs = reader.GetDocuments(col);
+                            // now copy 5000 documents per batch
+                            var docs = reader.GetDocuments(col);
 
-                        foreach(var batch in docs.Batch(batchSize))
-                        {
-                            engine.Insert(col, batch);
+                            foreach (var batch in docs.Batch(batchSize))
+                            {
+                                engine.Insert(col, batch);
 
-                            // just clear pages/cache
-                            engine.Rollback();
+                                // just clear pages/cache
+                                engine.Rollback();
+                            }
                         }
                     }
+
                 }
             }
 
