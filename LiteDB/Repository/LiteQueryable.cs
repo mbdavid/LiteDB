@@ -14,6 +14,7 @@ namespace LiteDB
         private int _limit = int.MaxValue;
         private int _skip = 0;
         private LiteCollection<T> _collection;
+        private List<Action<T>> _actions;
         private Query _query;
 
         internal LiteQueryable(LiteCollection<T> collection)
@@ -39,6 +40,14 @@ namespace LiteDB
         public LiteQueryable<T> Include(string path)
         {
             _collection = _collection.Include(path);
+            return this;
+        }
+
+        /// <summary>
+        /// Include an action function to be executed for each entity (like ForEach in List[T])
+        /// </summary>
+        public LiteQueryable<T> Include(Action<T> action)
+        {
             return this;
         }
 
@@ -126,7 +135,9 @@ namespace LiteDB
         /// </summary>
         public T SingleById(BsonValue id)
         {
-            return _collection.Find(Query.EQ("_id", id)).Single();
+            _query = Query.EQ("_id", id);
+
+            return this.ToEnumerable().Single();
         }
 
         #endregion
@@ -138,7 +149,17 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
-            return _collection.Find(_query ?? Query.All(), _skip, _limit);
+            var items = _collection.Find(_query ?? Query.All(), _skip, _limit);
+
+            foreach(var item in items)
+            {
+                foreach(var action in _actions)
+                {
+                    action(item);
+                }
+
+                yield return item;
+            }
         }
 
         /// <summary>

@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
-        <id>VuePage</id>
-        <version>1.1.0</version>
-        <title>VuePage</title>
+        <id>LiteDB</id>
+        <version>3.1.0</version>
+        <title>LiteDB</title>
         <authors>Mauricio David</authors>
-        <projectUrl>http://github.com/mbdavid/VuePage</projectUrl>
+        <projectUrl>http://www.litedb.org</projectUrl>
+        <iconUrl>http://www.litedb.org/img/logo_64x64.png</iconUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>Vue - ViewModel from server side</description>
-        <summary>Vue - ViewModel from server side</summary>
+        <description>Embedded .NET NoSQL Document Store in a single data file</description>
+        <summary>Embedded .NET NoSQL Document Store in a single data file</summary>
         <copyright>MIT</copyright>
         <language>en-US</language>
-        <tags>mvvm vue viewmodel server side webforms</tags>
-        <dependencies>
-            <dependency id="Newtonsoft.Json" version="9.0.1" />
-        </dependencies>
+        <tags>nosql database embed document store</tags>
     </metadata>
     <files>
-        <file src="..\VuePage\VuePage\bin\Release\VuePage.dll" target="lib\net40\VuePage.dll" />
-        <file src="..\VuePage\VuePage\bin\Release\VuePage.xml" target="lib\net40\VuePage.xml" />
+        <file src="LiteDB\bin\Release\net35\LiteDB.dll" target="lib\net35\LiteDB.dll" />
+        <file src="LiteDB\bin\Release\net35\LiteDB.xml" target="lib\net35\LiteDB.xml" />
+        <file src="LiteDB\bin\Release\netstandard\LiteDB.dll" target="lib\netstandard1.4\LiteDB.dll" />
+        <file src="LiteDB\bin\Release\netstandard\LiteDB.xml" target="lib\netstandard1.4\LiteDB.xml" />
     </files>
 </package>

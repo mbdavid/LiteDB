@@ -20,6 +20,11 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase Database { get { return _db; } }
 
+        /// <summary>
+        /// Get engine instance
+        /// </summary>
+        public LiteEngine Engine { get { return _db.Engine; } }
+
         #endregion
 
         #region Ctor
@@ -166,6 +171,14 @@ namespace LiteDB
         public LiteQueryable<T> Query<T>(string collectionName = null)
         {
             return new LiteQueryable<T>(_db.GetCollection<T>(collectionName));
+        }
+
+        /// <summary>
+        /// Search for a single instance of T by Id. Shortcut from Query.SingleById
+        /// </summary>
+        public T SingleById<T>(BsonValue id, string collectionName = null)
+        {
+            return this.Query<T>(collectionName).SingleById(id);
         }
 
         #endregion
