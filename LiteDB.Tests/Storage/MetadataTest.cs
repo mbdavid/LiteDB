@@ -15,7 +15,12 @@ namespace LiteDB.Tests
         [TestMethod]
         public void Metadata_Test()
         {
-            var ms = new MemoryStream(new byte[25000]);
+            var source = new byte[25000];
+            source[0] = 255;
+            source[24999] = 127;
+            source[10000] = 65;
+
+            var ms = new MemoryStream(source);
 
             // testing issue #495
             using (var file = new TempFile())
@@ -35,6 +40,16 @@ namespace LiteDB.Tests
 
                 Assert.IsNotNull(d);
                 Assert.AreEqual(d.Metadata["extension"].AsString, ".jpg");
+
+                // now lets download file
+                var output = new MemoryStream();
+                db.FileStorage.Download("1020d6eb-e5fb-4c94-8a21-c0ea2f3a4b59", output);
+                var dest = output.ToArray();
+
+                Assert.AreEqual(source.Length, dest.Length);
+                Assert.AreEqual(source[0], dest[0]);
+                Assert.AreEqual(source[10000], dest[10000]);
+                Assert.AreEqual(source[24999], dest[24999]);
 
             }
         }
