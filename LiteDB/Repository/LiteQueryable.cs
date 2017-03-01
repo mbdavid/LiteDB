@@ -20,6 +20,7 @@ namespace LiteDB
         internal LiteQueryable(LiteCollection<T> collection)
         {
             _collection = collection;
+            _actions = new List<Action<T>>();
             _query = null;
         }
 
