@@ -173,12 +173,116 @@ namespace LiteDB
             return new LiteQueryable<T>(_db.GetCollection<T>(collectionName));
         }
 
+        #endregion
+
+        #region Shortcuts
+
         /// <summary>
         /// Search for a single instance of T by Id. Shortcut from Query.SingleById
         /// </summary>
         public T SingleById<T>(BsonValue id, string collectionName = null)
         {
             return this.Query<T>(collectionName).SingleById(id);
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).ToList();
+        /// </summary>
+        public List<T> Fetch<T>(Query query = null, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(query ?? LiteDB.Query.All())
+                .ToList();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).ToList();
+        /// </summary>
+        public List<T> Fetch<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(predicate)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).First();
+        /// </summary>
+        public T First<T>(Query query = null, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(query ?? LiteDB.Query.All())
+                .First();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).First();
+        /// </summary>
+        public T First<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(predicate)
+                .First();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).FirstOrDefault();
+        /// </summary>
+        public T FirstOrDefault<T>(Query query = null, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(query ?? LiteDB.Query.All())
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).FirstOrDefault();
+        /// </summary>
+        public T FirstOrDefault<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(predicate)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).Single();
+        /// </summary>
+        public T Single<T>(Query query = null, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(query ?? LiteDB.Query.All())
+                .Single();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).Single();
+        /// </summary>
+        public T Single<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(predicate)
+                .Single();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).SingleOrDefault();
+        /// </summary>
+        public T SingleOrDefault<T>(Query query = null, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(query ?? LiteDB.Query.All())
+                .SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Execute Query[T].Where(query).SingleOrDefault();
+        /// </summary>
+        public T SingleOrDefault<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
+        {
+            return this.Query<T>(collectionName)
+                .Where(predicate)
+                .SingleOrDefault();
         }
 
         #endregion
