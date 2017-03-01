@@ -108,8 +108,6 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collection = null)
         {
-            if (string.IsNullOrEmpty(collection)) throw new ArgumentNullException("collection");
-
             return this.GetProperty(property, (p) =>
             {
                 BsonMapper.RegisterDbRef(_mapper, p, collection ?? _mapper.ResolveCollectionName(typeof(K)));
