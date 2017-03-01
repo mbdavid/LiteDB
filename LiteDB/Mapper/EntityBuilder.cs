@@ -106,13 +106,13 @@ namespace LiteDB
         /// <summary>
         /// Define a subdocument (or a list of) as a reference
         /// </summary>
-        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collection)
+        public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collection = null)
         {
             if (string.IsNullOrEmpty(collection)) throw new ArgumentNullException("collection");
 
             return this.GetProperty(property, (p) =>
             {
-                BsonMapper.RegisterDbRef(_mapper, p, collection);
+                BsonMapper.RegisterDbRef(_mapper, p, collection ?? _mapper.ResolveCollectionName(typeof(K)));
             });
         }
 
