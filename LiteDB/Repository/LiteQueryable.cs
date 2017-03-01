@@ -14,13 +14,13 @@ namespace LiteDB
         private int _limit = int.MaxValue;
         private int _skip = 0;
         private LiteCollection<T> _collection;
-        private List<Action<T>> _actions;
+        private List<Action<T, int>> _foreach;
         private Query _query;
 
         internal LiteQueryable(LiteCollection<T> collection)
         {
             _collection = collection;
-            _actions = new List<Action<T>>();
+            _foreach = new List<Action<T, int>>();
             _query = null;
         }
 
@@ -47,9 +47,18 @@ namespace LiteDB
         /// <summary>
         /// Include an action function to be executed for each entity (like ForEach in List[T])
         /// </summary>
-        public LiteQueryable<T> Include(Action<T> action)
+        public LiteQueryable<T> ForEach(Action<T> action)
         {
-            _actions.Add(action);
+            _foreach.Add((a, i) => action(a));
+            return this;
+        }
+
+        /// <summary>
+        /// Include an action function to be executed for each entity (like ForEach in List[T]). Int parameter is index
+        /// </summary>
+        public LiteQueryable<T> ForEach(Action<T, int> action)
+        {
+            _foreach.Add(action);
             return this;
         }
 
@@ -155,9 +164,10 @@ namespace LiteDB
 
             foreach(var item in items)
             {
-                foreach(var action in _actions)
+                var index = 0;
+                foreach(var action in _foreach)
                 {
-                    action(item);
+                    action(item, index++);
                 }
 
                 yield return item;
