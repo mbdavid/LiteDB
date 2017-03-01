@@ -71,6 +71,8 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Where(Query query)
         {
+            if (query == null) throw new ArgumentNullException("query");
+
             _query = _query == null ? query : Query.And(_query, query);
             return this;
         }
