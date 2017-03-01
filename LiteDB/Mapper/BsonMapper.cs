@@ -503,6 +503,8 @@ namespace LiteDB
 
                 foreach (var item in (IEnumerable)list)
                 {
+                    if (item == null) continue;
+
                     result.Add(new BsonDocument
                     {
                         { "$id", new BsonValue(idField.Getter(item)) },

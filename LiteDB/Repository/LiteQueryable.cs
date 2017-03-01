@@ -49,6 +49,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Include(Action<T> action)
         {
+            _actions.Add(action);
             return this;
         }
 
