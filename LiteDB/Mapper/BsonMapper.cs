@@ -308,6 +308,7 @@ namespace LiteDB
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
+            var hasId = false;
 
             foreach (var memberInfo in this.GetTypeMembers(type))
             {
@@ -318,8 +319,9 @@ namespace LiteDB
                 var name = this.ResolveFieldName(memberInfo.Name);
 
                 // checks if is _id
-                if (this.IsMemberId(type, memberInfo))
+                if (hasId == false && this.IsMemberId(type, memberInfo))
                 {
+                    hasId = true;
                     name = "_id";
                 }
 
