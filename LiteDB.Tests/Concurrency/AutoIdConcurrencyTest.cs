@@ -30,6 +30,8 @@ namespace LiteDB.Tests
                 {
                 }
 
+                System.Threading.Thread.Sleep(1000);
+
                 using (var dbA = new LiteDatabase(file.Filename))
                 using (var dbB = new LiteDatabase(file.Filename))
                 {
