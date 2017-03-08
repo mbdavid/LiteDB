@@ -309,9 +309,11 @@ namespace LiteDB
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
 
-            var idProp = getIdProperty(type, idAttr);
+            var members = this.GetTypeMembers(type);
 
-            foreach (var memberInfo in this.GetTypeMembers(type))
+            var idProp = getIdProperty(type, members, idAttr);
+
+            foreach (var memberInfo in members)
             {
                 // checks [BsonIgnore]
                 if (memberInfo.IsDefined(ignoreAttr, true)) continue;
@@ -396,16 +398,8 @@ namespace LiteDB
         /// <summary>
         /// Gets the property that is the id property. Explicitly sets the order as marked with BsonId, then Id, then ClassName+"Id".
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="idAttr"></param>
-        /// <returns></returns>
-        protected MemberInfo getIdProperty(Type type, Type idAttr)
+        protected MemberInfo getIdProperty(Type type, IEnumerable<MemberInfo> members, Type idAttr)
         {
-            var members = this.GetTypeMembers(type);
-            foreach (var m in members)
-            {
-                var attr1 = m.GetCustomAttributes(idAttr, true);
-            }
 #if NET35
             var idProp = members.Where(t => t.GetCustomAttributes(idAttr, true).Length != 0).FirstOrDefault();
 #else
