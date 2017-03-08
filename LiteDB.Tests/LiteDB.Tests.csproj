@@ -100,6 +100,7 @@
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Mapper\MapperExceptionTest.cs" />
     <Compile Include="Mapper\DictListTest.cs" />
+    <Compile Include="Mapper\ReflectionGetterSetterTest.cs" />
     <Compile Include="Mapper\MaxValueTest.cs" />
     <Compile Include="Mapper\MapperTest.cs" />
     <Compile Include="Engine\EncryptedTest.cs" />
@@ -127,7 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj">
-      <Project>{E808051A-83B7-4FA9-B004-D064EA162B60}</Project>
+      <Project>{e808051a-83b7-4fa9-b004-d064ea162b60}</Project>
       <Name>LiteDB</Name>
     </ProjectReference>
   </ItemGroup>

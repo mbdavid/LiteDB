@@ -1,5 +1,4 @@
-﻿#if !NET35
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,31 +42,38 @@ namespace LiteDB
         {
             if (memberInfo == null) throw new ArgumentNullException("propertyInfo");
             
-            // if has no write
-            if (memberInfo is PropertyInfo && (memberInfo as PropertyInfo).CanWrite == false) return null;
+            var fieldInfo = memberInfo as FieldInfo;
+            var propertyInfo = memberInfo as PropertyInfo;
+
+            // if is property and has no write
+            if (memberInfo is PropertyInfo && propertyInfo.CanWrite == false) return null;
+
+            // if *Structs*, use direct reflection - net35 has no Expression.Unbox to cast target
+            if (type.GetTypeInfo().IsValueType)
+            {
+                return memberInfo is FieldInfo ?
+                    (GenericSetter)fieldInfo.SetValue :
+                    ((t, v) => propertyInfo.SetValue(t, v, null));
+            }
 
             var dataType = memberInfo is PropertyInfo ?
-                (memberInfo as PropertyInfo).PropertyType :
-                (memberInfo as FieldInfo).FieldType;
+                propertyInfo.PropertyType :
+                fieldInfo.FieldType;
 
             var target = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "val");
 
-            var castTarget = type.GetTypeInfo().IsValueType ? 
-                Expression.Unbox(target, type) :
-                Expression.Convert(target, type);
-
+            var castTarget = Expression.Convert(target, type);
             var castValue = Expression.ConvertChecked(value, dataType);
 
-            var accessor =
-                memberInfo is PropertyInfo ? Expression.Property(castTarget, memberInfo as PropertyInfo) :
-                memberInfo is FieldInfo ? Expression.Field(castTarget, memberInfo as FieldInfo) : null;
+            var accessor = memberInfo is PropertyInfo ? 
+                Expression.Property(castTarget, propertyInfo) :
+                Expression.Field(castTarget, fieldInfo);
 
-            var assign = Expression.Assign(accessor, castValue);
+            var assign = ExpressionExtensions.Assign(accessor, castValue);
             var conv = Expression.Convert(assign, typeof(object));
             
             return Expression.Lambda<GenericSetter>(conv, target, value).Compile();
         }
     }
 }
-#endif

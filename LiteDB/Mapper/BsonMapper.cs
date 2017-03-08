@@ -418,7 +418,7 @@ namespace LiteDB
 
             if(this.IncludeFields)
             {
-                members.AddRange(type.GetFields(flags));
+                members.AddRange(type.GetFields(flags).Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false).Select(x => x as MemberInfo));
             }
 #else
             members.AddRange(type.GetRuntimeProperties().Where(x => x.CanRead).Select(x => x as MemberInfo));
