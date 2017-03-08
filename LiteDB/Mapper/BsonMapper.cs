@@ -309,6 +309,8 @@ namespace LiteDB
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
 
+            var idProp = getIdProperty(type, idAttr);
+
             foreach (var memberInfo in this.GetTypeMembers(type))
             {
                 // checks [BsonIgnore]
@@ -317,10 +319,13 @@ namespace LiteDB
                 // checks field name conversion
                 var name = this.ResolveFieldName(memberInfo.Name);
 
-                // checks if is _id
-                if (this.IsMemberId(type, memberInfo))
+                bool autoId = false;
+                // checks if is the id field. If so, also sets auto id from the attribute
+                if (memberInfo == idProp)
                 {
                     name = "_id";
+                    var attr = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
+                    autoId = attr == null ? true : attr.AutoId;
                 }
 
                 // check if property has [BsonField]
@@ -339,9 +344,6 @@ namespace LiteDB
                 var getter = Reflection.CreateGenericGetter(type, memberInfo);
                 var setter = Reflection.CreateGenericSetter(type, memberInfo);
 
-                // check if property has [BsonId] to get with was setted AutoId = true
-                var autoId = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
-
                 // checks if this property has [BsonIndex]
                 var index = (BsonIndexAttribute)memberInfo.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
@@ -356,7 +358,7 @@ namespace LiteDB
                 // create a property mapper
                 var member = new MemberMapper
                 {
-                    AutoId = autoId == null ? true : autoId.AutoId,
+                    AutoId = autoId,
                     FieldName = name,
                     MemberName = memberInfo.Name,
                     DataType = dataType,
@@ -392,14 +394,33 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if this member is Id field based on member name (Id) or [BsonId] attribute
+        /// Gets the property that is the id property. Explicitly sets the order as marked with BsonId, then Id, then ClassName+"Id".
         /// </summary>
-        protected bool IsMemberId(Type type, MemberInfo member)
+        /// <param name="type"></param>
+        /// <param name="idAttr"></param>
+        /// <returns></returns>
+        protected MemberInfo getIdProperty(Type type, Type idAttr)
         {
-            return member.IsDefined(typeof(BsonIdAttribute), false) ||
-                member.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
-                member.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase) ||
-                false;
+            var members = this.GetTypeMembers(type);
+            foreach (var m in members)
+            {
+                var attr1 = m.GetCustomAttributes(idAttr, true);
+            }
+#if NET35
+            var idProp = members.Where(t => t.GetCustomAttributes(idAttr, true).Length != 0).FirstOrDefault();
+#else
+            var idProp = members.Where(t => t.GetCustomAttribute(idAttr, true) != null).FirstOrDefault();
+#endif
+            if (idProp == null)
+            {
+                idProp = members.Where(t => t.Name.Equals("Id", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            }
+            if (idProp == null)
+            {
+                idProp = members.Where(t => t.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            }
+
+            return idProp;
         }
 
         /// <summary>
@@ -435,9 +456,9 @@ namespace LiteDB
             return members;
         }
 
-        #endregion
+#endregion
 
-        #region Register DbRef
+#region Register DbRef
 
         /// <summary>
         /// Register a property mapper as DbRef to serialize/deserialize only document reference _id
@@ -543,6 +564,6 @@ namespace LiteDB
             };
         }
 
-        #endregion
+#endregion
     }
 }
