@@ -100,6 +100,7 @@
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Mapper\MapperExceptionTest.cs" />
     <Compile Include="Mapper\DictListTest.cs" />
+    <Compile Include="Mapper\FluentMapperTest.cs" />
     <Compile Include="Mapper\ReflectionGetterSetterTest.cs" />
     <Compile Include="Mapper\MaxValueTest.cs" />
     <Compile Include="Mapper\MapperTest.cs" />
