@@ -112,7 +112,6 @@
     <Compile Include="Engine\EngineTest.cs" />
     <Compile Include="Concurrency\ThreadTest.cs" />
     <Compile Include="Mapper\ReflectionGetterSetterTest.cs" />
-    <Compile Include="Mapper\VirtualIdTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repository\RepoTest.cs" />
     <Compile Include="Storage\BigFileTest.cs" />
