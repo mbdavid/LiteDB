@@ -80,22 +80,8 @@ namespace LiteDB
                 // set datafile initial size
                 _stream.SetLength(_options.InitialSize);
 
-                // create a new header page in bytes (keep second page empty)
-                var header = new HeaderPage() { LastPageID = 1 };
-
-                if(password != null)
-                {
-                    _log.Write(Logger.DISK, "datafile encrypted");
-
-                    header.Password = AesEncryption.HashSHA1(password);
-                    header.Salt = AesEncryption.Salt();
-                }
-
-                // write bytes on page
-                this.WritePage(0, header.WritePage());
-
-                // write second page empty just to use as lock control
-                this.WritePage(1, new byte[BasePage.PAGE_SIZE]);
+                // create datafile
+                LiteEngine.CreateDatabase(_stream, password);
             }
         }
 

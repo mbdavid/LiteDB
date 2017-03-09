@@ -187,5 +187,31 @@ namespace LiteDB
             // dispose crypto
             if (_crypto != null) _crypto.Dispose();
         }
+
+        /// <summary>
+        /// Initialize new datafile with header page + lock reserved area zone
+        /// </summary>
+        public static void CreateDatabase(Stream stream, string password = null)
+        {
+            // create a new header page in bytes (keep second page empty)
+            var header = new HeaderPage() { LastPageID = 1 };
+
+            if (password != null)
+            {
+                header.Password = AesEncryption.HashSHA1(password);
+                header.Salt = AesEncryption.Salt();
+            }
+
+            // point to begin file
+            stream.Seek(0, SeekOrigin.Begin);
+
+            // get header page in bytes
+            var buffer = header.WritePage();
+
+            stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+
+            // write second page empty just to use as lock control
+            stream.Write(new byte[BasePage.PAGE_SIZE], 0, BasePage.PAGE_SIZE);
+        }
     }
 }

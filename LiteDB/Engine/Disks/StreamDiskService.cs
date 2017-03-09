@@ -36,19 +36,8 @@ namespace LiteDB
             {
                 _log.Write(Logger.DISK, "initialize new datafile");
 
-                // create a new header page in bytes
-                var header = new HeaderPage();
-
-                if(password != null)
-                {
-                    _log.Write(Logger.DISK, "datafile encrypted");
-
-                    header.Password = AesEncryption.HashSHA1(password);
-                    header.Salt = AesEncryption.Salt();
-                }
-
-                // write bytes on page
-                this.WritePage(0, header.WritePage());
+                // create datafile
+                LiteEngine.CreateDatabase(_stream, password);
             }
         }
 
