@@ -77,12 +77,10 @@ namespace LiteDB
         /// </summary>
         public bool IncludeFields { get; set; }
 
-#if NET35
         /// <summary>
         /// Get/Set that mapper must include non public (private, protected and internal) (default: false)
         /// </summary>
         public bool IncludeNonPublic { get; set; }
-#endif
 
         /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
@@ -411,7 +409,6 @@ namespace LiteDB
         {
             var members = new List<MemberInfo>();
 
-#if NET35
             var flags = this.IncludeNonPublic ?
                 (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) :
                 (BindingFlags.Public | BindingFlags.Instance);
@@ -422,17 +419,6 @@ namespace LiteDB
             {
                 members.AddRange(type.GetFields(flags).Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false).Select(x => x as MemberInfo));
             }
-#else
-            members.AddRange(type.GetRuntimeProperties().Where(x => x.CanRead).Select(x => x as MemberInfo));
-
-            if(this.IncludeFields)
-            {
-                // in fields:
-                // - remove when name ends with k__BackingField (Automatic Property syntax)
-                // - remove static properties
-                members.AddRange(type.GetRuntimeFields().Where(x => !x.Name.EndsWith("k__BackingField") && x.IsStatic == false));
-            }
-#endif
 
             return members;
         }

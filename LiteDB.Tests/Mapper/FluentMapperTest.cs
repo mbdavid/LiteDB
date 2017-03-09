@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Drawing;
+#if !NET35
+using System.Threading.Tasks;
+#endif
 
 namespace LiteDB.Tests
 {
@@ -13,6 +16,10 @@ namespace LiteDB.Tests
         public int CurrentKey { get; set; }
         public Func<string> GetPath { get; set; }
         public string PropName { get; set; }
+#if !NET35
+        // testing if DbAsync will be added
+        private Task<string> DbAsync { get { return new Task<string>(() => "task"); } }
+#endif
     }
 
     [TestClass]
@@ -25,7 +32,7 @@ namespace LiteDB.Tests
             {
                 CurrentKey = 1,
                 GetPath = () => "",
-                PropName = "name"
+                PropName = "name"                
             };
 
             var m = new BsonMapper();
