@@ -37,11 +37,15 @@ namespace LiteDB
 
         public static BinaryExpression Assign(Expression left, Expression right)
         {
+#if NET35
             var assign = typeof(Assigner<>).MakeGenericType(left.Type).GetMethod("Assign");
 
             var assignExpr = Expression.Add(left, right, assign);
 
             return assignExpr;
+#else
+            return Expression.Assign(left, right);
+#endif
         }
 
         private static class Assigner<T>

@@ -248,9 +248,12 @@ namespace LiteDB
 
                     // lock journal file during reading
                     // using `Lock` to throw IOException when in use
+#if NET35
                     _journal.Lock(0, 1);
+#endif
+
                 }
-                catch(FileNotFoundException)
+                catch (FileNotFoundException)
                 {
                     yield break;
                 }

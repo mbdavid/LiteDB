@@ -65,14 +65,20 @@
     <Compile Include="Database\AutoIndexDatabaseTest.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />
+    <Compile Include="Database\IndexSortAndFilterTest.cs" />
     <Compile Include="Database\UniqueIndexMapperTest.cs" />
     <Compile Include="Database\DbRefIndexTest.cs" />
     <Compile Include="Database\DeleteByNameTest.cs" />
     <Compile Include="Database\NonIdPocoTest.cs" />
     <Compile Include="Database\NullRefTests.cs" />
     <Compile Include="Database\PredicateBuilderTest.cs" />
+    <Compile Include="Database\UpgradeScriptTest.cs" />
     <Compile Include="Document\ImplicitTest.cs" />
     <Compile Include="Engine\AutoIndexEngineTest.cs" />
+    <Compile Include="Mapper\DictionaryTest.cs" />
+    <Compile Include="Mapper\DictListTest.cs" />
+    <Compile Include="Mapper\FluentMapperTest.cs" />
+    <Compile Include="Mapper\InterfaceBaseTest.cs" />
     <Compile Include="Mapper\MapperNonPublicTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
@@ -105,9 +111,13 @@
     <Compile Include="Engine\QueryTest.cs" />
     <Compile Include="Engine\EngineTest.cs" />
     <Compile Include="Concurrency\ThreadTest.cs" />
+    <Compile Include="Mapper\ReflectionGetterSetterTest.cs" />
+    <Compile Include="Mapper\VirtualIdTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repository\RepoTest.cs" />
     <Compile Include="Storage\BigFileTest.cs" />
     <Compile Include="Storage\LocalFileTest.cs" />
+    <Compile Include="Storage\MetadataTest.cs" />
     <Compile Include="Storage\StorageStreamTest.cs" />
     <Compile Include="Utils\TempFile.cs" />
   </ItemGroup>

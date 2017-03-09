@@ -57,6 +57,35 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Define custom Func for _id field.
+        /// </summary>
+        public EntityBuilder<T> Id<K>(Func<T, K> fn)
+        {
+            // if already has an _id, restore field name
+            if (_entity.Id != null)
+            {
+                //TODO must implement same name-rules/attributes here to restore correct FieldName
+                _entity.Id.FieldName = _entity.Id.MemberName;
+                _entity.Id.AutoId = false;
+                _entity.Id.IsUnique = false;
+            }
+
+            var id = new MemberMapper
+            {
+                FieldName = "_id",
+                IsUnique = true,
+                AutoId = false,
+                DataType = typeof(K),
+                Getter = (v) => fn((T)v),
+                UnderlyingType = typeof(K)
+            };
+
+            _entity.Members.Add(id);
+
+            return this;
+        }
+
+        /// <summary>
         /// Define an index based in a property on entity
         /// </summary>
         public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, bool unique = false)
