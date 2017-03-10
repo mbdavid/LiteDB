@@ -51,10 +51,10 @@ namespace LiteDB.Tests
                 db.Commit();
                 td.Stop();
 
-                Debug.Print("Insert time: " + ti.ElapsedMilliseconds);
-                Debug.Print("EnsureIndex time: " + tx.ElapsedMilliseconds);
-                Debug.Print("Update time: " + tu.ElapsedMilliseconds);
-                Debug.Print("Delete time: " + td.ElapsedMilliseconds);
+                Debug.WriteLine("Insert time: " + ti.ElapsedMilliseconds);
+                Debug.WriteLine("EnsureIndex time: " + tx.ElapsedMilliseconds);
+                Debug.WriteLine("Update time: " + tu.ElapsedMilliseconds);
+                Debug.WriteLine("Delete time: " + td.ElapsedMilliseconds);
             }
         }
 
