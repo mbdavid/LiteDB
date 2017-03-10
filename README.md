@@ -6,8 +6,9 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 in a single DLL (less than 200kb)
+- 100% C# code for .NET 3.5 / NETStandard 1.4 in a single DLL (less than 200kb)
 - Support for Portable UWP/PCL (thanks to @negue and @szurgot)
+- Thread safe and process safe
 - ACID transactions
 - Data recovery after write failure (journal mode)
 - Datafile encryption using DES (AES) cryptography
@@ -17,22 +18,13 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Index document fields for fast search (up to 16 indexes per collection)
 - LINQ support for queries
 - Shell command line - [try this online version](http://www.litedb.org/#shell)
+- Pretty fast - [compare results with SQLite here](https://github.com/mbdavid/LiteDB-Perf)
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
-- Install portable version from NuGet: `Install-Package LiteDB.Core`
 
-## New features in v2
-- Generic data access - can use any `Stream` as datafile
-- Better mapping of classes from your entity to `BsonDocument` (like EntityFramework)
-- Better cross reference with `DbRef` mapping
-- Lazy engine load (open the datafile only when running a command)
-- Reduce your database size with shrink
-- Support for `Initial Size` and `Limit Size` databases
-- Complete re-write of engine classes with full debug logger
-- Complete re-write disk operation to be more safe
-- Transaction control
-- `BsonMapper.Global` class mapper definition
-- See more examples at http://www.litedb.org/ and unit tests
+## New in 3.1
+- New `LiteRepository` class to simple repository pattern data access [see here](https://github.com/mbdavid/LiteDB/wiki/LiteRepository)
+- Collection names could be `null` and will be resolved by `BsonMapper.ResolveCollectionName` user function (default:  `typeof(T).Name`)
 
 ## Try online
 
@@ -56,12 +48,13 @@ public class Customer
 {
     public int Id { get; set; }
     public string Name { get; set; }
+    public int Age { get; set; }
     public string[] Phones { get; set; }
     public bool IsActive { get; set; }
 }
 
 // Open database (or create if doesn't exist)
-using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
+using(var db = new LiteDatabase(@"MyData.db"))
 {
 	// Get customer collection
 	var col = db.GetCollection<Customer>("customers");
@@ -71,8 +64,12 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
     { 
         Name = "John Doe", 
         Phones = new string[] { "8000-0000", "9000-0000" }, 
+        Age = 39,
         IsActive = true
     };
+    
+    // Create unique index in Name field
+    col.EnsureIndex(x => x.Name, true);
 	
 	// Insert new customer document (Id will be auto-incremented)
 	col.Insert(customer);
@@ -81,12 +78,9 @@ using(var db = new LiteDatabase(@"C:\Temp\MyData.db"))
 	customer.Name = "Joana Doe";
 	
 	col.Update(customer);
-	
-	// Index document using a document property
-	col.EnsureIndex(x => x.Name);
-	
-	// Use Linq to query documents
-	var results = col.Find(x => x.Name.StartsWith("Jo"));
+		
+	// Use LINQ to query documents (will create index in Age field)
+	var results = col.Find(x => x.Age > 20);
 }
 ```
 
@@ -144,9 +138,10 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - One database **per account/user** data store
 - Few concurrent write operations
 
-## GUI Tools
+## Plugins
 
-- [LiteDB Viewer](https://github.com/falahati/LiteDBViewer) from @falahati
+- A GUI tool: https://github.com/falahati/LiteDBViewer
+- Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 
 ## Changelog
 
@@ -156,7 +151,7 @@ Change details for each release are documented in the [release notes](https://gi
 
 [MIT](http://opensource.org/licenses/MIT)
 
-Copyright (c) 2016 - Maurício David
+Copyright (c) 2017 - Maurício David
 
 ## Thanks
 

@@ -9,8 +9,8 @@ namespace LiteDB
     /// </summary>
     internal class MimeTypeConverter
     {
-        private static IDictionary<string, string> _mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
-
+        private static IDictionary<string, string> _mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
         #region Big freaking list of mime types
 
         // combination of values from Windows 7 Registry and

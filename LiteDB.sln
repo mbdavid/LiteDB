@@ -10,9 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Shell", "LiteDB.Shell\LiteDB.Shell.csproj", "{5C46B331-F4DC-469D-B370-532E67CBA808}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F87962C9-71AE-4DAE-8E99-5432261B6A39}"
-	ProjectSection(SolutionItems) = preProject
-		LiteDB.nuspec = LiteDB.nuspec
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
