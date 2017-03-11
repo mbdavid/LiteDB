@@ -201,20 +201,18 @@ namespace LiteDB
             return false;
         }
 
-        public static PropertyInfo SelectProperty(IEnumerable<PropertyInfo> props, params Func<PropertyInfo, bool>[] predicates)
+        /// <summary>
+        /// Select member from a list of member using predicate order function to select
+        /// </summary>
+        public static MemberInfo SelectMember(IEnumerable<MemberInfo> members, params Func<MemberInfo, bool>[] predicates)
         {
             foreach (var predicate in predicates)
             {
-                var prop = props.FirstOrDefault(predicate);
+                var member = members.FirstOrDefault(predicate);
 
-                if (prop != null)
+                if (member != null)
                 {
-                    if (!prop.CanRead || !prop.CanWrite)
-                    {
-                        throw LiteException.PropertyReadWrite(prop);
-                    }
-
-                    return prop;
+                    return member;
                 }
             }
 

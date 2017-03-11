@@ -85,6 +85,7 @@ namespace LiteDB
         /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
         /// Use mapper.ResolveMember(Type entity, MemberInfo property, MemberMapper documentMappedField)
+        /// Set FieldName to null if you want remove from mapped document
         /// </summary>
         public Action<Type, MemberInfo, MemberMapper> ResolveMember;
 
@@ -301,14 +302,16 @@ namespace LiteDB
                 ForType = type
             };
 
-            var id = this.GetIdProperty(type);
             var idAttr = typeof(BsonIdAttribute);
             var ignoreAttr = typeof(BsonIgnoreAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
 
-            foreach (var memberInfo in this.GetTypeMembers(type))
+            var members = this.GetTypeMembers(type);
+            var id = this.GetIdMember(members);
+
+            foreach (var memberInfo in members)
             {
                 // checks [BsonIgnore]
                 if (memberInfo.IsDefined(ignoreAttr, true)) continue;
@@ -391,15 +394,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Gets PropertyInfo that refers to Id from a document object.
+        /// Gets MemberInfo that refers to Id from a document object.
         /// </summary>
-        protected virtual PropertyInfo GetIdProperty(Type type)
+        protected virtual MemberInfo GetIdMember(IEnumerable<MemberInfo> members)
         {
-            // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
-            return Reflection.SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
+            // Get all members and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name in this order
+            return Reflection.SelectMember(members,
                 x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
-                x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
+                x => x.Name.Equals(x.DeclaringType.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
