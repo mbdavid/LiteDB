@@ -75,6 +75,7 @@
     <Compile Include="Database\UpgradeScriptTest.cs" />
     <Compile Include="Document\ImplicitTest.cs" />
     <Compile Include="Engine\AutoIndexEngineTest.cs" />
+    <Compile Include="Mapper\CustomTypeTest.cs" />
     <Compile Include="Mapper\DictionaryTest.cs" />
     <Compile Include="Mapper\DictListTest.cs" />
     <Compile Include="Mapper\FluentMapperTest.cs" />
