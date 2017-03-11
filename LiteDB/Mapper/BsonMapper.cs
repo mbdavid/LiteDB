@@ -301,12 +301,12 @@ namespace LiteDB
                 ForType = type
             };
 
+            var id = this.GetIdProperty(type);
             var idAttr = typeof(BsonIdAttribute);
             var ignoreAttr = typeof(BsonIgnoreAttribute);
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
-            var hasId = false;
 
             foreach (var memberInfo in this.GetTypeMembers(type))
             {
@@ -316,13 +316,6 @@ namespace LiteDB
                 // checks field name conversion
                 var name = this.ResolveFieldName(memberInfo.Name);
 
-                // checks if is _id
-                if (hasId == false && this.IsMemberId(type, memberInfo))
-                {
-                    hasId = true;
-                    name = "_id";
-                }
-
                 // check if property has [BsonField]
                 var field = (BsonFieldAttribute)memberInfo.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
 
@@ -330,6 +323,12 @@ namespace LiteDB
                 if (field != null && field.Name != null)
                 {
                     name = field.Name;
+                }
+
+                // checks if memberInfo is id field
+                if (memberInfo == id)
+                {
+                    name = "_id";
                 }
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
@@ -392,14 +391,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if this member is Id field based on member name (Id) or [BsonId] attribute
+        /// Gets PropertyInfo that refers to Id from a document object.
         /// </summary>
-        protected bool IsMemberId(Type type, MemberInfo member)
+        protected virtual PropertyInfo GetIdProperty(Type type)
         {
-            return member.IsDefined(typeof(BsonIdAttribute), false) ||
-                member.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
-                member.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase) ||
-                false;
+            // Get all properties and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name
+            return Reflection.SelectProperty(type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic),
+                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
+                x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
+                x => x.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
