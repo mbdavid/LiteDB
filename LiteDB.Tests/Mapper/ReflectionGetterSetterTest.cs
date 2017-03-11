@@ -122,9 +122,7 @@ namespace LiteDB.Tests
                 IncludeFields = true
             };
 
-#if NET35
             m.IncludeNonPublic = true;
-#endif
 
             var clone = m.ToObject<GetterSetterClass>(m.ToDocument<GetterSetterClass>(o));
 
@@ -134,13 +132,11 @@ namespace LiteDB.Tests
             Assert.AreEqual(o.PublicField, clone.PublicField);
             Assert.AreEqual(o.InternalField, clone.InternalField);
 
-#if NET35
             Assert.AreEqual(o.GetProtectedProperty(), clone.GetProtectedProperty());
             Assert.AreEqual(o.GetProtectedField(), clone.GetProtectedField());
 
             Assert.AreEqual(o.GetPrivateProperty(), clone.GetPrivateProperty());
             Assert.AreEqual(o.GetPrivateField(), clone.GetPrivateField());
-#endif
         }
 
         [TestMethod]
@@ -164,9 +160,7 @@ namespace LiteDB.Tests
                 IncludeFields = true
             };
 
-#if NET35
             m.IncludeNonPublic = true;
-#endif
 
             var clone = m.ToObject<GetterSetterStruct>(m.ToDocument<GetterSetterStruct>(o));
 
@@ -176,10 +170,8 @@ namespace LiteDB.Tests
             Assert.AreEqual(o.PublicField, clone.PublicField);
             Assert.AreEqual(o.InternalField, clone.InternalField);
 
-#if NET35
             Assert.AreEqual(o.GetPrivateProperty(), clone.GetPrivateProperty());
             Assert.AreEqual(o.GetPrivateField(), clone.GetPrivateField());
-#endif
         }
     }
 }

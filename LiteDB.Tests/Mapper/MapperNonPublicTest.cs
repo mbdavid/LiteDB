@@ -1,8 +1,9 @@
-﻿#if NET35
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LiteDB.Tests
 {
+    #region Model
+
     public class MyBsonFieldTestClass
     {
         [BsonField("MY-STRING")]
@@ -75,6 +76,8 @@ namespace LiteDB.Tests
         }
     }
 
+    #endregion
+
     [TestClass]
     public class MapperNonPublicTest
     {
@@ -128,4 +131,3 @@ namespace LiteDB.Tests
         }
     }
 }
-#endif

@@ -14,6 +14,14 @@ namespace LiteDB.Tests
             this.Filename = Path.GetFullPath(string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
         }
 
+        public void CreateDatafile()
+        {
+            using (var s = new FileStream(Filename, System.IO.FileMode.CreateNew))
+            {
+                LiteEngine.CreateDatabase(s);
+            }
+        }
+
         public IDiskService Disk(bool journal = true)
         {
             return new FileDiskService(Filename, journal);
