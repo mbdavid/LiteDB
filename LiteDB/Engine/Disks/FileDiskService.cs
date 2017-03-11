@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+#if !NET35
+using System.Threading.Tasks;
+#endif
 
 namespace LiteDB
 {
@@ -66,11 +69,10 @@ namespace LiteDB
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
             // open/create file using read only/exclusive options
-            _stream = new FileStream(_filename,
+            _stream = CreateFileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite,
-                BasePage.PAGE_SIZE);
+                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite);
 
             // if file is new, initialize
             if (_stream.Length == 0)
@@ -179,11 +181,10 @@ namespace LiteDB
             if (_journal == null)
             {
                 // open or create datafile if not exists
-                _journal = new FileStream(_journalFilename,
+                _journal = CreateFileStream(_journalFilename,
                     System.IO.FileMode.OpenOrCreate,
                     FileAccess.ReadWrite,
-                    FileShare.ReadWrite,
-                    BasePage.PAGE_SIZE);
+                    FileShare.ReadWrite);
             }
 
             // lock first byte
@@ -223,11 +224,10 @@ namespace LiteDB
             {
                 try
                 {
-                    _journal = new FileStream(_journalFilename,
+                    _journal = CreateFileStream(_journalFilename,
                         System.IO.FileMode.Open,
                         FileAccess.ReadWrite,
-                        FileShare.ReadWrite,
-                        BasePage.PAGE_SIZE);
+                        FileShare.ReadWrite);
 
                     // just avoid initialize recovery if journal is empty
                     if (_journal.Length == 0) yield break;
@@ -335,5 +335,26 @@ namespace LiteDB
         }
 
         #endregion
+
+        /// <summary>
+        /// Create a new filestream. Can be synced over async task (netstandard)
+        /// </summary>
+        private FileStream CreateFileStream(string path, System.IO.FileMode mode, FileAccess access, FileShare share)
+        {
+#if !NET35
+            if (_options.Async)
+            {
+                return this.SyncOverAsync(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE));
+            }
+#endif
+            return new FileStream(path, mode, access, share, BasePage.PAGE_SIZE);
+        }
+
+#if !NET35
+        private T SyncOverAsync<T>(Func<T> f)
+        {
+            return Task.Run<T>(f).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+#endif
     }
 }

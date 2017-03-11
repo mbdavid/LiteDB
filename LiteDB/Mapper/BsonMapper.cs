@@ -116,6 +116,11 @@ namespace LiteDB
             RegisterType<Uri>(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
             RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
             RegisterType<TimeSpan>(value => new BsonValue(value.Ticks), bson => new TimeSpan(bson.AsInt64));
+            RegisterType<Regex>(
+                r => r.Options == RegexOptions.None ? new BsonValue(r.ToString()) : new BsonDocument { { "p", r.ToString() }, { "o", (int)r.Options } },
+                value => value.IsString ? new Regex(value) : new Regex(value.AsDocument["p"].AsString, (RegexOptions)value.AsDocument["o"].AsInt32)
+            );
+
 
             #endregion Register CustomTypes
 

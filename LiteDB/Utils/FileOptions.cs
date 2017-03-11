@@ -11,6 +11,9 @@ namespace LiteDB
         public long InitialSize { get; set; }
         public long LimitSize { get; set; }
         public FileMode FileMode { get; set; }
+#if !NET35
+        public bool Async { get; set; }
+#endif
 
         public FileOptions()
         {

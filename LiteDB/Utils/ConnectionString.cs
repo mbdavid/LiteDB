@@ -64,6 +64,13 @@ namespace LiteDB
         /// </summary>
         public bool Upgrade { get; set; }
 
+#if !NET35
+        /// <summary>
+        /// "async": Use "sync over async" to UWP apps access any directory
+        /// </summary>
+        public bool Async { get; set; }
+#endif
+
         /// <summary>
         /// Initialize empty connection string
         /// </summary>
@@ -105,6 +112,9 @@ namespace LiteDB
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.Log = values.GetValue("log", Logger.NONE);
             this.Upgrade = values.GetValue("upgrade", false);
+#if !NET35
+            this.Async = values.GetValue("async", false);
+#endif
         }
     }
 }

@@ -63,6 +63,9 @@ namespace LiteDB
 
             var options = new FileOptions
             {
+#if !NET35
+                Async = _connectionString.Async,
+#endif
                 InitialSize = _connectionString.InitialSize,
                 LimitSize = _connectionString.LimitSize,
                 Journal = _connectionString.Journal
