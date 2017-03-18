@@ -51,6 +51,19 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Implements bulk insert documents in a collection. Usefull when need lots of documents.
+        /// </summary>
+        public int InsertBulk(IEnumerable<T> docs, int batchSize = 5000)
+        {
+            if (docs == null) throw new ArgumentNullException("docs");
+
+            using (_engine.Value.Locker.Reserved())
+            {
+                return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize);
+            }
+        }
+
+        /// <summary>
         /// Convert each T document in a BsonDocument, setting autoId for each one
         /// </summary>
         private IEnumerable<BsonDocument> GetBsonDocs(IEnumerable<T> docs)

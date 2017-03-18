@@ -41,7 +41,27 @@ namespace LiteDB
                 return count;
             });
         }
-        
+
+        /// <summary>
+        /// Bulk documents to a collection - use data chunks for most efficient insert
+        /// </summary>
+        public int InsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (docs == null) throw new ArgumentNullException("docs");
+            if (batchSize < 100 || batchSize > 100000) throw new ArgumentException("batchSize must be a value between 100 and 100000");
+            if (this.TransactionCount > 0) throw LiteException.TransactionNotSupported("InsertBulk");
+
+            var count = 0;
+
+            foreach(var batch in docs.Batch(batchSize))
+            {
+                count += this.Insert(collection, batch);
+            }
+
+            return count;
+        }
+
         /// <summary>
         /// Internal implementation of insert a document
         /// </summary>
