@@ -38,11 +38,9 @@ namespace LiteDB
                             }
 
                             // now copy 5000 documents per batch
-                            var docs = reader.GetDocuments(col);
-
-                            foreach (var batch in docs.Batch(batchSize))
+                            foreach (var docs in reader.GetDocuments(col).Batch(batchSize))
                             {
-                                engine.Insert(col, batch);
+                                engine.Insert(col, docs);
 
                                 // just clear pages/cache
                                 engine.Rollback();

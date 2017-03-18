@@ -29,8 +29,11 @@ namespace LiteDB
                         engine.EnsureIndex(collectionName, index.Field, index.Unique);
                     }
 
-                    // copy all docs
-                    engine.Insert(collectionName, this.Find(collectionName, Query.All()));
+                    // now copy 5000 documents per batch
+                    foreach (var docs in this.Find(collectionName, Query.All()).Batch(5000))
+                    {
+                        engine.Insert(collectionName, docs);
+                    }
                 }
 
                 // copy user version
