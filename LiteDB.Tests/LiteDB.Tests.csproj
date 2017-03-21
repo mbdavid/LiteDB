@@ -68,6 +68,7 @@
     <Compile Include="Concurrency\LockerTest.cs" />
     <Compile Include="Concurrency\AutoIdConcurrencyTest.cs" />
     <Compile Include="Concurrency\ProcessTest.cs" />
+    <Compile Include="Database\BigDatabaseTest.cs" />
     <Compile Include="Database\AutoIndexDatabaseTest.cs" />
     <Compile Include="Database\UpgradeScriptTest.cs" />
     <Compile Include="Engine\BulkInsertTest.cs" />
