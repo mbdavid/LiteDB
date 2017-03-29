@@ -57,10 +57,10 @@ namespace LiteDB
 
                 // initialize all services again (crypto can be changed)
                 this.InitializeServices();
+                
+                // return how many bytes are reduced
+                return originalSize - temp.FileLength;
             }
-
-            // return how many bytes are reduced
-            return originalSize - temp.FileLength;
         }
     }
 }
