@@ -32,7 +32,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 ## Documentation
 
-Visit [the Wiki](https://github.com/mbdavid/LiteDB/wiki) for full documentation
+Visit [the Wiki](https://github.com/mbdavid/LiteDB/wiki) for full documentation. For simplified chinese version, [check here](https://github.com/lidanger/LiteDB.wiki_Translation_zh-cn).
 
 ## Download
 
@@ -156,4 +156,4 @@ Copyright (c) 2017 - Maurício David
 
 ## Thanks
 
-A special thanks to @negue and @szurgot helping with portable version.
+A special thanks to @negue and @szurgot helping with portable version and @lidanger for simplified chinese translation. 
