@@ -334,7 +334,7 @@ namespace LiteDB
 
         public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
         }
 
         public bool Remove(KeyValuePair<string, BsonValue> item)
