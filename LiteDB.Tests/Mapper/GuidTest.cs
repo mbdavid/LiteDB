@@ -43,8 +43,8 @@ namespace LiteDB.Tests.Mapper
             var roleModel = obj as PersonModel;
             if (roleModel == null) return false;
 
-            var equal = string.Equals(FirstName, roleModel.FirstName, StringComparison.InvariantCultureIgnoreCase)
-                && string.Equals(LastName, roleModel.LastName, StringComparison.InvariantCultureIgnoreCase);
+            var equal = string.Equals(FirstName, roleModel.FirstName, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(LastName, roleModel.LastName, StringComparison.OrdinalIgnoreCase);
 
             return equal;
         }
@@ -94,7 +94,7 @@ namespace LiteDB.Tests.Mapper
             var roleModel = obj as RoleModel;
             if (roleModel == null) return false;
 
-            if (!string.Equals(Name, roleModel.Name, StringComparison.InvariantCultureIgnoreCase) && Persons.Count == roleModel.Persons.Count) return false;
+            if (!string.Equals(Name, roleModel.Name, StringComparison.OrdinalIgnoreCase) && Persons.Count == roleModel.Persons.Count) return false;
 
             return Persons.Keys.All(key => Equals(Persons[key], roleModel.Persons[key]));
         }
