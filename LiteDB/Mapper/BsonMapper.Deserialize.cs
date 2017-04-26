@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace LiteDB
@@ -239,7 +240,7 @@ namespace LiteDB
         {
             foreach (var key in value.Keys)
             {
-                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, key) : Convert.ChangeType(key, K);
+                var k = K.GetTypeInfo().IsEnum ? Enum.Parse(K, key) : TypeDescriptor.GetConverter(K).ConvertFromInvariantString(key);
                 var v = this.Deserialize(T, value[key]);
 
                 dict.Add(k, v);
