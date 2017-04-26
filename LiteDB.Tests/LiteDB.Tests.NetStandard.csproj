@@ -79,6 +79,7 @@
     <Compile Include="Mapper\DictionaryTest.cs" />
     <Compile Include="Mapper\DictListTest.cs" />
     <Compile Include="Mapper\FluentMapperTest.cs" />
+    <Compile Include="Mapper\GuidTest.cs" />
     <Compile Include="Mapper\InterfaceBaseTest.cs" />
     <Compile Include="Mapper\MapperNonPublicTest.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
