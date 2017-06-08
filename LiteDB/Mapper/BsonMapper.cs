@@ -468,6 +468,11 @@ namespace LiteDB
             {
                 var idField = entity.Id;
 
+                if (idField == null)
+                {
+                    throw new LiteException(LiteException.ID_KEY_NOT_FOUND, "No id-field found for {0}. Make sure to set it for this type.", entity.ForType.Name);
+                }
+
                 var id = idField.Getter(obj);
 
                 return new BsonDocument
