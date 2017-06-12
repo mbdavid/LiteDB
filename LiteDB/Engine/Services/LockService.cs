@@ -232,7 +232,10 @@ namespace LiteDB
             }
 
             // try enter in write mode
-            _thread.TryEnterWriteLock(_timeout);
+            if (!_thread.TryEnterWriteLock(_timeout))
+            {
+                throw LiteException.LockTimeout(_timeout);
+            }
 
             // and release when dispose
             return () => _thread.ExitWriteLock();
