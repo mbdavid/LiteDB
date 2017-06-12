@@ -17,7 +17,7 @@ namespace LiteDB.Tests.Database
                 {
                     var transactionStarted = new AutoResetEvent(false);
                     var transactionBlock = new AutoResetEvent(false);
-                    Task.Run(() =>
+                    var blockTask = Task.Run(() =>
                     {
                         using (db.BeginTrans())
                         {
@@ -39,6 +39,7 @@ namespace LiteDB.Tests.Database
                         lockException = e;
                         transactionBlock.Set();
                     }
+                    blockTask.Wait();
                     Assert.IsNotNull(lockException);
                     Assert.AreEqual(LiteException.LOCK_TIMEOUT, lockException.ErrorCode);
                 }
