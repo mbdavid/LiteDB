@@ -1,9 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Text.RegularExpressions;
-
-namespace LiteDB.Shell
+﻿namespace LiteDB.Shell
 {
     internal class Program
     {
@@ -12,7 +7,7 @@ namespace LiteDB.Shell
         /// LiteDB.Shell [myfile.db] --param1 value1 --params2 "value 2"
         /// Parameters:
         /// --exec "command"   : Execute an shell command (can be multiples --exec)
-        /// --run script.txt   : Run script commands file 
+        /// --run script.txt   : Run script commands file
         /// --pretty           : Show JSON in multiline + indented
         /// --exit             : Exit after last command
         /// </summary>
