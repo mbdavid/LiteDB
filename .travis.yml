@@ -7,9 +7,6 @@ matrix:
       dotnet: none
       mono: none
       dist: trusty
-    - os: osx
-      osx_image: xcode8.2
-      language: generic
 
 before_install:
   - ./.travis/before-install-$TRAVIS_OS_NAME.sh
