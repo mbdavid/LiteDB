@@ -14,8 +14,6 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            var docs = new List<BsonDocument>(bufferSize);
-
             using (_locker.Shared())
             {
                 // get my collection page
@@ -48,15 +46,10 @@ namespace LiteDB
                     buffer = _data.Read(node.DataBlock);
                     doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
-                    docs.Add(doc);
+                    yield return doc;
+
+                    _trans.CheckPoint();
                 }
-            }
-
-            foreach(var doc in docs)
-            {
-                yield return doc;
-
-                _trans.CheckPoint();
             }
         }
 

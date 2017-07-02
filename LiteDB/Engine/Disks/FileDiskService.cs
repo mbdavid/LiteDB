@@ -251,8 +251,19 @@ namespace LiteDB
             var length = state == LockState.Shared ? 1 : LOCK_SHARED_LENGTH;
 
             _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
-            
-            _stream.TryLock(position, length, timeout);
+
+            if (state == LockState.Exclusive && _lockSharedPosition > 0)
+            {
+                var beforeLength = _lockSharedPosition - LOCK_POSITION;
+                var afterLength = LOCK_SHARED_LENGTH - beforeLength - 1;
+
+                _stream.TryLock(LOCK_POSITION, beforeLength, timeout);
+                _stream.TryLock(_lockSharedPosition + 1, afterLength, timeout);
+            }
+            else
+            {
+                _stream.TryLock(position, length, timeout);
+            }
 #endif
         }
 
@@ -270,7 +281,21 @@ namespace LiteDB
 
             _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
 
-            _stream.TryUnlock(position, length);
+            // if unlock exclusive but contains position of shared lock, keep shared
+            if (state == LockState.Exclusive && _lockSharedPosition != 0)
+            {
+                var beforeLength = _lockSharedPosition - LOCK_POSITION;
+                var afterLength = LOCK_SHARED_LENGTH - beforeLength - 1;
+
+                _stream.TryUnlock(LOCK_POSITION, beforeLength);
+                _stream.TryUnlock(_lockSharedPosition + 1, afterLength);
+            }
+            else
+            {
+                _stream.TryUnlock(position, length);
+
+                _lockSharedPosition = 0;
+            }
 #endif
         }
 

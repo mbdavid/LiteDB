@@ -97,8 +97,11 @@ namespace LiteDB
                     return new LockControl(() => { });
                 }
 
-                // if are locked in shared, exit read to enter in write
-                if (_state == LockState.Shared) throw new NotSupportedException("Lock are in exclusive mode");
+                // test if came from a shared lock (to restore after unlock)
+                var shared = _state == LockState.Shared;
+
+                // if came, need exit read lock
+                if (shared) _thread.ExitReadLock();
 
                 // try enter in write mode (thread)
                 if (!_thread.TryEnterWriteLock(_timeout))
@@ -111,7 +114,11 @@ namespace LiteDB
 
                 _log.Write(Logger.LOCK, "entered in exclusive lock mode");
 
-                this.AvoidDirtyRead();
+                // call avoid dirty only if not came from a shared mode
+                if (!shared)
+                {
+                    this.AvoidDirtyRead();
+                }
 
                 _state = LockState.Exclusive;
 
@@ -120,10 +127,20 @@ namespace LiteDB
                     // release thread write
                     _thread.ExitWriteLock();
 
+                    // 
+                    if (shared)
+                    {
+                        _thread.TryEnterReadLock(_timeout);
+                        _state = LockState.Shared;
+                    }
+
                     // release disk exclusive
                     _disk.Unlock(LockState.Exclusive);
 
-                    _state = LockState.Unlocked;
+                    if (!shared)
+                    {
+                        _state = LockState.Unlocked;
+                    }
                 });
             }
         }
