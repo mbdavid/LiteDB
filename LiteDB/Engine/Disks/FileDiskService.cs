@@ -169,7 +169,7 @@ namespace LiteDB
                 BasePage.GetSizeOfPages(pages.Count));
 
             // go to initial file position (after lastPageID)
-            _stream.Seek(lastPageID + 1, SeekOrigin.Begin);
+            _stream.Seek(BasePage.GetSizeOfPages(lastPageID + 1), SeekOrigin.Begin);
 
             foreach(var buffer in pages)
             {

@@ -55,7 +55,7 @@ namespace LiteDB
                 }
 
                 // try enter in read mode
-                if (_thread.TryEnterReadLock(_timeout))
+                if (!_thread.TryEnterReadLock(_timeout))
                 {
                     throw LiteException.LockTimeout(_timeout);
                 }
@@ -91,14 +91,14 @@ namespace LiteDB
         {
             lock (_disk)
             {
-                // if are locked in shared, throw invalid operation
-                if (_state == LockState.Shared) throw new InvalidOperationException("Call exit shared lock before call exclusive");
-
                 // if already in exclusive, do nothing
                 if (_state == LockState.Exclusive)
                 {
                     return new LockControl(() => { });
                 }
+
+                // if are locked in shared, exit read to enter in write
+                if (_state == LockState.Shared) throw new NotSupportedException("Lock are in exclusive mode");
 
                 // try enter in write mode (thread)
                 if (!_thread.TryEnterWriteLock(_timeout))
