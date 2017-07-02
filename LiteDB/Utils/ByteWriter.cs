@@ -10,7 +10,7 @@ namespace LiteDB
 
         public byte[] Buffer { get { return _buffer; } }
 
-        public int Position { get { return _pos; } }
+        public int Position { get { return _pos; } set { _pos = value; } }
 
         public ByteWriter(int length)
         {

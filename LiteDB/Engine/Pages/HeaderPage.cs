@@ -52,6 +52,11 @@ namespace LiteDB
         public byte[] Salt { get; set; }
 
         /// <summary>
+        /// Indicate if datafile need be recovered
+        /// </summary>
+        public bool Recovery { get; set; }
+
+        /// <summary>
         /// Get a dictionary with all collection pages with pageID link
         /// </summary>
         public Dictionary<string, uint> CollectionPages { get; set; }
@@ -102,6 +107,11 @@ namespace LiteDB
             {
                 this.CollectionPages.Add(reader.ReadString(), reader.ReadUInt32());
             }
+
+            // use last page byte position for recovery mode only because i forgot to reserve area before collection names!
+            // TODO: fix this in next change data structure
+            reader.Position = BasePage.PAGE_SIZE - 1;
+            this.Recovery = reader.ReadBoolean();
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -121,8 +131,11 @@ namespace LiteDB
                 writer.Write(key);
                 writer.Write(this.CollectionPages[key]);
             }
+
+            writer.Position = BasePage.PAGE_SIZE - 1;
+            writer.Write(this.Recovery);
         }
 
-        #endregion Read/Write pages
+        #endregion
     }
 }

@@ -38,6 +38,7 @@ namespace LiteDB
         public const int INVALID_DATA_TYPE = 204;
         public const int PROPERTY_NOT_MAPPED = 206;
         public const int INVALID_TYPED_NAME = 207;
+        public const int NEED_RECOVER = 208;
 
         #endregion
 
@@ -160,6 +161,11 @@ namespace LiteDB
         internal static LiteException TransactionNotSupported(string method)
         {
             return new LiteException(TRANSACTION_NOT_SUPPORTED, "Transactions are not supported here: " + method);
+        }
+
+        internal static LiteException NeedRecover()
+        {
+            return new LiteException(NEED_RECOVER, "Your datafile did not terminate properly during the writing process. Reopen the file");
         }
 
         #endregion

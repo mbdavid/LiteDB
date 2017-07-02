@@ -126,8 +126,11 @@ namespace LiteDB
                 // initialize all services
                 this.InitializeServices();
 
-                // try recovery if has journal file
-                _trans.Recovery();
+                // if header are marked with recovery, do it now
+                if (header.Recovery)
+                {
+                    _trans.Recovery(header.LastPageID);
+                }
             }
             catch (Exception)
             {

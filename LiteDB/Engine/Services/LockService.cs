@@ -264,6 +264,12 @@ namespace LiteDB
             // and get header from disk
             var disk = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
 
+            // if disk header are in recovery mode, throw exception to datafile re-open and recovery pages
+            if (disk.Recovery)
+            {
+                throw LiteException.NeedRecover();
+            }
+
             // if header change, clear cache and add new header to cache
             if (disk.ChangeID != changeID)
             {

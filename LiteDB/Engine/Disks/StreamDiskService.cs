@@ -116,14 +116,14 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages)
+        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
         {
         }
 
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public IEnumerable<byte[]> ReadJournal()
+        public IEnumerable<byte[]> ReadJournal(uint lastPageID)
         {
             yield break;
         }
@@ -131,7 +131,7 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public void ClearJournal()
+        public void ClearJournal(uint lastPageID)
         {
         }
 

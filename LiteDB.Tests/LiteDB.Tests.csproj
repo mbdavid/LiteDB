@@ -71,6 +71,7 @@
     <Compile Include="Database\BigDatabaseTest.cs" />
     <Compile Include="Database\AutoIndexDatabaseTest.cs" />
     <Compile Include="Database\LockTimeoutTests.cs" />
+    <Compile Include="Engine\JournalTest.cs" />
     <Compile Include="Database\ULongListTest.cs" />
     <Compile Include="Database\UpgradeScriptTest.cs" />
     <Compile Include="Engine\BulkInsertTest.cs" />
