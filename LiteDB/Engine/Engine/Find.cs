@@ -9,10 +9,12 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 10)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
+
+            var docs = new List<BsonDocument>(bufferSize);
 
             using (_locker.Shared())
             {
@@ -46,10 +48,15 @@ namespace LiteDB
                     buffer = _data.Read(node.DataBlock);
                     doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
-                    _trans.CheckPoint();
-
-                    yield return doc;
+                    docs.Add(doc);
                 }
+            }
+
+            foreach(var doc in docs)
+            {
+                yield return doc;
+
+                _trans.CheckPoint();
             }
         }
 

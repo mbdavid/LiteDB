@@ -89,6 +89,8 @@ namespace LiteDB
 
                 // discard journal file
                 _disk.ClearJournal(header.LastPageID);
+
+                //_disk.Flush();
             }
         }
 

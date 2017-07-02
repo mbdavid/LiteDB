@@ -24,24 +24,24 @@ namespace LiteDB.Tests
                     dbA.EnsureIndex("col", "process", false);
 
                     // insert 1000 x instance=1
-                    var ta = Task.Factory.StartNew(() =>
-                    {
+                    //var ta = Task.Factory.StartNew(() =>
+                    //{
                         for (var i = 0; i < 1000; i++)
                         {
                             dbA.Insert("col", new BsonDocument { { "process", 1 } });
                         }
-                    });
+                    //});
 
                     // insert 700 x instance=2
-                    var tb = Task.Factory.StartNew(() =>
-                    {
+                    //var tb = Task.Factory.StartNew(() =>
+                    //{
                         for (var i = 0; i < 700; i++)
                         {
                             dbB.Insert("col", new BsonDocument { { "process", 2 } });
                         }
-                    });
+                    //});
 
-                    Task.WaitAll(ta, tb);
+                    //Task.WaitAll(ta, tb);
 
                     Assert.AreEqual(1000, dbA.Count("col", Query.EQ("process", 1)));
                     Assert.AreEqual(700, dbA.Count("col", Query.EQ("process", 2)));

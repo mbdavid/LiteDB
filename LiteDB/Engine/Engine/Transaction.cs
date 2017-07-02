@@ -16,12 +16,12 @@ namespace LiteDB
 
         /// <summary>
         /// Starts a new transaction keeping all changed from now in memory only until Commit() be executed.
-        /// Lock thread in write mode to not accept other transaction
+        /// Lock thread in write/exclusive mode to not accept other transaction
         /// </summary>
         public void BeginTrans()
         {
             // lock as reserved mode
-            var locker = _locker.Reserved();
+            var locker = _locker.Exclusive();
 
             _transactions.Push(locker);
         }
@@ -57,6 +57,7 @@ namespace LiteDB
         {
             _trans.Rollback();
 
+            // clear all transaction stack
             while (_transactions.Count > 0)
             {
                 _transactions.Pop().Dispose();

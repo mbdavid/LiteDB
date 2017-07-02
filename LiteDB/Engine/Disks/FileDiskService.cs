@@ -23,7 +23,6 @@ namespace LiteDB
         /// </summary>
         internal const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
         internal const int LOCK_SHARED_LENGTH = 1000;
-        internal const int LOCK_RESERVED_POSITION = LOCK_POSITION + LOCK_SHARED_LENGTH + 1;
 
         private FileStream _stream;
         private string _filename;
@@ -248,12 +247,8 @@ namespace LiteDB
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return;
 
-            var position =
-                state == LockState.Shared ? _lockSharedPosition = _lockSharedRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_SHARED_LENGTH) :
-                state == LockState.Reserved ? LOCK_RESERVED_POSITION :
-                state == LockState.Exclusive ? LOCK_POSITION : 0;
-            
-            var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+            var position = state == LockState.Shared ? _lockSharedPosition = _lockSharedRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_SHARED_LENGTH) : LOCK_POSITION;
+            var length = state == LockState.Shared ? 1 : LOCK_SHARED_LENGTH;
 
             _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
             
@@ -270,12 +265,8 @@ namespace LiteDB
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return;
 
-            var position =
-                state == LockState.Shared ? _lockSharedPosition :
-                state == LockState.Reserved ? LOCK_RESERVED_POSITION :
-                state == LockState.Exclusive ? LOCK_POSITION : 0;
-            
-            var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+            var position = state == LockState.Shared ? _lockSharedPosition : LOCK_POSITION;
+            var length = state == LockState.Shared ? 1 : LOCK_SHARED_LENGTH;
 
             _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
 

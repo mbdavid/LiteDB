@@ -20,11 +20,6 @@ namespace LiteDB
         Shared,
 
         /// <summary>
-        /// FileAccess.Write | FileShared.Read
-        /// </summary>
-        Reserved,
-
-        /// <summary>
         /// FileAccess.Write | FileShared.None
         /// </summary>
         Exclusive

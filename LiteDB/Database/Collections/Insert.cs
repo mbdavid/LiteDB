@@ -12,7 +12,7 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            using (_engine.Value.Locker.Reserved())
+            using (_engine.Value.Locker.Exclusive())
             {
                 _mapper.SetAutoId(document, _engine.Value, _name);
 
@@ -44,7 +44,7 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            using (_engine.Value.Locker.Reserved())
+            using (_engine.Value.Locker.Exclusive())
             {
                 return _engine.Value.Insert(_name, this.GetBsonDocs(docs));
             }
@@ -57,7 +57,7 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            using (_engine.Value.Locker.Reserved())
+            using (_engine.Value.Locker.Exclusive())
             {
                 return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize);
             }
