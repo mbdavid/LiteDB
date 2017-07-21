@@ -11,9 +11,9 @@ before_install:
   - ./.travis/before-install-$TRAVIS_OS_NAME.sh
 
 script:
-  - dotnet restore ./LiteDB/LiteDB.dotnet.csproj
-  - dotnet build ./LiteDB/LiteDB.dotnet.csproj
-  - dotnet restore ./LiteDB.Tests/LiteDB.Tests.dotnet.csproj
-  - dotnet build ./LiteDB.Tests/LiteDB.Tests.dotnet.csproj
-  - dotnet test ./LiteDB.Tests/LiteDB.Tests.dotnet.csproj --logger:console;verbosity=normal
+  - dotnet restore ./LiteDB/LiteDB.csproj
+  - dotnet build ./LiteDB/LiteDB.csproj
+  - dotnet restore ./LiteDB.Tests/LiteDB.Tests.csproj
+  - dotnet build ./LiteDB.Tests/LiteDB.Tests.csproj
+  - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj --logger:console;verbosity=normal
 
