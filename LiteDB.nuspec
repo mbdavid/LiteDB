@@ -17,7 +17,9 @@
     <files>
         <file src="LiteDB\bin\Release\net35\LiteDB.dll" target="lib\net35\LiteDB.dll" />
         <file src="LiteDB\bin\Release\net35\LiteDB.xml" target="lib\net35\LiteDB.xml" />
-        <file src="LiteDB\bin\Release\netstandard\LiteDB.dll" target="lib\netstandard1.4\LiteDB.dll" />
-        <file src="LiteDB\bin\Release\netstandard\LiteDB.xml" target="lib\netstandard1.4\LiteDB.xml" />
+        <file src="LiteDB\bin\Release\net45\LiteDB.dll" target="lib\net45\LiteDB.dll" />
+        <file src="LiteDB\bin\Release\net45\LiteDB.xml" target="lib\net45\LiteDB.xml" />
+        <file src="LiteDB\bin\Release\netstandard1.4\LiteDB.dll" target="lib\netstandard1.4\LiteDB.dll" />
+        <file src="LiteDB\bin\Release\netstandard1.4\LiteDB.xml" target="lib\netstandard1.4\LiteDB.xml" />
     </files>
 </package>
