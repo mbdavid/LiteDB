@@ -5,10 +5,10 @@ matrix:
   include:
     - os: linux
       dotnet: 1.0.3
-      mono: latest
+      mono: none
       dist: trusty
-#before_install:
-#  - ./.travis/before-install-$TRAVIS_OS_NAME.sh
+before_install:
+  - ./.travis/before-install-$TRAVIS_OS_NAME.sh
 
 script:
   - dotnet restore ./LiteDB/LiteDB.dotnet.csproj
