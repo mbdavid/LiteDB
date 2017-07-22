@@ -225,26 +225,7 @@ namespace LiteDB
         /// </summary>
         public long Shrink(string password)
         {
-            // if has connection string, use same path
-            if (_connectionString != null)
-            {
-                // get temp file ("-temp" suffix)
-                var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
-
-                // get temp disk based on temp file
-                var tempDisk = new FileDiskService(tempFile, false);
-
-                var reduced = _engine.Value.Shrink(password);
-
-                // delete temp file
-                File.Delete(tempFile);
-
-                return reduced;
-            }
-            else
-            {
-                return _engine.Value.Shrink(password);
-            }
+            return _engine.Value.Shrink(password);
         }
 
         #endregion
