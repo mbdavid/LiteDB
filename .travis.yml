@@ -5,7 +5,7 @@ matrix:
   include:
     - os: linux
       dotnet: none
-      mono: 4.6
+      mono: latest
       dist: trusty
 before_install:
   - ./.travis/before-install-$TRAVIS_OS_NAME.sh
