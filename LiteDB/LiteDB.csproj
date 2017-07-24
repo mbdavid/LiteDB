@@ -113,6 +113,7 @@
     <Compile Include="Mapper\Reflection\Reflection.Expression.cs" />
     <Compile Include="Repository\LiteQueryable.cs" />
     <Compile Include="Repository\LiteRepository.cs" />
+    <Compile Include="Utils\ContainsExt.cs" />
     <Compile Include="Utils\LockControl.cs" />
     <Compile Include="Utils\LockState.cs" />
     <Compile Include="Mapper\Attributes\BsonRefAttribute.cs" />

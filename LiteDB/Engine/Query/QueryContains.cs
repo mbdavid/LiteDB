@@ -10,6 +10,7 @@ namespace LiteDB
     internal class QueryContains : Query
     {
         private BsonValue _value;
+        private StringComparison? _options = null;
 
         public QueryContains(string field, BsonValue value)
             : base(field)
@@ -17,8 +18,18 @@ namespace LiteDB
             _value = value;
         }
 
+        public QueryContains(string field, BsonValue value, StringComparison options) : this(field, value)
+        {
+            _options = options;
+        }
+
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
+            if (_options.HasValue)
+                return indexer
+                .FindAll(index, Query.Ascending)
+                .Where(x => x.Key.IsString && x.Key.AsString.Contains(_value, _options.Value));
+
             return indexer
                 .FindAll(index, Query.Ascending)
                 .Where(x => x.Key.IsString && x.Key.AsString.Contains(_value));
