@@ -58,14 +58,6 @@ namespace LiteDB
         #region Shortchut from Database/Engine
 
         /// <summary>
-        /// Starts new transaction. Don't forgot execute ".Commit()" method from LiteTransaction
-        /// </summary>
-        public LiteTransaction BeginTrans()
-        {
-            return _db.BeginTrans();
-        }
-
-        /// <summary>
         /// Returns a special collection for storage files/stream inside datafile
         /// </summary>
         public LiteStorage FileStorage

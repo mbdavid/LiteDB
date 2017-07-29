@@ -50,7 +50,6 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (docs == null) throw new ArgumentNullException("docs");
             if (batchSize < 100 || batchSize > 100000) throw new ArgumentException("batchSize must be a value between 100 and 100000");
-            if (this.TransactionCount > 0) throw LiteException.TransactionNotSupported("InsertBulk");
 
             var count = 0;
 

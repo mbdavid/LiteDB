@@ -44,63 +44,48 @@ namespace LiteDB
         /// <summary>
         /// Save all dirty pages to disk
         /// </summary>
-        public void Commit()
+        public void PersistDirtyPages()
         {
-            // enter in exclusive lock mode to write on disk
-            using (_locker.Exclusive())
+            // get header page
+            var header = _pager.GetPage<HeaderPage>(0);
+
+            // increase file changeID (back to 0 when overflow)
+            header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
+
+            // mark header as dirty
+            _pager.SetDirty(header);
+
+            // write journal file in desc order to header be last page in disk
+            _disk.WriteJournal(_cache.GetDirtyPages()
+                .OrderByDescending(x => x.PageID)
+                .Select(x => x.DiskData)
+                .Where(x => x.Length > 0)
+                .ToList(), header.LastPageID);
+
+            // mark header as recovery before start writing (in journal, must keep recovery = false)
+            header.Recovery = true;
+
+            // get all dirty page stating from Header page (SortedList)
+            foreach (var page in _cache.GetDirtyPages())
             {
-                // get header page
-                var header = _pager.GetPage<HeaderPage>(0);
+                // page.WritePage() updated DiskData with new rendered buffer
+                var buffer = _crypto == null || page.PageID == 0 ? 
+                    page.WritePage() : 
+                    _crypto.Encrypt(page.WritePage());
 
-                // increase file changeID (back to 0 when overflow)
-                header.ChangeID = header.ChangeID == ushort.MaxValue ? (ushort)0 : (ushort)(header.ChangeID + (ushort)1);
-
-                // mark header as dirty
-                _pager.SetDirty(header);
-
-                // write journal file in desc order to header be last page in disk
-                _disk.WriteJournal(_cache.GetDirtyPages()
-                    .OrderByDescending(x => x.PageID)
-                    .Select(x => x.DiskData)
-                    .Where(x => x.Length > 0)
-                    .ToList(), header.LastPageID);
-
-                // mark header as recovery before start writing (in journal, must keep recovery = false)
-                header.Recovery = true;
-
-                // get all dirty page stating from Header page (SortedList)
-                foreach (var page in _cache.GetDirtyPages())
-                {
-                    // page.WritePage() updated DiskData with new rendered buffer
-                    var buffer = _crypto == null || page.PageID == 0 ? 
-                        page.WritePage() : 
-                        _crypto.Encrypt(page.WritePage());
-
-                    _disk.WritePage(page.PageID, buffer);
-                }
-
-                // re-write header page but now with recovery=false
-                header.Recovery = false;
-
-                _disk.WritePage(0, header.WritePage());
-
-                // mark all dirty pages as clean pages (all are persisted in disk and are valid pages)
-                _cache.MarkDirtyAsClean();
-
-                // discard journal file
-                _disk.ClearJournal(header.LastPageID);
-
-                //_disk.Flush();
+                _disk.WritePage(page.PageID, buffer);
             }
-        }
 
-        /// <summary>
-        /// Rollback is just discard dirty pages
-        /// </summary>
-        public void Rollback()
-        {
-            // clear all dirty pages from memory
-            _cache.DiscardDirtyPages();
+            // re-write header page but now with recovery=false
+            header.Recovery = false;
+
+            _disk.WritePage(0, header.WritePage());
+
+            // mark all dirty pages as clean pages (all are persisted in disk and are valid pages)
+            _cache.MarkDirtyAsClean();
+
+            // discard journal file
+            _disk.ClearJournal(header.LastPageID);
         }
 
         /// <summary>
@@ -108,7 +93,7 @@ namespace LiteDB
         /// </summary>
         public void Recovery(uint lastPageID)
         {
-            using (_locker.Exclusive())
+            using (_locker.Write())
             {
                 // read all journal pages
                 foreach (var buffer in _disk.ReadJournal(lastPageID))

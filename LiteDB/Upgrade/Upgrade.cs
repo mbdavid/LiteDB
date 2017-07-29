@@ -41,9 +41,6 @@ namespace LiteDB
                             var docs = reader.GetDocuments(col);
 
                             engine.InsertBulk(col, docs, batchSize);
-
-                            // just clear pages/cache
-                            engine.Rollback();
                         }
                     }
 

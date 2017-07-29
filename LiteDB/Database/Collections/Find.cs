@@ -16,9 +16,6 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            // define index factory based on mapper definitions
-            query.IndexFactory((c, f) => IndexFactory(f));
-
             var docs = _engine.Value.Find(_name, query, skip, limit);
 
             foreach(var doc in docs)

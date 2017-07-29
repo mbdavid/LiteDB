@@ -176,14 +176,38 @@ namespace LiteDB
             return col;
         }
 
+        /// <summary>
+        /// Encapsulate all operations in a single write transaction
+        /// </summary>
+        private T Transaction<T>(string collection, bool addIfNotExists, Func<CollectionPage, T> action)
+        {
+            // always starts write operation locking database
+            using (_locker.Write())
+            {
+                try
+                {
+                    var col = this.GetCollectionPage(collection, addIfNotExists);
+
+                    var result = action(col);
+
+                    _trans.PersistDirtyPages();
+
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+
+                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
+                    _cache.DiscardDirtyPages();
+
+                    throw;
+                }
+            }
+        }
+
         public void Dispose()
         {
-            // if there is any open transaction, rollback
-            if (_transactions.Count > 0)
-            {
-                this.Rollback();
-            }
-
             // dispose datafile and journal file
             _disk.Dispose();
 

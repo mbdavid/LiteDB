@@ -107,20 +107,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Transaction
-
-        /// <summary>
-        /// Starts new transaction
-        /// </summary>
-        public LiteTransaction BeginTrans()
-        {
-            _engine.Value.BeginTrans();
-
-            return new LiteTransaction(() => _engine.Value.Commit(), _engine.Value.Rollback);
-        }
-
-        #endregion
-
         #region Collections
 
         /// <summary>

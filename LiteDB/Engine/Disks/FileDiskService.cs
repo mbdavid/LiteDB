@@ -22,7 +22,7 @@ namespace LiteDB
         /// Map lock positions
         /// </summary>
         internal const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
-        internal const int LOCK_SHARED_LENGTH = 1000;
+        internal const int LOCK_LENGTH = 1000;
 
         private FileStream _stream;
         private string _filename;
@@ -31,8 +31,8 @@ namespace LiteDB
         private FileOptions _options;
 
 #if NET35
-        private int _lockSharedPosition = 0;
-        private Random _lockSharedRandom = new Random();
+        private int _lockReadPosition = 0;
+        private Random _lockReadRandom = new Random();
 #endif
 
         #region Initialize/Dispose disk
@@ -247,18 +247,18 @@ namespace LiteDB
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return;
 
-            var position = state == LockState.Shared ? _lockSharedPosition = _lockSharedRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_SHARED_LENGTH) : LOCK_POSITION;
-            var length = state == LockState.Shared ? 1 : LOCK_SHARED_LENGTH;
+            var position = state == LockState.Read ? _lockReadPosition = _lockReadRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_LENGTH) : LOCK_POSITION;
+            var length = state == LockState.Read ? 1 : LOCK_LENGTH;
 
             _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
 
-            if (state == LockState.Exclusive && _lockSharedPosition > 0)
+            if (state == LockState.Write && _lockReadPosition > 0)
             {
-                var beforeLength = _lockSharedPosition - LOCK_POSITION;
-                var afterLength = LOCK_SHARED_LENGTH - beforeLength - 1;
+                var beforeLength = _lockReadPosition - LOCK_POSITION;
+                var afterLength = LOCK_LENGTH - beforeLength - 1;
 
                 _stream.TryLock(LOCK_POSITION, beforeLength, timeout);
-                _stream.TryLock(_lockSharedPosition + 1, afterLength, timeout);
+                _stream.TryLock(_lockReadPosition + 1, afterLength, timeout);
             }
             else
             {
@@ -276,25 +276,25 @@ namespace LiteDB
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return;
 
-            var position = state == LockState.Shared ? _lockSharedPosition : LOCK_POSITION;
-            var length = state == LockState.Shared ? 1 : LOCK_SHARED_LENGTH;
+            var position = state == LockState.Read ? _lockReadPosition : LOCK_POSITION;
+            var length = state == LockState.Read ? 1 : LOCK_LENGTH;
 
             _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
 
             // if unlock exclusive but contains position of shared lock, keep shared
-            if (state == LockState.Exclusive && _lockSharedPosition != 0)
+            if (state == LockState.Write && _lockReadPosition != 0)
             {
-                var beforeLength = _lockSharedPosition - LOCK_POSITION;
-                var afterLength = LOCK_SHARED_LENGTH - beforeLength - 1;
+                var beforeLength = _lockReadPosition - LOCK_POSITION;
+                var afterLength = LOCK_LENGTH - beforeLength - 1;
 
                 _stream.TryUnlock(LOCK_POSITION, beforeLength);
-                _stream.TryUnlock(_lockSharedPosition + 1, afterLength);
+                _stream.TryUnlock(_lockReadPosition + 1, afterLength);
             }
             else
             {
                 _stream.TryUnlock(position, length);
 
-                _lockSharedPosition = 0;
+                _lockReadPosition = 0;
             }
 #endif
         }

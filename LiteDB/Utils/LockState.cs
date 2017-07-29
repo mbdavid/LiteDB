@@ -17,11 +17,11 @@ namespace LiteDB
         /// <summary>
         /// FileAccess.Read | FileShared.ReadWrite
         /// </summary>
-        Shared,
+        Read,
 
         /// <summary>
         /// FileAccess.Write | FileShared.None
         /// </summary>
-        Exclusive
+        Write
     }
 }

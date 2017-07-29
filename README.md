@@ -1,12 +1,33 @@
-# TODO - next major version
+# Version 3.5?
 
-- Remove transactions
-- Remove auto-create index
-- Add full scan when no index
-- think about how/when create indexes defined by [Attributes] of FluentApi
-- cache results in query
-- findAndModify
+- Remove transactions [OK] **BREAK API**
+    * Now, each operation MUST do only 1 operation (read OR write)
+- Remove auto-create index [OK]
+- Remove auto-id in database [OK] **BREAK API**
+- Fix simple Lock system (only multi-read/single write) [OK]
+    * Will read thread goes to write? YES!
+- Cache results in query before send to client
+- Add collection Sequence (Long) (can be access by LiteEngine)
+- Add auto-id in engine (LiteEngine.Insert(autoIdType = BsonType.ObjectId)
+- Review Database.Insert / Upsert
+- Support for Linq-to-Object when no index or any NotImplemented (automatic)
+    * Think about how/when create indexes defined by [Attributes] of FluentApi
+    * Only for Database (in Engine keep thowing index not found exception)
+    
+- Write more unit test for concurrency
+    * Do tests in lock control only too
 
+# Initialize
+- When Database "GetCollection" checks if all index exists (when read CollectionPage)
+- **PROBLEM** Still same problem about 1 read operation can do write operation before
+
+
+    
+    
+
+
+# TODO
+- Check if needs Disk.Flush
 
 
 # LiteDB - A .NET NoSQL Document Store in a single data file

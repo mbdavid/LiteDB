@@ -12,8 +12,6 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            query.IndexFactory((c, f) => IndexFactory(f));
-
             return _engine.Value.Delete(_name, query);
         }
 

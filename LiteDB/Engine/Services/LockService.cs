@@ -6,10 +6,7 @@ using System.Threading;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement a locker service locking datafile to shared/reserved and exclusive access mode
-    /// Implement both thread lock and process lock
-    /// Shared -> Reserved -> Exclusive => !Reserved => !Shared
-    /// Reserved -> Exclusive => !Reserved
+    /// Implement simple lock service (multi-reader/single-writer [with no-reader])
     /// [Thread Safe]
     /// </summary>
     public class LockService
@@ -44,7 +41,7 @@ namespace LiteDB
         /// <summary>
         /// Enter in Shared lock mode.
         /// </summary>
-        public LockControl Shared()
+        public LockControl Read()
         {
             lock(_disk)
             {
@@ -61,13 +58,13 @@ namespace LiteDB
                 }
 
                 // lock disk in shared mode
-                _disk.Lock(LockState.Shared, _timeout);
+                _disk.Lock(LockState.Read, _timeout);
 
                 _log.Write(Logger.LOCK, "entered in shared lock mode");
 
-                this.AvoidDirtyRead();
+                this.DetectDatabaseChanges();
 
-                _state = LockState.Shared;
+                _state = LockState.Read;
 
                 return new LockControl(() =>
                 {
@@ -75,7 +72,7 @@ namespace LiteDB
                     _thread.ExitReadLock();
 
                     // exit disk lock mode
-                    _disk.Unlock(LockState.Shared);
+                    _disk.Unlock(LockState.Read);
 
                     _log.Write(Logger.LOCK, "exited shared lock mode");
 
@@ -87,21 +84,21 @@ namespace LiteDB
         /// <summary>
         /// Enter in Exclusive lock mode
         /// </summary>
-        public LockControl Exclusive()
+        public LockControl Write()
         {
             lock (_disk)
             {
                 // if already in exclusive, do nothing
-                if (_state == LockState.Exclusive)
+                if (_state == LockState.Write)
                 {
                     return new LockControl(() => { });
                 }
 
                 // test if came from a shared lock (to restore after unlock)
-                var shared = _state == LockState.Shared;
+                var read = _state == LockState.Read;
 
                 // if came, need exit read lock
-                if (shared) _thread.ExitReadLock();
+                if (read) _thread.ExitReadLock();
 
                 // try enter in write mode (thread)
                 if (!_thread.TryEnterWriteLock(_timeout))
@@ -110,17 +107,17 @@ namespace LiteDB
                 }
 
                 // try enter in exclusive mode in disk
-                _disk.Lock(LockState.Exclusive, _timeout);
+                _disk.Lock(LockState.Write, _timeout);
 
                 _log.Write(Logger.LOCK, "entered in exclusive lock mode");
 
                 // call avoid dirty only if not came from a shared mode
-                if (!shared)
+                if (!read)
                 {
-                    this.AvoidDirtyRead();
+                    this.DetectDatabaseChanges();
                 }
 
-                _state = LockState.Exclusive;
+                _state = LockState.Write;
 
                 return new LockControl(() =>
                 {
@@ -128,16 +125,16 @@ namespace LiteDB
                     _thread.ExitWriteLock();
 
                     // 
-                    if (shared)
+                    if (read)
                     {
                         _thread.TryEnterReadLock(_timeout);
-                        _state = LockState.Shared;
+                        _state = LockState.Read;
                     }
 
-                    // release disk exclusive
-                    _disk.Unlock(LockState.Exclusive);
+                    // release disk write
+                    _disk.Unlock(LockState.Write);
 
-                    if (!shared)
+                    if (!read)
                     {
                         _state = LockState.Unlocked;
                     }
@@ -151,7 +148,7 @@ namespace LiteDB
         /// Test if cache still valid (if datafile was changed by another process reset cache)
         /// [Thread Safe]
         /// </summary>
-        private void AvoidDirtyRead()
+        private void DetectDatabaseChanges()
         {
             // if disk are exclusive don't need check dirty read
             if (_disk.IsExclusive) return;

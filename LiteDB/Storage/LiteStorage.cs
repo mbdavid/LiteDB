@@ -194,7 +194,6 @@ namespace LiteDB
         /// </summary>
         public bool Delete(string id)
         {
-            if (_engine.TransactionCount > 0) throw LiteException.TransactionNotSupported("LiteStorage.Delete");
             if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
 
             // remove file reference in _files

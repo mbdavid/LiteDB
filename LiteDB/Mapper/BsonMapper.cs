@@ -43,11 +43,6 @@ namespace LiteDB
         private readonly Func<Type, object> _typeInstantiator;
 
         /// <summary>
-        /// Map for autoId type based functions
-        /// </summary>
-        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
-
-        /// <summary>
         /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
@@ -124,33 +119,6 @@ namespace LiteDB
 
             #endregion Register CustomTypes
 
-            #region Register AutoId
-
-            // register AutoId for ObjectId, Guid and Int32
-            RegisterAutoId
-            (
-                value => value.Equals(ObjectId.Empty),
-                (db, col) => ObjectId.NewObjectId()
-            );
-
-            RegisterAutoId
-            (
-                value => value == Guid.Empty,
-                (db, col) => Guid.NewGuid()
-            );
-
-            RegisterAutoId
-            (
-                value => value == 0,
-                (db, col) =>
-                {
-                    var max = db.Max(col, "_id");
-                    return max.IsMaxValue ? 1 : (max + 1);
-                }
-            );
-
-            #endregion  
-
         }
 
         #region Register CustomType
@@ -171,68 +139,6 @@ namespace LiteDB
         {
             _customSerializer[type] = (o) => serialize(o);
             _customDeserializer[type] = (b) => deserialize(b);
-        }
-
-        #endregion
-
-        #region AutoId
-
-        /// <summary>
-        /// Register a custom Auto Id generator function for a type
-        /// </summary>
-        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteEngine, string, T> newId)
-        {
-            if (isEmpty == null) throw new ArgumentNullException("isEmpty");
-            if (newId == null) throw new ArgumentNullException("newId");
-
-            _autoId[typeof(T)] = new AutoId
-            {
-                IsEmpty = o => isEmpty((T)o),
-                NewId = (db, col) => newId(db, col)
-            };
-        }
-
-        /// <summary>
-        /// Set new Id in entity class if entity needs one
-        /// </summary>
-        public virtual void SetAutoId(object entity, LiteEngine engine, string collection)
-        {
-            if (entity == null) throw new ArgumentNullException("entity");
-            if (engine == null) throw new ArgumentNullException("engine");
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-
-            // if object is BsonDocument, add _id as ObjectId
-            if (entity is BsonDocument)
-            {
-                var doc = entity as BsonDocument;
-                if (!doc.RawValue.ContainsKey("_id"))
-                {
-                    doc["_id"] = ObjectId.NewObjectId();
-                }
-                return;
-            }
-
-            // get fields mapper
-            var mapper = this.GetEntityMapper(entity.GetType());
-
-            var id = mapper.Id;
-
-            // if not id or no autoId = true
-            if (id == null || id.AutoId == false) return;
-
-            AutoId autoId;
-
-            if (_autoId.TryGetValue(id.DataType, out autoId))
-            {
-                var value = id.Getter(entity);
-
-                if (value == null || autoId.IsEmpty(value) == true)
-                {
-                    var newId = autoId.NewId(engine, collection);
-
-                    id.Setter(entity, newId);
-                }
-            }
         }
 
         #endregion

@@ -13,7 +13,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 var col = GetCollectionPage(collection, false);
 
@@ -41,7 +41,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 var col = GetCollectionPage(collection, false);
 
@@ -68,16 +68,13 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 var col = GetCollectionPage(collection, false);
 
                 if (col == null) return 0;
 
                 if (query == null) return col.DocumentCount;
-
-                // define auto-index create factory if not exists
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
 
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
@@ -98,14 +95,11 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 var col = GetCollectionPage(collection, false);
 
                 if (col == null) return false;
-
-                // define auto-index create factory if not exists
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
 
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);

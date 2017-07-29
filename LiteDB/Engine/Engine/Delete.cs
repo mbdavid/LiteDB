@@ -25,9 +25,6 @@ namespace LiteDB
             {
                 if (col == null) return 0;
 
-                // define auto-index create factory if not exists
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
-
                 var nodes = query.Run(col, _indexer);
                 var count = 0;
 

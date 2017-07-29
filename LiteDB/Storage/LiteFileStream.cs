@@ -27,8 +27,6 @@ namespace LiteDB
             _file = file;
             _mode = mode;
 
-            if (_engine.TransactionCount > 0) throw LiteException.TransactionNotSupported("LiteFileStream");
-
             if (mode == FileAccess.Read)
             {
                 // initialize first data block

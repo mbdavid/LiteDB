@@ -14,16 +14,13 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 // get my collection page
                 var col = this.GetCollectionPage(collection, false);
 
                 // no collection, no documents
                 if (col == null) yield break;
-
-                // if there is no create index factory, create new here
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
 
                 // get nodes from query executor to get all IndexNodes
                 var nodes = query.Run(col, _indexer);
@@ -61,7 +58,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 // get my collection page
                 var col = this.GetCollectionPage(collection, false);

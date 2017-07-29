@@ -10,24 +10,11 @@ namespace LiteDB
     /// </summary>
     public abstract class Query
     {
-        private Action<string, string> _indexFactory = null;
-
         public string Field { get; private set; }
 
         internal Query(string field)
         {
             this.Field = field;
-        }
-
-        /// <summary>
-        /// Set, only if not defined yet, a new factory to create index if nedded
-        /// </summary>
-        internal virtual void IndexFactory(Action<string, string> indexFactory)
-        {
-            if (_indexFactory == null)
-            {
-                _indexFactory = indexFactory;
-            }
         }
 
         #region Static Methods
@@ -248,15 +235,6 @@ namespace LiteDB
             // if index not index, let's auto create one
             if (index == null)
             {
-                // possible never happend because query always have index factory
-                if (_indexFactory == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
-
-                // create needed index
-                _indexFactory(col.CollectionName, this.Field);
-
-                // get index 
-                index = col.GetIndex(this.Field);
-
                 // this should never happend because index already created
                 if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
             }
