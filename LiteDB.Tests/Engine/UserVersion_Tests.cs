@@ -1,13 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class UserVersionTest
+    public class UserVersion_Tests
     {
-        [TestMethod]
-        public void UserVersion_Test()
+        [TestMethod, TestCategory("Engine")]
+        public void UserVersion_Get_Set()
         {
             using (var file = new TempFile())
             {

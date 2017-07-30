@@ -58,8 +58,6 @@ namespace LiteDB.Tests
 
                 Assert.AreEqual("e", first["name"].AsString);
 
-                Assert.AreEqual(LockState.Unlocked, db.Locker.State);
-
             }
         }
     }

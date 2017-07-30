@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class MyBase
     {
         public int Id { get; set; }
@@ -28,11 +30,13 @@ namespace LiteDB.Tests
         public List<MyBase> Bases { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class PolymorphicTest
+    public class Polymorphic_Tests
     {
-        [TestMethod]
-        public void Polymorphic_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Simple_Polymorphics()
         {
             using (var file = new TempFile())
             {

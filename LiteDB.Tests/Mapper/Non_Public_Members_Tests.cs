@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
     #region Model
 
@@ -79,7 +79,7 @@ namespace LiteDB.Tests
     #endregion
 
     [TestClass]
-    public class MapperNonPublicTest
+    public class Non_Public_Members_Tests
     {
         private MyBsonFieldTestClass CreateModel()
         {
@@ -97,8 +97,8 @@ namespace LiteDB.Tests
             return c;
         }
 
-        [TestMethod]
-        public void MapperNonPublic_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Non_Public_Members()
         {
             var mapper = new BsonMapper();
             mapper.UseLowerCaseDelimiter('_');

@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     /// <summary>
     /// Testing issue #501
     /// </summary>
@@ -48,11 +50,13 @@ namespace LiteDB.Tests
         }
     }
 
+    #endregion
+
     [TestClass]
-    public class InterfaceBaseTest
+    public class Interface_Tests
     {
-        [TestMethod]
-        public void InterfaceBase_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Interface_Base()
         {
             var m = new BsonMapper();
             var p = new Partner("one", "host1");

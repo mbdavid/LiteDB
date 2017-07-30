@@ -17,7 +17,7 @@ namespace LiteDB.Shell.Commands
             var sb = new StringBuilder();
             var enabled = !(s.Scan(@"off\s*").Length > 0);
 
-            env.Log.Level = enabled ? Logger.FULL : Logger.NONE;
+            env.LogEnabled = enabled;
         }
     }
 }

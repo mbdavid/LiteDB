@@ -9,8 +9,10 @@ using System.Drawing;
 using System.Threading.Tasks;
 #endif
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class FluentClass
     {
         public int CurrentKey { get; set; }
@@ -22,11 +24,13 @@ namespace LiteDB.Tests
 #endif
     }
 
+    #endregion
+
     [TestClass]
-    public class FluentMapperTest
+    public class Fluent_Api_Mapping_Tests
     {
-        [TestMethod]
-        public void FluentMapper_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Fluent_Api_Mapping()
         {
             var o = new FluentClass
             {

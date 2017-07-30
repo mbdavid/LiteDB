@@ -30,25 +30,20 @@ namespace LiteDB.Tests
 
                 ti.Start();
                 db.Insert("col", GetDocs(N1));
-                db.Commit();
                 ti.Stop();
 
                 tx.Start();
                 db.EnsureIndex("col", "name");
-                db.Commit();
                 tx.Stop();
 
                 tu.Start();
                 db.Update("col", GetDocs(N1));
-                db.Commit();
                 tu.Stop();
 
                 db.EnsureIndex("col", "name");
-                db.Commit();
 
                 td.Start();
                 db.Delete("col", Query.All());
-                db.Commit();
                 td.Stop();
 
                 Debug.WriteLine("Insert time: " + ti.ElapsedMilliseconds);

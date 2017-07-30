@@ -1,11 +1,14 @@
 # Version 3.5?
 
+- Remove physical journal file [OK]
 - Remove transactions [OK] **BREAK API**
     * Now, each operation MUST do only 1 operation (read OR write)
 - Remove auto-create index [OK]
 - Remove auto-id in database [OK] **BREAK API**
 - Fix simple Lock system (only multi-read/single write) [OK]
-    * Will read thread goes to write? YES!
+    * Will read thread goes to write? YES! [OK]
+- Fix debug messages in console [OK]
+- Fix upload from local disk [OK]
 - Cache results in query before send to client
 - Add collection Sequence (Long) (can be access by LiteEngine)
 - Add auto-id in engine (LiteEngine.Insert(autoIdType = BsonType.ObjectId)
@@ -22,6 +25,11 @@
 - **PROBLEM** Still same problem about 1 read operation can do write operation before
 
 
+# Tests
+- One test per file? (better to others contribution)
+- Keep model in same file
+- Each folder has a namespace
+- Use TestCategory() == FolderName
     
     
 

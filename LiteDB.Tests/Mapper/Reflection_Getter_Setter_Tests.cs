@@ -6,7 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Drawing;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
     #region Model
 
@@ -97,10 +97,10 @@ namespace LiteDB.Tests
     #endregion
 
     [TestClass]
-    public class ReflectionGetterSetterTest
+    public class Reflection_Getter_Setter_Tests
     {
-        [TestMethod]
-        public void GetterSetterClass_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Getter_Setter_Classes()
         {
             var o = new GetterSetterClass
             {
@@ -139,8 +139,8 @@ namespace LiteDB.Tests
             Assert.AreEqual(o.GetPrivateField(), clone.GetPrivateField());
         }
 
-        [TestMethod]
-        public void GetterSetterStruct_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Getter_Setter_Structs()
         {
             var o = new GetterSetterStruct
             {

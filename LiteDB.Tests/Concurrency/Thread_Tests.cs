@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Concurrency
 {
     [TestClass]
-    public class MultiThreadTest
+    public class Thread_Tests
     {
-        [TestMethod]
-        public void Thread_Insert_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Thread_Multi_Insert()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -41,8 +41,8 @@ namespace LiteDB.Tests
             }
         }
 
-        [TestMethod]
-        public void Thread_InsertUpdate_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Thread_Insert_Update()
         {
             const int N = 3000;
 
@@ -87,8 +87,8 @@ namespace LiteDB.Tests
             }
         }
 
-        [TestMethod]
-        public void Thread_InsertQuery_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Thread_Insert_Query()
         {
             const int N = 3000;
             var running = true;
@@ -123,8 +123,8 @@ namespace LiteDB.Tests
             }
         }
 
-        [TestMethod]
-        public void Thread_UserVersionInc_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Thread_UserVersion_Increment()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -139,82 +139,6 @@ namespace LiteDB.Tests
                 });
 
                 Assert.AreEqual(3000, db.UserVersion);
-            }
-        }
-
-        [TestMethod]
-        public void Thread_Transaction_Test()
-        {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
-            {
-                // insert first document
-                db.Insert("col", new BsonDocument
-                {
-                    { "_id", 1 },
-                    { "count", 1 }
-                });
-
-                // use parallel 
-                Parallel.For(1, 10000, (i) =>
-                {
-                    lock (db)
-                    {
-                        var doc = db.Find("col", Query.EQ("_id", 1)).Single();
-                        doc["count"] = doc["count"].AsInt32 + 1;
-                        db.Update("col", doc);
-                    }
-                });
-
-                Assert.AreEqual(10000, db.Find("col", Query.EQ("_id", 1)).Single()["count"].AsInt32);
-            }
-        }
-
-        [TestMethod]
-        public void Thread_FindUpsertEngine_Test()
-        {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
-            {
-                var tasks = new List<Task>();
-
-                for (var i = 0; i < 50; i++) // Change 1000 to whatever value spams it enough.
-                {
-                    var ind = i % 50;
-
-                    var tFind = Task.Factory.StartNew(() => { db.FindById("col", BitConverter.GetBytes(ind)); });
-                    var tUpsert = Task.Factory.StartNew(() => { db.Upsert("col", new BsonDocument { { "_id", BitConverter.GetBytes(ind) } }); });
-
-                    tasks.AddRange(new[] { tFind, tUpsert });
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-        }
-
-        [TestMethod]
-        public void Thread_FindUpsertDatabase_Test()
-        {
-            using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename))
-            {
-                var tasks = new List<Task>();
-                var col = db.GetCollection("col");
-
-                for (var i = 0; i < 1000; i++) // Change 1000 to whatever value spams it enough.
-                {
-                    var ind = i % 50;
-                    var t1 = Task.Factory.StartNew(() => { col.FindById(BitConverter.GetBytes(ind)); });
-                    var t2 = Task.Factory.StartNew(() =>
-                    {
-                        var doc = new BsonDocument { { "_id", BitConverter.GetBytes(ind) } };;
-                        col.Upsert(doc);
-                    });
-
-                    tasks.AddRange(new [] { t1, t2 });
-                }
-
-                Task.WaitAll(tasks.ToArray());
             }
         }
     }

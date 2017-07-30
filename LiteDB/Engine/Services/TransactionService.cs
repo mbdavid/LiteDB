@@ -55,6 +55,8 @@ namespace LiteDB
             // mark header as dirty
             _pager.SetDirty(header);
 
+            _log.Write(Logger.DISK, "start persist to disk operations - changeID: {0}", header.ChangeID);
+
             // write journal file in desc order to header be last page in disk
             _disk.WriteJournal(_cache.GetDirtyPages()
                 .OrderByDescending(x => x.PageID)
@@ -79,10 +81,15 @@ namespace LiteDB
             // re-write header page but now with recovery=false
             header.Recovery = false;
 
+            _log.Write(Logger.DISK, "re-write header page now with recovery = false");
+
             _disk.WritePage(0, header.WritePage());
 
             // mark all dirty pages as clean pages (all are persisted in disk and are valid pages)
             _cache.MarkDirtyAsClean();
+
+            // flush all data direct to disk
+            _disk.Flush();
 
             // discard journal file
             _disk.ClearJournal(header.LastPageID);

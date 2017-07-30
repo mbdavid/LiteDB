@@ -157,6 +157,5 @@ namespace LiteDB
         }
 
         #endregion
-
     }
 }

@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Storage
 {
     [TestClass]
-    public class MetadataTest
+    public class Metadata_Tests
     {
-        [TestMethod]
-        public void Metadata_Test()
+        [TestMethod, TestCategory("Storage")]
+        public void Insert_Update_Storage_Metadata()
         {
             var source = new byte[25000];
             source[0] = 255;
@@ -50,7 +50,6 @@ namespace LiteDB.Tests
                 Assert.AreEqual(source[0], dest[0]);
                 Assert.AreEqual(source[10000], dest[10000]);
                 Assert.AreEqual(source[24999], dest[24999]);
-
             }
         }
     }

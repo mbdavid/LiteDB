@@ -8,13 +8,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Concurrency
 {
     [TestClass]
-    public class MultiProcessTest
+    public class Process_Tests
     {
-        [TestMethod]
-        public void Process_Insert_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Process_Multi_Insert()
         {
             using (var file = new TempFile())
             {
@@ -53,8 +53,8 @@ namespace LiteDB.Tests
             }
         }
 
-        [TestMethod]
-        public void Process_InsertQuery_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Process_Insert_Count()
         {
             using (var file = new TempFile())
             {
@@ -95,8 +95,8 @@ namespace LiteDB.Tests
             }
         }
 
-        [TestMethod]
-        public void Process_InsertDelete_Test()
+        [TestMethod, TestCategory("Concurrency")]
+        public void Process_Insert_Delete()
         {
             using (var file = new TempFile())
             {

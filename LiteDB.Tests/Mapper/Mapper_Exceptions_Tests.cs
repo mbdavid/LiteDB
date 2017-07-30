@@ -4,19 +4,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class DataRecord
     {
         public Guid Id { get; set; }
         public string Value { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class MapperExceptionTest
+    public class Mapper_Exceptions_Tests
     {
-        [TestMethod]
-        public void MapperException_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Mapper_Exceptions()
         {
             var dataRecord = new DataRecord();
             var serialized = BsonMapper.Global.ToDocument(dataRecord);

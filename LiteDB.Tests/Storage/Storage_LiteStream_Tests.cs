@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Storage
 {
     [TestClass]
-    public class StorageStreamTest
+    public class Storage_LiteStream_Tests
     {
-        [TestMethod]
-        public void Storage_ReadWriteStream_Test()
+        [TestMethod, TestCategory("Storage")]
+        public void Storage_Read_Write_Stream()
         {
             var HELLO1 = "Hello World LiteDB 1 ".PadRight(300000, '-') + "\nEND";
             var HELLO2 = "Hello World LiteDB 2 - END";

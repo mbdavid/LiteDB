@@ -6,8 +6,10 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Drawing;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class MyMaxValueClass
     {
         public int Id { get; set; }
@@ -16,11 +18,13 @@ namespace LiteDB.Tests
         public UInt64 Max { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class MaxValueTest
+    public class Max_Min_Values_Tests
     {
-        [TestMethod]
-        public void MaxValue_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Max_Min_Values()
         {
             var c1 = new MyMaxValueClass
             {

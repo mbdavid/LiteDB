@@ -66,11 +66,10 @@ namespace LiteDB
             }
 
             // copy stream content to litedb file stream
-            var writer = file.OpenWrite();
-
-            stream.CopyTo(writer);
-
-            writer.Flush();
+            using (var writer = file.OpenWrite())
+            {
+                stream.CopyTo(writer);
+            }
 
             return file;
         }

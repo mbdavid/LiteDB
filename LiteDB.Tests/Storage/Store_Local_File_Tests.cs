@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Storage
 {
     [TestClass]
-    public class LocalFileTest
+    public class Store_Local_File_Tests
     {
-        [TestMethod]
-        public void LocalFile_Test()
+        [TestMethod, TestCategory("Storage")]
+        public void Store_Local_File()
         {
             var pdb = "LiteDB.pdb";
             var len = new FileInfo(pdb).Length; // get original file length

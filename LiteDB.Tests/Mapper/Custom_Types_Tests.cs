@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
     #region Model
 
@@ -21,12 +21,13 @@ namespace LiteDB.Tests
     #endregion
 
     [TestClass]
-    public class CustomTypeTest
+    public class Custom_Types_Tests
     {
-        [TestMethod]
-        public void CustomType_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Custom_Types()
         {
             var mapper = new BsonMapper();
+
             var o = new CustomType
             {
                 Re1 = new Regex("^a+"),

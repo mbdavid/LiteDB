@@ -163,10 +163,13 @@ namespace LiteDB
             // write journal only if enabled
             if (_options.Journal == false) return;
 
+            var size = BasePage.GetSizeOfPages(lastPageID + 1) +
+                BasePage.GetSizeOfPages(pages.Count);
+
+            _log.Write(Logger.JOURNAL, "extend datafile to journal pages: {0}", size);
+
             // set journal file length before write
-            _stream.SetLength(
-                BasePage.GetSizeOfPages(lastPageID + 1) + 
-                BasePage.GetSizeOfPages(pages.Count));
+            _stream.SetLength(size);
 
             // go to initial file position (after lastPageID)
             _stream.Seek(BasePage.GetSizeOfPages(lastPageID + 1), SeekOrigin.Begin);
@@ -183,10 +186,10 @@ namespace LiteDB
                 _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
             }
 
-#if !NET35
-            //TODO: review if flush go here
-            // _stream.Flush(true); 
-#endif
+            _log.Write(Logger.JOURNAL, "flush journal to disk", size);
+
+            // ensure all data are persisted in disk
+            this.Flush();
         }
 
         /// <summary>
@@ -212,21 +215,28 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Ensures all pages from the OS cache are persisted on medium
-        /// </summary>
-        public void Flush()
-        {
-#if !NET35
-            _stream.Flush(true);
-#endif
-        }
-
-        /// <summary>
         /// Shrink datafile to crop journal area
         /// </summary>
         public void ClearJournal(uint lastPageID)
         {
+            _log.Write(Logger.JOURNAL, "shrink datafile to remove journal area");
+
             this.SetLength(BasePage.GetSizeOfPages(lastPageID + 1));
+        }
+
+        /// <summary>
+        /// Flush data from memory to disk
+        /// </summary>
+        public void Flush()
+        {
+            _log.Write(Logger.DISK, "flush data from memory to disk");
+
+#if NET35
+            _stream.Flush();
+#endif
+#if !NET35
+            _stream.Flush(true);
+#endif
         }
 
         #endregion
@@ -301,6 +311,8 @@ namespace LiteDB
 
         #endregion
 
+        #region Create Stream
+
         /// <summary>
         /// Create a new filestream. Can be synced over async task (netstandard)
         /// </summary>
@@ -312,7 +324,9 @@ namespace LiteDB
                 return this.SyncOverAsync(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE));
             }
 #endif
-            return new FileStream(path, mode, access, share, BasePage.PAGE_SIZE);
+            return new FileStream(path, mode, access, share, 
+                BasePage.PAGE_SIZE); 
+                // System.IO.FileOptions.WriteThrough | System.IO.FileOptions.SequentialScan);
         }
 
 #if !NET35
@@ -321,5 +335,7 @@ namespace LiteDB
             return Task.Run<T>(f).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 #endif
+
+        #endregion
     }
 }

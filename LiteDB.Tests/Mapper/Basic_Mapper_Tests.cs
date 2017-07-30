@@ -6,8 +6,10 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Drawing;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class CustomStringEnumerable : IEnumerable<string>
     {
         private readonly List<string> innerList;
@@ -123,8 +125,10 @@ namespace LiteDB.Tests
         public DateTime MyDateIndexed { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class MapperTest
+    public class Basic_Mapper_Tests
     {
         private MyClass CreateModel()
         {
@@ -182,8 +186,8 @@ namespace LiteDB.Tests
             return mapper;
         }
 
-        [TestMethod]
-        public void Mapper_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Basic_Mapper()
         {
             var mapper = CreateMapper();
             var obj = CreateModel();

@@ -148,8 +148,8 @@
     <Compile Include="Upgrade\V6\Structures\DataBlock.cs" />
     <Compile Include="Upgrade\V6\Structures\IndexNode.cs" />
     <Compile Include="Upgrade\V6\Structures\RijndaelEncryption.cs" />
-    <Compile Include="Utils\LockControl.cs" />
     <Compile Include="Utils\LockState.cs" />
+    <Compile Include="Utils\LockControl.cs" />
     <Compile Include="Utils\Extensions\LinqExtensions.cs" />
     <Compile Include="Utils\FileHelper.cs" />
     <Compile Include="Engine\Structures\PageAddress.cs" />
