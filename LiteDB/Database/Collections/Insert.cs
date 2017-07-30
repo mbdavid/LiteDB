@@ -8,13 +8,11 @@ namespace LiteDB
         /// <summary>
         /// Insert a new document to this collection. Document Id must be a new value in collection - Returns document Id
         /// </summary>
-        public BsonValue Insert(T document)
+        public void Insert(T document)
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            var doc = _mapper.ToDocument(document);
-
-            return _engine.Value.Insert(_name, doc);
+            _engine.Value.Insert(_name, this.GetBsonDocs(new [] { document }), _autoId);
         }
 
         /// <summary>
@@ -39,7 +37,7 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            return _engine.Value.Insert(_name, this.GetBsonDocs(docs));
+            return _engine.Value.Insert(_name, this.GetBsonDocs(docs), _autoId);
         }
 
         /// <summary>
@@ -49,17 +47,29 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException("docs");
 
-            return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize);
+            return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize, _autoId);
         }
 
         /// <summary>
         /// Convert each T document in a BsonDocument, setting autoId for each one
         /// </summary>
-        private IEnumerable<BsonDocument> GetBsonDocs(IEnumerable<T> docs)
+        private IEnumerable<BsonDocument> GetBsonDocs(IEnumerable<T> documents)
         {
-            foreach (var doc in docs)
+            foreach (var document in documents)
             {
-                yield return _mapper.ToDocument(doc);
+                var doc = _mapper.ToDocument(document);
+
+                if (_autoId != BsonType.Null)
+                {
+                    doc.Remove("_id");
+                }
+
+                yield return doc;
+
+                if (_autoId != BsonType.Null)
+                {
+                    _id.Setter(document, doc["_id"].RawValue);
+                }
             }
         }
     }

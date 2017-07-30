@@ -7,12 +7,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class BulkInsertTest
+    public class Bulk_Insert_Tests
     {
-        [TestMethod]
+        [TestMethod, TestCategory("Engine")]
         public void BulkInsert_Test()
         {
             using (var file = new TempFile())

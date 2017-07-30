@@ -64,7 +64,7 @@ namespace LiteDB
             // lock disk in shared mode
             _disk.Lock(LockState.Read, _timeout);
 
-            _log.Write(Logger.LOCK, "entered in shared lock mode");
+            _log.Write(Logger.LOCK, "entered in read lock mode");
 
             this.DetectDatabaseChanges();
 
@@ -76,7 +76,7 @@ namespace LiteDB
                 // exit thread lock mode
                 _thread.ExitReadLock();
 
-                _log.Write(Logger.LOCK, "exited shared lock mode");
+                _log.Write(Logger.LOCK, "exited read lock mode");
             });
         }
 
@@ -106,7 +106,7 @@ namespace LiteDB
             // try enter in exclusive mode in disk
             _disk.Lock(LockState.Write, _timeout);
 
-            _log.Write(Logger.LOCK, "entered in exclusive lock mode");
+            _log.Write(Logger.LOCK, "entered in write lock mode");
 
             // call avoid dirty only if not came from a shared mode
             if (!read)
@@ -127,6 +127,8 @@ namespace LiteDB
                 {
                     _thread.TryEnterReadLock(_timeout);
                 }
+
+                _log.Write(Logger.LOCK, "exited write lock mode");
             });
         }
 

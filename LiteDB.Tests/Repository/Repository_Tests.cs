@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Repository
 {
+    #region Model
+
     public class ROrder
     {
         [BsonId]
@@ -40,11 +42,13 @@ namespace LiteDB.Tests
         public decimal Price { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class RepoTest
+    public class Repository_Tests
     {
-        [TestMethod]
-        public void Repo_Test()
+        [TestMethod, TestCategory("Repository")]
+        public void Simple_Repository()
         {
             using (var f = new TempFile())
             using (var db = new LiteRepository(f.Filename))

@@ -70,12 +70,12 @@
     <Compile Include="Database\AutoIndexDatabaseTest.cs" />
     <Compile Include="Database\ULongListTest.cs" />
     <Compile Include="Database\UpgradeScriptTest.cs" />
-    <Compile Include="Engine\BulkInsertTest.cs" />
+    <Compile Include="Engine\Bulk_Insert_Tests.cs" />
     <Compile Include="Mapper\Dictionary_Tests.cs" />
     <Compile Include="Mapper\Custom_Types_Tests.cs" />
     <Compile Include="Document\ImplicitTest.cs" />
     <Compile Include="Engine\AutoIndexEngineTest.cs" />
-    <Compile Include="Database\AutoIdTest.cs" />
+    <Compile Include="Database\AutoId_Tests.cs" />
     <Compile Include="Database\ConnectionStringTest.cs" />
     <Compile Include="Database\AttributeMapperTest.cs" />
     <Compile Include="Database\UniqueIndexMapperTest.cs" />
@@ -120,7 +120,7 @@
     <Compile Include="Engine\EngineTest.cs" />
     <Compile Include="Concurrency\Thread_Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Repository\RepoTest.cs" />
+    <Compile Include="Repository\Repository_Tests.cs" />
     <Compile Include="Storage\Metadata_Tests.cs" />
     <Compile Include="Storage\Store_Local_File_Tests.cs" />
     <Compile Include="Storage\Storage_LiteStream_Tests.cs" />

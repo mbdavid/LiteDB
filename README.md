@@ -8,17 +8,25 @@
 - Fix simple Lock system (only multi-read/single write) [OK]
     * Will read thread goes to write? YES! [OK]
 - Fix debug messages in console [OK]
+- Add integrety check in TempFile for tests (before delete)
 - Fix upload from local disk [OK]
+- Add collection Sequence (Long) (can be access by LiteEngine) [OK]
+- Add auto-id in engine (LiteEngine.Insert(autoIdType = BsonType.ObjectId) [OK]
+- Upsert doest work in AutoId _id
+
+- Bubble auto-id to T class in database ** BREAK API**
+- ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
+
+- To think: AutoId must be by default?
+
+
+
 - Cache results in query before send to client
-- Add collection Sequence (Long) (can be access by LiteEngine)
-- Add auto-id in engine (LiteEngine.Insert(autoIdType = BsonType.ObjectId)
 - Review Database.Insert / Upsert
 - Support for Linq-to-Object when no index or any NotImplemented (automatic)
     * Think about how/when create indexes defined by [Attributes] of FluentApi
     * Only for Database (in Engine keep thowing index not found exception)
     
-- Write more unit test for concurrency
-    * Do tests in lock control only too
 
 # Initialize
 - When Database "GetCollection" checks if all index exists (when read CollectionPage)

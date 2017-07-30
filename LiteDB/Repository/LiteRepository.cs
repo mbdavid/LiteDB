@@ -72,9 +72,9 @@ namespace LiteDB
         /// <summary>
         /// Insert a new document into collection. Document Id must be a new value in collection - Returns document Id
         /// </summary>
-        public BsonValue Insert<T>(T entity, string collectionName = null)
+        public void Insert<T>(T entity, string collectionName = null)
         {
-            return _db.GetCollection<T>(collectionName).Insert(entity);
+            _db.GetCollection<T>(collectionName).Insert(entity);
         }
 
         /// <summary>

@@ -9,18 +9,19 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - returns _id value
         /// </summary>
-        public BsonValue Insert(string collection, BsonDocument doc)
+        public BsonValue Insert(string collection, BsonDocument doc, BsonType autoId = BsonType.ObjectId)
         {
             if (doc == null) throw new ArgumentNullException("doc");
 
-            this.Insert(collection, new BsonDocument[] { doc });
+            this.Insert(collection, new BsonDocument[] { doc }, autoId);
+
             return doc["_id"];
         }
 
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonType autoId = BsonType.ObjectId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (docs == null) throw new ArgumentNullException("docs");
@@ -31,7 +32,7 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
-                    InsertDocument(col, doc);
+                    this.InsertDocument(col, doc, autoId);
 
                     _trans.CheckPoint();
 
@@ -45,7 +46,7 @@ namespace LiteDB
         /// <summary>
         /// Bulk documents to a collection - use data chunks for most efficient insert
         /// </summary>
-        public int InsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000)
+        public int InsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000, BsonType autoId = BsonType.ObjectId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (docs == null) throw new ArgumentNullException("docs");
@@ -55,7 +56,7 @@ namespace LiteDB
 
             foreach(var batch in docs.Batch(batchSize))
             {
-                count += this.Insert(collection, batch);
+                count += this.Insert(collection, batch, autoId);
             }
 
             return count;
@@ -64,14 +65,24 @@ namespace LiteDB
         /// <summary>
         /// Internal implementation of insert a document
         /// </summary>
-        private void InsertDocument(CollectionPage col, BsonDocument doc)
+        private void InsertDocument(CollectionPage col, BsonDocument doc, BsonType autoId)
         {
             BsonValue id;
 
-            // if no _id, add one as ObjectId
+            // increase collection sequence _id
+            col.Sequence++;
+
+            _pager.SetDirty(col);
+
+            // if no _id, add one
             if (!doc.RawValue.TryGetValue("_id", out id))
             {
-                doc["_id"] = id = ObjectId.NewObjectId();
+                doc["_id"] = id =
+                    autoId == BsonType.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :
+                    autoId == BsonType.Guid ? new BsonValue(Guid.NewGuid()) :
+                    autoId == BsonType.Int32 ? new BsonValue((Int32)col.Sequence) :
+                    autoId == BsonType.Int64 ? new BsonValue((Int64)col.Sequence) : 
+                    autoId == BsonType.String ? new BsonValue(col.Sequence.ToString()) : BsonValue.Null;
             }
 
             // test if _id is a valid type

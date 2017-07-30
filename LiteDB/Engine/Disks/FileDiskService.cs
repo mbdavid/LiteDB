@@ -166,7 +166,7 @@ namespace LiteDB
             var size = BasePage.GetSizeOfPages(lastPageID + 1) +
                 BasePage.GetSizeOfPages(pages.Count);
 
-            _log.Write(Logger.JOURNAL, "extend datafile to journal pages: {0}", size);
+            _log.Write(Logger.JOURNAL, "extend datafile to journal - {0} pages", pages.Count);
 
             // set journal file length before write
             _stream.SetLength(size);
@@ -186,7 +186,7 @@ namespace LiteDB
                 _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
             }
 
-            _log.Write(Logger.JOURNAL, "flush journal to disk", size);
+            _log.Write(Logger.JOURNAL, "flush journal to disk");
 
             // ensure all data are persisted in disk
             this.Flush();

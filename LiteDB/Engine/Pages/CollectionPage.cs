@@ -43,6 +43,11 @@ namespace LiteDB
         /// </summary>
         public CollectionIndex[] Indexes { get; set; }
 
+        /// <summary>
+        /// Storage number sequence to be used in auto _id values
+        /// </summary>
+        public ulong Sequence { get; set; }
+
         public CollectionPage(uint pageID)
             : base(pageID)
         {
@@ -51,6 +56,7 @@ namespace LiteDB
             this.ItemCount = 1; // fixed for CollectionPage
             this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
             this.Indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
+            this.Sequence = 0;
 
             for (var i = 0; i < Indexes.Length; i++)
             {
@@ -83,6 +89,10 @@ namespace LiteDB
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
             }
+
+            // position on page-footer (avoid file-change in v3)
+            reader.Position = BasePage.PAGE_SIZE - 8;
+            this.Sequence = reader.ReadUInt64();
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -99,6 +109,10 @@ namespace LiteDB
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);
             }
+
+            // position on page-footer (avoid file-change in v3)
+            writer.Position = BasePage.PAGE_SIZE - 8;
+            writer.Write(this.Sequence);
         }
 
         #endregion
