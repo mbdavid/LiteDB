@@ -2,49 +2,41 @@
 
 - Remove physical journal file [OK]
 - Remove transactions [OK] **BREAK API**
-    * Now, each operation MUST do only 1 operation (read OR write)
 - Remove auto-create index [OK]
-- Remove auto-id in database [OK] **BREAK API**
+- Remove auto-id in entity level (Database) [OK] **BREAK API**
 - Fix simple Lock system (only multi-read/single write) [OK]
-    * Will read thread goes to write? YES! [OK]
 - Fix debug messages in console [OK]
 - Add integrety check in TempFile for tests (before delete)
 - Fix upload from local disk [OK]
-- Add collection Sequence (Long) (can be access by LiteEngine) [OK]
-- Add auto-id in engine (LiteEngine.Insert(autoIdType = BsonType.ObjectId) [OK]
-- Upsert doest work in AutoId _id
-
-- Bubble auto-id to T class in database ** BREAK API**
+- Add collection Sequence (ulong) [OK]
+- Support for many BsonTypes on missing _id (not only ObjectId) [OK]
+- Upsert doest work with PK AutoId _id [OK]  ** BREAK API**
+- Auto-id in T class ** BREAK API**
 - ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
+- To think: AutoId must keep "true" by default?
 
-- To think: AutoId must be by default?
+# Next
 
-
+# Auto-Index dilema
+===================
+Option 1) Keep auto create index on run query with no index
+Option 2) Provide factory function when get collection to ensure indexes defined by fluentapi/attribute. Add full search for non index query
+Option 3) Complete remove index definition and add full search on non-index query.
 
 - Cache results in query before send to client
 - Review Database.Insert / Upsert
-- Support for Linq-to-Object when no index or any NotImplemented (automatic)
-    * Think about how/when create indexes defined by [Attributes] of FluentApi
-    * Only for Database (in Engine keep thowing index not found exception)
-    
+- Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
 
-# Initialize
-- When Database "GetCollection" checks if all index exists (when read CollectionPage)
-- **PROBLEM** Still same problem about 1 read operation can do write operation before
+# Tests pattern
 
-
-# Tests
-- One test per file? (better to others contribution)
+- Filename must end with "_Tests.cs"
+- Test name has no _Test on name
 - Keep model in same file
 - Each folder has a namespace
 - Use TestCategory() == FolderName
     
+====================================================    
     
-
-
-# TODO
-- Check if needs Disk.Flush
-
 
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
