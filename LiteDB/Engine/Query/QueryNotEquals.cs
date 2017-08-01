@@ -23,5 +23,15 @@ namespace LiteDB
                 .FindAll(index, Query.Ascending)
                 .Where(x => x.Key.CompareTo(_value) != 0);
         }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return doc.Get(this.Field).CompareTo(_value) != 0;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} != {1}", this.Field, _value);
+        }
     }
 }

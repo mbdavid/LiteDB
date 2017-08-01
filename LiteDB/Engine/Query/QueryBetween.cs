@@ -40,5 +40,17 @@ namespace LiteDB
                 node = indexer.GetNode(node.NextPrev(0, order));
             }
         }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            var value = doc.Get(this.Field);
+
+            return value.CompareTo(_start) >= 0 && value.CompareTo(_end) <= 0;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} between {1} and {2}", this.Field, _start, _end);
+        }
     }
 }

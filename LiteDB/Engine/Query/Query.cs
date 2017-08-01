@@ -4,17 +4,22 @@ using System.Linq;
 
 namespace LiteDB
 {
+    internal enum QueryMode { None, IndexSeek, FullScan }
+
     /// <summary>
     /// Class helper to create query using indexes in database. All methods are statics.
-    /// Queries can be executed in 2 ways: Index Seek (fast), Index Scan (good)
+    /// Queries can be executed in 3 ways: Index Seek (fast), Index Scan (good), Full Scan (slow)
     /// </summary>
     public abstract class Query
     {
+        internal QueryMode Mode { get; set; }
+
         public string Field { get; private set; }
 
         internal Query(string field)
         {
             this.Field = field;
+            this.Mode = QueryMode.None;
         }
 
         #region Static Methods
@@ -217,12 +222,18 @@ namespace LiteDB
 
         #endregion Static Methods
 
-        #region Execute Query
+        #region Executing Query
 
         /// <summary>
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
         /// </summary>
         internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
+
+        /// <summary>
+        /// Abstract method that must implement full scan - will be called for each document and need
+        /// returns true if condition was satisfied
+        /// </summary>
+        internal abstract bool ExecuteFullScan(BsonDocument doc);
 
         /// <summary>
         /// Find witch index will be used and run Execute method
@@ -232,15 +243,20 @@ namespace LiteDB
             // get index for this query
             var index = col.GetIndex(this.Field);
 
-            // if index not index, let's auto create one
             if (index == null)
             {
-                // this should never happend because index already created
-                if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
-            }
+                this.Mode = QueryMode.FullScan;
 
-            // execute query to get all IndexNodes
-            return this.ExecuteIndex(indexer, index);
+                // if there is no index, returns all index nodes - will be used Full Scan
+                return indexer.FindAll(col.PK, Query.Ascending);
+            }
+            else
+            {
+                this.Mode = QueryMode.IndexSeek;
+
+                // execute query to get all IndexNodes
+                return this.ExecuteIndex(indexer, index);
+            }
         }
 
         #endregion Execute Query

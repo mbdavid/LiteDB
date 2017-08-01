@@ -20,5 +20,15 @@ namespace LiteDB
         {
             yield break;
         }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("false");
+        }
     }
 }

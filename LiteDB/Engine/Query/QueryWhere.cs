@@ -19,11 +19,21 @@ namespace LiteDB
             _order = order;
         }
 
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return _func(doc.Get(this.Field));
+        }
+
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             return indexer
                 .FindAll(index, _order)
                 .Where(i => _func(i.Key));
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1})", _func.Method, this.Field);
         }
     }
 }

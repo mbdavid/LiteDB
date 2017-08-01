@@ -32,5 +32,15 @@ namespace LiteDB
                 }
             }
         }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return doc.Get(this.Field).CompareTo(_value) == 0;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} = {1}", this.Field, _value);
+        }
     }
 }

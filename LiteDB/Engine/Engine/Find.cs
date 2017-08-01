@@ -25,11 +25,15 @@ namespace LiteDB
                 // get nodes from query executor to get all IndexNodes
                 var nodes = query.Run(col, _indexer);
 
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
+                // if query run on index, lets skip/take with linq-to-object
+                if (query.Mode == QueryMode.IndexSeek)
+                {
+                    if (skip > 0) nodes = nodes.Skip(skip);
 
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
+                    if (limit != int.MaxValue) nodes = nodes.Take(limit);
+                }
+
+                _log.Write(Logger.QUERY, "executing query in {0} :: {1}", query.Mode, query);
 
                 // for each document, read data and deserialize as document
                 foreach (var node in nodes)
@@ -42,6 +46,18 @@ namespace LiteDB
                     // encapsulate read operation inside a try/catch (yield do not support try/catch)
                     buffer = _data.Read(node.DataBlock);
                     doc = BsonSerializer.Deserialize(buffer).AsDocument;
+
+                    // if need run in full scan, execute full scan and test return
+                    if (query.Mode == QueryMode.FullScan)
+                    {
+                        // execute query condition here - if false, do not add on final results
+                        if (query.ExecuteFullScan(doc) == false) continue;
+
+                        // implement skip/limit before on full search - no linq
+                        if (--skip >= 0) continue;
+
+                        if (--limit <= -1) yield break;
+                    }
 
                     yield return doc;
 

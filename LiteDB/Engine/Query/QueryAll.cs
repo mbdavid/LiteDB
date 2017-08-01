@@ -20,5 +20,15 @@ namespace LiteDB
         {
             return indexer.FindAll(index, _order);
         }
+
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return true;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("true");
+        }
     }
 }

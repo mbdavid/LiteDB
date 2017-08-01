@@ -24,12 +24,22 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
+        internal override bool ExecuteFullScan(BsonDocument doc)
+        {
+            return !_query.ExecuteFullScan(doc);
+        }
+
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
             var result = _query.Run(col, indexer);
             var all = new QueryAll("_id", _order).Run(col, indexer);
 
             return all.Except(result, new IndexNodeComparer());
+        }
+
+        public override string ToString()
+        {
+            return string.Format("!({0})", _query);
         }
     }
 }
