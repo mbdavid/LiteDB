@@ -31,10 +31,23 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
+            // run base query
             var result = _query.Run(col, indexer);
-            var all = new QueryAll("_id", _order).Run(col, indexer);
 
-            return all.Except(result, new IndexNodeComparer());
+            this.Mode = _query.Mode;
+
+            if (_query.Mode == QueryMode.Index)
+            {
+                // if is by index, resolve here
+                var all = new QueryAll("_id", _order).Run(col, indexer);
+
+                return all.Except(result, new IndexNodeComparer());
+            }
+            else
+            {
+                // if is by document, must return all nodes to be ExecuteDocument after
+                return result;
+            }
         }
 
         public override string ToString()

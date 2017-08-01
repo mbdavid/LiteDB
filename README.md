@@ -18,6 +18,7 @@
 - Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
 
 
+- Review all queries
 - Mark Query.Mode = Linq when is in linq (better for debug?)
 - Linq-to-Object in Exists/Count
 - Cache results in query before send to client

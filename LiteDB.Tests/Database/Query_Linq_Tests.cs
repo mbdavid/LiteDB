@@ -75,6 +75,7 @@ namespace LiteDB.Tests.Database
                 col.EnsureIndex(x => x.OS, false);
                 col.EnsureIndex(x => x.Domains.Select(z => z.DomainName), false);
                 col.EnsureIndex(x => x.Domains[0].Age, false);
+                //col.EnsureIndex(x => x.Active);
 
                 var idx = col.GetIndexes().Select(x => x.Field).ToArray();
 
@@ -119,11 +120,6 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(1, col.Count(x => x.OS == (PlatformID)5)); // Xbox
                 Assert.AreEqual(1, col.Count(x => x.OS == (PlatformID)Enum.Parse(typeof(PlatformID), "Xbox")));
                 Assert.AreEqual(3, col.Count(x => x.OS == PlatformID.Win32NT));
-
-                // doesnt works... must be a better linq provider
-                //var Platforms = new PlatformID[] { PlatformID.Xbox, PlatformID.Win32NT };
-                //Assert.AreEqual(4, col.Count(x => Platforms.Contains(x.OS)));
-
 
                 // and/or
                 Assert.AreEqual(1, col.Count(x => x.Id > 0 && x.Name == "Mauricio"));
