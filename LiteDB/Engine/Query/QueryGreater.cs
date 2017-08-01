@@ -38,7 +38,7 @@ namespace LiteDB
             }
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override bool ExecuteDocument(BsonDocument doc)
         {
             return doc.Get(this.Field).CompareTo(_value) >= (_equals ? 0 : 1);
         }

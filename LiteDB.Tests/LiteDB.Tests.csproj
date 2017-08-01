@@ -88,7 +88,7 @@
     <Compile Include="Mapper\Non_Public_Members_Tests.cs" />
     <Compile Include="Database\MultiKeyMapperTest.cs" />
     <Compile Include="Database\IncludeTest.cs" />
-    <Compile Include="Database\LinqTest.cs" />
+    <Compile Include="Database\Query_Linq_Tests.cs" />
     <Compile Include="Database\FindAllTest.cs" />
     <Compile Include="Engine\Shrink_Tests.cs" />
     <Compile Include="Database\StructTest.cs" />

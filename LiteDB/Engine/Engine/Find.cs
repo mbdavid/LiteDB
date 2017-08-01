@@ -26,7 +26,7 @@ namespace LiteDB
                 var nodes = query.Run(col, _indexer);
 
                 // if query run on index, lets skip/take with linq-to-object
-                if (query.Mode == QueryMode.IndexSeek)
+                if (query.Mode == QueryMode.Index)
                 {
                     if (skip > 0) nodes = nodes.Skip(skip);
 
@@ -48,10 +48,10 @@ namespace LiteDB
                     doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
                     // if need run in full scan, execute full scan and test return
-                    if (query.Mode == QueryMode.FullScan)
+                    if (query.Mode == QueryMode.Document)
                     {
                         // execute query condition here - if false, do not add on final results
-                        if (query.ExecuteFullScan(doc) == false) continue;
+                        if (query.ExecuteDocument(doc) == false) continue;
 
                         // implement skip/limit before on full search - no linq
                         if (--skip >= 0) continue;

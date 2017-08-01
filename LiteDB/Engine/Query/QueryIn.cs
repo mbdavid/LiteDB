@@ -25,7 +25,7 @@ namespace LiteDB
             }
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override bool ExecuteDocument(BsonDocument doc)
         {
             var val = doc.Get(this.Field);
 

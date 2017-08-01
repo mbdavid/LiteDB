@@ -19,7 +19,7 @@ namespace LiteDB
             _order = order;
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override bool ExecuteDocument(BsonDocument doc)
         {
             return _func(doc.Get(this.Field));
         }

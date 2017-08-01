@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
+    #region Model
+
     public enum PlatformID
     {
         Win32S,
@@ -52,14 +54,15 @@ namespace LiteDB.Tests
         public int Age { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class LinqTest
+    public class Query_Linq_Tests
     {
-        [TestMethod]
-        public void Linq_Test()
+        [TestMethod, TestCategory("Database")]
+        public void Query_Linq_Visitor()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Xbox };
                 var c2 = new User { Id = 2, Name = "Malatruco", Active = false, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Win32NT };
@@ -128,11 +131,10 @@ namespace LiteDB.Tests
             }
         }
 
-        [TestMethod]
-        public void EnumerableTest()
+        [TestMethod, TestCategory("Database")]
+        public void Query_Linq_Enumerable()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var col = db.GetCollection<User>("Users");
 
@@ -176,5 +178,32 @@ namespace LiteDB.Tests
                 Assert.IsTrue(queryResult.OrderBy(u => u.Name).SequenceEqual(lambdaResult.OrderBy(u => u.Name)));
             }
         }
+
+        [TestMethod, TestCategory("Database")]
+        public void Query_Linq_Object()
+        {
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var c1 = new User { Id = 1, Name = "Mauricio", Active = true, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Xbox };
+                var c2 = new User { Id = 2, Name = "Malatruco", Active = false, Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Win32NT };
+                var c3 = new User { Id = 3, Name = "Chris", Domain = new UserDomain { DomainName = "Numeria" }, OS = PlatformID.Win32NT };
+                var c4 = new User { Id = 4, Name = "Juliane", OS = PlatformID.Win32NT };
+
+                var col = db.GetCollection<User>("Customer");
+
+                col.Insert(new [] { c1, c2, c3, c4 });
+
+                // now, lets do some non-visitor query
+                var q1 = col.Find(x => x.Name.Length > 5).ToArray();
+
+                Assert.AreEqual(3, q1.Length);
+                
+                // it's not mapper ToUpper, must do LinqToObject
+                var q2 = col.Find(x => x.Name.ToUpper() == "MAURICIO").ToArray();
+
+                Assert.AreEqual(1, q1.Length);
+            }
+        }
+
     }
 }

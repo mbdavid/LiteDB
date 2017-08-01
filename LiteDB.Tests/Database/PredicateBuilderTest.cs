@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
     // from http://www.albahari.com/nutshell/predicatebuilder.aspx
     public static class PredicateBuilder

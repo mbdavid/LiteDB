@@ -24,9 +24,9 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override bool ExecuteDocument(BsonDocument doc)
         {
-            return !_query.ExecuteFullScan(doc);
+            return !_query.ExecuteDocument(doc);
         }
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)

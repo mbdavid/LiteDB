@@ -15,18 +15,14 @@
 - ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
 - To think: AutoId must keep "true" by default?
 - Remove index definitions on mapper (fluent/attribute)
+- Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
 
-# Next
 
-# Auto-Index dilema
-===================
-Option 1) Keep auto create index on run query with no index
-Option 2) Provide factory function when get collection to ensure indexes defined by fluentapi/attribute. Add full search for non index query
-Option 3) Complete remove index definition and add full search on non-index query.
-
+- Mark Query.Mode = Linq when is in linq (better for debug?)
+- Linq-to-Object in Exists/Count
 - Cache results in query before send to client
 - Review Database.Insert / Upsert
-- Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
+
 
 # Tests pattern
 

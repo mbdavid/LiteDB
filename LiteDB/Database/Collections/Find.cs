@@ -38,7 +38,41 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue)
         {
-            return this.Find(_visitor.Visit(predicate), skip, limit);
+            if (predicate == null) throw new ArgumentNullException("predicate");
+
+            Query query;
+            Func<T, bool> where = null;
+
+            try
+            {
+                // if not possible convert linq to Query, execute as LinqToObject
+                query = _visitor.Visit(predicate);
+            }
+            catch(Exception ex)
+            {
+                // query all documents, convert and apply where function
+                query = Query.All();
+                where = predicate.Compile();
+            }
+
+            var docs = _engine.Value.Find(_name, query, skip, limit);
+
+            foreach (var doc in docs)
+            {
+                // executing all includes in BsonDocument
+                foreach (var action in _includes)
+                {
+                    action(doc);
+                }
+
+                // get object from BsonDocument
+                var obj = _mapper.ToObject<T>(doc);
+
+                if (where == null || (where != null && where(obj) == true))
+                {
+                    yield return obj;
+                }
+            }
         }
 
         #endregion Find
@@ -68,7 +102,7 @@ namespace LiteDB
         /// </summary>
         public T FindOne(Expression<Func<T, bool>> predicate)
         {
-            return this.Find(_visitor.Visit(predicate)).FirstOrDefault();
+            return this.Find(predicate).FirstOrDefault();
         }
 
         /// <summary>

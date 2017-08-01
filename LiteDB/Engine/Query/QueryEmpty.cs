@@ -21,7 +21,7 @@ namespace LiteDB
             yield break;
         }
 
-        internal override bool ExecuteFullScan(BsonDocument doc)
+        internal override bool ExecuteDocument(BsonDocument doc)
         {
             return false;
         }
