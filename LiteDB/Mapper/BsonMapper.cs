@@ -255,9 +255,6 @@ namespace LiteDB
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
 
-                // checks if this property has [BsonIndex]
-                var index = (BsonIndexAttribute)memberInfo.GetCustomAttributes(indexAttr, false).FirstOrDefault();
-
                 // get data type
                 var dataType = memberInfo is PropertyInfo ?
                     (memberInfo as PropertyInfo).PropertyType :
@@ -273,7 +270,6 @@ namespace LiteDB
                     FieldName = name,
                     MemberName = memberInfo.Name,
                     DataType = dataType,
-                    IsUnique = index == null ? false : index.Unique,
                     IsList = isList,
                     UnderlyingType = isList ? Reflection.GetListItemType(dataType) : dataType,
                     Getter = getter,

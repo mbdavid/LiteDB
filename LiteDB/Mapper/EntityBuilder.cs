@@ -59,47 +59,27 @@ namespace LiteDB
         /// <summary>
         /// Define an index based in a property on entity
         /// </summary>
+        [Obsolete("Do not use Index mapper, use EnsureIndex on database creation")]
         public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, bool unique = false)
         {
-            return this.GetProperty(property, (p) =>
-            {
-                p.IsUnique = unique;
-            });
+            return this;
         }
 
         /// <summary>
         /// Define an index based in virtual property (getter function)
         /// </summary>
+        [Obsolete("Do not use Index mapper, use EnsureIndex on database creation")]
         public EntityBuilder<T> Index<K>(string indexName, Func<T, BsonValue> getter, bool unique = false)
         {
-            if (indexName.IsNullOrWhiteSpace()) throw new ArgumentNullException("indexName");
-
-            _entity.Members.Add(new MemberMapper
-            {
-                FieldName = indexName,
-                MemberName = indexName,
-                Getter = x => (object)getter((T)x),
-                Setter = null,
-                DataType = typeof(BsonValue),
-                IsUnique = unique
-            });
-
             return this;
         }
 
         /// <summary>
         /// Define an index based in a field name on BsonDocument
         /// </summary>
+        [Obsolete("Do not use Index mapper, use EnsureIndex on database creation")]
         public EntityBuilder<T> Index(string field, bool unique = false)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-
-            var p = _entity.Members.FirstOrDefault(x => x.FieldName == field);
-
-            if (p == null) throw new ArgumentException("field not found");
-
-            p.IsUnique = unique;
-
             return this;
         }
 

@@ -14,6 +14,7 @@
 - Auto-id in T class ** BREAK API**
 - ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
 - To think: AutoId must keep "true" by default?
+- Remove index definitions on mapper (fluent/attribute)
 
 # Next
 
