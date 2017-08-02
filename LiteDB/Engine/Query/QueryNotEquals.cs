@@ -24,7 +24,7 @@ namespace LiteDB
                 .Where(x => x.Key.CompareTo(_value) != 0);
         }
 
-        internal override bool ExecuteDocument(BsonDocument doc)
+        internal override bool FilterDocument(BsonDocument doc)
         {
             return doc.Get(this.Field).CompareTo(_value) != 0;
         }

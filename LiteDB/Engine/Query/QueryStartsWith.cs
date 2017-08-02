@@ -41,7 +41,7 @@ namespace LiteDB
             }
         }
 
-        internal override bool ExecuteDocument(BsonDocument doc)
+        internal override bool FilterDocument(BsonDocument doc)
         {
             var value = doc.Get(this.Field);
 

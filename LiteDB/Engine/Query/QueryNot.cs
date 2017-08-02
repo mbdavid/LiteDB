@@ -24,9 +24,9 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override bool ExecuteDocument(BsonDocument doc)
+        internal override bool FilterDocument(BsonDocument doc)
         {
-            return !_query.ExecuteDocument(doc);
+            return !_query.FilterDocument(doc);
         }
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
@@ -34,9 +34,9 @@ namespace LiteDB
             // run base query
             var result = _query.Run(col, indexer);
 
-            this.Mode = _query.Mode;
+            this.RunMode = _query.RunMode;
 
-            if (_query.Mode == QueryMode.Index)
+            if (_query.RunMode == QueryMode.Index)
             {
                 // if is by index, resolve here
                 var all = new QueryAll("_id", _order).Run(col, indexer);

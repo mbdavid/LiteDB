@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal enum QueryMode { None, Index, Document, Linq }
+    internal enum QueryMode { None, Index, Fullscan, Linq }
 
     /// <summary>
     /// Class helper to create query using indexes in database. All methods are statics.
@@ -12,14 +12,14 @@ namespace LiteDB
     /// </summary>
     public abstract class Query
     {
-        internal QueryMode Mode { get; set; }
+        internal QueryMode RunMode { get; set; }
 
         public string Field { get; private set; }
 
         internal Query(string field)
         {
             this.Field = field;
-            this.Mode = QueryMode.None;
+            this.RunMode = QueryMode.None;
         }
 
         #region Static Methods
@@ -233,7 +233,7 @@ namespace LiteDB
         /// Abstract method that must implement full scan - will be called for each document and need
         /// returns true if condition was satisfied
         /// </summary>
-        internal abstract bool ExecuteDocument(BsonDocument doc);
+        internal abstract bool FilterDocument(BsonDocument doc);
 
         /// <summary>
         /// Find witch index will be used and run Execute method
@@ -245,14 +245,14 @@ namespace LiteDB
 
             if (index == null)
             {
-                this.Mode = QueryMode.Document;
+                this.RunMode = QueryMode.Fullscan;
 
                 // if there is no index, returns all index nodes - will be used Full Scan
                 return indexer.FindAll(col.PK, Query.Ascending);
             }
             else
             {
-                this.Mode = QueryMode.Index;
+                this.RunMode = QueryMode.Index;
 
                 // execute query to get all IndexNodes
                 return this.ExecuteIndex(indexer, index);

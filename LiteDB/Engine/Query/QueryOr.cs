@@ -21,9 +21,9 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override bool ExecuteDocument(BsonDocument doc)
+        internal override bool FilterDocument(BsonDocument doc)
         {
-            return _left.ExecuteDocument(doc) || _right.ExecuteDocument(doc);
+            return _left.FilterDocument(doc) || _right.FilterDocument(doc);
         }
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
@@ -32,7 +32,7 @@ namespace LiteDB
             var right = _right.Run(col, indexer);
 
             // if any query (left/right) is FullScan, this query is full scan too
-            this.Mode = _left.Mode == QueryMode.Document || _right.Mode == QueryMode.Document ? QueryMode.Document : QueryMode.Index;
+            this.RunMode = _left.RunMode == QueryMode.Fullscan || _right.RunMode == QueryMode.Fullscan ? QueryMode.Fullscan : QueryMode.Index;
 
             return left.Union(right, new IndexNodeComparer());
         }

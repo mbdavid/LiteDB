@@ -7,35 +7,71 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class QueryTest
+    public class Query_Tests
     {
-        [TestMethod]
-        public void Query_Test()
+        [TestMethod, TestCategory("Engine")]
+        public void Query_Index()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            ExecuteQuery(true);
+        }
+
+        [TestMethod, TestCategory("Engine")]
+        public void Query_Fullscan()
+        {
+            ExecuteQuery(false);
+        }
+
+        public void ExecuteQuery(bool createIndex)
+        {
+            using (var db = new LiteEngine(new MemoryStream()))
             {
                 db.Insert("col", new BsonDocument[]
                 {
-                    new BsonDocument { { "_id", 1 }, { "name", "e" } },
-                    new BsonDocument { { "_id", 2 }, { "name", "d" } },
-                    new BsonDocument { { "_id", 3 }, { "name", "c" } },
-                    new BsonDocument { { "_id", 4 }, { "name", "b" } },
-                    new BsonDocument { { "_id", 5 }, { "name", "a" } }
+                    new BsonDocument { ["age"] = 1, ["name"] = "a" },
+                    new BsonDocument { ["age"] = 2, ["name"] = "b" },
+                    new BsonDocument { ["age"] = 3, ["name"] = "c" },
+                    new BsonDocument { ["age"] = 4, ["name"] = "d" },
+                    new BsonDocument { ["age"] = 5, ["name"] = "e" },
+                    new BsonDocument { ["age"] = 6, ["name"] = "f" },
+                    new BsonDocument { ["age"] = 7, ["name"] = "g" },
+                    new BsonDocument { ["age"] = 8, ["name"] = "h" },
+                    new BsonDocument { ["age"] = 9, ["name"] = "i" },
+                    new BsonDocument { ["age"] = 9, ["name"] = "j" }
                 });
 
-                db.EnsureIndex("col", "name");
+                if (createIndex)
+                {
+                    db.EnsureIndex("col", "age");
+                    db.EnsureIndex("col", "name");
+                }
 
-                Func<Query, string> result = (q) => string.Join(",", db.FindIndex("col", q).Select(x => x.ToString()));
+                Func<Query, string> result = (q) => string.Join(",", db.Find("col", q).Select(x => x["name"].AsString));
 
-                Assert.AreEqual("1", result(Query.EQ("_id", 1)));
-                Assert.AreEqual("4,5", result(Query.GTE("_id", 4)));
-                Assert.AreEqual("1", result(Query.LT("_id", 2)));
-                Assert.AreEqual("a,b,d,e", result(Query.Not("name", "c")));
-                Assert.AreEqual("2,4", result(Query.Where("_id", (v) => v.AsInt32 % 2 == 0)));
+                Assert.AreEqual("a,b,c,d,e,f,g,h,i,j", result(Query.All()));
+
+                Assert.AreEqual("a", result(Query.EQ("age", 1)));
+                Assert.AreEqual("g", result(Query.EQ("age", 7)));
+
+                Assert.AreEqual("h,i,j", result(Query.GT("age", 7)));
+                Assert.AreEqual("g,h,i,j", result(Query.GTE("age", 7)));
+
+                Assert.AreEqual("", result(Query.LT("age", 1)));
+                Assert.AreEqual("a", result(Query.LTE("age", 1)));
+
+                Assert.AreEqual("g,h,i,j", result(Query.Between("age", 7, 9)));
+
+                Assert.AreEqual("a,b,c,d,e,f,g,h", result(Query.Not("age", 9)));
+                Assert.AreEqual("a", result(Query.Not(Query.GTE("age", 2))));
+                Assert.AreEqual("a,g,i,j", result(Query.In("age", 1, 7, 9)));
+                Assert.AreEqual("a", result(Query.StartsWith("name", "a")));
+
+                Assert.AreEqual("j", result(Query.And(Query.EQ("age", 9), Query.EQ("name", "j"))));
+                Assert.AreEqual("a,i,j", result(Query.Or(Query.EQ("age", 1), Query.EQ("age", 9))));
+
+                Assert.AreEqual("b,d,f,h", result(Query.Where("age", (v) => v.AsInt32 % 2 == 0)));
             }
         }
 

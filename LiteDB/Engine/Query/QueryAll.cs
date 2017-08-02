@@ -21,7 +21,7 @@ namespace LiteDB
             return indexer.FindAll(index, _order);
         }
 
-        internal override bool ExecuteDocument(BsonDocument doc)
+        internal override bool FilterDocument(BsonDocument doc)
         {
             return true;
         }

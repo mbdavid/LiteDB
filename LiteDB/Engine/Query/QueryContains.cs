@@ -24,7 +24,7 @@ namespace LiteDB
                 .Where(x => x.Key.IsString && x.Key.AsString.Contains(_value));
         }
 
-        internal override bool ExecuteDocument(BsonDocument doc)
+        internal override bool FilterDocument(BsonDocument doc)
         {
             var value = doc.Get(this.Field);
 
