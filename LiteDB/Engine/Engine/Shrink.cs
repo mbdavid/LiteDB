@@ -9,13 +9,12 @@ namespace LiteDB
         /// <summary>
         /// Reduce disk size re-arranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
         /// </summary>
-        public long Shrink(string password = null, IDiskService temp = null)
+        public long Shrink(string password = null, IDiskService tempDisk = null)
         {
             var originalSize = _disk.FileLength;
 
             // if temp disk are not passed, use memory stream disk
-            temp = temp ?? new StreamDiskService(new MemoryStream());
-
+            using (var temp = tempDisk ?? new StreamDiskService(new MemoryStream()))
             using (_locker.Write())
             using (var engine = new LiteEngine(temp, password))
             {

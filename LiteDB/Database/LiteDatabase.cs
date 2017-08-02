@@ -220,7 +220,7 @@ namespace LiteDB
                 // get temp disk based on temp file
                 var tempDisk = new FileDiskService(tempFile, false);
 
-                var reduced = _engine.Value.Shrink(password);
+                var reduced = _engine.Value.Shrink(password, tempDisk);
 
                 // delete temp file
                 File.Delete(tempFile);
