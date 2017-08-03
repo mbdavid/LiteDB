@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
@@ -112,7 +113,7 @@ namespace LiteDB.Shell
 
             foreach (var writer in this.TextWriters)
             {
-                writer.Write(text);
+                writer.Write(Regex.Unescape(text));
             }
         }
 
