@@ -7,8 +7,6 @@ namespace LiteDB
 {
     public class BsonDocument : BsonValue, IDictionary<string, BsonValue>
     {
-        public const int MAX_DOCUMENT_SIZE = 256 * BasePage.PAGE_AVAILABLE_BYTES; // limits in 1.044.224b max document size to avoid large documents, memory usage and slow performance
-
         public BsonDocument()
             : base(new Dictionary<string, BsonValue>())
         {
