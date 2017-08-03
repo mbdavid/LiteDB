@@ -69,6 +69,20 @@ namespace LiteDB
         {
             BsonValue id;
 
+            // collection Sequence was created after release current datafile version. 
+            // In this case, Sequence will be 0 but already has documents. Let's fix this
+            // ** this code can be removed when datafile change from 7 (HeaderPage.FILE_VERSION) **
+            if (col.Sequence == 0 && col.DocumentCount > 0)
+            {
+                var max = this.Max(col.CollectionName, "_id");
+
+                // if max value is a number, convert to Sequence last value
+                // if not, just set sequence as document count
+                col.Sequence = (max.IsInt32 || max.IsInt64 || max.IsDouble || max.IsDecimal) ?
+                    Convert.ToInt64(max.RawValue) :
+                    Convert.ToInt64(col.DocumentCount);
+            }
+
             // increase collection sequence _id
             col.Sequence++;
 
@@ -80,8 +94,9 @@ namespace LiteDB
                 doc["_id"] = id =
                     autoId == BsonType.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :
                     autoId == BsonType.Guid ? new BsonValue(Guid.NewGuid()) :
+                    autoId == BsonType.DateTime ? new BsonValue(DateTime.Now) :
                     autoId == BsonType.Int32 ? new BsonValue((Int32)col.Sequence) :
-                    autoId == BsonType.Int64 ? new BsonValue((Int64)col.Sequence) : 
+                    autoId == BsonType.Int64 ? new BsonValue(col.Sequence) : 
                     autoId == BsonType.String ? new BsonValue(col.Sequence.ToString()) : BsonValue.Null;
             }
 

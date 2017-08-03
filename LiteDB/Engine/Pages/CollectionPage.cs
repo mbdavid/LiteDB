@@ -46,7 +46,7 @@ namespace LiteDB
         /// <summary>
         /// Storage number sequence to be used in auto _id values
         /// </summary>
-        public ulong Sequence { get; set; }
+        public long Sequence { get; set; }
 
         public CollectionPage(uint pageID)
             : base(pageID)
@@ -92,7 +92,7 @@ namespace LiteDB
 
             // position on page-footer (avoid file-change in v3)
             reader.Position = BasePage.PAGE_SIZE - 8;
-            this.Sequence = reader.ReadUInt64();
+            this.Sequence = reader.ReadInt64();
         }
 
         protected override void WriteContent(ByteWriter writer)

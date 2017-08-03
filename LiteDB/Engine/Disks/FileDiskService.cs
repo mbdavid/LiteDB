@@ -325,8 +325,8 @@ namespace LiteDB
             }
 #endif
             return new FileStream(path, mode, access, share, 
-                BasePage.PAGE_SIZE); 
-                // System.IO.FileOptions.WriteThrough | System.IO.FileOptions.SequentialScan);
+                BasePage.PAGE_SIZE,
+                System.IO.FileOptions.RandomAccess);
         }
 
 #if !NET35
