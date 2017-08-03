@@ -97,7 +97,6 @@
     <Compile Include="Document\BsonTest.cs" />
     <Compile Include="Database\DerivedTypesTest.cs" />
     <Compile Include="Engine\ReadOnlyTest.cs" />
-    <Compile Include="Engine\ShrinkTest.cs" />
     <Compile Include="Engine\DropCollectionTest.cs" />
     <Compile Include="Mapper\Mapper_Exceptions_Tests.cs" />
     <Compile Include="Mapper\Fluent_Api_Mapping_Tests.cs" />
