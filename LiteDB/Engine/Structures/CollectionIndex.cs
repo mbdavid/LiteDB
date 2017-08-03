@@ -5,7 +5,7 @@ namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public static Regex IndexPattern = new Regex(@"[\w-$\.]+$", RegexOptions.Compiled);
+        public static Regex IndexPattern = new Regex(@"^[\w-$\.]{1,60}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations

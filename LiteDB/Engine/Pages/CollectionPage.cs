@@ -15,7 +15,7 @@ namespace LiteDB
         /// </summary>
         public const ushort MAX_COLLECTIONS_SIZE = 3000;
 
-        public static Regex NamePattern = new Regex(@"^[\w-]{1,30}$", RegexOptions.Compiled);
+        public static Regex NamePattern = new Regex(@"^[\w-]{1,60}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Page type = Collection
