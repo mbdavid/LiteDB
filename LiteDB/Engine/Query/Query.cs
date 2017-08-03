@@ -143,6 +143,17 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns all documents that contains value (CONTAINS)
+        /// </summary>
+        public static Query Contains(string field, string value, StringComparison options)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException("value");
+
+            return new QueryContains(field, value, options);
+        }
+
+        /// <summary>
         /// Returns all documents that are not equals to value (not equals)
         /// </summary>
         public static Query Not(string field, BsonValue value)
