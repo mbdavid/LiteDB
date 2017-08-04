@@ -78,13 +78,13 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null)
+        public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null, bool disposeStream = false)
         {
             if (stream == null) throw new ArgumentNullException("stream");
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream), password: password, log: _log));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream, disposeStream), password: password, log: _log));
         }
 
         /// <summary>
