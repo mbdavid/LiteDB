@@ -18,12 +18,14 @@ namespace LiteDB
 
         private Stream _stream;
         private Logger _log; // will be initialize in "Initialize()"
+        private bool _disposeStream;
 
         #region Initialize disk
 
-        public StreamDiskService(Stream stream)
+        public StreamDiskService(Stream stream, bool disposeStream = false)
         {
             _stream = stream;
+            _disposeStream = disposeStream;
         }
 
         public void Initialize(Logger log, string password)
@@ -43,7 +45,14 @@ namespace LiteDB
 
         public virtual void Dispose()
         {
-            // do nothing - keeps stream opened
+            if (_disposeStream)
+            {
+                _stream.Dispose();
+            }
+            else
+            {
+                // do nothing - keeps stream opened
+            }
         }
 
         #endregion
