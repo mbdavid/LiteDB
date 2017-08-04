@@ -17,7 +17,10 @@
 - Remove index definitions on mapper (fluent/attribute)
 - Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
 
+
+- Review Linq query
 - Review if it's better use None/Flush/WriteThrough
+- Specific exception for non resolve Linq
 
 - Multikey search without index
 - Mark Query.Mode = Linq when is in linq (better for debug?)

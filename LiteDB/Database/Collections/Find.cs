@@ -40,39 +40,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException("predicate");
 
-            Query query;
-            Func<T, bool> where = null;
-
-            try
-            {
-                // if not possible convert linq to Query, execute as LinqToObject
-                query = _visitor.Visit(predicate);
-            }
-            catch(Exception ex)
-            {
-                // query all documents, convert and apply where function
-                query = Query.All();
-                where = predicate.Compile();
-            }
-
-            var docs = _engine.Value.Find(_name, query, skip, limit);
-
-            foreach (var doc in docs)
-            {
-                // executing all includes in BsonDocument
-                foreach (var action in _includes)
-                {
-                    action(doc);
-                }
-
-                // get object from BsonDocument
-                var obj = _mapper.ToObject<T>(doc);
-
-                if (where == null || (where != null && where(obj) == true))
-                {
-                    yield return obj;
-                }
-            }
+            return this.Find(_visitor.Visit(predicate), skip, limit);
         }
 
         #endregion Find
