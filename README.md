@@ -17,18 +17,26 @@
 - Remove index definitions on mapper (fluent/attribute)
 - Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
 
-
-- Review Linq query
 - Review if it's better use None/Flush/WriteThrough
-- Specific exception for non resolve Linq
-
 - Multikey search without index
 - Mark Query.Mode = Linq when is in linq (better for debug?)
 - Linq-to-Object in Exists/Count
 - Cache results in query before send to client
 
 - Review Database.Insert / Upsert
+- Try convert QueryAnd in QueryBetween if it's possible
 
+QUERY
+- Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
+- QueryAnd must return Left only with FilterDocument on right
+- RunMode change to bool NeedFilter?
+- Skip/Limit implemented inside foreach (no more on Linq)
+
+FIND MODIFY
+db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
+
+    
+    
 
 # Tests pattern
 

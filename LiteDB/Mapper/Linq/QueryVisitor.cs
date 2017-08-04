@@ -306,7 +306,7 @@ namespace LiteDB
                 var part = parts[i];
                 var prop = entity.Members.Find(x => x.MemberName == part);
 
-                if (prop == null) throw LiteException.PropertyNotMapped(property);
+                if (prop == null) throw new NotSupportedException(property + " not mapped in " + type.Name);
 
                 // if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
                 type = prop.UnderlyingType;
