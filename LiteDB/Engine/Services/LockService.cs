@@ -62,21 +62,21 @@ namespace LiteDB
             }
 
             // lock disk in shared mode
-            _disk.Lock(LockState.Read, _timeout);
+            var position = _disk.Lock(LockState.Read, _timeout);
 
-            _log.Write(Logger.LOCK, "entered in read lock mode");
+            _log.Write(Logger.LOCK, "entered in read lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
 
             this.DetectDatabaseChanges();
 
             return new LockControl(() =>
             {
                 // exit disk lock mode
-                _disk.Unlock(LockState.Read);
+                _disk.Unlock(LockState.Read, position);
 
                 // exit thread lock mode
                 _thread.ExitReadLock();
 
-                _log.Write(Logger.LOCK, "exited read lock mode");
+                _log.Write(Logger.LOCK, "exited read lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
             });
         }
 
@@ -91,11 +91,8 @@ namespace LiteDB
                 return new LockControl(() => { });
             }
 
-            // test if came from a shared lock (to restore after unlock)
-            var read = _thread.IsReadLockHeld;
-
-            // if came, need exit read lock
-            if (read) _thread.ExitReadLock();
+            // let's test if is not in read lock
+            if (_thread.IsReadLockHeld) throw new NotSupportedException("Not support Write lock inside a Read lock");
 
             // try enter in write mode (thread)
             if (!_thread.TryEnterWriteLock(_timeout))
@@ -104,31 +101,22 @@ namespace LiteDB
             }
 
             // try enter in exclusive mode in disk
-            _disk.Lock(LockState.Write, _timeout);
+            var position = _disk.Lock(LockState.Write, _timeout);
 
-            _log.Write(Logger.LOCK, "entered in write lock mode");
+            _log.Write(Logger.LOCK, "entered in write lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
 
             // call avoid dirty only if not came from a shared mode
-            if (!read)
-            {
-                this.DetectDatabaseChanges();
-            }
+            this.DetectDatabaseChanges();
 
             return new LockControl(() =>
             {
                 // release disk write
-                _disk.Unlock(LockState.Write);
+                _disk.Unlock(LockState.Write, position);
 
                 // release thread write
                 _thread.ExitWriteLock();
 
-                // if was in read mode before enter in write, back now to read
-                if (read)
-                {
-                    _thread.TryEnterReadLock(_timeout);
-                }
-
-                _log.Write(Logger.LOCK, "exited write lock mode");
+                _log.Write(Logger.LOCK, "exited write lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
             });
         }
 

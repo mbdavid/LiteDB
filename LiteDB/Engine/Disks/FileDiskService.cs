@@ -21,8 +21,9 @@ namespace LiteDB
         /// <summary>
         /// Map lock positions
         /// </summary>
-        internal const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
-        internal const int LOCK_LENGTH = 1000;
+        internal const int LOCK_INITIAL_POSITION = BasePage.PAGE_SIZE; // use second page
+        internal const int LOCK_READ_LENGTH = 1;
+        internal const int LOCK_WRITE_LENGTH = 3000;
 
         private FileStream _stream;
         private string _filename;
@@ -30,10 +31,7 @@ namespace LiteDB
         private Logger _log; // will be initialize in "Initialize()"
         private FileOptions _options;
 
-#if NET35
-        private int _lockReadPosition = 0;
-        private Random _lockReadRandom = new Random();
-#endif
+        private Random _lockReadRand = new Random();
 
         #region Initialize/Dispose disk
 
@@ -62,7 +60,7 @@ namespace LiteDB
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
             // open/create file using read only/exclusive options
-            _stream = CreateFileStream(_filename,
+            _stream = this.CreateFileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
                 _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite);
@@ -102,14 +100,17 @@ namespace LiteDB
             var buffer = new byte[BasePage.PAGE_SIZE];
             var position = BasePage.GetSizeOfPages(pageID);
 
-            // position cursor
-            if (_stream.Position != position)
+            lock (_stream)
             {
-                _stream.Seek(position, SeekOrigin.Begin);
-            }
+                // position cursor
+                if (_stream.Position != position)
+                {
+                    _stream.Seek(position, SeekOrigin.Begin);
+                }
 
-            // read bytes from data file
-            _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+                // read bytes from data file
+                _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+            }
 
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -249,63 +250,42 @@ namespace LiteDB
         public bool IsExclusive { get { return _options.FileMode == FileMode.Exclusive; } }
 
         /// <summary>
-        /// Implement datafile lock/unlock
+        /// Implement datafile lock. Return lock position
         /// </summary>
-        public void Lock(LockState state, TimeSpan timeout)
+        public int Lock(LockState state, TimeSpan timeout)
         {
 #if NET35
             // only shared mode lock datafile
-            if (_options.FileMode != FileMode.Shared) return;
+            if (_options.FileMode != FileMode.Shared) return 0;
 
-            var position = state == LockState.Read ? _lockReadPosition = _lockReadRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_LENGTH) : LOCK_POSITION;
-            var length = state == LockState.Read ? 1 : LOCK_LENGTH;
+            var position = state == LockState.Read ? _lockReadRand.Next(LOCK_INITIAL_POSITION, LOCK_INITIAL_POSITION + LOCK_WRITE_LENGTH) : LOCK_INITIAL_POSITION;
+            var length = state == LockState.Read ? 1 : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
+            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2}) in thread #{3}", state.ToString().ToLower(), position, length, Thread.CurrentThread.ManagedThreadId);
 
-            if (state == LockState.Write && _lockReadPosition > 0)
-            {
-                var beforeLength = _lockReadPosition - LOCK_POSITION;
-                var afterLength = LOCK_LENGTH - beforeLength - 1;
+            _stream.TryLock(position, length, timeout);
 
-                _stream.TryLock(LOCK_POSITION, beforeLength, timeout);
-                _stream.TryLock(_lockReadPosition + 1, afterLength, timeout);
-            }
-            else
-            {
-                _stream.TryLock(position, length, timeout);
-            }
+            return position;
+#endif
+#if !NET35
+            return 0;
 #endif
         }
 
         /// <summary>
-        /// Unlock datafile based on state
+        /// Unlock datafile based on state and position
         /// </summary>
-        public void Unlock(LockState state)
+        public void Unlock(LockState state, int position)
         {
 #if NET35
             // only shared mode lock datafile
-            if (_options.FileMode != FileMode.Shared) return;
+            if (_options.FileMode != FileMode.Shared || state == LockState.Unlocked) return;
 
-            var position = state == LockState.Read ? _lockReadPosition : LOCK_POSITION;
-            var length = state == LockState.Read ? 1 : LOCK_LENGTH;
+            var length = state == LockState.Read ? LOCK_READ_LENGTH : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
+            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2}) in thread #{3}", state.ToString().ToLower(), position, length, Thread.CurrentThread.ManagedThreadId);
 
-            // if unlock exclusive but contains position of shared lock, keep shared
-            if (state == LockState.Write && _lockReadPosition != 0)
-            {
-                var beforeLength = _lockReadPosition - LOCK_POSITION;
-                var afterLength = LOCK_LENGTH - beforeLength - 1;
-
-                _stream.TryUnlock(LOCK_POSITION, beforeLength);
-                _stream.TryUnlock(_lockReadPosition + 1, afterLength);
-            }
-            else
-            {
-                _stream.TryUnlock(position, length);
-
-                _lockReadPosition = 0;
-            }
+            _stream.TryUnlock(position, length);
 #endif
         }
 

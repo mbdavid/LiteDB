@@ -17,20 +17,23 @@
 - Remove index definitions on mapper (fluent/attribute)
 - Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
 
+*** Cache results in query before send to client: READ LOCK control ***
+
 - Review if it's better use None/Flush/WriteThrough
 - Multikey search without index
-- Mark Query.Mode = Linq when is in linq (better for debug?)
-- Linq-to-Object in Exists/Count
-- Cache results in query before send to client
-
 - Review Database.Insert / Upsert
-- Try convert QueryAnd in QueryBetween if it's possible
+- Implement Lock in StreamDiskService using a second MemoryStream _locker
+
+CONCURRENCY
+- Work LiteDB.Perf
 
 QUERY
+
 - Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
 - QueryAnd must return Left only with FilterDocument on right
 - RunMode change to bool NeedFilter?
 - Skip/Limit implemented inside foreach (no more on Linq)
+- Remove QueryBetween = convert into QueryAnd(Query.GTE, Query.LTE)
 
 FIND MODIFY
 db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
