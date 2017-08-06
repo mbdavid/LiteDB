@@ -16,21 +16,6 @@ namespace LiteDB
             _right = right;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
-        {
-            throw new NotSupportedException();
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return _left.FilterDocument(doc) || _right.FilterDocument(doc);
-
-            //return
-            //    (_left.UseFilter && _right.UseFilter) ? _left.FilterDocument(doc) || _right.FilterDocument(doc) :
-            //    _left.UseFilter ? _left.FilterDocument(doc) :
-            //    _right.UseFilter ? _right.FilterDocument(doc) : false;
-        }
-
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
             var left = _left.Run(col, indexer);
@@ -41,6 +26,16 @@ namespace LiteDB
             this.UseFilter = _left.UseFilter || _right.UseFilter;
 
             return left.Union(right, new IndexNodeComparer());
+        }
+
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        {
+            throw new NotSupportedException();
+        }
+
+        internal override bool FilterDocument(BsonDocument doc)
+        {
+            return _left.FilterDocument(doc) || _right.FilterDocument(doc);
         }
 
         public override string ToString()

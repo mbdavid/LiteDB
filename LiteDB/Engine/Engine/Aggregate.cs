@@ -81,7 +81,7 @@ namespace LiteDB
 
                 if (query.UseFilter)
                 {
-                    // count distinct nodes based on DataBlock
+                    // count distinct documents
                     return nodes
                         .Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
@@ -118,7 +118,7 @@ namespace LiteDB
 
                 if (query.UseFilter)
                 {
-                    // in full scan, use Any() of linq
+                    // check if has at least first document
                     return nodes
                         .Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
@@ -128,7 +128,7 @@ namespace LiteDB
                 {
                     var first = nodes.FirstOrDefault();
 
-                    // check if has at least first
+                    // check if has at least first node
                     return first != null;
                 }
             }

@@ -22,14 +22,6 @@ namespace LiteDB
             this.UseFilter = false;
         }
 
-        /// <summary>
-        /// Used in AND query to descend to all queris to be filtered
-        /// </summary>
-        internal virtual void ForceUseFilter()
-        {
-            this.UseFilter = true;
-        }
-
         #region Static Methods
 
         /// <summary>
@@ -242,15 +234,12 @@ namespace LiteDB
         #region Executing Query
 
         /// <summary>
-        /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
+        /// Used in AND query to descend to all queris to be filtered left other side are indexed
         /// </summary>
-        internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
-
-        /// <summary>
-        /// Abstract method that must implement full scan - will be called for each document and need
-        /// returns true if condition was satisfied
-        /// </summary>
-        internal abstract bool FilterDocument(BsonDocument doc);
+        internal virtual void ForceUseFilter()
+        {
+            this.UseFilter = true;
+        }
 
         /// <summary>
         /// Find witch index will be used and run Execute method
@@ -275,6 +264,17 @@ namespace LiteDB
                 return this.ExecuteIndex(indexer, index);
             }
         }
+
+        /// <summary>
+        /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
+        /// </summary>
+        internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
+
+        /// <summary>
+        /// Abstract method that must implement full scan - will be called for each document and need
+        /// returns true if condition was satisfied
+        /// </summary>
+        internal abstract bool FilterDocument(BsonDocument doc);
 
         #endregion
     }

@@ -19,16 +19,6 @@ namespace LiteDB
             _order = order;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
-        {
-            throw new NotSupportedException();
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return !_query.FilterDocument(doc);
-        }
-
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
             // run base query
@@ -49,6 +39,16 @@ namespace LiteDB
                 // if is by document, must return all nodes to be ExecuteDocument after
                 return result;
             }
+        }
+
+        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        {
+            throw new NotSupportedException();
+        }
+
+        internal override bool FilterDocument(BsonDocument doc)
+        {
+            return !_query.FilterDocument(doc);
         }
 
         public override string ToString()
