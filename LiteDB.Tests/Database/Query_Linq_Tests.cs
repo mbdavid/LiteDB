@@ -187,12 +187,15 @@ namespace LiteDB.Tests.Database
 
                 var col = db.GetCollection<User>("Customer");
 
+                col.EnsureIndex(x => x.Name);
+
                 col.Insert(new [] { c1, c2, c3, c4 });
 
-                // now, lets do some non-visitor query
-                var q1 = col.Find(x => x.Name.Length > 5).ToArray();
+                // x.Name == "Mauricio" has index
+                // x.Name.Length > 8 is Linq query
+                var q1 = col.Find(x => x.Name == "Mauricio" && x.Name.Length > 5).ToArray();
 
-                Assert.AreEqual(3, q1.Length);
+                Assert.AreEqual(1, q1.Length);
                 
                 // it's not mapper ToUpper, must do LinqToObject
                 var q2 = col.Find(x => x.Name.ToUpper() == "MAURICIO").ToArray();
