@@ -55,13 +55,13 @@ namespace LiteDB
         {
             if (_query != null)
             {
-                this.RunMode = _query.RunMode;
+                //this.RunMode = _query.RunMode;
 
                 return _query.Run(col, indexer);
             }
             else
             {
-                this.RunMode = QueryMode.Fullscan;
+                //this.RunMode = QueryMode.Fullscan;
 
                 return Query.All().Run(col, indexer);
             }

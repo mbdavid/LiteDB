@@ -520,7 +520,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.IsNull ? "(null)" : this.RawValue.ToString();
+            return JsonSerializer.Serialize(this);
         }
 
         #endregion

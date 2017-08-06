@@ -34,9 +34,10 @@ namespace LiteDB
             // run base query
             var result = _query.Run(col, indexer);
 
-            this.RunMode = _query.RunMode;
+            this.UseIndex = _query.UseIndex;
+            this.UseFilter = _query.UseFilter;
 
-            if (_query.RunMode == QueryMode.Index)
+            if (_query.UseIndex)
             {
                 // if is by index, resolve here
                 var all = new QueryAll("_id", _order).Run(col, indexer);

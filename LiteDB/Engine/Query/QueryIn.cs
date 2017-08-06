@@ -41,7 +41,10 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("{0} in {1}", this.Field, _values);
+            return string.Format("{0}([{1}] in {2})",
+                this.UseFilter ? "F" : this.UseIndex ? "I" : "",
+                this.Field,
+                _values);
         }
     }
 }

@@ -86,7 +86,7 @@ namespace LiteDB
                     context.Nodes = query.Run(col, _indexer).GetEnumerator();
 
                     // FindIndex must run as Index seek (not by full scan)
-                    if (query.RunMode != QueryMode.Index) throw LiteException.IndexNotFound(collection, query.Field);
+                    if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
 
                     _log.Write(Logger.QUERY, "executing query in '{0}' :: {1}", collection, query);
 

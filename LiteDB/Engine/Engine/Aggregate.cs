@@ -79,7 +79,7 @@ namespace LiteDB
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
-                if (query.RunMode == QueryMode.Fullscan)
+                if (query.UseFilter)
                 {
                     // count distinct nodes based on DataBlock
                     return nodes
@@ -116,7 +116,7 @@ namespace LiteDB
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
-                if (query.RunMode == QueryMode.Fullscan)
+                if (query.UseFilter)
                 {
                     // in full scan, use Any() of linq
                     return nodes
@@ -131,7 +131,6 @@ namespace LiteDB
                     // check if has at least first
                     return first != null;
                 }
-
             }
         }
     }

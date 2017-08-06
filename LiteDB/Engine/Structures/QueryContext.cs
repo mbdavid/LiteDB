@@ -41,7 +41,7 @@ namespace LiteDB
                 if (this.HasMore == false) yield break;
 
                 // if run under index, skip/limit before deserialize
-                if (_query.RunMode == QueryMode.Index)
+                if (_query.UseIndex)
                 {
                     if (--_skip >= 0) continue;
 
@@ -60,7 +60,7 @@ namespace LiteDB
                 var doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
                 // if need run in full scan, execute full scan and test return
-                if (_query.RunMode == QueryMode.Fullscan)
+                if (_query.UseFilter)
                 {
                     // execute query condition here - if false, do not add on final results
                     if (_query.FilterDocument(doc) == false) continue;
@@ -75,7 +75,7 @@ namespace LiteDB
                     }
                 }
 
-                log.Write(Logger.QUERY, "read document :: _id = {0}", node.Key);
+                log.Write(Logger.QUERY, "read document :: _id = {0}", node.Key.RawValue);
 
                 index--;
 

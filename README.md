@@ -14,6 +14,7 @@
 - Auto-id in T class ** BREAK API**
 - ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
 - Remove index definitions on mapper (fluent/attribute) [OK]
+- Removed QueryBetween and convert to And(GTE,LTE) [OK]
 
 *** Cache results in query before send to client: READ LOCK control ***
 
@@ -29,17 +30,19 @@ QUERY
 
 - Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
 - QueryAnd must return Left only with FilterDocument on right
-- RunMode change to bool NeedFilter?
-- Remove QueryBetween = convert into QueryAnd(Query.GTE, Query.LTE)
-- FindIndex using QueryContext
 - Query.UseIndex and UseFilter
 - Query.ToString => (I(_id > 1) AND F(_id < 10))
+- Remove QueryBetween = convert into QueryAnd(Query.GTE, Query.LTE)
+- Count\Exists when use filter must call checkTrans
 
 FIND MODIFY
 db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
 
-    
-    
+
+# PRO
+- In log, support for Func<> on parameter to not execute when log are not in use
+    _log(QUERY, "result = {0}", () => value.ToString());
+- Why I need change tests to C:\Temp?    
 
 # Tests pattern
 

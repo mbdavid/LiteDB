@@ -50,7 +50,10 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("{0} startsWith {1}", this.Field, _value);
+            return string.Format("{0}([{1}] startsWith {2})",
+                this.UseFilter ? "F" : this.UseIndex ? "I" : "",
+                this.Field,
+                _value);
         }
     }
 }

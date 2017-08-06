@@ -30,7 +30,7 @@ namespace LiteDB
 
                 foreach (var node in nodes)
                 {
-                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", collection, node.Key);
+                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", collection, node.Key.RawValue);
 
                     // get all indexes nodes from this data block
                     var allNodes = _indexer.GetNodeList(node, true).ToArray();

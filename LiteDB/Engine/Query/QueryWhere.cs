@@ -33,7 +33,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("{0}({1})", _func.ToString(), this.Field);
+            return string.Format("{0}[{1}]", _func.ToString(), this.Field);
         }
     }
 }

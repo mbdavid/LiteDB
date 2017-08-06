@@ -28,7 +28,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("false");
+            return string.Format("(false)");
         }
     }
 }

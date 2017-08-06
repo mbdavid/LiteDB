@@ -24,6 +24,11 @@ namespace LiteDB
         internal override bool FilterDocument(BsonDocument doc)
         {
             return _left.FilterDocument(doc) || _right.FilterDocument(doc);
+
+            //return
+            //    (_left.UseFilter && _right.UseFilter) ? _left.FilterDocument(doc) || _right.FilterDocument(doc) :
+            //    _left.UseFilter ? _left.FilterDocument(doc) :
+            //    _right.UseFilter ? _right.FilterDocument(doc) : false;
         }
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
@@ -32,7 +37,8 @@ namespace LiteDB
             var right = _right.Run(col, indexer);
 
             // if any query (left/right) is FullScan, this query is full scan too
-            this.RunMode = _left.RunMode == QueryMode.Fullscan || _right.RunMode == QueryMode.Fullscan ? QueryMode.Fullscan : QueryMode.Index;
+            this.UseIndex = _left.UseIndex && _right.UseIndex;
+            this.UseFilter = _left.UseFilter || _right.UseFilter;
 
             return left.Union(right, new IndexNodeComparer());
         }

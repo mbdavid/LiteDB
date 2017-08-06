@@ -4,22 +4,30 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal enum QueryMode { None, Index, Fullscan, Linq }
-
     /// <summary>
     /// Class helper to create query using indexes in database. All methods are statics.
     /// Queries can be executed in 3 ways: Index Seek (fast), Index Scan (good), Full Scan (slow)
     /// </summary>
     public abstract class Query
     {
-        internal QueryMode RunMode { get; set; }
-
         public string Field { get; private set; }
+
+        internal bool UseIndex { get; set; }
+        internal bool UseFilter { get; set; }
 
         internal Query(string field)
         {
             this.Field = field;
-            this.RunMode = QueryMode.None;
+            this.UseIndex = false;
+            this.UseFilter = false;
+        }
+
+        /// <summary>
+        /// Used in AND query to descend to all queris to be filtered
+        /// </summary>
+        internal virtual void ForceUseFilter()
+        {
+            this.UseFilter = true;
         }
 
         #region Static Methods
@@ -109,7 +117,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null);
+            return Query.And(Query.GTE(field, start), Query.LTE(field, end));
         }
 
         /// <summary>
@@ -220,7 +228,7 @@ namespace LiteDB
             return new QueryOr(left, right);
         }
 
-        #endregion Static Methods
+        #endregion
 
         #region Executing Query
 
@@ -245,20 +253,20 @@ namespace LiteDB
 
             if (index == null)
             {
-                this.RunMode = QueryMode.Fullscan;
+                this.UseFilter = true;
 
                 // if there is no index, returns all index nodes - will be used Full Scan
                 return indexer.FindAll(col.PK, Query.Ascending);
             }
             else
             {
-                this.RunMode = QueryMode.Index;
+                this.UseIndex = true;
 
                 // execute query to get all IndexNodes
                 return this.ExecuteIndex(indexer, index);
             }
         }
 
-        #endregion Execute Query
+        #endregion
     }
 }
