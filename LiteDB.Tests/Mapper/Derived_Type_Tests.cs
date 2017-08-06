@@ -2,8 +2,10 @@
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class Base
     {
         public int Id { get; set; }
@@ -19,14 +21,15 @@ namespace LiteDB.Tests
         public string Member2 { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class DerivedTypeTest
+    public class Derived_Type_Tests
     {
-        [TestMethod]
-        public void DerivedType_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Derived_Type()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
                 var derived1 = new Derived1 { Id = 1, Member1 = "Derived1" };
                 var derived2 = new Derived2 { Id = 2, Member2 = "Dereived2" };
@@ -55,7 +58,6 @@ namespace LiteDB.Tests
 
                 Assert.IsTrue(d1 is Derived1);
                 Assert.IsTrue(d2 is Derived2);
-
             }
         }
     }

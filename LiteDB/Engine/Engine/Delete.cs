@@ -25,12 +25,29 @@ namespace LiteDB
             {
                 if (col == null) return 0;
 
+                _log.Write(Logger.COMMAND, "delete documents in '{0}'", collection);
+
                 var nodes = query.Run(col, _indexer);
+
+                _log.Write(Logger.QUERY, "delete query {0}", query);
+
                 var count = 0;
 
                 foreach (var node in nodes)
                 {
-                    _log.Write(Logger.COMMAND, "delete document on '{0}' :: _id = {1}", collection, node.Key.RawValue);
+                    // checks if cache are full
+                    _trans.CheckPoint();
+
+                    // if use filter need deserialize document
+                    if (query.UseFilter)
+                    {
+                        var buffer = _data.Read(node.DataBlock);
+                        var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+
+                        if (query.FilterDocument(doc) == false) continue;
+                    }
+
+                    _log.Write(Logger.COMMAND, "delete document :: _id = {0}", node.Key.RawValue);
 
                     // get all indexes nodes from this data block
                     var allNodes = _indexer.GetNodeList(node, true).ToArray();
@@ -45,8 +62,6 @@ namespace LiteDB
 
                     // remove object data
                     _data.Delete(col, node.DataBlock);
-
-                    _trans.CheckPoint();
 
                     count++;
                 }

@@ -28,12 +28,15 @@ namespace LiteDB
             this.Nodes = null;
         }
 
-        public IEnumerable<BsonDocument> GetDocuments(DataService data, Logger log)
+        public IEnumerable<BsonDocument> GetDocuments(TransactionService trans, DataService data, Logger log)
         {
             var index = _bufferSize;
 
             while (index > 0)
             {
+                // checks if cache are full
+                trans.CheckPoint();
+
                 // read next node
                 this.HasMore = this.Nodes.MoveNext();
 
@@ -83,12 +86,14 @@ namespace LiteDB
             }
         }
 
-        public IEnumerable<BsonValue> GetIndexKeys(Logger log)
+        public IEnumerable<BsonValue> GetIndexKeys(TransactionService trans, Logger log)
         {
             var index = _bufferSize;
 
             while (index > 0)
             {
+                trans.CheckPoint();
+
                 // read next node
                 this.HasMore = this.Nodes.MoveNext();
 
@@ -103,7 +108,7 @@ namespace LiteDB
                     yield break;
                 }
 
-                log.Write(Logger.QUERY, "read index key :: key = {0}", this.Nodes.Current.Key);
+                log.Write(Logger.QUERY, "fetch index key :: key = {0}", this.Nodes.Current.Key);
 
                 yield return this.Nodes.Current.Key;
             }

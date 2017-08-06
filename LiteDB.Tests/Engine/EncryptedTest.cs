@@ -50,6 +50,9 @@ namespace LiteDB.Tests
                     var doc = db.Find("col", Query.All()).First();
 
                     Assert.AreEqual("Mauricio David", doc["name"].AsString);
+
+                    // let's remove password to work CheckIntegrety
+                    db.Shrink(null, null);
                 }
             }
         }

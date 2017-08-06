@@ -36,19 +36,19 @@ namespace LiteDB.Tests
                 { "say", new BsonDocument { { "my", new BsonDocument { { "name", "Heisenberg" } } } } }
             };
 
-            var i = string.Join(",", doc.GetValues("int"));
-            var i2 = string.Join(",", doc.GetValues("int", true));
-            var s = string.Join(",", doc.GetValues("addr.street"));
-            var p = string.Join(",", doc.GetValues("list.phones.number"));
-            var h = string.Join(",", doc.GetValues("say.my.name"));
-            var nf = string.Join(",", doc.GetValues("say.notfound"));
+            var i = string.Join(",", doc.GetValues("int").Select(x => x.AsString));
+            var i2 = string.Join(",", doc.GetValues("int", true).Select(x => x.AsString));
+            var s = string.Join(",", doc.GetValues("addr.street").Select(x => x.AsString));
+            var p = string.Join(",", doc.GetValues("list.phones.number").Select(x => x.AsString));
+            var h = string.Join(",", doc.GetValues("say.my.name").Select(x => x.AsString));
+            var nf = string.Join(",", doc.GetValues("say.notfound").Select(x => x.AsString));
 
             Assert.AreEqual("1,2,3,4,5,6,5,4", i);
             Assert.AreEqual("1,2,3,4,5,6", i2);
             Assert.AreEqual("av. protasio,av. ipiranga", s);
             Assert.AreEqual("123,456,789,***", p);
             Assert.AreEqual("Heisenberg", h);
-            Assert.AreEqual("(null)", nf);
+            Assert.AreEqual("", nf);
         }
 
         [TestMethod]

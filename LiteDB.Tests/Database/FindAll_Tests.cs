@@ -3,19 +3,23 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
+    #region Model
+
     public class Person
     {
         public int Id { get; set; }
         public string Fullname { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class FindAllTest
+    public class FindAll_Tests
     {
-        [TestMethod]
-        public void FindAll_Test()
+        [TestMethod, TestCategory("Database")]
+        public void FindAll()
         {
             using (var f = new TempFile())
             {
@@ -23,10 +27,10 @@ namespace LiteDB.Tests
                 {
                     var col = db.GetCollection<Person>("Person");
 
-                    col.Insert(new Tests.Person { Fullname = "John" });
-                    col.Insert(new Tests.Person { Fullname = "Doe" });
-                    col.Insert(new Tests.Person { Fullname = "Joana" });
-                    col.Insert(new Tests.Person { Fullname = "Marcus" });
+                    col.Insert(new Person { Fullname = "John" });
+                    col.Insert(new Person { Fullname = "Doe" });
+                    col.Insert(new Person { Fullname = "Joana" });
+                    col.Insert(new Person { Fullname = "Marcus" });
                 }
                 // close datafile
 

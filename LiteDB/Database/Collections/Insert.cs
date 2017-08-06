@@ -59,14 +59,18 @@ namespace LiteDB
             {
                 var doc = _mapper.ToDocument(document);
 
-                if (_autoId != BsonType.Null)
+                if (_autoId == BsonType.ObjectId ||
+                    _autoId == BsonType.Guid ||
+                    _autoId == BsonType.DateTime ||
+                    _autoId == BsonType.Int32 ||
+                    _autoId == BsonType.Int64)
                 {
                     doc.Remove("_id");
                 }
 
                 yield return doc;
 
-                if (_autoId != BsonType.Null)
+                if (_autoId != BsonType.Null && _id != null)
                 {
                     _id.Setter(document, doc["_id"].RawValue);
                 }

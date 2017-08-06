@@ -20,6 +20,7 @@ This version keeps
 - Add support to Between open/close interval [OK]
 - Fix shell keeping file open [OK]
 - Work LiteDB.Perf [OK]
+- AutoId default to ObjectId, Guid, DateTime, Int32 and Int64 _id
     
 # Better query engine
 - Removed auto create index [OK]
@@ -29,7 +30,6 @@ This version keeps
 - QueryLinq for non resolved Linq visitor [OK]
     = col.Find(x => x.Id < 10 && x.Name.Length > 10)
 
-    
 
 # TODO
 - db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
@@ -37,15 +37,9 @@ This version keeps
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
 - Review if it's better use None/Flush/WriteThrough
+- Review Log messages
+- Review trans.CheckPoint();
 
-# Tests pattern
-
-- Filename must end with "_Tests.cs"
-- Test name has no _Test on name
-- Keep model in same file
-- Each folder has a namespace
-- Use TestCategory() == FolderName
-    
 ====================================================    
     
 

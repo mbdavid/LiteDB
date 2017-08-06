@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using LiteDB;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class AttrCustomer
     {
         [BsonId]
@@ -27,11 +29,13 @@ namespace LiteDB.Tests
         public string Street { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class AttributeMapperTest
+    public class Attribute_Mapper_Tests
     {
-        [TestMethod]
-        public void AttributeMapper_Test()
+        [TestMethod, TestCategory("Mapper")]
+        public void Attribute_Mapper()
         {
             var mapper = new BsonMapper();
 

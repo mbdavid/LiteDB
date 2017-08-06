@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
     [TestClass]
-    public class ConnectionStringTest
+    public class ConnectionString_Tests
     {
-        [TestMethod]
-        public void ConnectionString_Test()
+        [TestMethod, TestCategory("Database")]
+        public void ConnectionString_Parser()
         {
             // only filename
             var onlyfile = new ConnectionString(@"demo.db");
@@ -53,8 +53,8 @@ namespace LiteDB.Tests
 
         }
 
-        [TestMethod]
-        public void LiteDatabase_FromConnectionString_SetsLogLevel()
+        [TestMethod, TestCategory("Database")]
+        public void ConnectionString_Sets_Log_Level()
         {
             var connectionString = "filename=foo;";
             var db = new LiteDatabase(connectionString);

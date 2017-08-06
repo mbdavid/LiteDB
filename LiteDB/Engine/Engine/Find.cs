@@ -32,10 +32,7 @@ namespace LiteDB
                     _log.Write(Logger.QUERY, "executing query in '{0}' :: {1}", collection, query);
 
                     // fill buffer with documents 
-                    docs.AddRange(context.GetDocuments(_data, _log));
-
-                    // do a checkpoint in memory cache
-                    _trans.CheckPoint();
+                    docs.AddRange(context.GetDocuments(_trans, _data, _log));
                 }
 
                 // returing first documents in buffer
@@ -50,14 +47,11 @@ namespace LiteDB
                     // lock read mode
                     using (_locker.Read())
                     {
-                        docs.AddRange(context.GetDocuments(_data, _log));
+                        docs.AddRange(context.GetDocuments(_trans, _data, _log));
                     }
 
                     // return documents from buffer
                     foreach (var doc in docs) yield return doc;
-
-                    // do a checkpoint in memory cache
-                    _trans.CheckPoint();
                 }
             }
         }
@@ -91,10 +85,7 @@ namespace LiteDB
                     _log.Write(Logger.QUERY, "executing query in '{0}' :: {1}", collection, query);
 
                     // fill buffer with index keys
-                    keys.AddRange(context.GetIndexKeys(_log));
-
-                    // do a checkpoint in memory cache
-                    _trans.CheckPoint();
+                    keys.AddRange(context.GetIndexKeys(_trans, _log));
                 }
 
                 // returing first keys in buffer
@@ -109,14 +100,11 @@ namespace LiteDB
                     // lock read mode
                     using (_locker.Read())
                     {
-                        keys.AddRange(context.GetIndexKeys(_log));
+                        keys.AddRange(context.GetIndexKeys(_trans, _log));
                     }
 
                     // return keys from buffer
                     foreach (var key in keys) yield return key;
-
-                    // do a checkpoint in memory cache
-                    _trans.CheckPoint();
                 }
             }
         }

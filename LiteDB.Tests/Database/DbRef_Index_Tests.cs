@@ -1,8 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
+    #region Model
+
     public class DCustomer
     {
         public string Login { get; set; }
@@ -15,11 +17,13 @@ namespace LiteDB.Tests
         public DCustomer Customer { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class DbRefIndexTest
+    public class DbRef_Index_Tests
     {
-        [TestMethod]
-        public void DbRefIndex_Test()
+        [TestMethod, TestCategory("Database")]
+        public void DbRef_Index()
         {
             var mapper = new BsonMapper();
 
@@ -35,7 +39,7 @@ namespace LiteDB.Tests
             using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var customer = new DCustomer { Login = "jd", Name = "John Doe" };
-                var order = new DOrder { OrderNumber = 1, Customer = customer };
+                var order = new DOrder { Customer = customer };
 
                 var customers = db.GetCollection<DCustomer>("Customers");
                 var orders = db.GetCollection<DOrder>("Orders");
