@@ -113,11 +113,11 @@ namespace LiteDB
         /// <summary>
         /// Returns all document that values are between "start" and "end" values (BETWEEN)
         /// </summary>
-        public static Query Between(string field, BsonValue start, BsonValue end)
+        public static Query Between(string field, BsonValue start, BsonValue end, bool startEquals = true, bool endEquals = true)
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null);
+            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null, startEquals, endEquals);
         }
 
         /// <summary>
@@ -220,11 +220,7 @@ namespace LiteDB
                 var l = left as QueryGreater;
                 var r = right as QueryLess;
 
-                // checks if is [field] >= Inital && [field] <= Final
-                if (l.IsEquals && r.IsEquals)
-                {
-                    return Between(l.Field, l.Value, r.Value);
-                }
+                return Between(l.Field, l.Value, r.Value, l.IsEquals, r.IsEquals);
             }
 
             return new QueryAnd(left, right);
