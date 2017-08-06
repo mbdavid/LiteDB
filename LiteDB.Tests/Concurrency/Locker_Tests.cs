@@ -14,38 +14,29 @@ namespace LiteDB.Tests.Concurrency
                 // initialize database with 4
                 using (var db = new LiteEngine(tmp.Filename))
                 {
-                    db.Insert("col", new BsonDocument { { "Number", 1 } });
-                    db.Insert("col", new BsonDocument { { "Number", 2 } });
-                    db.Insert("col", new BsonDocument { { "Number", 3 } });
-                    db.Insert("col", new BsonDocument { { "Number", 4 } });
+                    db.Insert("col", new BsonDocument { { "Number", 1 } }, BsonType.Int32);
+                    db.Insert("col", new BsonDocument { { "Number", 2 } }, BsonType.Int32);
+                    db.Insert("col", new BsonDocument { { "Number", 3 } }, BsonType.Int32);
+                    db.Insert("col", new BsonDocument { { "Number", 4 } }, BsonType.Int32);
+                    db.Insert("col", new BsonDocument { { "Number", 5 } }, BsonType.Int32);
                 }
 
                 using (var db = new LiteEngine(tmp.Filename))
                 {
-                    // locker here must be unlocked
-                    Assert.AreEqual(LockState.Unlocked, db.Locker.ThreadState);
-
-                    foreach (var doc in db.Find("col", Query.All()))
+                    foreach (var doc in db.Find("col", Query.All(), 0, 1000, 3))
                     {
-                        // locker here must be read
-                        Assert.AreEqual(LockState.Read, db.Locker.ThreadState);
+                        var id = doc["_id"];
 
                         doc["Name"] = "John";
 
                         // inside this update, locker must be in write
                         db.Update("col", doc);
-
-                        // but after update must back to read
-                        Assert.AreEqual(LockState.Read, db.Locker.ThreadState);
                     }
-
-                    // back do unlock
-                    Assert.AreEqual(LockState.Unlocked, db.Locker.ThreadState);
 
                     db.EnsureIndex("col", "Name");
                     var all = db.Find("col", Query.EQ("Name", "John"));
 
-                    Assert.AreEqual(4, all.Count());
+                    Assert.AreEqual(5, all.Count());
                 }
             }
         }

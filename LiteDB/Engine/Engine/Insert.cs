@@ -96,8 +96,7 @@ namespace LiteDB
                     autoId == BsonType.Guid ? new BsonValue(Guid.NewGuid()) :
                     autoId == BsonType.DateTime ? new BsonValue(DateTime.Now) :
                     autoId == BsonType.Int32 ? new BsonValue((Int32)col.Sequence) :
-                    autoId == BsonType.Int64 ? new BsonValue(col.Sequence) : 
-                    autoId == BsonType.String ? new BsonValue(col.Sequence.ToString()) : BsonValue.Null;
+                    autoId == BsonType.Int64 ? new BsonValue(col.Sequence) : BsonValue.Null;
             }
 
             // test if _id is a valid type

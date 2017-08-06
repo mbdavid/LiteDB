@@ -14,7 +14,7 @@ namespace LiteDB.Tests
 
         public TempFile(string ext = "db", bool checkIntegrity = true)
         {
-            this.Filename = Path.GetFullPath(string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
+            this.Filename = Path.Combine(@"C:\Temp\", string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
             _checkIntegrity = checkIntegrity;
         }
 

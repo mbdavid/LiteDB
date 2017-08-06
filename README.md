@@ -13,27 +13,27 @@
 - Upsert doest work with PK AutoId _id [OK]  ** BREAK API**
 - Auto-id in T class ** BREAK API**
 - ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
-- To think: AutoId must keep "true" by default?
-- Remove index definitions on mapper (fluent/attribute)
-- Support for query using Linq-to-Object when no index or any NotImplemented linq visitor
+- Remove index definitions on mapper (fluent/attribute) [OK]
 
 *** Cache results in query before send to client: READ LOCK control ***
 
 - Review if it's better use None/Flush/WriteThrough
 - Multikey search without index
-- Review Database.Insert / Upsert
 - Implement Lock in StreamDiskService using a second MemoryStream _locker
 
 CONCURRENCY
-- Work LiteDB.Perf
+- Work LiteDB.Perf [OK]
 
+ 
 QUERY
 
 - Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
 - QueryAnd must return Left only with FilterDocument on right
 - RunMode change to bool NeedFilter?
-- Skip/Limit implemented inside foreach (no more on Linq)
 - Remove QueryBetween = convert into QueryAnd(Query.GTE, Query.LTE)
+- FindIndex using QueryContext
+- Query.UseIndex and UseFilter
+- Query.ToString => (I(_id > 1) AND F(_id < 10))
 
 FIND MODIFY
 db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
