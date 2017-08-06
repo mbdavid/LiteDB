@@ -4,18 +4,16 @@ namespace LiteDB.Shell.Commands
 {
     internal class CollectionDrop : BaseCollection, ICommand
     {
-        public DataAccess Access { get { return DataAccess.Write; } }
-
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "drop$");
         }
 
-        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
+        public void Execute(StringScanner s, Env env)
         {
-            var col = this.ReadCollection(engine, s);
+            var col = this.ReadCollection(env.Engine, s);
 
-            display.WriteResult(engine.DropCollection(col));
+            env.Display.WriteResult(env.Engine.DropCollection(col));
         }
     }
 }

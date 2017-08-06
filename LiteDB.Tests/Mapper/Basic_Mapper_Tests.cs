@@ -60,12 +60,10 @@ namespace LiteDB.Tests.Mapper
         public sbyte MySByte { get; set; }
         public TimeSpan MyTimespan { get; set; }
 
-        [BsonIndex]
         public decimal MyDecimal { get; set; }
 
         public decimal? MyDecimalNullable { get; set; }
 
-        [BsonIndex(true)]
         public Uri MyUri { get; set; }
 
         // do not serialize this properties

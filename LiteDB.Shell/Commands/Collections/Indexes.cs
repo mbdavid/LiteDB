@@ -5,18 +5,16 @@ namespace LiteDB.Shell.Commands
 {
     internal class CollectionIndexes : BaseCollection, ICommand
     {
-        public DataAccess Access { get { return DataAccess.Read; } }
-
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "indexes$");
         }
 
-        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
+        public void Execute(StringScanner s, Env env)
         {
-            var col = this.ReadCollection(engine, s);
+            var col = this.ReadCollection(env.Engine, s);
 
-            display.WriteResult(new BsonArray(engine.GetIndexes(col).Select(x => new BsonDocument
+            env.Display.WriteResult(new BsonArray(env.Engine.GetIndexes(col).Select(x => new BsonDocument
             {
                 { "slot", x.Slot },
                 { "field", x.Field },

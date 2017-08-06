@@ -11,6 +11,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+    <NoWarn>1701;1702;1705;1591;0618</NoWarn>
     <AssemblyName>LiteDB.Tests</AssemblyName>
     <RootNamespace>LiteDB.Tests</RootNamespace>
   </PropertyGroup>

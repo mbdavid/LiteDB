@@ -14,7 +14,7 @@ namespace LiteDB
 
         private LazyLoad<LiteEngine> _engine = null;
         private BsonMapper _mapper = BsonMapper.Global;
-        private Logger _log = new Logger();
+        private Logger _log = null;
         private ConnectionString _connectionString = null;
 
         /// <summary>
@@ -39,19 +39,20 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        public LiteDatabase(string connectionString, BsonMapper mapper = null)
-            : this(new ConnectionString(connectionString), mapper)
+        public LiteDatabase(string connectionString, BsonMapper mapper = null, Logger log = null)
+            : this(new ConnectionString(connectionString), mapper, log)
         {
         }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
+        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null, Logger log = null)
         {
             if (connectionString == null) throw new ArgumentNullException("connectionString");
 
             _connectionString = connectionString;
+            _log = log ?? new Logger();
             _log.Level = _connectionString.Log;
 
             if (_connectionString.Upgrade)
@@ -83,6 +84,7 @@ namespace LiteDB
             if (stream == null) throw new ArgumentNullException("stream");
 
             _mapper = mapper ?? BsonMapper.Global;
+            _log = new Logger();
 
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream, disposeStream), password: password, log: _log));
         }
@@ -101,6 +103,7 @@ namespace LiteDB
             if (diskService == null) throw new ArgumentNullException("diskService");
 
             _mapper = mapper ?? BsonMapper.Global;
+            _log = log ?? new Logger();
 
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, cacheSize: cacheSize, log: _log ));
         }

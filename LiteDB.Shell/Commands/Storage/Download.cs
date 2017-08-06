@@ -4,16 +4,14 @@ namespace LiteDB.Shell.Commands
 {
     internal class FileDownload : BaseStorage, ICommand
     {
-        public DataAccess Access { get { return DataAccess.Read; } }
-
         public bool IsCommand(StringScanner s)
         {
             return this.IsFileCommand(s, "download");
         }
 
-        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
+        public void Execute(StringScanner s, Env env)
         {
-            var fs = new LiteStorage(engine);
+            var fs = new LiteStorage(env.Engine);
             var id = this.ReadId(s);
             var filename = s.Scan(@"\s*.*").Trim();
 
@@ -23,7 +21,7 @@ namespace LiteDB.Shell.Commands
             {
                 file.SaveAs(filename);
 
-                display.WriteResult(file.AsDocument);
+                env.Display.WriteResult(file.AsDocument);
             }
         }
     }

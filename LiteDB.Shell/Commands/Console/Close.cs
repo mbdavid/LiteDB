@@ -5,18 +5,16 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    internal class Open : ICommand
+    internal class Close : ICommand
     {
         public bool IsCommand(StringScanner s)
         {
-            return s.Scan(@"open\s+").Length > 0;
+            return s.Scan(@"close$").Length > 0;
         }
 
         public void Execute(StringScanner s, Env env)
         {
-            var connectionString = new ConnectionString(s.Scan(@".+").TrimToNull());
-
-            env.Open(connectionString);
+            env.Close();
         }
     }
 }

@@ -11,9 +11,7 @@ namespace LiteDB.Shell
         public static void Start(InputCommand input, Display display)
         {
             var commands = new List<ICommand>();
-            var env = new Env();
-
-            LiteEngine engine = null;
+            var env = new Env { Input = input, Display = display };
 
             // register commands
             RegisterCommands(commands);
@@ -41,26 +39,13 @@ namespace LiteDB.Shell
                     {
                         if (!command.IsCommand(s)) continue;
 
-                        // open datafile before execute
-                        if (command.Access != DataAccess.None)
-                        {
-                            engine = env.CreateEngine(command.Access);
-                        }
-
-                        command.Execute(engine, s, display, input, env);
-
-                        // close datafile to be always disconnected
-                        if (engine != null)
-                        {
-                            engine.Dispose();
-                            engine = null;
-                        }
+                        command.Execute(s, env);
 
                         found = true;
                         break;
                     }
 
-                    if (!found) throw new ShellException("Command not found");
+                    if (!found) throw new ShellException("Command " + cmd + " not found");
                 }
                 catch (Exception ex)
                 {
@@ -74,9 +59,9 @@ namespace LiteDB.Shell
         public static void RegisterCommands(List<ICommand> commands)
         {
             var type = typeof(ICommand);
-            var types = typeof(ShellProgram).GetTypeInfo().Assembly
+            var types = typeof(ShellProgram).Assembly
                 .GetTypes()
-                .Where(p => type.IsAssignableFrom(p) && p.GetTypeInfo().IsClass);
+                .Where(p => type.IsAssignableFrom(p) && p.IsClass);
 
             foreach(var cmd in types)
             {

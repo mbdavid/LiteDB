@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net451</TargetFrameworks>
+    <TargetFrameworks>net35</TargetFrameworks>
     <AssemblyName>LiteDB.Shell</AssemblyName>
     <PackageId>LiteDB.Shell</PackageId>    
     <OutputType>Exe</OutputType>
@@ -18,7 +18,7 @@
     <NoWarn>1701;1702;1705;1591</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
 

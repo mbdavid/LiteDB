@@ -16,33 +16,32 @@
 - Remove index definitions on mapper (fluent/attribute) [OK]
 - Removed QueryBetween and convert to And(GTE,LTE) [OK]
 
-*** Cache results in query before send to client: READ LOCK control ***
+- Fix shell keeping file open [OK]
 
-- Review if it's better use None/Flush/WriteThrough
-- Multikey search without index
+
+# CONCURRENCY
 - Implement Lock in StreamDiskService using a second MemoryStream _locker
-
-CONCURRENCY
 - Work LiteDB.Perf [OK]
 
  
-QUERY
+# QUERY
 
 - Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
-- QueryAnd must return Left only with FilterDocument on right
-- Query.UseIndex and UseFilter
-- Query.ToString => (I(_id > 1) AND F(_id < 10))
-- Remove QueryBetween = convert into QueryAnd(Query.GTE, Query.LTE)
+- Query.ToString => (IndexSeek(_id > 1), IndexScan(id contains "bla") AND Filter(_id < 10))
 - Count\Exists when use filter must call checkTrans
+- Review AND/OR index/filter
 
-FIND MODIFY
+# FIND MODIFY
 db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
 
 
-# PRO
+# TO THINK ABOUT 
 - In log, support for Func<> on parameter to not execute when log are not in use
     _log(QUERY, "result = {0}", () => value.ToString());
 - Why I need change tests to C:\Temp?    
+- Review if it's better use None/Flush/WriteThrough
+- Multikey search without index
+- How .net4.6 projects can get net35 version?
 
 # Tests pattern
 

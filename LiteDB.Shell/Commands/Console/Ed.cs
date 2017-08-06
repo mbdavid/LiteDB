@@ -6,21 +6,19 @@ namespace LiteDB.Shell.Commands
 {
     internal class Ed : ICommand
     {
-        public DataAccess Access { get { return DataAccess.None; } }
-
         public bool IsCommand(StringScanner s)
         {
             return s.Match(@"ed$");
         }
 
-        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
+        public void Execute(StringScanner s, Env env)
         {
             var temp = Path.GetTempPath() + "LiteDB.Shell.txt";
 
             // remove "ed" command from history
-            input.History.RemoveAt(input.History.Count - 1);
+            env.Input.History.RemoveAt(env.Input.History.Count - 1);
 
-            var last = input.History.Count > 0 ? input.History[input.History.Count - 1] : "";
+            var last = env.Input.History.Count > 0 ? env.Input.History[env.Input.History.Count - 1] : "";
 
             File.WriteAllText(temp, last.Replace("\n", Environment.NewLine));
 
@@ -30,7 +28,7 @@ namespace LiteDB.Shell.Commands
 
             if (text == last) return;
 
-            input.Queue.Enqueue(text);
+            env.Input.Queue.Enqueue(text);
         }
     }
 }

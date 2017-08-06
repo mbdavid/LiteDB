@@ -5,27 +5,25 @@ namespace LiteDB.Shell.Commands
 {
     internal class CollectionInsert : BaseCollection, ICommand
     {
-        public DataAccess Access { get { return DataAccess.Write; } }
-
         public bool IsCommand(StringScanner s)
         {
             return this.IsCollectionCommand(s, "insert");
         }
 
-        public void Execute(LiteEngine engine, StringScanner s, Display display, InputCommand input, Env env)
+        public void Execute(StringScanner s, Env env)
         {
-            var col = this.ReadCollection(engine, s);
+            var col = this.ReadCollection(env.Engine, s);
             var value = JsonSerializer.Deserialize(s.ToString());
 
             if (value.IsArray)
             {
-                display.WriteResult(engine.Insert(col, value.AsArray.RawValue.Select(x => x.AsDocument)));
+                env.Display.WriteResult(env.Engine.Insert(col, value.AsArray.RawValue.Select(x => x.AsDocument)));
             }
             else
             {
-                engine.Insert(col, new BsonDocument[] { value.AsDocument });
+                env.Engine.Insert(col, new BsonDocument[] { value.AsDocument });
 
-                display.WriteResult(value.AsDocument["_id"]);
+                env.Display.WriteResult(value.AsDocument["_id"]);
             }
         }
     }
