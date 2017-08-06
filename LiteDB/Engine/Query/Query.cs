@@ -117,7 +117,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            return Query.And(Query.GTE(field, start), Query.LTE(field, end));
+            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null);
         }
 
         /// <summary>
@@ -213,6 +213,19 @@ namespace LiteDB
         {
             if (left == null) throw new ArgumentNullException("left");
             if (right == null) throw new ArgumentNullException("right");
+
+            // test if can use QueryBetween because it's more efficient
+            if (left is QueryGreater && right is QueryLess && left.Field == right.Field)
+            {
+                var l = left as QueryGreater;
+                var r = right as QueryLess;
+
+                // checks if is [field] >= Inital && [field] <= Final
+                if (l.IsEquals && r.IsEquals)
+                {
+                    return Between(l.Field, l.Value, r.Value);
+                }
+            }
 
             return new QueryAnd(left, right);
         }

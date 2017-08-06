@@ -8,6 +8,9 @@ namespace LiteDB
         private BsonValue _value;
         private bool _equals;
 
+        public BsonValue Value { get { return _value; } }
+        public bool IsEquals { get { return _equals; } }
+
         public QueryLess(string field, BsonValue value, bool equals)
             : base(field)
         {
