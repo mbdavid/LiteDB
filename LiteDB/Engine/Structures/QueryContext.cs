@@ -75,7 +75,7 @@ namespace LiteDB
                     }
                 }
 
-                log.Write(Logger.QUERY, "read document :: _id = {0}", node.Key.RawValue);
+                log.Write(Logger.QUERY, "fetch document :: _id = {0}", node.Key.RawValue);
 
                 index--;
 

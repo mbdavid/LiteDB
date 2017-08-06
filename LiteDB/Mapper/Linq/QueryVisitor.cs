@@ -16,6 +16,7 @@ namespace LiteDB
         private BsonMapper _mapper;
         private Type _type;
         private ParameterDictionary _parameters = new ParameterDictionary();
+        private ParameterExpression _param = null;
 
         public QueryVisitor(BsonMapper mapper)
         {
@@ -26,6 +27,8 @@ namespace LiteDB
         public Query Visit(Expression<Func<T, bool>> predicate)
         {
             var lambda = predicate as LambdaExpression;
+
+            _param = lambda.Parameters[0];
 
             return this.VisitExpression(lambda.Body);
         }
@@ -181,7 +184,7 @@ namespace LiteDB
             catch(NotSupportedException)
             {
                 // when there is no linq implementation, use QueryLinq
-                return new QueryLinq<T>(expr, _mapper);
+                return new QueryLinq<T>(expr, _param, _mapper);
             }
         }
 

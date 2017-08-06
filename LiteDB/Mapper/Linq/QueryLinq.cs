@@ -15,17 +15,23 @@ namespace LiteDB
         private BsonMapper _mapper;
         private Func<T, bool> _where = null;
 
-        public QueryLinq(Expression expr, BsonMapper mapper)
+        public QueryLinq(Expression expr, ParameterExpression p, BsonMapper mapper)
             : base(null)
         {
-            var p = Expression.Parameter(typeof(T), "x");
+            var lambda = Expression.Lambda<Func<T, bool>>(expr, p);
 
-            var l = Expression.Lambda<Func<T, bool>>(expr, p);
-
-            _where = l.Compile();
+            _where = lambda.Compile();
 
             _mapper = mapper;
             _expr = expr;
+        }
+
+        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        {
+            this.UseIndex = false;
+            this.UseFilter = true;
+
+            return Query.All().Run(col, indexer);
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
@@ -39,14 +45,6 @@ namespace LiteDB
             var obj = _mapper.ToObject<T>(doc);
 
             return _where(obj);
-        }
-
-        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
-        {
-            this.UseIndex = false;
-            this.UseFilter = true;
-
-            return Query.All().Run(col, indexer);
         }
 
         public override string ToString()
