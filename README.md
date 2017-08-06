@@ -1,45 +1,39 @@
 # LiteDB v3.5
 
-This version keeps 
-
+## Changes
+- Fix simple lock control (multi-read/single write) in thread/process. Removed reserved lock state [OK]
 - Upgrade to VS2017 [OK]
-- Remove physical journal file [OK]
+- Remove physical journal file (store journal pages after file ends) [OK]
 - Remove transactions [OK] **BREAK API**
-- Remove auto-create index [OK]
-- Remove auto-id in entity level (Database) [OK] **BREAK API**
-- Fix simple Lock system (only multi-read/single write) [OK]
-- Fix debug messages in console [OK]
+- Remove auto-id register function for custom type [OK] **BREAK API**
+- Add auto-id in engine level with pre-defined commom types [OK]
+- Add collection sequence (`ulong`) to use in engine level auto-id [OK]
 - Add integrety check in TempFile for tests (before delete)
-- Fix upload from local disk [OK]
-- Add collection Sequence (ulong) to use in Engine auto-id [OK]
-- Support for many BsonTypes on missing _id (not only ObjectId) [OK]
-- Upsert doest work with PK AutoId _id [OK]  **BREAK API**
-- Removed auto-id in T class **BREAK API**
-- If you mark as AutoId attribute/fluentAPI, **ALWAYS** generate new value (will be ignored if you set before call insert)!! **BREAK API**
 - Remove index definitions on mapper (fluent/attribute) [OK] **OBSOLETE**
-- Review shell app with keeping open datafile [OK]
-- AutoId default = `true` to `_id` with `BsonType` = `ObjectId`, `Guid`, `DateTime`, `Int32` or `Int64` and false to all others
-- Work LiteDB.Perf [OK]
-    
-# Better query engine
-- Removed auto create index. If index not found do full scan search [OK]
+- Review shell app and now keeps datafile open [OK]
+- Auto-id default true to `_id` with `BsonType` = `ObjectId`, `Guid`, `DateTime`, `Int32` or `Int64`
+- LiteDB.Perf exe proejct for concurrency examples [OK]
+- Bugfix upload from local disk on storage [OK]
+- Bugfix debug messages in console on shell [OK]
+
+## Better query engine
+- Removed auto create index. If index not found do full scan search (use `EnsureIndex` on initialize database) [OK]
 - Implement FilterDocument option in all query implementations (full scan document) [OK]
-- In `Query.And` use only 1 index side with full scan on other [OK]
+- In `Query.And` use only one index side with full scan on other [OK]
 - Print query execution plan in Query.ToString() [OK]
 - Convert `Query.And` to `Query.Between` when possible [OK]
 - Add support to `Query.Between` open/close interval [OK]
 - QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
 
 
-# TODO
+## TODO
 - db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
 - Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
-- Review trans.CheckPoint();
-- Review Upsert?
+- Review trans.CheckPoint() (do just after foreach);
 
 ====================================================    
     
