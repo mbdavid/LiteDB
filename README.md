@@ -1,5 +1,8 @@
-# Version 3.5?
+# LiteDB v3.5
 
+This version keeps 
+
+- Upgrade to VS2017 [OK]
 - Remove physical journal file [OK]
 - Remove transactions [OK] **BREAK API**
 - Remove auto-create index [OK]
@@ -8,33 +11,31 @@
 - Fix debug messages in console [OK]
 - Add integrety check in TempFile for tests (before delete)
 - Fix upload from local disk [OK]
-- Add collection Sequence (ulong) [OK]
+- Add collection Sequence (ulong) to use in Engine auto-id [OK]
 - Support for many BsonTypes on missing _id (not only ObjectId) [OK]
-- Upsert doest work with PK AutoId _id [OK]  ** BREAK API**
-- Auto-id in T class ** BREAK API**
-- ** BREAK API ** - If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value!! (do not test)
-- Remove index definitions on mapper (fluent/attribute) [OK]
-- Convert Query.And in Query.Between when possible [OK]
+- Upsert doest work with PK AutoId _id [OK]  **BREAK API**
+- Removed auto-id in T class **BREAK API**
+- If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value (will be ignored if you set before call insert)!! **BREAK API**
+- Remove index definitions on mapper (fluent/attribute) [OK] **OBSOLETE**
 - Add support to Between open/close interval [OK]
-- Add "ExplainPlain" in Query.ToString()
 - Fix shell keeping file open [OK]
 - Work LiteDB.Perf [OK]
+    
+# Better query engine
+- Removed auto create index [OK]
+- Implement FilterDocument option in all query implementations (full scan document) [OK]
+- Print query execution plan in Query.ToString() [OK]
+- Convert Query.And to Query.Between when possible [OK]
+- QueryLinq for non resolved Linq visitor [OK]
+    = col.Find(x => x.Id < 10 && x.Name.Length > 10)
 
+    
 
-# CONCURRENCY
-
- 
-# QUERY
-
+# TODO
+- db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
 - Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
-
-# FIND MODIFY
-db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
-
-
-# TO THINK ABOUT 
 - Review if it's better use None/Flush/WriteThrough
 
 # Tests pattern
