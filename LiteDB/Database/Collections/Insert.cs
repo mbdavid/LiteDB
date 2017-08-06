@@ -58,19 +58,24 @@ namespace LiteDB
             foreach (var document in documents)
             {
                 var doc = _mapper.ToDocument(document);
+                var setId = false;
+                var id = doc["_id"];
 
-                if (_autoId == BsonType.ObjectId ||
-                    _autoId == BsonType.Guid ||
-                    _autoId == BsonType.DateTime ||
-                    _autoId == BsonType.Int32 ||
-                    _autoId == BsonType.Int64)
+                // check if exists _autoId and current id is "empty"
+                if ((_autoId == BsonType.ObjectId && (id.IsNull || id.AsObjectId == ObjectId.Empty)) ||
+                    (_autoId == BsonType.Guid && id.AsGuid == Guid.Empty) ||
+                    (_autoId == BsonType.DateTime && id.AsDateTime == DateTime.MinValue) ||
+                    (_autoId == BsonType.Int32 && id.AsInt32 == 0) ||
+                    (_autoId == BsonType.Int64 && id.AsInt64 == 0))
                 {
+                    // in this cases, remove _id and set new value after
                     doc.Remove("_id");
+                    setId = true;
                 }
 
                 yield return doc;
 
-                if (_autoId != BsonType.Null && _id != null)
+                if (setId && _id != null)
                 {
                     _id.Setter(document, doc["_id"].RawValue);
                 }

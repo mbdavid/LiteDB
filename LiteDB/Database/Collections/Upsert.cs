@@ -12,12 +12,18 @@ namespace LiteDB
         public bool Upsert(T document)
         {
             if (document == null) throw new ArgumentNullException("document");
-            if (_autoId != BsonType.Null) throw new LiteException("Upsert works only when _id is not AutoId");
 
-            // get BsonDocument from object
-            var doc = _mapper.ToDocument(document);
+            return this.Upsert(new T[] { document }) == 1;
+        }
 
-            return _engine.Value.Upsert(_name, doc);
+        /// <summary>
+        /// Insert or Update all documents
+        /// </summary>
+        public int Upsert(IEnumerable<T> documents)
+        {
+            if (documents == null) throw new ArgumentNullException("document");
+
+            return _engine.Value.Upsert(_name, this.GetBsonDocs(documents), _autoId);
         }
 
         /// <summary>
@@ -35,17 +41,6 @@ namespace LiteDB
             doc["_id"] = id;
 
             return _engine.Value.Upsert(_name, doc);
-        }
-
-        /// <summary>
-        /// Insert or Update all documents
-        /// </summary>
-        public int Upsert(IEnumerable<T> documents)
-        {
-            if (documents == null) throw new ArgumentNullException("document");
-            if (_autoId != BsonType.Null) throw new LiteException("Upsert works only when _id is not AutoId");
-
-            return _engine.Value.Upsert(_name, documents.Select(doc => _mapper.ToDocument(doc)));
         }
     }
 }

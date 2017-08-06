@@ -15,20 +15,20 @@ This version keeps
 - Support for many BsonTypes on missing _id (not only ObjectId) [OK]
 - Upsert doest work with PK AutoId _id [OK]  **BREAK API**
 - Removed auto-id in T class **BREAK API**
-- If you mark as AutoId attribute/fluentAPI, ALWAYS generate new value (will be ignored if you set before call insert)!! **BREAK API**
+- If you mark as AutoId attribute/fluentAPI, **ALWAYS** generate new value (will be ignored if you set before call insert)!! **BREAK API**
 - Remove index definitions on mapper (fluent/attribute) [OK] **OBSOLETE**
-- Add support to Between open/close interval [OK]
-- Fix shell keeping file open [OK]
+- Review shell app with keeping open datafile [OK]
+- AutoId default = `true` to `_id` with `BsonType` = `ObjectId`, `Guid`, `DateTime`, `Int32` or `Int64` and false to all others
 - Work LiteDB.Perf [OK]
-- AutoId default to ObjectId, Guid, DateTime, Int32 and Int64 _id
     
 # Better query engine
-- Removed auto create index [OK]
+- Removed auto create index. If index not found do full scan search [OK]
 - Implement FilterDocument option in all query implementations (full scan document) [OK]
+- In `Query.And` use only 1 index side with full scan on other [OK]
 - Print query execution plan in Query.ToString() [OK]
-- Convert Query.And to Query.Between when possible [OK]
-- QueryLinq for non resolved Linq visitor [OK]
-    = col.Find(x => x.Id < 10 && x.Name.Length > 10)
+- Convert `Query.And` to `Query.Between` when possible [OK]
+- Add support to `Query.Between` open/close interval [OK]
+- QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
 
 
 # TODO
@@ -39,6 +39,7 @@ This version keeps
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint();
+- Review Upsert?
 
 ====================================================    
     

@@ -98,6 +98,14 @@ namespace LiteDB
                     autoId == BsonType.Int32 ? new BsonValue((Int32)col.Sequence) :
                     autoId == BsonType.Int64 ? new BsonValue(col.Sequence) : BsonValue.Null;
             }
+            // create bubble in sequence number if _id is bigger than current sequence
+            else if(autoId == BsonType.Int32 || autoId == BsonType.Int64)
+            {
+                var current = id.AsInt64;
+
+                // if current id is bigger than sequence, jump sequence to this number. Other was, do not increse sequnce
+                col.Sequence = current >= col.Sequence ? current : col.Sequence - 1;
+            }
 
             // test if _id is a valid type
             if (id.IsNull || id.IsMinValue || id.IsMaxValue)

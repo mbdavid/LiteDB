@@ -44,9 +44,10 @@ namespace LiteDB
                     _autoId =
                         _id.DataType == typeof(ObjectId) ? BsonType.ObjectId :
                         _id.DataType == typeof(Guid) ? BsonType.Guid :
+                        _id.DataType == typeof(DateTime) ? BsonType.DateTime :
                         _id.DataType == typeof(Int32) ? BsonType.Int32 :
                         _id.DataType == typeof(Int64) ? BsonType.Int64 :
-                        _id.DataType == typeof(String) ? BsonType.String : BsonType.Null;
+                        BsonType.Null;
                 }
             }
 
