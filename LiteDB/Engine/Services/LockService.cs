@@ -146,6 +146,8 @@ namespace LiteDB
             // if disk header are in recovery mode, throw exception to datafile re-open and recovery pages
             if (disk.Recovery)
             {
+                _log.Write(Logger.ERROR, "datafile in recovery mode, need re-open database");
+
                 throw LiteException.NeedRecover();
             }
 

@@ -59,6 +59,8 @@ namespace LiteDB
             // if is read only, journal must be disabled
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
+            _log.Write(Logger.DISK, "open datafile '{0}'", Path.GetFileName(_filename));
+
             // open/create file using read only/exclusive options
             _stream = this.CreateFileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
@@ -261,7 +263,7 @@ namespace LiteDB
             var position = state == LockState.Read ? _lockReadRand.Next(LOCK_INITIAL_POSITION, LOCK_INITIAL_POSITION + LOCK_WRITE_LENGTH) : LOCK_INITIAL_POSITION;
             var length = state == LockState.Read ? 1 : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2}) in thread #{3}", state.ToString().ToLower(), position, length, Thread.CurrentThread.ManagedThreadId);
+            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
 
             _stream.TryLock(position, length, timeout);
 
@@ -283,7 +285,7 @@ namespace LiteDB
 
             var length = state == LockState.Read ? LOCK_READ_LENGTH : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2}) in thread #{3}", state.ToString().ToLower(), position, length, Thread.CurrentThread.ManagedThreadId);
+            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
 
             _stream.TryUnlock(position, length);
 #endif

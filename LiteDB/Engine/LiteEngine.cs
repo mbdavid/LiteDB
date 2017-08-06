@@ -105,17 +105,15 @@ namespace LiteDB
                 // initialize datafile (create) and set log instance
                 _disk.Initialize(_log, password);
 
-                // read header page as buffer
+                // lock disk (read mode) before read header
+                var position = _disk.Lock(LockState.Read, _timeout);
+
                 var buffer = _disk.ReadPage(0);
 
-                // read header page
-                var header = BasePage.ReadPage(buffer) as HeaderPage;
+                _disk.Unlock(LockState.Read, position);
 
-                if(header == null)
-                {
-                    // why ?!?!?!?!?!
-                    Console.WriteLine(buffer[0]);
-                }
+                // create header instance from array bytes
+                var header = BasePage.ReadPage(buffer) as HeaderPage;
 
                 // hash password with sha1 or keep as empty byte[20]
                 var sha1 = password == null ? new byte[20] : AesEncryption.HashSHA1(password);

@@ -55,7 +55,7 @@ namespace LiteDB
             // mark header as dirty
             _pager.SetDirty(header);
 
-            _log.Write(Logger.DISK, "start persist to disk operations - changeID: {0}", header.ChangeID);
+            _log.Write(Logger.DISK, "begin disk operations - changeID: {0}", header.ChangeID);
 
             // write journal file in desc order to header be last page in disk
             _disk.WriteJournal(_cache.GetDirtyPages()
@@ -100,6 +100,8 @@ namespace LiteDB
         /// </summary>
         public void Recovery(uint lastPageID)
         {
+            _log.Write(Logger.RECOVERY, "initializing recovery mode");
+
             using (_locker.Write())
             {
                 // read all journal pages
