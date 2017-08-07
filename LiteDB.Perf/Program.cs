@@ -13,22 +13,11 @@ namespace LiteDB.Perf
     {
         static string filename = "file_demo.db";
         static Logger log = new Logger(Logger.NONE, (s) => Console.WriteLine("#" + Thread.CurrentThread.ManagedThreadId.ToString("00") + " " + s));
-        static int TASKS = 200;
+        static int TASKS = 300;
 
         static void Main(string[] args)
         {
             // log.Level = Logger.DISK | Logger.LOCK;
-
-            //using (var d = new LiteEngine(@"c:\temp\app.db"))
-            //{
-            //    var l = new List<BsonDocument>();
-            //    for(var i = 1; i <= 100000; i++)
-            //    {
-            //        l.Add(new BsonDocument { ["a"] = i, ["b"] = i, ["c"] = i, ["d"] = Guid.NewGuid().ToString() });
-            //    }
-            //    d.InsertBulk("col1", l, 5000, BsonType.Int32);
-            //
-            //}
 
             ExecuteTest("Process", TestProcess);
             ExecuteTest("Thread", TestThread);

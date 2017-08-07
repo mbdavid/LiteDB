@@ -17,10 +17,10 @@
 - Bugfix debug messages in console on shell [OK]
 
 ## Better query engine
-- Removed auto create index. If index not found do full scan search (use `EnsureIndex` on initialize database) [OK]
+- Remove auto create index on query execution. If the index is not found do full scan search (use `EnsureIndex` on initialize database) [OK]
 - Implement FilterDocument option in all query implementations (full scan document) [OK]
 - In `Query.And` use only one index side with full scan on other [OK]
-- Print query execution plan in Query.ToString() [OK]
+- Print query execution plan in Query.ToString() [OK] `(Seek([Age] > 10) and Scan([Name] startsWith "John"))`
 - Convert `Query.And` to `Query.Between` when possible [OK]
 - Add support to `Query.Between` open/close interval [OK]
 - QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
