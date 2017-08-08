@@ -11,18 +11,22 @@ namespace LiteDB
     {
         private int _bufferSize;
         private int _skip;
+        private int _initialSkip;
         private int _limit;
         private Query _query;
+        private int _counter;
 
+        public int Skip { get { return _skip; } }
         public IEnumerator<IndexNode> Nodes { get; set; }
         public bool HasMore { get; private set; }
 
         public QueryContext(Query query, int skip, int limit, int bufferSize)
         {
             _query = query;
-            _skip = skip;
+            _skip = _initialSkip = skip;
             _limit = limit;
             _bufferSize = bufferSize;
+            _counter = 0;
 
             this.HasMore = true;
             this.Nodes = null;
@@ -82,8 +86,20 @@ namespace LiteDB
 
                 index--;
 
+                // increment counter document
+                _counter++;
+
+                // avoid lock again just to check limit
+                if (_limit == 0)
+                {
+                    this.HasMore = false;
+                }
+
                 yield return doc;
             }
+
+            // for next run, must skip counter because do continue after last
+            _skip = _counter + _initialSkip;
         }
 
         public IEnumerable<BsonValue> GetIndexKeys(TransactionService trans, Logger log)

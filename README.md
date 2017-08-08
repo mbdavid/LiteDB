@@ -27,14 +27,14 @@
 
 
 ## TODO
-- db.Update(Query query, Action<BsonDocument> update, int skip = 0, int limit = int.MaxValue)
-- Visitor must return Query with QueryLinq when not possible convert Expression to predefined Query
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint() (do just after foreach);
-
+- Index options again?
+- Remove Find bufferSize and use CacheBuffer size only (will change according document size)
+    
 ====================================================    
     
 
@@ -46,10 +46,10 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 / NETStandard 1.4 in a single DLL (less than 200kb)
+- 100% C# code for .NET 3.5 / NETStandard 1.3 in a single DLL (less than 200kb)
 - Support for Portable UWP/PCL (thanks to @negue and @szurgot)
 - Thread safe and process safe
-- ACID transactions
+- ACID in document level
 - Data recovery after write failure (journal mode)
 - Datafile encryption using DES (AES) cryptography
 - Map your POCO classes to `BsonDocument` using attributes or fluent mapper API
@@ -62,9 +62,11 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
-## New in 3.1
-- New `LiteRepository` class to simple repository pattern data access [see here](https://github.com/mbdavid/LiteDB/wiki/LiteRepository)
-- Collection names could be `null` and will be resolved by `BsonMapper.ResolveCollectionName` user function (default:  `typeof(T).Name`)
+## New in 3.5
+- Fix concurrency problems
+- Remove transaction
+- Support for full scan search and LINQ
+(see "How upgrade to 3.5")
 
 ## Try online
 

@@ -9,7 +9,7 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 100)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 5)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
@@ -29,7 +29,7 @@ namespace LiteDB
                     // get nodes from query executor to get all IndexNodes
                     context.Nodes = query.Run(col, _indexer).GetEnumerator();
 
-                    _log.Write(Logger.QUERY, "executing query in '{0}' :: {1}", collection, query);
+                    _log.Write(Logger.QUERY, "fetching query in '{0}' skip {1} :: {2}", collection, context.Skip, query);
 
                     // fill buffer with documents 
                     docs.AddRange(context.GetDocuments(_trans, _data, _log));
@@ -47,6 +47,16 @@ namespace LiteDB
                     // lock read mode
                     using (_locker.Read())
                     {
+                        // run query again skiping already returned documents
+                        // it's important because collection could be changed between on lock and other
+                        var col = this.GetCollectionPage(collection, false);
+
+                        if (col == null) yield break;
+
+                        context.Nodes = query.Run(col, _indexer).GetEnumerator();
+
+                        _log.Write(Logger.QUERY, "fetching query in '{0}' skip {1} :: {2}", collection, context.Skip, query);
+
                         docs.AddRange(context.GetDocuments(_trans, _data, _log));
                     }
 
@@ -82,7 +92,7 @@ namespace LiteDB
                     // FindIndex must run as Index seek (not by full scan)
                     if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
 
-                    _log.Write(Logger.QUERY, "executing query in '{0}' :: {1}", collection, query);
+                    _log.Write(Logger.QUERY, "fetching index keys in '{0}' skip {1} :: {2}", collection, context.Skip, query);
 
                     // fill buffer with index keys
                     keys.AddRange(context.GetIndexKeys(_trans, _log));
@@ -100,6 +110,18 @@ namespace LiteDB
                     // lock read mode
                     using (_locker.Read())
                     {
+                        // run query again skiping already returned documents
+                        // it's important because collection could be changed between on lock and other
+                        var col = this.GetCollectionPage(collection, false);
+
+                        if (col == null) yield break;
+
+                        context.Nodes = query.Run(col, _indexer).GetEnumerator();
+
+                        if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
+
+                        _log.Write(Logger.QUERY, "fetching index keys in '{0}' skip {1} :: {2}", collection, context.Skip, query);
+
                         keys.AddRange(context.GetIndexKeys(_trans, _log));
                     }
 
