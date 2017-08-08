@@ -11,7 +11,7 @@ namespace LiteDB.Perf
 {
     class Program
     {
-        static string filename = "file_demo.db";
+        static string filename = Path.Combine(Path.GetTempPath(), "file_demo.db");
         static Logger log = new Logger(Logger.NONE, (s) => Console.WriteLine("#" + Thread.CurrentThread.ManagedThreadId.ToString("00") + " " + s));
         static int TASKS = 300;
 
