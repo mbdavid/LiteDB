@@ -172,7 +172,7 @@ namespace LiteDB
                     dict[member.FieldName] = member.Serialize(value, this);
                 }
                 else
-                {
+                {   
                     dict[member.FieldName] = this.Serialize(member.DataType, value, depth);
                 }
             }

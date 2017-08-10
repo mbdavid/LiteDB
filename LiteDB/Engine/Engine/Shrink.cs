@@ -29,10 +29,8 @@ namespace LiteDB
                         engine.EnsureIndex(collectionName, index.Field, index.Unique);
                     }
 
-                    // now copy documents 
-                    var docs = this.Find(collectionName, Query.All());
-
-                    engine.InsertBulk(collectionName, docs);
+                    // copy all docs
+                    engine.Insert(collectionName, this.Find(collectionName, Query.All()));
                 }
 
                 // copy user version
@@ -57,10 +55,10 @@ namespace LiteDB
 
                 // initialize all services again (crypto can be changed)
                 this.InitializeServices();
-                
-                // return how many bytes are reduced
-                return originalSize - temp.FileLength;
             }
+
+            // return how many bytes are reduced
+            return originalSize - temp.FileLength;
         }
     }
 }

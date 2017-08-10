@@ -149,13 +149,6 @@ namespace LiteDB
         {
         }
 
-        /// <summary>
-        /// No flush implemented
-        /// </summary>
-        public void Flush()
-        {
-        }
-
         #endregion
 
     }

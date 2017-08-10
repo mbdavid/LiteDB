@@ -208,10 +208,6 @@ namespace LiteDB
                 _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
             }
 
-#if !NET35
-            _journal.Flush(true);
-#endif
-
             // journal file will be unlocked only in ClearJournal
         }
 
@@ -269,16 +265,6 @@ namespace LiteDB
 
             // unlock journal file
             _journal.TryUnlock(0, 1);
-        }
-
-        /// <summary>
-        /// Ensures all pages from the OS cache are persisted on medium
-        /// </summary>
-        public void Flush()
-        {
-#if !NET35
-            _stream.Flush(true);
-#endif
         }
 
         /// <summary>
