@@ -81,6 +81,31 @@ namespace LiteDB
             return string.Format("{0}\\{1:00000}", id, index);
         }
 
+        #region Dispose
+
+        private bool _disposed = false;
+
+        ~LiteFileStream()
+        {
+            Dispose(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (!_disposed)
+            {
+                if (this.CanWrite)
+                {
+                    this.Flush();
+                }
+                _disposed = true;
+            }
+        }
+
+        #endregion
+
         #region Not supported operations
 
         public override long Seek(long offset, SeekOrigin origin)

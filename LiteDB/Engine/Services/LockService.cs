@@ -235,7 +235,13 @@ namespace LiteDB
             _thread.TryEnterWriteLock(_timeout);
 
             // and release when dispose
-            return () => _thread.ExitWriteLock();
+            return () =>
+                {
+                    if (_thread.IsWriteLockHeld)
+                    {
+                        _thread.ExitWriteLock();
+                    }
+                };
         }
 
         #endregion

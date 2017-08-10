@@ -9,13 +9,16 @@ using System.Text;
 
 namespace LiteDB.Tests
 {
+    using System.Reflection;
+
     [TestClass]
     public class LocalFileTest
     {
         [TestMethod]
         public void LocalFile_Test()
         {
-            var pdb = "LiteDB.pdb";
+            var directory = Directory.GetCurrentDirectory();
+            var pdb = Path.Combine(directory, "LiteDB.pdb");
             var len = new FileInfo(pdb).Length; // get original file length
 
             using (var file = new TempFile())
