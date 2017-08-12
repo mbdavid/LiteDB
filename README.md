@@ -27,6 +27,12 @@
 
 
 ## TODO
+- Add back shell commands to Engine (only database commands)
+- Implement Parent in BsonValue (how/when set?)
+- BUG: Review MultiKey index
+- To next version: MultiKey must be identified on Index to solve this (and must be defined by user)
+- Remove return Duplicate values in MultiKey indexes
+
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
 - Review if it's better use None/Flush/WriteThrough

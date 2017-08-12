@@ -10,15 +10,16 @@ namespace LiteDB
     internal class QueryContext : IDisposable
     {
         private int _bufferSize;
+        private int _counter;
         private int _skip;
         private int _initialSkip;
         private int _limit;
         private Query _query;
-        private int _counter;
 
         public int Skip { get { return _skip; } }
         public IEnumerator<IndexNode> Nodes { get; set; }
         public bool HasMore { get; private set; }
+        public int Total { get { return _counter; } }
 
         public QueryContext(Query query, int skip, int limit, int bufferSize)
         {
@@ -62,7 +63,7 @@ namespace LiteDB
                 // get current node
                 var node = this.Nodes.Current;
 
-                // encapsulate read operation inside a try/catch (yield do not support try/catch)
+                // read document from data block
                 var buffer = data.Read(node.DataBlock);
                 var doc = BsonSerializer.Deserialize(buffer).AsDocument;
 
@@ -82,7 +83,7 @@ namespace LiteDB
                     }
                 }
 
-                log.Write(Logger.QUERY, "fetch document :: _id = {0}", node.Key.RawValue);
+                log.Write(Logger.QUERY, "fetch document #{0}", node.Position);
 
                 index--;
 
@@ -113,11 +114,12 @@ namespace LiteDB
                 // read next node
                 this.HasMore = this.Nodes.MoveNext();
 
-                // if finish, exit loop
-                if (this.HasMore == false) yield break;
-
+                // skip N nodes 
                 if (--_skip >= 0) continue;
 
+                if (this.HasMore == false) yield break;
+
+                // and limit in N max 
                 if (--_limit <= -1)
                 {
                     this.HasMore = false;
@@ -126,8 +128,19 @@ namespace LiteDB
 
                 log.Write(Logger.QUERY, "fetch index key :: key = {0}", this.Nodes.Current.Key);
 
+                index--;
+
+                // increment counter key
+                _counter++;
+
+                // avoid lock again just to check limit
+                if (_limit == 0) this.HasMore = false;
+
                 yield return this.Nodes.Current.Key;
             }
+
+            // for next run, must skip counter because do continue after last
+            _skip = _counter + _initialSkip;
         }
 
         public void Dispose()

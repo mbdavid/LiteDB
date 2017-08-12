@@ -518,6 +518,83 @@ namespace LiteDB
             return new BsonValue(value);
         }
 
+        // +
+        public static BsonValue operator +(BsonValue left, BsonValue right)
+        {
+            if (!left.IsNumber || !right.IsNumber) return BsonValue.Null;
+
+            if (left.IsInt32 && right.IsInt32) return left.AsInt32 + right.AsInt32;
+            if (left.IsInt64 && right.IsInt64) return left.AsInt64 + right.AsInt64;
+            if (left.IsDouble && right.IsDouble) return left.AsDouble + right.AsDouble;
+            if (left.IsDecimal && right.IsDecimal) return left.AsDecimal + right.AsDecimal;
+
+            var result = left.AsDecimal + right.AsDecimal;
+            var type = (BsonType)Math.Max((int)left.Type, (int)right.Type);
+
+            return
+                type == BsonType.Int64 ? new BsonValue((Int64)result) :
+                type == BsonType.Double ? new BsonValue((Double)result) :
+                new BsonValue(result);
+        }
+
+        // -
+        public static BsonValue operator -(BsonValue left, BsonValue right)
+        {
+            if (!left.IsNumber || !right.IsNumber) return BsonValue.Null;
+
+            if (left.IsInt32 && right.IsInt32) return left.AsInt32 - right.AsInt32;
+            if (left.IsInt64 && right.IsInt64) return left.AsInt64 - right.AsInt64;
+            if (left.IsDouble && right.IsDouble) return left.AsDouble - right.AsDouble;
+            if (left.IsDecimal && right.IsDecimal) return left.AsDecimal - right.AsDecimal;
+
+            var result = left.AsDecimal - right.AsDecimal;
+            var type = (BsonType)Math.Max((int)left.Type, (int)right.Type);
+
+            return
+                type == BsonType.Int64 ? new BsonValue((Int64)result) :
+                type == BsonType.Double ? new BsonValue((Double)result) :
+                new BsonValue(result);
+        }
+
+        // *
+        public static BsonValue operator *(BsonValue left, BsonValue right)
+        {
+            if (!left.IsNumber || !right.IsNumber) return BsonValue.Null;
+
+            if (left.IsInt32 && right.IsInt32) return left.AsInt32 * right.AsInt32;
+            if (left.IsInt64 && right.IsInt64) return left.AsInt64 * right.AsInt64;
+            if (left.IsDouble && right.IsDouble) return left.AsDouble * right.AsDouble;
+            if (left.IsDecimal && right.IsDecimal) return left.AsDecimal * right.AsDecimal;
+
+            var result = left.AsDecimal * right.AsDecimal;
+            var type = (BsonType)Math.Max((int)left.Type, (int)right.Type);
+
+            return
+                type == BsonType.Int64 ? new BsonValue((Int64)result) :
+                type == BsonType.Double ? new BsonValue((Double)result) :
+                new BsonValue(result);
+        }
+
+        // /
+        public static BsonValue operator /(BsonValue left, BsonValue right)
+        {
+            if (!left.IsNumber || !right.IsNumber) return BsonValue.Null;
+
+
+            if (left.IsInt32 && right.IsInt32) return left.AsInt32 / right.AsInt32;
+            if (left.IsInt64 && right.IsInt64) return left.AsInt64 / right.AsInt64;
+            if (left.IsDouble && right.IsDouble) return left.AsDouble / right.AsDouble;
+            if (left.IsDecimal && right.IsDecimal) return left.AsDecimal / right.AsDecimal;
+
+            var result = left.AsDecimal / right.AsDecimal;
+            var type = (BsonType)Math.Max((int)left.Type, (int)right.Type);
+
+            return
+                type == BsonType.Int64 ? new BsonValue((Int64)result) :
+                type == BsonType.Double ? new BsonValue((Double)result) :
+                new BsonValue(result);
+        }
+
         public override string ToString()
         {
             return JsonSerializer.Serialize(this);

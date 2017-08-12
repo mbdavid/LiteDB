@@ -63,6 +63,8 @@ namespace LiteDB
                     // return documents from buffer
                     foreach (var doc in docs) yield return doc;
                 }
+
+                _log.Write(Logger.QUERY, "{0} documents fetch in '{1}' collection", context.Total, collection);
             }
         }
 
@@ -128,6 +130,8 @@ namespace LiteDB
                     // return keys from buffer
                     foreach (var key in keys) yield return key;
                 }
+
+                _log.Write(Logger.QUERY, "{0} nodes fetch in '{1}' collection", context.Total, collection);
             }
         }
 

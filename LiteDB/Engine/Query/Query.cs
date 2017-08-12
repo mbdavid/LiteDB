@@ -261,7 +261,9 @@ namespace LiteDB
                 this.UseIndex = true;
 
                 // execute query to get all IndexNodes
-                return this.ExecuteIndex(indexer, index);
+                // do DistinctBy datablock to not duplicate same document in results
+                return this.ExecuteIndex(indexer, index)
+                    .DistinctBy(x => x.DataBlock, null);
             }
         }
 
