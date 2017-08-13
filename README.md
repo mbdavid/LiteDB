@@ -24,22 +24,18 @@
 - Convert `Query.And` to `Query.Between` when possible [OK]
 - Add support to `Query.Between` open/close interval [OK]
 - QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
+- BUG: Remove return Duplicate values in MultiKey indexes [OK]
 
 
 ## TODO
 - Add back shell commands to Engine (only database commands)
 - Implement Parent in BsonValue (how/when set?)
-- BUG: Review MultiKey index
-- To next version: MultiKey must be identified on Index to solve this (and must be defined by user)
-- Remove return Duplicate values in MultiKey indexes
 
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint() (do just after foreach);
-- Index options again?
-- Remove Find bufferSize and use CacheBuffer size only (will change according document size)
     
 ====================================================    
     
