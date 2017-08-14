@@ -104,6 +104,11 @@ namespace LiteDB
 
             using (_locker.Write())
             {
+                // double check in header need recovery (could be already recover from another thread)
+                var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
+
+                if (header.Recovery == false) return;
+
                 // read all journal pages
                 foreach (var buffer in _disk.ReadJournal(lastPageID))
                 {
