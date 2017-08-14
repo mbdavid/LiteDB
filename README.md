@@ -36,7 +36,15 @@
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint() (do just after foreach);
+
+# Expression
+- Add better error messages on parser LiteExpression (expose as public)
+- Always run Run method in query (include And)
+- Index definition must contains Expression (extract from Field string)
+- In Run, change Field value for Expression value from index
+- Split Query in Query (and,or,linq), QueryFilter (equals,between,...)
     
+
 ====================================================    
     
 

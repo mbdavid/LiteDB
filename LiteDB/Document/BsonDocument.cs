@@ -44,7 +44,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if field name is a valid string: only [\w$]+(\w-$)*
+        /// Test if field name is a valid string: only [\w$]+[\w-]*
         /// </summary>
         internal static bool IsValidFieldName(string field)
         {
@@ -55,7 +55,7 @@ namespace LiteDB
             {
                 var c = field[i];
 
-                if (char.IsLetterOrDigit(c) || c == '_' || c == '$')
+                if (char.IsLetterOrDigit(c) || c == '_' || (c == '$' && i == 0))
                 {
                     continue;
                 }
