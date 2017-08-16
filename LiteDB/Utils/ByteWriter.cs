@@ -219,6 +219,7 @@ namespace LiteDB
                 case BsonType.Int32: this.Write((Int32)value.RawValue); break;
                 case BsonType.Int64: this.Write((Int64)value.RawValue); break;
                 case BsonType.Double: this.Write((Double)value.RawValue); break;
+                case BsonType.Decimal: this.Write((Decimal)value.RawValue); break;
 
                 case BsonType.String: this.Write((String)value.RawValue, length); break;
 
