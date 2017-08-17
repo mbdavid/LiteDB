@@ -31,5 +31,15 @@ namespace LiteDB.Tests
 
             Assert.AreEqual(c1, jc1);
         }
+
+        [TestMethod]
+        public void ObjectId_equals_null_does_not_throw()
+        {
+            var oid0 = default(ObjectId);
+            var oid1 = ObjectId.NewObjectId();
+
+            Assert.IsFalse(oid1.Equals(null));
+            Assert.IsFalse(oid1.Equals(oid0));
+        }
     }
 }
