@@ -52,11 +52,6 @@ namespace LiteDB
         void ClearJournal();
 
         /// <summary>
-        /// Ensures all pages from the OS cache are persisted on medium
-        /// </summary>
-        void Flush();
-
-        /// <summary>
         /// Lock datafile returning lock position
         /// </summary>
         void Lock(LockState state, TimeSpan timeout);

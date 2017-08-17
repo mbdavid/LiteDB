@@ -80,9 +80,6 @@ namespace LiteDB
                 // mark all dirty pages in clean pages (all are persisted in disk and are valid pages)
                 _cache.MarkDirtyAsClean();
 
-                // ensure all pages from OS cache has been persisted on medium
-                _disk.Flush();
-
                 // discard journal file
                 _disk.ClearJournal();
             }

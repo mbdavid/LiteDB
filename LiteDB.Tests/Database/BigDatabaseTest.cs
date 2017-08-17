@@ -39,7 +39,7 @@ namespace LiteDB.Tests
                 {
                     var data = db.GetCollection<EndpointMatch>("Matches");
 
-                    data.InsertBulk(GetDocs(1, 400000, false));
+                    data.Insert(GetDocs(1, 400000, false));
 
                     GC.Collect();
                 }

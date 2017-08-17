@@ -140,6 +140,15 @@ namespace LiteDB
         /// <summary>
         /// Delete entity based on _id key
         /// </summary>
+        /// <param name="id">
+        /// The id.
+        /// </param>
+        /// <param name="collectionName">
+        /// The collection Name.
+        /// </param>
+        /// <returns>
+        /// returns false if not found document
+        /// </returns>
         public bool Delete<T>(BsonValue id, string collectionName = null)
         {
             return _db.GetCollection<T>(collectionName).Delete(id);
@@ -148,6 +157,15 @@ namespace LiteDB
         /// <summary>
         /// Delete entity based on Query
         /// </summary>
+        /// <param name="query">
+        /// The query.
+        /// </param>
+        /// <param name="collectionName">
+        /// The collection Name.
+        /// </param>
+        /// <returns>
+        /// The <see cref="int"/>.
+        /// </returns>
         public int Delete<T>(Query query, string collectionName = null)
         {
             return _db.GetCollection<T>(collectionName).Delete(query);

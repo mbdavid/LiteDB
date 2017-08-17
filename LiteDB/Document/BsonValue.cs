@@ -377,7 +377,7 @@ namespace LiteDB
         // Int64
         public static implicit operator Int64(BsonValue value)
         {
-            return (Int64)value.RawValue;
+            return value.AsInt64;
         }
 
         // Int64

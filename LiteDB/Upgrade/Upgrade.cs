@@ -37,13 +37,16 @@ namespace LiteDB
                                 engine.EnsureIndex(col, field, true);
                             }
 
-                            // now bulk copy documents
+                            // now copy 5000 documents per batch
                             var docs = reader.GetDocuments(col);
 
-                            engine.InsertBulk(col, docs, batchSize);
+                            foreach (var batch in docs.Batch(batchSize))
+                            {
+                                engine.Insert(col, batch);
 
-                            // just clear pages/cache
-                            engine.Rollback();
+                                // just clear pages/cache
+                                engine.Rollback();
+                            }
                         }
                     }
 
