@@ -30,6 +30,7 @@ namespace LiteDB
         public const int DATABASE_WRONG_PASSWORD = 123;
         public const int READ_ONLY_DATABASE = 125;
         public const int TRANSACTION_NOT_SUPPORTED = 126;
+        public const int ID_KEY_NOT_FOUND = 127;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
