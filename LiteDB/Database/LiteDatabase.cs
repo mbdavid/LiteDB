@@ -173,7 +173,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
 
-            return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
+            return _engine.Value.CollectionExists(name);
         }
 
         /// <summary>
