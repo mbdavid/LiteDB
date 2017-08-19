@@ -29,7 +29,7 @@ namespace LiteDB
 
                 var nodes = query.Run(col, _indexer);
 
-                _log.Write(Logger.QUERY, "delete query {0}", query);
+                _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
 
                 var count = 0;
 

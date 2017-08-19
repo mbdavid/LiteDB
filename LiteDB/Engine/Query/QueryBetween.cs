@@ -80,9 +80,9 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("{0}([{1}] between {2}{3} and {4}{5})",
+            return string.Format("{0}({1} between {2}{3} and {4}{5})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "IndexSeek" : "",
-                this.Expression?.Expr ?? this.Field,
+                this.Expression?.ToString() ?? this.Field,
                 _startEquals ? "[" : "(",
                 _start, 
                 _end,

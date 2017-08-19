@@ -13,15 +13,14 @@ namespace LiteDB
     /// </summary>
     internal partial class LiteExpression
     {
-        private Func<BsonDocument, IEnumerable<BsonValue>> _expr;
-
-        public string Expr { get; private set; }
+        private Func<BsonDocument, IEnumerable<BsonValue>> _func;
+        private string _expr;
 
         public LiteExpression(string expression)
         {
-            this.Expr = expression;
+            _expr = expression;
 
-            _expr = Compile(expression);
+            _func = Compile(expression);
         }
 
         /// <summary>
@@ -30,7 +29,7 @@ namespace LiteDB
         public IEnumerable<BsonValue> Execute(BsonDocument doc, bool includeNullIfEmpty = true)
         {
             var index = 0;
-            var values = _expr(doc);
+            var values = _func(doc);
 
             foreach (var value in values)
             {
@@ -250,7 +249,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.Expr;
+            return _expr;
         }
     }
 }

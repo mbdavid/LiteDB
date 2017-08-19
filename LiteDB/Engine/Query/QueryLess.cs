@@ -41,9 +41,9 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("{0}([{1}] <{2} {3})",
+            return string.Format("{0}({1} <{2} {3})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Expression?.Expr ?? this.Field,
+                this.Expression?.ToString() ?? this.Field,
                 _equals ? "=" : "",
                 _value);
         }

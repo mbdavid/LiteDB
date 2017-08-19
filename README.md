@@ -27,20 +27,10 @@
 - BUG: Remove return Duplicate values in MultiKey indexes [OK]
 
 
-## TODO
-- Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
-
 # Index Expression
-- Always run Run method in query (include And)
-- Index definition must contains Expression (extract from Field string)
-- In Run, change Field value for Expression value from index
-- Split Query in Query (and,or,linq), QueryFilter (equals,between,...)
-- Shell "db.col1.indexes" add Expression
-- IndexInfo
-- Index could not have count? Now, with multikey, is not same as collection (can be more, never less)
+- Support shell query with expressions: db.col1.find COUNT($.b[*]) = 2
 
 # Find with Include
-- Use new fixed path
 - Review Linq visitor to correct this
 - Review GetPath() - do right?
 
@@ -57,6 +47,7 @@
 - Review trans.CheckPoint() (do just after foreach);
 
 # Add only in 4.1
+- Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
 - FindAndModify
 - Batch operation
     

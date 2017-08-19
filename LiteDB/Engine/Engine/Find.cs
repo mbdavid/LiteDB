@@ -29,7 +29,7 @@ namespace LiteDB
                     // get nodes from query executor to get all IndexNodes
                     context.Nodes = query.Run(col, _indexer).GetEnumerator();
 
-                    _log.Write(Logger.QUERY, "fetching query in '{0}' skip {1} :: {2}", collection, context.Skip, query);
+                    _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
 
                     // fill buffer with documents 
                     docs.AddRange(context.GetDocuments(_trans, _data, _log));
@@ -55,7 +55,7 @@ namespace LiteDB
 
                         context.Nodes = query.Run(col, _indexer).GetEnumerator();
 
-                        _log.Write(Logger.QUERY, "fetching query in '{0}' skip {1} :: {2}", collection, context.Skip, query);
+                        _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
 
                         docs.AddRange(context.GetDocuments(_trans, _data, _log));
                     }
@@ -63,8 +63,6 @@ namespace LiteDB
                     // return documents from buffer
                     foreach (var doc in docs) yield return doc;
                 }
-
-                _log.Write(Logger.QUERY, "{0} documents fetch in '{1}' collection", context.Total, collection);
             }
         }
 
@@ -94,7 +92,7 @@ namespace LiteDB
                     // FindIndex must run as Index seek (not by full scan)
                     if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
 
-                    _log.Write(Logger.QUERY, "fetching index keys in '{0}' skip {1} :: {2}", collection, context.Skip, query);
+                    _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
 
                     // fill buffer with index keys
                     keys.AddRange(context.GetIndexKeys(_trans, _log));
@@ -122,7 +120,7 @@ namespace LiteDB
 
                         if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
 
-                        _log.Write(Logger.QUERY, "fetching index keys in '{0}' skip {1} :: {2}", collection, context.Skip, query);
+                        _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
 
                         keys.AddRange(context.GetIndexKeys(_trans, _log));
                     }
@@ -130,8 +128,6 @@ namespace LiteDB
                     // return keys from buffer
                     foreach (var key in keys) yield return key;
                 }
-
-                _log.Write(Logger.QUERY, "{0} nodes fetch in '{1}' collection", context.Total, collection);
             }
         }
 

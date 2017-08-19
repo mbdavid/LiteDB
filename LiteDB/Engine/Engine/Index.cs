@@ -19,29 +19,12 @@ namespace LiteDB
                 // check if index already exists
                 var current = col.GetIndex(field);
 
-                // if already exists, checks if changed unique
+                // if already exists, just exit
                 if (current != null)
                 {
-                    // change from unique to non-unique (just update)
-                    if (current.Unique == true && unique == false)
-                    {
-                        current.Unique = false;
-                        _pager.SetDirty(col);
-                        return true;
-                    }
-                    // change from non-unique to unique (need be re-created)
-                    else if (current.Unique == false && unique == true)
-                    {
-                        _indexer.DropIndex(current);
-                        current.Clear();
-                    }
-                    else
-                    {
-                        return false; // no changes
-                    }
+                    // do not test any difference between current index and new defition
+                    return false;
                 }
-
-                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", collection, field, unique);
 
                 // create index head
                 var index = _indexer.CreateIndex(col);
@@ -49,6 +32,8 @@ namespace LiteDB
                 index.Field = field;
                 index.Expression = expression ?? "$." + field;
                 index.Unique = unique;
+
+                _log.Write(Logger.COMMAND, "create index on '{0}' :: {1} unique: {2}", collection, index.Expression, unique);
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, _indexer))

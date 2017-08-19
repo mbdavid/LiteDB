@@ -37,7 +37,7 @@ namespace LiteDB
             return string.Format("{0}({1}[{2}])",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Scan" : "",
                 _func.ToString(),
-                this.Expression?.Expr ?? this.Field);
+                this.Expression?.ToString() ?? this.Field);
         }
     }
 }

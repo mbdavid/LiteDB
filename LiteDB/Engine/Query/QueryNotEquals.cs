@@ -32,9 +32,9 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("{0}([{1}] != {2})",
+            return string.Format("{0}({1} != {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Scan" : "",
-                this.Expression?.Expr ?? this.Field,
+                this.Expression?.ToString() ?? this.Field,
                 _value);
         }
     }
