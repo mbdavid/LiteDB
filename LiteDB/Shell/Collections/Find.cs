@@ -15,7 +15,8 @@ namespace LiteDB.Shell
             var col = this.ReadCollection(engine, s);
             var query = this.ReadQuery(s);
             var skipLimit = this.ReadSkipLimit(s);
-            var docs = engine.Find(col, query, skipLimit.Key, skipLimit.Value);
+            var includes = this.ReadIncludes(s);
+            var docs = engine.Find(col, query, includes, skipLimit.Key, skipLimit.Value);
 
             foreach(var doc in docs)
             {

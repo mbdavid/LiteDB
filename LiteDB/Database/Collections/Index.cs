@@ -17,7 +17,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
             if (field == "_id") return false; // always exists
 
-            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw LiteException.InvalidFormat("IndexField", field);
+            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw LiteException.InvalidFormat(field);
 
             return _engine.Value.EnsureIndex(_name, field, unique);
         }

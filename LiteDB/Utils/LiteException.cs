@@ -169,9 +169,14 @@ namespace LiteDB
             return new LiteException(NEED_RECOVER, "Your datafile did not terminate properly during the writing process. Reopen the file");
         }
 
-        internal static LiteException InvalidFormat(string field, string format)
+        internal static LiteException InvalidFormat(string field)
         {
             return new LiteException(INVALID_FORMAT, "Invalid format: {0}", field);
+        }
+
+        internal static LiteException InvalidPath(string path)
+        {
+            return new LiteException(INVALID_FORMAT, "Invalid path format: {0}", path);
         }
 
         internal static LiteException DocumentMaxDepth(int depth, Type type)

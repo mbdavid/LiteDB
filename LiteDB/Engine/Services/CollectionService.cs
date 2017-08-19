@@ -46,7 +46,7 @@ namespace LiteDB
         public CollectionPage Add(string name)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
-            if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat("Collection", name);
+            if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
             _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);
 

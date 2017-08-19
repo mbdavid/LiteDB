@@ -252,6 +252,17 @@ namespace LiteDB
             ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
         }
 
+        public void CopyTo(BsonDocument doc)
+        {
+            var myDict = this.RawValue;
+            var otherDict = doc.RawValue;
+
+            foreach(var key in myDict.Keys)
+            {
+                otherDict[key] = myDict[key];
+            }
+        }
+
         public bool Remove(KeyValuePair<string, BsonValue> item)
         {
             return this.RawValue.Remove(item.Key);

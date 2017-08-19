@@ -246,7 +246,7 @@ namespace LiteDB
                 }
 
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(memberInfo.Name, name);
+                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(memberInfo.Name);
 
                 // create getter/setter function
                 var getter = Reflection.CreateGenericGetter(type, memberInfo);

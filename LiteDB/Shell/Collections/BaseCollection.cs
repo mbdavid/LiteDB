@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
@@ -49,9 +50,32 @@ namespace LiteDB.Shell
             return new KeyValuePair<int, int>(skip, limit);
         }
 
+        public string[] ReadIncludes(StringScanner s)
+        {
+            if (s.Scan(@"\s*include[s]?\s+").Length > 0)
+            {
+                var includes = JsonSerializer.Deserialize(s);
+
+                if (includes.IsString)
+                {
+                    return new string[] { includes.AsString };
+                }
+                else if(includes.IsArray)
+                {
+                    return includes.AsArray.Select(x => x.AsString).ToArray();
+                }
+                else
+                {
+                    throw LiteException.InvalidFormat(includes.ToString());
+                }
+            }
+
+            return new string[0];
+        }
+
         public Query ReadQuery(StringScanner s)
         {
-            if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d"))
+            if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d") || s.Match(@"include[s]?\s+[\""\[]"))
             {
                 return Query.All();
             }
