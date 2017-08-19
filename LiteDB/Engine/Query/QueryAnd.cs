@@ -16,33 +16,40 @@ namespace LiteDB
             _right = right;
         }
 
-        internal override void ForceUseFilter()
+        internal override bool UseFilter
         {
-            _left.ForceUseFilter();
-            _right.ForceUseFilter();
+            get
+            {
+                // return true if any site use filter
+                return _left.UseFilter || _right.UseFilter;
+            }
+            set
+            {
+                // set both sides with value
+                _left.UseFilter = value;
+                _right.UseFilter = value;
+            }
         }
 
         internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
+            // execute both run operation but not fetch any node yet
             var left = _left.Run(col, indexer);
+            var right = _right.Run(col, indexer);
 
-            // if left use index, force right use full scan
+            // if left use index, force right use full scan (left has preference to use index)
             if (_left.UseIndex)
             {
                 this.UseIndex = true;
-                this.UseFilter = true;
-                _right.ForceUseFilter();
+                _right.UseFilter = true;
                 return left;
             }
-
-            var right = _right.Run(col, indexer);
 
             // if right use index (and left no), force left use filter
             if (_right.UseIndex)
             {
                 this.UseIndex = true;
-                this.UseFilter = true;
-                _left.ForceUseFilter();
+                _left.UseFilter = true;
                 return right;
             }
 

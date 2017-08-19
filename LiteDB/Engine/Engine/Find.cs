@@ -9,7 +9,7 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 5)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 200)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
@@ -71,7 +71,7 @@ namespace LiteDB
         /// <summary>
         /// Find index keys from collection. Do not retorn document, only key value
         /// </summary>
-        public IEnumerable<BsonValue> FindIndex(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 1000)
+        public IEnumerable<BsonValue> FindIndex(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 2000)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");

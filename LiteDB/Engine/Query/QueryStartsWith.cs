@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -43,16 +44,16 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            var value = doc.Get(this.Field);
-
-            return value.IsString ? value.AsString.StartsWith(_value.AsString) : false;
+            return this.Expression.Execute(doc, false)
+                .Where(x => x.IsString)
+                .Any(x => x.AsString.StartsWith(_value));
         }
 
         public override string ToString()
         {
             return string.Format("{0}([{1}] startsWith {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Field,
+                this.Expression?.Expr ?? this.Field,
                 _value);
         }
     }

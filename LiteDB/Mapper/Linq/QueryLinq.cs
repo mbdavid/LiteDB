@@ -18,7 +18,7 @@ namespace LiteDB
         public QueryLinq(Expression expr, ParameterExpression p, BsonMapper mapper)
             : base(null)
         {
-            var lambda = Expression.Lambda<Func<T, bool>>(expr, p);
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<T, bool>>(expr, p);
 
             _where = lambda.Compile();
 

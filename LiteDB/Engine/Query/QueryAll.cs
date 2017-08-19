@@ -30,7 +30,7 @@ namespace LiteDB
         {
             return string.Format("{0}([{1}])",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Scan" : "",
-                this.Field);
+                this.Expression.Expr);
         }
     }
 }

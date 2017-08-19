@@ -36,18 +36,15 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            return doc.Get(this.Field).CompareTo(_value) == 0;
-            //return doc
-            //    .GetValues(this.Field)
-            //    .Select(x => x.CompareTo(_value) == 0)
-            //    .Any();
+            return this.Expression.Execute(doc, true)
+                .Any(x => x.CompareTo(_value) == 0);
         }
 
         public override string ToString()
         {
             return string.Format("{0}([{1}] = {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Field,
+                this.Expression?.Expr ?? this.Field,
                 _value);
         }
     }

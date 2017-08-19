@@ -26,16 +26,16 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            var value = doc.Get(this.Field);
-
-            return value.IsString ? value.AsString.Contains(_value.AsString) : false;
+            return this.Expression.Execute(doc, false)
+                .Where(x => x.IsString)
+                .Any(x => x.AsString.Contains(_value));
         }
 
         public override string ToString()
         {
             return string.Format("{0}([{1}] contains {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Scan" : "",
-                this.Field,
+                this.Expression?.Expr ?? this.Field,
                 _value);
         }
     }

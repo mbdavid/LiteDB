@@ -12,14 +12,13 @@ namespace LiteDB
     {
         public string Field { get; private set; }
 
-        internal bool UseIndex { get; set; }
-        internal bool UseFilter { get; set; }
+        internal LiteExpression Expression { get; set; }
+        internal virtual bool UseIndex { get; set; }
+        internal virtual bool UseFilter { get; set; }
 
         internal Query(string field)
         {
             this.Field = field;
-            this.UseIndex = false;
-            this.UseFilter = false;
         }
 
         #region Static Methods
@@ -199,7 +198,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns document that exists in BOTH queries results (Intersect).
+        /// Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan)
         /// </summary>
         public static Query And(Query left, Query right)
         {
@@ -234,14 +233,6 @@ namespace LiteDB
         #region Executing Query
 
         /// <summary>
-        /// Used in AND query to descend to all queris to be filtered left other side are indexed
-        /// </summary>
-        internal virtual void ForceUseFilter()
-        {
-            this.UseFilter = true;
-        }
-
-        /// <summary>
         /// Find witch index will be used and run Execute method
         /// </summary>
         internal virtual IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
@@ -249,16 +240,25 @@ namespace LiteDB
             // get index for this query
             var index = col.GetIndex(this.Field);
 
+            // if index not found, must use Filter (full scan)
             if (index == null)
             {
                 this.UseFilter = true;
 
-                // if there is no index, returns all index nodes - will be used Full Scan
+                // create expression based on Field
+                var expr = this.Field.StartsWith("$") ? this.Field : "$." + this.Field;
+
+                this.Expression = new LiteExpression(expr);
+
+                // returns all index nodes - (will use Filter method later)
                 return indexer.FindAll(col.PK, Query.Ascending);
             }
             else
             {
                 this.UseIndex = true;
+
+                // create expression from index
+                this.Expression = new LiteExpression(index.Expression);
 
                 // execute query to get all IndexNodes
                 // do DistinctBy datablock to not duplicate same document in results

@@ -21,7 +21,8 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            return _func(doc.Get(this.Field));
+            return this.Expression.Execute(doc, true)
+                .Any(x => _func(x));
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
@@ -35,8 +36,8 @@ namespace LiteDB
         {
             return string.Format("{0}({1}[{2}])",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Scan" : "",
-                _func.ToString(), 
-                this.Field);
+                _func.ToString(),
+                this.Expression?.Expr ?? this.Field);
         }
     }
 }

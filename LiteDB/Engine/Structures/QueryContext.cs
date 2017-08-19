@@ -83,8 +83,6 @@ namespace LiteDB
                     }
                 }
 
-                log.Write(Logger.QUERY, "fetch document #{0}", node.Position);
-
                 index--;
 
                 // increment counter document
@@ -125,8 +123,6 @@ namespace LiteDB
                     this.HasMore = false;
                     yield break;
                 }
-
-                log.Write(Logger.QUERY, "fetch index key :: key = {0}", this.Nodes.Current.Key);
 
                 index--;
 

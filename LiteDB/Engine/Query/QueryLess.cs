@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -34,14 +35,15 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            return doc.Get(this.Field).CompareTo(_value) <= (_equals ? 0 : -1);
+            return this.Expression.Execute(doc, true)
+                .Any(x => x.CompareTo(_value) <= (_equals ? 0 : -1));
         }
 
         public override string ToString()
         {
             return string.Format("{0}([{1}] <{2} {3})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Field,
+                this.Expression?.Expr ?? this.Field,
                 _equals ? "=" : "",
                 _value);
         }

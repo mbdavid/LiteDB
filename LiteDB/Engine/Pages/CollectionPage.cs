@@ -90,7 +90,7 @@ namespace LiteDB
                 if (eq > 0)
                 {
                     index.Field = field.Substring(0, eq);
-                    index.Expression = field.Substring(eq);
+                    index.Expression = field.Substring(eq + 1);
                 }
                 else
                 {
@@ -117,7 +117,16 @@ namespace LiteDB
 
             foreach (var index in this.Indexes)
             {
-                writer.Write(index.Field + "=" + index.Expression);
+                // write Field+Expression only if index are used
+                if(index.Field.Length > 0)
+                {
+                    writer.Write(index.Field + "=" + index.Expression);
+                }
+                else
+                {
+                    writer.Write("");
+                }
+
                 writer.Write(index.Unique);
                 writer.Write(index.HeadNode);
                 writer.Write(index.TailNode);

@@ -27,13 +27,14 @@ namespace LiteDB
 
         internal override bool FilterDocument(BsonDocument doc)
         {
-            var val = doc.Get(this.Field);
-
-            foreach (var value in _values.Distinct())
+            foreach(var val in this.Expression.Execute(doc, true))
             {
-                var diff = val.CompareTo(value);
+                foreach (var value in _values.Distinct())
+                {
+                    var diff = val.CompareTo(value);
 
-                if (diff == 0) return true;
+                    if (diff == 0) return true;
+                }
             }
 
             return false;
@@ -43,7 +44,7 @@ namespace LiteDB
         {
             return string.Format("{0}([{1}] in {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Field,
+                this.Expression?.Expr ?? this.Field,
                 _values);
         }
     }

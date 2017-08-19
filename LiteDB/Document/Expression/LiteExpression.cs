@@ -15,8 +15,12 @@ namespace LiteDB
     {
         private Func<BsonDocument, IEnumerable<BsonValue>> _expr;
 
+        public string Expr { get; private set; }
+
         public LiteExpression(string expression)
         {
+            this.Expr = expression;
+
             _expr = Compile(expression);
         }
 
@@ -243,5 +247,10 @@ namespace LiteDB
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return this.Expr;
+        }
     }
 }

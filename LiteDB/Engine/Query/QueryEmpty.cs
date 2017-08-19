@@ -12,7 +12,7 @@ namespace LiteDB
         /// Initializes a new instance of the <see cref="QueryEmpty" /> class.
         /// </summary>
         public QueryEmpty()
-            : base("")
+            : base(null)
         {
         }
 

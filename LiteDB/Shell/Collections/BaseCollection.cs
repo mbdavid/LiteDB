@@ -7,7 +7,10 @@ namespace LiteDB.Shell
 {
     internal class BaseCollection
     {
-        public Regex FieldPattern = new Regex(@"[\w$\.-]+\s*", RegexOptions.Compiled);
+        /// <summary>
+        /// Field (or path) regex pattern
+        /// </summary>
+        public Regex FieldPattern = new Regex(@"[\w$\[\]\*\.-]+\s*", RegexOptions.Compiled);
 
         /// <summary>
         /// Read collection name from db.(collection).(command)
