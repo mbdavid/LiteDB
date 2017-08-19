@@ -158,6 +158,7 @@ namespace LiteDB
                 case BsonType.Int32: return this.ReadInt32();
                 case BsonType.Int64: return this.ReadInt64();
                 case BsonType.Double: return this.ReadDouble();
+                case BsonType.Decimal: return this.ReadDecimal();
 
                 case BsonType.String: return this.ReadString(length);
 

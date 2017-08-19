@@ -15,7 +15,7 @@ namespace LiteDB
 
             using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return BsonValue.MinValue;
 
@@ -43,7 +43,7 @@ namespace LiteDB
 
             using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return BsonValue.MaxValue;
 
@@ -70,7 +70,7 @@ namespace LiteDB
 
             using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return 0;
 
@@ -109,7 +109,7 @@ namespace LiteDB
 
             using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return false;
 

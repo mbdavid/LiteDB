@@ -57,36 +57,31 @@ namespace LiteDB.Shell
             }
         }
 
-        public void WriteResult(BsonValue result)
+        public void WriteResult(IEnumerable<BsonValue> results)
         {
             var index = 0;
 
-            if (result.IsNull) return;
-
-            if (result.IsDocument)
+            foreach(var result in results)
             {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
-            }
-            else if (result.IsArray)
-            {
-                foreach (var doc in result.AsArray)
+                if (result.IsDocument)
                 {
+                    var doc = result.AsDocument;
+
                     this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
                     this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(doc, this.Pretty, false));
                 }
-
-                if (index == 0)
+                else if (result.IsString)
                 {
-                    this.WriteLine(ConsoleColor.DarkCyan, "no documents");
+                    this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
                 }
-            }
-            else if (result.IsString)
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
-            }
-            else
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+                else if (result.IsNumber)
+                {
+                    this.WriteLine(ConsoleColor.DarkCyan, result.RawValue.ToString());
+                }
+                else
+                {
+                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+                }
             }
         }
 

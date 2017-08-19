@@ -39,6 +39,7 @@ namespace LiteDB
         public const int PROPERTY_NOT_MAPPED = 206;
         public const int INVALID_TYPED_NAME = 207;
         public const int NEED_RECOVER = 208;
+        public const int PROPERTY_READ_WRITE = 209;
 
         #endregion
 
@@ -61,7 +62,7 @@ namespace LiteDB
             this.ErrorCode = code;
         }
 
-        #region Database Errors
+        #region Method Errors
 
         internal static LiteException NoDatabase()
         {
@@ -168,10 +169,6 @@ namespace LiteDB
             return new LiteException(NEED_RECOVER, "Your datafile did not terminate properly during the writing process. Reopen the file");
         }
 
-        #endregion
-
-        #region Document/Mapper Errors
-
         internal static LiteException InvalidFormat(string field, string format)
         {
             return new LiteException(INVALID_FORMAT, "Invalid format: {0}", field);
@@ -196,8 +193,6 @@ namespace LiteDB
         {
             return new LiteException(INVALID_DATA_TYPE, "Invalid BSON data type '{0}' on field '{1}'.", value.Type, field);
         }
-
-        public const int PROPERTY_READ_WRITE = 204;
 
         internal static LiteException PropertyReadWrite(PropertyInfo prop)
         {

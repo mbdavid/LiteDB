@@ -1,4 +1,4 @@
-# LiteDB v3.5
+# LiteDB v4
 
 ## Changes
 - Fix simple lock control (multi-read/single write) in thread/process. Removed reserved lock state [OK]
@@ -31,18 +31,35 @@
 - Add back shell commands to Engine (only database commands)
 - Implement Parent in BsonValue (how/when set?)
 
+# Index Expression
+- Always run Run method in query (include And)
+- Index definition must contains Expression (extract from Field string)
+- In Run, change Field value for Expression value from index
+- Split Query in Query (and,or,linq), QueryFilter (equals,between,...)
+- Shell "db.col1.indexes" add Expression
+- IndexInfo
+- Index could not have count? Now, with multikey, is not same as collection (can be more, never less)
+
+# Find with Include
+- Use new fixed path
+- Review Linq visitor to correct this
+- Review GetPath() - do right?
+
+# Finish review
+- It's time to update to v4?
+- Add better error messages on parser LiteExpression (expose as public)
+- Shell commands exceptions
+- Find old version about database usage to add in .Info()
+- Review all LiteException messages/codes
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint() (do just after foreach);
 
-# Expression
-- Add better error messages on parser LiteExpression (expose as public)
-- Always run Run method in query (include And)
-- Index definition must contains Expression (extract from Field string)
-- In Run, change Field value for Expression value from index
-- Split Query in Query (and,or,linq), QueryFilter (equals,between,...)
+# Add only in 4.1
+- FindAndModify
+- Batch operation
     
 
 ====================================================    
