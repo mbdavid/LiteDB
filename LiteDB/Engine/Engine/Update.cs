@@ -79,8 +79,10 @@ namespace LiteDB
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
             {
-                // using Distinct/ToArray because I will do many queries
-                var keys = doc.GetValues(index.Field, true, index.Unique).ToArray();
+                var expr = new LiteExpression(index.Expression);
+
+                // getting all keys do check
+                var keys = expr.Execute(doc).ToArray();
 
                 // get a list of to delete nodes (using ToArray to resolve now)
                 var toDelete = allNodes

@@ -15,6 +15,7 @@ namespace LiteDB.Shell
             var col = this.ReadCollection(engine, s);
             var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field name");
             var unique = false;
+            string expression = null;
 
             s.Scan(@"\s*");
 
@@ -28,11 +29,14 @@ namespace LiteDB.Shell
                 }
                 else if (options.IsDocument) // support old version index definitions
                 {
-                    unique = options.AsDocument["unique"].AsBoolean;
+                    var doc = options.AsDocument;
+
+                    unique = doc.ContainsKey("unique") ? doc["unique"].AsBoolean : false;
+                    expression = doc.ContainsKey("expr") ? doc["expr"].AsString : null;
                 }
             }
 
-            yield return engine.EnsureIndex(col, field, unique);
+            yield return engine.EnsureIndex(col, field, unique, expression);
         }
     }
 }

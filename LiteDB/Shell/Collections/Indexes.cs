@@ -22,6 +22,7 @@ namespace LiteDB.Shell
                 {
                     { "slot", index.Slot },
                     { "field", index.Field },
+                    { "expression", index.Expression },
                     { "unique", index.Unique }
                 };
             }

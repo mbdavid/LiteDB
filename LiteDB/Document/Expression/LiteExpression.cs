@@ -68,74 +68,74 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        private static Expression ParseExpression(StringScanner s, ParameterExpression doc)
+        public static Expression ParseExpression(StringScanner s, ParameterExpression doc)
         {
-            //if(s.Match(@"\$")) // read path
-            //{
-            //    s.Scan(@"\$\.?"); // read root
-            //    var root = typeof(LiteExpression).GetTypeInfo().GetMethod("Root");
-            //    var name = Expression.Constant(s.Scan(@"[\$\-\w]+"));
-            //    var expr = Expression.Call(root, doc, name) as Expression;
+            if(s.Match(@"\$")) // read path
+            {
+                s.Scan(@"\$\.?"); // read root
+                var root = typeof(LiteExpression).GetMethod("Root");
+                var name = Expression.Constant(s.Scan(@"[\$\-\w]+"));
+                var expr = Expression.Call(root, doc, name) as Expression;
 
-            //    // parse the rest of path
-            //    while (!s.HasTerminated)
-            //    {
-            //        var result = ParsePath(s, expr);
+                // parse the rest of path
+                while (!s.HasTerminated)
+                {
+                    var result = ParsePath(s, expr);
 
-            //        if(result == null) break;
+                    if(result == null) break;
 
-            //        expr = result;
-            //    }
+                    expr = result;
+                }
 
-            //    return expr;
-            //}
-            //else if (s.Match(@"-?\d*\.\d+")) // read double
-            //{
-            //    var number = Convert.ToDouble(s.Scan(@"-?\d*\.\d+"));
-            //    var value = Expression.Constant(new BsonValue(number));
+                return expr;
+            }
+            else if (s.Match(@"-?\d*\.\d+")) // read double
+            {
+                var number = Convert.ToDouble(s.Scan(@"-?\d*\.\d+"));
+                var value = Expression.Constant(new BsonValue(number));
 
-            //    return Expression.NewArrayInit(typeof(BsonValue), value);
-            //}
-            //else if (s.Match(@"-?\d+")) // read int
-            //{
-            //    var number = Convert.ToInt32(s.Scan(@"-?\d+"));
-            //    var value = Expression.Constant(new BsonValue(number));
+                return Expression.NewArrayInit(typeof(BsonValue), value);
+            }
+            else if (s.Match(@"-?\d+")) // read int
+            {
+                var number = Convert.ToInt32(s.Scan(@"-?\d+"));
+                var value = Expression.Constant(new BsonValue(number));
 
-            //    return Expression.NewArrayInit(typeof(BsonValue), value);
-            //}
-            //else if (s.Match(@"(true|false)")) // read bool
-            //{
-            //    var boolean = Convert.ToBoolean(s.Scan(@"(true|false)"));
-            //    var value = Expression.Constant(new BsonValue(boolean));
+                return Expression.NewArrayInit(typeof(BsonValue), value);
+            }
+            else if (s.Match(@"(true|false)")) // read bool
+            {
+                var boolean = Convert.ToBoolean(s.Scan(@"(true|false)"));
+                var value = Expression.Constant(new BsonValue(boolean));
 
-            //    return Expression.NewArrayInit(typeof(BsonValue), value);
-            //}
-            //else if (s.Match(@"'")) // read string
-            //{
-            //    var str = s.Scan(@"'([\s\S]*)?'", 1);
-            //    var value = Expression.Constant(new BsonValue(str));
+                return Expression.NewArrayInit(typeof(BsonValue), value);
+            }
+            else if (s.Match(@"'")) // read string
+            {
+                var str = s.Scan(@"'([\s\S]*)?'", 1);
+                var value = Expression.Constant(new BsonValue(str));
 
-            //    return Expression.NewArrayInit(typeof(BsonValue), value);
-            //}
-            //else if (s.Match(@"\w+")) // read function
-            //{
-            //    // get static method from this class
-            //    var method = typeof(LiteExpression).GetMethod(s.Scan(@"\w+").ToUpper());
-            //    var parameters = new List<Expression>();
+                return Expression.NewArrayInit(typeof(BsonValue), value);
+            }
+            else if (s.Match(@"\w+")) // read function
+            {
+                // get static method from this class
+                var method = typeof(LiteExpression).GetMethod(s.Scan(@"\w+").ToUpper());
+                var parameters = new List<Expression>();
 
-            //    s.Scan(@"\s*\(");
-                
-            //    while(!s.HasTerminated && s.Scan(@"\s*\)\s*").Length == 0)
-            //    {
-            //        var parameter = ParseExpression(s, doc);
+                s.Scan(@"\s*\(");
+              
+                while(!s.HasTerminated && s.Scan(@"\s*\)\s*").Length == 0)
+                {
+                    var parameter = ParseExpression(s, doc);
 
-            //        parameters.Add(parameter);
+                    parameters.Add(parameter);
 
-            //        s.Scan(@"\s*,\s*");
-            //    }
+                    s.Scan(@"\s*,\s*");
+                }
 
-            //    return Expression.Call(method, parameters.ToArray());
-            //}
+                return Expression.Call(method, parameters.ToArray());
+            }
 
             throw new InvalidOperationException("Invalid bson expression: " + s.ToString());
         }
@@ -173,7 +173,7 @@ namespace LiteDB
             }
         }
 
-        #region Path function
+        #region Path methods
 
         /// <summary>
         /// Returns value from root document. Returns same document if name are empty

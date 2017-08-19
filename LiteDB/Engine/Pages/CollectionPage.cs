@@ -15,7 +15,7 @@ namespace LiteDB
         /// </summary>
         public const ushort MAX_COLLECTIONS_SIZE = 3000;
 
-        public static Regex NamePattern = new Regex(@"^[\w-]{1,60}$", RegexOptions.Compiled);
+        public static Regex NamePattern = new Regex(@"^[\w-]{1,36}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Page type = Collection
@@ -83,14 +83,28 @@ namespace LiteDB
 
             foreach (var index in this.Indexes)
             {
-                index.Field = reader.ReadString();
+                var field = reader.ReadString();
+                var eq = field.IndexOf('=');
+
+                // Use same string to avoid change file defition
+                if (eq > 0)
+                {
+                    index.Field = field.Substring(0, eq);
+                    index.Expression = field.Substring(eq);
+                }
+                else
+                {
+                    index.Field = field;
+                    index.Expression = "$." + field;
+                }
+
                 index.Unique = reader.ReadBoolean();
                 index.HeadNode = reader.ReadPageAddress();
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
             }
 
-            // position on page-footer (avoid file-change in v3)
+            // position on page-footer (avoid file structure change)
             reader.Position = BasePage.PAGE_SIZE - 8;
             this.Sequence = reader.ReadInt64();
         }
@@ -103,14 +117,14 @@ namespace LiteDB
 
             foreach (var index in this.Indexes)
             {
-                writer.Write(index.Field);
+                writer.Write(index.Field + "=" + index.Expression);
                 writer.Write(index.Unique);
                 writer.Write(index.HeadNode);
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);
             }
 
-            // position on page-footer (avoid file-change in v3)
+            // position on page-footer (avoid file structure change)
             writer.Position = BasePage.PAGE_SIZE - 8;
             writer.Write(this.Sequence);
         }

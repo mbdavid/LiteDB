@@ -9,7 +9,7 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string collection, string field, bool unique = false)
+        public bool EnsureIndex(string collection, string field, bool unique = false, string expression = null)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
@@ -47,6 +47,7 @@ namespace LiteDB
                 var index = _indexer.CreateIndex(col);
 
                 index.Field = field;
+                index.Expression = expression ?? "$." + field;
                 index.Unique = unique;
 
                 // read all objects (read from PK index)
@@ -55,9 +56,10 @@ namespace LiteDB
                     // read binary and deserialize document
                     var buffer = _data.Read(pkNode.DataBlock);
                     var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                    var expr = new LiteExpression(index.Expression);
 
-                    // get distinct values from field in document
-                    var keys = doc.GetValues(field, true, unique);
+                    // get values from expression in document
+                    var keys = expr.Execute(doc, true);
 
                     // adding index node for each value
                     foreach (var key in keys)

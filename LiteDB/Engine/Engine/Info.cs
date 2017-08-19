@@ -31,8 +31,8 @@ namespace LiteDB
                             {
                                 {  "slot", i.Slot },
                                 {  "field", i.Field },
+                                {  "expression", i.Expression },
                                 {  "unique", i.Unique }
-                                //{  "expression", i.Expression },
                             }))
                         }
                     };

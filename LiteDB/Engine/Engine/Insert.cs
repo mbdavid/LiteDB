@@ -132,7 +132,8 @@ namespace LiteDB
             {
                 // for each index, get all keys (support now multi-key) - gets distinct values only
                 // if index are unique, get single key only
-                var keys = doc.GetValues(index.Field, index.Unique);
+                var expr = new LiteExpression(index.Expression);
+                var keys = expr.Execute(doc, true);
 
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)

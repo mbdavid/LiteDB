@@ -28,8 +28,7 @@
 
 
 ## TODO
-- Add back shell commands to Engine (only database commands)
-- Implement Parent in BsonValue (how/when set?)
+- Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
 
 # Index Expression
 - Always run Run method in query (include And)

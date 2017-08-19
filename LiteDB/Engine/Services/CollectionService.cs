@@ -74,6 +74,7 @@ namespace LiteDB
             var pk = _indexer.CreateIndex(col);
 
             pk.Field = "_id";
+            pk.Expression = "$._id";
             pk.Unique = true;
 
             return col;
