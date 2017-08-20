@@ -26,16 +26,14 @@
 - QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
 - BUG: Remove return Duplicate values in MultiKey indexes [OK]
 
+# Next
 
 # Index Expression
 - Support shell query with expressions: db.col1.find COUNT($.b[*]) = 2
 
-# Find with Include
-- Review Linq visitor to correct this
-- Review GetPath() - do right?
+
 
 # Finish review
-- It's time to update to v4?
 - Add better error messages on parser LiteExpression (expose as public)
 - Shell commands exceptions
 - Find old version about database usage to add in .Info()
@@ -48,9 +46,26 @@
 
 # Add only in 4.1
 - Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
-- FindAndModify
 - Batch operation
-    
+
+# FindAndModify
+{
+    Path [must return BsonDocument or BsonArray]
+    Key [work only when path returns BsonDocument]
+    Value
+    ValueExpr
+    Remove?
+}    
+
+db.col1.findModify { 
+    "$.name": "john",
+    "$": { "name": "john" },
+    "$": { "name": { $expr: "$.OldName" } },
+    "$.Items": 123,
+    "$.Items": { $remove: true }
+    "$.Items[0]": { $remove: true }
+}
+where [query]
 
 ====================================================    
     

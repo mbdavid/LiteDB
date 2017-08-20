@@ -29,7 +29,6 @@ namespace LiteDB.Tests
             doc["Items"].AsArray.Add(true);
             doc["Items"].AsArray.Add(DateTime.Now);
 
-            doc.Set("MyObj.IsFirstId", true);
 
             return doc;
         }

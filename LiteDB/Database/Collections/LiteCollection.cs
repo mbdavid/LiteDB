@@ -9,7 +9,7 @@ namespace LiteDB
         private LazyLoad<LiteEngine> _engine;
         private BsonMapper _mapper;
         private Logger _log;
-        private List<Action<BsonDocument>> _includes;
+        private List<string> _includes;
         private QueryVisitor<T> _visitor;
         private MemberMapper _id = null;
         private BsonType _autoId = BsonType.Null;
@@ -31,7 +31,7 @@ namespace LiteDB
             _mapper = mapper;
             _log = log;
             _visitor = new QueryVisitor<T>(mapper);
-            _includes = new List<Action<BsonDocument>>();
+            _includes = new List<string>();
 
             // if strong typed collection, get _id member mapped (if exists)
             if (typeof(T) != typeof(BsonDocument))

@@ -22,7 +22,6 @@ namespace LiteDB.Tests
             doc["maxDate"] = DateTime.MaxValue;
             doc["minDate"] = DateTime.MinValue;
 
-            doc.Set("Customer.Address.Street", "Av. Caçapava, Nº 122");
 
             doc["Items"] = new BsonArray();
 

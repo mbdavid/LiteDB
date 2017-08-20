@@ -20,9 +20,7 @@ namespace LiteDB
                 // procced with all includes
                 foreach(var include in includes)
                 {
-                    if (!include.StartsWith("$")) throw LiteException.InvalidPath(include);
-
-                    var expr = new LiteExpression(include);
+                    var expr = new LiteExpression(include.StartsWith("$") ? include : "$." + include);
 
                     // get all values according JSON path
                     foreach(var value in expr.Execute(doc, false)

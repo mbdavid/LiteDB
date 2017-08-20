@@ -302,7 +302,7 @@ namespace LiteDB
         /// Support multi level dotted notation: x => x.Customer.Name
         /// Prefix is used on array expression like: x => x.Customers.Any(z => z.Name == "John") (prefix = "Customers." 
         /// </summary>
-        public string GetField(Expression expr, string prefix = "")
+        public string GetField(Expression expr, string prefix = "", bool showArrayItems = false)
         {
             var property = prefix + expr.GetPath();
             var parts = property.Split('.');
@@ -324,6 +324,11 @@ namespace LiteDB
 
                 fields[i] = prop.FieldName;
 
+                if (showArrayItems && prop.IsList)
+                {
+                    fields[i] += "[*]";
+                }
+
                 if (prop.FieldName == "_id" && isdbref)
                 {
                     isdbref = false;
@@ -335,6 +340,17 @@ namespace LiteDB
             }
 
             return string.Join(".", fields);
+        }
+
+        /// <summary>
+        /// Convert a expression into a JSON path.
+        /// x => x.Name ==> "$.Name"
+        /// x => x.Items[0].Day ==> "$.Items[0].Day"
+        /// x => x.Items[0].Day ==> "$.Items[0].Day"
+        /// </summary>
+        public string GetPath(Expression expr)
+        {
+            return "$." + this.GetField(expr, "", true);
         }
     }
 }

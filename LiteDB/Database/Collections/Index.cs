@@ -12,14 +12,12 @@ namespace LiteDB
         /// </summary>
         /// <param name="field">Document field name (case sensitive)</param>
         /// <param name="unique">If is a unique index</param>
-        public bool EnsureIndex(string field, bool unique = false)
+        /// <param name="expression">Create a custom expression function to be indexed</param>
+        public bool EnsureIndex(string field, bool unique = false, string expression = null)
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
-            if (field == "_id") return false; // always exists
 
-            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw LiteException.InvalidFormat(field);
-
-            return _engine.Value.EnsureIndex(_name, field, unique);
+            return _engine.Value.EnsureIndex(_name, field, unique, expression);
         }
 
         /// <summary>
@@ -27,11 +25,12 @@ namespace LiteDB
         /// </summary>
         /// <param name="property">Property linq expression</param>
         /// <param name="unique">Create a unique values index?</param>
-        public bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false)
+        /// <param name="expression">Create a custom expression function to be indexed</param>
+        public bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false, string expression = null)
         {
             var field = _visitor.GetField(property);
 
-            return this.EnsureIndex(field, unique);
+            return this.EnsureIndex(field, unique, expression ?? _visitor.GetPath(property));
         }
 
         /// <summary>

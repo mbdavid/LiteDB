@@ -72,70 +72,29 @@ namespace LiteDB
             return true;
         }
 
-        #region Get/Set methods
+        #region Get/GetValues methods
 
         /// <summary>
-        /// Get BsonValues from path. Support JSONPath like
+        /// Get BsonValues from path or expression. Support JSONPath like
         /// </summary>
-        public IEnumerable<BsonValue> GetValues(string path)
+        public IEnumerable<BsonValue> GetValues(string expr, bool addNullIfEmpty = false)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException("path");
-
-            var expr = path.StartsWith("$") ? path : "$." + path;
+            if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException("expr");
 
             return new LiteExpression(expr)
-                .Execute(this, false);
+                .Execute(this, addNullIfEmpty);
         }
 
         /// <summary>
-        /// Get BsonValue from path. Support JSONPath-like
+        /// Get BsonValue from string field
         /// </summary>
-        public BsonValue Get(string path)
+        public BsonValue Get(string field)
         {
-            return this.GetValues(path).FirstOrDefault() ?? BsonValue.Null;
-        }
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
 
-        /// <summary>
-        /// Set value to a path - supports dotted path like: Customer.Address.Street - Fluent API (returns same BsonDocument)
-        /// </summary>
-        [Obsolete("Must be re-implemented using new JSONPath expression")]
-        public BsonDocument Set(string path, BsonValue value)
-        {
-            // supports parent.child.name
-            var names = path.Split('.');
-
-            if (names.Length == 1)
-            {
-                this[path] = value;
-                return this;
-            }
-
-            var doc = this;
-
-            // walk on path creating object when do not exists
-            for (var i = 0; i < names.Length - 1; i++)
-            {
-                var name = names[i];
-
-                if (doc[name].IsDocument)
-                {
-                    doc = doc[name].AsDocument;
-                }
-                else if (doc[name].IsNull)
-                {
-                    var d = new BsonDocument();
-                    doc[name] = d;
-                    doc = d;
-                }
-                else
-                {
-                    return this;
-                }
-            }
-
-            doc[names.Last()] = value;
-
-            return this;
+            return new LiteExpression("$." + field)
+                .Execute(this, true)
+                .First();
         }
 
         #endregion

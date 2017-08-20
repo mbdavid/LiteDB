@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -150,6 +151,34 @@ namespace LiteDB
         {
             return new EntityBuilder<T>(this);
         }
+
+        #region Get LinqVisitor processor
+
+        /// <summary>
+        /// Returns JSON path from a strong typed document using current mapper
+        /// </summary>
+        public string GetPath<T>(Expression<Func<T, object>> property)
+        {
+            return new QueryVisitor<T>(this).GetPath(property);
+        }
+
+        /// <summary>
+        /// Returns field name from a strong typed document using current mapper
+        /// </summary>
+        public string GetField<T>(Expression<Func<T, object>> property)
+        {
+            return new QueryVisitor<T>(this).GetField(property);
+        }
+
+        /// <summary>
+        /// Get Query object from a strong typed predicate using current mapper
+        /// </summary>
+        public Query GetQuery<T>(Expression<Func<T, bool>> predicate)
+        {
+            return new QueryVisitor<T>(this).Visit(predicate);
+        }
+
+        #endregion
 
         #region Predefinded Property Resolvers
 

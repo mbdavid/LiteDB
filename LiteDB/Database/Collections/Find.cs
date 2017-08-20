@@ -16,16 +16,10 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            var docs = _engine.Value.Find(_name, query, skip, limit);
+            var docs = _engine.Value.Find(_name, query, _includes.ToArray(), skip, limit);
 
             foreach(var doc in docs)
             {
-                // executing all includes in BsonDocument
-                foreach (var action in _includes)
-                {
-                    action(doc);
-                }
-
                 // get object from BsonDocument
                 var obj = _mapper.ToObject<T>(doc);
 
