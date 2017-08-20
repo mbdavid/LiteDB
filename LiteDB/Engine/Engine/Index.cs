@@ -11,6 +11,7 @@ namespace LiteDB
         /// </summary>
         public bool EnsureIndex(string collection, string field, bool unique = false, string expression = null)
         {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexPattern.ToString(), "field");
             if (field == "_id") return false; // always exists
             if (expression != null && expression.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");

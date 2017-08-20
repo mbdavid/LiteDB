@@ -188,8 +188,6 @@ namespace LiteDB
         /// </summary>
         private T Transaction<T>(string collection, bool addIfNotExists, Func<CollectionPage, T> action)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-
             // always starts write operation locking database
             using (_locker.Write())
             {

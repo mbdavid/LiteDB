@@ -51,8 +51,6 @@ namespace LiteDB.Tests
             Assert.AreEqual(123, doc["_id"].AsInt32);
             Assert.AreEqual(o["_id"].AsInt64, doc["_id"].AsInt64);
 
-            Assert.AreEqual("Av. Caçapava, Nº 122", doc.Get("Customer.Address.Street").AsString);
-
             Assert.AreEqual(o["FirstString"].AsString, doc["FirstString"].AsString);
             Assert.AreEqual(o["Date"].AsDateTime.ToString(), doc["Date"].AsDateTime.ToString());
             Assert.AreEqual(o["CustomerId"].AsGuid, doc["CustomerId"].AsGuid);
