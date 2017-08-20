@@ -15,6 +15,7 @@
 - LiteDB.Perf exe proejct for concurrency examples [OK]
 - Bugfix upload from local disk on storage [OK]
 - Bugfix debug messages in console on shell [OK]
+- Add include in engine/document level with any level [OK]
 
 ## Better query engine
 - Remove auto create index on query execution. If the index is not found do full scan search (use `EnsureIndex` on initialize database) [OK]
@@ -25,11 +26,10 @@
 - Add support to `Query.Between` open/close interval [OK]
 - QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
 - BUG: Remove return Duplicate values in MultiKey indexes [OK]
+- Support expression on index [OK]
+- Support expression on full search [OK]
 
 # Next
-
-# Index Expression
-- Support shell query with expressions: db.col1.find COUNT($.b[*]) = 2
 
 
 
@@ -48,24 +48,16 @@
 - Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
 - Batch operation
 
-# FindAndModify
-{
-    Path [must return BsonDocument or BsonArray]
-    Key [work only when path returns BsonDocument]
-    Value
-    ValueExpr
-    Remove?
-}    
+# Document Update
 
-db.col1.findModify { 
+doc.Update({ 
     "$.name": "john",
     "$": { "name": "john" },
     "$": { "name": { $expr: "$.OldName" } },
     "$.Items": 123,
     "$.Items": { $remove: true }
     "$.Items[0]": { $remove: true }
-}
-where [query]
+})
 
 ====================================================    
     

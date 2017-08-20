@@ -57,33 +57,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Define an index based in a property on entity
-        /// </summary>
-        [Obsolete("Do not use Index mapper, use EnsureIndex on database creation")]
-        public EntityBuilder<T> Index<K>(Expression<Func<T, K>> property, bool unique = false)
-        {
-            return this;
-        }
-
-        /// <summary>
-        /// Define an index based in virtual property (getter function)
-        /// </summary>
-        [Obsolete("Do not use Index mapper, use EnsureIndex on database creation")]
-        public EntityBuilder<T> Index<K>(string indexName, Func<T, BsonValue> getter, bool unique = false)
-        {
-            return this;
-        }
-
-        /// <summary>
-        /// Define an index based in a field name on BsonDocument
-        /// </summary>
-        [Obsolete("Do not use Index mapper, use EnsureIndex on database creation")]
-        public EntityBuilder<T> Index(string field, bool unique = false)
-        {
-            return this;
-        }
-
-        /// <summary>
         /// Define a subdocument (or a list of) as a reference
         /// </summary>
         public EntityBuilder<T> DbRef<K>(Expression<Func<T, K>> property, string collection = null)
