@@ -63,6 +63,7 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual("$.current-domain", m.GetPath<User>(x => x.Domain));
             Assert.AreEqual("$.Domains[*]", m.GetPath<User>(x => x.Domains));
             Assert.AreEqual("$.Domains[*].Age", m.GetPath<User>(x => x.Domains[0].Age));
+            Assert.AreEqual("$.Domains[*].Age", m.GetPath<User>(x => x.Domains.Select(z => z.Age)));
             Assert.AreEqual("$.Domains[*].$id", m.GetPath<User>(x => x.Domains[0].DomainName));
 
             // Bson Field

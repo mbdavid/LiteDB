@@ -181,6 +181,7 @@ namespace LiteDB
         public static bool IsList(Type type)
         {
             if (type.IsArray) return true;
+            if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
 
 #if NET35
             foreach (var @interface in type.GetInterfaces())
