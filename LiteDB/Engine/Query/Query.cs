@@ -245,8 +245,9 @@ namespace LiteDB
             {
                 this.UseFilter = true;
 
-                // create expression based on Field
-                var expr = this.Field.StartsWith("$") ? this.Field : "$." + this.Field;
+                // create expression based on Field (if field contais '$' or '(' is already an expression)
+                var expr = this.Field.StartsWith("$") || this.Field.IndexOf("(") > 0 ? 
+                    this.Field : "$." + this.Field;
 
                 this.Expression = new LiteExpression(expr);
 

@@ -11,7 +11,7 @@ namespace LiteDB.Shell
         /// <summary>
         /// Field (or path) regex pattern
         /// </summary>
-        public Regex FieldPattern = new Regex(@"[\w$\[\]\*\.-]+\s*", RegexOptions.Compiled);
+        public Regex FieldPattern = new Regex(@"[\w\.-]+\s*", RegexOptions.Compiled);
 
         /// <summary>
         /// Read collection name from db.(collection).(command)
@@ -86,7 +86,7 @@ namespace LiteDB.Shell
         private Query ReadInlineQuery(StringScanner s)
         {
             var left = this.ReadOneQuery(s);
-            var oper = s.Scan(@"\s+(and|or)\s+").Trim();
+            var oper = s.Scan(@"\s+(and|or)\s+").ToLower().Trim();
 
             // there is no right side
             if (oper.Length == 0) return left;
@@ -98,8 +98,10 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field name");
-            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|in|between|contains)").ThrowIfEmpty("Invalid query operator");
+            var field = LiteExpression.Extract(s).TrimToNull() ??
+                s.Scan(this.FieldPattern).Trim();
+
+            var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)").ToLower().ThrowIfEmpty("Invalid query operator");
             var value = JsonSerializer.Deserialize(s);
 
             switch (oper)
@@ -110,7 +112,8 @@ namespace LiteDB.Shell
                 case ">=": return Query.GTE(field, value);
                 case "<": return Query.LT(field, value);
                 case "<=": return Query.LTE(field, value);
-                case "like": return Query.StartsWith(field, value);
+                case "like":
+                case "startswith": return Query.StartsWith(field, value);
                 case "in": return Query.In(field, value.AsArray);
                 case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
                 case "contains": return Query.Contains(field, value);

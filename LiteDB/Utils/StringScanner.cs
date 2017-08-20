@@ -10,7 +10,7 @@ namespace LiteDB
     public class StringScanner
     {
         public string Source { get; private set; }
-        public int Index { get; private set; }
+        public int Index { get; set; }
 
         /// <summary>
         /// Initialize scanner with a string to be parsed

@@ -69,9 +69,30 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Extract expression from a StringScanner
+        /// </summary>
+        public static string Extract(StringScanner s)
+        {
+            var start = s.Index;
+
+            try
+            {
+                var doc = Expression.Parameter(typeof(BsonDocument), "doc");
+                ParseExpression(s, doc);
+
+                return s.Source.Substring(start, s.Index - start);
+            }
+            catch (InvalidOperationException)
+            {
+                s.Index = start;
+                return "";
+            }
+        }
+
+        /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        public static Expression ParseExpression(StringScanner s, ParameterExpression doc)
+        private static Expression ParseExpression(StringScanner s, ParameterExpression doc)
         {
             if(s.Match(@"\$")) // read path
             {
