@@ -135,6 +135,32 @@ namespace LiteDB
 
         #endregion
 
+        #region Update
+
+        /// <summary>
+        /// Update document fields using update rules
+        /// </summary>
+        public void Update(params Update[] updates)
+        {
+            if (updates == null) throw new ArgumentNullException(nameof(updates));
+
+            foreach(var update in updates)
+            {
+                var path = update.Path.StartsWith("$") ? update.Path : "$." + update.Path;
+                var parent = path.Substring(0, path.LastIndexOf('.'));
+                var name = path.Substring(path.LastIndexOf('.') + 1);
+
+                foreach(var item in this.GetValues(parent, false).Where(x => x.IsDocument))
+                {
+                    var value = update.FieldValue ?? update.Expression.Execute(this, true).First();
+
+                    item.AsDocument[name] = value;
+                }
+            }
+        }
+
+        #endregion
+
         #region IDictionary
 
         public ICollection<string> Keys
