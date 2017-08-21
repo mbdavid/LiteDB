@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Expressions.ParameterExpression, LiteDB.BsonValue>;
 
 namespace LiteDB
@@ -159,6 +159,14 @@ namespace LiteDB
 
                     return Query.EQ(field, value);
                 }
+                else if (method == "Contains" && typeof(IEnumerable).IsAssignableFrom(type))
+                {
+                    var field = this.GetField(met.Object, prefix);
+                    var value = this.VisitValue(met.Arguments[0], null);
+
+                    return Query.EQ(field, value);
+                }
+
                 // Any (Enumerable): x.Customer.Any(z => z.Name.StartsWith("John"))
                 else if(method == "Any" && type == typeof(Enumerable) && paramType == ExpressionType.Parameter)
                 {
