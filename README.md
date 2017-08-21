@@ -34,6 +34,7 @@
 
 
 # Finish review
+- Add more Expression function (see RDLC functions)
 - Add better error messages on parser LiteExpression (expose as public)
 - Shell commands exceptions
 - Find old version about database usage to add in .Info()
@@ -43,13 +44,17 @@
 - Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint() (do just after foreach);
+- Query#Run right way to detect when Field are Expression? Create 2 declaration types?
+- Implement StringScanner read string '/" and ([{ bracket (LiteExpression)
+- Remove Update? Or remove from StringConnection? Create LiteDB.Upgrade.dll (to be used in shell or any app?)
 
 # Add only in 4.1
 - Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
 - Batch operation
 
-# Document Update
+# Document Update (4.1)
 
+// option 1
 doc.Update({ 
     "$.name": "john",
     "$": { "name": "john" },
@@ -57,6 +62,13 @@ doc.Update({
     "$.Items": 123,
     "$.Items": { $remove: true }
     "$.Items[0]": { $remove: true }
+})
+
+// option 2
+doc.Update({
+    "Name": "John".
+    "Age": { $expr: "COUNT($.Age)" },
+    $remove: ["$.Name, $.Books[*].Title"]
 })
 
 ====================================================    
