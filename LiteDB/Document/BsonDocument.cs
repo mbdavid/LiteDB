@@ -140,23 +140,42 @@ namespace LiteDB
         /// <summary>
         /// Update document fields using update rules
         /// </summary>
-        public void Update(params Update[] updates)
+        public bool Update(params Update[] updates)
         {
             if (updates == null) throw new ArgumentNullException(nameof(updates));
 
-            foreach(var update in updates)
+            var changed = false;
+
+            foreach (var update in updates)
             {
                 var path = update.Path.StartsWith("$") ? update.Path : "$." + update.Path;
                 var parent = path.Substring(0, path.LastIndexOf('.'));
                 var name = path.Substring(path.LastIndexOf('.') + 1);
+                var value = update.Value ?? update.Expression?.Execute(this, true).First();
 
-                foreach(var item in this.GetValues(parent, false).Where(x => x.IsDocument))
+                if (update.Action == UpdateAction.Add)
                 {
-                    var value = update.FieldValue ?? update.Expression.Execute(this, true).First();
-
-                    item.AsDocument[name] = value;
+                    foreach(var arr in this.GetValues(path, false).Where(x => x.IsArray))
+                    {
+                        arr.AsArray.Add(value);
+                        changed = true;
+                    }
+                }
+                else if (update.Action == UpdateAction.Set)
+                {
+                    foreach (var item in this.GetValues(parent, false).Where(x => x.IsDocument))
+                    {
+                        item.AsDocument[name] = value;
+                        changed = true;
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException();
                 }
             }
+
+            return changed;
         }
 
         #endregion

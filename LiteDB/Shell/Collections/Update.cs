@@ -27,22 +27,25 @@ namespace LiteDB.Shell
                 var query = Query.All();
                 var updates = new List<Update>();
 
-                while(!s.HasTerminated && !s.Match(@"where\s+"))
+                while(!s.HasTerminated)
                 {
-                    var path = LiteExpression.Extract(s);
-                    s.Scan(@"\s*=\s*");
-                    var expr = LiteExpression.Extract(s);
+                    var path = LiteExpression.Extract(s, true);
+                    var action = s.Scan(@"\s*(\+)?=\s*", 1);
+                    var expr = LiteExpression.Extract(s, false).TrimToNull();
 
-                    if(!string.IsNullOrEmpty(expr))
+                    updates.Add(new Update
                     {
-                        updates.Add(Update.Expr(path, expr));
-                    }
-                    else
-                    {
-                        updates.Add(Update.Value(path, JsonSerializer.Deserialize(s)));
-                    }
+                        Path = path,
+                        Action = action == "+" ? UpdateAction.Add : UpdateAction.Set,
+                        Value = expr == null ? JsonSerializer.Deserialize(s) : null,
+                        Expression = expr != null ? new LiteExpression(expr) : null
+                    });
 
                     s.Scan(@"\s*");
+
+                    if (s.Scan(@",\s*").Length > 0) continue;
+                    else if(s.Scan(@"where\s*").Length > 0 || s.HasTerminated) break;
+                    else throw LiteException.SyntaxError("Invalid update shell command syntax");
                 }
 
                 if(!s.HasTerminated)

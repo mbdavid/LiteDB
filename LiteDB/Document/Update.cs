@@ -31,6 +31,8 @@ using System.Threading;
 
 namespace LiteDB
 {
+    internal enum UpdateAction { Set, Add, Remove }
+
     /// <summary>
     /// Represent a single document field update
     /// </summary>
@@ -40,34 +42,56 @@ namespace LiteDB
 
         internal LiteExpression Expression { get; set; }
 
-        internal BsonValue FieldValue { get; set; }
+        internal BsonValue Value { get; set; }
 
-        internal bool Delete { get; set; }
+        internal UpdateAction Action { get; set; }
 
-        private Update()
+        internal Update()
         {
         }
 
         /// <summary>
-        /// Add/Update all fields according JSON path.
+        /// Set all fields according JSON path to specific value.
         /// </summary>
-        public static Update Value(string path, BsonValue value)
+        public static Update Set(string path, BsonValue value)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            return new Update { Path = path, FieldValue = value };
+            return new Update { Path = path, Value = value, Action = UpdateAction.Set };
         }
 
         /// <summary>
-        /// Add/Update all fields according JSON path applying expression calculation over document. Gets first result only to field
+        /// Set all fields according JSON path to result of an expression.
         /// </summary>
-        public static Update Expr(string path, string expr)
+        public static Update SetExpr(string path, string expr)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException(nameof(expr));
 
-            return new Update { Path = path, Expression = new LiteExpression(expr) };
+            return new Update { Path = path, Expression = new LiteExpression(expr), Action = UpdateAction.Set };
+        }
+
+        /// <summary>
+        /// Add into an array according JSON path a specific value.
+        /// </summary>
+        public static Update Add(string path, BsonValue value)
+        {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            return new Update { Path = path, Value = value, Action = UpdateAction.Add };
+        }
+
+        /// <summary>
+        /// Add into an array according JSON path a result of an expression.
+        /// </summary>
+        public static Update AddExpr(string path, string expr)
+        {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException(nameof(expr));
+
+            return new Update { Path = path, Expression = new LiteExpression(expr), Action = UpdateAction.Add };
         }
 
         /// <summary>
@@ -77,7 +101,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            return new Update { Path = path, Delete = true };
+            return new Update { Path = path, Action = UpdateAction.Remove };
         }
     }
 }

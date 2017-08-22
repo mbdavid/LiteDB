@@ -98,7 +98,7 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = LiteExpression.Extract(s).TrimToNull() ??
+            var field = LiteExpression.Extract(s, false).TrimToNull() ??
                 s.Scan(this.FieldPattern).Trim();
 
             var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)").ToLower().ThrowIfEmpty("Invalid query operator");

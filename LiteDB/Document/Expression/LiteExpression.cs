@@ -69,16 +69,25 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Extract expression from a StringScanner
+        /// Extract expression or a path from a StringScanner
         /// </summary>
-        public static string Extract(StringScanner s)
+        public static string Extract(StringScanner s, bool pathOnly)
         {
             var start = s.Index;
 
             try
             {
+                var root = false;
+
+                // if marked to read path only and first char is not $,
+                // enter in parseExpressin marking as RootPath
+                if (pathOnly)
+                {
+                    root = s.Scan(@"$").Length == 0;
+                }
+
                 var doc = Expression.Parameter(typeof(BsonDocument), "doc");
-                ParseExpression(s, doc);
+                ParseExpression(s, doc, root);
 
                 return s.Source.Substring(start, s.Index - start);
             }
@@ -92,9 +101,9 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        private static Expression ParseExpression(StringScanner s, ParameterExpression doc)
+        private static Expression ParseExpression(StringScanner s, ParameterExpression doc, bool isPathRoot = false)
         {
-            if(s.Match(@"\$")) // read path
+            if(s.Match(@"\$") || isPathRoot) // read path
             {
                 s.Scan(@"\$\.?"); // read root
                 var root = typeof(LiteExpression).GetMethod("Root");
@@ -134,6 +143,12 @@ namespace LiteDB
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
             }
+            else if (s.Match(@"null")) // read null
+            {
+                var value = Expression.Constant(BsonValue.Null);
+
+                return Expression.NewArrayInit(typeof(BsonValue), value);
+            }
             else if (s.Match(@"'")) // read string
             {
                 var str = s.Scan(@"'([\s\S]*)?'", 1);
@@ -149,13 +164,15 @@ namespace LiteDB
 
                 s.Scan(@"\s*\(");
               
-                while(!s.HasTerminated && s.Scan(@"\s*\)\s*").Length == 0)
+                while(!s.HasTerminated)
                 {
                     var parameter = ParseExpression(s, doc);
 
                     parameters.Add(parameter);
 
-                    s.Scan(@"\s*,\s*");
+                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                    else if (s.Scan(@"\s*\)\s*").Length > 0) break;
+                    else throw LiteException.SyntaxError("Missing `,` or `)` on expression syntax");
                 }
 
                 return Expression.Call(method, parameters.ToArray());

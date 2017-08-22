@@ -64,13 +64,13 @@ namespace LiteDB
                 foreach (var doc in this.Find(collection, query))
                 {
                     // for each document in query update fields
-                    doc.Update(updates);
-
-                    if (UpdateDocument(col, doc))
+                    if(doc.Update(updates))
                     {
-                        _trans.CheckPoint();
-
-                        count++;
+                        // only save on disk if any update on document was made
+                        if (UpdateDocument(col, doc))
+                        {
+                            count++;
+                        }
                     }
                 }
 

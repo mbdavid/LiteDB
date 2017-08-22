@@ -34,6 +34,7 @@
 
 
 # Finish review
+- BUG: _id with date never found (milliseconds). Test using db.col.update a=5
 - Add more Expression function (see RDLC functions)
 - Add better error messages on parser LiteExpression (expose as public)
 - Shell commands exceptions

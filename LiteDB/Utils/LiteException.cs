@@ -30,6 +30,7 @@ namespace LiteDB
         public const int DATABASE_WRONG_PASSWORD = 123;
         public const int READ_ONLY_DATABASE = 125;
         public const int TRANSACTION_NOT_SUPPORTED = 126;
+        public const int SYNTAX_ERROR = 127;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -137,6 +138,11 @@ namespace LiteDB
         internal static LiteException InvalidCommand(string command)
         {
             return new LiteException(INVALID_COMMAND, "Command '{0}' is not a valid shell command.", command);
+        }
+
+        internal static LiteException SyntaxError(string message)
+        {
+            return new LiteException(SYNTAX_ERROR, "Syntax error: " + message);
         }
 
         internal static LiteException AlreadyExistsCollectionName(string newName)
