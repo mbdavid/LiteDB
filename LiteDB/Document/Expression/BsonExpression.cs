@@ -11,12 +11,12 @@ namespace LiteDB
     /// <summary>
     /// Compile and execute simple expressions using BsonDocuments. Used in indexes and updates operations
     /// </summary>
-    internal partial class LiteExpression
+    public partial class BsonExpression
     {
         private Func<BsonDocument, IEnumerable<BsonValue>> _func;
         private string _expr;
 
-        public LiteExpression(string expression)
+        public BsonExpression(string expression)
         {
             _expr = expression;
 
@@ -76,7 +76,7 @@ namespace LiteDB
             if(s.Match(@"\$") || isPathRoot) // read path
             {
                 s.Scan(@"\$\.?"); // read root
-                var root = typeof(LiteExpression).GetMethod("Root");
+                var root = typeof(BsonExpression).GetMethod("Root");
                 var name = Expression.Constant(s.Scan(@"[\$\-\w]+"));
                 var expr = Expression.Call(root, doc, name) as Expression;
 
@@ -129,7 +129,7 @@ namespace LiteDB
             else if (s.Match(@"\w+")) // read function
             {
                 // get static method from this class
-                var method = typeof(LiteExpression).GetMethod(s.Scan(@"\w+").ToUpper());
+                var method = typeof(BsonExpression).GetMethod(s.Scan(@"\w+").ToUpper());
                 var parameters = new List<Expression>();
 
                 s.Scan(@"\s*\(");
@@ -166,13 +166,13 @@ namespace LiteDB
         {
             if (s.Match(@"\.[\$\-\w]+"))
             {
-                var member = typeof(LiteExpression).GetMethod("Member");
+                var member = typeof(BsonExpression).GetMethod("Member");
                 var name = Expression.Constant(s.Scan(@"\.([\$\-\w]+)", 1));
                 return Expression.Call(member, expr, name);
             }
             else if (s.Match(@"\["))
             {
-                var array = typeof(LiteExpression).GetMethod("Array");
+                var array = typeof(BsonExpression).GetMethod("Array");
                 var i = s.Scan(@"\[(-?[\d+\*])\]", 1);
                 var index = i == "*" ? int.MaxValue : Convert.ToInt32(i);
 

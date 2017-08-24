@@ -63,7 +63,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-            this.InsertSet(path, new LiteExpression(expr));
+            this.InsertSet(path, new BsonExpression(expr));
 
             return this;
         }
@@ -89,7 +89,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException(nameof(expr));
 
-            this.InsertAdd(path, new LiteExpression(expr));
+            this.InsertAdd(path, new BsonExpression(expr));
 
             return this;
         }
@@ -104,8 +104,8 @@ namespace LiteDB
                 path = path.StartsWith("$") ? path : "$." + path;
                 var parent = path.Substring(0, path.LastIndexOf('.'));
                 var key = path.Substring(path.LastIndexOf('.') + 1);
-                var expr = new LiteExpression(parent);
-                var val = value is BsonValue ? value as BsonValue : (value as LiteExpression).Execute(doc, true).First();
+                var expr = new BsonExpression(parent);
+                var val = value is BsonValue ? value as BsonValue : (value as BsonExpression).Execute(doc, true).First();
                 var changed = false;
 
                 foreach (var item in expr.Execute(doc, false).Where(x => x.IsDocument))
@@ -129,8 +129,8 @@ namespace LiteDB
         {
             _updates.Add((doc) =>
             {
-                var expr = new LiteExpression(path.StartsWith("$") ? path : "$." + path);
-                var val = value is BsonValue ? value as BsonValue : (value as LiteExpression).Execute(doc, true).First();
+                var expr = new BsonExpression(path.StartsWith("$") ? path : "$." + path);
+                var val = value is BsonValue ? value as BsonValue : (value as BsonExpression).Execute(doc, true).First();
                 var changed = false;
 
                 foreach (var arr in expr.Execute(doc, false).Where(x => x.IsArray))

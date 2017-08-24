@@ -43,7 +43,7 @@ namespace LiteDB
                     // read binary and deserialize document
                     var buffer = _data.Read(pkNode.DataBlock);
                     var doc = BsonSerializer.Deserialize(buffer).AsDocument;
-                    var expr = new LiteExpression(index.Expression);
+                    var expr = new BsonExpression(index.Expression);
 
                     // get values from expression in document
                     var keys = expr.Execute(doc, true);

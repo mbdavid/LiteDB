@@ -157,7 +157,7 @@ namespace LiteDB.Shell
                 }
 
                 var doc = Expression.Parameter(typeof(BsonDocument), "doc");
-                LiteExpression.ParseExpression(s, doc, root);
+                BsonExpression.ParseExpression(s, doc, root);
 
                 return s.Source.Substring(start, s.Index - start);
             }

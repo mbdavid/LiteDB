@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal partial class LiteExpression
+    public partial class BsonExpression
     {
         public static IEnumerable<BsonValue> LOWER(IEnumerable<BsonValue> values)
         {

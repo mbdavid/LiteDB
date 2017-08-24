@@ -112,7 +112,7 @@ namespace LiteDB
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
             {
-                var expr = new LiteExpression(index.Expression);
+                var expr = new BsonExpression(index.Expression);
 
                 // getting all keys do check
                 var keys = expr.Execute(doc).ToArray();

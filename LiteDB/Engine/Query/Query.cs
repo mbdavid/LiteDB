@@ -12,7 +12,7 @@ namespace LiteDB
     {
         public string Field { get; private set; }
 
-        internal LiteExpression Expression { get; set; }
+        internal BsonExpression Expression { get; set; }
         internal virtual bool UseIndex { get; set; }
         internal virtual bool UseFilter { get; set; }
 
@@ -249,7 +249,7 @@ namespace LiteDB
                 var expr = this.Field.StartsWith("$") || this.Field.IndexOf("(") > 0 ? 
                     this.Field : "$." + this.Field;
 
-                this.Expression = new LiteExpression(expr);
+                this.Expression = new BsonExpression(expr);
 
                 // returns all index nodes - (will use Filter method later)
                 return indexer.FindAll(col.PK, Query.Ascending);
@@ -259,7 +259,7 @@ namespace LiteDB
                 this.UseIndex = true;
 
                 // create expression from index
-                this.Expression = new LiteExpression(index.Expression);
+                this.Expression = new BsonExpression(index.Expression);
 
                 // execute query to get all IndexNodes
                 // do DistinctBy datablock to not duplicate same document in results
