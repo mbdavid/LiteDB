@@ -72,33 +72,6 @@ namespace LiteDB
             return true;
         }
 
-        #region Get/GetValues methods
-
-        /// <summary>
-        /// Get BsonValues from path or expression. Support JSONPath like
-        /// </summary>
-        public IEnumerable<BsonValue> GetValues(string expr, bool addNullIfEmpty = false)
-        {
-            if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException("expr");
-
-            return new LiteExpression(expr)
-                .Execute(this, addNullIfEmpty);
-        }
-
-        /// <summary>
-        /// Get BsonValue from string field
-        /// </summary>
-        public BsonValue Get(string field)
-        {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
-
-            return new LiteExpression("$." + field)
-                .Execute(this, true)
-                .First();
-        }
-
-        #endregion
-
         #region CompareTo / ToString
 
         public override int CompareTo(BsonValue other)
@@ -131,51 +104,6 @@ namespace LiteDB
         public override string ToString()
         {
             return JsonSerializer.Serialize(this, false, true);
-        }
-
-        #endregion
-
-        #region Update
-
-        /// <summary>
-        /// Update document fields using update rules
-        /// </summary>
-        public bool Update(params Update[] updates)
-        {
-            if (updates == null) throw new ArgumentNullException(nameof(updates));
-
-            var changed = false;
-
-            foreach (var update in updates)
-            {
-                var path = update.Path.StartsWith("$") ? update.Path : "$." + update.Path;
-                var parent = path.Substring(0, path.LastIndexOf('.'));
-                var name = path.Substring(path.LastIndexOf('.') + 1);
-                var value = update.Value ?? update.Expression?.Execute(this, true).First();
-
-                if (update.Action == UpdateAction.Add)
-                {
-                    foreach(var arr in this.GetValues(path, false).Where(x => x.IsArray))
-                    {
-                        arr.AsArray.Add(value);
-                        changed = true;
-                    }
-                }
-                else if (update.Action == UpdateAction.Set)
-                {
-                    foreach (var item in this.GetValues(parent, false).Where(x => x.IsDocument))
-                    {
-                        item.AsDocument[name] = value;
-                        changed = true;
-                    }
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            return changed;
         }
 
         #endregion

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
@@ -98,9 +99,7 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = LiteExpression.Extract(s, false).TrimToNull() ??
-                s.Scan(this.FieldPattern).Trim();
-
+            var field = this.ReadExpression(s, false) ?? s.Scan(this.FieldPattern).Trim();
             var oper = s.Scan(@"(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)").ToLower().ThrowIfEmpty("Invalid query operator");
             var value = JsonSerializer.Deserialize(s);
 
@@ -118,6 +117,54 @@ namespace LiteDB.Shell
                 case "between": return Query.Between(field, value.AsArray[0], value.AsArray[1]);
                 case "contains": return Query.Contains(field, value);
                 default: throw new LiteException("Invalid query operator");
+            }
+        }
+
+        /// <summary>
+        /// Read BsonValue from StringScanner or returns null if not a valid bson value
+        /// </summary>
+        public BsonValue ReadBsonValue(StringScanner s)
+        {
+            var start = s.Index;
+
+            try
+            {
+                return JsonSerializer.Deserialize(s);
+            }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
+            {
+                s.Index = start;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Extract expression or a path from a StringScanner. Returns null if is not a Path/Expression
+        /// </summary>
+        public string ReadExpression(StringScanner s, bool pathOnly)
+        {
+            var start = s.Index;
+
+            try
+            {
+                var root = false;
+
+                // if marked to read path only and first char is not $,
+                // enter in parseExpressin marking as RootPath
+                if (pathOnly)
+                {
+                    root = s.Scan(@"$").Length == 0;
+                }
+
+                var doc = Expression.Parameter(typeof(BsonDocument), "doc");
+                LiteExpression.ParseExpression(s, doc, root);
+
+                return s.Source.Substring(start, s.Index - start);
+            }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
+            {
+                s.Index = start;
+                return null;
             }
         }
     }

@@ -69,39 +69,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Extract expression or a path from a StringScanner
-        /// </summary>
-        public static string Extract(StringScanner s, bool pathOnly)
-        {
-            var start = s.Index;
-
-            try
-            {
-                var root = false;
-
-                // if marked to read path only and first char is not $,
-                // enter in parseExpressin marking as RootPath
-                if (pathOnly)
-                {
-                    root = s.Scan(@"$").Length == 0;
-                }
-
-                var doc = Expression.Parameter(typeof(BsonDocument), "doc");
-                ParseExpression(s, doc, root);
-
-                return s.Source.Substring(start, s.Index - start);
-            }
-            catch (InvalidOperationException)
-            {
-                s.Index = start;
-                return "";
-            }
-        }
-
-        /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        private static Expression ParseExpression(StringScanner s, ParameterExpression doc, bool isPathRoot = false)
+        internal static Expression ParseExpression(StringScanner s, ParameterExpression doc, bool isPathRoot = false)
         {
             if(s.Match(@"\$") || isPathRoot) // read path
             {
@@ -172,13 +142,13 @@ namespace LiteDB
 
                     if (s.Scan(@"\s*,\s*").Length > 0) continue;
                     else if (s.Scan(@"\s*\)\s*").Length > 0) break;
-                    else throw LiteException.SyntaxError("Missing `,` or `)` on expression syntax");
+                    else throw LiteException.UnexpectedToken(s.ToString());
                 }
 
                 return Expression.Call(method, parameters.ToArray());
             }
 
-            throw new InvalidOperationException("Invalid bson expression: " + s.ToString());
+            throw LiteException.UnexpectedToken(s.ToString());
         }
 
         /// <summary>

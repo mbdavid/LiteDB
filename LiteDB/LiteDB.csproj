@@ -42,8 +42,4 @@
     <Reference Include="System" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Document\Expression\" />
-  </ItemGroup>
-
 </Project>

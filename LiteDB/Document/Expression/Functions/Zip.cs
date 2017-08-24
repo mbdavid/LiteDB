@@ -9,7 +9,7 @@ namespace LiteDB
 {
     internal partial class LiteExpression
     {
-        private static IEnumerable<KeyValuePair<BsonValue, BsonValue>> Zip(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
+        private static IEnumerable<BinaryValues> Zip(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
         {
             var firstEnumerator = first.GetEnumerator();
             var secondEnumerator = second.GetEnumerator();
@@ -25,14 +25,27 @@ namespace LiteDB
                     secondCurrent = secondEnumerator.Current;
                 }
 
-                yield return new KeyValuePair<BsonValue, BsonValue>(firstCurrent, secondCurrent);
+                yield return new BinaryValues(firstCurrent, secondCurrent);
             }
             while (secondEnumerator.MoveNext())
             {
                 secondCurrent = secondEnumerator.Current;
 
-                yield return new KeyValuePair<BsonValue, BsonValue>(firstCurrent, secondCurrent);
+                yield return new BinaryValues(firstCurrent, secondCurrent);
             }
+        }
+
+    }
+
+    internal class BinaryValues
+    {
+        public BsonValue Left { get; set; }
+        public BsonValue Right { get; set; }
+
+        public BinaryValues(BsonValue left, BsonValue right)
+        {
+            this.Left = left;
+            this.Right = right;
         }
     }
 }

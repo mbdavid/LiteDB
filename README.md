@@ -30,11 +30,16 @@
 - Support expression on full search [OK]
 
 # Next
-
+- Create compiler variables: NET35, NET40, NETFULL and NETSTANDARD.
+    - Use NET35 for Unity using Reflectin.Emit
+    - Use !NET35 for Reflection.Expression
+    ...
+    - target versions: net35, net40 and netstandard
 
 
 # Finish review
 - BUG: _id with date never found (milliseconds). Test using db.col.update a=5
+
 - Add more Expression function (see RDLC functions)
 - Add better error messages on parser LiteExpression (expose as public)
 - Shell commands exceptions

@@ -13,9 +13,9 @@ namespace LiteDB
         {
             foreach (var value in Zip(left, right))
             {
-                if (!value.Key.IsNumber || !value.Value.IsNumber) continue;
+                if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
-                yield return value.Key + value.Value;
+                yield return value.Left + value.Right;
             }
         }
 
@@ -23,9 +23,9 @@ namespace LiteDB
         {
             foreach (var value in Zip(left, right))
             {
-                if (!value.Key.IsNumber || !value.Value.IsNumber) continue;
+                if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
-                yield return value.Key + value.Value;
+                yield return value.Left + value.Right;
             }
         }
 
@@ -33,9 +33,9 @@ namespace LiteDB
         {
             foreach (var value in Zip(left, right))
             {
-                if (!value.Key.IsNumber || !value.Value.IsNumber) continue;
+                if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
-                yield return value.Key * value.Value;
+                yield return value.Left * value.Right;
             }
         }
 
@@ -43,9 +43,9 @@ namespace LiteDB
         {
             foreach (var value in Zip(left, right))
             {
-                if (!value.Key.IsNumber || !value.Value.IsNumber) continue;
+                if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
-                yield return value.Key / value.Value;
+                yield return value.Left  / value.Right;
             }
         }
     }

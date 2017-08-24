@@ -33,7 +33,7 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
-                    if (UpdateDocument(col, doc))
+                    if (this.UpdateDocument(col, doc))
                     {
                         _trans.CheckPoint();
 
@@ -48,11 +48,11 @@ namespace LiteDB
         /// <summary>
         /// Update each document according query result with Update rules
         /// </summary>
-        public int Update(string collection, Query query, params Update[] updates)
+        public int Update(string collection, Query query, Update update)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
-            if (updates == null || updates.Length == 0) throw new ArgumentNullException(nameof(query));
+            if (update == null) throw new ArgumentNullException(nameof(update));
 
             return this.Transaction<int>(collection, false, (col) =>
             {
@@ -64,10 +64,10 @@ namespace LiteDB
                 foreach (var doc in this.Find(collection, query))
                 {
                     // for each document in query update fields
-                    if(doc.Update(updates))
+                    if(update.Execute(doc))
                     {
                         // only save on disk if any update on document was made
-                        if (UpdateDocument(col, doc))
+                        if (this.UpdateDocument(col, doc))
                         {
                             count++;
                         }

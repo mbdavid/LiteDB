@@ -197,7 +197,7 @@ namespace LiteDB
 
         internal static LiteException UnexpectedToken(string token)
         {
-            return new LiteException(UNEXPECTED_TOKEN, "Unexpected JSON token: {0}", token);
+            return new LiteException(UNEXPECTED_TOKEN, "Unexpected JSON/Shell token: {0}", token);
         }
 
         internal static LiteException InvalidDataType(string field, BsonValue value)

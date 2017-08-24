@@ -24,84 +24,138 @@ db.Update(string collection, Query query,
 */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading;
 
 namespace LiteDB
 {
-    internal enum UpdateAction { Set, Add, Remove }
-
     /// <summary>
-    /// Represent a single document field update
+    /// Represent an update multi field to by apply in a document
     /// </summary>
     public class Update
     {
-        internal string Path { get; set; }
+        private List<Func<BsonDocument, bool>> _updates = new List<Func<BsonDocument, bool>>();
 
-        internal LiteExpression Expression { get; set; }
-
-        internal BsonValue Value { get; set; }
-
-        internal UpdateAction Action { get; set; }
-
-        internal Update()
-        {
-        }
+        #region Public methods to Add/Set
 
         /// <summary>
-        /// Set all fields according JSON path to specific value.
+        /// Set fields according JSON path to specific value.
         /// </summary>
-        public static Update Set(string path, BsonValue value)
+        public Update Set(string path, BsonValue value)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            return new Update { Path = path, Value = value, Action = UpdateAction.Set };
+            this.InsertSet(path, value);
+
+            return this;
         }
 
         /// <summary>
-        /// Set all fields according JSON path to result of an expression.
+        /// Set fields according JSON path to an expression evaluate (first result).
         /// </summary>
-        public static Update SetExpr(string path, string expr)
+        public Update SetExpr(string path, string expr)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
-            if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException(nameof(expr));
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-            return new Update { Path = path, Expression = new LiteExpression(expr), Action = UpdateAction.Set };
+            this.InsertSet(path, new LiteExpression(expr));
+
+            return this;
         }
 
         /// <summary>
         /// Add into an array according JSON path a specific value.
         /// </summary>
-        public static Update Add(string path, BsonValue value)
+        public Update Add(string path, BsonValue value)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            return new Update { Path = path, Value = value, Action = UpdateAction.Add };
+            this.InsertAdd(path, value);
+
+            return this;
         }
 
         /// <summary>
         /// Add into an array according JSON path a result of an expression.
         /// </summary>
-        public static Update AddExpr(string path, string expr)
+        public Update AddExpr(string path, string expr)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (string.IsNullOrEmpty(expr)) throw new ArgumentNullException(nameof(expr));
 
-            return new Update { Path = path, Expression = new LiteExpression(expr), Action = UpdateAction.Add };
+            this.InsertAdd(path, new LiteExpression(expr));
+
+            return this;
+        }
+
+        #endregion
+
+
+        private void InsertSet(string path, object value)
+        {
+            _updates.Add((doc) =>
+            {
+                path = path.StartsWith("$") ? path : "$." + path;
+                var parent = path.Substring(0, path.LastIndexOf('.'));
+                var key = path.Substring(path.LastIndexOf('.') + 1);
+                var expr = new LiteExpression(parent);
+                var val = value is BsonValue ? value as BsonValue : (value as LiteExpression).Execute(doc, true).First();
+                var changed = false;
+
+                foreach (var item in expr.Execute(doc, false).Where(x => x.IsDocument))
+                {
+                    var idoc = item.AsDocument;
+                    var cur = idoc[key];
+
+                    // update field only if value are different from current value
+                    if(cur != val)
+                    {
+                        idoc[key] = val;
+                        changed = true;
+                    }
+                }
+
+                return changed;
+            });
+        }
+
+        private void InsertAdd(string path, object value)
+        {
+            _updates.Add((doc) =>
+            {
+                var expr = new LiteExpression(path.StartsWith("$") ? path : "$." + path);
+                var val = value is BsonValue ? value as BsonValue : (value as LiteExpression).Execute(doc, true).First();
+                var changed = false;
+
+                foreach (var arr in expr.Execute(doc, false).Where(x => x.IsArray))
+                {
+                    arr.AsArray.Add(val);
+                    changed = true;
+                }
+
+                return changed;
+            });
         }
 
         /// <summary>
-        /// Remove all fields according JSON path
+        /// Execute update in all defined fields adding/setting new values. Returns true if any field are updated/added
         /// </summary>
-        public static Update Remove(string path)
+        public bool Execute(BsonDocument doc)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            var changed = false;
 
-            return new Update { Path = path, Action = UpdateAction.Remove };
+            foreach (var fn in _updates)
+            {
+                if (fn(doc)) changed = true;
+            }
+
+            return changed;
         }
     }
 }
