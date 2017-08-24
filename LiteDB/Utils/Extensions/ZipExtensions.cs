@@ -7,9 +7,9 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal static class ZipExtensions
     {
-        private static IEnumerable<BinaryValues> Zip(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
+        public static IEnumerable<ZipValues> ZipValues(this IEnumerable<BsonValue> first, IEnumerable<BsonValue> second)
         {
             var firstEnumerator = first.GetEnumerator();
             var secondEnumerator = second.GetEnumerator();
@@ -25,24 +25,24 @@ namespace LiteDB
                     secondCurrent = secondEnumerator.Current;
                 }
 
-                yield return new BinaryValues(firstCurrent, secondCurrent);
+                yield return new ZipValues(firstCurrent, secondCurrent);
             }
             while (secondEnumerator.MoveNext())
             {
                 secondCurrent = secondEnumerator.Current;
 
-                yield return new BinaryValues(firstCurrent, secondCurrent);
+                yield return new ZipValues(firstCurrent, secondCurrent);
             }
         }
 
     }
 
-    internal class BinaryValues
+    internal class ZipValues
     {
         public BsonValue Left { get; set; }
         public BsonValue Right { get; set; }
 
-        public BinaryValues(BsonValue left, BsonValue right)
+        public ZipValues(BsonValue left, BsonValue right)
         {
             this.Left = left;
             this.Right = right;

@@ -11,7 +11,7 @@ namespace LiteDB
     {
         public static IEnumerable<BsonValue> ADD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in Zip(left, right))
+            foreach (var value in left.ZipValues(right))
             {
                 if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
@@ -21,7 +21,7 @@ namespace LiteDB
 
         public static IEnumerable<BsonValue> MINUS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in Zip(left, right))
+            foreach (var value in left.ZipValues(right))
             {
                 if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
@@ -31,7 +31,7 @@ namespace LiteDB
 
         public static IEnumerable<BsonValue> MULTIPLY(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in Zip(left, right))
+            foreach (var value in left.ZipValues(right))
             {
                 if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
@@ -41,7 +41,7 @@ namespace LiteDB
 
         public static IEnumerable<BsonValue> DIVIDE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in Zip(left, right))
+            foreach (var value in left.ZipValues(right))
             {
                 if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
