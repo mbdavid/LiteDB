@@ -51,24 +51,29 @@ namespace LiteDB.Shell
             return new KeyValuePair<int, int>(skip, limit);
         }
 
+        /// <summary>
+        /// Read includes paths using comma delimiter: xxx include $.Books[*], $.Customer
+        /// </summary>
         public string[] ReadIncludes(StringScanner s)
         {
             if (s.Scan(@"\s*include[s]?\s+").Length > 0)
             {
-                var includes = JsonSerializer.Deserialize(s);
+                var includes = new List<string>();
+                var include = BsonExpression.ReadExpression(s, true);
 
-                if (includes.IsString)
+                if (include == null) throw LiteException.SyntaxError("Missing include paths");
+
+                while (include != null && !s.HasTerminated)
                 {
-                    return new string[] { includes.AsString };
+                    includes.Add(include);
+
+                    // capture next only if found comma symbol
+                    include = s.Scan(@"\s*,\s*").Length > 0 ?
+                        BsonExpression.ReadExpression(s, true) :
+                        null;
                 }
-                else if(includes.IsArray)
-                {
-                    return includes.AsArray.Select(x => x.AsString).ToArray();
-                }
-                else
-                {
-                    throw LiteException.InvalidFormat(includes.ToString());
-                }
+
+                return includes.ToArray();
             }
 
             return new string[0];
@@ -76,7 +81,9 @@ namespace LiteDB.Shell
 
         public Query ReadQuery(StringScanner s)
         {
-            if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d") || s.Match(@"include[s]?\s+[\""\[]"))
+            s.Scan(@"\s*");
+
+            if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d") || s.Match(@"include[s]?\s+[\$\w]"))
             {
                 return Query.All();
             }

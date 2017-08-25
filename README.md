@@ -34,6 +34,8 @@
     - Review Select syntax/parser/error messages
     - Review autoId insert syntax/parser/error messages
     - UnspectedTokenJson/Shell/Expression
+    
+# REVIEW => When NEEDs $. and when DON'T? Why do not always require $    
 
 # Document    
 - Implement BsonDocument.Resolve()
