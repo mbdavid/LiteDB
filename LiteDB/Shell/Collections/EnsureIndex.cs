@@ -21,19 +21,8 @@ namespace LiteDB.Shell
 
             if (s.HasTerminated == false)
             {
-                var options = JsonSerializer.Deserialize(s.ToString());
-
-                if (options.IsBoolean)
-                {
-                    unique = options.AsBoolean;
-                }
-                else if (options.IsDocument) // support old version index definitions
-                {
-                    var doc = options.AsDocument;
-
-                    unique = doc.ContainsKey("unique") ? doc["unique"].AsBoolean : false;
-                    expression = doc.ContainsKey("expr") ? doc["expr"].AsString : null;
-                }
+                unique = s.Scan(@"unique\s*").Length > 0;
+                expression = s.Scan(@"\s*using\s+(.+)").TrimToNull();
             }
 
             yield return engine.EnsureIndex(col, field, unique, expression);

@@ -25,7 +25,7 @@ namespace LiteDB
             {
                 if (!value.Left.IsNumber || !value.Right.IsNumber) continue;
 
-                yield return value.Left + value.Right;
+                yield return value.Left - value.Right;
             }
         }
 

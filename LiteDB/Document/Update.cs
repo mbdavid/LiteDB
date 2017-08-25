@@ -101,9 +101,9 @@ namespace LiteDB
         {
             _updates.Add((doc) =>
             {
-                path = path.StartsWith("$") ? path : "$." + path;
-                var parent = path.Substring(0, path.LastIndexOf('.'));
-                var key = path.Substring(path.LastIndexOf('.') + 1);
+                var field = path.StartsWith("$") ? path : "$." + path;
+                var parent = field.Substring(0, field.LastIndexOf('.'));
+                var key = field.Substring(field.LastIndexOf('.') + 1);
                 var expr = new BsonExpression(parent);
                 var val = value is BsonValue ? value as BsonValue : (value as BsonExpression).Execute(doc, true).First();
                 var changed = false;

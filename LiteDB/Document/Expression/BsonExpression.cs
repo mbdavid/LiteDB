@@ -15,6 +15,23 @@ namespace LiteDB
     {
         public static BsonExpression Empty = new BsonExpression();
 
+        #region Operator Functions Cache
+
+        private static Dictionary<string, MethodInfo> _operators = new Dictionary<string, MethodInfo>
+        {
+            ["+"] = typeof(BsonExpression).GetMethod("ADD"),
+            ["-"] = typeof(BsonExpression).GetMethod("MINUS"),
+            ["*"] = typeof(BsonExpression).GetMethod("MULTIPLY"),
+            ["/"] = typeof(BsonExpression).GetMethod("DIVIDE"),
+            ["="] = typeof(BsonExpression).GetMethod("EQ"),
+            [">"] = typeof(BsonExpression).GetMethod("GT"),
+            [">="] = typeof(BsonExpression).GetMethod("GTE"),
+            ["<"] = typeof(BsonExpression).GetMethod("LT"),
+            ["<="] = typeof(BsonExpression).GetMethod("LTE")
+        };
+
+        #endregion
+
         private Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> _func;
         private string _expression;
 
@@ -95,6 +112,27 @@ namespace LiteDB
         /// </summary>
         internal static Expression ParseExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot = false)
         {
+            var left = ParseSingleExpression(s, root, current, isRoot);
+            var op = s.Scan(@"\s*(\+|\-|\*|\/|\=|\>\=|\>|\<\=|\<)\s*", 1);
+
+            if (op.Length > 0)
+            {
+                var method = _operators[op];
+                var right = ParseExpression(s, root, current, false);
+
+                return Expression.Call(method, left, right);
+            }
+            else
+            {
+                return left;
+            }
+        }
+
+        /// <summary>
+        /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
+        /// </summary>
+        internal static Expression ParseSingleExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot = false)
+        {
             if (s.Match(@"[\$@]") || isRoot) // read root path
             {
                 var r = s.Scan(@"([\$@])\.?", 1); // read root/current
@@ -148,13 +186,11 @@ namespace LiteDB
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
             }
-            else if (s.Match(@"\w+")) // read function
+            else if (s.Match(@"\w+\s*\(")) // read function
             {
                 // get static method from this class
-                var method = typeof(BsonExpression).GetMethod(s.Scan(@"\w+").ToUpper());
+                var method = typeof(BsonExpression).GetMethod(s.Scan(@"(\w+)\s*\(", 1).ToUpper());
                 var parameters = new List<Expression>();
-
-                s.Scan(@"\s*\(");
 
                 while (!s.HasTerminated)
                 {
@@ -225,9 +261,14 @@ namespace LiteDB
             {
                 // if marked to read path only and first char is not $,
                 // enter in parseExpressin marking as RootPath
-                var isRoot = pathOnly && s.Scan(@"$").Length == 0;
+                var isRoot = pathOnly;
                 var root = Expression.Parameter(typeof(BsonDocument), "root");
                 var current = Expression.Parameter(typeof(BsonValue), "current");
+
+                if (pathOnly)
+                {
+                    s.Scan(@"\$\.?");
+                }
 
                 ParseExpression(s, root, current, isRoot);
 

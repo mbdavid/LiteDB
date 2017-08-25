@@ -63,14 +63,9 @@ namespace LiteDB.Shell
 
             foreach(var result in results)
             {
-                if (result.IsDocument)
-                {
-                    var doc = result.AsDocument;
+                this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", ++index));
 
-                    this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
-                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(doc, this.Pretty, false));
-                }
-                else if (result.IsString)
+                if (result.IsString)
                 {
                     this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
                 }

@@ -298,9 +298,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Based on an expression, returns document field mapped from class Property.
+        /// Based on a LINQ expression, returns document field mapped from class Property.
         /// Support multi level dotted notation: x => x.Customer.Name
-        /// Prefix is used on array expression like: x => x.Customers.Any(z => z.Name == "John") (prefix = "Customers." 
+        /// Prefix is used on array expression like: x => x.Customers.Any(z => z.Name == "John")
         /// </summary>
         public string GetField(Expression expr, string prefix = "", bool showArrayItems = false)
         {
@@ -343,7 +343,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert a expression into a JSON path.
+        /// Convert a LINQ expression into a JSON path.
         /// x => x.Name ==> "$.Name"
         /// x => x.Items[0].Day ==> "$.Items[0].Day"
         /// x => x.Items[0].Day ==> "$.Items[0].Day"

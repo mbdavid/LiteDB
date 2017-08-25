@@ -16,6 +16,9 @@ namespace LiteDB.Shell
             var expression = BsonExpression.ReadExpression(s, false);
             var output = this.ReadBsonValue(s);
 
+            // select command required output value, path or expression
+            if (expression == null && output == BsonValue.Null) throw LiteException.SyntaxError("Missing select path");
+
             s.Scan(@"\s*where\s*");
 
             var query = this.ReadQuery(s);
