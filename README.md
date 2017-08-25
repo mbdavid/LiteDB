@@ -29,60 +29,39 @@
 - Support expression on index [OK]
 - Support expression on full search [OK]
 
-# Expression
-- Introduce @ element for filter array
-- Non-agregate function must run over SINGLE value (do not use ZIP), like
-    - ADD(left, right) must do: `yield return left.First() + right.First()`
-    - EQ(left, right) must do: `yield return left.First() == right.First()`
+# Shell
+    - Review Update syntax/parser/error messages
+    - Review Select syntax/parser/error messages
+    - Review autoId insert syntax/parser/error messages
+    - UnspectedTokenJson/Shell/Expression
 
+# Document    
+- Implement BsonDocument.Resolve()
+    
 # Build
-
 - Create compiler variables: NET35, NET40, NETFULL and NETSTANDARD.
     - Use NET35 for Unity using Reflectin.Emit
     - Use !NET35 for Reflection.Expression
     ...
     - target versions: net35, net40 and netstandard
 
+# Bugs    
+- BUG: _id with date never found (milliseconds). Test using db.col.update a=5
+- BUG: when query using > or < must use same BsonType
 
 # Finish review
-- BUG: _id with date never found (milliseconds). Test using db.col.update a=5
-
 - Add more Expression function (see RDLC functions)
-- Add better error messages on parser LiteExpression (expose as public)
-- Shell commands exceptions
 - Find old version about database usage to add in .Info()
 - Review all LiteException messages/codes
 - Count\Exists when use filter must call checkTrans
 - Review AND/OR index/filter
-- Review if it's better use None/Flush/WriteThrough
 - Review Log messages
 - Review trans.CheckPoint() (do just after foreach);
-- Query#Run right way to detect when Field are Expression? Create 2 declaration types?
-- Implement StringScanner read string '/" and ([{ bracket (LiteExpression)
-- Remove Update? Or remove from StringConnection? Create LiteDB.Upgrade.dll (to be used in shell or any app?)
+- Review if it's better use None/Flush/WriteThrough
 
-# Add only in 4.1
-- Implement Parent in BsonValue (how/when set?) => What do in case a same BsonValue in 2 Documents?
-- Batch operation
-
-# Document Update (4.1)
-
-// option 1
-doc.Update({ 
-    "$.name": "john",
-    "$": { "name": "john" },
-    "$": { "name": { $expr: "$.OldName" } },
-    "$.Items": 123,
-    "$.Items": { $remove: true }
-    "$.Items[0]": { $remove: true }
-})
-
-// option 2
-doc.Update({
-    "Name": "John".
-    "Age": { $expr: "COUNT($.Age)" },
-    $remove: ["$.Name, $.Books[*].Title"]
-})
+- Write Wiki about shell commands
+- Write Wiki about Expression/Path and usage (index, filter, ...)
+- Update wiki minor details
 
 ====================================================    
     
