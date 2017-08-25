@@ -16,16 +16,5 @@ namespace LiteDB
                 yield return value.Left == value.Right;
             }
         }
-
-        public static IEnumerable<BsonValue> FILTER(IEnumerable<BsonValue> values, IEnumerable<BsonValue> conditional)
-        {
-            foreach (var value in values.ZipValues(conditional))
-            {
-                if(value.Right.IsBoolean && value.Right.AsBoolean)
-                {
-                    yield return value.Left;
-                }
-            }
-        }
     }
 }

@@ -29,7 +29,14 @@
 - Support expression on index [OK]
 - Support expression on full search [OK]
 
-# Next
+# Expression
+- Introduce @ element for filter array
+- Non-agregate function must run over SINGLE value (do not use ZIP), like
+    - ADD(left, right) must do: `yield return left.First() + right.First()`
+    - EQ(left, right) must do: `yield return left.First() == right.First()`
+
+# Build
+
 - Create compiler variables: NET35, NET40, NETFULL and NETSTANDARD.
     - Use NET35 for Unity using Reflectin.Emit
     - Use !NET35 for Reflection.Expression

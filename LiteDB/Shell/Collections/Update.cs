@@ -27,7 +27,6 @@ namespace LiteDB.Shell
                 // db.colName.update 
                 //     field = value, 
                 //     array += valueToAdd,
-                //     -removeField
                 // where _id = 1 
                 //   and ...
 
@@ -36,10 +35,10 @@ namespace LiteDB.Shell
 
                 while(!s.HasTerminated)
                 {
-                    var path = this.ReadExpression(s, true);
+                    var path = BsonExpression.ReadExpression(s, true);
                     var action = s.Scan(@"\s*(\+)?=\s*", 1);
                     var value = this.ReadBsonValue(s);
-                    var expr = value == null ? base.ReadExpression(s, false) : null;
+                    var expr = value == null ? BsonExpression.ReadExpression(s, false) : null;
 
                     if (action == "+" && value != null)
                     {

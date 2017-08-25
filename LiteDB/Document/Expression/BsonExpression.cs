@@ -13,14 +13,19 @@ namespace LiteDB
     /// </summary>
     public partial class BsonExpression
     {
-        private Func<BsonDocument, IEnumerable<BsonValue>> _func;
-        private string _expr;
+        public static BsonExpression Empty = new BsonExpression();
+
+        private Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> _func;
+        private string _expression;
 
         public BsonExpression(string expression)
         {
-            _expr = expression;
-
+            _expression = expression;
             _func = Compile(expression);
+        }
+
+        private BsonExpression()
+        {
         }
 
         /// <summary>
@@ -28,8 +33,16 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonValue> Execute(BsonDocument doc, bool includeNullIfEmpty = true)
         {
+            return this.Execute(doc, doc, includeNullIfEmpty);
+        }
+
+        /// <summary>
+        /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
+        /// </summary>
+        public IEnumerable<BsonValue> Execute(BsonDocument root, BsonValue current, bool includeNullIfEmpty = true)
+        {
             var index = 0;
-            var values = _func(doc);
+            var values = _func(root, current ?? root);
 
             foreach (var value in values)
             {
@@ -40,28 +53,23 @@ namespace LiteDB
             if (index == 0 && includeNullIfEmpty) yield return BsonValue.Null;
         }
 
-        private static Dictionary<string, Func<BsonDocument, IEnumerable<BsonValue>>> _cache = new Dictionary<string, Func<BsonDocument, IEnumerable<BsonValue>>>();
+        private static Dictionary<string, Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>> _cache = new Dictionary<string, Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>();
 
         /// <summary>
-        /// Compile a string expression into a Linq function to run compiled in memory
+        /// Parse and compile an expression from a string. Do cache of expressions
         /// </summary>
-        public static Func<BsonDocument, IEnumerable<BsonValue>> Compile(string expression)
+        public static Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> Compile(string expression)
         {
-            Func<BsonDocument, IEnumerable<BsonValue>> fn;
+            Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> fn;
 
             if (_cache.TryGetValue(expression, out fn)) return fn;
 
-            lock(_cache)
+            lock (_cache)
             {
                 if (_cache.TryGetValue(expression, out fn)) return fn;
 
-                var s = new StringScanner(expression);
-                var doc = Expression.Parameter(typeof(BsonDocument), "doc");
-                var expr = ParseExpression(s, doc);
+                fn = Compile(new StringScanner(expression));
 
-                var lambda = Expression.Lambda<Func<BsonDocument, IEnumerable<BsonValue>>>(expr, doc);
-
-                fn = lambda.Compile();
                 _cache[expression] = fn;
 
                 return fn;
@@ -69,23 +77,37 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Parse and compile an expression from a StringScanner. Has no cache
+        /// </summary>
+        public static Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> Compile(StringScanner expression)
+        {
+            var root = Expression.Parameter(typeof(BsonDocument), "root");
+            var current = Expression.Parameter(typeof(BsonValue), "current");
+            var expr = ParseExpression(expression, root, current);
+
+            var lambda = Expression.Lambda<Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>(expr, root, current);
+
+            return lambda.Compile();
+        }
+
+        /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        internal static Expression ParseExpression(StringScanner s, ParameterExpression doc, bool isPathRoot = false)
+        internal static Expression ParseExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot = false)
         {
-            if(s.Match(@"\$") || isPathRoot) // read path
+            if (s.Match(@"[\$@]") || isRoot) // read root path
             {
-                s.Scan(@"\$\.?"); // read root
-                var root = typeof(BsonExpression).GetMethod("Root");
+                var r = s.Scan(@"([\$@])\.?", 1); // read root/current
+                var method = typeof(BsonExpression).GetMethod("Root");
                 var name = Expression.Constant(s.Scan(@"[\$\-\w]+"));
-                var expr = Expression.Call(root, doc, name) as Expression;
+                var expr = Expression.Call(method, r == "@" ? current : root, name) as Expression;
 
                 // parse the rest of path
                 while (!s.HasTerminated)
                 {
-                    var result = ParsePath(s, expr);
+                    var result = ParsePath(s, expr, root);
 
-                    if(result == null) break;
+                    if (result == null) break;
 
                     expr = result;
                 }
@@ -133,16 +155,16 @@ namespace LiteDB
                 var parameters = new List<Expression>();
 
                 s.Scan(@"\s*\(");
-              
-                while(!s.HasTerminated)
+
+                while (!s.HasTerminated)
                 {
-                    var parameter = ParseExpression(s, doc);
+                    var parameter = ParseExpression(s, root, current);
 
                     parameters.Add(parameter);
 
                     if (s.Scan(@"\s*,\s*").Length > 0) continue;
                     else if (s.Scan(@"\s*\)\s*").Length > 0) break;
-                    else throw LiteException.UnexpectedToken(s.ToString());
+                    throw LiteException.UnexpectedToken(s.ToString());
                 }
 
                 return Expression.Call(method, parameters.ToArray());
@@ -162,24 +184,58 @@ namespace LiteDB
         /// $.Items[-1] = Last value from Items array
         /// $.Items[*].Age = All age values from all items array
         /// </summary>
-        private static Expression ParsePath(StringScanner s, Expression expr)
+        private static Expression ParsePath(StringScanner s, Expression expr, ParameterExpression root)
         {
             if (s.Match(@"\.[\$\-\w]+"))
             {
-                var member = typeof(BsonExpression).GetMethod("Member");
+                var method = typeof(BsonExpression).GetMethod("Member");
                 var name = Expression.Constant(s.Scan(@"\.([\$\-\w]+)", 1));
-                return Expression.Call(member, expr, name);
+                return Expression.Call(method, expr, name);
             }
             else if (s.Match(@"\["))
             {
-                var array = typeof(BsonExpression).GetMethod("Array");
-                var i = s.Scan(@"\[(-?[\d+\*])\]", 1);
-                var index = i == "*" ? int.MaxValue : Convert.ToInt32(i);
+                var method = typeof(BsonExpression).GetMethod("Array");
+                var i = s.Scan(@"\[\s*(-?[\d+\*])\s*\]", 1);
+                var index = i != "*" && i != "" ? Convert.ToInt32(i) : int.MaxValue;
+                var inner = BsonExpression.Empty;
 
-                return Expression.Call(array, expr, Expression.Constant(index));
+                if (i == "") // if array operation are not index based, read expression 
+                {
+                    s.Scan(@"\[\s*");
+                    inner = new BsonExpression(ReadExpression(s, false));
+                    s.Scan(@"\s*\]");
+                }
+
+                return Expression.Call(method, expr, Expression.Constant(index), Expression.Constant(inner), root);
             }
             else
             {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Extract expression or a path from a StringScanner. Returns null if is not a Path/Expression
+        /// </summary>
+        public static string ReadExpression(StringScanner s, bool pathOnly)
+        {
+            var start = s.Index;
+
+            try
+            {
+                // if marked to read path only and first char is not $,
+                // enter in parseExpressin marking as RootPath
+                var isRoot = pathOnly && s.Scan(@"$").Length == 0;
+                var root = Expression.Parameter(typeof(BsonDocument), "root");
+                var current = Expression.Parameter(typeof(BsonValue), "current");
+
+                ParseExpression(s, root, current, isRoot);
+
+                return s.Source.Substring(start, s.Index - start);
+            }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
+            {
+                s.Index = start;
                 return null;
             }
         }
@@ -189,17 +245,29 @@ namespace LiteDB
         /// <summary>
         /// Returns value from root document. Returns same document if name are empty
         /// </summary>
-        public static IEnumerable<BsonValue> Root(BsonDocument value, string name)
+        public static IEnumerable<BsonValue> Root(BsonValue value, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 yield return value;
             }
-            else
+            else if (value.IsDocument)
             {
-                BsonValue item;
+                if (value.AsDocument.TryGetValue(name, out BsonValue item))
+                {
+                    yield return item;
+                }
+            }
+        }
 
-                if (value.TryGetValue(name, out item))
+        /// <summary>
+        /// Return a value from a value as document. If has no name, just return values ($). If value are not a document, do not return anything
+        /// </summary>
+        public static IEnumerable<BsonValue> Member(IEnumerable<BsonValue> values, string name)
+        {
+            foreach (var doc in values.Where(x => x.IsDocument).Select(x => x.AsDocument))
+            {
+                if (doc.TryGetValue(name, out BsonValue item))
                 {
                     yield return item;
                 }
@@ -209,7 +277,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all values from array according index. If index are MaxValue, return all values
         /// </summary>
-        public static IEnumerable<BsonValue> Array(IEnumerable<BsonValue> values, int index = int.MaxValue)
+        public static IEnumerable<BsonValue> Array(IEnumerable<BsonValue> values, int index, BsonExpression expr, BsonDocument root)
         {
             foreach (var value in values)
             {
@@ -217,10 +285,29 @@ namespace LiteDB
                 {
                     var arr = value.AsArray;
 
-                    if (index == int.MaxValue)
+                    // [expression(Func<BsonValue, bool>)]
+                    if (expr != Empty)
                     {
-                        foreach (var item in arr) yield return item;
+                        foreach (var item in arr)
+                        {
+                            // execute for each child value and except a first bool value (returns if true)
+                            var c = expr.Execute(root, item, true).First();
+
+                            if (c.IsBoolean && c.AsBoolean == true)
+                            {
+                                yield return item;
+                            }
+                        }
                     }
+                    // [all]
+                    else if (index == int.MaxValue)
+                    {
+                        foreach (var item in arr)
+                        {
+                            yield return item;
+                        }
+                    }
+                    // [fixed_index]
                     else
                     {
                         var idx = index < 0 ? arr.Count + index : index;
@@ -234,30 +321,11 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Return a value from a value as document. If value are not a document, do not return anything
-        /// </summary>
-        public static IEnumerable<BsonValue> Member(IEnumerable<BsonValue> values, string name)
-        {
-            foreach (var value in values)
-            {
-                if (value.IsDocument)
-                {
-                    BsonValue item;
-
-                    if (value.AsDocument.TryGetValue(name, out item))
-                    {
-                        yield return item;
-                    }
-                }
-            }
-        }
-
         #endregion
 
         public override string ToString()
         {
-            return _expr;
+            return _expression;
         }
     }
 }
