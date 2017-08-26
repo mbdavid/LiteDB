@@ -19,6 +19,8 @@ namespace LiteDB.Shell
             {
                 var doc = JsonSerializer.Deserialize(s.ToString()).AsDocument;
 
+                s.ThrowIfNotFinish();
+
                 yield return engine.Update(col, doc);
             }
             // query update
@@ -58,20 +60,22 @@ namespace LiteDB.Shell
                     }
                     else
                     {
-                        throw LiteException.UnexpectedToken(s.ToString());
+                        throw LiteException.SyntaxError(s);
                     }
 
                     s.Scan(@"\s*");
 
                     if (s.Scan(@",\s*").Length > 0) continue;
                     else if(s.Scan(@"where\s*").Length > 0 || s.HasTerminated) break;
-                    else throw LiteException.UnexpectedToken(s.ToString());
+                    else throw LiteException.SyntaxError(s);
                 }
 
                 if(!s.HasTerminated)
                 {
-                    query = this.ReadQuery(s);
+                    query = this.ReadQuery(s, false);
                 }
+
+                s.ThrowIfNotFinish();
 
                 yield return engine.Update(col, query, updates);
             }

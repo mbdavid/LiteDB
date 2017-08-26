@@ -13,7 +13,9 @@ namespace LiteDB.Shell
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
-            var query = this.ReadQuery(s);
+            var query = this.ReadQuery(s, false);
+
+            s.ThrowIfNotFinish();
 
             yield return engine.Count(col, query);
         }

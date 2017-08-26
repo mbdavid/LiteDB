@@ -9,11 +9,11 @@ namespace LiteDB
             return str == null || str.Trim().Length == 0;
         }
 
-        public static string ThrowIfEmpty(this string str, string message)
+        public static string ThrowIfEmpty(this string str, string message, StringScanner s)
         {
             if (string.IsNullOrEmpty(str) || str.Trim().Length == 0)
             {
-                throw LiteException.InvalidCommand(message);
+                throw LiteException.SyntaxError(s, message);
             }
 
             return str;

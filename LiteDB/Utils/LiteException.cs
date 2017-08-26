@@ -10,14 +10,11 @@ namespace LiteDB
     {
         #region Errors code
 
-        public const int NO_DATABASE = 100;
         public const int FILE_NOT_FOUND = 101;
-        public const int FILE_CORRUPTED = 102;
         public const int INVALID_DATABASE = 103;
         public const int INVALID_DATABASE_VERSION = 104;
         public const int FILE_SIZE_EXCEEDED = 105;
         public const int COLLECTION_LIMIT_EXCEEDED = 106;
-        public const int JOURNAL_FILE_FOUND = 107;
         public const int INDEX_DROP_IP = 108;
         public const int INDEX_LIMIT_EXCEEDED = 109;
         public const int INDEX_DUPLICATE_KEY = 110;
@@ -44,7 +41,11 @@ namespace LiteDB
 
         #endregion
 
+        #region Ctor
+
         public int ErrorCode { get; private set; }
+        public string Line { get; private set; }
+        public int Position { get; private set; }
 
         public LiteException(string message)
             : base(message)
@@ -63,21 +64,13 @@ namespace LiteDB
             this.ErrorCode = code;
         }
 
-        #region Method Errors
+        #endregion
 
-        internal static LiteException NoDatabase()
-        {
-            return new LiteException(NO_DATABASE, "There is no database.");
-        }
+        #region Method Errors
 
         internal static LiteException FileNotFound(string fileId)
         {
             return new LiteException(FILE_NOT_FOUND, "File '{0}' not found.", fileId);
-        }
-
-        internal static LiteException FileCorrupted(string fileId)
-        {
-            return new LiteException(FILE_CORRUPTED, "File '{0}' has no content or is corrupted.", fileId);
         }
 
         internal static LiteException InvalidDatabase()
@@ -98,11 +91,6 @@ namespace LiteDB
         internal static LiteException CollectionLimitExceeded(int limit)
         {
             return new LiteException(COLLECTION_LIMIT_EXCEEDED, "This database exceeded the maximum limit of collection names size: {0} bytes", limit);
-        }
-
-        internal static LiteException JournalFileFound(string journal)
-        {
-            return new LiteException(JOURNAL_FILE_FOUND, "Journal file found on '{0}'. Try to reopen the database.", journal);
         }
 
         internal static LiteException IndexDropId()
@@ -140,11 +128,6 @@ namespace LiteDB
             return new LiteException(INVALID_COMMAND, "Command '{0}' is not a valid shell command.", command);
         }
 
-        internal static LiteException SyntaxError(string message)
-        {
-            return new LiteException(SYNTAX_ERROR, "Syntax error: " + message);
-        }
-
         internal static LiteException AlreadyExistsCollectionName(string newName)
         {
             return new LiteException(ALREADY_EXISTS_COLLECTION_NAME, "New collection name '{0}' already exists.", newName);
@@ -180,11 +163,6 @@ namespace LiteDB
             return new LiteException(INVALID_FORMAT, "Invalid format: {0}", field);
         }
 
-        internal static LiteException InvalidPath(string path)
-        {
-            return new LiteException(INVALID_FORMAT, "Invalid path format: {0}", path);
-        }
-
         internal static LiteException DocumentMaxDepth(int depth, Type type)
         {
             return new LiteException(DOCUMENT_MAX_DEPTH, "Document has more than {0} nested documents in '{1}'. Check for circular references (use DbRef).", depth, type == null ? "-" : type.Name);
@@ -197,7 +175,7 @@ namespace LiteDB
 
         internal static LiteException UnexpectedToken(string token)
         {
-            return new LiteException(UNEXPECTED_TOKEN, "Unexpected JSON/Shell token: {0}", token);
+            return new LiteException(UNEXPECTED_TOKEN, "Unexpected JSON token: {0}", token);
         }
 
         internal static LiteException InvalidDataType(string field, BsonValue value)
@@ -218,6 +196,16 @@ namespace LiteDB
         internal static LiteException InvalidTypedName(string type)
         {
             return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName').", type);
+        }
+
+        internal static LiteException SyntaxError(StringScanner s, string message = "Unexpected token")
+        {
+            var ex = new LiteException(SYNTAX_ERROR, message);
+
+            ex.Line = s.Source;
+            ex.Position = s.Index;
+
+            return ex;
         }
 
         #endregion

@@ -28,17 +28,8 @@
 - BUG: Remove return Duplicate values in MultiKey indexes [OK]
 - Support expression on index [OK]
 - Support expression on full search [OK]
+- Better shell error messages in parser with position in error [OK]
 
-# Shell
-    - Review Update syntax/parser/error messages
-    - Review Select syntax/parser/error messages
-    - Review autoId insert syntax/parser/error messages
-    - UnspectedTokenJson/Shell/Expression
-    
-# REVIEW => When NEEDs $. and when DON'T? Why do not always require $    
-
-# Document    
-- Implement BsonDocument.Resolve()
     
 # Build
 - Create compiler variables: NET35, NET40, NETFULL and NETSTANDARD.

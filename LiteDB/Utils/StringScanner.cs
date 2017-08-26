@@ -115,5 +115,15 @@ namespace LiteDB
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
             return match.Success;
         }
+
+        /// <summary>
+        /// Throw syntax exception if not terminate string
+        /// </summary>
+        public void ThrowIfNotFinish()
+        {
+            this.Scan(@"\s*");
+
+            if (!this.HasTerminated) throw LiteException.SyntaxError(this);
+        }
     }
 }

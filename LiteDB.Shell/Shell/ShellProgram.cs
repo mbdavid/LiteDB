@@ -53,7 +53,7 @@ namespace LiteDB.Shell
                 }
                 catch (Exception ex)
                 {
-                    display.WriteError(ex.Message);
+                    display.WriteError(ex);
                 }
             }
         }

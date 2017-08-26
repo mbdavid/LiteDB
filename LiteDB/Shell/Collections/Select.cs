@@ -14,18 +14,24 @@ namespace LiteDB.Shell
         {
             var col = this.ReadCollection(engine, s);
             var expression = BsonExpression.ReadExpression(s, false);
-            var output = this.ReadBsonValue(s);
+            var output = expression == null ? this.ReadBsonValue(s) : null;
 
             // select command required output value, path or expression
-            if (expression == null && output == BsonValue.Null) throw LiteException.SyntaxError("Missing select path");
+            if (expression == null && output == null) throw LiteException.SyntaxError(s, "Missing select path");
 
-            s.Scan(@"\s*where\s*");
+            var query = Query.All();
 
-            var query = this.ReadQuery(s);
+            if (s.Scan(@"\s*where\s*").Length > 0)
+            {
+                query = this.ReadQuery(s, true);
+            }
+
             var skipLimit = this.ReadSkipLimit(s);
             var includes = this.ReadIncludes(s);
-            var docs = engine.Find(col, query, includes, skipLimit.Key, skipLimit.Value);
 
+            s.ThrowIfNotFinish();
+
+            var docs = engine.Find(col, query, includes, skipLimit.Key, skipLimit.Value);
             var expr = expression == null ? null : new BsonExpression(expression);
 
             foreach(var doc in docs)

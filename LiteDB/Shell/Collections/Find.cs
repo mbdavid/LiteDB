@@ -13,9 +13,12 @@ namespace LiteDB.Shell
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
-            var query = this.ReadQuery(s);
+            var query = this.ReadQuery(s, false);
             var skipLimit = this.ReadSkipLimit(s);
             var includes = this.ReadIncludes(s);
+
+            s.ThrowIfNotFinish();
+
             var docs = engine.Find(col, query, includes, skipLimit.Key, skipLimit.Value);
 
             foreach(var doc in docs)

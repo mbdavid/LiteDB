@@ -22,17 +22,23 @@ namespace LiteDB.Shell
                 sid == "date" || sid == "datetime" ? BsonType.DateTime :
                 sid == "guid" ? BsonType.Guid : BsonType.ObjectId;
 
+            s.ThrowIfNotFinish();
+
             if (value.IsArray)
             {
                 var count = engine.Insert(col, value.AsArray.RawValue.Select(x => x.AsDocument), autoId);
 
                 yield return count;
             }
-            else
+            else if(value.IsDocument)
             {
                 engine.Insert(col, new BsonDocument[] { value.AsDocument }, autoId);
 
                 yield return value.AsDocument["_id"];
+            }
+            else
+            {
+                throw LiteException.SyntaxError(s, "Invalid JSON value (must be a document or an array)");
             }
         }
     }

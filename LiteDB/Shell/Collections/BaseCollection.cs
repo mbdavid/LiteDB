@@ -10,9 +10,9 @@ namespace LiteDB.Shell
     internal class BaseCollection
     {
         /// <summary>
-        /// Field (or path) regex pattern
+        /// Field only regex pattern (My.Demo.T_est)
         /// </summary>
-        public Regex FieldPattern = new Regex(@"[\w\.-]+\s*", RegexOptions.Compiled);
+        public Regex FieldPattern = new Regex(@"^[\$\w](\.?[\w\$][\w-]*)*\s*", RegexOptions.Compiled);
 
         /// <summary>
         /// Read collection name from db.(collection).(command)
@@ -61,7 +61,7 @@ namespace LiteDB.Shell
                 var includes = new List<string>();
                 var include = BsonExpression.ReadExpression(s, true);
 
-                if (include == null) throw LiteException.SyntaxError("Missing include paths");
+                if (include == null) throw LiteException.SyntaxError(s, "Missing include paths");
 
                 while (include != null && !s.HasTerminated)
                 {
@@ -79,9 +79,11 @@ namespace LiteDB.Shell
             return new string[0];
         }
 
-        public Query ReadQuery(StringScanner s)
+        public Query ReadQuery(StringScanner s, bool required)
         {
             s.Scan(@"\s*");
+
+            if (required && s.HasTerminated) throw LiteException.SyntaxError(s, "Unexpected finish of line");
 
             if (s.HasTerminated || s.Match(@"skip\s+\d") || s.Match(@"limit\s+\d") || s.Match(@"include[s]?\s+[\$\w]"))
             {
@@ -106,8 +108,11 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = BsonExpression.ReadExpression(s, true) ?? s.Scan(this.FieldPattern).Trim();
-            var oper = s.Scan(@"\s*(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)\s*").Trim().ToLower().ThrowIfEmpty("Invalid query operator");
+            var field = BsonExpression.ReadExpression(s, false) ?? s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field", s);
+            var oper = s.Scan(@"\s*(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)\s*").Trim().ToLower().ThrowIfEmpty("Invalid query operator", s);
+
+            if (s.HasTerminated) throw LiteException.SyntaxError(s, "Missing value");
+
             var value = JsonSerializer.Deserialize(s);
 
             switch (oper)

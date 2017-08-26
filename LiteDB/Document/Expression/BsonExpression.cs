@@ -14,8 +14,6 @@ namespace LiteDB
     /// </summary>
     public partial class BsonExpression
     {
-        public static BsonExpression Empty = new BsonExpression();
-
         #region Operator Functions Cache
 
         private static Dictionary<string, MethodInfo> _operators = new Dictionary<string, MethodInfo>
@@ -34,7 +32,6 @@ namespace LiteDB
             ["||"] = typeof(BsonExpression).GetMethod("OR")
         };
 
-
         #endregion
 
         private Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> _func;
@@ -43,11 +40,16 @@ namespace LiteDB
         public BsonExpression(string expression)
         {
             _expression = expression;
-            _func = Compile(expression);
+            _func = Compile(expression, true);
         }
 
-        private BsonExpression()
+        /// <summary>
+        /// Support full operations (be used inside array selector $.Items[expr])
+        /// </summary>
+        private BsonExpression(string expression, bool arithmeticOnly)
         {
+            _expression = expression;
+            _func = Compile(expression, arithmeticOnly);
         }
 
         /// <summary>
@@ -75,12 +77,14 @@ namespace LiteDB
             if (index == 0 && includeNullIfEmpty) yield return BsonValue.Null;
         }
 
+        #region Compiler
+
         private static Dictionary<string, Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>> _cache = new Dictionary<string, Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>();
 
         /// <summary>
         /// Parse and compile an expression from a string. Do cache of expressions
         /// </summary>
-        public static Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> Compile(string expression)
+        private static Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> Compile(string expression, bool arithmeticOnly)
         {
             Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> fn;
 
@@ -90,7 +94,13 @@ namespace LiteDB
             {
                 if (_cache.TryGetValue(expression, out fn)) return fn;
 
-                fn = Compile(new StringScanner(expression));
+                var root = Expression.Parameter(typeof(BsonDocument), "root");
+                var current = Expression.Parameter(typeof(BsonValue), "current");
+                var expr = ParseExpression(new StringScanner(expression), root, current, arithmeticOnly);
+
+                var lambda = Expression.Lambda<Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>(expr, root, current);
+
+                fn = lambda.Compile();
 
                 _cache[expression] = fn;
 
@@ -98,19 +108,12 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Parse and compile an expression from a StringScanner. Has no cache
-        /// </summary>
-        public static Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> Compile(StringScanner expression)
-        {
-            var root = Expression.Parameter(typeof(BsonDocument), "root");
-            var current = Expression.Parameter(typeof(BsonValue), "current");
-            var expr = ParseExpression(expression, root, current, false);
+        #endregion
 
-            var lambda = Expression.Lambda<Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>(expr, root, current);
+        #region Expression Parser
 
-            return lambda.Compile();
-        }
+        private static Regex _reArithmetic = new Regex(@"^\s*(\+|\-|\*|\/)\s*");
+        private static Regex _reOperator = new Regex(@"^\s*(\+|\-|\*|\/|=|!=|>=|>|<=|<|&&|\|\|)\s*");
 
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
@@ -121,15 +124,11 @@ namespace LiteDB
             var values = new List<Expression> { first };
             var ops = new List<string>();
 
-            // checks if must support arithmetic only (+, -, *, /)
-            var reOperations = arithmeticOnly ?
-                new Regex(@"\s*(+|-|*|\/)\s*") :
-                new Regex(@"\s*(+|-|\*|\/|=|!=|>=|>|<=|<|&&|\|\|)\s*");
-
             // read all blocks and operation first
             while (!s.HasTerminated)
             {
-                var op = s.Scan(reOperations, 1);
+                // checks if must support arithmetic only (+, -, *, /)
+                var op = s.Scan(arithmeticOnly ? _reArithmetic : _reOperator, 1);
 
                 if (op.Length == 0) break;
 
@@ -244,25 +243,17 @@ namespace LiteDB
 
                     if (s.Scan(@"\s*,\s*").Length > 0) continue;
                     else if (s.Scan(@"\s*\)\s*").Length > 0) break;
-                    throw LiteException.UnexpectedToken(s.ToString());
+                    throw LiteException.SyntaxError(s);
                 }
 
                 return Expression.Call(method, parameters.ToArray());
             }
 
-            throw LiteException.UnexpectedToken(s.ToString());
+            throw LiteException.SyntaxError(s);
         }
 
         /// <summary>
         /// Implement a JSON-Path like navigation on BsonDocument. Support a simple range of paths
-        /// $ => Root document
-        /// $.Name => Name value from root
-        /// $.Address.Street => Street value from Address sub document
-        /// $.Items => Array value from Items
-        /// $.Items[*] = All values (IEnumerable) from Items array
-        /// $.Items[0] = First value from Items array
-        /// $.Items[-1] = Last value from Items array
-        /// $.Items[*].Age = All age values from all items array
         /// </summary>
         private static Expression ParsePath(StringScanner s, Expression expr, ParameterExpression root)
         {
@@ -277,12 +268,14 @@ namespace LiteDB
                 var method = typeof(BsonExpression).GetMethod("Array");
                 var i = s.Scan(@"\[\s*(-?[\d+\*])\s*\]", 1);
                 var index = i != "*" && i != "" ? Convert.ToInt32(i) : int.MaxValue;
-                var inner = BsonExpression.Empty;
+                var inner = "";
 
                 if (i == "") // if array operation are not index based, read expression 
                 {
                     s.Scan(@"\[\s*");
-                    inner = new BsonExpression(ReadExpression(s, false));
+                    // read expression with full support to all operators/formulas
+                    inner = ReadExpression(s, false, false);
+                    if (inner == null) throw LiteException.SyntaxError(s, "Invalid expression formula");
                     s.Scan(@"\s*\]");
                 }
 
@@ -294,10 +287,14 @@ namespace LiteDB
             }
         }
 
+        #endregion
+
+        #region Expression reader from a StringScanner
+
         /// <summary>
         /// Extract expression or a path from a StringScanner. Returns null if is not a Path/Expression
         /// </summary>
-        public static string ReadExpression(StringScanner s, bool pathOnly)
+        internal static string ReadExpression(StringScanner s, bool pathOnly, bool arithmeticOnly = true)
         {
             var start = s.Index;
 
@@ -311,24 +308,30 @@ namespace LiteDB
 
                 if (pathOnly)
                 {
+                    // if read path, read first expression only
+                    // support missing $ as root
                     s.Scan(@"\$\.?");
                     ParseSingleExpression(s, root, current, true);
                 }
                 else
                 {
-                    ParseExpression(s, root, current, true);
+                    // read all expression (a + b)
+                    // if include operator, support = > < && || too
+                    ParseExpression(s, root, current, arithmeticOnly);
                 }
 
                 return s.Source.Substring(start, s.Index - start);
             }
-            catch (LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.SYNTAX_ERROR)
             {
                 s.Index = start;
                 return null;
             }
         }
 
-        #region Path methods
+        #endregion
+
+        #region Path static methods
 
         /// <summary>
         /// Returns value from root document. Returns same document if name are empty
@@ -365,7 +368,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all values from array according index. If index are MaxValue, return all values
         /// </summary>
-        public static IEnumerable<BsonValue> Array(IEnumerable<BsonValue> values, int index, BsonExpression expr, BsonDocument root)
+        public static IEnumerable<BsonValue> Array(IEnumerable<BsonValue> values, int index, string expr, BsonDocument root)
         {
             foreach (var value in values)
             {
@@ -374,12 +377,14 @@ namespace LiteDB
                     var arr = value.AsArray;
 
                     // [expression(Func<BsonValue, bool>)]
-                    if (expr != Empty)
+                    if (expr != "")
                     {
+                        var e = new BsonExpression(expr, false);
+
                         foreach (var item in arr)
                         {
                             // execute for each child value and except a first bool value (returns if true)
-                            var c = expr.Execute(root, item, true).First();
+                            var c = e.Execute(root, item, true).First();
 
                             if (c.IsBoolean && c.AsBoolean == true)
                             {

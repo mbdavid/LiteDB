@@ -13,7 +13,7 @@ namespace LiteDB.Shell
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
-            var newName = s.Scan(@"[\w-]+").ThrowIfEmpty("Invalid new collection name");
+            var newName = s.Scan(@"[\w-]+").ThrowIfEmpty("Invalid new collection name", s);
 
             yield return engine.RenameCollection(col, newName);
         }

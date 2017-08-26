@@ -7,12 +7,14 @@ namespace LiteDB.Shell
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsCollectionCommand(s, "drop$");
+            return this.IsCollectionCommand(s, "drop");
         }
 
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
+
+            s.ThrowIfNotFinish();
 
             yield return engine.DropCollection(col);
         }

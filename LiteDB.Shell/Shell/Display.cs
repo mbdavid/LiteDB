@@ -34,9 +34,17 @@ namespace LiteDB.Shell
             this.WriteLine(ConsoleColor.Gray, text);
         }
 
-        public void WriteError(string err)
+        public void WriteError(Exception ex)
         {
-            this.WriteLine(ConsoleColor.Red, err);
+            this.WriteLine(ConsoleColor.Red, ex.Message);
+
+            if (ex is LiteException && (ex as LiteException).ErrorCode == LiteException.SYNTAX_ERROR)
+            {
+                var err = ex as LiteException;
+
+                this.WriteLine(ConsoleColor.DarkYellow, "> " + err.Line);
+                this.WriteLine(ConsoleColor.DarkYellow, "> " + "^".PadLeft(err.Position + 1, ' '));
+            }
         }
 
         public void WriteHelp(string line1 = null, string line2 = null)

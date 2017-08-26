@@ -8,12 +8,15 @@ namespace LiteDB.Shell
     {
         public bool IsCommand(StringScanner s)
         {
-            return this.IsCollectionCommand(s, "indexes$");
+            return this.IsCollectionCommand(s, "indexes");
         }
 
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
+
+            s.ThrowIfNotFinish();
+
             var indexes = engine.GetIndexes(col);
 
             foreach(var index in indexes)

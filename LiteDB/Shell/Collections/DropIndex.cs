@@ -13,7 +13,9 @@ namespace LiteDB.Shell
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
-            var index = s.Scan(this.FieldPattern).Trim();
+            var index = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Missing field index name", s);
+
+            s.ThrowIfNotFinish();
 
             yield return engine.DropIndex(col, index);
         }
