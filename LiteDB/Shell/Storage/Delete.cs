@@ -15,6 +15,8 @@ namespace LiteDB.Shell
             var fs = new LiteStorage(engine);
             var id = this.ReadId(s);
 
+            s.ThrowIfNotFinish();
+
             yield return fs.Delete(id);
         }
     }

@@ -16,6 +16,8 @@ namespace LiteDB.Shell
             var id = this.ReadId(s);
             var metadata = JsonSerializer.Deserialize(s.ToString()).AsDocument;
 
+            s.ThrowIfNotFinish();
+
             fs.SetMetadata(id, metadata);
 
             yield break;

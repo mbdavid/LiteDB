@@ -24,6 +24,8 @@ namespace LiteDB.Shell
             {
                 var id = this.ReadId(s);
 
+                s.ThrowIfNotFinish();
+
                 files = fs.Find(id);
             }
 

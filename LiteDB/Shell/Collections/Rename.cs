@@ -15,6 +15,8 @@ namespace LiteDB.Shell
             var col = this.ReadCollection(engine, s);
             var newName = s.Scan(@"[\w-]+").ThrowIfEmpty("Invalid new collection name", s);
 
+            s.ThrowIfNotFinish();
+
             yield return engine.RenameCollection(col, newName);
         }
     }
