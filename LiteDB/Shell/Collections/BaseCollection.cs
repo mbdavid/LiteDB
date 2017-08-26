@@ -106,7 +106,7 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = BsonExpression.ReadExpression(s, false) ?? s.Scan(this.FieldPattern).Trim();
+            var field = BsonExpression.ReadExpression(s, true) ?? s.Scan(this.FieldPattern).Trim();
             var oper = s.Scan(@"\s*(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)\s*").Trim().ToLower().ThrowIfEmpty("Invalid query operator");
             var value = JsonSerializer.Deserialize(s);
 

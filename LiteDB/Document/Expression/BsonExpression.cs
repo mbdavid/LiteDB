@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -19,16 +20,20 @@ namespace LiteDB
 
         private static Dictionary<string, MethodInfo> _operators = new Dictionary<string, MethodInfo>
         {
+            ["/"] = typeof(BsonExpression).GetMethod("DIVIDE"),
+            ["*"] = typeof(BsonExpression).GetMethod("MULTIPLY"),
             ["+"] = typeof(BsonExpression).GetMethod("ADD"),
             ["-"] = typeof(BsonExpression).GetMethod("MINUS"),
-            ["*"] = typeof(BsonExpression).GetMethod("MULTIPLY"),
-            ["/"] = typeof(BsonExpression).GetMethod("DIVIDE"),
-            ["="] = typeof(BsonExpression).GetMethod("EQ"),
             [">"] = typeof(BsonExpression).GetMethod("GT"),
             [">="] = typeof(BsonExpression).GetMethod("GTE"),
             ["<"] = typeof(BsonExpression).GetMethod("LT"),
-            ["<="] = typeof(BsonExpression).GetMethod("LTE")
+            ["<="] = typeof(BsonExpression).GetMethod("LTE"),
+            ["="] = typeof(BsonExpression).GetMethod("EQ"),
+            ["!="] = typeof(BsonExpression).GetMethod("NEQ"),
+            ["&&"] = typeof(BsonExpression).GetMethod("AND"),
+            ["||"] = typeof(BsonExpression).GetMethod("OR")
         };
+
 
         #endregion
 
@@ -100,7 +105,7 @@ namespace LiteDB
         {
             var root = Expression.Parameter(typeof(BsonDocument), "root");
             var current = Expression.Parameter(typeof(BsonValue), "current");
-            var expr = ParseExpression(expression, root, current);
+            var expr = ParseExpression(expression, root, current, false);
 
             var lambda = Expression.Lambda<Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>(expr, root, current);
 
@@ -110,28 +115,67 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        internal static Expression ParseExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot = false)
+        internal static Expression ParseExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool arithmeticOnly)
         {
-            var left = ParseSingleExpression(s, root, current, isRoot);
-            var op = s.Scan(@"\s*(\+|\-|\*|\/|\=|\>\=|\>|\<\=|\<)\s*", 1);
+            var first = ParseSingleExpression(s, root, current, false);
+            var values = new List<Expression> { first };
+            var ops = new List<string>();
 
-            if (op.Length > 0)
-            {
-                var method = _operators[op];
-                var right = ParseExpression(s, root, current, false);
+            // checks if must support arithmetic only (+, -, *, /)
+            var reOperations = arithmeticOnly ?
+                new Regex(@"\s*(+|-|*|\/)\s*") :
+                new Regex(@"\s*(+|-|\*|\/|=|!=|>=|>|<=|<|&&|\|\|)\s*");
 
-                return Expression.Call(method, left, right);
-            }
-            else
+            // read all blocks and operation first
+            while (!s.HasTerminated)
             {
-                return left;
+                var op = s.Scan(reOperations, 1);
+
+                if (op.Length == 0) break;
+
+                var expr = ParseSingleExpression(s, root, current, false);
+
+                values.Add(expr);
+                ops.Add(op);
             }
+
+            var order = 0;
+
+            // now, process operator in correct order
+            while(values.Count >= 2)
+            {
+                var op = _operators.ElementAt(order);
+                var n = ops.IndexOf(op.Key);
+
+                if (n == -1)
+                {
+                    order++;
+                }
+                else
+                {
+                    // get left/right values to execute operator
+                    var left = values.ElementAt(n);
+                    var right = values.ElementAt(n + 1);
+
+                    // process result in a single value
+                    var result = Expression.Call(op.Value, left, right);
+
+                    // remove left+right and insert result
+                    values.Insert(n, result);
+                    values.RemoveRange(n + 1, 2);
+
+                    // remove operation
+                    ops.RemoveAt(n);
+                }
+            }
+
+            return values.Single();
         }
 
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        internal static Expression ParseSingleExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot = false)
+        internal static Expression ParseSingleExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
         {
             if (s.Match(@"[\$@]") || isRoot) // read root path
             {
@@ -194,7 +238,7 @@ namespace LiteDB
 
                 while (!s.HasTerminated)
                 {
-                    var parameter = ParseExpression(s, root, current);
+                    var parameter = ParseExpression(s, root, current, false);
 
                     parameters.Add(parameter);
 
@@ -268,9 +312,12 @@ namespace LiteDB
                 if (pathOnly)
                 {
                     s.Scan(@"\$\.?");
+                    ParseSingleExpression(s, root, current, true);
                 }
-
-                ParseExpression(s, root, current, isRoot);
+                else
+                {
+                    ParseExpression(s, root, current, true);
+                }
 
                 return s.Source.Substring(start, s.Index - start);
             }
