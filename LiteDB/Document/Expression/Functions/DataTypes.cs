@@ -13,5 +13,21 @@ namespace LiteDB
         {
             yield return new BsonArray(values);
         }
+
+        public static IEnumerable<BsonValue> IS_DATE(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values)
+            {
+                yield return value.IsDateTime;
+            }
+        }
+
+        public static IEnumerable<BsonValue> IS_NUMBER(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values)
+            {
+                yield return value.IsNumber;
+            }
+        }
     }
 }

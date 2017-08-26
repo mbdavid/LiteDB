@@ -114,7 +114,7 @@ namespace LiteDB
         public BsonValue(DateTime value)
         {
             this.Type = BsonType.DateTime;
-            this.RawValue = value;
+            this.RawValue = value.Truncate();
         }
 
         public BsonValue(BsonValue value)
@@ -139,7 +139,11 @@ namespace LiteDB
             else if (value is ObjectId) this.Type = BsonType.ObjectId;
             else if (value is Guid) this.Type = BsonType.Guid;
             else if (value is Boolean) this.Type = BsonType.Boolean;
-            else if (value is DateTime) this.Type = BsonType.DateTime;
+            else if (value is DateTime)
+            {
+                this.Type = BsonType.DateTime;
+                this.RawValue = ((DateTime)value).Truncate();
+            }
             else if (value is BsonValue)
             {
                 var v = (BsonValue)value;
