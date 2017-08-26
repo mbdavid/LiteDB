@@ -23,19 +23,24 @@ namespace LiteDB
         {
             foreach (var node in indexer.FindAll(index, Query.Ascending))
             {
-                var diff = node.Key.CompareTo(_value);
+                // compares only with are same type
+                if (node.Key.Type == _value.Type || (node.Key.IsNumber && _value.IsNumber))
+                {
+                    var diff = node.Key.CompareTo(_value);
 
-                if (diff == 1 || (!_equals && diff == 0)) break;
+                    if (diff == 1 || (!_equals && diff == 0)) break;
 
-                if (node.IsHeadTail(index)) yield break;
+                    if (node.IsHeadTail(index)) yield break;
 
-                yield return node;
+                    yield return node;
+                }
             }
         }
 
         internal override bool FilterDocument(BsonDocument doc)
         {
             return this.Expression.Execute(doc, true)
+                .Where(x => x.Type == _value.Type || (x.IsNumber && _value.IsNumber))
                 .Any(x => x.CompareTo(_value) <= (_equals ? 0 : -1));
         }
 

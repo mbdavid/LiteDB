@@ -29,13 +29,17 @@ namespace LiteDB
             // move until next is last
             while (node != null)
             {
-                var diff = node.Key.CompareTo(_value);
-
-                if (diff == 1 || (_equals && diff == 0))
+                // compares only with are same type
+                if (node.Key.Type == _value.Type || (node.Key.IsNumber && _value.IsNumber))
                 {
-                    if (node.IsHeadTail(index)) yield break;
+                    var diff = node.Key.CompareTo(_value);
 
-                    yield return node;
+                    if (diff == 1 || (_equals && diff == 0))
+                    {
+                        if (node.IsHeadTail(index)) yield break;
+
+                        yield return node;
+                    }
                 }
 
                 node = indexer.GetNode(node.Next[0]);
@@ -45,6 +49,7 @@ namespace LiteDB
         internal override bool FilterDocument(BsonDocument doc)
         {
             return this.Expression.Execute(doc, true)
+                .Where(x => x.Type == _value.Type || (x.IsNumber && _value.IsNumber))
                 .Any(x => x.CompareTo(_value) >= (_equals ? 0 : 1));
         }
 
