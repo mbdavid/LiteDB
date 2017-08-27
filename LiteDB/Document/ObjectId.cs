@@ -134,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public bool Equals(ObjectId other)
         {
-            return
+            return other != null && 
                 this.Timestamp == other.Timestamp &&
                 this.Machine == other.Machine &&
                 this.Pid == other.Pid &&
@@ -146,12 +146,7 @@ namespace LiteDB
         /// </summary>
         public override bool Equals(object other)
         {
-            if (other is ObjectId)
-            {
-                return this.Equals((ObjectId)other);
-            }
-
-            return false;
+            return Equals(other as ObjectId);
         }
 
         /// <summary>
