@@ -63,8 +63,8 @@ public class Customer
 // Open database (or create if doesn't exist)
 using(var db = new LiteDatabase(@"MyData.db"))
 {
-	// Get customer collection
-	var col = db.GetCollection<Customer>("customers");
+    // Get customer collection
+    var col = db.GetCollection<Customer>("customers");
 
     // Create your new customer instance
 	var customer = new Customer
@@ -78,16 +78,16 @@ using(var db = new LiteDatabase(@"MyData.db"))
     // Create unique index in Name field
     col.EnsureIndex(x => x.Name, true);
 	
-	// Insert new customer document (Id will be auto-incremented)
-	col.Insert(customer);
+    // Insert new customer document (Id will be auto-incremented)
+    col.Insert(customer);
 	
-	// Update a document inside a collection
-	customer.Name = "Joana Doe";
+    // Update a document inside a collection
+    customer.Name = "Joana Doe";
 	
-	col.Update(customer);
-		
-	// Use LINQ to query documents (will create index in Age field)
-	var results = col.Find(x => x.Age > 20);
+    col.Update(customer);
+	
+    // Use LINQ to query documents (with no index)
+    var results = col.Find(x => x.Age > 20);
 }
 ```
 
@@ -99,10 +99,9 @@ public class Order
 {
     public ObjectId Id { get; set; }
     public DateTime OrderDate { get; set; }
-	public Address ShippingAddress { get; set; }
+    public Address ShippingAddress { get; set; }
     public Customer Customer { get; set; }
     public List<Product> Products { get; set; }
-	public decimal Total => Products.Sum(p => p.Price);
 }        
 
 // Re-use mapper from global instance
@@ -112,9 +111,7 @@ var mapper = BsonMapper.Global;
 mapper.Entity<Order>()
     .DbRef(x => x.Customer, "customers")   // 1 to 1/0 reference
     .DbRef(x => x.Products, "products")    // 1 to Many reference
-	.Field(x => x.ShippingAddress, "addr") // Embedded sub document
-	.Index(x => x.OrderDate)               // Index this field
-	.Ignore(x => x.Total);                 // Do not store this
+    .Field(x => x.ShippingAddress, "addr"); // Embedded sub document
             
 using(var db = new LiteDatabase("MyOrderDatafile.db"))
 {
@@ -127,12 +124,11 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
         .Find(x => x.OrderDate <= DateTime.Now);
 
     // Each instance of Order will load Customer/Products references
-	foreach(var order in query)
-	{
-		var name = order.Customer.Name;
-		...
-	}
-                    
+    foreach(var order in query)
+    {
+        var name = order.Customer.Name;
+        ...
+    }
 }
 
 ```
@@ -147,7 +143,8 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 
 ## Plugins
 
-- A GUI tool: https://github.com/falahati/LiteDBViewer
+- A GUI viewer tool: https://github.com/falahati/LiteDBViewer
+- A GUI editor tool: https://github.com/JosefNemec/LiteDbExplorer 
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 - LINQPad support: https://github.com/adospace/litedbpad
 
