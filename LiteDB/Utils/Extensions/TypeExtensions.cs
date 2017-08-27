@@ -1,4 +1,4 @@
-﻿#if NET35
+﻿#if NETFULL
 using System;
 using System.Collections.Generic;
 using System.Linq;

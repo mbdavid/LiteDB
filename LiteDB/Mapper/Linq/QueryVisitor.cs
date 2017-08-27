@@ -126,7 +126,7 @@ namespace LiteDB
                 {
                     var met = expr as MethodCallExpression;
                     var method = met.Method.Name;
-#if NET35
+#if NETFULL
                     var type = met.Method.ReflectedType;
 #else
                 var type = met.Method.DeclaringType;

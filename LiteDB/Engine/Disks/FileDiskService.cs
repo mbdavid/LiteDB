@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-#if !NET35
+#if NETSTANDARD
 using System.Threading.Tasks;
 #endif
 
@@ -234,10 +234,9 @@ namespace LiteDB
         {
             _log.Write(Logger.DISK, "flush data from memory to disk");
 
-#if NET35
+#if NETFULL
             _stream.Flush();
-#endif
-#if !NET35
+#else
             _stream.Flush(true);
 #endif
         }
@@ -256,7 +255,7 @@ namespace LiteDB
         /// </summary>
         public int Lock(LockState state, TimeSpan timeout)
         {
-#if NET35
+#if NETFULL
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return 0;
 
@@ -268,8 +267,7 @@ namespace LiteDB
             _stream.TryLock(position, length, timeout);
 
             return position;
-#endif
-#if !NET35
+#else
             return 0;
 #endif
         }
@@ -279,7 +277,7 @@ namespace LiteDB
         /// </summary>
         public void Unlock(LockState state, int position)
         {
-#if NET35
+#if NETFULL
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared || state == LockState.Unlocked) return;
 
@@ -300,7 +298,7 @@ namespace LiteDB
         /// </summary>
         private FileStream CreateFileStream(string path, System.IO.FileMode mode, FileAccess access, FileShare share)
         {
-#if !NET35
+#if NETSTANDARD
             if (_options.Async)
             {
                 return this.SyncOverAsync(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE));
@@ -311,7 +309,7 @@ namespace LiteDB
                 System.IO.FileOptions.RandomAccess);
         }
 
-#if !NET35
+#if NETSTANDARD
         private T SyncOverAsync<T>(Func<T> f)
         {
             return Task.Run<T>(f).ConfigureAwait(false).GetAwaiter().GetResult();

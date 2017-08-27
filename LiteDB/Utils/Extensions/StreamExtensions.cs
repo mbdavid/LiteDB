@@ -39,7 +39,7 @@ namespace LiteDB
 
             try
             {
-#if NET35
+#if NETFULL
                 stream.Unlock(position, length);
 #endif
                 return true;
@@ -59,7 +59,7 @@ namespace LiteDB
 
             FileHelper.TryExec(() =>
             {
-#if NET35
+#if NETFULL
                 stream.Lock(position, length);
 #endif
             }, timeout);

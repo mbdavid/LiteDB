@@ -1,4 +1,4 @@
-﻿#if NET35
+﻿#if NETFULL
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;

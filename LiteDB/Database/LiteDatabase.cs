@@ -10,6 +10,19 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
+#if NET35
+        public static string __DEFINE_NET35 = "";
+#endif
+#if NET40
+        public static string __DEFINE_NET40 = "";
+#endif
+#if NETFULL
+        public static string __DEFINE_NETFULL = "";
+#endif
+#if NETSTANDARD
+        public static string __DEFINE_NETSTANDARD = "";
+#endif
+
         #region Properties
 
         private LazyLoad<LiteEngine> _engine = null;
@@ -64,7 +77,7 @@ namespace LiteDB
 
             var options = new FileOptions
             {
-#if !NET35
+#if NETSTANDARD
                 Async = _connectionString.Async,
 #endif
                 InitialSize = _connectionString.InitialSize,

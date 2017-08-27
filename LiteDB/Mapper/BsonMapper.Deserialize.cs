@@ -170,7 +170,7 @@ namespace LiteDB
 
                 if (o is IDictionary && type.GetTypeInfo().IsGenericType)
                 {
-#if NET35
+#if NETFULL
                     var k = type.GetGenericArguments()[0];
                     var t = type.GetGenericArguments()[1];
 #else
@@ -221,7 +221,7 @@ namespace LiteDB
             }
             else
             {
-#if NET35
+#if NETFULL
                 var addMethod = type.GetMethod("Add");
 #else
                 var addMethod = type.GetRuntimeMethod("Add", new Type[1] { itemType });

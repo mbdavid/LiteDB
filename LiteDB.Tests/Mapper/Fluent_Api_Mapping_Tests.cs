@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Drawing;
-#if !NET35
+#if NETSTANDARD
 using System.Threading.Tasks;
 #endif
 
@@ -18,7 +18,7 @@ namespace LiteDB.Tests.Mapper
         public int CurrentKey { get; set; }
         public Func<string> GetPath { get; set; }
         public string PropName { get; set; }
-#if !NET35
+#if NETSTANDARD
         // testing if DbAsync will be added
         private Task<string> DbAsync { get { return new Task<string>(() => "task"); } }
 #endif

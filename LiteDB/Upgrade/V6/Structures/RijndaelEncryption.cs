@@ -14,7 +14,7 @@ namespace LiteDB_V6
     {
         private static readonly byte[] SALT = new byte[] { 0x16, 0xae, 0xbf, 0x20, 0x01, 0xa0, 0xa9, 0x52, 0x34, 0x1a, 0x45, 0x55, 0x4a, 0xe1, 0x32, 0x1d };
 
-#if NET35
+#if NETFULL
         private Rijndael _rijndael;
 #else
         private Aes _rijndael;
@@ -24,7 +24,7 @@ namespace LiteDB_V6
 
         public RijndaelEncryption(string password)
         {
-#if NET35
+#if NETFULL
             _rijndael = Rijndael.Create();
 #else
             _rijndael = Aes.Create();
@@ -75,7 +75,7 @@ namespace LiteDB_V6
         /// </summary>
         public static byte[] HashSHA1(string password)
         {
-#if NET35
+#if NETFULL
             var sha = new SHA1CryptoServiceProvider();
 #else
             var sha = SHA1.Create();
@@ -89,7 +89,7 @@ namespace LiteDB_V6
         {
             if (_rijndael != null)
             {
-#if NET35
+#if NETFULL
                 _rijndael.Clear();
 #endif
                 _rijndael = null;

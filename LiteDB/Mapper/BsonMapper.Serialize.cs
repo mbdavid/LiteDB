@@ -101,7 +101,7 @@ namespace LiteDB
                 {
                     type = obj.GetType();
                 }
-#if NET35
+#if NETFULL
                 var itemType = type.GetGenericArguments()[1];
 #else
                 var itemType = type.GetTypeInfo().GenericTypeArguments[1];

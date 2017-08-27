@@ -40,7 +40,7 @@ namespace LiteDB
         public static void WaitFor(int ms)
         {
             // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
-#if NET35
+#if NETFULL
             System.Threading.Thread.Sleep(ms);
 #else
             System.Threading.Tasks.Task.Delay(ms).Wait();

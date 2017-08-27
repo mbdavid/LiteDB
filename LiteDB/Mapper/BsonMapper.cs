@@ -101,7 +101,7 @@ namespace LiteDB
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;
 
-#if NET35
+#if NETFULL
             this.IncludeFields = false;
 #endif
 
@@ -336,7 +336,7 @@ namespace LiteDB
         {
             // Get all members and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name in this order
             return Reflection.SelectMember(members,
-#if NET35
+#if NETFULL
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
 #else
                 x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,

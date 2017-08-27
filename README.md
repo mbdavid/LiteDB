@@ -29,6 +29,8 @@
 - Support expression on index [OK]
 - Support expression on full search [OK]
 - Better shell error messages in parser with position in error [OK]
+- BUG: _id with date never found (milliseconds) [OK]
+- BUG: when query using > or < must use same BsonType [OK]
 
     
 # Build
@@ -39,8 +41,6 @@
     - target versions: net35, net40 and netstandard
 
 # Bugs    
-- BUG: _id with date never found (milliseconds). Test using db.col.update a=5
-- BUG: when query using > or < must use same BsonType
 
 # Finish review
 - Add more Expression function (see RDLC functions)
