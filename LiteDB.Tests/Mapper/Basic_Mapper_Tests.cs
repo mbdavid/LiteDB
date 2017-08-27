@@ -207,7 +207,7 @@ namespace LiteDB.Tests.Mapper
             Assert.AreEqual(obj.MyId, nobj.MyId);
             Assert.AreEqual(obj.MyString, nobj.MyString);
             Assert.AreEqual(obj.MyGuid, nobj.MyGuid);
-            Assert.AreEqual(obj.MyDateTime, nobj.MyDateTime);
+            Assert.AreEqual(obj.MyDateTime.ToString(), nobj.MyDateTime.ToString());
             Assert.AreEqual(obj.MyDateTimeNullable, nobj.MyDateTimeNullable);
             Assert.AreEqual(obj.MyIntNullable, nobj.MyIntNullable);
             Assert.AreEqual(obj.MyEnumProp, nobj.MyEnumProp);

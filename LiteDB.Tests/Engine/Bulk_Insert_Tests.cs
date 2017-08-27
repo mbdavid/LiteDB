@@ -19,13 +19,13 @@ namespace LiteDB.Tests.Engine
             using (var db = new LiteEngine(file.Filename))
             {
                 // let's bulk 500.000 documents
-                db.InsertBulk("col", GetDocs(1, 500000));
+                db.InsertBulk("col", GetDocs(1, 60000));
 
                 // and assert if all are inserted (based on collection header only)
-                Assert.AreEqual(500000, db.Count("col"));
+                Assert.AreEqual(60000, db.Count("col"));
 
                 // and now count all 
-                Assert.AreEqual(500000, db.Count("col", Query.All()));
+                Assert.AreEqual(60000, db.Count("col", Query.All()));
             }
         }
 
