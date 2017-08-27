@@ -218,6 +218,22 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns document that exists in ALL queries results.
+        /// </summary>
+        public static Query And(params Query[] queries)
+        {
+            if (queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+
+            var left = queries[0];
+
+            for (int i = 1; i < queries.Length; i++)
+            {
+                left = And(left, queries[i]);
+            }
+            return left;
+        }
+
+        /// <summary>
         /// Returns documents that exists in ANY queries results (Union).
         /// </summary>
         public static Query Or(Query left, Query right)
@@ -226,6 +242,22 @@ namespace LiteDB
             if (right == null) throw new ArgumentNullException("right");
 
             return new QueryOr(left, right);
+        }
+
+        /// <summary>
+        /// Returns document that exists in ANY queries results (Union).
+        /// </summary>
+        public static Query Or(params Query[] queries)
+        {
+            if (queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+
+            var left = queries[0];
+
+            for (int i = 1; i < queries.Length; i++)
+            {
+                left = Or(left, queries[i]);
+            }
+            return left;
         }
 
         #endregion
@@ -245,7 +277,7 @@ namespace LiteDB
             {
                 this.UseFilter = true;
 
-                // create expression based on Field (if field contais '$' or '(' is already an expression)
+                // create expression based on Field (if field contains '$' or '(' is already an expression)
                 var expr = this.Field.StartsWith("$") || this.Field.IndexOf("(") > 0 ? 
                     this.Field : "$." + this.Field;
 

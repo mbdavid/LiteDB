@@ -72,6 +72,7 @@ namespace LiteDB.Tests.Engine
 
                 Assert.AreEqual("j", result(Query.And(Query.GTE("age", 1), Query.And(Query.LTE("age", 9), Query.EQ("name", "j")))));
 
+                Assert.AreEqual("j", result(Query.And(Query.GTE("age", 1), Query.LTE("age", 9), Query.EQ("name", "j"))));
 
                 Assert.AreEqual("a,i,j", result(Query.Or(Query.EQ("age", 1), Query.EQ("age", 9))));
 
