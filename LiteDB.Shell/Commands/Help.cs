@@ -62,10 +62,12 @@ namespace LiteDB.Shell.Commands
                 d.WriteHelp("> show collections", "List all collections inside database");
                 d.WriteHelp("> db.<collection>.insert <jsonDoc>", "Insert a new document into collection");
                 d.WriteHelp("> db.<collection>.update <jsonDoc>", "Update a document inside collection");
+                d.WriteHelp("> db.<collection>.update <field|path>=<value|expr> where <filter>", "Update document fields according filter query");
                 d.WriteHelp("> db.<collection>.delete <filter>", "Delete documents using a filter clausule (see find)");
                 d.WriteHelp("> db.<collection>.bulk <filename>", "Bulk insert a json file as documents");
                 d.WriteHelp("> db.<collection>.find [skip N][limit N]", "Show all documents. Can limit/skip results");
-                d.WriteHelp("> db.<collection>.find <filter> [skip N][limit N]", "Show filtered documents based on index search. See <filter> syntax below");
+                d.WriteHelp("> db.<collection>.find <filter> [skip N][limit N][include p0, pN]", "Show filtered documents based on index search. See <filter> syntax below");
+                d.WriteHelp("> db.<collection>.select <path|expr> where <filter> [skip N][limit N][include p0, pN]", "Show filtered documents based on index search. See <filter> syntax below");
                 d.WriteHelp("> db.<collection>.count <filter>", "Show count rows according query filter");
                 d.WriteHelp("> db.<collection>.ensureIndex <field> [unique]", "Create a new index document field");
                 d.WriteHelp("> db.<collection>.indexes", "List all indexes in this collection");

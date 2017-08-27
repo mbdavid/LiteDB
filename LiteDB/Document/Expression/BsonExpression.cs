@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 namespace LiteDB
 {
     /// <summary>
-    /// Compile and execute simple expressions using BsonDocuments. Used in indexes and updates operations
+    /// Compile and execute simple expressions using BsonDocuments. Used in indexes and updates operations. See https://github.com/mbdavid/LiteDB/wiki/Expressions
     /// </summary>
     public partial class BsonExpression
     {
@@ -232,8 +232,11 @@ namespace LiteDB
             else if (s.Match(@"\w+\s*\(")) // read function
             {
                 // get static method from this class
-                var method = typeof(BsonExpression).GetMethod(s.Scan(@"(\w+)\s*\(", 1).ToUpper());
+                var name = s.Scan(@"(\w+)\s*\(", 1).ToUpper();
+                var method = typeof(BsonExpression).GetMethod(name);
                 var parameters = new List<Expression>();
+
+                if (method == null) throw LiteException.SyntaxError(s, "Method " + name + " not exist");
 
                 while (!s.HasTerminated)
                 {

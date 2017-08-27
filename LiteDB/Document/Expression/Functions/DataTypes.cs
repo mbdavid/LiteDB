@@ -29,5 +29,13 @@ namespace LiteDB
                 yield return value.IsNumber;
             }
         }
+
+        public static IEnumerable<BsonValue> IS_STRING(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values)
+            {
+                yield return value.IsString;
+            }
+        }
     }
 }

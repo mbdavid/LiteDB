@@ -66,5 +66,13 @@ namespace LiteDB
                 yield return value.AsString.PadRight(width, pchar);
             }
         }
+
+        public static IEnumerable<BsonValue> FORMAT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> format)
+        {
+            foreach (var value in values.ZipValues(format))
+            {
+                yield return string.Format("{0:" + value.Right + "}", value.Left.RawValue);
+            }
+        }
     }
 }

@@ -16,6 +16,7 @@
 - Bugfix upload from local disk on storage [OK]
 - Bugfix debug messages in console on shell [OK]
 - Add include in engine/document level with any level [OK]
+- Compiled in NET35 for Unity3D support, NET40 and NETSTANDARD 1.3
 
 ## Better query engine
 - Remove auto create index on query execution. If the index is not found do full scan search (use `EnsureIndex` on initialize database) [OK]
@@ -29,20 +30,13 @@
 - Support expression on index [OK]
 - Support expression on full search [OK]
 - Better shell error messages in parser with position in error [OK]
-- BUG: _id with date never found (milliseconds) [OK]
+- BUG: DateTime.Now indexed date (milliseconds problem) [OK]
 - BUG: when query using > or < must use same BsonType [OK]
 
-    
-# Build
-- Create compiler variables: NET35, NET40, NETFULL and NETSTANDARD.
-    - Use NET35 for Unity using Reflectin.Emit
-    - Use !NET35 for Reflection.Expression
-    ...
-    - target versions: net35, net40 and netstandard
-
-# Bugs    
 
 # Finish review
+- Add support EnsureIndex + Update Fields in Repository
+
 - Add more Expression function (see RDLC functions)
 - Find old version about database usage to add in .Info()
 - Review all LiteException messages/codes
