@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>LiteDB</id>
-        <version>4.0.0</version>
+        <version>4.0.0-beta1</version>
         <title>LiteDB</title>
         <authors>Mauricio David</authors>
         <projectUrl>http://www.litedb.org</projectUrl>
