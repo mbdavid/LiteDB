@@ -20,6 +20,21 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Checks if a collection exists on database. Collection name is case insensitive
+        /// </summary>
+        public bool CollectionExists(string name)
+        {
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
+
+            using (_locker.Read())
+            {
+                var header = _pager.GetPage<HeaderPage>(0);
+
+                return header.CollectionPages.ContainsKey(name);
+            }
+        }
+
+        /// <summary>
         /// Drop collection including all documents, indexes and extended pages
         /// </summary>
         public bool DropCollection(string collection)
@@ -53,7 +68,7 @@ namespace LiteDB
                 _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", collection, newName);
 
                 // check if newName already exists
-                if (this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))
+                if (this.CollectionExists(newName))
                 {
                     throw LiteException.AlreadyExistsCollectionName(newName);
                 }

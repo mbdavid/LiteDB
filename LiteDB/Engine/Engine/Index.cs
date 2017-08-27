@@ -121,5 +121,26 @@ namespace LiteDB
                 }
             }
         }
+
+        /// <summary>
+        /// Get index from field name (index field name is case sensitive) - returns null if not found
+        /// </summary>
+        public IndexInfo GetIndex(string collection, string field)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+
+            using (_locker.Read())
+            {
+                var col = this.GetCollectionPage(collection, false);
+
+                if (col != null)
+                {
+                    var index = col.GetIndex(field);
+                    if (index != null)
+                        return new IndexInfo(index);
+                }
+                return null;
+            }
+        }
     }
 }

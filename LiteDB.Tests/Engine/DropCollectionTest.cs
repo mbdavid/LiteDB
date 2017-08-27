@@ -13,14 +13,14 @@ namespace LiteDB.Tests
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
-                Assert.IsFalse(db.GetCollectionNames().Any(x => x == "col"));
+                Assert.IsFalse(db.CollectionExists("col"));
 
                 db.Insert("col", new BsonDocument { { "a", 1 } });
-                Assert.IsTrue(db.GetCollectionNames().Any(x => x == "col"));
+                Assert.IsTrue(db.CollectionExists("col"));
 
                 db.DropCollection("col");
 
-                Assert.IsFalse(db.GetCollectionNames().Any(x => x == "col"));
+                Assert.IsFalse(db.CollectionExists("col"));
             }
         }
     }
