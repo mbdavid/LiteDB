@@ -5,7 +5,7 @@ namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public static Regex IndexPattern = new Regex(@"[\w-$\.]+$", RegexOptions.Compiled);
+        public static Regex IndexPattern = new Regex(@"^[\w](\.?[\w\$][\w-]*){0,29}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations
@@ -21,6 +21,11 @@ namespace LiteDB
         /// Field name
         /// </summary>
         public string Field { get; set; }
+
+        /// <summary>
+        /// Get index expression (path or expr)
+        /// </summary>
+        public string Expression { get; set; }
 
         /// <summary>
         /// Indicate if this index has distinct values only
@@ -66,6 +71,7 @@ namespace LiteDB
         public void Clear()
         {
             this.Field = string.Empty;
+            this.Expression = string.Empty;
             this.Unique = false;
             this.HeadNode = PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;

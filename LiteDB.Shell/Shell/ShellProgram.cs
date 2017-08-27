@@ -10,10 +10,8 @@ namespace LiteDB.Shell
     {
         public static void Start(InputCommand input, Display display)
         {
-            var commands = new List<ICommand>();
-            var env = new Env();
-
-            LiteEngine engine = null;
+            var commands = new List<IShellCommand>();
+            var env = new Env { Input = input, Display = display };
 
             // register commands
             RegisterCommands(commands);
@@ -36,51 +34,42 @@ namespace LiteDB.Shell
 
                     var found = false;
 
-                    // test all commands
+                    // first test all shell app commands
                     foreach (var command in commands)
                     {
                         if (!command.IsCommand(s)) continue;
 
-                        // open datafile before execute
-                        if (command.Access != DataAccess.None)
-                        {
-                            engine = env.CreateEngine(command.Access);
-                        }
-
-                        command.Execute(engine, s, display, input, env);
-
-                        // close datafile to be always disconnected
-                        if (engine != null)
-                        {
-                            engine.Dispose();
-                            engine = null;
-                        }
+                        command.Execute(s, env);
 
                         found = true;
                         break;
                     }
 
-                    if (!found) throw new ShellException("Command not found");
+                    // if not found, try database command
+                    if (!found)
+                    {
+                        display.WriteResult(env.Engine.Run(cmd));
+                    }
                 }
                 catch (Exception ex)
                 {
-                    display.WriteError(ex.Message);
+                    display.WriteError(ex);
                 }
             }
         }
 
         #region Register all commands
 
-        public static void RegisterCommands(List<ICommand> commands)
+        public static void RegisterCommands(List<IShellCommand> commands)
         {
-            var type = typeof(ICommand);
-            var types = typeof(ShellProgram).GetTypeInfo().Assembly
+            var type = typeof(IShellCommand);
+            var types = typeof(ShellProgram).Assembly
                 .GetTypes()
-                .Where(p => type.IsAssignableFrom(p) && p.GetTypeInfo().IsClass);
+                .Where(p => type.IsAssignableFrom(p) && p.IsClass);
 
             foreach(var cmd in types)
             {
-                commands.Add(Activator.CreateInstance(cmd) as ICommand);
+                commands.Add(Activator.CreateInstance(cmd) as IShellCommand);
             }
         }
 

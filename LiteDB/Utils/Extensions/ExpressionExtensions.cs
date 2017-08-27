@@ -22,6 +22,14 @@ namespace LiteDB
             // quick and dirty solution to support x.Name.SubName
             // http://stackoverflow.com/questions/671968/retrieving-property-name-from-lambda-expression
 
+            // enum properties seem to get compiled with Convert(prop, Int32) wrapper calls on Mono 5.0+
+            // this causes path extraction code below to fail, since a clean "x.y.z" string is expected
+            // thus we strip out any Converts found, using a loop in case there are nested Convert expressions
+            while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked)
+            {
+                expr = ((UnaryExpression)expr).Operand;
+            }
+            
             var str = expr.ToString(); // gives you: "o => o.Whatever"
             var firstDelim = str.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?
 
@@ -33,27 +41,6 @@ namespace LiteDB
                 .Replace(")", "");
 
             return path;
-        }
-
-        public static BinaryExpression Assign(Expression left, Expression right)
-        {
-#if NET35
-            var assign = typeof(Assigner<>).MakeGenericType(left.Type).GetMethod("Assign");
-
-            var assignExpr = Expression.Add(left, right, assign);
-
-            return assignExpr;
-#else
-            return Expression.Assign(left, right);
-#endif
-        }
-
-        private static class Assigner<T>
-        {
-            public static T Assign(ref T left, T right)
-            {
-                return (left = right);
-            }
         }
     }
 }

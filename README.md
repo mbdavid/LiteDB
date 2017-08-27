@@ -1,3 +1,58 @@
+# LiteDB v4
+
+## Changes
+- Fix simple lock control (multi-read/single write) in thread/process. Removed reserved lock state [OK]
+- Upgrade to VS2017 [OK]
+- Remove physical journal file (store journal pages after file ends) [OK]
+- Remove transactions [OK] **BREAK API**
+- Remove auto-id register function for custom type [OK] **BREAK API**
+- Add auto-id in engine level with pre-defined commom types [OK]
+- Add collection sequence (`ulong`) to use in engine level auto-id [OK]
+- Add integrety check in TempFile for tests (before delete)
+- Remove index definitions on mapper (fluent/attribute) [OK] **OBSOLETE**
+- Review shell app and now keeps datafile open [OK]
+- Auto-id default true to `_id` with `BsonType` = `ObjectId`, `Guid`, `DateTime`, `Int32` or `Int64`
+- LiteDB.Perf exe proejct for concurrency examples [OK]
+- Bugfix upload from local disk on storage [OK]
+- Bugfix debug messages in console on shell [OK]
+- Add include in engine/document level with any level [OK]
+- Compiled in NET35 for Unity3D support, NET40 and NETSTANDARD 1.3
+
+## Better query engine
+- Remove auto create index on query execution. If the index is not found do full scan search (use `EnsureIndex` on initialize database) [OK]
+- Implement FilterDocument option in all query implementations (full scan document) [OK]
+- In `Query.And` use only one index side with full scan on other [OK]
+- Print query execution plan in Query.ToString() [OK] `(Seek([Age] > 10) and Scan([Name] startsWith "John"))`
+- Convert `Query.And` to `Query.Between` when possible [OK]
+- Add support to `Query.Between` open/close interval [OK]
+- QueryLinq for non resolved linq expression on visitor [OK] `col.Find(x => x.Id < 10 && x.Name.Length > 10)`
+- BUG: Remove return Duplicate values in MultiKey indexes [OK]
+- Support expression on index [OK]
+- Support expression on full search [OK]
+- Better shell error messages in parser with position in error [OK]
+- BUG: DateTime.Now indexed date (milliseconds problem) [OK]
+- BUG: when query using > or < must use same BsonType [OK]
+
+
+# Finish review
+- Add support EnsureIndex + Update Fields in Repository
+
+- Add more Expression function (see RDLC functions)
+- Find old version about database usage to add in .Info()
+- Review all LiteException messages/codes
+- Count\Exists when use filter must call checkTrans
+- Review AND/OR index/filter
+- Review Log messages
+- Review trans.CheckPoint() (do just after foreach);
+- Review if it's better use None/Flush/WriteThrough
+
+- Write Wiki about shell commands
+- Write Wiki about Expression/Path and usage (index, filter, ...)
+- Update wiki minor details
+
+====================================================    
+    
+
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
 [![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb) [![Build Status](https://travis-ci.org/mbdavid/LiteDB.svg?branch=master)](https://travis-ci.org/mbdavid/LiteDB)
@@ -6,10 +61,10 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 / NETStandard 1.3 in a single DLL (less than 250kb)
+- 100% C# code for .NET 3.5 / NETStandard 1.3 in a single DLL (less than 200kb)
 - Support for Portable UWP/PCL (thanks to @negue and @szurgot)
 - Thread safe and process safe
-- ACID transactions
+- ACID in document level
 - Data recovery after write failure (journal mode)
 - Datafile encryption using DES (AES) cryptography
 - Map your POCO classes to `BsonDocument` using attributes or fluent mapper API
@@ -22,9 +77,11 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
-## New in 3.1
-- New `LiteRepository` class to simple repository pattern data access [see here](https://github.com/mbdavid/LiteDB/wiki/LiteRepository)
-- Collection names could be `null` and will be resolved by `BsonMapper.ResolveCollectionName` user function (default:  `typeof(T).Name`)
+## New in 3.5
+- Fix concurrency problems
+- Remove transaction
+- Support for full scan search and LINQ
+(see "How upgrade to 3.5")
 
 ## Try online
 

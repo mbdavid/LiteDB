@@ -23,5 +23,20 @@ namespace LiteDB
                 .FindAll(index, Query.Ascending)
                 .Where(x => x.Key.IsString && x.Key.AsString.Contains(_value));
         }
+
+        internal override bool FilterDocument(BsonDocument doc)
+        {
+            return this.Expression.Execute(doc, false)
+                .Where(x => x.IsString)
+                .Any(x => x.AsString.Contains(_value));
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1} contains {2})",
+                this.UseFilter ? "Filter" : this.UseIndex ? "Scan" : "",
+                this.Expression?.ToString() ?? this.Field,
+                _value);
+        }
     }
 }

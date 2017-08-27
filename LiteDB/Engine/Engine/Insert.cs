@@ -9,18 +9,19 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - returns _id value
         /// </summary>
-        public BsonValue Insert(string collection, BsonDocument doc)
+        public BsonValue Insert(string collection, BsonDocument doc, BsonType autoId = BsonType.ObjectId)
         {
             if (doc == null) throw new ArgumentNullException("doc");
 
-            this.Insert(collection, new BsonDocument[] { doc });
+            this.Insert(collection, new BsonDocument[] { doc }, autoId);
+
             return doc["_id"];
         }
 
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonType autoId = BsonType.ObjectId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (docs == null) throw new ArgumentNullException("docs");
@@ -31,7 +32,7 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
-                    InsertDocument(col, doc);
+                    this.InsertDocument(col, doc, autoId);
 
                     _trans.CheckPoint();
 
@@ -45,18 +46,17 @@ namespace LiteDB
         /// <summary>
         /// Bulk documents to a collection - use data chunks for most efficient insert
         /// </summary>
-        public int InsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000)
+        public int InsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000, BsonType autoId = BsonType.ObjectId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (docs == null) throw new ArgumentNullException("docs");
             if (batchSize < 100 || batchSize > 100000) throw new ArgumentException("batchSize must be a value between 100 and 100000");
-            if (this.TransactionCount > 0) throw LiteException.TransactionNotSupported("InsertBulk");
 
             var count = 0;
 
             foreach(var batch in docs.Batch(batchSize))
             {
-                count += this.Insert(collection, batch);
+                count += this.Insert(collection, batch, autoId);
             }
 
             return count;
@@ -65,14 +65,46 @@ namespace LiteDB
         /// <summary>
         /// Internal implementation of insert a document
         /// </summary>
-        private void InsertDocument(CollectionPage col, BsonDocument doc)
+        private void InsertDocument(CollectionPage col, BsonDocument doc, BsonType autoId)
         {
             BsonValue id;
 
-            // if no _id, add one as ObjectId
+            // collection Sequence was created after release current datafile version. 
+            // In this case, Sequence will be 0 but already has documents. Let's fix this
+            // ** this code can be removed when datafile change from 7 (HeaderPage.FILE_VERSION) **
+            if (col.Sequence == 0 && col.DocumentCount > 0)
+            {
+                var max = this.Max(col.CollectionName, "_id");
+
+                // if max value is a number, convert to Sequence last value
+                // if not, just set sequence as document count
+                col.Sequence = (max.IsInt32 || max.IsInt64 || max.IsDouble || max.IsDecimal) ?
+                    Convert.ToInt64(max.RawValue) :
+                    Convert.ToInt64(col.DocumentCount);
+            }
+
+            // increase collection sequence _id
+            col.Sequence++;
+
+            _pager.SetDirty(col);
+
+            // if no _id, add one
             if (!doc.RawValue.TryGetValue("_id", out id))
             {
-                doc["_id"] = id = ObjectId.NewObjectId();
+                doc["_id"] = id =
+                    autoId == BsonType.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :
+                    autoId == BsonType.Guid ? new BsonValue(Guid.NewGuid()) :
+                    autoId == BsonType.DateTime ? new BsonValue(DateTime.Now) :
+                    autoId == BsonType.Int32 ? new BsonValue((Int32)col.Sequence) :
+                    autoId == BsonType.Int64 ? new BsonValue(col.Sequence) : BsonValue.Null;
+            }
+            // create bubble in sequence number if _id is bigger than current sequence
+            else if(autoId == BsonType.Int32 || autoId == BsonType.Int64)
+            {
+                var current = id.AsInt64;
+
+                // if current id is bigger than sequence, jump sequence to this number. Other was, do not increse sequnce
+                col.Sequence = current >= col.Sequence ? current : col.Sequence - 1;
             }
 
             // test if _id is a valid type
@@ -81,7 +113,7 @@ namespace LiteDB
                 throw LiteException.InvalidDataType("_id", id);
             }
 
-            _log.Write(Logger.COMMAND, "insert document on '{0}' :: _id = {1}", col.CollectionName, id);
+            _log.Write(Logger.COMMAND, "insert document on '{0}' :: _id = {1}", col.CollectionName, id.RawValue);
 
             // serialize object
             var bytes = BsonSerializer.Serialize(doc);
@@ -100,7 +132,8 @@ namespace LiteDB
             {
                 // for each index, get all keys (support now multi-key) - gets distinct values only
                 // if index are unique, get single key only
-                var keys = doc.GetValues(index.Field, index.Unique);
+                var expr = new BsonExpression(index.Expression);
+                var keys = expr.Execute(doc, true);
 
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)

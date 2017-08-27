@@ -29,7 +29,7 @@ namespace LiteDB
 
         internal LiteFileInfo(LiteEngine engine, string id, string filename)
         {
-            if (!IdPattern.IsMatch(id)) throw LiteException.InvalidFormat("FileId", id);
+            if (!IdPattern.IsMatch(id)) throw LiteException.InvalidFormat(id);
 
             _engine = engine;
 

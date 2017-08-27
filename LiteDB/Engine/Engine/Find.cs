@@ -9,46 +9,59 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 200)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            var docs = new List<BsonDocument>(bufferSize);
+
+            using(var context = new QueryContext(query, skip, limit, bufferSize))
             {
-                // get my collection page
-                var col = this.GetCollectionPage(collection, false);
-
-                // no collection, no documents
-                if (col == null) yield break;
-
-                // if there is no create index factory, create new here
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
-
-                // get nodes from query executor to get all IndexNodes
-                var nodes = query.Run(col, _indexer);
-
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
-
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-                // for each document, read data and deserialize as document
-                foreach (var node in nodes)
+                using (_locker.Read())
                 {
-                    _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", collection, node.Key);
+                    // get my collection page
+                    var col = this.GetCollectionPage(collection, false);
 
-                    byte[] buffer;
-                    BsonDocument doc;
+                    // no collection, no documents
+                    if (col == null) yield break;
 
-                    // encapsulate read operation inside a try/catch (yield do not support try/catch)
-                    buffer = _data.Read(node.DataBlock);
-                    doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                    // get nodes from query executor to get all IndexNodes
+                    context.Nodes = query.Run(col, _indexer).GetEnumerator();
 
-                    _trans.CheckPoint();
+                    _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
 
-                    yield return doc;
+                    // fill buffer with documents 
+                    docs.AddRange(context.GetDocuments(_trans, _data, _log));
+                }
+
+                // returing first documents in buffer
+                foreach (var doc in docs) yield return doc;
+
+                // if still documents to read, continue
+                while (context.HasMore)
+                {
+                    // clear buffer
+                    docs.Clear();
+
+                    // lock read mode
+                    using (_locker.Read())
+                    {
+                        // run query again skiping already returned documents
+                        // it's important because collection could be changed between on lock and other
+                        var col = this.GetCollectionPage(collection, false);
+
+                        if (col == null) yield break;
+
+                        context.Nodes = query.Run(col, _indexer).GetEnumerator();
+
+                        _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
+
+                        docs.AddRange(context.GetDocuments(_trans, _data, _log));
+                    }
+
+                    // return documents from buffer
+                    foreach (var doc in docs) yield return doc;
                 }
             }
         }
@@ -56,36 +69,64 @@ namespace LiteDB
         /// <summary>
         /// Find index keys from collection. Do not retorn document, only key value
         /// </summary>
-        public IEnumerable<BsonValue> FindIndex(string collection, Query query, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<BsonValue> FindIndex(string collection, Query query, int skip = 0, int limit = int.MaxValue, int bufferSize = 2000)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            var keys = new List<BsonValue>(bufferSize);
+
+            using (var context = new QueryContext(query, skip, limit, bufferSize))
             {
-                // get my collection page
-                var col = this.GetCollectionPage(collection, false);
-
-                // no collection, no values
-                if (col == null) yield break;
-
-                // get nodes from query executor to get all IndexNodes
-                var nodes = query.Run(col, _indexer);
-
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
-
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-                // for each document, read data and deserialize as document
-                foreach (var node in nodes)
+                using (_locker.Read())
                 {
-                    _log.Write(Logger.QUERY, "read index key on '{0}' :: key = {1}", collection, node.Key);
+                    // get my collection page
+                    var col = this.GetCollectionPage(collection, false);
 
-                    _trans.CheckPoint();
+                    // no collection, no values
+                    if (col == null) yield break;
 
-                    yield return node.Key;
+                    // get nodes from query executor to get all IndexNodes
+                    context.Nodes = query.Run(col, _indexer).GetEnumerator();
+
+                    // FindIndex must run as Index seek (not by full scan)
+                    if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
+
+                    _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
+
+                    // fill buffer with index keys
+                    keys.AddRange(context.GetIndexKeys(_trans, _log));
+                }
+
+                // returing first keys in buffer
+                foreach (var key in keys) yield return key;
+
+                // if still documents to read, continue
+                while (context.HasMore)
+                {
+                    // clear buffer
+                    keys.Clear();
+
+                    // lock read mode
+                    using (_locker.Read())
+                    {
+                        // run query again skiping already returned documents
+                        // it's important because collection could be changed between on lock and other
+                        var col = this.GetCollectionPage(collection, false);
+
+                        if (col == null) yield break;
+
+                        context.Nodes = query.Run(col, _indexer).GetEnumerator();
+
+                        if (!query.UseIndex) throw LiteException.IndexNotFound(collection, query.Field);
+
+                        _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
+
+                        keys.AddRange(context.GetIndexKeys(_trans, _log));
+                    }
+
+                    // return keys from buffer
+                    foreach (var key in keys) yield return key;
                 }
             }
         }

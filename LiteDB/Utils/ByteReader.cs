@@ -8,7 +8,7 @@ namespace LiteDB
         private byte[] _buffer;
         private int _pos;
 
-        public int Position { get { return _pos; } }
+        public int Position { get { return _pos; } set { _pos = value; } }
 
         public ByteReader(byte[] buffer)
         {

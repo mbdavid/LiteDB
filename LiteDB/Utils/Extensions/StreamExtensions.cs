@@ -35,9 +35,11 @@ namespace LiteDB
         /// </summary>
         public static bool TryUnlock(this FileStream stream, long position, long length)
         {
+            if (length == 0) return true;
+
             try
             {
-#if NET35
+#if NETFULL
                 stream.Unlock(position, length);
 #endif
                 return true;
@@ -53,9 +55,11 @@ namespace LiteDB
         /// </summary>
         public static void TryLock(this FileStream stream, long position, long length, TimeSpan timeout)
         {
+            if (length == 0) return;
+
             FileHelper.TryExec(() =>
             {
-#if NET35
+#if NETFULL
                 stream.Lock(position, length);
 #endif
             }, timeout);

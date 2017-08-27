@@ -10,11 +10,11 @@ namespace LiteDB
         /// then any documents not updated are then attempted to insert.
         /// This will have the side effect of throwing if duplicate items are attempted to be inserted. Returns true if document is inserted
         /// </summary>
-        public bool Upsert(string collection, BsonDocument doc)
+        public bool Upsert(string collection, BsonDocument doc, BsonType autoId = BsonType.ObjectId)
         {
             if (doc == null) throw new ArgumentNullException("doc");
 
-            return this.Upsert(collection, new BsonDocument[] { doc }) == 1;
+            return this.Upsert(collection, new BsonDocument[] { doc }, autoId) == 1;
         }
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace LiteDB
         /// then any documents not updated are then attempted to insert.
         /// This will have the side effect of throwing if duplicate items are attempted to be inserted.
         /// </summary>
-        public int Upsert(string collection, IEnumerable<BsonDocument> docs)
+        public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonType autoId = BsonType.ObjectId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (docs == null) throw new ArgumentNullException("docs");
@@ -33,10 +33,11 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
-                    // first try update document, if not found, insert
-                    if(this.UpdateDocument(col, doc) == false)
+                    // first try update document (if exists _id)
+                    // if not found, insert
+                    if (doc["_id"] == BsonValue.Null || this.UpdateDocument(col, doc) == false)
                     {
-                        this.InsertDocument(col, doc);
+                        this.InsertDocument(col, doc, autoId);
                         count++;
                     }
 

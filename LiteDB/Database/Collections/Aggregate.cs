@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LiteDB
@@ -22,8 +23,6 @@ namespace LiteDB
         public int Count(Query query)
         {
             if (query == null) throw new ArgumentNullException("query");
-
-            query.IndexFactory((c, f) => IndexFactory(f));
 
             return (int)_engine.Value.Count(_name, query);
         }
@@ -58,8 +57,6 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            query.IndexFactory((c, f) => IndexFactory(f));
-
             return _engine.Value.Count(_name, query);
         }
 
@@ -83,8 +80,6 @@ namespace LiteDB
         public bool Exists(Query query)
         {
             if (query == null) throw new ArgumentNullException("query");
-
-            query.IndexFactory((c, f) => IndexFactory(f));
 
             return _engine.Value.Exists(_name, query);
         }

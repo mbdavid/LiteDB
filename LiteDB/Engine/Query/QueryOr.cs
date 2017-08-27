@@ -16,10 +16,16 @@ namespace LiteDB
             _right = right;
         }
 
-        internal override void IndexFactory(Action<string, string> createIndex)
+        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
-            _left.IndexFactory(createIndex);
-            _right.IndexFactory(createIndex);
+            var left = _left.Run(col, indexer);
+            var right = _right.Run(col, indexer);
+
+            // if any query (left/right) is FullScan, this query is full scan too
+            this.UseIndex = _left.UseIndex && _right.UseIndex;
+            this.UseFilter = _left.UseFilter || _right.UseFilter;
+
+            return left.Union(right, new IndexNodeComparer());
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
@@ -27,12 +33,14 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        internal override bool FilterDocument(BsonDocument doc)
         {
-            var left = _left.Run(col, indexer);
-            var right = _right.Run(col, indexer);
+            return _left.FilterDocument(doc) || _right.FilterDocument(doc);
+        }
 
-            return left.Union(right, new IndexNodeComparer());
+        public override string ToString()
+        {
+            return string.Format("({0} or {1})", _left, _right);
         }
     }
 }

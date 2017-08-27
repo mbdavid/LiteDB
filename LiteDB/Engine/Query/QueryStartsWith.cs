@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -39,6 +40,21 @@ namespace LiteDB
 
                 node = indexer.GetNode(node.Next[0]);
             }
+        }
+
+        internal override bool FilterDocument(BsonDocument doc)
+        {
+            return this.Expression.Execute(doc, false)
+                .Where(x => x.IsString)
+                .Any(x => x.AsString.StartsWith(_value));
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1} startsWith {2})",
+                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
+                this.Expression?.ToString() ?? this.Field,
+                _value);
         }
     }
 }

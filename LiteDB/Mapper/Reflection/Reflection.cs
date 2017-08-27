@@ -72,7 +72,7 @@ namespace LiteDB
                             }
                             else if (typeDef == typeof(IDictionary<,>))
                             {
-#if NET35
+#if NETFULL
                                 var k = type.GetGenericArguments()[0];
                                 var v = type.GetGenericArguments()[1];
 #else
@@ -116,7 +116,7 @@ namespace LiteDB
         public static Type UnderlyingTypeOf(Type type)
         {
             // works only for generics (if type is not generic, returns same type)
-#if NET35
+#if NETFULL
             if (!type.IsGenericType) return type;
 
             return type.GetGenericArguments()[0];
@@ -146,7 +146,7 @@ namespace LiteDB
         {
             if (listType.IsArray) return listType.GetElementType();
 
-#if NET35
+#if NETFULL
             foreach (var i in listType.GetInterfaces())
 #else
             foreach (var i in listType.GetTypeInfo().ImplementedInterfaces)
@@ -154,7 +154,7 @@ namespace LiteDB
             {
                 if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-#if NET35
+#if NETFULL
                     return i.GetGenericArguments()[0];
 #else
                     return i.GetTypeInfo().GenericTypeArguments[0];
@@ -164,7 +164,7 @@ namespace LiteDB
                 // from #395
                 else if(listType.GetTypeInfo().IsGenericType && i == typeof(IEnumerable))
                 {
-#if NET35
+#if NETFULL
                     return listType.GetGenericArguments()[0];
 #else
                     return listType.GetTypeInfo().GenericTypeArguments[0];
@@ -181,8 +181,9 @@ namespace LiteDB
         public static bool IsList(Type type)
         {
             if (type.IsArray) return true;
+            if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
 
-#if NET35
+#if NETFULL
             foreach (var @interface in type.GetInterfaces())
 #else
             foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)

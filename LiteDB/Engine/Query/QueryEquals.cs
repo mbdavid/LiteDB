@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace LiteDB
@@ -31,6 +32,20 @@ namespace LiteDB
                     yield return node;
                 }
             }
+        }
+
+        internal override bool FilterDocument(BsonDocument doc)
+        {
+            return this.Expression.Execute(doc, true)
+                .Any(x => x.CompareTo(_value) == 0);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1} = {2})",
+                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
+                this.Expression?.ToString() ?? this.Field,
+                _value);
         }
     }
 }

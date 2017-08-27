@@ -9,45 +9,33 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string collection, string field, bool unique = false)
+        public bool EnsureIndex(string collection, string field, bool unique = false, string expression = null)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexPattern.ToString(), "field");
+            if (field == "_id") return false; // always exists
+            if (expression != null && expression.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
 
             return this.Transaction<bool>(collection, true, (col) =>
             {
                 // check if index already exists
                 var current = col.GetIndex(field);
 
-                // if already exists, checks if changed unique
+                // if already exists, just exit
                 if (current != null)
                 {
-                    // change from unique to non-unique (just update)
-                    if (current.Unique == true && unique == false)
-                    {
-                        current.Unique = false;
-                        _pager.SetDirty(col);
-                        return true;
-                    }
-                    // change from non-unique to unique (need be re-created)
-                    else if (current.Unique == false && unique == true)
-                    {
-                        _indexer.DropIndex(current);
-                        current.Clear();
-                    }
-                    else
-                    {
-                        return false; // no changes
-                    }
+                    // do not test any difference between current index and new defition
+                    return false;
                 }
-
-                _log.Write(Logger.COMMAND, "create index on '{0}' :: '{1}' unique: {2}", collection, field, unique);
 
                 // create index head
                 var index = _indexer.CreateIndex(col);
 
                 index.Field = field;
+                index.Expression = expression ?? "$." + field;
                 index.Unique = unique;
+
+                _log.Write(Logger.COMMAND, "create index on '{0}' :: {1} unique: {2}", collection, index.Expression, unique);
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
@@ -55,9 +43,10 @@ namespace LiteDB
                     // read binary and deserialize document
                     var buffer = _data.Read(pkNode.DataBlock);
                     var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                    var expr = new BsonExpression(index.Expression);
 
-                    // get distinct values from field in document
-                    var keys = doc.GetValues(field, true, unique);
+                    // get values from expression in document
+                    var keys = expr.Execute(doc, true);
 
                     // adding index node for each value
                     foreach (var key in keys)
@@ -120,7 +109,7 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 var col = this.GetCollectionPage(collection, false);
 

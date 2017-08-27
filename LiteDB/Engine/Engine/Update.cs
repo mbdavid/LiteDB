@@ -33,11 +33,44 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
-                    if (UpdateDocument(col, doc))
+                    if (this.UpdateDocument(col, doc))
                     {
                         _trans.CheckPoint();
 
                         count++;
+                    }
+                }
+
+                return count;
+            });
+        }
+
+        /// <summary>
+        /// Update each document according query result with Update rules
+        /// </summary>
+        public int Update(string collection, Query query, Update update)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (update == null) throw new ArgumentNullException(nameof(update));
+
+            return this.Transaction<int>(collection, false, (col) =>
+            {
+                // no collection, no updates
+                if (col == null) return 0;
+
+                var count = 0;
+
+                foreach (var doc in this.Find(collection, query))
+                {
+                    // for each document in query update fields
+                    if(update.Execute(doc))
+                    {
+                        // only save on disk if any update on document was made
+                        if (this.UpdateDocument(col, doc))
+                        {
+                            count++;
+                        }
                     }
                 }
 
@@ -59,7 +92,7 @@ namespace LiteDB
                 throw LiteException.InvalidDataType("_id", id);
             }
 
-            _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = {1}", col.CollectionName, id);
+            _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = {1}", col.CollectionName, id.RawValue);
 
             // find indexNode from pk index
             var pkNode = _indexer.Find(col.PK, id, false, Query.Ascending);
@@ -79,8 +112,10 @@ namespace LiteDB
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
             {
-                // using Distinct/ToArray because I will do many queries
-                var keys = doc.GetValues(index.Field, true, index.Unique).ToArray();
+                var expr = new BsonExpression(index.Expression);
+
+                // getting all keys do check
+                var keys = expr.Execute(doc).ToArray();
 
                 // get a list of to delete nodes (using ToArray to resolve now)
                 var toDelete = allNodes

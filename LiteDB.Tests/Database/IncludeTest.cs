@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using LiteDB;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
+    #region Model 
+
     public class Order
     {
         public ObjectId Id { get; set; }
@@ -40,11 +42,13 @@ namespace LiteDB.Tests
         public Address SupplierAddress { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class IncludeTest
+    public class Include_Tests
     {
-        [TestMethod]
-        public void Include_Test()
+        [TestMethod, TestCategory("Database")]
+        public void Include()
         {
             var mapper = new BsonMapper();
 
@@ -63,8 +67,7 @@ namespace LiteDB.Tests
             mapper.Entity<Product>()
                 .DbRef(x => x.SupplierAddress, "addresses");
 
-            using (var file = new TempFile())
-            using (var db = new LiteDatabase(file.Filename, mapper))
+            using (var db = new LiteDatabase(new MemoryStream(), mapper))
             {
                 var address = new Address { StreetName = "3600 S Las Vegas Blvd" };
                 var customer = new Customer { Name = "John Doe", MainAddress = address };

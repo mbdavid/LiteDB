@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace LiteDB.Tests
 {
     public class TempFile : IDisposable
     {
+        private bool _checkIntegrity = false;
+
         public string Filename { get; private set; }
 
-        public TempFile(string ext = "db")
+        public TempFile(string ext = "db", bool checkIntegrity = true)
         {
-            this.Filename = Path.GetFullPath(string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
+            this.Filename = Path.Combine(Path.GetTempPath(), string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
+            _checkIntegrity = checkIntegrity;
         }
 
         public void CreateDatafile()
@@ -63,6 +67,9 @@ namespace LiteDB.Tests
                 // IDisposable only
             }
 
+            // check file integrity
+            this.CheckIntegrity();
+
             File.Delete(this.Filename);
 
             _disposed = true;
@@ -78,6 +85,46 @@ namespace LiteDB.Tests
         public string ReadAsText()
         {
             return File.ReadAllText(this.Filename);
+        }
+
+        /// <summary>
+        /// Read all colleciton, indexes and documents inside current datafile
+        /// Drop per index, per collection and shrink
+        /// This steps will check/validate all file data
+        /// </summary>
+        private void CheckIntegrity()
+        {
+            using (var db = new LiteEngine(this.Filename))
+            {
+                var cols = db.GetCollectionNames().ToArray();
+
+                foreach(var col in cols)
+                {
+                    var indexes = db.GetIndexes(col).ToArray();
+
+                    foreach(var idx in indexes)
+                    {
+                        var q = db.Find(col, Query.All(idx.Field));
+
+                        foreach(var doc in q)
+                        {
+                            // document are ok!
+                        }
+
+                        // lets drop this index (if not _id)
+                        if(idx.Field != "_id")
+                        {
+                            db.DropIndex(col, idx.Field);
+                        }
+                    }
+
+                    // and drop collection
+                    db.DropCollection(col);
+                }
+
+                // and now shrink
+                db.Shrink();
+            }
         }
 
         #region LoremIpsum Generator

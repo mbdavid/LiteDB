@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
@@ -33,9 +34,17 @@ namespace LiteDB.Shell
             this.WriteLine(ConsoleColor.Gray, text);
         }
 
-        public void WriteError(string err)
+        public void WriteError(Exception ex)
         {
-            this.WriteLine(ConsoleColor.Red, err);
+            this.WriteLine(ConsoleColor.Red, ex.Message);
+
+            if (ex is LiteException && (ex as LiteException).ErrorCode == LiteException.SYNTAX_ERROR)
+            {
+                var err = ex as LiteException;
+
+                this.WriteLine(ConsoleColor.DarkYellow, "> " + err.Line);
+                this.WriteLine(ConsoleColor.DarkYellow, "> " + "^".PadLeft(err.Position + 1, ' '));
+            }
         }
 
         public void WriteHelp(string line1 = null, string line2 = null)
@@ -56,36 +65,26 @@ namespace LiteDB.Shell
             }
         }
 
-        public void WriteResult(BsonValue result)
+        public void WriteResult(IEnumerable<BsonValue> results)
         {
             var index = 0;
 
-            if (result.IsNull) return;
+            foreach(var result in results)
+            {
+                this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", ++index));
 
-            if (result.IsDocument)
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
-            }
-            else if (result.IsArray)
-            {
-                foreach (var doc in result.AsArray)
+                if (result.IsString)
                 {
-                    this.Write(ConsoleColor.Cyan, string.Format("[{0}]:{1}", ++index, this.Pretty ? Environment.NewLine : " "));
-                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(doc, this.Pretty, false));
+                    this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
                 }
-
-                if (index == 0)
+                else if (result.IsNumber)
                 {
-                    this.WriteLine(ConsoleColor.DarkCyan, "no documents");
+                    this.WriteLine(ConsoleColor.DarkCyan, result.RawValue.ToString());
                 }
-            }
-            else if (result.IsString)
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
-            }
-            else
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+                else
+                {
+                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
+                }
             }
         }
 
@@ -112,7 +111,7 @@ namespace LiteDB.Shell
 
             foreach (var writer in this.TextWriters)
             {
-                writer.Write(text);
+                writer.Write(Regex.Unescape(text));
             }
         }
 

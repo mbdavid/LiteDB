@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
 using System.Text;
-using LiteDB;
 
 namespace LiteDB
 {
@@ -18,21 +16,13 @@ namespace LiteDB
         {
             _aes = Aes.Create();
             _aes.Padding = PaddingMode.Zeros;
-            Rfc2898DeriveBytes pdb = null;
 
-            try
             {
-                pdb = new Rfc2898DeriveBytes(password, salt);
-                _aes.Key = pdb.GetBytes(32);
-                _aes.IV = pdb.GetBytes(16);
-            }
-            finally
-            {
-                IDisposable disp = pdb as IDisposable;
-
-                if (disp != null)
+                var pdb = new Rfc2898DeriveBytes(password, salt);
+                using (pdb as IDisposable)
                 {
-                    disp.Dispose();
+                    _aes.Key = pdb.GetBytes(32);
+                    _aes.IV = pdb.GetBytes(16);
                 }
             }
         }
@@ -91,26 +81,13 @@ namespace LiteDB
         /// <returns></returns>
         public static byte[] Salt(int maxLength = 16)
         {
-#if NET35
-            var random = new RNGCryptoServiceProvider();
-
-            // empty salt array
             var salt = new byte[maxLength];
-
-            // build the random bytes
-            random.GetNonZeroBytes(salt);
-
-            // Return the string encoded salt
+            {
+                var rng = RandomNumberGenerator.Create();
+                using (rng as IDisposable)
+                    rng.GetBytes(salt);
+            }
             return salt;
-#else
-            // simple solution for NETStandard
-            var rnd = new Random();
-            var salt = new byte[maxLength];
-
-            rnd.NextBytes(salt);
-
-            return salt;
-#endif
         }
 
         public void Dispose()

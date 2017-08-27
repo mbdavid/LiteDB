@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NET35
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,10 +71,11 @@ namespace LiteDB
                 Expression.Property(castTarget, propertyInfo) :
                 Expression.Field(castTarget, fieldInfo);
 
-            var assign = ExpressionExtensions.Assign(accessor, castValue);
+            var assign = Expression.Assign(accessor, castValue);
             var conv = Expression.Convert(assign, typeof(object));
             
             return Expression.Lambda<GenericSetter>(conv, target, value).Compile();
         }
     }
 }
+#endif

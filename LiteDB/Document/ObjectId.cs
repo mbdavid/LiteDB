@@ -256,7 +256,7 @@ namespace LiteDB
         static ObjectId()
         {
             _machine = (GetMachineHash() +
-#if NET35
+#if NETFULL
                 AppDomain.CurrentDomain.Id
 #else
                 10000 // Magic number
@@ -277,7 +277,7 @@ namespace LiteDB
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static int GetCurrentProcessId()
         {
-#if NET35
+#if NETFULL
             return Process.GetCurrentProcess().Id;
 #else
             return 1000; // Magic number
@@ -287,7 +287,7 @@ namespace LiteDB
         private static int GetMachineHash()
         {
             var hostName =
-#if NET35
+#if NETFULL
                 Environment.MachineName; // use instead of Dns.HostName so it will work offline
 #else
                 "SOMENAME";

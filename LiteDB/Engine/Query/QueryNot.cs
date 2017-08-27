@@ -19,9 +19,26 @@ namespace LiteDB
             _order = order;
         }
 
-        internal override void IndexFactory(Action<string, string> createIndex)
+        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
-            _query.IndexFactory(createIndex);
+            // run base query
+            var result = _query.Run(col, indexer);
+
+            this.UseIndex = _query.UseIndex;
+            this.UseFilter = _query.UseFilter;
+
+            if (_query.UseIndex)
+            {
+                // if is by index, resolve here
+                var all = new QueryAll("_id", _order).Run(col, indexer);
+
+                return all.Except(result, new IndexNodeComparer());
+            }
+            else
+            {
+                // if is by document, must return all nodes to be ExecuteDocument after
+                return result;
+            }
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
@@ -29,12 +46,14 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        internal override bool FilterDocument(BsonDocument doc)
         {
-            var result = _query.Run(col, indexer);
-            var all = new QueryAll("_id", _order).Run(col, indexer);
+            return !_query.FilterDocument(doc);
+        }
 
-            return all.Except(result, new IndexNodeComparer());
+        public override string ToString()
+        {
+            return string.Format("!({0})", _query);
         }
     }
 }

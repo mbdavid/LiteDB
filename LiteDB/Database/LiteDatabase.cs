@@ -10,11 +10,24 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
+#if NET35
+        public static string __DEFINE_NET35 = "";
+#endif
+#if NET40
+        public static string __DEFINE_NET40 = "";
+#endif
+#if NETFULL
+        public static string __DEFINE_NETFULL = "";
+#endif
+#if NETSTANDARD
+        public static string __DEFINE_NETSTANDARD = "";
+#endif
+
         #region Properties
 
         private LazyLoad<LiteEngine> _engine = null;
         private BsonMapper _mapper = BsonMapper.Global;
-        private Logger _log = new Logger();
+        private Logger _log = null;
         private ConnectionString _connectionString = null;
 
         /// <summary>
@@ -39,19 +52,20 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        public LiteDatabase(string connectionString, BsonMapper mapper = null)
-            : this(new ConnectionString(connectionString), mapper)
+        public LiteDatabase(string connectionString, BsonMapper mapper = null, Logger log = null)
+            : this(new ConnectionString(connectionString), mapper, log)
         {
         }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
+        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null, Logger log = null)
         {
             if (connectionString == null) throw new ArgumentNullException("connectionString");
 
             _connectionString = connectionString;
+            _log = log ?? new Logger();
             _log.Level = _connectionString.Log;
 
             if (_connectionString.Upgrade)
@@ -63,7 +77,7 @@ namespace LiteDB
 
             var options = new FileOptions
             {
-#if !NET35
+#if NETSTANDARD
                 Async = _connectionString.Async,
 #endif
                 InitialSize = _connectionString.InitialSize,
@@ -78,13 +92,14 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null)
+        public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null, bool disposeStream = false)
         {
             if (stream == null) throw new ArgumentNullException("stream");
 
             _mapper = mapper ?? BsonMapper.Global;
+            _log = new Logger();
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream), password: password, log: _log));
+            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream, disposeStream), password: password, log: _log));
         }
 
         /// <summary>
@@ -101,22 +116,9 @@ namespace LiteDB
             if (diskService == null) throw new ArgumentNullException("diskService");
 
             _mapper = mapper ?? BsonMapper.Global;
+            _log = log ?? new Logger();
 
             _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, cacheSize: cacheSize, log: _log ));
-        }
-
-        #endregion
-
-        #region Transaction
-
-        /// <summary>
-        /// Starts new transaction
-        /// </summary>
-        public LiteTransaction BeginTrans()
-        {
-            _engine.Value.BeginTrans();
-
-            return new LiteTransaction(() => _engine.Value.Commit(), _engine.Value.Rollback);
         }
 
         #endregion
@@ -234,7 +236,7 @@ namespace LiteDB
                 // get temp disk based on temp file
                 var tempDisk = new FileDiskService(tempFile, false);
 
-                var reduced = _engine.Value.Shrink(password);
+                var reduced = _engine.Value.Shrink(password, tempDisk);
 
                 // delete temp file
                 File.Delete(tempFile);

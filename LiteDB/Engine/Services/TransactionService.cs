@@ -44,7 +44,7 @@ namespace LiteDB
         /// <summary>
         /// Save all dirty pages to disk
         /// </summary>
-        public void Commit()
+        public void PersistDirtyPages()
         {
             // get header page
             var header = _pager.GetPage<HeaderPage>(0);
@@ -55,91 +55,75 @@ namespace LiteDB
             // mark header as dirty
             _pager.SetDirty(header);
 
-            // write journal file
+            _log.Write(Logger.DISK, "begin disk operations - changeID: {0}", header.ChangeID);
+
+            // write journal file in desc order to header be last page in disk
             _disk.WriteJournal(_cache.GetDirtyPages()
+                .OrderByDescending(x => x.PageID)
                 .Select(x => x.DiskData)
                 .Where(x => x.Length > 0)
-                .ToList());
+                .ToList(), header.LastPageID);
 
-            // enter in exclusive lock mode to write on disk
-            using (_locker.Exclusive())
+            // mark header as recovery before start writing (in journal, must keep recovery = false)
+            header.Recovery = true;
+
+            // get all dirty page stating from Header page (SortedList)
+            foreach (var page in _cache.GetDirtyPages())
             {
-                // set final datafile length (optimize page writes)
-                _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));
+                // page.WritePage() updated DiskData with new rendered buffer
+                var buffer = _crypto == null || page.PageID == 0 ? 
+                    page.WritePage() : 
+                    _crypto.Encrypt(page.WritePage());
 
-                foreach (var page in _cache.GetDirtyPages())
-                {
-                    // page.WritePage() updated DiskData with new rendered buffer
-                    var buffer = _crypto == null || page.PageID == 0 ? 
-                        page.WritePage() : 
-                        _crypto.Encrypt(page.WritePage());
-
-                    _disk.WritePage(page.PageID, buffer);
-                }
-
-                // mark all dirty pages in clean pages (all are persisted in disk and are valid pages)
-                _cache.MarkDirtyAsClean();
-
-                // ensure all pages from OS cache has been persisted on medium
-                _disk.Flush();
-
-                // discard journal file
-                _disk.ClearJournal();
+                _disk.WritePage(page.PageID, buffer);
             }
+
+            // re-write header page but now with recovery=false
+            header.Recovery = false;
+
+            _log.Write(Logger.DISK, "re-write header page now with recovery = false");
+
+            _disk.WritePage(0, header.WritePage());
+
+            // mark all dirty pages as clean pages (all are persisted in disk and are valid pages)
+            _cache.MarkDirtyAsClean();
+
+            // flush all data direct to disk
+            _disk.Flush();
+
+            // discard journal file
+            _disk.ClearJournal(header.LastPageID);
         }
 
         /// <summary>
-        /// Clear cache, discard journal file
+        /// Get journal pages and override all into datafile
         /// </summary>
-        public void Rollback()
+        public void Recovery(uint lastPageID)
         {
-            // clear all dirty pages from memory
-            _cache.DiscardDirtyPages();
+            _log.Write(Logger.RECOVERY, "initializing recovery mode");
 
-            _disk.ClearJournal();
-        }
-
-        /// <summary>
-        /// Try recovery journal file (if exists). Restore original datafile
-        /// Journal file are NOT encrypted (even when datafile are encrypted)
-        /// </summary>
-        public void Recovery()
-        {
-            var fileSize = _disk.FileLength;
-            var pages = 0;
-
-            // read all journal pages
-            foreach (var buffer in _disk.ReadJournal())
+            using (_locker.Write())
             {
-                // read pageID (first 4 bytes)
-                var pageID = BitConverter.ToUInt32(buffer, 0);
+                // double check in header need recovery (could be already recover from another thread)
+                var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
 
-                _log.Write(Logger.RECOVERY, "recover page #{0:0000}", pageID);
+                if (header.Recovery == false) return;
 
-                // if header, read all byte (to get original filesize)
-                if (pageID == 0)
+                // read all journal pages
+                foreach (var buffer in _disk.ReadJournal(lastPageID))
                 {
-                    var header = (HeaderPage)BasePage.ReadPage(buffer);
+                    // read pageID (first 4 bytes)
+                    var pageID = BitConverter.ToUInt32(buffer, 0);
 
-                    fileSize = BasePage.GetSizeOfPages(header.LastPageID + 1);
+                    _log.Write(Logger.RECOVERY, "recover page #{0:0000}", pageID);
+
+                    // write in stream (encrypt if datafile is encrypted)
+                    _disk.WritePage(pageID, _crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer));
                 }
 
-                // write in stream (encrypt if datafile is encrypted)
-                _disk.WritePage(pageID, _crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer));
-
-                pages++;
+                // shrink datafile
+                _disk.ClearJournal(lastPageID);
             }
-
-            // no pages, no recovery
-            if (pages ==  0) return;
-
-            _log.Write(Logger.RECOVERY, "resize datafile to {0} bytes", fileSize);
-
-            // redim filesize if grow more than original before rollback
-            _disk.SetLength(fileSize);
-
-            // empty journal file
-            _disk.ClearJournal();
         }
     }
 }

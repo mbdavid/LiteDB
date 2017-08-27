@@ -49,11 +49,6 @@ namespace LiteDB
         public Func<BsonValue, BsonMapper, object> Deserialize { get; set; }
 
         /// <summary>
-        /// Indicate field has an unique index
-        /// </summary>
-        public bool IsUnique { get; set; }
-
-        /// <summary>
         /// Is this property an DbRef? Must implement Serialize/Deserialize delegates
         /// </summary>
         public bool IsDbRef { get; set; }

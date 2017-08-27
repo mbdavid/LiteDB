@@ -17,3 +17,5 @@ script:
   - dotnet build ./LiteDB.Tests/LiteDB.Tests.csproj
   - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj --logger:console;verbosity=normal
 
+notifications:
+  email: false  
