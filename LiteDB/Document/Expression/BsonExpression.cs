@@ -224,7 +224,7 @@ namespace LiteDB
             }
             else if (s.Match(@"'")) // read string
             {
-                var str = s.Scan(@"'([\s\S]*)?'", 1);
+                var str = s.Scan(@"'([\s\S]*?)'", 1);
                 var value = Expression.Constant(new BsonValue(str));
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
