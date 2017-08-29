@@ -59,6 +59,16 @@ namespace LiteDB
             }
         }
 
+        public static IEnumerable<BsonValue> MOD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in left.ZipValues(right))
+            {
+                if (!value.First.IsNumber || !value.Second.IsNumber) continue;
+
+                yield return value.First % value.Second;
+            }
+        }
+
         public static IEnumerable<BsonValue> EQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))

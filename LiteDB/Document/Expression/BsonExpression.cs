@@ -18,6 +18,7 @@ namespace LiteDB
 
         private static Dictionary<string, MethodInfo> _operators = new Dictionary<string, MethodInfo>
         {
+            ["%"] = typeof(BsonExpression).GetMethod("MOD"),
             ["/"] = typeof(BsonExpression).GetMethod("DIVIDE"),
             ["*"] = typeof(BsonExpression).GetMethod("MULTIPLY"),
             ["+"] = typeof(BsonExpression).GetMethod("ADD"),
@@ -112,8 +113,8 @@ namespace LiteDB
 
         #region Expression Parser
 
-        private static Regex _reArithmetic = new Regex(@"^\s*(\+|\-|\*|\/)\s*");
-        private static Regex _reOperator = new Regex(@"^\s*(\+|\-|\*|\/|=|!=|>=|>|<=|<|&&|\|\|)\s*");
+        private static Regex _reArithmetic = new Regex(@"^\s*(\+|\-|\*|\/|%)\s*");
+        private static Regex _reOperator = new Regex(@"^\s*(\+|\-|\*|\/|%|=|!=|>=|>|<=|<|&&|\|\|)\s*");
 
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
