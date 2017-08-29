@@ -21,11 +21,11 @@ namespace LiteDB.Shell
             // read all fields definitions (support AS as keyword no name field)
             while(!s.HasTerminated)
             {
-                var expression = BsonExpression.ReadExpression(s, false);
-                var key = s.Scan(@"\s*as\s+(\w+)", 1).TrimToNull()
+                var expression = BsonExpression.ReadExpression(s, true, false);
+                var key = s.Scan(@"\s*as\s+([\w-]+)", 1).TrimToNull()
                     ?? ("expr" + (++index));
 
-                fields.Add(key, new BsonExpression(expression));
+                fields.Add(key, expression);
 
                 if (s.Scan(@"\s*,\s*").Length > 0) continue;
                 break;

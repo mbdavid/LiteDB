@@ -37,10 +37,10 @@ namespace LiteDB.Shell
 
                 while(!s.HasTerminated)
                 {
-                    var path = BsonExpression.ReadExpression(s, true);
-                    var action = s.Scan(@"\s*(\+)?=\s*", 1);
+                    var path = BsonExpression.ReadExpression(s, true, true).Source;
+                    var action = s.Scan(@"\s*(\+)?=\s*", 1).ThrowIfEmpty("Invalid operator (support = or +=)", s);
                     var value = this.ReadBsonValue(s);
-                    var expr = value == null ? BsonExpression.ReadExpression(s, false) : null;
+                    var expr = value == null ? BsonExpression.ReadExpression(s, true, false)?.Source : null;
 
                     if (action == "+" && value != null)
                     {

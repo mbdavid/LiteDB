@@ -59,17 +59,15 @@ namespace LiteDB.Shell
             if (s.Scan(@"\s*include[s]?\s+").Length > 0)
             {
                 var includes = new List<string>();
-                var include = BsonExpression.ReadExpression(s, true);
-
-                if (include == null) throw LiteException.SyntaxError(s, "Missing include paths");
+                var include = BsonExpression.ReadExpression(s, true, true);
 
                 while (include != null && !s.HasTerminated)
                 {
-                    includes.Add(include);
+                    includes.Add(include.Source);
 
                     // capture next only if found comma symbol
                     include = s.Scan(@"\s*,\s*").Length > 0 ?
-                        BsonExpression.ReadExpression(s, true) :
+                        BsonExpression.ReadExpression(s, true, true) :
                         null;
                 }
 
@@ -108,7 +106,7 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = BsonExpression.ReadExpression(s, false) ?? s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field", s);
+            var field = BsonExpression.ReadExpression(s, true, false)?.Source ?? s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field", s);
             var oper = s.Scan(@"\s*(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)\s*").Trim().ToLower().ThrowIfEmpty("Invalid query operator", s);
 
             if (s.HasTerminated) throw LiteException.SyntaxError(s, "Missing value");

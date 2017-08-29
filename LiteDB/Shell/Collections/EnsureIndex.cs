@@ -25,7 +25,7 @@ namespace LiteDB.Shell
 
                 if (s.Scan(@"\s*using\s+(.+)").Length > 0)
                 {
-                    expression = BsonExpression.ReadExpression(s, false);
+                    expression = BsonExpression.ReadExpression(s, true, false)?.Source;
                 }
             }
 
