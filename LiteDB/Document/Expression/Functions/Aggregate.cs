@@ -14,14 +14,39 @@ namespace LiteDB
             yield return values.Count();
         }
 
+        public static IEnumerable<BsonValue> MIN(IEnumerable<BsonValue> values)
+        {
+            yield return values.Min();
+        }
+
+        public static IEnumerable<BsonValue> MAX(IEnumerable<BsonValue> values)
+        {
+            yield return values.Max();
+        }
+
+        public static IEnumerable<BsonValue> AVG(IEnumerable<BsonValue> values)
+        {
+            var sum = new BsonValue(0);
+            var count = 0;
+
+            foreach (var value in values.Where(x => x.IsNumber))
+            {
+                sum += value;
+                count++;
+            }
+
+            if (count > 0)
+            {
+                yield return sum / count;
+            }
+        }
+
         public static IEnumerable<BsonValue> SUM(IEnumerable<BsonValue> values)
         {
             var sum = new BsonValue(0);
 
-            foreach (var value in values)
+            foreach (var value in values.Where(x => x.IsNumber))
             {
-                if (!value.IsNumber) continue;
-
                 sum += value;
             }
 
