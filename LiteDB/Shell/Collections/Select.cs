@@ -21,9 +21,24 @@ namespace LiteDB.Shell
             // read all fields definitions (support AS as keyword no name field)
             while(!s.HasTerminated)
             {
-                var expression = BsonExpression.ReadExpression(s, true, false);
+                // try read any kind of expression
+                var expression = BsonExpression.ReadExpression(s, false, false);
+
+                // if not found a valid one, try read only as path (will add $. before)
+                if (expression == null)
+                {
+                    expression = BsonExpression.ReadExpression(s, true, true);
+                }
+
                 var key = s.Scan(@"\s*as\s+([\w-]+)", 1).TrimToNull()
+                    ?? this.NamedField(expression)
                     ?? ("expr" + (++index));
+
+                // if key already exits, add with another name
+                while (fields.ContainsKey(key))
+                {
+                    key = "expr" + (++index);
+                }
 
                 fields.Add(key, expression);
 
@@ -70,6 +85,13 @@ namespace LiteDB.Shell
                     yield return output;
                 }
             }
+        }
+
+        private string NamedField(BsonExpression expr)
+        {
+            var segments = expr.Source.Split('.');
+
+            return Regex.Replace(segments[segments.Length - 1], @"(\w+).*", "$1").TrimToNull();
         }
     }
 }

@@ -61,7 +61,7 @@ namespace LiteDB.Shell
                 var includes = new List<string>();
                 var include = BsonExpression.ReadExpression(s, true, true);
 
-                while (include != null && !s.HasTerminated)
+                while (include != null)
                 {
                     includes.Add(include.Source);
 
@@ -106,7 +106,7 @@ namespace LiteDB.Shell
 
         private Query ReadOneQuery(StringScanner s)
         {
-            var field = BsonExpression.ReadExpression(s, true, false)?.Source ?? s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field", s);
+            var field = BsonExpression.ReadExpression(s, false, false)?.Source ?? s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field", s);
             var oper = s.Scan(@"\s*(=|!=|>=|<=|>|<|like|starts[Ww]ith|in|between|contains)\s*").Trim().ToLower().ThrowIfEmpty("Invalid query operator", s);
 
             if (s.HasTerminated) throw LiteException.SyntaxError(s, "Missing value");
