@@ -16,12 +16,26 @@ namespace LiteDB
 
         public static IEnumerable<BsonValue> MIN(IEnumerable<BsonValue> values)
         {
-            yield return values.Min();
+            var min = BsonValue.MaxValue;
+
+            foreach(var value in values.Where(x => x.IsNumber))
+            {
+                min = value < min ? value : min;
+            }
+
+            yield return min == BsonValue.MaxValue ? BsonValue.MinValue : min;
         }
 
         public static IEnumerable<BsonValue> MAX(IEnumerable<BsonValue> values)
         {
-            yield return values.Max();
+            var max = BsonValue.MinValue;
+
+            foreach (var value in values.Where(x => x.IsNumber))
+            {
+                max = value > max ? value : max;
+            }
+
+            yield return max == BsonValue.MinValue ? BsonValue.MaxValue : max;
         }
 
         public static IEnumerable<BsonValue> AVG(IEnumerable<BsonValue> values)
