@@ -48,8 +48,8 @@ namespace LiteDB
                 // if finish, exit loop
                 if (this.HasMore == false) yield break;
 
-                // if run under index, skip/limit before deserialize
-                if (_query.UseIndex)
+                // if run ONLY under index, skip/limit before deserialize
+                if (_query.UseIndex && _query.UseFilter == false)
                 {
                     if (--_skip >= 0) continue;
 
