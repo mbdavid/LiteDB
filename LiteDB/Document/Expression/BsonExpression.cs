@@ -35,6 +35,8 @@ namespace LiteDB
 
         #endregion
 
+        #region Ctor
+
         private Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> _func;
 
         public string Source { get; private set; }
@@ -63,6 +65,8 @@ namespace LiteDB
                 }
             }
         }
+
+        #endregion
 
         #region Execution
 
@@ -269,6 +273,15 @@ namespace LiteDB
                 var value = Expression.Constant(new BsonValue(str));
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
+            }
+            else if (s.Scan(@"\(\s*").Length > 0) // read inner (
+            {
+                // read a inner expression inside ( and )
+                var inner = ParseExpression(s, root, current, false);
+
+                if (s.Scan(@"\s*\)").Length == 0) throw LiteException.SyntaxError(s);
+
+                return inner;
             }
             else if (s.Match(@"\w+\s*\(")) // read function
             {

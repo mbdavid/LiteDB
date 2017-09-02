@@ -55,8 +55,6 @@ namespace LiteDB
 
                         context.Nodes = query.Run(col, _indexer).GetEnumerator();
 
-                        _log.Write(Logger.QUERY, "{0} :: {1} ({2})", collection, query, context.Skip);
-
                         docs.AddRange(context.GetDocuments(_trans, _data, _log));
                     }
 
