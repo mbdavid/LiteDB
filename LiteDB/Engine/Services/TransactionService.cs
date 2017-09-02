@@ -76,6 +76,7 @@ namespace LiteDB
             }
 
             // get all dirty page stating from Header page (SortedList)
+            // header page (id=0) always must be first page to write on disk because it's will mark disk as "in recovery"
             foreach (var page in _cache.GetDirtyPages())
             {
                 // page.WritePage() updated DiskData with new rendered buffer
