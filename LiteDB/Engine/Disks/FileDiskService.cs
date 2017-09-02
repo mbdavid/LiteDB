@@ -159,6 +159,11 @@ namespace LiteDB
         #region Journal file
 
         /// <summary>
+        /// Indicate if journal are enabled or not based on file options
+        /// </summary>
+        public bool IsJournalEnabled { get { return _options.Journal; } }
+
+        /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
         public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
@@ -200,20 +205,24 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<byte[]> ReadJournal(uint lastPageID)
         {
-            // if journal are not enabled, just return empty result
-            if (_options.Journal == false) yield break;
-
             // position stream at begin journal area
-            _stream.Seek(BasePage.GetSizeOfPages(lastPageID + 1), SeekOrigin.Begin);
+            var pos = BasePage.GetSizeOfPages(lastPageID + 1);
+
+            _stream.Seek(pos, SeekOrigin.Begin);
 
             var buffer = new byte[BasePage.PAGE_SIZE];
 
-            while (_stream.Position <= _stream.Length)
+            while (_stream.Position < _stream.Length)
             {
                 // read page bytes from journal file
                 _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
                 yield return buffer;
+
+                // now set position to next journal page
+                pos += BasePage.PAGE_SIZE;
+
+                _stream.Seek(pos, SeekOrigin.Begin);
             }
         }
 

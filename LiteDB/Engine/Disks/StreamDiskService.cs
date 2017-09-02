@@ -123,6 +123,11 @@ namespace LiteDB
         public bool IsExclusive { get { return true; } }
 
         /// <summary>
+        /// No journal in Stream
+        /// </summary>
+        public bool IsJournalEnabled { get { return false; } }
+
+        /// <summary>
         /// No journal implemented
         /// </summary>
         public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)

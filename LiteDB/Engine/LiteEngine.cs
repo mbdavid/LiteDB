@@ -136,7 +136,7 @@ namespace LiteDB
                 // if header are marked with recovery, do it now
                 if (header.Recovery)
                 {
-                    _trans.Recovery(header.LastPageID);
+                    _trans.Recovery();
                 }
             }
             catch (Exception)

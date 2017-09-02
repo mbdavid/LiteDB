@@ -58,14 +58,22 @@ namespace LiteDB
             _log.Write(Logger.DISK, "begin disk operations - changeID: {0}", header.ChangeID);
 
             // write journal file in desc order to header be last page in disk
-            _disk.WriteJournal(_cache.GetDirtyPages()
-                .OrderByDescending(x => x.PageID)
-                .Select(x => x.DiskData)
-                .Where(x => x.Length > 0)
-                .ToList(), header.LastPageID);
+            if (_disk.IsJournalEnabled)
+            {
+                _disk.WriteJournal(_cache.GetDirtyPages()
+                    .OrderByDescending(x => x.PageID)
+                    .Select(x => x.DiskData)
+                    .Where(x => x.Length > 0)
+                    .ToList(), header.LastPageID);
 
-            // mark header as recovery before start writing (in journal, must keep recovery = false)
-            header.Recovery = true;
+                // mark header as recovery before start writing (in journal, must keep recovery = false)
+                header.Recovery = true;
+            }
+            else
+            {
+                // if no journal extend, resize file here to fast writes
+                _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));
+            }
 
             // get all dirty page stating from Header page (SortedList)
             foreach (var page in _cache.GetDirtyPages())
@@ -78,12 +86,15 @@ namespace LiteDB
                 _disk.WritePage(page.PageID, buffer);
             }
 
-            // re-write header page but now with recovery=false
-            header.Recovery = false;
+            if (_disk.IsJournalEnabled)
+            {
+                // re-write header page but now with recovery=false
+                header.Recovery = false;
 
-            _log.Write(Logger.DISK, "re-write header page now with recovery = false");
+                _log.Write(Logger.DISK, "re-write header page now with recovery = false");
 
-            _disk.WritePage(0, header.WritePage());
+                _disk.WritePage(0, header.WritePage());
+            }
 
             // mark all dirty pages as clean pages (all are persisted in disk and are valid pages)
             _cache.MarkDirtyAsClean();
@@ -98,7 +109,7 @@ namespace LiteDB
         /// <summary>
         /// Get journal pages and override all into datafile
         /// </summary>
-        public void Recovery(uint lastPageID)
+        public void Recovery()
         {
             _log.Write(Logger.RECOVERY, "initializing recovery mode");
 
@@ -110,7 +121,7 @@ namespace LiteDB
                 if (header.Recovery == false) return;
 
                 // read all journal pages
-                foreach (var buffer in _disk.ReadJournal(lastPageID))
+                foreach (var buffer in _disk.ReadJournal(header.LastPageID))
                 {
                     // read pageID (first 4 bytes)
                     var pageID = BitConverter.ToUInt32(buffer, 0);
@@ -122,7 +133,7 @@ namespace LiteDB
                 }
 
                 // shrink datafile
-                _disk.ClearJournal(lastPageID);
+                _disk.ClearJournal(header.LastPageID);
             }
         }
     }

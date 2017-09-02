@@ -37,6 +37,11 @@ namespace LiteDB
         bool IsExclusive { get; }
 
         /// <summary>
+        /// Get if journal are enabled or not. Can optimize with has no jounal
+        /// </summary>
+        bool IsJournalEnabled { get; }
+
+        /// <summary>
         /// Read journal file returning IEnumerable of pages
         /// </summary>
         IEnumerable<byte[]> ReadJournal(uint lastPageID);
