@@ -44,7 +44,7 @@ namespace LiteDB.Tests.Database
     public class Linq_Visitor_Tests
     {
         [TestMethod, TestCategory("Database")]
-        public void Linq_Visitor()
+        public void Linq_Visitor_Wit_DbRef()
         {
             var m = new BsonMapper();
 
@@ -75,6 +75,33 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual("(_id = 123)", m.GetQuery<User>(x => x.Id == 123).ToString());
             Assert.AreEqual("(_id between [1 and 2])", m.GetQuery<User>(x => x.Id >= 1 && x.Id <= 2).ToString());
             Assert.AreEqual("(Domains.$id = \"admin\")", m.GetQuery<User>(x => x.Domains[0].DomainName == "admin").ToString());
+        }
+
+        [TestMethod, TestCategory("Database")]
+        public void Linq_Visitor_Without_DbRef()
+        {
+            var m = new BsonMapper();
+            m.UseLowerCaseDelimiter();
+
+            // Json PATH
+
+            Assert.AreEqual("$.age", m.GetPath<User>(x => x.Age));
+            Assert.AreEqual("$._id", m.GetPath<User>(x => x.Id));
+            Assert.AreEqual("$.domain", m.GetPath<User>(x => x.Domain));
+            Assert.AreEqual("$.domains[*]", m.GetPath<User>(x => x.Domains));
+            Assert.AreEqual("$.domains[*].age", m.GetPath<User>(x => x.Domains[0].Age));
+            Assert.AreEqual("$.domains[*].age", m.GetPath<User>(x => x.Domains.Select(z => z.Age)));
+            Assert.AreEqual("$.domains[*].domain_name", m.GetPath<User>(x => x.Domains[0].DomainName));
+
+            // Bson Field
+            Assert.AreEqual("domains", m.GetField<User>(x => x.Domains));
+            Assert.AreEqual("domains.age", m.GetField<User>(x => x.Domains[0].Age));
+            Assert.AreEqual("domains.domain_name", m.GetField<User>(x => x.Domains[0].DomainName));
+
+            // Query
+            Assert.AreEqual("(_id = 123)", m.GetQuery<User>(x => x.Id == 123).ToString());
+            Assert.AreEqual("(_id between [1 and 2])", m.GetQuery<User>(x => x.Id >= 1 && x.Id <= 2).ToString());
+            Assert.AreEqual("(domains.domain_name = \"admin\")", m.GetQuery<User>(x => x.Domains[0].DomainName == "admin").ToString());
         }
     }
 }

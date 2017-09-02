@@ -14,6 +14,14 @@ namespace LiteDB
             yield return new BsonArray(values);
         }
 
+        public static IEnumerable<BsonValue> JSON(IEnumerable<BsonValue> values)
+        {
+            foreach(var value in values.Where(x => x.IsString))
+            {
+                yield return JsonSerializer.Deserialize(value);
+            }
+        }
+
         public static IEnumerable<BsonValue> IS_DATE(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
