@@ -55,7 +55,7 @@ namespace LiteDB
             _log.Write(Logger.CACHE, () =>
             {
                 return !_clean.ContainsKey(page.PageID) ?
-                    string.Format("add page to cache #{0:0000} :: {1}", page.PageID, page.PageType) : "";
+                    string.Format("add page #{0:0000} ({1}) to cache (length: {2})", page.PageID, page.PageType, _clean.Count + 1) : "";
             });
 
             _clean[page.PageID] = page;

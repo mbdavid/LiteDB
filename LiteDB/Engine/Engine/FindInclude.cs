@@ -9,11 +9,11 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition. Support for include reference documents. Use Path syntax
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query, string[] includes, int skip = 0, int limit = int.MaxValue, int bufferSize = 200)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, string[] includes, int skip = 0, int limit = int.MaxValue)
         {
             if (includes == null) throw new ArgumentNullException("includes");
 
-            var docs = this.Find(collection, query, skip, limit, bufferSize);
+            var docs = this.Find(collection, query, skip, limit);
 
             foreach(var doc in docs)
             {

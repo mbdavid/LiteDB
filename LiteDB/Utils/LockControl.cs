@@ -10,8 +10,14 @@ namespace LiteDB
     {
         private Action _dispose;
 
-        internal LockControl(Action dispose)
+        /// <summary>
+        /// Indicate that cache was clear becase has changes on file
+        /// </summary>
+        public bool Changed { get; private set; }
+
+        internal LockControl(bool changed, Action dispose)
         {
+            this.Changed = changed;
             _dispose = dispose;
         }
 

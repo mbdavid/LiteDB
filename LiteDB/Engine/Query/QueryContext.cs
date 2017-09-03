@@ -9,25 +9,22 @@ namespace LiteDB
     /// </summary>
     internal class QueryContext : IDisposable
     {
-        private int _bufferSize;
-        private int _counter;
+        private int _position;
         private int _skip;
-        private int _initialSkip;
         private int _limit;
         private Query _query;
 
-        public int Skip { get { return _skip; } }
+        public int Skip { get { return _skip; } set { _skip = value; } }
         public IEnumerator<IndexNode> Nodes { get; set; }
         public bool HasMore { get; private set; }
-        public int Total { get { return _counter; } }
+        public int Position { get { return _position; } }
 
-        public QueryContext(Query query, int skip, int limit, int bufferSize)
+        public QueryContext(Query query, int skip, int limit)
         {
             _query = query;
-            _skip = _initialSkip = skip;
+            _skip = skip;
             _limit = limit;
-            _bufferSize = bufferSize;
-            _counter = 0;
+            _position = skip;
 
             this.HasMore = true;
             this.Nodes = null;
@@ -35,13 +32,14 @@ namespace LiteDB
 
         public IEnumerable<BsonDocument> GetDocuments(TransactionService trans, DataService data, Logger log)
         {
-            var index = _bufferSize;
-
-            while (index > 0)
+            if (_skip > 0)
             {
-                // checks if cache are full
-                trans.CheckPoint();
+                log.Write(Logger.QUERY, "skiping {0} documents", _skip);
+            }
 
+            // while until must cache not recycle
+            while (trans.CheckPoint() == false)
+            {
                 // read next node
                 this.HasMore = this.Nodes.MoveNext();
 
@@ -83,10 +81,8 @@ namespace LiteDB
                     }
                 }
 
-                index--;
-
-                // increment counter document
-                _counter++;
+                // increment position cursor
+                _position++;
 
                 // avoid lock again just to check limit
                 if (_limit == 0)
@@ -96,47 +92,6 @@ namespace LiteDB
 
                 yield return doc;
             }
-
-            // for next run, must skip counter because do continue after last
-            _skip = _counter + _initialSkip;
-        }
-
-        public IEnumerable<BsonValue> GetIndexKeys(TransactionService trans, Logger log)
-        {
-            var index = _bufferSize;
-
-            while (index > 0)
-            {
-                trans.CheckPoint();
-
-                // read next node
-                this.HasMore = this.Nodes.MoveNext();
-
-                // skip N nodes 
-                if (--_skip >= 0) continue;
-
-                if (this.HasMore == false) yield break;
-
-                // and limit in N max 
-                if (--_limit <= -1)
-                {
-                    this.HasMore = false;
-                    yield break;
-                }
-
-                index--;
-
-                // increment counter key
-                _counter++;
-
-                // avoid lock again just to check limit
-                if (_limit == 0) this.HasMore = false;
-
-                yield return this.Nodes.Current.Key;
-            }
-
-            // for next run, must skip counter because do continue after last
-            _skip = _counter + _initialSkip;
         }
 
         public void Dispose()

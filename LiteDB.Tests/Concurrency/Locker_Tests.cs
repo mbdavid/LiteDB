@@ -23,7 +23,7 @@ namespace LiteDB.Tests.Concurrency
 
                 using (var db = new LiteEngine(tmp.Filename))
                 {
-                    foreach (var doc in db.Find("col", Query.All(), 0, 1000, 3))
+                    foreach (var doc in db.Find("col", Query.All(), 0, 1000))
                     {
                         var id = doc["_id"];
 

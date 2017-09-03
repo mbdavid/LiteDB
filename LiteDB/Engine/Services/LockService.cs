@@ -52,7 +52,7 @@ namespace LiteDB
             // if read or write
             if (_thread.IsReadLockHeld || _thread.IsWriteLockHeld)
             {
-                return new LockControl(() => { });
+                return new LockControl(false, () => { });
             }
 
             // try enter in read mode
@@ -66,9 +66,9 @@ namespace LiteDB
             // lock disk in shared mode
             var position = _disk.Lock(LockState.Read, _timeout);
 
-            this.DetectDatabaseChanges();
+            var changed = this.DetectDatabaseChanges();
 
-            return new LockControl(() =>
+            return new LockControl(changed, () =>
             {
                 // exit disk lock mode
                 _disk.Unlock(LockState.Read, position);
@@ -88,7 +88,7 @@ namespace LiteDB
             // if already in exclusive, do nothing
             if (_thread.IsWriteLockHeld)
             {
-                return new LockControl(() => { });
+                return new LockControl(false, () => { });
             }
 
             // let's test if is not in read lock
@@ -106,9 +106,9 @@ namespace LiteDB
             var position = _disk.Lock(LockState.Write, _timeout);
 
             // call avoid dirty only if not came from a shared mode
-            this.DetectDatabaseChanges();
+            var changed = this.DetectDatabaseChanges();
 
-            return new LockControl(() =>
+            return new LockControl(changed, () =>
             {
                 // release disk write
                 _disk.Unlock(LockState.Write, position);
@@ -124,17 +124,18 @@ namespace LiteDB
 
         /// <summary>
         /// Test if cache still valid (if datafile was changed by another process reset cache)
+        /// Returns true if file was changed
         /// [Thread Safe]
         /// </summary>
-        private void DetectDatabaseChanges()
+        private bool DetectDatabaseChanges()
         {
             // if disk are exclusive don't need check dirty read
-            if (_disk.IsExclusive) return;
+            if (_disk.IsExclusive) return false;
 
             _log.Write(Logger.CACHE, "checking disk to avoid dirty read");
 
             // empty cache? just exit
-            if (_cache.CleanUsed == 0) return;
+            if (_cache.CleanUsed == 0) return false;
 
             // get ChangeID from cache
             var header = _cache.GetPage(0) as HeaderPage;
@@ -158,7 +159,10 @@ namespace LiteDB
 
                 _cache.ClearPages();
                 _cache.AddPage(disk);
+                return true;
             }
+
+            return false;
         }
     }
 }
