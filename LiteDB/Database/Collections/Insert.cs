@@ -13,9 +13,11 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            var doc = this.GetBsonDocs(new[] { document }).Single();
+            var docs = this.GetBsonDocs(new[] { document });
 
-            return _engine.Value.Insert(_name, doc, _autoId);
+            _engine.Value.Insert(_name, docs, _autoId);
+
+            return docs.Single()["_id"];
         }
 
         /// <summary>
