@@ -14,11 +14,9 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            var docs = new List<BsonDocument>();
-
             _log.Write(Logger.COMMAND, "query documents in '{0}' => {1}", collection, query);
 
-            using (var context = new QueryContext(query, skip, limit))
+            using (var cursor = new QueryCursor(query, skip, limit))
             {
                 using (_locker.Read())
                 {
@@ -29,23 +27,20 @@ namespace LiteDB
                     if (col == null) yield break;
 
                     // get nodes from query executor to get all IndexNodes
-                    context.Nodes = query.Run(col, _indexer).GetEnumerator();
+                    cursor.Initialize(query.Run(col, _indexer).GetEnumerator());
 
                     _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
 
                     // fill buffer with documents 
-                    docs.AddRange(context.GetDocuments(_trans, _data, _log));
+                    cursor.Fetch(_trans, _data);
                 }
 
                 // returing first documents in buffer
-                foreach (var doc in docs) yield return doc;
+                foreach (var doc in cursor.Documents) yield return doc;
 
                 // if still documents to read, continue
-                while (context.HasMore)
+                while (cursor.HasMore)
                 {
-                    // clear buffer
-                    docs.Clear();
-
                     // lock read mode
                     using (var l = _locker.Read())
                     {
@@ -56,17 +51,14 @@ namespace LiteDB
                             
                             if (col == null) yield break;
                             
-                            context.Nodes = query.Run(col, _indexer).GetEnumerator();
-
-                            // skip already returned documents
-                            context.Skip = context.Position;
+                            cursor.ReQuery(query.Run(col, _indexer).GetEnumerator());
                         }
 
-                        docs.AddRange(context.GetDocuments(_trans, _data, _log));
+                        cursor.Fetch(_trans, _data);
                     }
 
                     // return documents from buffer
-                    foreach (var doc in docs) yield return doc;
+                    foreach (var doc in cursor.Documents) yield return doc;
                 }
             }
         }

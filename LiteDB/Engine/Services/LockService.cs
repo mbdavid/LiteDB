@@ -132,10 +132,10 @@ namespace LiteDB
             // if disk are exclusive don't need check dirty read
             if (_disk.IsExclusive) return false;
 
-            _log.Write(Logger.CACHE, "checking disk to avoid dirty read");
-
             // empty cache? just exit
             if (_cache.CleanUsed == 0) return false;
+
+            _log.Write(Logger.CACHE, "checking disk to detect database changes from another process");
 
             // get ChangeID from cache
             var header = _cache.GetPage(0) as HeaderPage;

@@ -7,44 +7,62 @@ namespace LiteDB
     /// <summary>
     /// Include all components to be used in execution of a qery
     /// </summary>
-    internal class QueryContext : IDisposable
+    internal class QueryCursor : IDisposable
     {
         private int _position;
         private int _skip;
         private int _limit;
         private Query _query;
+        private IEnumerator<IndexNode> _nodes;
 
-        public int Skip { get { return _skip; } set { _skip = value; } }
-        public IEnumerator<IndexNode> Nodes { get; set; }
+        public List<BsonDocument> Documents { get; private set; }
         public bool HasMore { get; private set; }
-        public int Position { get { return _position; } }
 
-        public QueryContext(Query query, int skip, int limit)
+        public QueryCursor(Query query, int skip, int limit)
         {
             _query = query;
             _skip = skip;
             _limit = limit;
             _position = skip;
+            _nodes = null;
 
             this.HasMore = true;
-            this.Nodes = null;
+            this.Documents = new List<BsonDocument>();
         }
 
-        public IEnumerable<BsonDocument> GetDocuments(TransactionService trans, DataService data, Logger log)
+        /// <summary>
+        /// Initialize nodes enumeator with query execution
+        /// </summary>
+        public void Initialize(IEnumerator<IndexNode> nodes)
         {
-            if (_skip > 0)
-            {
-                log.Write(Logger.QUERY, "skiping {0} documents", _skip);
-            }
+            _nodes = nodes;
+        }
+
+        /// <summary>
+        /// ReQuery result and set skip counter to current position
+        /// </summary>
+        public void ReQuery(IEnumerator<IndexNode> nodes)
+        {
+            _nodes = nodes;
+            _skip = _position;
+        }
+
+        /// <summary>
+        /// Fetch documents from enumerator and add to buffer. If cache recycle, stop read to execute in another read
+        /// </summary>
+        public void Fetch(TransactionService trans, DataService data)
+        {
+            // empty document buffer
+            this.Documents.Clear();
 
             // while until must cache not recycle
             while (trans.CheckPoint() == false)
             {
                 // read next node
-                this.HasMore = this.Nodes.MoveNext();
+                this.HasMore = _nodes.MoveNext();
 
                 // if finish, exit loop
-                if (this.HasMore == false) yield break;
+                if (this.HasMore == false) return;
 
                 // if run ONLY under index, skip/limit before deserialize
                 if (_query.UseIndex && _query.UseFilter == false)
@@ -54,12 +72,12 @@ namespace LiteDB
                     if (--_limit <= -1)
                     {
                         this.HasMore = false;
-                        yield break;
+                        return;
                     }
                 }
 
                 // get current node
-                var node = this.Nodes.Current;
+                var node = _nodes.Current;
 
                 // read document from data block
                 var buffer = data.Read(node.DataBlock);
@@ -77,7 +95,7 @@ namespace LiteDB
                     if (--_limit <= -1)
                     {
                         this.HasMore = false;
-                        yield break;
+                        return;
                     }
                 }
 
@@ -90,15 +108,15 @@ namespace LiteDB
                     this.HasMore = false;
                 }
 
-                yield return doc;
+                this.Documents.Add(doc);
             }
         }
 
         public void Dispose()
         {
-            if (this.Nodes != null)
+            if (_nodes != null)
             {
-                this.Nodes.Dispose();
+                _nodes.Dispose();
             }
         }
     }
