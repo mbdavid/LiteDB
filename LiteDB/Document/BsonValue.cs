@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 
 namespace LiteDB
@@ -55,6 +54,18 @@ namespace LiteDB
         {
             this.Type = BsonType.Int64;
             this.RawValue = value;
+        }
+
+        public BsonValue(UInt32 value)
+        {
+            this.Type = BsonType.Double;
+            this.RawValue = (Double)value;
+        }
+
+        public BsonValue(UInt64 value)
+        {
+            this.Type = BsonType.Double;
+            this.RawValue = (Double)value;
         }
 
         public BsonValue(Double value)
@@ -144,6 +155,11 @@ namespace LiteDB
                 this.Type = BsonType.DateTime;
                 this.RawValue = ((DateTime)value).Truncate();
             }
+            else if (value is UInt32 || value is UInt64)
+            {
+                this.Type = BsonType.Double;
+                this.RawValue = (Double)value;
+            }
             else if (value is BsonValue)
             {
                 var v = (BsonValue)value;
@@ -188,7 +204,7 @@ namespace LiteDB
             }
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Convert types
 
@@ -278,7 +294,7 @@ namespace LiteDB
             get { return this.Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
         }
 
-        #endregion
+        #endregion Convert types
 
         #region IsTypes
 
@@ -362,7 +378,7 @@ namespace LiteDB
             get { return this.Type == BsonType.MaxValue; }
         }
 
-        #endregion
+        #endregion IsTypes
 
         #region Implicit Ctor
 
@@ -414,16 +430,28 @@ namespace LiteDB
             return new BsonValue(value);
         }
 
-        // UInt64 (to avoid ambigous between Double-Decimal)
+        // UInt32
+        public static implicit operator UInt32(BsonValue value)
+        {
+            return (UInt32)value.RawValue;
+        }
+
+        // UInt32
+        public static implicit operator BsonValue(UInt32 value)
+        {
+            return new BsonValue(value);
+        }
+
+        // UInt64
         public static implicit operator UInt64(BsonValue value)
         {
             return (UInt64)value.RawValue;
         }
 
-        // Decimal
+        // UInt64
         public static implicit operator BsonValue(UInt64 value)
         {
-            return new BsonValue((Double)value);
+            return new BsonValue(value);
         }
 
         // String
@@ -593,7 +621,7 @@ namespace LiteDB
             return JsonSerializer.Serialize(this);
         }
 
-        #endregion
+        #endregion Implicit Ctor
 
         #region IComparable<BsonValue>, IEquatable<BsonValue>
 
@@ -654,7 +682,7 @@ namespace LiteDB
             return this.CompareTo(other) == 0;
         }
 
-        #endregion
+        #endregion IComparable<BsonValue>, IEquatable<BsonValue>
 
         #region Operators
 
@@ -704,7 +732,7 @@ namespace LiteDB
             return hash;
         }
 
-        #endregion
+        #endregion Operators
 
         #region GetBytesCount
 
@@ -771,6 +799,6 @@ namespace LiteDB
                 (value.Type == BsonType.String || value.Type == BsonType.Binary || value.Type == BsonType.Guid ? 5 : 0); // bytes.Length + 0x??
         }
 
-        #endregion
+        #endregion GetBytesCount
     }
 }
