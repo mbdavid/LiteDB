@@ -66,5 +66,18 @@ namespace LiteDB
 
             yield return sum;
         }
+
+        public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values)
+        {
+            return JOIN(values, null);
+        }
+
+        public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values, IEnumerable<BsonValue> separator = null)
+        {
+            yield return string.Join(
+                separator?.FirstOrDefault().AsString ?? ",",
+                values.Select(x => x.AsString).ToArray()
+            );
+        }
     }
 }

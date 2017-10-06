@@ -287,10 +287,7 @@ namespace LiteDB
             {
                 // get static method from this class
                 var name = s.Scan(@"(\w+)\s*\(", 1).ToUpper();
-                var method = typeof(BsonExpression).GetMethod(name);
                 var parameters = new List<Expression>();
-
-                if (method == null) throw LiteException.SyntaxError(s, "Method " + name + " not exist");
 
                 while (!s.HasTerminated)
                 {
@@ -302,6 +299,12 @@ namespace LiteDB
                     else if (s.Scan(@"\s*\)\s*").Length > 0) break;
                     throw LiteException.SyntaxError(s);
                 }
+
+                var methods = typeof(BsonExpression).GetMethods(BindingFlags.Public | BindingFlags.Static);
+
+                var method = methods.FirstOrDefault(x => x.Name == name && x.GetParameters().Count() == parameters.Count);
+
+                if (method == null) throw LiteException.SyntaxError(s, "Method " + name + " not exist or invalid parameter count");
 
                 return Expression.Call(method, parameters.ToArray());
             }
