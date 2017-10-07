@@ -9,11 +9,17 @@ namespace LiteDB
 {
     public partial class BsonExpression
     {
+        /// <summary>
+        /// Count all values. Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> COUNT(IEnumerable<BsonValue> values)
         {
             yield return values.Count();
         }
 
+        /// <summary>
+        /// Find minimal value from all values (number values only). Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> MIN(IEnumerable<BsonValue> values)
         {
             var min = BsonValue.MaxValue;
@@ -26,6 +32,9 @@ namespace LiteDB
             yield return min == BsonValue.MaxValue ? BsonValue.MinValue : min;
         }
 
+        /// <summary>
+        /// Find max value from all values (number values only). Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> MAX(IEnumerable<BsonValue> values)
         {
             var max = BsonValue.MinValue;
@@ -38,6 +47,9 @@ namespace LiteDB
             yield return max == BsonValue.MinValue ? BsonValue.MaxValue : max;
         }
 
+        /// <summary>
+        /// Find average value from all values (number values only). Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> AVG(IEnumerable<BsonValue> values)
         {
             var sum = new BsonValue(0);
@@ -55,6 +67,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Sum all values (number values only). Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> SUM(IEnumerable<BsonValue> values)
         {
             var sum = new BsonValue(0);
@@ -67,11 +82,17 @@ namespace LiteDB
             yield return sum;
         }
 
+        /// <summary>
+        /// Join all values into a single string with ',' separator. Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values)
         {
             return JOIN(values, null);
         }
 
+        /// <summary>
+        /// Join all values into a single string with a string separator. Return a single value
+        /// </summary>
         public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values, IEnumerable<BsonValue> separator = null)
         {
             yield return string.Join(

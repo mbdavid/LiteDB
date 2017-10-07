@@ -7,8 +7,11 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal class ExpressionOperators
     {
+        /// <summary>
+        /// Add two number values. If any side are string, concat left+right as string. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> ADD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -29,6 +32,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Minus two number values. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> MINUS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -39,6 +45,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Multiply two number values. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> MULTIPLY(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -49,6 +58,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Divide two number values. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> DIVIDE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -59,6 +71,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Mod two number values. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> MOD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -69,6 +84,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left and right are same value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> EQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -77,6 +95,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left and right are not same value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> NEQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -85,6 +106,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left is greater than right value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> GT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -93,6 +117,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left is greater or equals than right value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> GTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -101,6 +128,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left is less than right value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> LT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -109,6 +139,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left is less or equals than right value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> LTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -117,6 +150,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test left AND right value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> AND(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
@@ -125,19 +161,14 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test left OR right value. Returns true or false. Support multiples values
+        /// </summary>
         public static IEnumerable<BsonValue> OR(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
             {
                 yield return value.First || value.Second;
-            }
-        }
-
-        public static IEnumerable<BsonValue> IIF(IEnumerable<BsonValue> condition, IEnumerable<BsonValue> ifTrue, IEnumerable<BsonValue> ifFalse)
-        {
-            foreach (var value in condition.ZipValues(ifTrue, ifFalse).Where(x => x.First.IsBoolean))
-            {
-                yield return value.First.AsBoolean ? value.Second : value.Third;
             }
         }
     }
