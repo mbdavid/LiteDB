@@ -22,14 +22,14 @@ namespace LiteDB.Shell
             while(!s.HasTerminated)
             {
                 // try read any kind of expression
-                //var expression = BsonExpression.ReadExpression(s, false, false);
-                //
-                //// if not found a valid one, try read only as path (will add $. before)
-                //if (expression == null)
-                //{
-                //    expression = BsonExpression.ReadExpression(s, true, true);
-                //}
-                var expression = BsonExpression.ReadExpression(s, true, false);
+                var expression = BsonExpression.ReadExpression(s, false, false);
+                
+                // if not found a valid one, try read only as path (will add $. before)
+                if (expression == null)
+                {
+                    expression = BsonExpression.ReadExpression(s, true, true);
+                }
+                //var expression = BsonExpression.ReadExpression(s, true, false);
 
                 var key = s.Scan(@"\s*as\s+([\w-]+)", 1).TrimToNull()
                     ?? this.NamedField(expression)

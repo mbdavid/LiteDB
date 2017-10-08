@@ -233,7 +233,7 @@ namespace LiteDB
             {
                 var r = s.Scan(@"[\$@]"); // read root/current
                 var method = typeof(BsonExpression).GetMethod("Root");
-                var name = Expression.Constant(s.Scan(@"\.([\$\-\w]+)", 1));
+                var name = Expression.Constant(s.Scan(@"\.?([\$\-\w]+)", 1));
                 var expr = Expression.Call(method, r == "@" ? current : root, name) as Expression;
 
                 // parse the rest of path

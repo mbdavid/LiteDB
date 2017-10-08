@@ -38,23 +38,23 @@ namespace LiteDB.Shell
                 while(!s.HasTerminated)
                 {
                     var path = BsonExpression.ReadExpression(s, true, true).Source;
-                    var action = s.Scan(@"\s*(\+)?=\s*", 1).ThrowIfEmpty("Invalid operator (support = or +=)", s);
+                    var action = s.Scan(@"\s*\+?=\s*").Trim().ThrowIfEmpty("Invalid operator (support = or +=)", s);
                     var value = this.ReadBsonValue(s);
                     var expr = value == null ? BsonExpression.ReadExpression(s, true, false)?.Source : null;
 
-                    if (action == "+" && value != null)
+                    if (action == "+=" && value != null)
                     {
                         updates.Add(path, value);
                     }
-                    else if (action == "+" && expr != null)
+                    else if (action == "+=" && expr != null)
                     {
                         updates.AddExpr(path, expr);
                     }
-                    else if (action == "" && value != null)
+                    else if (action == "=" && value != null)
                     {
                         updates.Set(path, value);
                     }
-                    else if (action == "" && expr != null)
+                    else if (action == "=" && expr != null)
                     {
                         updates.SetExpr(path, expr);
                     }
