@@ -40,6 +40,22 @@ namespace LiteDB
         /// <summary>
         /// Returns substring from string value using index and length (zero-based). Support multiple values (only string)
         /// </summary>
+        public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index)
+        {
+            var idx = index?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
+
+            foreach (var value in values)
+            {
+                if (value.IsString)
+                {
+                    yield return value.AsString.Substring(idx);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns substring from string value using index and length (zero-based). Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index, IEnumerable<BsonValue> length)
         {
             var idx = index?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
