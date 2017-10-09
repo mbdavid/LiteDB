@@ -33,12 +33,24 @@ namespace LiteDB
 
                 foreach (var doc in docs)
                 {
-                    // first try update document (if exists _id)
-                    // if not found, insert
-                    if (doc["_id"] == BsonValue.Null || this.UpdateDocument(col, doc) == false)
+                    if (doc["_id"] == BsonValue.Null)
                     {
+                        // Try insert document (if doc has no _id)
                         this.InsertDocument(col, doc, autoId);
                         count++;
+                    }
+                    else {
+                        if (this.UpdateDocument(col, doc))
+                        {
+                            // Try update document (if doc has _id)
+                            count++;
+                        }
+                        else
+                        {
+                            // Try insert document (if doc has _id, but couldn't update)
+                            this.InsertDocument(col, doc, autoId);
+                            count++;
+                        }
                     }
 
                     _trans.CheckPoint();
