@@ -9,6 +9,9 @@ namespace LiteDB
 {
     public partial class BsonExpression
     {
+        /// <summary>
+        /// Return lower case from string value. Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> LOWER(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
@@ -20,6 +23,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Return UPPER case from string value. Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> UPPER(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
@@ -31,6 +37,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Returns substring from string value using index and length (zero-based). Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index, IEnumerable<BsonValue> length)
         {
             var idx = index?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
@@ -45,6 +54,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Return value string with left padding. Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> LPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
             var width = totalWidth?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
@@ -56,6 +68,10 @@ namespace LiteDB
             }
         }
 
+
+        /// <summary>
+        /// Return value string with right padding. Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> RPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
             var width = totalWidth?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
@@ -67,6 +83,9 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Return format value string using format definition (same as String.Format("{0:~}", values)). Support multiple values (only string)
+        /// </summary>
         public static IEnumerable<BsonValue> FORMAT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> format)
         {
             foreach (var value in values.ZipValues(format).Where(x => x.Second.IsString))

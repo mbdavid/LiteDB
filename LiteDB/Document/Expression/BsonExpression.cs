@@ -16,22 +16,30 @@ namespace LiteDB
     {
         #region Operator Functions Cache
 
+        /// <summary>
+        /// Operation definition by methods
+        /// </summary>
         private static Dictionary<string, MethodInfo> _operators = new Dictionary<string, MethodInfo>
         {
-            ["%"] = typeof(BsonExpression).GetMethod("MOD"),
-            ["/"] = typeof(BsonExpression).GetMethod("DIVIDE"),
-            ["*"] = typeof(BsonExpression).GetMethod("MULTIPLY"),
-            ["+"] = typeof(BsonExpression).GetMethod("ADD"),
-            ["-"] = typeof(BsonExpression).GetMethod("MINUS"),
-            [">"] = typeof(BsonExpression).GetMethod("GT"),
-            [">="] = typeof(BsonExpression).GetMethod("GTE"),
-            ["<"] = typeof(BsonExpression).GetMethod("LT"),
-            ["<="] = typeof(BsonExpression).GetMethod("LTE"),
-            ["="] = typeof(BsonExpression).GetMethod("EQ"),
-            ["!="] = typeof(BsonExpression).GetMethod("NEQ"),
-            ["&&"] = typeof(BsonExpression).GetMethod("AND"),
-            ["||"] = typeof(BsonExpression).GetMethod("OR")
+            ["%"] = typeof(ExpressionOperators).GetMethod("MOD"),
+            ["/"] = typeof(ExpressionOperators).GetMethod("DIVIDE"),
+            ["*"] = typeof(ExpressionOperators).GetMethod("MULTIPLY"),
+            ["+"] = typeof(ExpressionOperators).GetMethod("ADD"),
+            ["-"] = typeof(ExpressionOperators).GetMethod("MINUS"),
+            [">"] = typeof(ExpressionOperators).GetMethod("GT"),
+            [">="] = typeof(ExpressionOperators).GetMethod("GTE"),
+            ["<"] = typeof(ExpressionOperators).GetMethod("LT"),
+            ["<="] = typeof(ExpressionOperators).GetMethod("LTE"),
+            ["="] = typeof(ExpressionOperators).GetMethod("EQ"),
+            ["!="] = typeof(ExpressionOperators).GetMethod("NEQ"),
+            ["&&"] = typeof(ExpressionOperators).GetMethod("AND"),
+            ["||"] = typeof(ExpressionOperators).GetMethod("OR")
         };
+
+        /// <summary>
+        /// List of all methods avaiable in expressions
+        /// </summary>
+        private static MethodInfo[] _methods = typeof(BsonExpression).GetMethods(BindingFlags.Public | BindingFlags.Static);
 
         #endregion
 
@@ -225,7 +233,7 @@ namespace LiteDB
             {
                 var r = s.Scan(@"[\$@]"); // read root/current
                 var method = typeof(BsonExpression).GetMethod("Root");
-                var name = Expression.Constant(s.Scan(@"\.([\$\-\w]+)", 1));
+                var name = Expression.Constant(s.Scan(@"\.?([\$\-\w]+)", 1));
                 var expr = Expression.Call(method, r == "@" ? current : root, name) as Expression;
 
                 // parse the rest of path
@@ -287,10 +295,7 @@ namespace LiteDB
             {
                 // get static method from this class
                 var name = s.Scan(@"(\w+)\s*\(", 1).ToUpper();
-                var method = typeof(BsonExpression).GetMethod(name);
                 var parameters = new List<Expression>();
-
-                if (method == null) throw LiteException.SyntaxError(s, "Method " + name + " not exist");
 
                 while (!s.HasTerminated)
                 {
@@ -302,6 +307,10 @@ namespace LiteDB
                     else if (s.Scan(@"\s*\)\s*").Length > 0) break;
                     throw LiteException.SyntaxError(s);
                 }
+
+                var method = _methods.FirstOrDefault(x => x.Name == name && x.GetParameters().Count() == parameters.Count);
+
+                if (method == null) throw LiteException.SyntaxError(s, "Method " + name + " not exist or invalid parameter count");
 
                 return Expression.Call(method, parameters.ToArray());
             }

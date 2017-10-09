@@ -200,12 +200,11 @@ namespace LiteDB
 
         internal static LiteException SyntaxError(StringScanner s, string message = "Unexpected token")
         {
-            var ex = new LiteException(SYNTAX_ERROR, message);
-
-            ex.Line = s.Source;
-            ex.Position = s.Index;
-
-            return ex;
+            return new LiteException(SYNTAX_ERROR, message)
+            {
+                Line = s.Source,
+                Position = s.Index
+            };
         }
 
         #endregion

@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+#if !NET35
+using System.Threading.Tasks;
+#endif
 
 namespace LiteDB
 {
@@ -40,6 +43,21 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Get current thread id
+        /// </summary>
+        public int ThreadId
+        {
+            get
+            {
+#if NET35
+                return Thread.CurrentThread.ManagedThreadId;
+#else
+                return Task.CurrentId ?? 0;
+#endif
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -61,7 +79,7 @@ namespace LiteDB
                 throw LiteException.LockTimeout(_timeout);
             }
 
-            _log.Write(Logger.LOCK, "entered in read lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
+            _log.Write(Logger.LOCK, "entered in read lock mode in thread #{0}", this.ThreadId);
 
             // lock disk in shared mode
             var position = _disk.Lock(LockState.Read, _timeout);
@@ -76,7 +94,7 @@ namespace LiteDB
                 // exit thread lock mode
                 _thread.ExitReadLock();
 
-                _log.Write(Logger.LOCK, "exited read lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
+                _log.Write(Logger.LOCK, "exited read lock mode in thread #{0}", this.ThreadId);
             });
         }
 
@@ -100,7 +118,7 @@ namespace LiteDB
                 throw LiteException.LockTimeout(_timeout);
             }
 
-            _log.Write(Logger.LOCK, "entered in write lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
+            _log.Write(Logger.LOCK, "entered in write lock mode in thread #{0}", this.ThreadId);
 
             // try enter in exclusive mode in disk
             var position = _disk.Lock(LockState.Write, _timeout);
@@ -116,7 +134,7 @@ namespace LiteDB
                 // release thread write
                 _thread.ExitWriteLock();
 
-                _log.Write(Logger.LOCK, "exited write lock mode in thread #{0}", Thread.CurrentThread.ManagedThreadId);
+                _log.Write(Logger.LOCK, "exited write lock mode in thread #{0}", this.ThreadId);
             });
         }
 
