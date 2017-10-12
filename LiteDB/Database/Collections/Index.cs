@@ -26,11 +26,11 @@ namespace LiteDB
         /// <param name="property">Property linq expression</param>
         /// <param name="unique">Create a unique values index?</param>
         /// <param name="expression">Create a custom expression function to be indexed</param>
-        public bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false, string expression = null)
+        public bool EnsureIndex<K>(Expression<Func<T, K>> property, bool unique = false, Func<T, string> expression = null)
         {
             var field = _visitor.GetField(property);
 
-            return this.EnsureIndex(field, unique, expression ?? _visitor.GetPath(property));
+            return this.EnsureIndex(field, unique, expression?.Invoke(default(T)) ?? _visitor.GetPath(property));
         }
 
         /// <summary>
