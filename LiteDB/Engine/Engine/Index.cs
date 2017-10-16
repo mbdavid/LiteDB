@@ -9,7 +9,15 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string collection, string field, bool unique = false, string expression = null)
+        public bool EnsureIndex(string collection, string field, bool unique = false)
+        {
+            return this.EnsureIndex(collection, field, null, unique);
+        }
+
+        /// <summary>
+        /// Create a new index (or do nothing if already exists) to a collection/field
+        /// </summary>
+        public bool EnsureIndex(string collection, string field, string expression, bool unique = false)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexPattern.ToString(), "field");

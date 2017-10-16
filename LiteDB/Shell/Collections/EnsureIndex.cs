@@ -23,7 +23,7 @@ namespace LiteDB.Shell
             {
                 unique = s.Scan(@"unique\s*").Length > 0;
 
-                if (s.Scan(@"\s*using\s+(.+)").Length > 0)
+                if (s.Scan(@"\s*using\s+").Length > 0)
                 {
                     expression = BsonExpression.ReadExpression(s, true, false)?.Source;
                 }
@@ -31,7 +31,7 @@ namespace LiteDB.Shell
 
             s.ThrowIfNotFinish();
 
-            yield return engine.EnsureIndex(col, field, unique, expression);
+            yield return engine.EnsureIndex(col, field, expression, unique);
         }
     }
 }
