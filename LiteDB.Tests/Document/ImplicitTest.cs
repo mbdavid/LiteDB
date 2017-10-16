@@ -1,11 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LiteDB.Tests
 {
@@ -17,19 +10,23 @@ namespace LiteDB.Tests
         {
             int i = int.MaxValue;
             long l = long.MaxValue;
-            ulong u = ulong.MaxValue;
+            uint ui = uint.MaxValue;
+            ulong ul = ulong.MaxValue;
 
             BsonValue bi = i;
             BsonValue bl = l;
-            BsonValue bu = u;
+            BsonValue bui = ui;
+            BsonValue bul = ul;
 
             Assert.IsTrue(bi.IsInt32);
             Assert.IsTrue(bl.IsInt64);
-            Assert.IsTrue(bu.IsDouble);
+            Assert.IsTrue(bui.IsDouble);
+            Assert.IsTrue(bul.IsDouble);
 
             Assert.AreEqual(i, bi.AsInt32);
             Assert.AreEqual(l, bl.AsInt64);
-            Assert.AreEqual(u, bu.AsDouble);
+            Assert.AreEqual(ui, bui.AsDouble);
+            Assert.AreEqual(ul, bul.AsDouble);
         }
     }
 }
