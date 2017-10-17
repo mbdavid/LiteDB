@@ -42,8 +42,8 @@ namespace LiteDB.Tests.Database
     [TestClass]
     public class AutoId_Tests
     {
-        [TestMethod, TestCategory("Database")]
-        public void AutoId_Strong_Typed_Test()
+        [TestMethod]
+        public void AutoId_Strong_Typed()
         {
             var mapper = new BsonMapper();
 

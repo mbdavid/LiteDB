@@ -22,7 +22,7 @@ namespace LiteDB.Tests.Database
     [TestClass]
     public class DbRef_Index_Tests
     {
-        [TestMethod, TestCategory("Database")]
+        [TestMethod]
         public void DbRef_Index()
         {
             var mapper = new BsonMapper();

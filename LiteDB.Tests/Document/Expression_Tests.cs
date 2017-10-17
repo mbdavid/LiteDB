@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Document
 {
     [TestClass]
     public class Expression_Tests
@@ -25,7 +25,7 @@ namespace LiteDB.Tests
 
 
         [TestMethod]
-        public void Path_Test()
+        public void Json_Paths()
         {
             Assert.AreEqual("1", Exec("$._id")); // direct access
             Assert.AreEqual("", Exec("$._id2")); // missing field
@@ -46,7 +46,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Expression_Test()
+        public void Json_Expressions()
         {
             Assert.AreEqual("2", Exec("1 + 1")); // simple arithmetic 
             Assert.AreEqual("7", Exec("1 + (2 * 3)")); // using order

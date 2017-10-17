@@ -184,7 +184,7 @@ namespace LiteDB.Tests.Mapper
             return mapper;
         }
 
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Basic_Mapper()
         {
             var mapper = CreateMapper();

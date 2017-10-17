@@ -7,10 +7,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Document
 {
     [TestClass]
-    public class DocumentTest
+    public class Document_Test
     {
         [TestMethod]
         public void Document_ImplicitConvert_Test()

@@ -8,16 +8,16 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class PerformanceTest
+    public class Performance_Tests
     {
         const int N1 = 10000;
         const int N2 = 1000;
 
         [TestMethod]
-        public void Performance_Test()
+        public void Simple_Performance_Runner()
         {
             // just a simple example to test performance speed
             using (var file = new TempFile())

@@ -12,14 +12,14 @@ namespace LiteDB.Tests.Engine
     [TestClass]
     public class Query_Tests
     {
-        [TestMethod, TestCategory("Engine")]
-        public void Query_Index()
+        [TestMethod]
+        public void Query_Using_Index_Search()
         {
             ExecuteQuery(true);
         }
 
-        [TestMethod, TestCategory("Engine")]
-        public void Query_Fullscan()
+        [TestMethod]
+        public void Query_Using_Fullscan_Search()
         {
             ExecuteQuery(false);
         }
@@ -81,7 +81,7 @@ namespace LiteDB.Tests.Engine
         }
 
         [TestMethod]
-        public void QueryFirst_Test()
+        public void Query_Using_First_Linq()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))

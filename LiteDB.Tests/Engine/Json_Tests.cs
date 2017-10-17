@@ -1,10 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class JsonTest
+    public class Json_Tests
     {
         private BsonDocument CreateDoc()
         {
@@ -34,7 +34,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Json_Test()
+        public void Json_To_Document_Test()
         {
             var o = CreateDoc();
 

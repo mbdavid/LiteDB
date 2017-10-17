@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace LiteDB.Tests.Database
 {
+    #region Model
+
     public class MultiKeyDoc
     {
         public int Id { get; set; }
@@ -12,11 +14,13 @@ namespace LiteDB.Tests.Database
         public List<Customer> Customers { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class MultiKeyMapperTest
+    public class MultiKey_Mapper_Tests
     {
         [TestMethod]
-        public void MultiKeyMapper_Test()
+        public void MultiKey_Mapper()
         {
             using (var file = new TempFile())
             using (var db = new LiteDatabase(file.Filename))

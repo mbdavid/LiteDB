@@ -55,7 +55,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Interface_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Interface_Base()
         {
             var m = new BsonMapper();

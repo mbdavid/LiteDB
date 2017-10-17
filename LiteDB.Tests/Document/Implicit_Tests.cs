@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Document
 {
     [TestClass]
-    public class ImplicitTest
+    public class Implicit_Tests
     {
         [TestMethod]
-        public void Implicit_Test()
+        public void Implicit_Convert()
         {
             int i = int.MaxValue;
             long l = long.MaxValue;

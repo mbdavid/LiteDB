@@ -12,7 +12,7 @@
 //    [TestClass]
 //    public class Store_Local_File_Tests
 //    {
-//        [TestMethod, TestCategory("Storage")]
+//        [TestMethod]
 //        public void Store_Local_File()
 //        {
 //            var pdb = "LiteDB.pdb";

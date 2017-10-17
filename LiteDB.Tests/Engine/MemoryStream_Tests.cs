@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class MemoryStreamTest
+    public class MemoryStream_Tests
     {
         [TestMethod]
-        public void MemoryStream_Test()
+        public void Engine_Using_MemoryStream()
         {
             var mem = new MemoryStream();
 

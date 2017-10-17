@@ -12,7 +12,7 @@ namespace LiteDB.Tests.Concurrency
     [TestClass]
     public class Thread_Tests
     {
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Thread_Multi_Insert()
         {
             using (var file = new TempFile())
@@ -41,7 +41,7 @@ namespace LiteDB.Tests.Concurrency
             }
         }
 
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Thread_Insert_Update()
         {
             const int N = 3000;
@@ -87,7 +87,7 @@ namespace LiteDB.Tests.Concurrency
             }
         }
 
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Thread_Insert_Query()
         {
             const int N = 3000;
@@ -123,7 +123,7 @@ namespace LiteDB.Tests.Concurrency
             }
         }
 
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Thread_UserVersion_Increment()
         {
             using (var file = new TempFile())

@@ -23,7 +23,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Custom_Types_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Custom_Types()
         {
             var mapper = new BsonMapper();

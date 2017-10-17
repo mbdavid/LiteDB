@@ -16,11 +16,11 @@ namespace LiteDB
 #if NET40
         public static string __DEFINE_NET40 = "";
 #endif
-#if NETFULL
-        public static string __DEFINE_NETFULL = "";
+#if NETSTANDARD13
+        public static string __DEFINE_NETSTANDARD13 = "";
 #endif
-#if NETSTANDARD
-        public static string __DEFINE_NETSTANDARD = "";
+#if NETSTANDARD20
+        public static string __DEFINE_NETSTANDARD20 = "";
 #endif
 
         #region Properties
@@ -77,7 +77,7 @@ namespace LiteDB
 
             var options = new FileOptions
             {
-#if NETSTANDARD
+#if HAVE_SYNC_OVER_ASYNC
                 Async = _connectionString.Async,
 #endif
                 InitialSize = _connectionString.InitialSize,

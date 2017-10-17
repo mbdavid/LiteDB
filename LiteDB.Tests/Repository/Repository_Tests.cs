@@ -47,7 +47,7 @@ namespace LiteDB.Tests.Repository
     [TestClass]
     public class Repository_Tests
     {
-        [TestMethod, TestCategory("Repository")]
+        [TestMethod]
         public void Simple_Repository()
         {
             using (var f = new TempFile())

@@ -20,7 +20,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Dictionary_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Nested_Dictionary()
         {
             var mapper = new BsonMapper();
@@ -51,7 +51,7 @@ namespace LiteDB.Tests.Mapper
             Assert.AreEqual(((string[])dict["Array"])[0], ((object[])nobj["Array"])[0].ToString());
         }
 
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Dictionary_Of_List_T()
         {
             var source = new DictListData

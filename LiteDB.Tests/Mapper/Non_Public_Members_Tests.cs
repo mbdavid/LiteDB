@@ -97,7 +97,7 @@ namespace LiteDB.Tests.Mapper
             return c;
         }
 
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Non_Public_Members()
         {
             var mapper = new BsonMapper();

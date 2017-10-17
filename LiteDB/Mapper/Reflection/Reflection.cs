@@ -33,8 +33,7 @@ namespace LiteDB
         {
             try
             {
-                CreateObject c;
-                if (_cacheCtor.TryGetValue(type, out c))
+                if (_cacheCtor.TryGetValue(type, out CreateObject c))
                 {
                     return c();
                 }
@@ -48,8 +47,7 @@ namespace LiteDB
             {
                 try
                 {
-                    CreateObject c = null;
-                    if (_cacheCtor.TryGetValue(type, out c))
+                    if (_cacheCtor.TryGetValue(type, out CreateObject c))
                     {
                         return c();
                     }
@@ -72,13 +70,9 @@ namespace LiteDB
                             }
                             else if (typeDef == typeof(IDictionary<,>))
                             {
-#if NETFULL
-                                var k = type.GetGenericArguments()[0];
-                                var v = type.GetGenericArguments()[1];
-#else
-                                var k = type.GetTypeInfo().GenericTypeArguments[0];
-                                var v = type.GetTypeInfo().GenericTypeArguments[1];
-#endif
+                                var k = type.GetTypeInfo().GetGenericArguments()[0];
+                                var v = type.GetTypeInfo().GetGenericArguments()[1];
+
                                 return CreateInstance(GetGenericDictionaryOfType(k, v));
                             }
                         }
@@ -116,15 +110,11 @@ namespace LiteDB
         public static Type UnderlyingTypeOf(Type type)
         {
             // works only for generics (if type is not generic, returns same type)
-#if NETFULL
-            if (!type.IsGenericType) return type;
+            var t = type.GetTypeInfo();
 
-            return type.GetGenericArguments()[0];
-#else
             if (!type.GetTypeInfo().IsGenericType) return type;
 
-            return type.GetTypeInfo().GenericTypeArguments[0];
-#endif
+            return type.GetTypeInfo().GetGenericArguments()[0];
         }
 
         public static Type GetGenericListOfType(Type type)
@@ -146,29 +136,17 @@ namespace LiteDB
         {
             if (listType.IsArray) return listType.GetElementType();
 
-#if NETFULL
             foreach (var i in listType.GetInterfaces())
-#else
-            foreach (var i in listType.GetTypeInfo().ImplementedInterfaces)
-#endif
             {
                 if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-#if NETFULL
-                    return i.GetGenericArguments()[0];
-#else
-                    return i.GetTypeInfo().GenericTypeArguments[0];
-#endif
+                    return i.GetTypeInfo().GetGenericArguments()[0];
                 }
                 // if interface is IEnumerable (non-generic), let's get from listType and not from interface
                 // from #395
                 else if(listType.GetTypeInfo().IsGenericType && i == typeof(IEnumerable))
                 {
-#if NETFULL
-                    return listType.GetGenericArguments()[0];
-#else
-                    return listType.GetTypeInfo().GenericTypeArguments[0];
-#endif
+                    return listType.GetTypeInfo().GetGenericArguments()[0];
                 }
             }
 
@@ -183,11 +161,7 @@ namespace LiteDB
             if (type.IsArray) return true;
             if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
 
-#if NETFULL
             foreach (var @interface in type.GetInterfaces())
-#else
-            foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
-#endif
             {
                 if (@interface.GetTypeInfo().IsGenericType)
                 {

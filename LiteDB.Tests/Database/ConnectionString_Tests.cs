@@ -9,7 +9,7 @@ namespace LiteDB.Tests.Database
     [TestClass]
     public class ConnectionString_Tests
     {
-        [TestMethod, TestCategory("Database")]
+        [TestMethod]
         public void ConnectionString_Parser()
         {
             // only filename
@@ -53,7 +53,7 @@ namespace LiteDB.Tests.Database
 
         }
 
-        [TestMethod, TestCategory("Database")]
+        [TestMethod]
         public void ConnectionString_Sets_Log_Level()
         {
             var connectionString = "filename=foo;";

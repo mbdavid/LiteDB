@@ -29,6 +29,19 @@ namespace LiteDB
             {
                 expr = ((UnaryExpression)expr).Operand;
             }
+
+            // if is a method call, get first
+            while(expr.NodeType == ExpressionType.Lambda)
+            {
+                if (((LambdaExpression)expr).Body is UnaryExpression unary)
+                {
+                    expr = unary.Operand;
+                }
+                else
+                {
+                    break;
+                }
+            }
             
             var str = expr.ToString(); // gives you: "o => o.Whatever"
             var firstDelim = str.IndexOf('.'); // make sure there is a beginning property indicator; the "." in "o.Whatever" -- this may not be necessary?

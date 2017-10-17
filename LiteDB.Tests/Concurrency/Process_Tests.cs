@@ -1,5 +1,4 @@
-﻿#if NETFULL
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using System.Linq;
@@ -13,7 +12,7 @@ namespace LiteDB.Tests.Concurrency
     [TestClass]
     public class Process_Tests
     {
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Process_Multi_Insert()
         {
             using (var file = new TempFile())
@@ -53,7 +52,7 @@ namespace LiteDB.Tests.Concurrency
             }
         }
 
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Process_Insert_Count()
         {
             using (var file = new TempFile())
@@ -95,7 +94,7 @@ namespace LiteDB.Tests.Concurrency
             }
         }
 
-        [TestMethod, TestCategory("Concurrency")]
+        [TestMethod]
         public void Process_Insert_Delete()
         {
             using (var file = new TempFile())
@@ -141,4 +140,3 @@ namespace LiteDB.Tests.Concurrency
         }
     }
 }
-#endif

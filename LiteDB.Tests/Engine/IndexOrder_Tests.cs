@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class IndexOrderTest
+    public class IndexOrder_Tests
     {
         [TestMethod]
         public void Index_Order()

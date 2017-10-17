@@ -6,8 +6,8 @@ namespace LiteDB.Tests.Concurrency
     [TestClass]
     public class Locker_Tests
     {
-        [TestMethod, TestCategory("Concurrency")]
-        public void Loop_With_Update_Test()
+        [TestMethod]
+        public void Loop_With_Update()
         {
             using (var tmp = new TempFile())
             {

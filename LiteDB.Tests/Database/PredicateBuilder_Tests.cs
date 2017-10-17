@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 
 namespace LiteDB.Tests.Database
 {
+    #region Model
+
     // from http://www.albahari.com/nutshell/predicatebuilder.aspx
     public static class PredicateBuilder
     {
@@ -30,11 +32,13 @@ namespace LiteDB.Tests.Database
         }
     }
 
+    #endregion
+
     [TestClass]
-    public class PredicateBuilderTest
+    public class PredicateBuilder_Tests
     {
         [TestMethod]
-        public void PredicateBuilder_Test()
+        public void Usage_PredicateBuilder()
         {
             var p = PredicateBuilder.True<User>();
 

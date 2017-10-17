@@ -12,7 +12,7 @@ namespace LiteDB.Tests.Engine
     [TestClass]
     public class Shrink_Tests
     {
-        [TestMethod, TestCategory("Engine")]
+        [TestMethod]
         public void Shrink_After_DropCollection()
         {
             using (var file = new TempFile())
@@ -32,7 +32,7 @@ namespace LiteDB.Tests.Engine
             }
         }
 
-        [TestMethod, TestCategory("Engine")]
+        [TestMethod]
         public void Shrink_Large_Files()
         {
             // do some tests

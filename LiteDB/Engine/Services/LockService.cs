@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-#if !NET35
-using System.Threading.Tasks;
-#endif
 
 namespace LiteDB
 {
@@ -50,10 +47,10 @@ namespace LiteDB
         {
             get
             {
-#if NET35
+#if HAVE_THREAD_ID
                 return Thread.CurrentThread.ManagedThreadId;
 #else
-                return Task.CurrentId ?? 0;
+                return System.Threading.Tasks.Task.CurrentId ?? 0;
 #endif
             }
         }

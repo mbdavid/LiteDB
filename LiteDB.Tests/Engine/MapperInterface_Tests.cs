@@ -1,11 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class MapperInterfaceTest
+    public class MapperInterface_Tests
     {
+        #region Model
+
         public interface IMyInterface
         {
             string Name { get; set; }
@@ -37,8 +39,10 @@ namespace LiteDB.Tests
             public MyClassImpl Impl { get; set; }
         }
 
+        #endregion
+
         [TestMethod]
-        public void MapInterfaces_Test()
+        public void Map_Interfaces()
         {
             var mapper = new BsonMapper();
 

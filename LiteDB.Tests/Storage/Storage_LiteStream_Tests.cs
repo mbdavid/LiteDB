@@ -12,7 +12,7 @@ namespace LiteDB.Tests.Storage
     [TestClass]
     public class Storage_LiteStream_Tests
     {
-        [TestMethod, TestCategory("Storage")]
+        [TestMethod]
         public void Storage_Read_Write_Stream()
         {
             var HELLO1 = "Hello World LiteDB 1 ".PadRight(300000, '-') + "\nEND";

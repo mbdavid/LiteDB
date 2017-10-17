@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class ReadOnlyTest
+    public class ReadOnly_Tests
     {
         [TestMethod]
-        public void ReadOnly_Test()
+        public void Datafile_Read_Only_Access()
         {
             using (var file = new TempFile())
             {

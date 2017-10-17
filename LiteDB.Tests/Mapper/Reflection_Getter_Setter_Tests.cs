@@ -99,7 +99,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Reflection_Getter_Setter_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Getter_Setter_Classes()
         {
             var o = new GetterSetterClass
@@ -139,7 +139,7 @@ namespace LiteDB.Tests.Mapper
             Assert.AreEqual(o.GetPrivateField(), clone.GetPrivateField());
         }
 
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Getter_Setter_Structs()
         {
             var o = new GetterSetterStruct

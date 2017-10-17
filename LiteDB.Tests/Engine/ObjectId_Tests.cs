@@ -1,12 +1,12 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class ObjectIdTest
+    public class ObjectId_Tests
     {
         [TestMethod]
-        public void ObjectId_Test()
+        public void ObjectId_BsonValue()
         {
             var oid0 = ObjectId.Empty;
             var oid1 = ObjectId.NewObjectId();

@@ -8,7 +8,7 @@ namespace LiteDB.Tests.Database
     [TestClass]
     public class Delete_By_Name_Tests
     {
-        [TestMethod, TestCategory("Database")]
+        [TestMethod]
         public void Delete_By_Name()
         {
             using (var f = new TempFile())

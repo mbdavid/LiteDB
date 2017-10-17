@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Database
 {
     [TestClass]
-    public class UpgradeScriptTest
+    public class UpgradeScript_Tests
     {
         // [TestMethod]
         public void UpgradeScript_Test()

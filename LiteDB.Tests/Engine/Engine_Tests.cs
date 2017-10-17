@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class EngineTest
+    public class Engine_Tests
     {
         [TestMethod]
-        public void Engine_Insert_Test()
+        public void Engine_Insert_Documents()
         {
             using (var file = new TempFile())
             {
@@ -35,7 +35,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Engine_Upsert_Test()
+        public void Engine_Upsert_Documents()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -60,7 +60,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Engine_Delete_Test()
+        public void Engine_Delete_Documents()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
@@ -77,7 +77,7 @@ namespace LiteDB.Tests
             }
         }
 
-        public void Engine_QueryUpdate_Test()
+        public void Engine_QueryUpdate_Documents()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))

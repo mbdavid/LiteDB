@@ -2,13 +2,13 @@
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class DropCollectionTest
+    public class DropCollection_Tests
     {
         [TestMethod]
-        public void DropCollection_Test()
+        public void DropCollection()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
