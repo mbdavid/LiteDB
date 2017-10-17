@@ -101,11 +101,9 @@ namespace LiteDB
                 {
                     type = obj.GetType();
                 }
-#if NETFULL
-                var itemType = type.GetGenericArguments()[1];
-#else
-                var itemType = type.GetTypeInfo().GenericTypeArguments[1];
-#endif
+
+                var itemType = type.GetTypeInfo().GetGenericArguments()[1];
+
                 return this.SerializeDictionary(itemType, obj as IDictionary, depth);
             }
             // check if is a list or array

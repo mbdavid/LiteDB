@@ -35,7 +35,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Polymorphic_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Simple_Polymorphics()
         {
             using (var file = new TempFile())

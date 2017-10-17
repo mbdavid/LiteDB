@@ -26,7 +26,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Derived_Type_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Derived_Type()
         {
             using (var db = new LiteDatabase(new MemoryStream()))

@@ -100,10 +100,7 @@ namespace LiteDB
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;
-
-#if NETFULL
             this.IncludeFields = false;
-#endif
 
             _typeInstantiator = customTypeInstantiator ?? Reflection.CreateInstance;
 
@@ -334,9 +331,8 @@ namespace LiteDB
         /// </summary>
         protected virtual MemberInfo GetIdMember(IEnumerable<MemberInfo> members)
         {
-            // Get all members and test in order: BsonIdAttribute, "Id" name, "<typeName>Id" name in this order
             return Reflection.SelectMember(members,
-#if NETFULL
+#if HAVE_ATTR_DEFINED
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
 #else
                 x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
@@ -398,6 +394,9 @@ namespace LiteDB
             member.Serialize = (obj, m) =>
             {
                 var idField = entity.Id;
+
+                // #768 if using DbRef with interface with no ID mapped
+                if (idField == null) throw new LiteException("There is no _id field mapped in your type: " + member.DataType.FullName);
 
                 var id = idField.Getter(obj);
 

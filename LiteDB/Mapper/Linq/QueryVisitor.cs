@@ -126,11 +126,11 @@ namespace LiteDB
                 {
                     var met = expr as MethodCallExpression;
                     var method = met.Method.Name;
-#if NETFULL
-                    var type = met.Method.ReflectedType;
-#else
-                var type = met.Method.DeclaringType;
-#endif
+// #if HAVE_TYPE_INFO
+                    var type = met.Method.DeclaringType;
+// #else
+//                     var type = met.Method.ReflectedType;
+// #endif
                     var paramType = met.Arguments[0] is MemberExpression ?
                         (ExpressionType?)(met.Arguments[0] as MemberExpression).Expression.NodeType :
                         null;

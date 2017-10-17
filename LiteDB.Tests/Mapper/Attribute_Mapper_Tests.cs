@@ -34,7 +34,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Attribute_Mapper_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Attribute_Mapper()
         {
             var mapper = new BsonMapper();

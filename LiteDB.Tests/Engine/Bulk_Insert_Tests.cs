@@ -12,8 +12,8 @@ namespace LiteDB.Tests.Engine
     [TestClass]
     public class Bulk_Insert_Tests
     {
-        [TestMethod, TestCategory("Engine")]
-        public void BulkInsert_Test()
+        [TestMethod]
+        public void Bulk_Insert_Engine()
         {
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))

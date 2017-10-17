@@ -3,10 +3,10 @@ using System;
 using System.IO;
 using System.IO.Compression;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Document
 {
     [TestClass]
-    public class BsonTest
+    public class Bson_Tests
     {
         private BsonDocument CreateDoc()
         {
@@ -39,7 +39,7 @@ namespace LiteDB.Tests
         }
 
         [TestMethod]
-        public void Bson_Test()
+        public void Convert_To_Json_Bson()
         {
             var o = CreateDoc();
 

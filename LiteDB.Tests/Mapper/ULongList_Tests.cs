@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public class Gang
     {
         public ObjectId Id { get; set; }
@@ -17,11 +19,13 @@ namespace LiteDB.Tests
         public DateTime Raid { get; set; } = DateTime.UtcNow.AddYears(-1);
     }
 
+    #endregion
+
     [TestClass]
-    public class ULongListTest
+    public class ULongList_Tests
     {
         [TestMethod]
-        public void ULongList_Test()
+        public void ULongList_Mapper()
         {
             using (var file = new TempFile())
             using (var db = new LiteDatabase(file.Filename))

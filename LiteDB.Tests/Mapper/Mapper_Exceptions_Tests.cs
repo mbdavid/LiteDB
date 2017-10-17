@@ -19,7 +19,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Mapper_Exceptions_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Mapper_Exceptions()
         {
             var dataRecord = new DataRecord();

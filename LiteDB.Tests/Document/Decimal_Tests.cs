@@ -7,13 +7,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Document
 {
     [TestClass]
-    public class DecimalTest
+    public class Decimal_Tests
     {
         [TestMethod]
-        public void BsonValueDecimal_Test()
+        public void BsonValueDecimal()
         {
             var d0 = 0m;
             var d1 = 1m;

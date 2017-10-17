@@ -23,7 +23,7 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class Max_Min_Values_Tests
     {
-        [TestMethod, TestCategory("Mapper")]
+        [TestMethod]
         public void Max_Min_Values()
         {
             var c1 = new MyMaxValueClass

@@ -43,8 +43,8 @@ namespace LiteDB.Tests.Database
     [TestClass]
     public class Linq_Visitor_Tests
     {
-        [TestMethod, TestCategory("Database")]
-        public void Linq_Visitor_Wit_DbRef()
+        [TestMethod]
+        public void Linq_Visitor_With_DbRef()
         {
             var m = new BsonMapper();
 
@@ -77,7 +77,7 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual("(Domains.$id = \"admin\")", m.GetQuery<User>(x => x.Domains[0].DomainName == "admin").ToString());
         }
 
-        [TestMethod, TestCategory("Database")]
+        [TestMethod]
         public void Linq_Visitor_Without_DbRef()
         {
             var m = new BsonMapper();

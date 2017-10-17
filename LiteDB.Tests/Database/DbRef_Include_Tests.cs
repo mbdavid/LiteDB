@@ -45,10 +45,10 @@ namespace LiteDB.Tests.Database
     #endregion
 
     [TestClass]
-    public class Include_Tests
+    public class DbRef_Include_Tests
     {
-        [TestMethod, TestCategory("Database")]
-        public void Include()
+        [TestMethod]
+        public void DbRef_Include()
         {
             var mapper = new BsonMapper();
 

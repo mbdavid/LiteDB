@@ -19,10 +19,10 @@ namespace LiteDB.Tests.Database
     #endregion
 
     [TestClass]
-    public class MinMax_Tests
+    public class Query_Min_Max_Tests
     {
-        [TestMethod, TestCategory("Database")]
-        public void MinMax()
+        [TestMethod]
+        public void Query_Min_Max()
         {
             using (var f = new TempFile())
             using (var db = new LiteDatabase(f.Filename))

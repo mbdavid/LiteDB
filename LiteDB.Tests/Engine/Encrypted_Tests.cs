@@ -2,13 +2,13 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class EncryptedTest
+    public class Encrypted_Tests
     {
         [TestMethod]
-        public void Encrypted_Test()
+        public void Encrypted_Database()
         {
             using (var encrypt = new TempFile())
             using (var plain = new TempFile())

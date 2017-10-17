@@ -18,7 +18,7 @@ namespace LiteDB.Tests.Database
     [TestClass]
     public class FindAll_Tests
     {
-        [TestMethod, TestCategory("Database")]
+        [TestMethod]
         public void FindAll()
         {
             using (var f = new TempFile())

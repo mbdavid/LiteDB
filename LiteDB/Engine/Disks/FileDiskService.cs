@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-#if NETSTANDARD
-using System.Threading.Tasks;
-#endif
 
 namespace LiteDB
 {
@@ -243,10 +240,10 @@ namespace LiteDB
         {
             _log.Write(Logger.DISK, "flush data from memory to disk");
 
-#if NETFULL
-            _stream.Flush();
-#else
+#if HAVE_FLUSH_DISK
             _stream.Flush(true);
+#else
+            _stream.Flush();
 #endif
         }
 
@@ -264,7 +261,7 @@ namespace LiteDB
         /// </summary>
         public int Lock(LockState state, TimeSpan timeout)
         {
-#if NETFULL
+#if HAVE_LOCK
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return 0;
 
@@ -286,7 +283,7 @@ namespace LiteDB
         /// </summary>
         public void Unlock(LockState state, int position)
         {
-#if NETFULL
+#if HAVE_LOCK
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared || state == LockState.Unlocked) return;
 
@@ -307,23 +304,19 @@ namespace LiteDB
         /// </summary>
         private FileStream CreateFileStream(string path, System.IO.FileMode mode, FileAccess access, FileShare share)
         {
-#if NETSTANDARD
+#if HAVE_SYNC_OVER_ASYNC
             if (_options.Async)
             {
-                return this.SyncOverAsync(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE));
+                return System.Threading.Tasks.Task.Run(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE))
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
             }
 #endif
             return new FileStream(path, mode, access, share, 
                 BasePage.PAGE_SIZE,
                 System.IO.FileOptions.RandomAccess);
         }
-
-#if NETSTANDARD
-        private T SyncOverAsync<T>(Func<T> f)
-        {
-            return Task.Run<T>(f).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-#endif
 
         #endregion
     }

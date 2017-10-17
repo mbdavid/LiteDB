@@ -6,7 +6,7 @@ namespace LiteDB.Tests.Engine
     [TestClass]
     public class UserVersion_Tests
     {
-        [TestMethod, TestCategory("Engine")]
+        [TestMethod]
         public void UserVersion_Get_Set()
         {
             using (var file = new TempFile())

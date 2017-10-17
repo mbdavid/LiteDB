@@ -12,7 +12,7 @@ namespace LiteDB.Tests.Storage
     [TestClass]
     public class Metadata_Tests
     {
-        [TestMethod, TestCategory("Storage")]
+        [TestMethod]
         public void Insert_Update_Storage_Metadata()
         {
             var source = new byte[25000];

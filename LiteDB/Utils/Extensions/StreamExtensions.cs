@@ -30,6 +30,7 @@ namespace LiteDB
             }
         }
 
+#if HAVE_LOCK
         /// <summary>
         /// Try unlock stream segment. Do nothing if was not possible (it's not locked)
         /// </summary>
@@ -39,9 +40,8 @@ namespace LiteDB
 
             try
             {
-#if NETFULL
                 stream.Unlock(position, length);
-#endif
+
                 return true;
             }
             catch (IOException)
@@ -59,10 +59,9 @@ namespace LiteDB
 
             FileHelper.TryExec(() =>
             {
-#if NETFULL
                 stream.Lock(position, length);
-#endif
             }, timeout);
         }
+#endif
     }
 }

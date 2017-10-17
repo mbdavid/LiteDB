@@ -3,8 +3,10 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace LiteDB.Tests
+namespace LiteDB.Tests.Mapper
 {
+    #region Model
+
     public struct StructValue
     {
         public string Property { get; set; }
@@ -16,14 +18,18 @@ namespace LiteDB.Tests
         public StructValue Struct { get; set; }
     }
 
+    #endregion
+
     [TestClass]
-    public class StructTest
+    public class Struct_Tests
     {
         [TestMethod]
-        public void Struct_Test()
+        public void Struct_Mapper()
         {
-            var mapper = new BsonMapper();
-            mapper.IncludeFields = true;
+            var mapper = new BsonMapper
+            {
+                IncludeFields = true
+            };
 
             var obj = new ContainerValue
             {
