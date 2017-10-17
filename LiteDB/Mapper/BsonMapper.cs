@@ -395,6 +395,9 @@ namespace LiteDB
             {
                 var idField = entity.Id;
 
+                // #768 if using DbRef with interface with no ID mapped
+                if (idField == null) throw new LiteException("There is no _id field mapped in your type: " + member.DataType.FullName);
+
                 var id = idField.Getter(obj);
 
                 return new BsonDocument
