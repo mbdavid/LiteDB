@@ -11,7 +11,6 @@
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
     <Copyright>MIT</Copyright>
-    <Summary>Embedded .NET NoSQL Document Store in a single data file</Summary>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>LiteDB</Title>
     <PackageId>LiteDB</PackageId>
@@ -33,7 +32,17 @@
   
   <!--
   == All variables ==
-  HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_FLUSH_DISK;HAVE_SYNC_OVER_ASYNC;HAVE_LOCK;HAVE_THREAD_ID;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY;HAVE_ATTR_DEFINED
+  HAVE_APP_DOMAIN
+  HAVE_PROCESS
+  HAVE_ENVIRONMENT
+  HAVE_FLUSH_DISK
+  HAVE_SYNC_OVER_ASYNC
+  HAVE_LOCK
+  HAVE_THREAD_ID
+  HAVE_TYPE_INFO
+  HAVE_EXPRESSION_ASSIGN
+  HAVE_TASK_DELAY
+  HAVE_ATTR_DEFINED
   -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -62,7 +71,6 @@
     
   <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
     <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
