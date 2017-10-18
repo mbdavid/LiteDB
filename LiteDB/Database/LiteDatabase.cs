@@ -10,19 +10,6 @@ namespace LiteDB
     /// </summary>
     public partial class LiteDatabase : IDisposable
     {
-#if NET35
-        public static string __DEFINE_NET35 = "";
-#endif
-#if NET40
-        public static string __DEFINE_NET40 = "";
-#endif
-#if NETSTANDARD13
-        public static string __DEFINE_NETSTANDARD13 = "";
-#endif
-#if NETSTANDARD20
-        public static string __DEFINE_NETSTANDARD20 = "";
-#endif
-
         #region Properties
 
         private LazyLoad<LiteEngine> _engine = null;
