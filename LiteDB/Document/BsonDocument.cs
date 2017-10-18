@@ -72,6 +72,97 @@ namespace LiteDB
             return true;
         }
 
+        #region Update support with expressions
+
+        /// <summary>
+        /// Get an IEnumerable of values from a json-like path inside document. Use BsonExpression to parse this path
+        /// </summary>
+        public IEnumerable<BsonValue> Get(string path, bool includeNullIfEmpty = false)
+        {
+            var expr = new BsonExpression(new StringScanner(path), true, true);
+
+            return expr.Execute(this, includeNullIfEmpty);
+        }
+
+        /// <summary>
+        /// Find the field inside document tree, using json-like path, and update with an expression paramter. If field nod exists, create new field. Return true if document was changed
+        /// </summary>
+        public bool Set(string path, BsonExpression expr)
+        {
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
+
+            var value = expr.Execute(this, true).First();
+
+            return this.Set(path, value);
+        }
+
+        /// <summary>
+        /// Find the field inside document tree, using json-like path, and update with value paramter. If field nod exists, create new field. Return true if document was changed
+        /// </summary>
+        public bool Set(string path, BsonValue value)
+        {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(value));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            var field = path.StartsWith("$") ? path : "$." + path;
+            var parent = field.Substring(0, field.LastIndexOf('.'));
+            var key = field.Substring(field.LastIndexOf('.') + 1);
+            var expr = new BsonExpression(parent);
+            var changed = false;
+
+            foreach (var item in expr.Execute(this, false).Where(x => x.IsDocument))
+            {
+                var idoc = item.AsDocument;
+                var cur = idoc[key];
+
+                // update field only if value are different from current value
+                if (cur != value)
+                {
+                    idoc[key] = value;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// Set or add a value to document using a json-like path to update/create this field
+        /// </summary>
+        public bool Set(string path, BsonExpression expr, bool addInArray)
+        {
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
+
+            var value = expr.Execute(this, true).First();
+
+            return this.Set(path, value, addInArray);
+        }
+
+        /// <summary>
+        /// Set or add a value to document using a json-like path to update/create this field. If you addInArray, only add if path returns an array.
+        /// </summary>
+        public bool Set(string path, BsonValue value, bool addInArray)
+        {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(value));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            if (addInArray == false) return this.Set(path, value);
+
+            var expr = new BsonExpression(path.StartsWith("$") ? path : "$." + path);
+            var changed = false;
+
+            foreach (var arr in expr.Execute(this, false).Where(x => x.IsArray))
+            {
+                arr.AsArray.Add(value);
+                changed = true;
+            }
+
+            return changed;
+        }
+
+
+        #endregion
+
         #region CompareTo / ToString
 
         public override int CompareTo(BsonValue other)

@@ -46,39 +46,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Update each document according query result with Update rules
-        /// </summary>
-        public int Update(string collection, Query query, Update update)
-        {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (query == null) throw new ArgumentNullException(nameof(query));
-            if (update == null) throw new ArgumentNullException(nameof(update));
-
-            return this.Transaction<int>(collection, false, (col) =>
-            {
-                // no collection, no updates
-                if (col == null) return 0;
-
-                var count = 0;
-
-                foreach (var doc in this.Find(collection, query))
-                {
-                    // for each document in query update fields
-                    if(update.Execute(doc))
-                    {
-                        // only save on disk if any update on document was made
-                        if (this.UpdateDocument(col, doc))
-                        {
-                            count++;
-                        }
-                    }
-                }
-
-                return count;
-            });
-        }
-
-        /// <summary>
         /// Implement internal update document
         /// </summary>
         private bool UpdateDocument(CollectionPage col, BsonDocument doc)
