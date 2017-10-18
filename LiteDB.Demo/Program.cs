@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LiteDB.Perf
+namespace LiteDB.Demo
 {
     class Program
     {
@@ -60,6 +60,9 @@ namespace LiteDB.Perf
             Assert();
         }
 
+        /// <summary>
+        /// Simple test: insert new document and then update this document. Finish quering first 100 documents
+        /// </summary>
         static void RunTask(LiteEngine db)
         {
             for(var i = 0; i < 10; i++)
@@ -78,7 +81,7 @@ namespace LiteDB.Perf
 
         static void Assert()
         {
-            // checks if are ok
+            // checks if datafile are ok
             using (var db = new LiteEngine(filename))
             {
                 db.FindAll("collection").ToArray();
@@ -87,6 +90,9 @@ namespace LiteDB.Perf
 
         #region Process/Thread Testing
 
+        /// <summary>
+        /// In TestProcess, each task contains a new instance of LiteEngine
+        /// </summary>
         static void TestProcess()
         {
             var tasks = new List<Task>();
@@ -107,6 +113,9 @@ namespace LiteDB.Perf
             Task.WaitAll(tasks.ToArray());
         }
 
+        /// <summary>
+        /// In TestThread, all tasks contains the same instance of LiteEngine
+        /// </summary>
         static void TestThread()
         {
             var tasks = new List<Task>();
