@@ -24,5 +24,28 @@ namespace LiteDB
                 }
             }
         }
+
+        internal override bool FilterDocument(BsonDocument doc)
+        {
+            foreach(var val in this.Expression.Execute(doc, true))
+            {
+                foreach (var value in _values.Distinct())
+                {
+                    var diff = val.CompareTo(value);
+
+                    if (diff == 0) return true;
+                }
+            }
+
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}({1} in {2})",
+                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
+                this.Expression?.ToString() ?? this.Field,
+                _values);
+        }
     }
 }

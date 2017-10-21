@@ -6,27 +6,44 @@ namespace LiteDB.Shell
 {
     public class Env
     {
-        public ConnectionString ConnectionString { get; set; }
+        public Display Display { get; set; }
+        public InputCommand Input { get; set; }
         public Logger Log { get; set; }
+
+        private LiteEngine _engine = null;
 
         public Env()
         {
-            this.ConnectionString = null;
-            this.Log = new Logger();
-            this.Log.Logging += (msg) =>
+            this.Log = new Logger(Logger.NONE, (msg) =>
             {
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine(msg);
-            };
+            });
         }
 
-        public LiteEngine CreateEngine(DataAccess access)
+        public LiteEngine Engine
         {
-            if (this.ConnectionString == null) throw new ShellException("No database");
+            get
+            {
+                if (_engine == null) throw ShellException.NoDatabase();
+                return _engine;
+            }
+        }
 
-            var db = new LiteDatabase(this.ConnectionString);
+        public void Open(ConnectionString connectionString)
+        {
+            this.Close();
 
-            return db.Engine;
+            _engine = new LiteDatabase(connectionString, null, this.Log).Engine;
+        }
+
+        public void Close()
+        {
+            if (_engine != null)
+            {
+                _engine.Dispose();
+                _engine = null;
+            }
         }
     }
 }

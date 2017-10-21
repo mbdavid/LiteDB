@@ -7,8 +7,6 @@ namespace LiteDB
 {
     public class BsonDocument : BsonValue, IDictionary<string, BsonValue>
     {
-        public const int MAX_DOCUMENT_SIZE = 256 * BasePage.PAGE_AVAILABLE_BYTES; // limits in 1.044.224b max document size to avoid large documents, memory usage and slow performance
-
         public BsonDocument()
             : base(new Dictionary<string, BsonValue>())
         {
@@ -46,7 +44,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if field name is a valid string: only [\w$]+(\w-$)*
+        /// Test if field name is a valid string: only [\w$]+[\w-]*
         /// </summary>
         internal static bool IsValidFieldName(string field)
         {
@@ -57,7 +55,7 @@ namespace LiteDB
             {
                 var c = field[i];
 
-                if (char.IsLetterOrDigit(c) || c == '_' || c == '$')
+                if (char.IsLetterOrDigit(c) || c == '_' || (c == '$' && i == 0))
                 {
                     continue;
                 }
@@ -74,154 +72,94 @@ namespace LiteDB
             return true;
         }
 
-        #region Get/Set methods
+        #region Update support with expressions
 
         /// <summary>
-        /// Get value from a path - supports dotted path like: Customer.Address.Street
+        /// Get an IEnumerable of values from a json-like path inside document. Use BsonExpression to parse this path
         /// </summary>
-        public BsonValue Get(string path)
+        public IEnumerable<BsonValue> Get(string path, bool includeNullIfEmpty = false)
         {
-            // supports parent.child.name
-            var names = path.Split('.');
+            var expr = new BsonExpression(new StringScanner(path), true, true);
 
-            if (names.Length == 1)
-            {
-                return this[path];
-            }
-
-            var value = this;
-
-            for (var i = 0; i < names.Length - 1; i++)
-            {
-                var name = names[i];
-
-                if (value[name].IsDocument)
-                {
-                    value = value[name].AsDocument;
-                }
-                else
-                {
-                    return BsonValue.Null;
-                }
-            }
-
-            return value[names.Last()];
+            return expr.Execute(this, includeNullIfEmpty);
         }
 
         /// <summary>
-        /// Set value to a path - supports dotted path like: Customer.Address.Street - Fluent API (returns same BsonDocument)
+        /// Find the field inside document tree, using json-like path, and update with an expression paramter. If field nod exists, create new field. Return true if document was changed
         /// </summary>
-        public BsonDocument Set(string path, BsonValue value)
+        public bool Set(string path, BsonExpression expr)
         {
-            // supports parent.child.name
-            var names = path.Split('.');
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-            if (names.Length == 1)
-            {
-                this[path] = value;
-                return this;
-            }
+            var value = expr.Execute(this, true).First();
 
-            var doc = this;
-
-            // walk on path creating object when do not exists
-            for (var i = 0; i < names.Length - 1; i++)
-            {
-                var name = names[i];
-
-                if (doc[name].IsDocument)
-                {
-                    doc = doc[name].AsDocument;
-                }
-                else if (doc[name].IsNull)
-                {
-                    var d = new BsonDocument();
-                    doc[name] = d;
-                    doc = d;
-                }
-                else
-                {
-                    return this;
-                }
-            }
-
-            doc[names.Last()] = value;
-
-            return this;
+            return this.Set(path, value);
         }
 
         /// <summary>
-        /// Get a collection of values from a path. Supports array values. If SingleValue=true, returns BsonArray as a single value (BsonArray)
+        /// Find the field inside document tree, using json-like path, and update with value paramter. If field nod exists, create new field. Return true if document was changed
         /// </summary>
-        public IEnumerable<BsonValue> GetValues(string path, bool distinct = false, bool singleValue = false)
+        public bool Set(string path, BsonValue value)
         {
-            // if single key, use Get method
-            if (singleValue)
-            {
-                yield return this.Get(path);
-            }
-            // implement this first level here to avoid recursive calls do GetKeyValues for almost all documents
-            else if (path.IndexOf(".") == -1)
-            {
-                var value = this[path];
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(value));
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
-                if (value.IsArray)
-                {
-                    var items = this.GetKeyValues(value, path);
+            var field = path.StartsWith("$") ? path : "$." + path;
+            var parent = field.Substring(0, field.LastIndexOf('.'));
+            var key = field.Substring(field.LastIndexOf('.') + 1);
+            var expr = new BsonExpression(parent);
+            var changed = false;
 
-                    foreach (var item in distinct ? items.Distinct() : items)
-                    {
-                        yield return item;
-                    }
-                }
-                else
+            foreach (var item in expr.Execute(this, false).Where(x => x.IsDocument))
+            {
+                var idoc = item.AsDocument;
+                var cur = idoc[key];
+
+                // update field only if value are different from current value
+                if (cur != value)
                 {
-                    yield return value;
+                    idoc[key] = value;
+                    changed = true;
                 }
             }
-            else
-            {
-                // let's call GetKeyValues recursivly until get all base values
-                var items = this.GetKeyValues(this, path);
 
-                foreach (var item in /*distinct ? items.Distinct() :*/ items)
-                {
-                    yield return item;
-                }
-            }
+            return changed;
         }
 
         /// <summary>
-        /// Get, recursivly, values inside a BsonValue respecting Arrays and Documents path
+        /// Set or add a value to document using a json-like path to update/create this field
         /// </summary>
-        private IEnumerable<BsonValue> GetKeyValues(BsonValue value, string path)
+        public bool Set(string path, BsonExpression expr, bool addInArray)
         {
-            if (value.IsArray)
-            {
-                foreach(var item in value.AsArray)
-                {
-                    foreach(var v in this.GetKeyValues(item, path))
-                    {
-                        yield return v;
-                    }
-                }
-            }
-            else if (value.IsDocument && path != null)
-            {
-                var dot = path.IndexOf(".");
-                var docValue = value.AsDocument[dot == -1 ? path : path.Substring(0, dot)];
-                var rpath = dot == -1 ? null : path.Substring(dot + 1);
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-                foreach(var v in this.GetKeyValues(docValue, rpath))
-                {
-                    yield return v;
-                }
-            }
-            else
-            {
-                yield return value;
-            }
+            var value = expr.Execute(this, true).First();
+
+            return this.Set(path, value, addInArray);
         }
+
+        /// <summary>
+        /// Set or add a value to document using a json-like path to update/create this field. If you addInArray, only add if path returns an array.
+        /// </summary>
+        public bool Set(string path, BsonValue value, bool addInArray)
+        {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(value));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            if (addInArray == false) return this.Set(path, value);
+
+            var expr = new BsonExpression(path.StartsWith("$") ? path : "$." + path);
+            var changed = false;
+
+            foreach (var arr in expr.Execute(this, false).Where(x => x.IsArray))
+            {
+                arr.AsArray.Add(value);
+                changed = true;
+            }
+
+            return changed;
+        }
+
 
         #endregion
 
@@ -334,7 +272,18 @@ namespace LiteDB
 
         public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
+        }
+
+        public void CopyTo(BsonDocument doc)
+        {
+            var myDict = this.RawValue;
+            var otherDict = doc.RawValue;
+
+            foreach(var key in myDict.Keys)
+            {
+                otherDict[key] = myDict[key];
+            }
         }
 
         public bool Remove(KeyValuePair<string, BsonValue> item)

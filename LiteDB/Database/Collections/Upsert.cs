@@ -13,17 +13,17 @@ namespace LiteDB
         {
             if (document == null) throw new ArgumentNullException("document");
 
-            // use locker because needs by SetAutoId be isolated
-            using (_engine.Value.Locker.Reserved())
-            {
-                // set autoId if there is no Id
-                _mapper.SetAutoId(document, _engine.Value, _name);
+            return this.Upsert(new T[] { document }) == 1;
+        }
 
-                // get BsonDocument from object
-                var doc = _mapper.ToDocument(document);
+        /// <summary>
+        /// Insert or Update all documents
+        /// </summary>
+        public int Upsert(IEnumerable<T> documents)
+        {
+            if (documents == null) throw new ArgumentNullException("document");
 
-                return _engine.Value.Upsert(_name, doc);
-            }
+            return _engine.Value.Upsert(_name, this.GetBsonDocs(documents), _autoId);
         }
 
         /// <summary>
@@ -41,19 +41,6 @@ namespace LiteDB
             doc["_id"] = id;
 
             return _engine.Value.Upsert(_name, doc);
-        }
-
-        /// <summary>
-        /// Insert or Update all documents
-        /// </summary>
-        public int Upsert(IEnumerable<T> documents)
-        {
-            if (documents == null) throw new ArgumentNullException("document");
-
-            using (_engine.Value.Locker.Reserved())
-            {
-                return _engine.Value.Upsert(_name, this.GetBsonDocs(documents));
-            }
         }
     }
 }

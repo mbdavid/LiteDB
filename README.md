@@ -1,15 +1,14 @@
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
-[![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb)
+[![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb) [![Build Status](https://travis-ci.org/mbdavid/LiteDB.svg?branch=master)](https://travis-ci.org/mbdavid/LiteDB)
 
 LiteDB is a small, fast and lightweight NoSQL embedded database. 
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 / NETStandard 1.4 in a single DLL (less than 200kb)
-- Support for Portable UWP/PCL (thanks to @negue and @szurgot)
+- 100% C# code for .NET 3.5 / .NET 4.0 / NETStandard 1.3 / NETStandard 2.0 in a single DLL (less than 300kb)
 - Thread safe and process safe
-- ACID transactions
+- ACID in document/operation level
 - Data recovery after write failure (journal mode)
 - Datafile encryption using DES (AES) cryptography
 - Map your POCO classes to `BsonDocument` using attributes or fluent mapper API
@@ -22,9 +21,15 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 - Open source and free for everyone - including commercial use
 - Install from NuGet: `Install-Package LiteDB`
 
-## New in 3.1
-- New `LiteRepository` class to simple repository pattern data access [see here](https://github.com/mbdavid/LiteDB/wiki/LiteRepository)
-- Collection names could be `null` and will be resolved by `BsonMapper.ResolveCollectionName` user function (default:  `typeof(T).Name`)
+## New in 4.0
+- New `Expressions/Path` index/query support. See [Expressions](https://github.com/mbdavid/LiteDB/wiki/Expressions)
+- Nested `Include` support
+- Optimzed query execution (with explain plain debug)
+- Fix concurrency problems
+- Remove transaction and auto index creation
+- Support for full scan search and LINQ search
+- New shell commands: update fields based on expressions and select/transform documents
+- See full [changelog](https://github.com/mbdavid/LiteDB/wiki/Changelog)
 
 ## Try online
 
@@ -32,7 +37,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 ## Documentation
 
-Visit [the Wiki](https://github.com/mbdavid/LiteDB/wiki) for full documentation
+Visit [the Wiki](https://github.com/mbdavid/LiteDB/wiki) for full documentation. For simplified chinese version, [check here](https://github.com/lidanger/LiteDB.wiki_Translation_zh-cn).
 
 ## Download
 
@@ -56,8 +61,8 @@ public class Customer
 // Open database (or create if doesn't exist)
 using(var db = new LiteDatabase(@"MyData.db"))
 {
-	// Get customer collection
-	var col = db.GetCollection<Customer>("customers");
+    // Get customer collection
+    var col = db.GetCollection<Customer>("customers");
 
     // Create your new customer instance
 	var customer = new Customer
@@ -71,16 +76,16 @@ using(var db = new LiteDatabase(@"MyData.db"))
     // Create unique index in Name field
     col.EnsureIndex(x => x.Name, true);
 	
-	// Insert new customer document (Id will be auto-incremented)
-	col.Insert(customer);
+    // Insert new customer document (Id will be auto-incremented)
+    col.Insert(customer);
 	
-	// Update a document inside a collection
-	customer.Name = "Joana Doe";
+    // Update a document inside a collection
+    customer.Name = "Joana Doe";
 	
-	col.Update(customer);
-		
-	// Use LINQ to query documents (will create index in Age field)
-	var results = col.Find(x => x.Age > 20);
+    col.Update(customer);
+	
+    // Use LINQ to query documents (with no index)
+    var results = col.Find(x => x.Age > 20);
 }
 ```
 
@@ -92,10 +97,9 @@ public class Order
 {
     public ObjectId Id { get; set; }
     public DateTime OrderDate { get; set; }
-	public Address ShippingAddress { get; set; }
+    public Address ShippingAddress { get; set; }
     public Customer Customer { get; set; }
     public List<Product> Products { get; set; }
-	public decimal Total => Products.Sum(p => p.Price);
 }        
 
 // Re-use mapper from global instance
@@ -105,9 +109,7 @@ var mapper = BsonMapper.Global;
 mapper.Entity<Order>()
     .DbRef(x => x.Customer, "customers")   // 1 to 1/0 reference
     .DbRef(x => x.Products, "products")    // 1 to Many reference
-	.Field(x => x.ShippingAddress, "addr") // Embedded sub document
-	.Index(x => x.OrderDate)               // Index this field
-	.Ignore(x => x.Total);                 // Do not store this
+    .Field(x => x.ShippingAddress, "addr"); // Embedded sub document
             
 using(var db = new LiteDatabase("MyOrderDatafile.db"))
 {
@@ -120,12 +122,11 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
         .Find(x => x.OrderDate <= DateTime.Now);
 
     // Each instance of Order will load Customer/Products references
-	foreach(var order in query)
-	{
-		var name = order.Customer.Name;
-		...
-	}
-                    
+    foreach(var order in query)
+    {
+        var name = order.Customer.Name;
+        ...
+    }
 }
 
 ```
@@ -140,8 +141,10 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 
 ## Plugins
 
-- A GUI tool: https://github.com/falahati/LiteDBViewer
+- A GUI viewer tool: https://github.com/falahati/LiteDBViewer
+- A GUI editor tool: https://github.com/JosefNemec/LiteDbExplorer 
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
+- LINQPad support: https://github.com/adospace/litedbpad
 
 ## Changelog
 
@@ -155,4 +158,4 @@ Copyright (c) 2017 - Maurício David
 
 ## Thanks
 
-A special thanks to @negue and @szurgot helping with portable version.
+A special thanks to @negue and @szurgot helping with portable version and @lidanger for simplified chinese translation. 

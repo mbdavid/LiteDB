@@ -6,28 +6,19 @@ namespace LiteDB
 {
     /// <summary>
     /// Class helper to create query using indexes in database. All methods are statics.
-    /// Queries can be executed in 2 ways: Index Seek (fast), Index Scan (good)
+    /// Queries can be executed in 3 ways: Index Seek (fast), Index Scan (good), Full Scan (slow)
     /// </summary>
     public abstract class Query
     {
-        private Action<string, string> _indexFactory = null;
-
         public string Field { get; private set; }
+
+        internal BsonExpression Expression { get; set; }
+        internal virtual bool UseIndex { get; set; }
+        internal virtual bool UseFilter { get; set; }
 
         internal Query(string field)
         {
             this.Field = field;
-        }
-
-        /// <summary>
-        /// Set, only if not defined yet, a new factory to create index if nedded
-        /// </summary>
-        internal virtual void IndexFactory(Action<string, string> indexFactory)
-        {
-            if (_indexFactory == null)
-            {
-                _indexFactory = indexFactory;
-            }
         }
 
         #region Static Methods
@@ -113,11 +104,11 @@ namespace LiteDB
         /// <summary>
         /// Returns all document that values are between "start" and "end" values (BETWEEN)
         /// </summary>
-        public static Query Between(string field, BsonValue start, BsonValue end)
+        public static Query Between(string field, BsonValue start, BsonValue end, bool startEquals = true, bool endEquals = true)
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null);
+            return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null, startEquals, endEquals);
         }
 
         /// <summary>
@@ -207,14 +198,39 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns document that exists in BOTH queries results (Intersect).
+        /// Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan)
         /// </summary>
         public static Query And(Query left, Query right)
         {
             if (left == null) throw new ArgumentNullException("left");
             if (right == null) throw new ArgumentNullException("right");
 
+            // test if can use QueryBetween because it's more efficient
+            if (left is QueryGreater && right is QueryLess && left.Field == right.Field)
+            {
+                var l = left as QueryGreater;
+                var r = right as QueryLess;
+
+                return Between(l.Field, l.Value, r.Value, l.IsEquals, r.IsEquals);
+            }
+
             return new QueryAnd(left, right);
+        }
+
+        /// <summary>
+        /// Returns document that exists in ALL queries results.
+        /// </summary>
+        public static Query And(params Query[] queries)
+        {
+            if (queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+
+            var left = queries[0];
+
+            for (int i = 1; i < queries.Length; i++)
+            {
+                left = And(left, queries[i]);
+            }
+            return left;
         }
 
         /// <summary>
@@ -228,14 +244,25 @@ namespace LiteDB
             return new QueryOr(left, right);
         }
 
-        #endregion Static Methods
-
-        #region Execute Query
-
         /// <summary>
-        /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
+        /// Returns document that exists in ANY queries results (Union).
         /// </summary>
-        internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
+        public static Query Or(params Query[] queries)
+        {
+            if (queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+
+            var left = queries[0];
+
+            for (int i = 1; i < queries.Length; i++)
+            {
+                left = Or(left, queries[i]);
+            }
+            return left;
+        }
+
+        #endregion
+
+        #region Executing Query
 
         /// <summary>
         /// Find witch index will be used and run Execute method
@@ -245,26 +272,45 @@ namespace LiteDB
             // get index for this query
             var index = col.GetIndex(this.Field);
 
-            // if index not index, let's auto create one
+            // if index not found, must use Filter (full scan)
             if (index == null)
             {
-                // possible never happend because query always have index factory
-                if (_indexFactory == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
+                this.UseFilter = true;
 
-                // create needed index
-                _indexFactory(col.CollectionName, this.Field);
+                // create expression based on Field (if field contains '$' or '(' is already an expression)
+                var expr = this.Field.StartsWith("$") || this.Field.IndexOf("(") > 0 ? 
+                    this.Field : "$." + this.Field;
 
-                // get index 
-                index = col.GetIndex(this.Field);
+                this.Expression = new BsonExpression(expr);
 
-                // this should never happend because index already created
-                if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Field);
+                // returns all index nodes - (will use Filter method later)
+                return indexer.FindAll(col.PK, Query.Ascending);
             }
+            else
+            {
+                this.UseIndex = true;
 
-            // execute query to get all IndexNodes
-            return this.ExecuteIndex(indexer, index);
+                // create expression from index
+                this.Expression = new BsonExpression(index.Expression);
+
+                // execute query to get all IndexNodes
+                // do DistinctBy datablock to not duplicate same document in results
+                return this.ExecuteIndex(indexer, index)
+                    .DistinctBy(x => x.DataBlock, null);
+            }
         }
 
-        #endregion Execute Query
+        /// <summary>
+        /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
+        /// </summary>
+        internal abstract IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index);
+
+        /// <summary>
+        /// Abstract method that must implement full scan - will be called for each document and need
+        /// returns true if condition was satisfied
+        /// </summary>
+        internal abstract bool FilterDocument(BsonDocument doc);
+
+        #endregion
     }
 }

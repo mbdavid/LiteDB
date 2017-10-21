@@ -33,8 +33,7 @@ namespace LiteDB
         {
             try
             {
-                CreateObject c;
-                if (_cacheCtor.TryGetValue(type, out c))
+                if (_cacheCtor.TryGetValue(type, out CreateObject c))
                 {
                     return c();
                 }
@@ -48,8 +47,7 @@ namespace LiteDB
             {
                 try
                 {
-                    CreateObject c = null;
-                    if (_cacheCtor.TryGetValue(type, out c))
+                    if (_cacheCtor.TryGetValue(type, out CreateObject c))
                     {
                         return c();
                     }
@@ -72,13 +70,9 @@ namespace LiteDB
                             }
                             else if (typeDef == typeof(IDictionary<,>))
                             {
-#if NET35
-                                var k = type.GetGenericArguments()[0];
-                                var v = type.GetGenericArguments()[1];
-#else
-                                var k = type.GetTypeInfo().GenericTypeArguments[0];
-                                var v = type.GetTypeInfo().GenericTypeArguments[1];
-#endif
+                                var k = type.GetTypeInfo().GetGenericArguments()[0];
+                                var v = type.GetTypeInfo().GetGenericArguments()[1];
+
                                 return CreateInstance(GetGenericDictionaryOfType(k, v));
                             }
                         }
@@ -116,15 +110,11 @@ namespace LiteDB
         public static Type UnderlyingTypeOf(Type type)
         {
             // works only for generics (if type is not generic, returns same type)
-#if NET35
-            if (!type.IsGenericType) return type;
+            var t = type.GetTypeInfo();
 
-            return type.GetGenericArguments()[0];
-#else
             if (!type.GetTypeInfo().IsGenericType) return type;
 
-            return type.GetTypeInfo().GenericTypeArguments[0];
-#endif
+            return type.GetTypeInfo().GetGenericArguments()[0];
         }
 
         public static Type GetGenericListOfType(Type type)
@@ -146,29 +136,17 @@ namespace LiteDB
         {
             if (listType.IsArray) return listType.GetElementType();
 
-#if NET35
             foreach (var i in listType.GetInterfaces())
-#else
-            foreach (var i in listType.GetTypeInfo().ImplementedInterfaces)
-#endif
             {
                 if (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-#if NET35
-                    return i.GetGenericArguments()[0];
-#else
-                    return i.GetTypeInfo().GenericTypeArguments[0];
-#endif
+                    return i.GetTypeInfo().GetGenericArguments()[0];
                 }
                 // if interface is IEnumerable (non-generic), let's get from listType and not from interface
                 // from #395
                 else if(listType.GetTypeInfo().IsGenericType && i == typeof(IEnumerable))
                 {
-#if NET35
-                    return listType.GetGenericArguments()[0];
-#else
-                    return listType.GetTypeInfo().GenericTypeArguments[0];
-#endif
+                    return listType.GetTypeInfo().GetGenericArguments()[0];
                 }
             }
 
@@ -181,12 +159,9 @@ namespace LiteDB
         public static bool IsList(Type type)
         {
             if (type.IsArray) return true;
+            if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
 
-#if NET35
             foreach (var @interface in type.GetInterfaces())
-#else
-            foreach (var @interface in type.GetTypeInfo().ImplementedInterfaces)
-#endif
             {
                 if (@interface.GetTypeInfo().IsGenericType)
                 {
@@ -201,20 +176,18 @@ namespace LiteDB
             return false;
         }
 
-        public static PropertyInfo SelectProperty(IEnumerable<PropertyInfo> props, params Func<PropertyInfo, bool>[] predicates)
+        /// <summary>
+        /// Select member from a list of member using predicate order function to select
+        /// </summary>
+        public static MemberInfo SelectMember(IEnumerable<MemberInfo> members, params Func<MemberInfo, bool>[] predicates)
         {
             foreach (var predicate in predicates)
             {
-                var prop = props.FirstOrDefault(predicate);
+                var member = members.FirstOrDefault(predicate);
 
-                if (prop != null)
+                if (member != null)
                 {
-                    if (!prop.CanRead || !prop.CanWrite)
-                    {
-                        throw LiteException.PropertyReadWrite(prop);
-                    }
-
-                    return prop;
+                    return member;
                 }
             }
 

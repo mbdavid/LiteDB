@@ -105,8 +105,15 @@ namespace LiteDB
                 // initialize datafile (create) and set log instance
                 _disk.Initialize(_log, password);
 
-                // read header page
-                var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
+                // lock disk (read mode) before read header
+                var position = _disk.Lock(LockState.Read, _timeout);
+
+                var buffer = _disk.ReadPage(0);
+
+                _disk.Unlock(LockState.Read, position);
+
+                // create header instance from array bytes
+                var header = BasePage.ReadPage(buffer) as HeaderPage;
 
                 // hash password with sha1 or keep as empty byte[20]
                 var sha1 = password == null ? new byte[20] : AesEncryption.HashSHA1(password);
@@ -126,8 +133,11 @@ namespace LiteDB
                 // initialize all services
                 this.InitializeServices();
 
-                // try recovery if has journal file
-                _trans.Recovery();
+                // if header are marked with recovery, do it now
+                if (header.Recovery)
+                {
+                    _trans.Recovery();
+                }
             }
             catch (Exception)
             {
@@ -173,14 +183,38 @@ namespace LiteDB
             return col;
         }
 
+        /// <summary>
+        /// Encapsulate all operations in a single write transaction
+        /// </summary>
+        private T Transaction<T>(string collection, bool addIfNotExists, Func<CollectionPage, T> action)
+        {
+            // always starts write operation locking database
+            using (_locker.Write())
+            {
+                try
+                {
+                    var col = this.GetCollectionPage(collection, addIfNotExists);
+
+                    var result = action(col);
+
+                    _trans.PersistDirtyPages();
+
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    _log.Write(Logger.ERROR, ex.Message);
+
+                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
+                    _cache.DiscardDirtyPages();
+
+                    throw;
+                }
+            }
+        }
+
         public void Dispose()
         {
-            // if there is any open transaction, rollback
-            if (_transactions.Count > 0)
-            {
-                this.Rollback();
-            }
-
             // dispose datafile and journal file
             _disk.Dispose();
 

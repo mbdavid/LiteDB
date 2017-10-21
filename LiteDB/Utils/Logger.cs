@@ -48,11 +48,21 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Execute msg function only if level are enabled
+        /// </summary>
+        public void Write(byte level, Func<string> fn)
+        {
+            if ((level & this.Level) == 0) return;
+
+            this.Write(level, fn());
+        }
+
+        /// <summary>
         /// Write log text to output using inside a component (statics const of Logger)
         /// </summary>
         public void Write(byte level, string message, params object[] args)
         {
-            if ((level & this.Level) == 0) return;
+            if ((level & this.Level) == 0 || string.IsNullOrEmpty(message)) return;
 
             if (this.Logging != null)
             {

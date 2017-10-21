@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            using (_locker.Shared())
+            using (_locker.Read())
             {
                 var header = _pager.GetPage<HeaderPage>(0);
 

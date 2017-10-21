@@ -35,15 +35,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// WaitFor function used in NETFULL + PCL
+        /// WaitFor function used in all platforms
         /// </summary>
         public static void WaitFor(int ms)
         {
             // http://stackoverflow.com/questions/12641223/thread-sleep-replacement-in-net-for-windows-store
-#if NET35
-            System.Threading.Thread.Sleep(ms);
-#else
+#if HAVE_TASK_DELAY
             System.Threading.Tasks.Task.Delay(ms).Wait();
+#else
+            System.Threading.Thread.Sleep(ms);
 #endif
         }
     }

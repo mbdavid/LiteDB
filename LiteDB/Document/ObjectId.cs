@@ -134,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public bool Equals(ObjectId other)
         {
-            return
+            return other != null && 
                 this.Timestamp == other.Timestamp &&
                 this.Machine == other.Machine &&
                 this.Pid == other.Pid &&
@@ -146,12 +146,7 @@ namespace LiteDB
         /// </summary>
         public override bool Equals(object other)
         {
-            if (other is ObjectId)
-            {
-                return this.Equals((ObjectId)other);
-            }
-
-            return false;
+            return Equals(other as ObjectId);
         }
 
         /// <summary>
@@ -261,7 +256,7 @@ namespace LiteDB
         static ObjectId()
         {
             _machine = (GetMachineHash() +
-#if NET35
+#if HAVE_APP_DOMAIN
                 AppDomain.CurrentDomain.Id
 #else
                 10000 // Magic number
@@ -282,7 +277,7 @@ namespace LiteDB
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static int GetCurrentProcessId()
         {
-#if NET35
+#if HAVE_PROCESS
             return Process.GetCurrentProcess().Id;
 #else
             return 1000; // Magic number
@@ -292,7 +287,7 @@ namespace LiteDB
         private static int GetMachineHash()
         {
             var hostName =
-#if NET35
+#if HAVE_ENVIRONMENT
                 Environment.MachineName; // use instead of Dns.HostName so it will work offline
 #else
                 "SOMENAME";

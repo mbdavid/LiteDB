@@ -10,7 +10,7 @@ namespace LiteDB
     public class StringScanner
     {
         public string Source { get; private set; }
-        public int Index { get; private set; }
+        public int Index { get; set; }
 
         /// <summary>
         /// Initialize scanner with a string to be parsed
@@ -114,6 +114,16 @@ namespace LiteDB
         {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
             return match.Success;
+        }
+
+        /// <summary>
+        /// Throw syntax exception if not terminate string
+        /// </summary>
+        public void ThrowIfNotFinish()
+        {
+            this.Scan(@"\s*");
+
+            if (!this.HasTerminated) throw LiteException.SyntaxError(this);
         }
     }
 }

@@ -32,9 +32,16 @@ namespace LiteDB
         public BasePage GetPage(uint pageID)
         {
             // try get page from clean cache or from dirty list
-            return 
+            var page =
                 _clean.GetOrDefault(pageID) ??
                 _dirty.GetOrDefault(pageID);
+
+            if (page != null)
+            {
+                _log.Write(Logger.CACHE, "read page #{0:0000} :: {1}", page.PageID, page.PageType);
+            }
+
+            return page;
         }
 
         /// <summary>
@@ -44,6 +51,12 @@ namespace LiteDB
         public void AddPage(BasePage page)
         {
             if (page.IsDirty) throw new NotSupportedException("Page can't be dirty");
+
+            _log.Write(Logger.CACHE, () =>
+            {
+                return !_clean.ContainsKey(page.PageID) ?
+                    string.Format("add page #{0:0000} ({1}) to cache (length: {2})", page.PageID, page.PageType, _clean.Count + 1) : "";
+            });
 
             _clean[page.PageID] = page;
         }
@@ -56,6 +69,12 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
+            _log.Write(Logger.CACHE, () => 
+            {
+                return !_dirty.ContainsKey(page.PageID) ?
+                    string.Format("mark page as dirty #{0:0000} :: {1}", page.PageID, page.PageType) : "";
+            });
+
             _clean.Remove(page.PageID);
             page.IsDirty = true;
             _dirty[page.PageID] = page;

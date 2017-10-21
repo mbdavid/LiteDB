@@ -4,8 +4,7 @@ using System.Threading;
 namespace LiteDB
 {
     /// <summary>
-    /// Used to control lock state. Based on SQLite
-    /// http://www.sqlite.org/lockingv3.html
+    /// Used to control lock state.
     /// </summary>
     public enum LockState
     {
@@ -17,16 +16,11 @@ namespace LiteDB
         /// <summary>
         /// FileAccess.Read | FileShared.ReadWrite
         /// </summary>
-        Shared,
-
-        /// <summary>
-        /// FileAccess.Write | FileShared.Read
-        /// </summary>
-        Reserved,
+        Read,
 
         /// <summary>
         /// FileAccess.Write | FileShared.None
         /// </summary>
-        Exclusive
+        Write
     }
 }

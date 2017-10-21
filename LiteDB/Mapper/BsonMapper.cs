@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -43,11 +44,6 @@ namespace LiteDB
         private readonly Func<Type, object> _typeInstantiator;
 
         /// <summary>
-        /// Map for autoId type based functions
-        /// </summary>
-        private Dictionary<Type, AutoId> _autoId = new Dictionary<Type, AutoId>();
-
-        /// <summary>
         /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
@@ -85,6 +81,7 @@ namespace LiteDB
         /// <summary>
         /// A custom callback to change MemberInfo behavior when converting to MemberMapper.
         /// Use mapper.ResolveMember(Type entity, MemberInfo property, MemberMapper documentMappedField)
+        /// Set FieldName to null if you want remove from mapped document
         /// </summary>
         public Action<Type, MemberInfo, MemberMapper> ResolveMember;
 
@@ -103,10 +100,7 @@ namespace LiteDB
             this.ResolveFieldName = (s) => s;
             this.ResolveMember = (t, mi, mm) => { };
             this.ResolveCollectionName = (t) => Reflection.IsList(t) ? Reflection.GetListItemType(t).Name : t.Name;
-
-#if NET35
             this.IncludeFields = false;
-#endif
 
             _typeInstantiator = customTypeInstantiator ?? Reflection.CreateInstance;
 
@@ -115,35 +109,13 @@ namespace LiteDB
             RegisterType<Uri>(uri => uri.AbsoluteUri, bson => new Uri(bson.AsString));
             RegisterType<DateTimeOffset>(value => new BsonValue(value.UtcDateTime), bson => bson.AsDateTime.ToUniversalTime());
             RegisterType<TimeSpan>(value => new BsonValue(value.Ticks), bson => new TimeSpan(bson.AsInt64));
+            RegisterType<Regex>(
+                r => r.Options == RegexOptions.None ? new BsonValue(r.ToString()) : new BsonDocument { { "p", r.ToString() }, { "o", (int)r.Options } },
+                value => value.IsString ? new Regex(value) : new Regex(value.AsDocument["p"].AsString, (RegexOptions)value.AsDocument["o"].AsInt32)
+            );
+
 
             #endregion Register CustomTypes
-
-            #region Register AutoId
-
-            // register AutoId for ObjectId, Guid and Int32
-            RegisterAutoId
-            (
-                value => value.Equals(ObjectId.Empty),
-                (db, col) => ObjectId.NewObjectId()
-            );
-
-            RegisterAutoId
-            (
-                value => value == Guid.Empty,
-                (db, col) => Guid.NewGuid()
-            );
-
-            RegisterAutoId
-            (
-                value => value == 0,
-                (db, col) =>
-                {
-                    var max = db.Max(col, "_id");
-                    return max.IsMaxValue ? 1 : (max + 1);
-                }
-            );
-
-            #endregion  
 
         }
 
@@ -169,68 +141,6 @@ namespace LiteDB
 
         #endregion
 
-        #region AutoId
-
-        /// <summary>
-        /// Register a custom Auto Id generator function for a type
-        /// </summary>
-        public void RegisterAutoId<T>(Func<T, bool> isEmpty, Func<LiteEngine, string, T> newId)
-        {
-            if (isEmpty == null) throw new ArgumentNullException("isEmpty");
-            if (newId == null) throw new ArgumentNullException("newId");
-
-            _autoId[typeof(T)] = new AutoId
-            {
-                IsEmpty = o => isEmpty((T)o),
-                NewId = (db, col) => newId(db, col)
-            };
-        }
-
-        /// <summary>
-        /// Set new Id in entity class if entity needs one
-        /// </summary>
-        public virtual void SetAutoId(object entity, LiteEngine engine, string collection)
-        {
-            if (entity == null) throw new ArgumentNullException("entity");
-            if (engine == null) throw new ArgumentNullException("engine");
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-
-            // if object is BsonDocument, add _id as ObjectId
-            if (entity is BsonDocument)
-            {
-                var doc = entity as BsonDocument;
-                if (!doc.RawValue.ContainsKey("_id"))
-                {
-                    doc["_id"] = ObjectId.NewObjectId();
-                }
-                return;
-            }
-
-            // get fields mapper
-            var mapper = this.GetEntityMapper(entity.GetType());
-
-            var id = mapper.Id;
-
-            // if not id or no autoId = true
-            if (id == null || id.AutoId == false) return;
-
-            AutoId autoId;
-
-            if (_autoId.TryGetValue(id.DataType, out autoId))
-            {
-                var value = id.Getter(entity);
-
-                if (value == null || autoId.IsEmpty(value) == true)
-                {
-                    var newId = autoId.NewId(engine, collection);
-
-                    id.Setter(entity, newId);
-                }
-            }
-        }
-
-        #endregion
-
         /// <summary>
         /// Map your entity class to BsonDocument using fluent API
         /// </summary>
@@ -238,6 +148,34 @@ namespace LiteDB
         {
             return new EntityBuilder<T>(this);
         }
+
+        #region Get LinqVisitor processor
+
+        /// <summary>
+        /// Returns JSON path from a strong typed document using current mapper
+        /// </summary>
+        public string GetPath<T>(Expression<Func<T, object>> property)
+        {
+            return new QueryVisitor<T>(this).GetPath(property);
+        }
+
+        /// <summary>
+        /// Returns field name from a strong typed document using current mapper
+        /// </summary>
+        public string GetField<T>(Expression<Func<T, object>> property)
+        {
+            return new QueryVisitor<T>(this).GetField(property);
+        }
+
+        /// <summary>
+        /// Get Query object from a strong typed predicate using current mapper
+        /// </summary>
+        public Query GetQuery<T>(Expression<Func<T, bool>> predicate)
+        {
+            return new QueryVisitor<T>(this).Visit(predicate);
+        }
+
+        #endregion
 
         #region Predefinded Property Resolvers
 
@@ -306,22 +244,17 @@ namespace LiteDB
             var fieldAttr = typeof(BsonFieldAttribute);
             var indexAttr = typeof(BsonIndexAttribute);
             var dbrefAttr = typeof(BsonRefAttribute);
-            var hasId = false;
 
-            foreach (var memberInfo in this.GetTypeMembers(type))
+            var members = this.GetTypeMembers(type);
+            var id = this.GetIdMember(members);
+
+            foreach (var memberInfo in members)
             {
                 // checks [BsonIgnore]
                 if (memberInfo.IsDefined(ignoreAttr, true)) continue;
 
                 // checks field name conversion
                 var name = this.ResolveFieldName(memberInfo.Name);
-
-                // checks if is _id
-                if (hasId == false && this.IsMemberId(type, memberInfo))
-                {
-                    hasId = true;
-                    name = "_id";
-                }
 
                 // check if property has [BsonField]
                 var field = (BsonFieldAttribute)memberInfo.GetCustomAttributes(fieldAttr, false).FirstOrDefault();
@@ -332,8 +265,14 @@ namespace LiteDB
                     name = field.Name;
                 }
 
+                // checks if memberInfo is id field
+                if (memberInfo == id)
+                {
+                    name = "_id";
+                }
+
                 // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(memberInfo.Name, name);
+                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(memberInfo.Name);
 
                 // create getter/setter function
                 var getter = Reflection.CreateGenericGetter(type, memberInfo);
@@ -341,9 +280,6 @@ namespace LiteDB
 
                 // check if property has [BsonId] to get with was setted AutoId = true
                 var autoId = (BsonIdAttribute)memberInfo.GetCustomAttributes(idAttr, false).FirstOrDefault();
-
-                // checks if this property has [BsonIndex]
-                var index = (BsonIndexAttribute)memberInfo.GetCustomAttributes(indexAttr, false).FirstOrDefault();
 
                 // get data type
                 var dataType = memberInfo is PropertyInfo ?
@@ -360,7 +296,6 @@ namespace LiteDB
                     FieldName = name,
                     MemberName = memberInfo.Name,
                     DataType = dataType,
-                    IsUnique = index == null ? false : index.Unique,
                     IsList = isList,
                     UnderlyingType = isList ? Reflection.GetListItemType(dataType) : dataType,
                     Getter = getter,
@@ -392,14 +327,18 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if this member is Id field based on member name (Id) or [BsonId] attribute
+        /// Gets MemberInfo that refers to Id from a document object.
         /// </summary>
-        protected bool IsMemberId(Type type, MemberInfo member)
+        protected virtual MemberInfo GetIdMember(IEnumerable<MemberInfo> members)
         {
-            return member.IsDefined(typeof(BsonIdAttribute), false) ||
-                member.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
-                member.Name.Equals(type.Name + "Id", StringComparison.OrdinalIgnoreCase) ||
-                false;
+            return Reflection.SelectMember(members,
+#if HAVE_ATTR_DEFINED
+                x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
+#else
+                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
+#endif
+                x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
+                x => x.Name.Equals(x.DeclaringType.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -455,6 +394,9 @@ namespace LiteDB
             member.Serialize = (obj, m) =>
             {
                 var idField = entity.Id;
+
+                // #768 if using DbRef with interface with no ID mapped
+                if (idField == null) throw new LiteException("There is no _id field mapped in your type: " + member.DataType.FullName);
 
                 var id = idField.Getter(obj);
 

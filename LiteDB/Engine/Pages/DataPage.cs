@@ -17,8 +17,7 @@ namespace LiteDB
         /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage) ~ 50% PAGE_AVAILABLE_BYTES
         /// This value is used for minimize
         /// </summary>
-        //public const int DATA_RESERVED_BYTES = PAGE_AVAILABLE_BYTES / 2;
-        public const int DATA_RESERVED_BYTES = 400;
+        public const int DATA_RESERVED_BYTES = PAGE_AVAILABLE_BYTES / 2;
 
         /// <summary>
         /// Returns all data blocks - Each block has one object

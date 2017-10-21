@@ -27,7 +27,7 @@ namespace LiteDB
 
         public static GenericGetter CreateGenericGetter(Type type, MemberInfo memberInfo)
         {
-            if (memberInfo == null) throw new ArgumentNullException("memberInfo");
+            if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
 
             // if has no read
             if (memberInfo is PropertyInfo && (memberInfo as PropertyInfo).CanRead == false) return null;
@@ -40,7 +40,8 @@ namespace LiteDB
 
         public static GenericSetter CreateGenericSetter(Type type, MemberInfo memberInfo)
         {
-            if (memberInfo == null) throw new ArgumentNullException("propertyInfo");
+#if HAVE_EXPRESSION_ASSIGN
+            if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
             
             var fieldInfo = memberInfo as FieldInfo;
             var propertyInfo = memberInfo as PropertyInfo;
@@ -70,10 +71,27 @@ namespace LiteDB
                 Expression.Property(castTarget, propertyInfo) :
                 Expression.Field(castTarget, fieldInfo);
 
-            var assign = ExpressionExtensions.Assign(accessor, castValue);
+            var assign = Expression.Assign(accessor, castValue);
             var conv = Expression.Convert(assign, typeof(object));
             
             return Expression.Lambda<GenericSetter>(conv, target, value).Compile();
+#else
+            // when member is a field, use simple Reflection
+            if (memberInfo is FieldInfo)
+            {
+                var fieldInfo = memberInfo as FieldInfo;
+
+                return fieldInfo.SetValue;
+            }
+
+            // if is property, use invoke from setMethod
+            var propertyInfo = memberInfo as PropertyInfo;
+            var setMethod = propertyInfo.GetSetMethod(true);
+
+            if (setMethod == null) return null;
+
+            return (target, value) => setMethod.Invoke(target, new[] { value });
+#endif
         }
     }
 }

@@ -12,6 +12,7 @@ namespace LiteDB
         {
             this.Slot = index.Slot;
             this.Field = index.Field;
+            this.Expression = index.Expression;
             this.Unique = index.Unique;
         }
 
@@ -24,6 +25,11 @@ namespace LiteDB
         /// Field index name
         /// </summary>
         public string Field { get; private set; }
+
+        /// <summary>
+        /// Index Expression
+        /// </summary>
+        public string Expression { get; private set; }
 
         /// <summary>
         /// Index is Unique?

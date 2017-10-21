@@ -64,6 +64,13 @@ namespace LiteDB
         /// </summary>
         public bool Upgrade { get; set; }
 
+#if HAVE_SYNC_OVER_ASYNC
+        /// <summary>
+        /// "async": Use "sync over async" to UWP apps access any directory
+        /// </summary>
+        public bool Async { get; set; }
+#endif
+
         /// <summary>
         /// Initialize empty connection string
         /// </summary>
@@ -96,7 +103,7 @@ namespace LiteDB
             this.Password = values.GetValue<string>("password", null);
             this.CacheSize = values.GetValue(@"cache size", 5000);
             this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));
-#if NET35
+#if HAVE_LOCK
             this.Mode = values.GetValue("mode", FileMode.Shared);
 #else
             this.Mode = values.GetValue("mode", FileMode.Exclusive);
@@ -105,6 +112,9 @@ namespace LiteDB
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.Log = values.GetValue("log", Logger.NONE);
             this.Upgrade = values.GetValue("upgrade", false);
+#if HAVE_SYNC_OVER_ASYNC
+            this.Async = values.GetValue("async", false);
+#endif
         }
     }
 }

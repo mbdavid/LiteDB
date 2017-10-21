@@ -18,12 +18,14 @@ namespace LiteDB
 
         private Stream _stream;
         private Logger _log; // will be initialize in "Initialize()"
+        private bool _disposeStream;
 
         #region Initialize disk
 
-        public StreamDiskService(Stream stream)
+        public StreamDiskService(Stream stream, bool disposeStream = false)
         {
             _stream = stream;
+            _disposeStream = disposeStream;
         }
 
         public void Initialize(Logger log, string password)
@@ -43,7 +45,14 @@ namespace LiteDB
 
         public virtual void Dispose()
         {
-            // do nothing - keeps stream opened
+            if (_disposeStream)
+            {
+                _stream.Dispose();
+            }
+            else
+            {
+                // do nothing - keeps stream opened
+            }
         }
 
         #endregion
@@ -114,16 +123,21 @@ namespace LiteDB
         public bool IsExclusive { get { return true; } }
 
         /// <summary>
+        /// No journal in Stream
+        /// </summary>
+        public bool IsJournalEnabled { get { return false; } }
+
+        /// <summary>
         /// No journal implemented
         /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages)
+        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
         {
         }
 
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public IEnumerable<byte[]> ReadJournal()
+        public IEnumerable<byte[]> ReadJournal(uint lastPageID)
         {
             yield break;
         }
@@ -131,25 +145,32 @@ namespace LiteDB
         /// <summary>
         /// No journal implemented
         /// </summary>
-        public void ClearJournal()
+        public void ClearJournal(uint lastPageID)
         {
         }
 
         /// <summary>
         /// No lock implemented
         /// </summary>
-        public void Lock(LockState state, TimeSpan timeout)
+        public int Lock(LockState state, TimeSpan timeout)
         {
+            return 0;
         }
 
         /// <summary>
         /// No lock implemented
         /// </summary>
-        public void Unlock(LockState state)
+        public void Unlock(LockState state, int position)
+        {
+        }
+
+        /// <summary>
+        /// No flush implemented
+        /// </summary>
+        public void Flush()
         {
         }
 
         #endregion
-
     }
 }

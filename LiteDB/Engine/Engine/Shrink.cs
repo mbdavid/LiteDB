@@ -9,15 +9,13 @@ namespace LiteDB
         /// <summary>
         /// Reduce disk size re-arranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
         /// </summary>
-        public long Shrink(string password = null, IDiskService temp = null)
+        public long Shrink(string password = null, IDiskService tempDisk = null)
         {
             var originalSize = _disk.FileLength;
 
             // if temp disk are not passed, use memory stream disk
-            temp = temp ?? new StreamDiskService(new MemoryStream());
-
-            using (_locker.Reserved())
-            using (_locker.Exclusive())
+            using (var temp = tempDisk ?? new StreamDiskService(new MemoryStream()))
+            using (_locker.Write())
             using (var engine = new LiteEngine(temp, password))
             {
                 // read all collection
@@ -29,8 +27,10 @@ namespace LiteDB
                         engine.EnsureIndex(collectionName, index.Field, index.Unique);
                     }
 
-                    // copy all docs
-                    engine.Insert(collectionName, this.Find(collectionName, Query.All()));
+                    // now copy documents 
+                    var docs = this.Find(collectionName, Query.All());
+
+                    engine.InsertBulk(collectionName, docs);
                 }
 
                 // copy user version
@@ -55,10 +55,10 @@ namespace LiteDB
 
                 // initialize all services again (crypto can be changed)
                 this.InitializeServices();
+                
+                // return how many bytes are reduced
+                return originalSize - temp.FileLength;
             }
-
-            // return how many bytes are reduced
-            return originalSize - temp.FileLength;
         }
     }
 }

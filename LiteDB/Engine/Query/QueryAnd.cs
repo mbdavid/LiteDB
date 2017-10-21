@@ -16,10 +16,48 @@ namespace LiteDB
             _right = right;
         }
 
-        internal override void IndexFactory(Action<string, string> createIndex)
+        internal override bool UseFilter
         {
-            _left.IndexFactory(createIndex);
-            _right.IndexFactory(createIndex);
+            get
+            {
+                // return true if any site use filter
+                return _left.UseFilter || _right.UseFilter;
+            }
+            set
+            {
+                // set both sides with value
+                _left.UseFilter = value;
+                _right.UseFilter = value;
+            }
+        }
+
+        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        {
+            // execute both run operation but not fetch any node yet
+            var left = _left.Run(col, indexer);
+            var right = _right.Run(col, indexer);
+
+            // if left use index, force right use full scan (left has preference to use index)
+            if (_left.UseIndex)
+            {
+                this.UseIndex = true;
+                _right.UseFilter = true;
+                return left;
+            }
+
+            // if right use index (and left no), force left use filter
+            if (_right.UseIndex)
+            {
+                this.UseIndex = true;
+                _left.UseFilter = true;
+                return right;
+            }
+
+            // neither left and right uses index (both are full scan)
+            this.UseIndex = false;
+            this.UseFilter = true;
+
+            return left.Intersect(right, new IndexNodeComparer());
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
@@ -27,12 +65,14 @@ namespace LiteDB
             throw new NotSupportedException();
         }
 
-        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        internal override bool FilterDocument(BsonDocument doc)
         {
-            var left = _left.Run(col, indexer);
-            var right = _right.Run(col, indexer);
+            return _left.FilterDocument(doc) && _right.FilterDocument(doc);
+        }
 
-            return left.Intersect(right, new IndexNodeComparer());
+        public override string ToString()
+        {
+            return string.Format("({0} and {1})", _left, _right);
         }
     }
 }

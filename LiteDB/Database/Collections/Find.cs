@@ -16,19 +16,10 @@ namespace LiteDB
         {
             if (query == null) throw new ArgumentNullException("query");
 
-            // define index factory based on mapper definitions
-            query.IndexFactory((c, f) => IndexFactory(f));
-
-            var docs = _engine.Value.Find(_name, query, skip, limit);
+            var docs = _engine.Value.Find(_name, query, _includes.ToArray(), skip, limit);
 
             foreach(var doc in docs)
             {
-                // executing all includes in BsonDocument
-                foreach (var action in _includes)
-                {
-                    action(doc);
-                }
-
                 // get object from BsonDocument
                 var obj = _mapper.ToObject<T>(doc);
 
@@ -41,6 +32,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue)
         {
+            if (predicate == null) throw new ArgumentNullException("predicate");
+
             return this.Find(_visitor.Visit(predicate), skip, limit);
         }
 
@@ -71,7 +64,7 @@ namespace LiteDB
         /// </summary>
         public T FindOne(Expression<Func<T, bool>> predicate)
         {
-            return this.Find(_visitor.Visit(predicate)).FirstOrDefault();
+            return this.Find(predicate).FirstOrDefault();
         }
 
         /// <summary>

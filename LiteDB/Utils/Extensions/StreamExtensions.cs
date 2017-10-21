@@ -30,16 +30,18 @@ namespace LiteDB
             }
         }
 
+#if HAVE_LOCK
         /// <summary>
         /// Try unlock stream segment. Do nothing if was not possible (it's not locked)
         /// </summary>
         public static bool TryUnlock(this FileStream stream, long position, long length)
         {
+            if (length == 0) return true;
+
             try
             {
-#if NET35
                 stream.Unlock(position, length);
-#endif
+
                 return true;
             }
             catch (IOException)
@@ -53,12 +55,13 @@ namespace LiteDB
         /// </summary>
         public static void TryLock(this FileStream stream, long position, long length, TimeSpan timeout)
         {
+            if (length == 0) return;
+
             FileHelper.TryExec(() =>
             {
-#if NET35
                 stream.Lock(position, length);
-#endif
             }, timeout);
         }
+#endif
     }
 }

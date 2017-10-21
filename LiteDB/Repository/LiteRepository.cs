@@ -58,14 +58,6 @@ namespace LiteDB
         #region Shortchut from Database/Engine
 
         /// <summary>
-        /// Starts new transaction. Don't forgot execute ".Commit()" method from LiteTransaction
-        /// </summary>
-        public LiteTransaction BeginTrans()
-        {
-            return _db.BeginTrans();
-        }
-
-        /// <summary>
         /// Returns a special collection for storage files/stream inside datafile
         /// </summary>
         public LiteStorage FileStorage
@@ -80,9 +72,9 @@ namespace LiteDB
         /// <summary>
         /// Insert a new document into collection. Document Id must be a new value in collection - Returns document Id
         /// </summary>
-        public BsonValue Insert<T>(T entity, string collectionName = null)
+        public void Insert<T>(T entity, string collectionName = null)
         {
-            return _db.GetCollection<T>(collectionName).Insert(entity);
+            _db.GetCollection<T>(collectionName).Insert(entity);
         }
 
         /// <summary>

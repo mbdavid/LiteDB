@@ -14,78 +14,51 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            _log.Write(Logger.COMMAND, "query documents in '{0}' => {1}", collection, query);
+
+            using (var cursor = new QueryCursor(query, skip, limit))
             {
-                // get my collection page
-                var col = this.GetCollectionPage(collection, false);
-
-                // no collection, no documents
-                if (col == null) yield break;
-
-                // if there is no create index factory, create new here
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
-
-                // get nodes from query executor to get all IndexNodes
-                var nodes = query.Run(col, _indexer);
-
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
-
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-                // for each document, read data and deserialize as document
-                foreach (var node in nodes)
+                using (_locker.Read())
                 {
-                    _log.Write(Logger.QUERY, "read document on '{0}' :: _id = {1}", collection, node.Key);
+                    // get my collection page
+                    var col = this.GetCollectionPage(collection, false);
 
-                    byte[] buffer;
-                    BsonDocument doc;
+                    // no collection, no documents
+                    if (col == null) yield break;
 
-                    // encapsulate read operation inside a try/catch (yield do not support try/catch)
-                    buffer = _data.Read(node.DataBlock);
-                    doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                    // get nodes from query executor to get all IndexNodes
+                    cursor.Initialize(query.Run(col, _indexer).GetEnumerator());
 
-                    _trans.CheckPoint();
+                    _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
 
-                    yield return doc;
+                    // fill buffer with documents 
+                    cursor.Fetch(_trans, _data);
                 }
-            }
-        }
 
-        /// <summary>
-        /// Find index keys from collection. Do not retorn document, only key value
-        /// </summary>
-        public IEnumerable<BsonValue> FindIndex(string collection, Query query, int skip = 0, int limit = int.MaxValue)
-        {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (query == null) throw new ArgumentNullException("query");
+                // returing first documents in buffer
+                foreach (var doc in cursor.Documents) yield return doc;
 
-            using (_locker.Shared())
-            {
-                // get my collection page
-                var col = this.GetCollectionPage(collection, false);
-
-                // no collection, no values
-                if (col == null) yield break;
-
-                // get nodes from query executor to get all IndexNodes
-                var nodes = query.Run(col, _indexer);
-
-                // skip first N nodes
-                if (skip > 0) nodes = nodes.Skip(skip);
-
-                // limit in M nodes
-                if (limit != int.MaxValue) nodes = nodes.Take(limit);
-
-                // for each document, read data and deserialize as document
-                foreach (var node in nodes)
+                // if still documents to read, continue
+                while (cursor.HasMore)
                 {
-                    _log.Write(Logger.QUERY, "read index key on '{0}' :: key = {1}", collection, node.Key);
+                    // lock read mode
+                    using (var l = _locker.Read())
+                    {
+                        // if file was changed, re-run query and skip already returned documents
+                        if (l.Changed)
+                        {
+                            var col = this.GetCollectionPage(collection, false);
+                            
+                            if (col == null) yield break;
+                            
+                            cursor.ReQuery(query.Run(col, _indexer).GetEnumerator());
+                        }
 
-                    _trans.CheckPoint();
+                        cursor.Fetch(_trans, _data);
+                    }
 
-                    yield return node.Key;
+                    // return documents from buffer
+                    foreach (var doc in cursor.Documents) yield return doc;
                 }
             }
         }

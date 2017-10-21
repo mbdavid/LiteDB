@@ -18,23 +18,17 @@ namespace LiteDB
         /// <summary>
         /// Map lock positions
         /// </summary>
-        internal const int LOCK_POSITION = BasePage.PAGE_SIZE; // use second page
-        internal const int LOCK_SHARED_LENGTH = 1000;
-        internal const int LOCK_RESERVED_POSITION = LOCK_POSITION + LOCK_SHARED_LENGTH + 1;
+        internal const int LOCK_INITIAL_POSITION = BasePage.PAGE_SIZE; // use second page
+        internal const int LOCK_READ_LENGTH = 1;
+        internal const int LOCK_WRITE_LENGTH = 3000;
 
         private FileStream _stream;
         private string _filename;
 
-        private FileStream _journal;
-        private string _journalFilename;
-
         private Logger _log; // will be initialize in "Initialize()"
         private FileOptions _options;
 
-#if NET35
-        private int _lockSharedPosition = 0;
-        private Random _lockSharedRandom = new Random();
-#endif
+        private Random _lockReadRand = new Random();
 
         #region Initialize/Dispose disk
 
@@ -52,9 +46,6 @@ namespace LiteDB
             // setting class variables
             _filename = filename;
             _options = options;
-
-            // journal filename
-            _journalFilename = FileHelper.GetTempFile(_filename, "-journal", false);
         }
 
         public void Initialize(Logger log, string password)
@@ -65,12 +56,13 @@ namespace LiteDB
             // if is read only, journal must be disabled
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
+            _log.Write(Logger.DISK, "open datafile '{0}'", Path.GetFileName(_filename));
+
             // open/create file using read only/exclusive options
-            _stream = new FileStream(_filename,
+            _stream = this.CreateFileStream(_filename,
                 _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite,
-                BasePage.PAGE_SIZE);
+                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite);
 
             // if file is new, initialize
             if (_stream.Length == 0)
@@ -87,13 +79,6 @@ namespace LiteDB
 
         public virtual void Dispose()
         {
-            if (_journal != null)
-            {
-                _log.Write(Logger.DISK, "close journal file '{0}'", Path.GetFileName(_journalFilename));
-                _journal.Dispose();
-                _journal = null;
-                FileHelper.TryDelete(_journalFilename);
-            }
             if (_stream != null)
             {
                 _log.Write(Logger.DISK, "close datafile '{0}'", Path.GetFileName(_filename));
@@ -114,14 +99,17 @@ namespace LiteDB
             var buffer = new byte[BasePage.PAGE_SIZE];
             var position = BasePage.GetSizeOfPages(pageID);
 
-            // position cursor
-            if (_stream.Position != position)
+            lock (_stream)
             {
-                _stream.Seek(position, SeekOrigin.Begin);
-            }
+                // position cursor
+                if (_stream.Position != position)
+                {
+                    _stream.Seek(position, SeekOrigin.Begin);
+                }
 
-            // read bytes from data file
-            _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+                // read bytes from data file
+                _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+            }
 
             _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
@@ -168,32 +156,28 @@ namespace LiteDB
         #region Journal file
 
         /// <summary>
+        /// Indicate if journal are enabled or not based on file options
+        /// </summary>
+        public bool IsJournalEnabled { get { return _options.Journal; } }
+
+        /// <summary>
         /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
         /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages)
+        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
         {
             // write journal only if enabled
             if (_options.Journal == false) return;
 
-            // if no journal already open, do it now
-            if (_journal == null)
-            {
-                // open or create datafile if not exists
-                _journal = new FileStream(_journalFilename,
-                    System.IO.FileMode.OpenOrCreate,
-                    FileAccess.ReadWrite,
-                    FileShare.ReadWrite,
-                    BasePage.PAGE_SIZE);
-            }
+            var size = BasePage.GetSizeOfPages(lastPageID + 1) +
+                BasePage.GetSizeOfPages(pages.Count);
 
-            // lock first byte
-            _journal.TryLock(0, 1, TimeSpan.Zero);
-
-            // go to initial file position
-            _journal.Seek(0, SeekOrigin.Begin);
+            _log.Write(Logger.JOURNAL, "extend datafile to journal - {0} pages", pages.Count);
 
             // set journal file length before write
-            _journal.SetLength(pages.Count);
+            _stream.SetLength(size);
+
+            // go to initial file position (after lastPageID)
+            _stream.Seek(BasePage.GetSizeOfPages(lastPageID + 1), SeekOrigin.Begin);
 
             foreach(var buffer in pages)
             {
@@ -204,81 +188,63 @@ namespace LiteDB
                 _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, pageType);
 
                 // write page bytes
-                _journal.Write(buffer, 0, BasePage.PAGE_SIZE);
+                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
             }
 
-            // journal file will be unlocked only in ClearJournal
+            _log.Write(Logger.JOURNAL, "flush journal to disk");
+
+            // ensure all data are persisted in disk
+            this.Flush();
         }
 
         /// <summary>
         /// Read journal file returning IEnumerable of pages
         /// </summary>
-        public IEnumerable<byte[]> ReadJournal()
+        public IEnumerable<byte[]> ReadJournal(uint lastPageID)
         {
-            // if journal are not enabled, just return empty result
-            if (_options.Journal == false) yield break;
+            // position stream at begin journal area
+            var pos = BasePage.GetSizeOfPages(lastPageID + 1);
 
-            // check if exists journal file (if opened)
-            if (_journal == null)
-            {
-                try
-                {
-                    _journal = new FileStream(_journalFilename,
-                        System.IO.FileMode.Open,
-                        FileAccess.ReadWrite,
-                        FileShare.ReadWrite,
-                        BasePage.PAGE_SIZE);
-
-                    // just avoid initialize recovery if journal is empty
-                    if (_journal.Length == 0) yield break;
-
-                    // lock journal file during reading
-                    // using `Lock` to throw IOException when in use
-#if NET35
-                    _journal.Lock(0, 1);
-#endif
-
-                }
-                catch (FileNotFoundException)
-                {
-                    yield break;
-                }
-                catch(IOException ex)
-                {
-                    if (ex.IsLocked()) yield break;
-                    throw;
-                }
-            }
+            _stream.Seek(pos, SeekOrigin.Begin);
 
             var buffer = new byte[BasePage.PAGE_SIZE];
 
-            // seek to begin file before start
-            _journal.Seek(0, SeekOrigin.Begin);
-
-            while (_journal.Position < _journal.Length)
+            while (_stream.Position < _stream.Length)
             {
                 // read page bytes from journal file
-                _journal.Read(buffer, 0, BasePage.PAGE_SIZE);
+                _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
 
                 yield return buffer;
-            }
 
-            // unlock journal file
-            _journal.TryUnlock(0, 1);
+                // now set position to next journal page
+                pos += BasePage.PAGE_SIZE;
+
+                _stream.Seek(pos, SeekOrigin.Begin);
+            }
         }
 
         /// <summary>
-        /// Clear journal file (set size to 0 length)
+        /// Shrink datafile to crop journal area
         /// </summary>
-        public void ClearJournal()
+        public void ClearJournal(uint lastPageID)
         {
-            if (_journal != null)
-            {
-                _log.Write(Logger.JOURNAL, "cleaning journal file");
-                _journal.TryUnlock(0, 1);
-                _journal.Seek(0, SeekOrigin.Begin);
-                _journal.SetLength(0);
-            }
+            _log.Write(Logger.JOURNAL, "shrink datafile to remove journal area");
+
+            this.SetLength(BasePage.GetSizeOfPages(lastPageID + 1));
+        }
+
+        /// <summary>
+        /// Flush data from memory to disk
+        /// </summary>
+        public void Flush()
+        {
+            _log.Write(Logger.DISK, "flush data from memory to disk");
+
+#if HAVE_FLUSH_DISK
+            _stream.Flush(true);
+#else
+            _stream.Flush();
+#endif
         }
 
         #endregion
@@ -291,47 +257,65 @@ namespace LiteDB
         public bool IsExclusive { get { return _options.FileMode == FileMode.Exclusive; } }
 
         /// <summary>
-        /// Implement datafile lock/unlock
+        /// Implement datafile lock. Return lock position
         /// </summary>
-        public void Lock(LockState state, TimeSpan timeout)
+        public int Lock(LockState state, TimeSpan timeout)
         {
-#if NET35
+#if HAVE_LOCK
             // only shared mode lock datafile
-            if (_options.FileMode != FileMode.Shared) return;
+            if (_options.FileMode != FileMode.Shared) return 0;
 
-            var position =
-                state == LockState.Shared ? _lockSharedPosition = _lockSharedRandom.Next(LOCK_POSITION, LOCK_POSITION + LOCK_SHARED_LENGTH) :
-                state == LockState.Reserved ? LOCK_RESERVED_POSITION :
-                state == LockState.Exclusive ? LOCK_POSITION : 0;
-            
-            var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+            var position = state == LockState.Read ? _lockReadRand.Next(LOCK_INITIAL_POSITION, LOCK_INITIAL_POSITION + LOCK_WRITE_LENGTH) : LOCK_INITIAL_POSITION;
+            var length = state == LockState.Read ? 1 : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
-            
+            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
+
             _stream.TryLock(position, length, timeout);
+
+            return position;
+#else
+            return 0;
 #endif
         }
 
         /// <summary>
-        /// Unlock datafile based on state
+        /// Unlock datafile based on state and position
         /// </summary>
-        public void Unlock(LockState state)
+        public void Unlock(LockState state, int position)
         {
-#if NET35
+#if HAVE_LOCK
             // only shared mode lock datafile
-            if (_options.FileMode != FileMode.Shared) return;
+            if (_options.FileMode != FileMode.Shared || state == LockState.Unlocked) return;
 
-            var position =
-                state == LockState.Shared ? _lockSharedPosition :
-                state == LockState.Reserved ? LOCK_RESERVED_POSITION :
-                state == LockState.Exclusive ? LOCK_POSITION : 0;
-            
-            var length = state == LockState.Exclusive ? LOCK_SHARED_LENGTH : 1;
+            var length = state == LockState.Read ? LOCK_READ_LENGTH : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1}, length: {2})", state.ToString().ToLower(), position, length);
+            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
 
             _stream.TryUnlock(position, length);
 #endif
+        }
+
+        #endregion
+
+        #region Create Stream
+
+        /// <summary>
+        /// Create a new filestream. Can be synced over async task (netstandard)
+        /// </summary>
+        private FileStream CreateFileStream(string path, System.IO.FileMode mode, FileAccess access, FileShare share)
+        {
+#if HAVE_SYNC_OVER_ASYNC
+            if (_options.Async)
+            {
+                return System.Threading.Tasks.Task.Run(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE))
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+            }
+#endif
+            return new FileStream(path, mode, access, share, 
+                BasePage.PAGE_SIZE,
+                System.IO.FileOptions.RandomAccess);
         }
 
         #endregion

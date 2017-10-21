@@ -13,9 +13,9 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return BsonValue.MinValue;
 
@@ -41,9 +41,9 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return BsonValue.MaxValue;
 
@@ -68,25 +68,34 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return 0;
 
                 if (query == null) return col.DocumentCount;
 
-                // define auto-index create factory if not exists
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
-
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
-                // count distinct nodes based on DataBlock
-                return nodes
-                    .Select(x => x.DataBlock)
-                    .Distinct()
-                    .LongCount();
+                if (query.UseFilter)
+                {
+                    // count distinct documents
+                    return nodes
+                        .Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Where(x => query.FilterDocument(x))
+                        .Distinct()
+                        .LongCount();
+                }
+                else
+                {
+                    // count distinct nodes based on DataBlock
+                    return nodes
+                        .Select(x => x.DataBlock)
+                        .Distinct()
+                        .LongCount();
+                }
             }
         }
 
@@ -98,22 +107,30 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
             if (query == null) throw new ArgumentNullException("query");
 
-            using (_locker.Shared())
+            using (_locker.Read())
             {
-                var col = GetCollectionPage(collection, false);
+                var col = this.GetCollectionPage(collection, false);
 
                 if (col == null) return false;
-
-                // define auto-index create factory if not exists
-                query.IndexFactory((c, f) => this.EnsureIndex(c, f, false));
 
                 // run query in this collection
                 var nodes = query.Run(col, _indexer);
 
-                var first = nodes.FirstOrDefault();
+                if (query.UseFilter)
+                {
+                    // check if has at least first document
+                    return nodes
+                        .Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Where(x => query.FilterDocument(x))
+                        .Any();
+                }
+                else
+                {
+                    var first = nodes.FirstOrDefault();
 
-                // check if has at least first
-                return first != null;
+                    // check if has at least first node
+                    return first != null;
+                }
             }
         }
     }
