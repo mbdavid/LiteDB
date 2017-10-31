@@ -235,7 +235,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    if (DateTime.TryParse(value.AsString, out var val))
+                    if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out var val))
                     {
                         yield return val;
                     }
