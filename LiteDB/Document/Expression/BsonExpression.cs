@@ -299,11 +299,9 @@ namespace LiteDB
                     keys.Add(Expression.Constant(new BsonValue(key)));
                     values.Add(value);
 
-                    var delim = s.Scan(@"\s*([,\}])\s*", 1);
-
-                    if (delim.Length == 0) throw LiteException.SyntaxError(s);
-
-                    if (delim == "}") break;
+                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                    else if (s.Scan(@"\s*\}\s*").Length > 0) break;
+                    throw LiteException.SyntaxError(s);
                 }
 
                 var arrKeys = Expression.NewArrayInit(typeof(BsonValue), keys.ToArray());
@@ -313,7 +311,6 @@ namespace LiteDB
             }
             else if (s.Scan(@"\[\s*").Length > 0) // read array [
             {
-                // read key value
                 var method = typeof(ExpressionOperators).GetMethod("ARRAY");
                 var values = new List<Expression>();
 
@@ -324,11 +321,9 @@ namespace LiteDB
 
                     values.Add(value);
 
-                    var delim = s.Scan(@"\s*([,\]])\s*", 1);
-
-                    if (delim.Length == 0) throw LiteException.SyntaxError(s);
-
-                    if (delim == "]") break;
+                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                    else if (s.Scan(@"\s*\]\s*").Length > 0) break;
+                    throw LiteException.SyntaxError(s);
                 }
 
                 var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
@@ -350,15 +345,18 @@ namespace LiteDB
                 var name = s.Scan(@"(\w+)\s*\(", 1).ToUpper();
                 var parameters = new List<Expression>();
 
-                while (!s.HasTerminated)
+                if (s.Scan(@"\s*\)\s*").Length == 0)
                 {
-                    var parameter = ParseExpression(s, root, current, false);
+                    while (!s.HasTerminated)
+                    {
+                        var parameter = ParseExpression(s, root, current, false);
 
-                    parameters.Add(parameter);
+                        parameters.Add(parameter);
 
-                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
-                    else if (s.Scan(@"\s*\)\s*").Length > 0) break;
-                    throw LiteException.SyntaxError(s);
+                        if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                        else if (s.Scan(@"\s*\)\s*").Length > 0) break;
+                        throw LiteException.SyntaxError(s);
+                    }
                 }
 
                 var method = _methods.FirstOrDefault(x => x.Name == name && x.GetParameters().Count() == parameters.Count);

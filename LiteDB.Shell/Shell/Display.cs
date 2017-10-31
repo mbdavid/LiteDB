@@ -115,6 +115,6 @@ namespace LiteDB.Shell
             }
         }
 
-        #endregion Private methods
+        #endregion
     }
 }
