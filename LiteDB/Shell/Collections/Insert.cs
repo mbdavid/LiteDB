@@ -26,7 +26,7 @@ namespace LiteDB.Shell
 
             if (value.IsArray)
             {
-                var count = engine.Insert(col, value.AsArray.RawValue.Select(x => x.AsDocument), autoId);
+                var count = engine.InsertBulk(col, value.AsArray.RawValue.Select(x => x.AsDocument), autoId: autoId);
 
                 yield return count;
             }

@@ -27,6 +27,21 @@ namespace LiteDB.Shell
 
             var query = Query.All();
 
+            // support into new_collection
+            var into = s.Scan(@"\s*into\s+([\w-]+)", 1);
+            var autoId = BsonType.ObjectId;
+
+            // checks for autoId
+            if (into.Length > 0)
+            {
+                var sid = s.Scan(@"\s+_?id:(int32|int64|int|long|objectid|datetime|date|guid)", 1).Trim().ToLower();
+                autoId =
+                    sid == "int32" || sid == "int" ? BsonType.Int32 :
+                    sid == "int64" || sid == "long" ? BsonType.Int64 :
+                    sid == "date" || sid == "datetime" ? BsonType.DateTime :
+                    sid == "guid" ? BsonType.Guid : BsonType.ObjectId;
+            }
+
             if (s.Scan(@"\s*where\s*").Length > 0)
             {
                 query = this.ReadQuery(s, true);
@@ -39,11 +54,34 @@ namespace LiteDB.Shell
 
             var docs = engine.Find(col, query, includes, skipLimit.Key, skipLimit.Value);
 
-            foreach(var doc in docs)
+            if (into.Length > 0)
+            {
+                // insert into results to other collection collection
+                var count = engine.Insert(into, this.Execute(docs, expression), autoId);
+
+                // return inserted documents
+                return new BsonValue[] { count };
+            }
+            else
+            {
+                return this.Execute(docs, expression).Select(x => x as BsonValue);
+            }
+        }
+
+        private IEnumerable<BsonDocument> Execute(IEnumerable<BsonDocument> docs, BsonExpression expression)
+        {
+            foreach (var doc in docs)
             {
                 foreach (var value in expression.Execute(doc, false))
                 {
-                    yield return value;
+                    if (value.IsDocument)
+                    {
+                        yield return value.AsDocument;
+                    }
+                    else
+                    {
+                        yield return new BsonDocument { ["expr"] = value };
+                    }
                 }
             }
         }

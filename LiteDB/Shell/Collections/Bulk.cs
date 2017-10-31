@@ -21,7 +21,7 @@ namespace LiteDB.Shell
             {
                 var docs = JsonSerializer.DeserializeArray(sr);
 
-                yield return engine.Insert(col, docs.Select(x => x.AsDocument));
+                yield return engine.InsertBulk(col, docs.Select(x => x.AsDocument));
             }
         }
     }
