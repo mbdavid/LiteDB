@@ -21,6 +21,14 @@ namespace LiteDB
                 {
                     yield return value.First.RawValue?.ToString() + value.Second.RawValue?.ToString();
                 }
+                else if (value.First.IsDateTime && value.Second.IsNumber)
+                {
+                    yield return value.First.AsDateTime.AddDays(value.Second.AsDouble);
+                }
+                else if (value.First.IsNumber && value.Second.IsDateTime)
+                {
+                    yield return value.Second.AsDateTime.AddDays(value.First.AsDouble);
+                }
                 else if (!value.First.IsNumber || !value.Second.IsNumber)
                 {
                     continue;
@@ -39,9 +47,22 @@ namespace LiteDB
         {
             foreach (var value in left.ZipValues(right))
             {
-                if (!value.First.IsNumber || !value.Second.IsNumber) continue;
-
-                yield return value.First - value.Second;
+                if (value.First.IsDateTime && value.Second.IsNumber)
+                {
+                    yield return value.First.AsDateTime.AddDays(-value.Second.AsDouble);
+                }
+                else if (value.First.IsNumber && value.Second.IsDateTime)
+                {
+                    yield return value.Second.AsDateTime.AddDays(-value.First.AsDouble);
+                }
+                else if (!value.First.IsNumber || !value.Second.IsNumber)
+                {
+                    continue;
+                }
+                else
+                {
+                    yield return value.First - value.Second;
+                }
             }
         }
 
