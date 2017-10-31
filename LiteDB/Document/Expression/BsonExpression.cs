@@ -282,6 +282,59 @@ namespace LiteDB
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
             }
+            else if (s.Scan(@"\{\s*").Length > 0) // read document {
+            {
+                // read key value
+                var method = typeof(ExpressionOperators).GetMethod("DOCUMENT");
+                var keys = new List<Expression>();
+                var values = new List<Expression>();
+
+                while (!s.HasTerminated)
+                {
+                    // read key + value
+                    var key = s.Scan("(.+)?:", 1).ThrowIfEmpty("Invalid token", s);
+                    var value = ParseExpression(s, root, current, false);
+
+                    // add key and value to parameter list (as an expression)
+                    keys.Add(Expression.Constant(new BsonValue(key)));
+                    values.Add(value);
+
+                    var delim = s.Scan(@"\s*([,\}])\s*", 1);
+
+                    if (delim.Length == 0) throw LiteException.SyntaxError(s);
+
+                    if (delim == "}") break;
+                }
+
+                var arrKeys = Expression.NewArrayInit(typeof(BsonValue), keys.ToArray());
+                var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+
+                return Expression.Call(method, new Expression[] { arrKeys, arrValues });
+            }
+            else if (s.Scan(@"\[\s*").Length > 0) // read array [
+            {
+                // read key value
+                var method = typeof(ExpressionOperators).GetMethod("ARRAY");
+                var values = new List<Expression>();
+
+                while (!s.HasTerminated)
+                {
+                    // read value expression
+                    var value = ParseExpression(s, root, current, false);
+
+                    values.Add(value);
+
+                    var delim = s.Scan(@"\s*([,\]])\s*", 1);
+
+                    if (delim.Length == 0) throw LiteException.SyntaxError(s);
+
+                    if (delim == "]") break;
+                }
+
+                var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+
+                return Expression.Call(method, new Expression[] { arrValues });
+            }
             else if (s.Scan(@"\(\s*").Length > 0) // read inner (
             {
                 // read a inner expression inside ( and )

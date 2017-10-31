@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40</TargetFrameworks>
+    <TargetFrameworks>net46</TargetFrameworks>
     <AssemblyName>LiteDB.Demo</AssemblyName>
     <OutputType>Exe</OutputType>
     <RootNamespace>LiteDB.Demo</RootNamespace>
