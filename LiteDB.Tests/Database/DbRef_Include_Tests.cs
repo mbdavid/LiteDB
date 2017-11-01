@@ -96,6 +96,11 @@ namespace LiteDB.Tests.Database
                     ProductsNull = null
                 };
 
+                mapper.SerializeNullValues = true;
+
+                var dOrder = mapper.ToDocument<Order>(order);
+
+
                 orders.Insert(order);
 
                 //var r0 = orders

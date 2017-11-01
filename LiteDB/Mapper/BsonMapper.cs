@@ -393,6 +393,9 @@ namespace LiteDB
 
             member.Serialize = (obj, m) =>
             {
+                // supports null values when "SerializeNullValues = true"
+                if (obj == null) return BsonValue.Null;
+
                 var idField = entity.Id;
 
                 // #768 if using DbRef with interface with no ID mapped
@@ -428,6 +431,9 @@ namespace LiteDB
 
             member.Serialize = (list, m) =>
             {
+                // supports null values when "SerializeNullValues = true"
+                if (list == null) return BsonValue.Null;
+
                 var result = new BsonArray();
                 var idField = entity.Id;
 
@@ -436,6 +442,7 @@ namespace LiteDB
                     if (item == null) continue;
 
                     var id = idField.Getter(item);
+
                     result.Add(new BsonDocument
                     {
                         { "$id", m.Serialize(id.GetType(), id, 0) },
