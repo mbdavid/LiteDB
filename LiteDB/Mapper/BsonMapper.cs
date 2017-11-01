@@ -402,7 +402,7 @@ namespace LiteDB
 
                 return new BsonDocument
                 {
-                    { "$id", new BsonValue(id) },
+                    { "$id", m.Serialize(id.GetType(), id, 0) },
                     { "$ref", collection }
                 };
             };
@@ -435,9 +435,10 @@ namespace LiteDB
                 {
                     if (item == null) continue;
 
+                    var id = idField.Getter(item);
                     result.Add(new BsonDocument
                     {
-                        { "$id", new BsonValue(idField.Getter(item)) },
+                        { "$id", m.Serialize(id.GetType(), id, 0) },
                         { "$ref", collection }
                     });
                 }
