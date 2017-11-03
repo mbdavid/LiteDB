@@ -61,39 +61,41 @@ namespace LiteDB.Shell
                 
                 s.ThrowIfNotFinish();
 
-                // execute command
-                var count = 0;
-
-                foreach (var doc in engine.Find(col, query))
-                {
-                    var docChanged = false;
-
-                    foreach(var update in updates)
-                    {
-                        var itemChanged = false;
-
-                        if(update.Value == null)
-                        {
-                            itemChanged = doc.Set(update.Path, update.Expr, update.Add);
-                        }
-                        else
-                        {
-                            itemChanged = doc.Set(update.Path, update.Value, update.Add);
-                        }
-
-                        if (itemChanged) docChanged = true;
-                    }
-
-                    // execute update only if document was changed
-                    if (docChanged)
-                    {
-                        engine.Update(col, doc);
-
-                        count++;
-                    }
-                }
+                // fetch documents to update
+                var count = engine.Update(col, this.FetchDocuments(engine, col, query, updates));
 
                 yield return count;
+            }
+        }
+
+        private IEnumerable<BsonDocument> FetchDocuments(LiteEngine engine, string col, Query query, List<UpdateData> updates)
+        {
+            // query document accord query and return modified only documents
+            foreach (var doc in engine.Find(col, query))
+            {
+                var docChanged = false;
+
+                foreach (var update in updates)
+                {
+                    var itemChanged = false;
+
+                    if (update.Value == null)
+                    {
+                        itemChanged = doc.Set(update.Path, update.Expr, update.Add);
+                    }
+                    else
+                    {
+                        itemChanged = doc.Set(update.Path, update.Value, update.Add);
+                    }
+
+                    if (itemChanged) docChanged = true;
+                }
+
+                // execute update only if document was changed
+                if (docChanged)
+                {
+                    yield return doc;
+                }
             }
         }
 
