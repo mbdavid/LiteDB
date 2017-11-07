@@ -38,7 +38,7 @@ namespace LiteDB
             w.Serialize(value ?? BsonValue.Null);
         }
 
-        #endregion Serialize
+        #endregion
 
         #region Deserialize
 
@@ -114,6 +114,6 @@ namespace LiteDB
             return jr.DeserializeArray();
         }
 
-        #endregion Deserialize
+        #endregion
     }
 }

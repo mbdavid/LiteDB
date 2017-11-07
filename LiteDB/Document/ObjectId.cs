@@ -46,7 +46,7 @@ namespace LiteDB
             get { return BsonValue.UnixEpoch.AddSeconds(this.Timestamp); }
         }
 
-        #endregion Properties
+        #endregion
 
         #region Ctor
 
@@ -123,7 +123,7 @@ namespace LiteDB
             return bytes;
         }
 
-        #endregion Ctor
+        #endregion
 
         #region Equals/CompareTo/ToString
 
@@ -207,7 +207,7 @@ namespace LiteDB
             return BitConverter.ToString(this.ToByteArray()).Replace("-", "").ToLower();
         }
 
-        #endregion Equals/CompareTo/ToString
+        #endregion
 
         #region Operators
 
@@ -244,7 +244,7 @@ namespace LiteDB
             return lhs.CompareTo(rhs) <= 0;
         }
 
-        #endregion Operators
+        #endregion
 
         #region Static methods
 
@@ -306,6 +306,6 @@ namespace LiteDB
             return new ObjectId((int)timestamp, _machine, _pid, inc);
         }
 
-        #endregion Static methods
+        #endregion
     }
 }

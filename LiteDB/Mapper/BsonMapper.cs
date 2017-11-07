@@ -115,7 +115,7 @@ namespace LiteDB
             );
 
 
-            #endregion Register CustomTypes
+            #endregion
 
         }
 

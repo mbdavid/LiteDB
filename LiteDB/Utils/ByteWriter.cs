@@ -166,7 +166,7 @@ namespace LiteDB
             _pos += value.Length;
         }
 
-        #endregion Native data types
+        #endregion
 
         #region Extended types
 
@@ -237,6 +237,6 @@ namespace LiteDB
             }
         }
 
-        #endregion Extended types
+        #endregion
     }
 }

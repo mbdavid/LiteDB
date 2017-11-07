@@ -575,7 +575,7 @@ namespace LiteDB
         {".xwd", "image/x-xwindowdump"},
         {".z", "application/x-compress"},
         {".zip", "application/x-zip-compressed"},
-        #endregion Big freaking list of mime types
+        #endregion
         };
 
         public static string GetMimeType(string filename)

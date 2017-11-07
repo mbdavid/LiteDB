@@ -410,6 +410,6 @@ namespace LiteDB
             return last;
         }
 
-        #endregion Find
+        #endregion
     }
 }

@@ -48,6 +48,6 @@ namespace LiteDB
         {
         }
 
-        #endregion Read/Write pages
+        #endregion
     }
 }

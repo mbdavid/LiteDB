@@ -110,7 +110,7 @@ namespace LiteDB
             return buffer;
         }
 
-        #endregion Native data types
+        #endregion
 
         #region Extended types
 
@@ -179,6 +179,6 @@ namespace LiteDB
             throw new NotImplementedException();
         }
 
-        #endregion Extended types
+        #endregion
     }
 }

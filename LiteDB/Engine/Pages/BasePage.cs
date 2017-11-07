@@ -23,7 +23,7 @@ namespace LiteDB
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
-        #endregion Page Constants
+        #endregion
 
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]

@@ -37,7 +37,7 @@ namespace LiteDB
             return this.Find(_visitor.Visit(predicate), skip, limit);
         }
 
-        #endregion Find
+        #endregion
 
         #region FindById + One + All
 
@@ -75,6 +75,6 @@ namespace LiteDB
             return this.Find(Query.All());
         }
 
-        #endregion FindById + One + All
+        #endregion
     }
 }
