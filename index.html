@@ -158,8 +158,7 @@ var mapper = BsonMapper.Global;
 mapper.Entity&lt;Customer&gt;()
         .Key(x => x.CustomerKey)
         .Field(x => x.Name, "customer_name")
-        .Ignore(x => x.Age)
-        .Index(x => x.Name, unique);
+        .Ignore(x => x.Age);
             
 using(var db = new LiteDatabase(@"MyData.db"))
 {
@@ -201,6 +200,7 @@ public class Order
 var mapper = BsonMapper.Global;
 
 // Produts and Customer are other collections (not embedded document)
+// you can use [BsonRef("colname")] attribute
 mapper.Entity&lt;Order&gt;()
     .DbRef(x => x.Products, "products")
     .DbRef(x => x.Customer, "customers");
@@ -208,6 +208,8 @@ mapper.Entity&lt;Order&gt;()
 using(var db = new LiteDatabase(@"MyData.db"))
 {
     var orders = db.GetCollection&lt;Order&gt;("orders");
+    
+    orders.EnsureIndex(x => x.OrderDate);
         
     // When query Order, includes references
     var query = orders
