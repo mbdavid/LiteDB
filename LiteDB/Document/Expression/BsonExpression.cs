@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -250,14 +251,14 @@ namespace LiteDB
             }
             else if (s.Match(@"-?\d*\.\d+")) // read double
             {
-                var number = Convert.ToDouble(s.Scan(@"-?\d*\.\d+"));
+                var number = Convert.ToDouble(s.Scan(@"-?\d*\.\d+"), CultureInfo.InvariantCulture.NumberFormat);
                 var value = Expression.Constant(new BsonValue(number));
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
             }
             else if (s.Match(@"-?\d+")) // read int
             {
-                var number = Convert.ToInt32(s.Scan(@"-?\d+"));
+                var number = Convert.ToInt32(s.Scan(@"-?\d+"), CultureInfo.InvariantCulture.NumberFormat);
                 var value = Expression.Constant(new BsonValue(number));
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
