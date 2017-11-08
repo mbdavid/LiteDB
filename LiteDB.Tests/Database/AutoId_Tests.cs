@@ -183,5 +183,26 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(12, cint_12.Id);
             }
         }
+
+        [TestMethod]
+        public void AutoId_BsonDocument()
+        {
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var col = db.GetCollection("Writers");
+                col.Insert(new BsonDocument { ["Name"] = "Mark Twain" });
+                col.Insert(new BsonDocument { ["Name"] = "Jack London", ["_id"] = 1 });
+
+                // create an index in name field
+                col.EnsureIndex("LowerName", "LOWER($.Name)");
+
+                var mark = col.FindOne(Query.EQ("LowerName", "mark twain"));
+                var jack = col.FindOne(Query.EQ("LowerName", "jack london"));
+
+                // checks if auto-id is a ObjectId
+                Assert.IsTrue(mark["_id"].IsObjectId);
+                Assert.IsTrue(jack["_id"].IsInt32); // jack do not use AutoId (fixed in int32)
+            }
+        }
     }
 }
