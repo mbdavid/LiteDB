@@ -68,7 +68,7 @@ namespace LiteDB
             if (pkNode == null) return false;
 
             // serialize document in bytes
-            var bytes = BsonSerializer.Serialize(doc);
+            var bytes = _serializer.Serialize(doc);
 
             // update data storage
             var dataBlock = _data.Update(col, pkNode.DataBlock, bytes);

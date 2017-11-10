@@ -162,8 +162,8 @@ namespace LiteDB
 
                 case BsonType.String: return this.ReadString(length);
 
-                case BsonType.Document: return new BsonReader().ReadDocument(this);
-                case BsonType.Array: return new BsonReader().ReadArray(this);
+                case BsonType.Document: return new BsonReader(false).ReadDocument(this);
+                case BsonType.Array: return new BsonReader(false).ReadArray(this);
 
                 case BsonType.Binary: return this.ReadBytes(length);
                 case BsonType.ObjectId: return this.ReadObjectId();

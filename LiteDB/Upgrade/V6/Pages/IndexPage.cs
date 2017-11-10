@@ -59,8 +59,8 @@ namespace LiteDB_V6
 
                 case 5: return reader.ReadString(length);
 
-                case 6: return new LiteDB.BsonReader().ReadDocument(reader);
-                case 7: return new LiteDB.BsonReader().ReadArray(reader);
+                case 6: return new LiteDB.BsonReader(false).ReadDocument(reader);
+                case 7: return new LiteDB.BsonReader(false).ReadArray(reader);
 
                 case 8: return reader.ReadBytes(length);
                 case 9: return reader.ReadObjectId();

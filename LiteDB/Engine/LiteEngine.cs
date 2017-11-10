@@ -35,6 +35,10 @@ namespace LiteDB
 
         private TimeSpan _timeout;
 
+        private bool _utcDate;
+
+        private BsonSerializer _serializer;
+
         /// <summary>
         /// Get log instance for debug operations
         /// </summary>
@@ -91,7 +95,7 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation and full engine options
         /// </summary>
-        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
+        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null, bool utcDate = false)
         {
             if (disk == null) throw new ArgumentNullException("disk");
 
@@ -99,6 +103,7 @@ namespace LiteDB
             _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
+            _utcDate = utcDate;
 
             try
             {
@@ -159,6 +164,7 @@ namespace LiteDB
             _data = new DataService(_pager, _log);
             _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _cacheSize, _log);
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
+            _serializer = new BsonSerializer(_utcDate);
         }
 
         #endregion

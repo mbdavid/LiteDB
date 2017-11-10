@@ -32,7 +32,7 @@ namespace LiteDB
                     _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
 
                     // fill buffer with documents 
-                    cursor.Fetch(_trans, _data);
+                    cursor.Fetch(_trans, _data, _serializer);
                 }
 
                 // returing first documents in buffer
@@ -54,7 +54,7 @@ namespace LiteDB
                             cursor.ReQuery(query.Run(col, _indexer).GetEnumerator());
                         }
 
-                        cursor.Fetch(_trans, _data);
+                        cursor.Fetch(_trans, _data, _serializer);
                     }
 
                     // return documents from buffer

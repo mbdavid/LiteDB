@@ -14,6 +14,7 @@ namespace LiteDB_V6
         private FileDiskService _disk;
         private IndexService _indexer;
         private DataService _data;
+        private BsonSerializer _serializer;
 
         /// <summary>
         /// Initialize database reader with database stream file and password
@@ -28,6 +29,7 @@ namespace LiteDB_V6
             _indexer = new IndexService(_pager);
             _data = new DataService(_pager);
             _collections = new CollectionService(_pager);
+            _serializer = new BsonSerializer(false);
 
             return true;
         }
@@ -66,7 +68,7 @@ namespace LiteDB_V6
             {
                 var bytes = _data.Read(node.DataBlock);
 
-                yield return BsonSerializer.Deserialize(bytes);
+                yield return _serializer.Deserialize(bytes);
             }
         }
 
