@@ -7,14 +7,7 @@ namespace LiteDB
     /// </summary>
     public class BsonSerializer
     {
-        private bool _utcDate;
-
-        public BsonSerializer(bool utcDate)
-        {
-            _utcDate = utcDate;
-        }
-
-        public byte[] Serialize(BsonDocument doc)
+        public static byte[] Serialize(BsonDocument doc)
         {
             if (doc == null) throw new ArgumentNullException("doc");
 
@@ -23,11 +16,11 @@ namespace LiteDB
             return writer.Serialize(doc);
         }
 
-        public BsonDocument Deserialize(byte[] bson)
+        public static BsonDocument Deserialize(byte[] bson, bool utcDate = false)
         {
             if (bson == null || bson.Length == 0) throw new ArgumentNullException("bson");
 
-            var reader = new BsonReader(_utcDate);
+            var reader = new BsonReader(utcDate);
 
             return reader.Deserialize(bson);
         }

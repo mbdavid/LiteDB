@@ -116,7 +116,7 @@ namespace LiteDB
             _log.Write(Logger.COMMAND, "insert document on '{0}' :: _id = {1}", col.CollectionName, id.RawValue);
 
             // serialize object
-            var bytes = _serializer.Serialize(doc);
+            var bytes = _bsonWriter.Serialize(doc);
 
             // storage in data pages - returns dataBlock address
             var dataBlock = _data.Insert(col, bytes);

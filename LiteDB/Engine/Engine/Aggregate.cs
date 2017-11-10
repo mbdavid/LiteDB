@@ -83,7 +83,7 @@ namespace LiteDB
                 {
                     // count distinct documents
                     return nodes
-                        .Select(x => _serializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Select(x => _bsonReader.Deserialize(_data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
                         .Distinct()
                         .LongCount();
@@ -120,7 +120,7 @@ namespace LiteDB
                 {
                     // check if has at least first document
                     return nodes
-                        .Select(x => _serializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Select(x => _bsonReader.Deserialize(_data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
                         .Any();
                 }

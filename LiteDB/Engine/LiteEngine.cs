@@ -35,9 +35,8 @@ namespace LiteDB
 
         private TimeSpan _timeout;
 
-        private bool _utcDate;
-
-        private BsonSerializer _serializer;
+        private BsonReader _bsonReader;
+        private BsonWriter _bsonWriter = new BsonWriter();
 
         /// <summary>
         /// Get log instance for debug operations
@@ -103,7 +102,7 @@ namespace LiteDB
             _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
-            _utcDate = utcDate;
+            _bsonReader = new BsonReader(utcDate);
 
             try
             {
@@ -164,7 +163,6 @@ namespace LiteDB
             _data = new DataService(_pager, _log);
             _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _cacheSize, _log);
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
-            _serializer = new BsonSerializer(_utcDate);
         }
 
         #endregion
