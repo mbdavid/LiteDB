@@ -39,7 +39,7 @@ namespace LiteDB.Tests.Database
                   initial size = 10 MB ;
                   mode =  excluSIVE ;
                   limit SIZE = 20mb;
-                  log = 255");
+                  log = 255;utc=true");
 
             Assert.AreEqual(@"c:\only;file""d""emo.db", full.Filename);
             Assert.AreEqual(false, full.Journal);
@@ -50,6 +50,7 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(10 * 1024 * 1024, full.InitialSize);
             Assert.AreEqual(20 * 1024 * 1024, full.LimitSize);
             Assert.AreEqual(255, full.Log);
+            Assert.AreEqual(true, full.UtcDate);
 
         }
 

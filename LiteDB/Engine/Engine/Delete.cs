@@ -42,7 +42,7 @@ namespace LiteDB
                     if (query.UseFilter)
                     {
                         var buffer = _data.Read(node.DataBlock);
-                        var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                        var doc = _bsonReader.Deserialize(buffer).AsDocument;
 
                         if (query.FilterDocument(doc) == false) continue;
                     }

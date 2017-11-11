@@ -16,11 +16,11 @@ namespace LiteDB
             return writer.Serialize(doc);
         }
 
-        public static BsonDocument Deserialize(byte[] bson)
+        public static BsonDocument Deserialize(byte[] bson, bool utcDate = false)
         {
             if (bson == null || bson.Length == 0) throw new ArgumentNullException("bson");
 
-            var reader = new BsonReader();
+            var reader = new BsonReader(utcDate);
 
             return reader.Deserialize(bson);
         }

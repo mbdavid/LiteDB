@@ -60,6 +60,11 @@ namespace LiteDB
         public byte Log { get; set; }
 
         /// <summary>
+        /// "utc": Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)
+        /// </summary>
+        public bool UtcDate { get; set; }
+
+        /// <summary>
         /// "upgrade": Test if database is in old version and update if needed (default: false)
         /// </summary>
         public bool Upgrade { get; set; }
@@ -111,6 +116,7 @@ namespace LiteDB
             this.InitialSize = values.GetFileSize(@"initial size", BasePage.PAGE_SIZE * 2);
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.Log = values.GetValue("log", Logger.NONE);
+            this.UtcDate = values.GetValue("utc", false);
             this.Upgrade = values.GetValue("upgrade", false);
 #if HAVE_SYNC_OVER_ASYNC
             this.Async = values.GetValue("async", false);

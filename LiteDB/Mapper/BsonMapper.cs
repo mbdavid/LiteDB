@@ -211,9 +211,8 @@ namespace LiteDB
         internal EntityMapper GetEntityMapper(Type type)
         {
             //TODO: needs check if Type if BsonDocument? Returns empty EntityMapper?
-            EntityMapper mapper;
 
-            if (!_entities.TryGetValue(type, out mapper))
+            if (!_entities.TryGetValue(type, out EntityMapper mapper))
             {
                 lock (_entities)
                 {
@@ -352,7 +351,9 @@ namespace LiteDB
                 (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) :
                 (BindingFlags.Public | BindingFlags.Instance);
 
-            members.AddRange(type.GetProperties(flags).Where(x => x.CanRead).Select(x => x as MemberInfo));
+            members.AddRange(type.GetProperties(flags)
+                .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
+                .Select(x => x as MemberInfo));
 
             if(this.IncludeFields)
             {

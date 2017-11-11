@@ -50,7 +50,10 @@ namespace LiteDB
                         BsonType.Null;
                 }
             }
-
+            else
+            {
+                _autoId = BsonType.ObjectId;
+            }
         }
     }
 }

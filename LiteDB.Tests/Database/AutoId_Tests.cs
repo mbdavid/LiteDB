@@ -183,5 +183,90 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(12, cint_12.Id);
             }
         }
+
+        [TestMethod]
+        public void AutoId_BsonDocument()
+        {
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var col = db.GetCollection("Writers");
+                col.Insert(new BsonDocument { ["Name"] = "Mark Twain" });
+                col.Insert(new BsonDocument { ["Name"] = "Jack London", ["_id"] = 1 });
+
+                // create an index in name field
+                col.EnsureIndex("LowerName", "LOWER($.Name)");
+
+                var mark = col.FindOne(Query.EQ("LowerName", "mark twain"));
+                var jack = col.FindOne(Query.EQ("LowerName", "jack london"));
+
+                // checks if auto-id is a ObjectId
+                Assert.IsTrue(mark["_id"].IsObjectId);
+                Assert.IsTrue(jack["_id"].IsInt32); // jack do not use AutoId (fixed in int32)
+            }
+        }
+
+        [TestMethod]
+        public void AutoId_No_Duplicate_After_Delete()
+        {
+            // using strong type
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var col = db.GetCollection<EntityInt>("col1");
+
+                col.EnsureIndex(x => x.Name);
+
+                col.Insert(new EntityInt { Name = "One" });
+                col.Insert(new EntityInt { Name = "Two" });
+
+                var one = col.FindOne(x => x.Name == "One");
+                var two = col.FindOne(x => x.Name == "Two");
+
+                Assert.AreEqual(1, one.Id);
+                Assert.AreEqual(2, two.Id);
+
+                // now delete first 2 rows
+                col.Delete(one.Id);
+                col.Delete(two.Id);
+
+                // and insert new documents
+                col.Insert(new EntityInt { Name = "Three" });
+                col.Insert(new EntityInt { Name = "Four" });
+
+                var three = col.FindOne(x => x.Name == "Three");
+                var four = col.FindOne(x => x.Name == "Four");
+
+                Assert.AreEqual(3, three.Id);
+                Assert.AreEqual(4, four.Id);
+            }
+
+            // using bsondocument/engine
+            using (var db = new LiteEngine(new MemoryStream()))
+            {
+                db.EnsureIndex("col", "Name");
+
+                db.Insert("col", new BsonDocument { ["Name"] = "One" }, BsonType.Int32);
+                db.Insert("col", new BsonDocument { ["Name"] = "Two" }, BsonType.Int32);
+
+                var one = db.FindOne("col", Query.EQ("Name", "One"));
+                var two = db.FindOne("col", Query.EQ("Name", "Two"));
+
+                Assert.AreEqual(1, one["_id"].AsInt32);
+                Assert.AreEqual(2, two["_id"].AsInt32);
+
+                // now delete first 2 rows
+                db.Delete("col", one["_id"].AsInt32);
+                db.Delete("col", two["_id"].AsInt32);
+
+                // and insert new documents
+                db.Insert("col", new BsonDocument { ["Name"] = "Three" }, BsonType.Int32);
+                db.Insert("col", new BsonDocument { ["Name"] = "Four" }, BsonType.Int32);
+
+                var three = db.FindOne("col", Query.EQ("Name", "Three"));
+                var four = db.FindOne("col", Query.EQ("Name", "Four"));
+
+                Assert.AreEqual(3, three["_id"].AsInt32);
+                Assert.AreEqual(4, four["_id"].AsInt32);
+            }
+        }
     }
 }

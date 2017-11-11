@@ -66,7 +66,7 @@ namespace LiteDB_V6
             {
                 var bytes = _data.Read(node.DataBlock);
 
-                yield return BsonSerializer.Deserialize(bytes);
+                yield return new BsonReader(false).Deserialize(bytes);
             }
         }
 

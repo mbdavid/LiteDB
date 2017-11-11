@@ -35,6 +35,9 @@ namespace LiteDB
 
         private TimeSpan _timeout;
 
+        private BsonReader _bsonReader;
+        private BsonWriter _bsonWriter = new BsonWriter();
+
         /// <summary>
         /// Get log instance for debug operations
         /// </summary>
@@ -91,7 +94,7 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation and full engine options
         /// </summary>
-        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
+        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null, bool utcDate = false)
         {
             if (disk == null) throw new ArgumentNullException("disk");
 
@@ -99,6 +102,7 @@ namespace LiteDB
             _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
+            _bsonReader = new BsonReader(utcDate);
 
             try
             {

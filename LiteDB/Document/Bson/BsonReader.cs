@@ -8,6 +8,13 @@ namespace LiteDB
     /// </summary>
     internal class BsonReader
     {
+        private bool _utcDate = false;
+
+        public BsonReader(bool utcDate)
+        {
+            _utcDate = utcDate;
+        }
+
         /// <summary>
         /// Main method - deserialize using ByteReader helper
         /// </summary>
@@ -27,8 +34,7 @@ namespace LiteDB
 
             while (reader.Position < end)
             {
-                string name;
-                var value = this.ReadElement(reader, out name);
+                var value = this.ReadElement(reader, out string name);
                 obj.RawValue[name] = value;
             }
 
@@ -48,8 +54,7 @@ namespace LiteDB
 
             while (reader.Position < end)
             {
-                string name;
-                var value = this.ReadElement(reader, out name);
+                var value = this.ReadElement(reader, out string name);
                 arr.Add(value);
             }
 
@@ -110,7 +115,9 @@ namespace LiteDB
                 if (ts == 253402300800000) return DateTime.MaxValue;
                 if (ts == -62135596800000) return DateTime.MinValue;
 
-                return BsonValue.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
+                var date = BsonValue.UnixEpoch.AddMilliseconds(ts);
+
+                return _utcDate ? date : date.ToLocalTime();
             }
             else if (type == 0x0A) // Null
             {
