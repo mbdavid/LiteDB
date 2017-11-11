@@ -213,13 +213,14 @@ namespace LiteDB.Tests.Database
             {
                 var col = db.GetCollection<EntityInt>("col1");
 
-                col.EnsureIndex(x => x.Name);
+                var one = new EntityInt { Name = "One" };
+                var two = new EntityInt { Name = "Two" };
+                var three = new EntityInt { Name = "Three" };
+                var four = new EntityInt { Name = "Four" };
 
-                col.Insert(new EntityInt { Name = "One" });
-                col.Insert(new EntityInt { Name = "Two" });
-
-                var one = col.FindOne(x => x.Name == "One");
-                var two = col.FindOne(x => x.Name == "Two");
+                // insert
+                col.Insert(one);
+                col.Insert(two);
 
                 Assert.AreEqual(1, one.Id);
                 Assert.AreEqual(2, two.Id);
@@ -229,11 +230,7 @@ namespace LiteDB.Tests.Database
                 col.Delete(two.Id);
 
                 // and insert new documents
-                col.Insert(new EntityInt { Name = "Three" });
-                col.Insert(new EntityInt { Name = "Four" });
-
-                var three = col.FindOne(x => x.Name == "Three");
-                var four = col.FindOne(x => x.Name == "Four");
+                col.Insert(new EntityInt[] { three, four });
 
                 Assert.AreEqual(3, three.Id);
                 Assert.AreEqual(4, four.Id);
@@ -242,13 +239,13 @@ namespace LiteDB.Tests.Database
             // using bsondocument/engine
             using (var db = new LiteEngine(new MemoryStream()))
             {
-                db.EnsureIndex("col", "Name");
+                var one = new BsonDocument { ["Name"] = "One" };
+                var two = new BsonDocument { ["Name"] = "Two" };
+                var three = new BsonDocument { ["Name"] = "Three" };
+                var four = new BsonDocument { ["Name"] = "Four" };
 
-                db.Insert("col", new BsonDocument { ["Name"] = "One" }, BsonType.Int32);
-                db.Insert("col", new BsonDocument { ["Name"] = "Two" }, BsonType.Int32);
-
-                var one = db.FindOne("col", Query.EQ("Name", "One"));
-                var two = db.FindOne("col", Query.EQ("Name", "Two"));
+                db.Insert("col", one, BsonType.Int32);
+                db.Insert("col", two, BsonType.Int32);
 
                 Assert.AreEqual(1, one["_id"].AsInt32);
                 Assert.AreEqual(2, two["_id"].AsInt32);
@@ -258,11 +255,7 @@ namespace LiteDB.Tests.Database
                 db.Delete("col", two["_id"].AsInt32);
 
                 // and insert new documents
-                db.Insert("col", new BsonDocument { ["Name"] = "Three" }, BsonType.Int32);
-                db.Insert("col", new BsonDocument { ["Name"] = "Four" }, BsonType.Int32);
-
-                var three = db.FindOne("col", Query.EQ("Name", "Three"));
-                var four = db.FindOne("col", Query.EQ("Name", "Four"));
+                db.Insert("col", new BsonDocument[] { three, four }, BsonType.Int32);
 
                 Assert.AreEqual(3, three["_id"].AsInt32);
                 Assert.AreEqual(4, four["_id"].AsInt32);
