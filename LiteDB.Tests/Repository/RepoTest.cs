@@ -82,6 +82,12 @@ namespace LiteDB.Tests
 
                 Assert.IsTrue(r2);
 
+                //check is exists by predicate
+                r2 = db.Query<ROrder>()
+                    .Exists(x => !x.Active);
+
+                Assert.IsTrue(r2);
+
                 // Single by id
                 var r3 = db.Query<RCustomer>()
                     .SingleById(c2.CustomerId);
@@ -100,5 +106,7 @@ namespace LiteDB.Tests
 
             }
         }
+
+        
     }
 }

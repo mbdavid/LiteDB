@@ -212,6 +212,16 @@ namespace LiteDB
             return _collection.Exists(_query ?? Query.All());
         }
 
+        /// <summary>
+        /// return true/false if filter return any results
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        public bool Exists(Expression<Func<T, bool>> predicate)
+        {
+            
+            return this.Where(predicate).Exists();
+        }
         #endregion
     }
 }
