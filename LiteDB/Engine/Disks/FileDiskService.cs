@@ -69,11 +69,8 @@ namespace LiteDB
             {
                 _log.Write(Logger.DISK, "initialize new datafile");
 
-                // set datafile initial size
-                _stream.SetLength(_options.InitialSize);
-
                 // create datafile
-                LiteEngine.CreateDatabase(_stream, password);
+                LiteEngine.CreateDatabase(_stream, password, _options.InitialSize);
             }
         }
 

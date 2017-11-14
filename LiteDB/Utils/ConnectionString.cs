@@ -113,7 +113,7 @@ namespace LiteDB
 #else
             this.Mode = values.GetValue("mode", FileMode.Exclusive);
 #endif
-            this.InitialSize = values.GetFileSize(@"initial size", BasePage.PAGE_SIZE * 2);
+            this.InitialSize = values.GetFileSize(@"initial size", 0);
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.Log = values.GetValue("log", Logger.NONE);
             this.UtcDate = values.GetValue("utc", false);
