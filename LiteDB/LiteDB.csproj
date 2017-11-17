@@ -74,4 +74,8 @@
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Interfaces\Database\Collections\" />
+  </ItemGroup>
+
 </Project>
