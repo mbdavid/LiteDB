@@ -18,7 +18,7 @@ namespace LiteDB
         public FileOptions()
         {
             this.Journal = true;
-            this.InitialSize = BasePage.PAGE_SIZE;
+            this.InitialSize = 0;
             this.LimitSize = long.MaxValue;
 #if HAVE_LOCK
             this.FileMode = FileMode.Shared;
