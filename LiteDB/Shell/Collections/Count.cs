@@ -3,6 +3,17 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "count",
+        Syntax = "db.<collection>.count [filter]",
+        Description = "Show count rows according query filter",
+        Examples = new string[] {
+            "db.orders.count",
+            "db.orders.count customer = \"John Doe\"",
+            "db.orders.count customer startsWith \"John\" and YEAR($.orderDate) >= 2015"
+        }
+    )]
     internal class CollectionCount : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

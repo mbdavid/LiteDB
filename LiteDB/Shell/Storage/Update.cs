@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "FileStorage",
+        Name = "update",
+        Syntax = "fs.update <fileId> <jsonDoc>",
+        Description = "Update metada from a file inside file storage.",
+        Examples = new string[] {
+            "fs.update my_photo_001 { author: \"John Doe\" }"
+        }
+    )]
     internal class FileUpdate : BaseStorage, ICommand
     {
         public bool IsCommand(StringScanner s)

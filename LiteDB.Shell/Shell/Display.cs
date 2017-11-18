@@ -20,7 +20,7 @@ namespace LiteDB.Shell
         {
             this.WriteInfo("Welcome to LiteDB Shell");
             this.WriteInfo("");
-            this.WriteInfo("Getting started with `help`");
+            this.WriteInfo("Getting started with `help`, `help full` or `help <command>`");
             this.WriteInfo("");
         }
 
@@ -44,24 +44,6 @@ namespace LiteDB.Shell
 
                 this.WriteLine(ConsoleColor.DarkYellow, "> " + err.Line);
                 this.WriteLine(ConsoleColor.DarkYellow, "> " + "^".PadLeft(err.Position + 1, ' '));
-            }
-        }
-
-        public void WriteHelp(string line1 = null, string line2 = null)
-        {
-            if (string.IsNullOrEmpty(line1))
-            {
-                this.WriteLine("");
-            }
-            else
-            {
-                this.WriteLine(ConsoleColor.Cyan, line1);
-
-                if (!string.IsNullOrEmpty(line2))
-                {
-                    this.WriteLine(ConsoleColor.DarkCyan, "    " + line2);
-                    this.WriteLine("");
-                }
             }
         }
 

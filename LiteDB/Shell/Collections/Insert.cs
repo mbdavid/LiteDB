@@ -4,6 +4,17 @@ using System.Linq;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "insert",
+        Syntax = "db.<collection>.insert <jsonDoc> [id:[int|long|date|guid|objectId]]",
+        Description = "Insert a new document inside collection. Can define auto id data type that will be used when _id missing in document.",
+        Examples = new string[] {
+            "db.customers.insert { _id: 1, name: \"John\" }",
+            "db.customers.insert { name: \"Carlos\" } id:int",
+            "db.customers.insert { name: \"July\", birthDate: { $date: \"2011-08-10\" } } id:guid"
+        }
+    )]
     internal class CollectionInsert : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

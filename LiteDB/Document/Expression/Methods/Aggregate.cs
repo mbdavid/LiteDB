@@ -48,6 +48,22 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns first value from an list of values
+        /// </summary>
+        public static IEnumerable<BsonValue> FIRST(IEnumerable<BsonValue> values)
+        {
+            yield return values.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Returns last value from an list of values
+        /// </summary>
+        public static IEnumerable<BsonValue> LAST(IEnumerable<BsonValue> values)
+        {
+            yield return values.LastOrDefault();
+        }
+
+        /// <summary>
         /// Find average value from all values (number values only). Return a single value
         /// </summary>
         public static IEnumerable<BsonValue> AVG(IEnumerable<BsonValue> values)

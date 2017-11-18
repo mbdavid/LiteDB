@@ -5,6 +5,20 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "select",
+        Syntax = "db.<collection>.select <expression|path> [into <new_collection> [id:<data-type>]] [where <filter>] [includes <path1>,<path2>,...<pathN>] [skip N] [limit <M>]",
+        Description = "Search for document using filter. Support document transforms using expression (see `help expression`). Can include DbRef documents in results. Can skip/limit results.",
+        Examples = new string[] {
+            "db.orders.select",
+            "db.orders.select $ where _id > 100",
+            "db.orders.select { name: $.name, age: $.age - 2017 } where age < 30 limit 100",
+            "db.orders.select { name: UPPER($.name), mobile: FIRST($.phones[@.type = 'Mobile'].Number) }",
+            "db.orders.select $ into new_orders where DATEDIFF('day', $.orderDate, DATE()) = 0",
+            "db.orders.select $ include $.customer, $.produts[*] where _id = 22"
+        }
+    )]
     internal class Select : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

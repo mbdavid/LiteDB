@@ -3,6 +3,15 @@ using System.IO;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "FileStorage",
+        Name = "upload",
+        Syntax = "fs.upload <fileId> <filename>",
+        Description = "Upload a local file to data file.",
+        Examples = new string[] {
+            "fs.upload my_photo_001 c:/Temp/my_photo_001.jpg"
+        }
+    )]
     internal class FileUpload : BaseStorage, ICommand
     {
         public bool IsCommand(StringScanner s)

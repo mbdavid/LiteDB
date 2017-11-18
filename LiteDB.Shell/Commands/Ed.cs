@@ -4,6 +4,12 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
+    [Help(
+        Category = "Shell",
+        Name = "ed",
+        Syntax = "ed",
+        Description = "Open your last command in notepad."
+    )]
     internal class Ed : IShellCommand
     {
         public bool IsCommand(StringScanner s)
