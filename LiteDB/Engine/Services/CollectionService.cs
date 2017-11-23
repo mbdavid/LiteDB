@@ -26,7 +26,7 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Get(string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
 
             var header = _pager.GetPage<HeaderPage>(0);
 
@@ -45,7 +45,7 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Add(string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
             if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
             _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);

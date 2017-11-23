@@ -40,7 +40,7 @@ namespace LiteDB
         public FileDiskService(string filename, FileOptions options)
         {
             // simple validations
-            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
             if (options.InitialSize > options.LimitSize) throw new ArgumentException("limit size less than initial size");
 
             // setting class variables

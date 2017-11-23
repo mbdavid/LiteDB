@@ -49,7 +49,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null, Logger log = null)
         {
-            if (connectionString == null) throw new ArgumentNullException("connectionString");
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             _connectionString = connectionString;
             _log = log ?? new Logger();
@@ -81,7 +81,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null, bool disposeStream = false)
         {
-            if (stream == null) throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             _mapper = mapper ?? BsonMapper.Global;
             _log = new Logger();
@@ -100,7 +100,7 @@ namespace LiteDB
         /// <param name="log">Custom log implementation</param>
         public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
         {
-            if (diskService == null) throw new ArgumentNullException("diskService");
+            if (diskService == null) throw new ArgumentNullException(nameof(diskService));
 
             _mapper = mapper ?? BsonMapper.Global;
             _log = log ?? new Logger();
@@ -135,7 +135,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<BsonDocument> GetCollection(string name)
         {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
             return new LiteCollection<BsonDocument>(name, _engine, _mapper, _log);
         }
@@ -171,7 +171,7 @@ namespace LiteDB
         /// </summary>
         public bool CollectionExists(string name)
         {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
             return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
         }
@@ -181,7 +181,7 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string name)
         {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException("name");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
             return _engine.Value.DropCollection(name);
         }
@@ -191,8 +191,8 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string oldName, string newName)
         {
-            if (oldName.IsNullOrWhiteSpace()) throw new ArgumentNullException("oldName");
-            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
+            if (oldName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(oldName));
+            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
 
             return _engine.Value.RenameCollection(oldName, newName);
         }

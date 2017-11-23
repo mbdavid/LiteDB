@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Insert(string collection, BsonDocument doc, BsonType autoId = BsonType.ObjectId)
         {
-            if (doc == null) throw new ArgumentNullException("doc");
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
 
             this.Insert(collection, new BsonDocument[] { doc }, autoId);
 
@@ -23,8 +23,8 @@ namespace LiteDB
         /// </summary>
         public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonType autoId = BsonType.ObjectId)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (docs == null) throw new ArgumentNullException("docs");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
 
             return this.Transaction<int>(collection, true, (col) =>
             {
@@ -48,8 +48,8 @@ namespace LiteDB
         /// </summary>
         public int InsertBulk(string collection, IEnumerable<BsonDocument> docs, int batchSize = 5000, BsonType autoId = BsonType.ObjectId)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (docs == null) throw new ArgumentNullException("docs");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
             if (batchSize < 100 || batchSize > 100000) throw new ArgumentException("batchSize must be a value between 100 and 100000");
 
             var count = 0;
@@ -67,8 +67,6 @@ namespace LiteDB
         /// </summary>
         private void InsertDocument(CollectionPage col, BsonDocument doc, BsonType autoId)
         {
-            BsonValue id;
-
             // collection Sequence was created after release current datafile version. 
             // In this case, Sequence will be 0 but already has documents. Let's fix this
             // ** this code can be removed when datafile change from 7 (HeaderPage.FILE_VERSION) **
@@ -89,7 +87,7 @@ namespace LiteDB
             _pager.SetDirty(col);
 
             // if no _id, add one
-            if (!doc.RawValue.TryGetValue("_id", out id))
+            if (!doc.RawValue.TryGetValue("_id", out var id))
             {
                 doc["_id"] = id =
                     autoId == BsonType.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :

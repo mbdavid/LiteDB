@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string collection, Query query, string[] includes, int skip = 0, int limit = int.MaxValue)
         {
-            if (includes == null) throw new ArgumentNullException("includes");
+            if (includes == null) throw new ArgumentNullException(nameof(includes));
 
             var docs = this.Find(collection, query, skip, limit);
 

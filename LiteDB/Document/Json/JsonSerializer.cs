@@ -47,7 +47,7 @@ namespace LiteDB
         /// </summary>
         public static BsonValue Deserialize(string json)
         {
-            if (json == null) throw new ArgumentNullException("json");
+            if (json == null) throw new ArgumentNullException(nameof(json));
 
             using (var sr = new StringReader(json))
             {
@@ -62,7 +62,7 @@ namespace LiteDB
         /// </summary>
         public static BsonValue Deserialize(TextReader reader)
         {
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             var jr = new JsonReader(reader);
 
@@ -74,7 +74,7 @@ namespace LiteDB
         /// </summary>
         public static BsonValue Deserialize(StringScanner s)
         {
-            if (s == null) throw new ArgumentNullException("s");
+            if (s == null) throw new ArgumentNullException(nameof(s));
 
             if (s.HasTerminated) return BsonValue.Null;
 
@@ -95,7 +95,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DeserializeArray(string json)
         {
-            if (json == null) throw new ArgumentNullException("json");
+            if (json == null) throw new ArgumentNullException(nameof(json));
 
             var sr = new StringReader(json);
             var reader = new JsonReader(sr);
@@ -107,7 +107,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DeserializeArray(TextReader reader)
         {
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             var jr = new JsonReader(reader);
 

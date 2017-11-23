@@ -57,7 +57,7 @@ namespace LiteDB
         /// <param name="createValue">The delegate that produces the value when it is needed.</param>
         public LazyLoad(Func<T> createValue)
         {
-            if (createValue == null) throw new ArgumentNullException("createValue");
+            if (createValue == null) throw new ArgumentNullException(nameof(createValue));
 
             _createValue = createValue;
         }

@@ -88,7 +88,7 @@ namespace LiteDB
         /// </summary>
         public ConnectionString(string connectionString)
         {
-            if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException("connectionString");
+            if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException(nameof(connectionString));
 
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 

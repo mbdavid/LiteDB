@@ -52,7 +52,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string id, string filename, Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             // checks if file exists
             var file = this.FindById(id);
@@ -79,7 +79,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Upload(string id, string filename)
         {
-            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
 
             using (var stream = File.OpenRead(filename))
             {
@@ -120,7 +120,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo Download(string id, Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             var file = this.FindById(id);
 
@@ -140,7 +140,7 @@ namespace LiteDB
         /// </summary>
         public LiteFileInfo FindById(string id)
         {
-            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
+            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(id));
 
             var doc = _engine.Find(FILES, Query.EQ("_id", id)).FirstOrDefault();
 
@@ -171,7 +171,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string id)
         {
-            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
+            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(id));
 
             return _engine.Exists(FILES, Query.EQ("_id", id));
         }
@@ -193,7 +193,7 @@ namespace LiteDB
         /// </summary>
         public bool Delete(string id)
         {
-            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException("id");
+            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(id));
 
             // remove file reference in _files
             var deleted = _engine.Delete(FILES, id);

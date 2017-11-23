@@ -18,8 +18,8 @@ namespace LiteDB
         /// </summary>
         public int Delete(string collection, Query query)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (query == null) throw new ArgumentNullException("query");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return this.Transaction<int>(collection, false, (col) =>
             {

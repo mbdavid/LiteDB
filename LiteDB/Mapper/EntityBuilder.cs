@@ -36,7 +36,7 @@ namespace LiteDB
         /// </summary>
         public EntityBuilder<T> Field<K>(Expression<Func<T, K>> property, string field)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return this.GetProperty(property, (p) =>
             {
@@ -72,7 +72,7 @@ namespace LiteDB
         /// </summary>
         private EntityBuilder<T> GetProperty<TK, K>(Expression<Func<TK, K>> property, Action<MemberMapper> action)
         {
-            if (property == null) throw new ArgumentNullException("property");
+            if (property == null) throw new ArgumentNullException(nameof(property));
 
             var prop = _entity.GetMember(property);
 

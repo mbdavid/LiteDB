@@ -13,7 +13,7 @@ namespace LiteDB
         /// </summary>
         public virtual object ToObject(Type type, BsonDocument doc)
         {
-            if (doc == null) throw new ArgumentNullException("doc");
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
 
             // if T is BsonDocument, just return them
             if (type == typeof(BsonDocument)) return doc;

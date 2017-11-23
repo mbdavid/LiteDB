@@ -96,7 +96,7 @@ namespace LiteDB
         /// </summary>
         public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null, bool utcDate = false)
         {
-            if (disk == null) throw new ArgumentNullException("disk");
+            if (disk == null) throw new ArgumentNullException(nameof(disk));
 
             _timeout = timeout ?? TimeSpan.FromMinutes(1);
             _cacheSize = cacheSize;

@@ -15,7 +15,7 @@ namespace LiteDB
         public BsonDocument(Dictionary<string, BsonValue> dict)
             : base(dict)
         {
-            if (dict == null) throw new ArgumentNullException("dict");
+            if (dict == null) throw new ArgumentNullException(nameof(dict));
         }
 
         public new Dictionary<string, BsonValue> RawValue

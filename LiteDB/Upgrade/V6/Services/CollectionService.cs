@@ -18,7 +18,7 @@ namespace LiteDB_V6
         /// </summary>
         public CollectionPage Get(string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
 
             var header = _pager.GetPage<HeaderPage>(0);
 

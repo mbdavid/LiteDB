@@ -14,7 +14,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             var docs = _engine.Value.Find(_name, query, _includes.ToArray(), skip, limit);
 
@@ -32,7 +32,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue)
         {
-            if (predicate == null) throw new ArgumentNullException("predicate");
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return this.Find(_visitor.Visit(predicate), skip, limit);
         }
@@ -46,7 +46,7 @@ namespace LiteDB
         /// </summary>
         public T FindById(BsonValue id)
         {
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+            if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
             return this.Find(Query.EQ("_id", id)).SingleOrDefault();
         }
