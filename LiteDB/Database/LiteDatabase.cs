@@ -53,7 +53,7 @@ namespace LiteDB
 
             _connectionString = connectionString;
             _log = log ?? new Logger();
-            _log.Level = _connectionString.Log;
+            _log.Level = log?.Level ?? _connectionString.Log;
 
             if (_connectionString.Upgrade)
             {
