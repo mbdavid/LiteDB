@@ -14,6 +14,7 @@ namespace LiteDB.Demo
         public int Id { get; set; }
         public string Name { get; set; }
         public int Age { get; set; }
+        public string LongText { get; set; }
     }
 
     class Paging
@@ -24,14 +25,14 @@ namespace LiteDB.Demo
         {
             File.Delete(filename);
 
-            using (var db = new LiteDatabase(filename))
+            using (var db = new LiteDatabase("cache size=25000;filename=" + filename))
             {
                 var people = db.GetCollection<Person>();
 
                 Console.WriteLine("Populating...");
 
                 // pouplate collection
-                people.InsertBulk(Populate(50000));
+                people.InsertBulk(Populate(75000));
 
                 // create indexes
                 people.EnsureIndex(x => x.Name);
@@ -79,6 +80,7 @@ namespace LiteDB.Demo
                     Id = i,
                     Name = Guid.NewGuid().ToString("d"),
                     Age = rnd.Next(18, 40)
+                    // LongText = Guid.NewGuid().ToString("d").PadRight(1000, '-')
                 };
             }
         }
@@ -86,16 +88,48 @@ namespace LiteDB.Demo
 
     public static class PagingExtensions
     {
+        // Using copy all document solution
         public static List<T> FindPaged<T>(this LiteCollection<T> col, LiteDatabase db, Query query, string orderByExpr, int order, int pageIndex, int pageSize)
         {
             var tmp = "tmp_" + Guid.NewGuid().ToString().Substring(0, 5);
             var engine = db.Engine;
 
+            // create index in tmp collection on orderBy column
+            engine.EnsureIndex(tmp, "orderBy", orderByExpr);
+
             // insert unsorted result inside a temp collection
             engine.InsertBulk(tmp, engine.Find(col.Name, query));
 
-            // create an index to order by this result
+            var skip = pageIndex * pageSize;
+
+            // now, get all documents in temp using orderBy expr index with skip/limit 
+            var sorted = engine.Find(tmp, Query.All("orderBy", order), skip, pageSize);
+
+            // convert docs to T entity
+            var list = new List<T>(sorted.Select(x => db.Mapper.ToObject<T>(x)));
+
+            // drop temp collection
+            engine.DropCollection(tmp);
+
+            return list;
+        }
+
+        // coping only _id, orderColumn solution
+        public static List<T> FindPaged2<T>(this LiteCollection<T> col, LiteDatabase db, Query query, string orderByExpr, int order, int pageIndex, int pageSize)
+        {
+            var tmp = "tmp_" + Guid.NewGuid().ToString().Substring(0, 5);
+            var engine = db.Engine;
+            var expr = new BsonExpression(orderByExpr);
+
+            // create index in tmp collection on orderBy column
             engine.EnsureIndex(tmp, "orderBy", orderByExpr);
+
+            // insert unsorted result inside a temp collection - only _id value and orderBy column
+            engine.InsertBulk(tmp, engine.Find(col.Name, query).Select(x => new BsonDocument
+            {
+                ["_id"] = x["_id"],
+                ["orderBy"] = expr.Execute(x, true).First()
+            }));
 
             var skip = pageIndex * pageSize;
 
@@ -103,7 +137,8 @@ namespace LiteDB.Demo
             var sorted = engine.Find(tmp, Query.All("orderBy", order), skip, pageSize);
 
             // convert docs to T entity
-            var list = new List<T>(sorted.Select(x => db.Mapper.ToObject<T>(x)));
+            var list = new List<T>(sorted.Select(x => engine.FindById(col.Name, x["_id"]))
+                .Select(x => db.Mapper.ToObject<T>(x)));
 
             // drop temp collection
             engine.DropCollection(tmp);
