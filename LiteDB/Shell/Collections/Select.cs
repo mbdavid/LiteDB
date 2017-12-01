@@ -71,7 +71,7 @@ namespace LiteDB.Shell
             if (into.Length > 0)
             {
                 // insert into results to other collection collection
-                var count = engine.Insert(into, this.Execute(docs, expression), autoId);
+                var count = engine.InsertBulk(into, this.Execute(docs, expression), autoId: autoId);
 
                 // return inserted documents
                 return new BsonValue[] { count };
