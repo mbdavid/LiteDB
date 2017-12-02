@@ -9,14 +9,6 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class Person
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int Age { get; set; }
-        public string LongText { get; set; }
-    }
-
     class Paging
     {
         static string filename = Path.Combine(Path.GetTempPath(), "file_paging.db");
@@ -25,62 +17,69 @@ namespace LiteDB.Demo
         {
             File.Delete(filename);
 
-            using (var db = new LiteDatabase("cache size=25000;filename=" + filename))
+            using (var db = new LiteEngine(filename))
             {
-                var people = db.GetCollection<Person>();
-
                 Console.WriteLine("Populating...");
 
                 // pouplate collection
-                people.InsertBulk(Populate(75000));
+                db.InsertBulk("col", Populate(75000));
 
                 // create indexes
-                people.EnsureIndex(x => x.Name);
-                people.EnsureIndex(x => x.Age);
+                db.EnsureIndex("col", "name");
+                db.EnsureIndex("col", "age");
 
                 // query by age
-                var query = Query.EQ("Age", 22);
+                var query = Query.EQ("age", 22);
 
                 // show count result
-                Console.WriteLine("Result count: " + people.Count(query));
+                Console.WriteLine("Result count: " + db.Count("col", query));
 
-                var page = "0";
+                var input = "0";
 
-                while(page != "")
+                while(input != "")
                 {
+                    var skip = Convert.ToInt32(input);
+                    var limit = 10;
+
                     var timer = new Stopwatch();
 
                     timer.Start();
 
-                    var result = people.FindPaged(db, query, "$.Name", Query.Ascending, Convert.ToInt32(page), 10);
+                    var result = db.FindSort(
+                        "col", 
+                        query, 
+                        "$.name", 
+                        Query.Ascending, 
+                        skip, 
+                        limit);
 
                     timer.Stop();
 
-                    Console.WriteLine("\n\nPage index: " + page + " (ms: " + timer.ElapsedMilliseconds + ")");
+                    Console.WriteLine("\n\nSkip docs: " + skip + " (ms: " + timer.ElapsedMilliseconds + ")");
 
                     foreach (var doc in result)
                     {
-                        Console.WriteLine(doc.Id.ToString().PadRight(6) + " - " + doc.Name + "  -> " + doc.Age);
+                        Console.WriteLine(doc["_id"].AsString.PadRight(6) + " - " + doc["name"].AsString + "  -> " + doc["age"].AsInt32);
                     }
 
-                    Console.Write("\nEnter new page index: ");
-                    page = Console.ReadLine();
+                    Console.Write("\nEnter new skip index: ");
+                    input = Console.ReadLine();
                 }
             }
         }
 
-        static IEnumerable<Person> Populate(int count)
+        static IEnumerable<BsonDocument> Populate(int count)
         {
             var rnd = new Random();
 
             for(var i = 1; i <= count; i++)
             {
-                yield return new Person
+                yield return new BsonDocument
                 {
-                    Id = i,
-                    Name = Guid.NewGuid().ToString("d"),
-                    Age = rnd.Next(18, 40)
-                    // LongText = Guid.NewGuid().ToString("d").PadRight(1000, '-')
+                    ["_id"] = i,
+                    ["name"] = Guid.NewGuid().ToString("d"),
+                    ["age"] = rnd.Next(18, 40)
+                    //["long"] = Guid.NewGuid().ToString("d").PadRight(1000, '-')
                 };
             }
         }
@@ -89,61 +88,55 @@ namespace LiteDB.Demo
     public static class PagingExtensions
     {
         // Using copy all document solution
-        public static List<T> FindPaged<T>(this LiteCollection<T> col, LiteDatabase db, Query query, string orderByExpr, int order, int pageIndex, int pageSize)
+        public static List<BsonDocument> FindSort_TempCollectionDisk(this LiteEngine db, string collection, Query query, string orderBy, int order, int skip, int limit)
         {
             var tmp = "tmp_" + Guid.NewGuid().ToString().Substring(0, 5);
-            var engine = db.Engine;
 
             // create index in tmp collection on orderBy column
-            engine.EnsureIndex(tmp, "orderBy", orderByExpr);
+            db.EnsureIndex(tmp, "orderBy", orderBy);
 
             // insert unsorted result inside a temp collection
-            engine.InsertBulk(tmp, engine.Find(col.Name, query));
-
-            var skip = pageIndex * pageSize;
+            db.InsertBulk(tmp, db.Find(collection, query));
 
             // now, get all documents in temp using orderBy expr index with skip/limit 
-            var sorted = engine.Find(tmp, Query.All("orderBy", order), skip, pageSize);
+            var sorted = db.Find(tmp, Query.All("orderBy", order), skip, limit);
 
             // convert docs to T entity
-            var list = new List<T>(sorted.Select(x => db.Mapper.ToObject<T>(x)));
+            var result = sorted.ToList();
 
             // drop temp collection
-            engine.DropCollection(tmp);
+            db.DropCollection(tmp);
 
-            return list;
+            return result;
         }
 
         // coping only _id, orderColumn solution
-        public static List<T> FindPaged2<T>(this LiteCollection<T> col, LiteDatabase db, Query query, string orderByExpr, int order, int pageIndex, int pageSize)
+        public static List<BsonDocument> FindSort_TempCollectionMemory(this LiteEngine db, string collection, Query query, string orderBy, int order, int skip, int limit)
         {
-            var tmp = "tmp_" + Guid.NewGuid().ToString().Substring(0, 5);
-            var engine = db.Engine;
-            var expr = new BsonExpression(orderByExpr);
+            var expr = new BsonExpression(orderBy);
+            var disk = new StreamDiskService(new MemoryStream(), true);
 
-            // create index in tmp collection on orderBy column
-            engine.EnsureIndex(tmp, "orderBy", orderByExpr);
-
-            // insert unsorted result inside a temp collection - only _id value and orderBy column
-            engine.InsertBulk(tmp, engine.Find(col.Name, query).Select(x => new BsonDocument
+            // create in-memory database with large cache area
+            using (var engine = new LiteEngine(disk, cacheSize: 200000))
             {
-                ["_id"] = x["_id"],
-                ["orderBy"] = expr.Execute(x, true).First()
-            }));
+                // create index in tmp collection on orderBy column
+                engine.EnsureIndex("tmp", "a");
 
-            var skip = pageIndex * pageSize;
+                // insert unsorted result inside a temp collection - only _id value and orderBy column
+                engine.Insert("tmp", db.Find(collection, query).Select(doc => new BsonDocument
+                {
+                    ["_id"] = doc["_id"],
+                    ["a"] = expr.Execute(doc, true).First()
+                }));
 
-            // now, get all documents in temp orderBy expr with skip/limit 
-            var sorted = engine.Find(tmp, Query.All("orderBy", order), skip, pageSize);
+                // now, get all documents in temp orderBy expr with skip/limit 
+                var sorted = engine.Find("tmp", Query.All("a", order), skip, limit);
 
-            // convert docs to T entity
-            var list = new List<T>(sorted.Select(x => engine.FindById(col.Name, x["_id"]))
-                .Select(x => db.Mapper.ToObject<T>(x)));
+                // for each sorted doc, find in real collection
+                var result = sorted.Select(x => db.FindById(collection, x["_id"])).ToList();
 
-            // drop temp collection
-            engine.DropCollection(tmp);
-
-            return list;
+                return result;
+            }
         }
     }
 }
