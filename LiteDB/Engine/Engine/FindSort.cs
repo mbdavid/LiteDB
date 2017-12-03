@@ -10,70 +10,70 @@ namespace LiteDB
         /// <summary>
         /// Experimental Find with Sort operation
         /// </summary>
-        public List<BsonDocument> FindSort(string collection, Query query, string orderBy, int order = Query.Ascending, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<BsonDocument> FindSort(string collection, Query query, string orderBy, int order = Query.Ascending, int skip = 0, int limit = int.MaxValue)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
             _log.Write(Logger.COMMAND, "query-sort documents in '{0}' => {1}", collection, query);
 
-            // evaluate orderBy path/expression
-            var expr = new BsonExpression(orderBy);
-
             // lock database for read access
             using (_locker.Read())
             {
-                // create memory database
-                using (var engine = new LiteEngine(new MemoryStream()))
+                // get collection page
+                var col = this.GetCollectionPage(collection, false);
+
+                if (col == null) return new List<BsonDocument>();
+
+                // total documents keeps in memory to be sorted
+                var total = limit == int.MaxValue ? int.MaxValue : skip + limit;
+                var last = BsonValue.MaxValue;
+
+                // resolve orderBy as an expression
+                var expr = new BsonExpression(orderBy);
+
+                // create sortedlist, in memory
+                var sorted = new SortedSet<KeyDocument>(new KeyDocumentComparer());
+
+                // first lets works only with index in query
+                var nodes = query.Run(col, _indexer);
+
+                foreach (var node in nodes)
                 {
-                    // get collection page
-                    var col = this.GetCollectionPage(collection, false);
+                    var buffer = _data.Read(node.DataBlock);
+                    var doc = _bsonReader.Deserialize(buffer).AsDocument;
 
-                    if (col == null) return new List<BsonDocument>();
+                    // if needs use filter
+                    if (query.UseFilter && query.FilterDocument(doc) == false) continue;
 
-                    // create a temp collection in new memory database
-                    var tmp = engine._collections.Add("tmp");
+                    // get key to be sorted
+                    var key = expr.Execute(doc, true).First();
+                    var diff = key.CompareTo(last);
 
-                    // create index pointer
-                    var index = engine._indexer.CreateIndex(tmp);
-
-                    index.Field = "s";
-                    index.Expression = "$.s";
-                    index.Unique = false;
-
-                    // first lets works only with index in query
-                    var nodes = query.Run(col, _indexer);
-
-                    foreach (var node in nodes)
+                    // add to list only if lower than last space
+                    if(diff < 1)
                     {
-                        var buffer = _data.Read(node.DataBlock);
-                        var doc = _bsonReader.Deserialize(buffer).AsDocument;
+                        sorted.Add(new KeyDocument
+                        {
+                            Key = key,
+                            Document = doc
+                        });
 
-                        // if needs use filter
-                        if (query.UseFilter && query.FilterDocument(doc) == false) continue;
+                        // exceeded limit
+                        if (sorted.Count > total)
+                        {
+                            var exceeded = sorted.ElementAt(total);
 
-                        // get sort value to be indexed
-                        var key = expr.Execute(doc, true).First();
+                            sorted.Remove(exceeded);
 
-                        var tmpNode = engine._indexer.AddNode(index, key, null);
-
-                        tmpNode.DataBlock = node.DataBlock;
+                            last = sorted.Last().Key;
+                        }
                     }
-
-                    var result = new List<BsonDocument>();
-
-                    // now I have an index in sorted field
-                    // apply skip/take before get
-                    foreach(var node in engine._indexer.FindAll(index, order).Skip(skip).Take(limit))
-                    {
-                        var buffer = _data.Read(node.DataBlock);
-                        var doc = _bsonReader.Deserialize(buffer).AsDocument;
-
-                        result.Add(doc);
-                    }
-
-                    return result;
                 }
+
+                return sorted
+                    .Skip(skip)
+                    .Select(x => x.Document);
             }
         }
     }
