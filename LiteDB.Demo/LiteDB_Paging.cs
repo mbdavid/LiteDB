@@ -51,7 +51,7 @@ namespace LiteDB.Demo
 
         public List<string> Fetch(int skip, int limit)
         {
-            var result = _engine.FindSort(
+            var result = _engine.FindSort2(
                 "col",
                 _query,
                 "$.name",
