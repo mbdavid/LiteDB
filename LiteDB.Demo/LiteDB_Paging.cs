@@ -55,7 +55,7 @@ namespace LiteDB.Demo
                 "col",
                 _query,
                 "$.name",
-                Query.Ascending,
+                Query.Descending,
                 skip,
                 limit);
 

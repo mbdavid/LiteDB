@@ -28,7 +28,7 @@ namespace LiteDB
             // lock database for read access
             using (_locker.Read())
             {
-                var last = BsonValue.MaxValue;
+                var last = order == Query.Ascending ? BsonValue.MaxValue : BsonValue.MinValue;
                 var total = limit == int.MaxValue ? int.MaxValue : skip + limit;
                 var indexCounter = 0;
                 var disk = new TempDiskService();
@@ -47,7 +47,8 @@ namespace LiteDB
                     // create index pointer
                     var index = engine._indexer.CreateIndex(tmp);
 
-                    // get tail index node
+                    // get head/tail index node
+                    var head = engine._indexer.GetNode(index.HeadNode);
                     var tail = engine._indexer.GetNode(index.TailNode);
 
                     // first lets works only with index in query
@@ -66,7 +67,8 @@ namespace LiteDB
                         var diff = key.CompareTo(last);
 
                         // add to list only if lower than last space
-                        if (diff < 1)
+                        if ((order == Query.Ascending && diff < 1) || 
+                            (order == Query.Descending && diff > -1))
                         {
                             var tmpNode = engine._indexer.AddNode(index, key, null);
 
@@ -78,11 +80,13 @@ namespace LiteDB
                             // exceeded limit
                             if (indexCounter > total)
                             {
-                                var exceeded = tail.Prev[0];
+                                var exceeded = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
 
                                 engine._indexer.Delete(index, exceeded);
 
-                                last = engine._indexer.GetNode(tail.Prev[0]).Key;
+                                var lnode = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
+
+                                last = engine._indexer.GetNode(lnode).Key;
 
                                 indexCounter--;
                             }
@@ -99,10 +103,16 @@ namespace LiteDB
 
                     var result = new List<BsonDocument>();
 
-                    // now I have an index in sorted field
-                    // apply skip/take before get
-                    foreach (var node in engine._indexer.FindAll(index, order).Skip(skip).Take(limit))
+                    // if skip is lower than limit, take nodes from skip from begin
+                    // if skip is higher than limit, take nodes from end and revert order (avoid lots of skip)
+                    var find = skip < limit ?
+                        engine._indexer.FindAll(index, order).Skip(skip).Take(limit) : // get from original order
+                        engine._indexer.FindAll(index, -order).Take(limit).Reverse(); // avoid long skips, take from end and revert
+
+                    // --- foreach (var node in engine._indexer.FindAll(index, order).Skip(skip).Take(limit))
+                    foreach (var node in find)
                     {
+                        // if document are in cache, use it. if not, get from disk again
                         var doc = node.CacheDocument;
 
                         if (doc == null)
