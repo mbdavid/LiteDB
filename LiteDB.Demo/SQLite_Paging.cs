@@ -16,7 +16,6 @@ namespace LiteDB.Demo
         static string filename = Path.Combine(Path.GetTempPath(), "sqlite_paging.db");
 
         private SQLiteConnection _db = null;
-        private Query _query = Query.EQ("age", 22);
 
         public void Init()
         {
@@ -32,10 +31,7 @@ namespace LiteDB.Demo
             table.ExecuteNonQuery();
 
             // create indexes before
-            var idxName = new SQLiteCommand("CREATE INDEX idx1 ON col (name)", _db);
-            idxName.ExecuteNonQuery();
-
-            var idxAge = new SQLiteCommand("CREATE INDEX idx2 ON col (age)", _db);
+            var idxAge = new SQLiteCommand("CREATE INDEX idx_age ON col (age)", _db);
             idxAge.ExecuteNonQuery();
 
             using (var trans = _db.BeginTransaction())

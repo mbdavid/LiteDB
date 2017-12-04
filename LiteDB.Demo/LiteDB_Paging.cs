@@ -32,7 +32,6 @@ namespace LiteDB.Demo
         public void Populate(IEnumerable<string[]> lines)
         {
             // create indexes before
-            _engine.EnsureIndex("col", "name");
             _engine.EnsureIndex("col", "age");
 
             // bulk data insert
@@ -55,7 +54,7 @@ namespace LiteDB.Demo
                 "col",
                 _query,
                 "$.name",
-                Query.Descending,
+                Query.Ascending,
                 skip,
                 limit);
 
