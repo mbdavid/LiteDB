@@ -188,13 +188,27 @@ var bytes = mem.ToArray();
 // You can implement your own IDiskService to persist data</code></pre>
             
             <pre class="language-csharp demo-box" style="display: none" id="code5"><code>// DbRef to cross references
+public class Customer
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
+
+public class Product
+{
+    public int Id { get; set; }
+    public string Description { get; set; }
+    public double Price { get; set; }
+}
+
+// DbRef to cross references
 public class Order
 {
     public ObjectId Id { get; set; }
     public DateTime OrderDate { get; set; }
     public Customer Customer { get; set; }
-    public List&lt;Product&gt; Products { get; set; }
-}        
+    public List<Product> Products { get; set; }
+}       
 
 // Re-use mapper from global instance
 var mapper = BsonMapper.Global;
@@ -207,18 +221,41 @@ mapper.Entity&lt;Order&gt;()
             
 using(var db = new LiteDatabase(@"MyData.db"))
 {
-    var orders = db.GetCollection&lt;Order&gt;("orders");
-    
+    var customers = db.GetCollection<Customer>("customers");
+    var products = db.GetCollection<Product>("products");
+    var orders = db.GetCollection<Order>("orders");
+
+    // create examples
+    var john = new Customer { Name = "John Doe" };
+    var tv = new Product { Description = "TV Sony 44\"", Price = 799 };
+    var iphone = new Product { Description = "iPhone X", Price = 999 };
+    var order1 = new Order { OrderDate = new DateTime(2017, 1, 1), Customer = john, Products = new List<Product>() { iphone, tv } };
+    var order2 = new Order { OrderDate = new DateTime(2017, 10, 1), Customer = john, Products = new List<Product>() { iphone } };
+
+    // insert into collections
+    customers.Insert(john);
+    products.Insert(new Product[] { tv, iphone });
+    orders.Insert(new Order[] { order1, order2 });
+
+    // create index in OrderDate
     orders.EnsureIndex(x => x.OrderDate);
-        
+
     // When query Order, includes references
     var query = orders
         .Include(x => x.Customer)
         .Include(x => x.Products)
-        .Find(x => x.OrderDate &lt;= DateTime.Now);
+        .Find(x => x.OrderDate == new DateTime(2017, 1, 1));
 
     // Each instance of Order will load Customer/Products references
-                    
+    foreach(var c in query)
+    {
+        Console.WriteLine("#{0} - {1}", c.Id, c.Customer.Name);
+
+        foreach(var p in c.Products)
+        {
+            Console.WriteLine(" > {0} - {1:c}", p.Description, p.Price);
+        }
+    }
 }</code></pre>
 
         </div>
