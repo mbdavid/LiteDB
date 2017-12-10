@@ -29,18 +29,13 @@ namespace LiteDB.Demo
             _engine = new LiteEngine(disk, cacheSize: 50000);
         }
 
-        public void Populate(IEnumerable<string[]> lines)
+        public void Populate(IEnumerable<BsonDocument> docs)
         {
             // create indexes before
             _engine.EnsureIndex("col", "age");
 
             // bulk data insert
-            _engine.Insert("col", lines.Select(line => new BsonDocument
-            {
-                ["_id"] = Convert.ToInt32(line[0]),
-                ["name"] = line[1],
-                ["age"] = Convert.ToInt32(line[2])
-            }));
+            _engine.Insert("col", docs);
         }
 
         /// <summary>
@@ -48,7 +43,7 @@ namespace LiteDB.Demo
         /// </summary>
         public long Count() => _engine.Find("col", _query).Count();
 
-        public List<string> Fetch(int skip, int limit)
+        public List<BsonDocument> Fetch(int skip, int limit)
         {
             var result = _engine.FindSort(
                 "col",
@@ -63,12 +58,7 @@ namespace LiteDB.Demo
             //    .Skip(skip)
             //    .Take(limit);
 
-
-            return result.Select(doc =>
-                doc["_id"].AsString.PadRight(6) + " - " + 
-                doc["name"].AsString.PadRight(30) + "  -> " + 
-                doc["age"].AsInt32
-            ).ToList();
+            return result;
 
         }
     }

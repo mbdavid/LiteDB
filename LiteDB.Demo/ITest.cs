@@ -12,8 +12,8 @@ namespace LiteDB.Demo
     interface ITest
     {
         void Init();
-        void Populate(IEnumerable<string[]> lines);
+        void Populate(IEnumerable<BsonDocument> docs);
         long Count();
-        List<string> Fetch(int skip, int limit);
+        List<BsonDocument> Fetch(int skip, int limit);
     }
 }

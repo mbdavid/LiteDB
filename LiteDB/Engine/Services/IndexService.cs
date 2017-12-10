@@ -73,8 +73,18 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue key, IndexNode last)
         {
+            var level = this.FlipCoin();
+
+            // set index collection with max-index level
+            if (level > index.MaxLevel)
+            {
+                index.MaxLevel = level;
+
+                _pager.SetDirty(index.Page);
+            }
+
             // call AddNode with key value
-            return this.AddNode(index, key, this.FlipCoin(), last);
+            return this.AddNode(index, key, level, last);
         }
 
         /// <summary>
@@ -85,10 +95,8 @@ namespace LiteDB
             // calc key size
             var keyLength = key.GetBytesCount(false);
 
-            if (keyLength > MAX_INDEX_LENGTH)
-            {
-                throw LiteException.IndexKeyTooLong();
-            }
+            // test for index key maxlength
+            if (keyLength > MAX_INDEX_LENGTH) throw LiteException.IndexKeyTooLong();
 
             // creating a new index node
             var node = new IndexNode(level)
@@ -117,7 +125,7 @@ namespace LiteDB
             IndexNode cache = null;
 
             // scan from top left
-            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // get cache for last node
                 cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
@@ -366,7 +374,7 @@ namespace LiteDB
         {
             var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
-            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 for (; cur.NextPrev(i, order).IsEmpty == false; cur = this.GetNode(cur.NextPrev(i, order)))
                 {

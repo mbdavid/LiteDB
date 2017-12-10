@@ -105,7 +105,14 @@ namespace LiteDB
             }
 
             // position on page-footer (avoid file structure change)
-            reader.Position = BasePage.PAGE_SIZE - 8;
+            reader.Position = BasePage.PAGE_SIZE - 8 - CollectionIndex.INDEX_PER_COLLECTION;
+
+            foreach (var index in this.Indexes)
+            {
+                var maxLevel = reader.ReadByte();
+                index.MaxLevel = maxLevel == 0 ? (byte)IndexNode.MAX_LEVEL_LENGTH : maxLevel;
+            }
+
             this.Sequence = reader.ReadInt64();
         }
 
@@ -134,7 +141,13 @@ namespace LiteDB
             }
 
             // position on page-footer (avoid file structure change)
-            writer.Position = BasePage.PAGE_SIZE - 8;
+            writer.Position = BasePage.PAGE_SIZE - 8 - CollectionIndex.INDEX_PER_COLLECTION;
+
+            foreach (var index in this.Indexes)
+            {
+                writer.Write(index.MaxLevel);
+            }
+
             writer.Write(this.Sequence);
         }
 

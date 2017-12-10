@@ -25,14 +25,14 @@ namespace LiteDB.Demo
             _db.Open();
         }
 
-        public void Populate(IEnumerable<string[]> lines)
+        public void Populate(IEnumerable<BsonDocument> docs)
         {
             var table = new SQLiteCommand("CREATE TABLE col (id INTEGER NOT NULL PRIMARY KEY, name TEXT, age INT)", _db);
             table.ExecuteNonQuery();
 
             // create indexes before
             var idxAge = new SQLiteCommand("CREATE INDEX idx_age ON col (age)", _db);
-            idxAge.ExecuteNonQuery();
+            // idxAge.ExecuteNonQuery();
 
             using (var trans = _db.BeginTransaction())
             {
@@ -42,11 +42,11 @@ namespace LiteDB.Demo
                 cmd.Parameters.Add(new SQLiteParameter("name", DbType.String));
                 cmd.Parameters.Add(new SQLiteParameter("age", DbType.Int32));
 
-                foreach (var line in lines)
+                foreach (var doc in docs)
                 {
-                    cmd.Parameters["id"].Value = Convert.ToInt32(line[0]);
-                    cmd.Parameters["name"].Value = line[1];
-                    cmd.Parameters["age"].Value = Convert.ToInt32(line[2]);
+                    cmd.Parameters["id"].Value = doc["_id"].AsInt32;
+                    cmd.Parameters["name"].Value = doc["name"].AsString;
+                    cmd.Parameters["age"].Value = doc["age"].AsInt32;
 
                     cmd.ExecuteNonQuery();
                 }
@@ -75,7 +75,7 @@ namespace LiteDB.Demo
             return Convert.ToInt64(count);
         }
 
-        public List<string> Fetch(int skip, int limit)
+        public List<BsonDocument> Fetch(int skip, int limit)
         {
             var cmd = new SQLiteCommand(
                 @"SELECT * 
@@ -84,16 +84,18 @@ namespace LiteDB.Demo
                    ORDER BY name
                    LIMIT " + limit + " OFFSET " + skip, _db);
 
-            var result = new List<string>();
+            var result = new List<BsonDocument>();
 
             using (var reader = cmd.ExecuteReader())
             {
                 while(reader.Read())
                 {
-                    result.Add(
-                        reader["id"].ToString().PadRight(6) + " - " +
-                        reader["name"].ToString().PadRight(30) + "  -> " +
-                        reader["age"].ToString());
+                    result.Add(new BsonDocument
+                    {
+                        ["_id"] = Convert.ToInt32(reader["id"]),
+                        ["name"] = reader["name"].ToString(),
+                        ["age"] = Convert.ToInt32(reader["age"])
+                    });
                 }
             }
 
