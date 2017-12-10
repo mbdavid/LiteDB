@@ -79,12 +79,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Every page must implement this ItemCount + FreeBytes
-        /// Must be called after Items are updates (insert/deletes) to keep variables ItemCount and FreeBytes synced
-        /// </summary>
-        public abstract void UpdateItemCount();
-
-        /// <summary>
         /// Returns a size of specified number of pages
         /// </summary>
         /// <param name="pageCount">The page count</param>

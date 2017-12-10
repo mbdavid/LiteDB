@@ -64,15 +64,6 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Update freebytes + items count
-        /// </summary>
-        public override void UpdateItemCount()
-        {
-            this.ItemCount = 1; // fixed for CollectionPage
-            this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
-        }
-
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)

@@ -41,15 +41,11 @@ namespace LiteDB
                 Key = BsonValue.MinValue,
                 KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
                 Slot = (byte)index.Slot,
-                Page = page,
-                Position = new PageAddress(page.PageID, 0)
+                Page = page
             };
 
             // add as first node
-            page.Nodes.Add(head.Position.Index, head);
-
-            // update freebytes + item count (for head)
-            page.UpdateItemCount();
+            page.AddNode(head);
 
             // set index page as dirty
             _pager.SetDirty(index.Page);
@@ -109,14 +105,10 @@ namespace LiteDB
             // get a free page to insert my index node
             var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
 
-            node.Position = new PageAddress(page.PageID, page.Nodes.NextIndex());
             node.Page = page;
 
             // add index node to page
-            page.Nodes.Add(node.Position.Index, node);
-
-            // update freebytes + items count
-            page.UpdateItemCount();
+            page.AddNode(node);
 
             // now, let's link my index node on right place
             var cur = this.GetNode(index.HeadNode);
@@ -254,13 +246,10 @@ namespace LiteDB
                 }
             }
 
-            page.Nodes.Remove(node.Position.Index);
-
-            // update freebytes + items count
-            page.UpdateItemCount();
+            page.DeleteNode(node);
 
             // if there is no more nodes in this page, delete them
-            if (page.Nodes.Count == 0)
+            if (page.NodesCount == 0)
             {
                 // first, remove from free list
                 _pager.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
@@ -332,7 +321,7 @@ namespace LiteDB
         {
             if (address.IsEmpty) return null;
             var page = _pager.GetPage<IndexPage>(address.PageID);
-            return page.Nodes[address.Index];
+            return page.GetNode(address.Index);
         }
 
         /// <summary>
