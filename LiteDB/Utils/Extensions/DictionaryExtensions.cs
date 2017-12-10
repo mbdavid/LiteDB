@@ -21,9 +21,7 @@ namespace LiteDB
 
         public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T defaultValue = default(T))
         {
-            T result;
-
-            if (dict.TryGetValue(key, out result))
+            if (dict.TryGetValue(key, out T result))
             {
                 return result;
             }
