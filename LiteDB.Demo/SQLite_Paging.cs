@@ -32,7 +32,7 @@ namespace LiteDB.Demo
 
             // create indexes before
             var idxAge = new SQLiteCommand("CREATE INDEX idx_age ON col (age)", _db);
-            // idxAge.ExecuteNonQuery();
+            idxAge.ExecuteNonQuery();
 
             using (var trans = _db.BeginTransaction())
             {

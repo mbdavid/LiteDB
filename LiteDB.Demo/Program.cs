@@ -15,7 +15,7 @@ namespace LiteDB.Demo
         {
             var timer = new Stopwatch();
             ITest test = new LiteDB_Paging();
-            // ITest test = new SQLite_Paging();
+            //ITest test = new SQLite_Paging();
 
             Console.WriteLine("Testing: {0}", test.GetType().Name);
 
