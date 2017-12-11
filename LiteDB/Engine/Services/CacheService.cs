@@ -31,10 +31,10 @@ namespace LiteDB
         /// </summary>
         public BasePage GetPage(uint pageID)
         {
-            // try get page from clean cache or from dirty list
+            // try get page from dirty cache or from clean list
             var page =
-                _clean.GetOrDefault(pageID) ??
-                _dirty.GetOrDefault(pageID);
+                _dirty.GetOrDefault(pageID) ??
+                _clean.GetOrDefault(pageID);
 
             return page;
         }
