@@ -11,7 +11,7 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main0(string[] args)
         {
             var timer = new Stopwatch();
             ITest test = new LiteDB_Paging();
