@@ -100,6 +100,11 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Cached document - if null, use DataBlock
+        /// </summary>
+        public BsonDocument CacheDocument { get; set; }
+
         public IndexNode(byte level)
         {
             this.Position = PageAddress.Empty;

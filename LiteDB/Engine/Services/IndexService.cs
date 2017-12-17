@@ -41,15 +41,11 @@ namespace LiteDB
                 Key = BsonValue.MinValue,
                 KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
                 Slot = (byte)index.Slot,
-                Page = page,
-                Position = new PageAddress(page.PageID, 0)
+                Page = page
             };
 
             // add as first node
-            page.Nodes.Add(head.Position.Index, head);
-
-            // update freebytes + item count (for head)
-            page.UpdateItemCount();
+            page.AddNode(head);
 
             // set index page as dirty
             _pager.SetDirty(index.Page);
@@ -73,8 +69,18 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue key, IndexNode last)
         {
+            var level = this.FlipCoin();
+
+            // set index collection with max-index level
+            if (level > index.MaxLevel)
+            {
+                index.MaxLevel = level;
+
+                _pager.SetDirty(index.Page);
+            }
+
             // call AddNode with key value
-            return this.AddNode(index, key, this.FlipCoin(), last);
+            return this.AddNode(index, key, level, last);
         }
 
         /// <summary>
@@ -85,10 +91,8 @@ namespace LiteDB
             // calc key size
             var keyLength = key.GetBytesCount(false);
 
-            if (keyLength > MAX_INDEX_LENGTH)
-            {
-                throw LiteException.IndexKeyTooLong();
-            }
+            // test for index key maxlength
+            if (keyLength > MAX_INDEX_LENGTH) throw LiteException.IndexKeyTooLong();
 
             // creating a new index node
             var node = new IndexNode(level)
@@ -101,14 +105,10 @@ namespace LiteDB
             // get a free page to insert my index node
             var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
 
-            node.Position = new PageAddress(page.PageID, page.Nodes.NextIndex());
             node.Page = page;
 
             // add index node to page
-            page.Nodes.Add(node.Position.Index, node);
-
-            // update freebytes + items count
-            page.UpdateItemCount();
+            page.AddNode(node);
 
             // now, let's link my index node on right place
             var cur = this.GetNode(index.HeadNode);
@@ -117,7 +117,7 @@ namespace LiteDB
             IndexNode cache = null;
 
             // scan from top left
-            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // get cache for last node
                 cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
@@ -246,13 +246,10 @@ namespace LiteDB
                 }
             }
 
-            page.Nodes.Remove(node.Position.Index);
-
-            // update freebytes + items count
-            page.UpdateItemCount();
+            page.DeleteNode(node);
 
             // if there is no more nodes in this page, delete them
-            if (page.Nodes.Count == 0)
+            if (page.NodesCount == 0)
             {
                 // first, remove from free list
                 _pager.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
@@ -324,7 +321,7 @@ namespace LiteDB
         {
             if (address.IsEmpty) return null;
             var page = _pager.GetPage<IndexPage>(address.PageID);
-            return page.Nodes[address.Index];
+            return page.GetNode(address.Index);
         }
 
         /// <summary>
@@ -366,7 +363,7 @@ namespace LiteDB
         {
             var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
 
-            for (var i = IndexNode.MAX_LEVEL_LENGTH - 1; i >= 0; i--)
+            for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 for (; cur.NextPrev(i, order).IsEmpty == false; cur = this.GetNode(cur.NextPrev(i, order)))
                 {

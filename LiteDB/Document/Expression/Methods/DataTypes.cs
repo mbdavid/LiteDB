@@ -12,6 +12,7 @@ namespace LiteDB
     {
         /// <summary>
         /// Parse a JSON string into a new BsonValue. Support multiple values (string only)
+        /// JSON('{a:1}') = {a:1}
         /// </summary>
         public static IEnumerable<BsonValue> JSON(IEnumerable<BsonValue> values)
         {
@@ -20,6 +21,27 @@ namespace LiteDB
                 yield return JsonSerializer.Deserialize(value);
             }
         }
+
+        /// <summary>
+        /// Extend source document with other document. Copy all field from extend to source. Source document will be modified.
+        /// EXTEND($, {a: 2}) = {_id:1, a: 2}
+        /// </summary>
+        public static IEnumerable<BsonValue> EXTEND(IEnumerable<BsonValue> source, IEnumerable<BsonValue> extend)
+        {
+            foreach (var value in source.ZipValues(extend))
+            {
+                if (!value.First.IsDocument) continue;
+                if (!value.Second.IsDocument) continue;
+
+                var dest = value.First.AsDocument;
+
+                value.Second.AsDocument.CopyTo(dest);
+
+                yield return dest;
+            }
+
+        }
+
 
         #region Convert datatypes
 

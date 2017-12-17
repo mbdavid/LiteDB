@@ -293,7 +293,7 @@ namespace LiteDB
                 while (!s.HasTerminated)
                 {
                     // read key + value
-                    var key = s.Scan("(.+?):", 1).ThrowIfEmpty("Invalid token", s);
+                    var key = s.Scan(@"(.+?)\s*:\s*", 1).ThrowIfEmpty("Invalid token", s);
                     var value = ParseExpression(s, root, current, false);
 
                     // add key and value to parameter list (as an expression)

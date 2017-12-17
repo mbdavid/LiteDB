@@ -14,6 +14,7 @@ namespace LiteDB
             this.Field = index.Field;
             this.Expression = index.Expression;
             this.Unique = index.Unique;
+            this.MaxLevel = index.MaxLevel;
         }
 
         /// <summary>
@@ -35,5 +36,10 @@ namespace LiteDB
         /// Index is Unique?
         /// </summary>
         public bool Unique { get; private set; }
+
+        /// <summary>
+        /// Indicate max level used in skip-list
+        /// </summary>
+        public byte MaxLevel { get; private set; }
     }
 }

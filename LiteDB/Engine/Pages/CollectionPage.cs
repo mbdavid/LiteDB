@@ -64,15 +64,6 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Update freebytes + items count
-        /// </summary>
-        public override void UpdateItemCount()
-        {
-            this.ItemCount = 1; // fixed for CollectionPage
-            this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
-        }
-
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)
@@ -105,7 +96,14 @@ namespace LiteDB
             }
 
             // position on page-footer (avoid file structure change)
-            reader.Position = BasePage.PAGE_SIZE - 8;
+            reader.Position = BasePage.PAGE_SIZE - 8 - CollectionIndex.INDEX_PER_COLLECTION;
+
+            foreach (var index in this.Indexes)
+            {
+                var maxLevel = reader.ReadByte();
+                index.MaxLevel = maxLevel == 0 ? (byte)IndexNode.MAX_LEVEL_LENGTH : maxLevel;
+            }
+
             this.Sequence = reader.ReadInt64();
         }
 
@@ -134,7 +132,13 @@ namespace LiteDB
             }
 
             // position on page-footer (avoid file structure change)
-            writer.Position = BasePage.PAGE_SIZE - 8;
+            writer.Position = BasePage.PAGE_SIZE - 8 - CollectionIndex.INDEX_PER_COLLECTION;
+
+            foreach (var index in this.Indexes)
+            {
+                writer.Write(index.MaxLevel);
+            }
+
             writer.Write(this.Sequence);
         }
 

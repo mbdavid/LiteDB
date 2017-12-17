@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LiteDB
 {
@@ -77,12 +78,6 @@ namespace LiteDB
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.DiskData = new byte[0];
         }
-
-        /// <summary>
-        /// Every page must implement this ItemCount + FreeBytes
-        /// Must be called after Items are updates (insert/deletes) to keep variables ItemCount and FreeBytes synced
-        /// </summary>
-        public abstract void UpdateItemCount();
 
         /// <summary>
         /// Returns a size of specified number of pages

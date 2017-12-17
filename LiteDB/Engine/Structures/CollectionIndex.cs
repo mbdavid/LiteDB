@@ -56,6 +56,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Persist max level used
+        /// </summary>
+        public byte MaxLevel { get; set; }
+
+        /// <summary>
         /// Get a reference for page
         /// </summary>
         public CollectionPage Page { get; set; }
@@ -75,6 +80,7 @@ namespace LiteDB
             this.Unique = false;
             this.HeadNode = PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
+            this.MaxLevel = 1;
         }
     }
 }
