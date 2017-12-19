@@ -151,20 +151,24 @@ namespace LiteDB.Tests.Database
 
                 products.Delete(product1.ProductId);
 
+                var json = db.Engine.Find("orders", Query.All(), new string[] { "$.Customer", "$.Products[*]" })
+                    .FirstOrDefault()
+                    .ToString();
+
                 var result2 = orders
                     .Include(x => x.Customer)
                     .Include(x => x.Products)
                     .FindAll()
                     .FirstOrDefault();
 
-             //   // must missing customer and has only 1 product
-             //
-             //   Assert.IsNull(result2.Customer);
-             //   Assert.AreEqual(1, result2.Products.Count);
-             //
-             //   // property ProductArray contains only deleted "product1", but has no include on query, so must returns deleted
-             //
-             //   Assert.AreEqual(1, result.ProductArray.Length);
+                // must missing customer and has only 1 product
+             
+                Assert.IsNull(result2.Customer);
+                Assert.AreEqual(1, result2.Products.Count);
+             
+                // property ProductArray contains only deleted "product1", but has no include on query, so must returns deleted
+             
+                Assert.AreEqual(1, result2.ProductArray.Length);
 
 
             }

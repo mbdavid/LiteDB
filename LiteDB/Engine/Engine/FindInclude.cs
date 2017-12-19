@@ -25,7 +25,8 @@ namespace LiteDB
                     // get all values according JSON path
                     foreach(var value in expr.Execute(doc, false)
                         .Where(x => x.IsDocument)
-                        .Select(x => x.AsDocument))
+                        .Select(x => x.AsDocument)
+                        .ToList())
                     {
                         // works only if is a document
                         var refId = value["$id"];
@@ -44,6 +45,11 @@ namespace LiteDB
                             value.Remove("$ref");
 
                             refDoc.CopyTo(value);
+                        }
+                        else
+                        {
+                            // remove value from parent (document or array)
+                            value.Destroy();
                         }
                     }
                 }

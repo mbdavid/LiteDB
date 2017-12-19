@@ -444,6 +444,9 @@ namespace LiteDB
             {
                 if (value.AsDocument.TryGetValue(name, out BsonValue item))
                 {
+                    // fill destroy action to remove value from root
+                    item.Destroy = () => value.AsDocument.Remove(name);
+
                     yield return item;
                 }
             }
@@ -458,6 +461,9 @@ namespace LiteDB
             {
                 if (doc.TryGetValue(name, out BsonValue item))
                 {
+                    // fill destroy action to remove value from parent document
+                    item.Destroy = () => doc.Remove(name);
+
                     yield return item;
                 }
             }
@@ -474,7 +480,7 @@ namespace LiteDB
                 {
                     var arr = value.AsArray;
 
-                    // [expression(Func<BsonValue, bool>)]
+                    // [<expr>] - index are an expression
                     if (expr.Source != null)
                     {
                         foreach (var item in arr)
@@ -484,26 +490,37 @@ namespace LiteDB
 
                             if (c.IsBoolean && c.AsBoolean == true)
                             {
+                                // fill destroy action to remove value from parent array
+                                item.Destroy = () => arr.Remove(item);
+
                                 yield return item;
                             }
                         }
                     }
-                    // [all]
+                    // [*] - index are all values
                     else if (index == int.MaxValue)
                     {
                         foreach (var item in arr)
                         {
+                            // fill destroy action to remove value from parent array
+                            item.Destroy = () => arr.Remove(item);
+
                             yield return item;
                         }
                     }
-                    // [fixed_index]
+                    // [n] - fixed index
                     else
                     {
                         var idx = index < 0 ? arr.Count + index : index;
 
                         if (arr.Count > idx)
                         {
-                            yield return arr[idx];
+                            var item = arr[idx];
+
+                            // fill destroy action to remove value from parent array
+                            item.Destroy = () => arr.Remove(item);
+
+                            yield return item;
                         }
                     }
                 }

@@ -37,6 +37,11 @@ namespace LiteDB
         /// </summary>
         public virtual object RawValue { get; private set; }
 
+        /// <summary>
+        /// Internal destroy method. Works only when used with BsonExpression
+        /// </summary>
+        internal Action Destroy = () => { };
+
         #region Constructor
 
         public BsonValue()
@@ -200,6 +205,7 @@ namespace LiteDB
                 {
                     var array = new BsonArray((List<BsonValue>)this.RawValue);
                     array.Length = this.Length;
+                    array.Destroy = this.Destroy;
 
                     return array;
                 }
@@ -218,6 +224,7 @@ namespace LiteDB
                 {
                     var doc = new BsonDocument((Dictionary<string, BsonValue>)this.RawValue);
                     doc.Length = this.Length;
+                    doc.Destroy = this.Destroy;
 
                     return doc;
                 }
