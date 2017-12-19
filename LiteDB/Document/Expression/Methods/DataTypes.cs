@@ -39,7 +39,21 @@ namespace LiteDB
 
                 yield return dest;
             }
+        }
 
+        /// <summary>
+        /// Convert an array into IEnuemrable of values.
+        /// ITEMS([1, 2, null]) = 1, 2, null
+        /// </summary>
+        public static IEnumerable<BsonValue> ITEMS(IEnumerable<BsonValue> array)
+        {
+            foreach (var arr in array.Where(x => x.IsArray).Select(x => x.AsArray))
+            {
+                foreach(var value in arr)
+                {
+                    yield return value;
+                }
+            }
         }
 
 
