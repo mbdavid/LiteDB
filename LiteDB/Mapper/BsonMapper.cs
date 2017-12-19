@@ -460,25 +460,26 @@ namespace LiteDB
 
                 if (array.Count == 0) return m.Deserialize(member.DataType, array);
 
-                var hasIdRef = array[0].AsDocument == null || array[0].AsDocument["$id"].IsNull;
+                // copy array changing $id to _id
+                var result = new BsonArray();
 
-                if (hasIdRef)
+                foreach (var item in array)
                 {
-                    // if no $id, deserialize as full (was loaded via Include)
-                    return m.Deserialize(member.DataType, array);
-                }
-                else
-                {
-                    // copy array changing $id to _id
-                    var arr = new BsonArray();
+                    var refId = item.AsDocument["$id"];
 
-                    foreach (var item in array)
+                    // if refId is null was included by "include" query, so "item" is full filled document
+                    if (refId.IsNull)
                     {
-                        arr.Add(new BsonDocument { { "_id", item.AsDocument["$id"] } });
+                        result.Add(item);
+                    }
+                    else
+                    {
+                        result.Add(new BsonDocument { { "_id", refId } });
                     }
 
-                    return m.Deserialize(member.DataType, arr);
                 }
+
+                return m.Deserialize(member.DataType, result);
             };
         }
 
