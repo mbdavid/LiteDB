@@ -15,7 +15,7 @@ script:
   - dotnet build ./LiteDB/LiteDB.csproj -f netstandard1.3
   - dotnet restore ./LiteDB.Tests/LiteDB.Tests.csproj
   - dotnet build ./LiteDB.Tests/LiteDB.Tests.csproj
-  - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj --logger:console;verbosity=normal
+  - dotnet test ./LiteDB.Tests/LiteDB.Tests.csproj -o ./LiteDB.Tests/bin/Debug/netcoreapp2.0 --logger:console;verbosity=normal
 
 notifications:
   email: false  
