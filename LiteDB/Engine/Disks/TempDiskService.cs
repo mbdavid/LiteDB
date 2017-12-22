@@ -161,11 +161,7 @@ namespace LiteDB
         {
             if (_stream != null)
             {
-#if HAVE_FLUSH_DISK
-                _stream.Flush(true);
-#else
-            _stream.Flush();
-#endif
+                _stream.Flush();
             }
         }
 
