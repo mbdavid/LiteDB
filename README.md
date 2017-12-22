@@ -24,7 +24,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 ## New in 4.0
 - New `Expressions/Path` index/query support. See [Expressions](https://github.com/mbdavid/LiteDB/wiki/Expressions)
 - Nested `Include` support
-- Optimzed query execution (with explain plain debug)
+- Optimized query execution (with explain plain debug)
 - Fix concurrency problems
 - Remove transaction and auto index creation
 - Support for full scan search and LINQ search
