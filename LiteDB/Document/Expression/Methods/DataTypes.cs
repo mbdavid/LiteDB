@@ -56,7 +56,6 @@ namespace LiteDB
             }
         }
 
-
         #region Convert datatypes
 
         /// <summary>

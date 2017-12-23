@@ -99,6 +99,24 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return "true" only if all values are true
+        /// ALL($.items[*] > 0)
+        /// </summary>
+        public static IEnumerable<BsonValue> ALL(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values.Where(x => x.IsBoolean).Select(x => x.AsBoolean))
+            {
+                if (value == false)
+                {
+                    yield return false;
+                    yield break;
+                }
+            }
+
+            yield return true;
+        }
+
+        /// <summary>
         /// Join all values into a single string with ',' separator. Return a single value
         /// </summary>
         public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values)
