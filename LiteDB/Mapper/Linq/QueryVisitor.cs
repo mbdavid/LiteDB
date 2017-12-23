@@ -179,7 +179,7 @@ namespace LiteDB
                     }
                 }
 
-                throw new NotSupportedException("Not implemented Linq expression");
+                return new QueryLinq<T>(expr, _param, _mapper);
             }
             catch(NotSupportedException)
             {
