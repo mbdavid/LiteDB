@@ -46,10 +46,8 @@ namespace LiteDB.Tests.Engine
 
             using (var file = new TempFile())
             {
-                using (var dbe = new LiteDatabase(file.Filename))
+                using (var db = new LiteEngine(file.Filename))
                 {
-                    var db = dbe.Engine;
-
                     db.UserVersion = 99;
                     db.EnsureIndex("col", "name", true);
                     db.Insert("col", GetDocs(1, 40000));
@@ -61,7 +59,7 @@ namespace LiteDB.Tests.Engine
                     Assert.IsTrue(file.Size > 20 * 1024 * 1024);
 
                     // reduce datafile (use temp disk) (from LiteDatabase)
-                    dbe.Shrink();
+                    db.Shrink();
 
                     // now file are small than 50kb
                     Assert.IsTrue(file.Size < 50 * 1024);
@@ -70,10 +68,10 @@ namespace LiteDB.Tests.Engine
                 }
 
                 // re-open datafile to check if is ok
-                using (var db = new LiteDatabase(file.Filename))
+                using (var db = new LiteEngine(file.Filename))
                 {
                     // still 1 doc and 1 name unique index
-                    DoTest(db.Engine);
+                    DoTest(db);
 
                     // shrink again but now with password
                     var reduced = db.Shrink("abc123");
@@ -82,7 +80,7 @@ namespace LiteDB.Tests.Engine
                     Assert.AreEqual(0, reduced);
 
                     // still 1 doc and 1 name unique index
-                    DoTest(db.Engine);
+                    DoTest(db);
                 }
 
                 // re-open, again, but now with password

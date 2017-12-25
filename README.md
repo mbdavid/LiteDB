@@ -1,6 +1,9 @@
 # NEXT
-- Remove FileOptions, create EngineOptions or DatabaseOptions
-- Async?
+- Hide Database, Mapper, FileStorage, Shell, +Tests from solution
+- Remove FileOptions, use only ConnectionString
+- Keep LiteEngine with minimum data access methods
+
+- Async
 
 
 
