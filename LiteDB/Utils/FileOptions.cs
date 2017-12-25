@@ -7,7 +7,6 @@ namespace LiteDB
     /// </summary>
     public class FileOptions
     {
-        public bool Journal { get; set; }
         public long InitialSize { get; set; }
         public long LimitSize { get; set; }
         public bool ReadOnly { get; set; }
@@ -17,7 +16,6 @@ namespace LiteDB
 
         public FileOptions()
         {
-            this.Journal = true;
             this.InitialSize = 0;
             this.LimitSize = long.MaxValue;
             this.ReadOnly = false;

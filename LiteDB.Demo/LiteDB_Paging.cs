@@ -20,10 +20,7 @@ namespace LiteDB.Demo
         {
             File.Delete(filename);
 
-            var disk = new FileDiskService(filename, new FileOptions
-            {
-                Journal = false
-            });
+            var disk = new FileDiskService(filename);
 
             _engine = new LiteEngine(disk, cacheSize: 50000);
         }

@@ -22,11 +22,6 @@ namespace LiteDB
         public EmptyPage(BasePage page)
             : base(page.PageID)
         {
-            if(page.DiskData.Length > 0)
-            {
-                this.DiskData = new byte[BasePage.PAGE_SIZE];
-                Buffer.BlockCopy(page.DiskData, 0, this.DiskData, 0, BasePage.PAGE_SIZE);
-            }
         }
 
         #region Read/Write pages

@@ -7,7 +7,6 @@ namespace LiteDB
 {
     /// <summary>
     /// Implement generic Stream disk service. Used for any read/write/seek stream
-    /// No journal implemented
     /// </summary>
     public class StreamDiskService : IDiskService
     {
@@ -112,52 +111,6 @@ namespace LiteDB
         /// Returns file length
         /// </summary>
         public long FileLength { get { return _stream.Length; } }
-
-        #endregion
-
-        #region Not implemented in Stream
-
-        /// <summary>
-        /// No journal in Stream
-        /// </summary>
-        public bool IsJournalEnabled { get { return false; } }
-
-        /// <summary>
-        /// No journal implemented
-        /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
-        {
-        }
-
-        /// <summary>
-        /// No journal implemented
-        /// </summary>
-        public IEnumerable<byte[]> ReadJournal(uint lastPageID)
-        {
-            yield break;
-        }
-
-        /// <summary>
-        /// No journal implemented
-        /// </summary>
-        public void ClearJournal(uint lastPageID)
-        {
-        }
-
-        /// <summary>
-        /// No lock implemented
-        /// </summary>
-        public int Lock(LockState state, TimeSpan timeout)
-        {
-            return 0;
-        }
-
-        /// <summary>
-        /// No lock implemented
-        /// </summary>
-        public void Unlock(LockState state, int position)
-        {
-        }
 
         /// <summary>
         /// No flush implemented

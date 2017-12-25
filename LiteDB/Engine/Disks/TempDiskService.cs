@@ -6,7 +6,7 @@ using System.Threading;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement temporary disk access. Open datafile only when be used and delete when dispose. No journal, no sharing
+    /// Implement temporary disk access. Open datafile only when be used and delete when dispose.
     /// </summary>
     public class TempDiskService : IDiskService
     {
@@ -123,37 +123,6 @@ namespace LiteDB
         /// </summary>
         public long FileLength { get { return _stream?.Length ?? 0; } }
 
-        #endregion
-
-        #region Journal file
-
-        /// <summary>
-        /// No journal
-        /// </summary>
-        public bool IsJournalEnabled { get { return false; } }
-
-        /// <summary>
-        /// No journal
-        /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
-        {
-        }
-
-        /// <summary>
-        /// No journal
-        /// </summary>
-        public IEnumerable<byte[]> ReadJournal(uint lastPageID)
-        {
-            yield break;
-        }
-
-        /// <summary>
-        /// No journal
-        /// </summary>
-        public void ClearJournal(uint lastPageID)
-        {
-        }
-
         /// <summary>
         /// Flush data from memory to disk
         /// </summary>
@@ -175,17 +144,15 @@ namespace LiteDB
         private FileStream CreateFileStream(string path, System.IO.FileMode mode, FileAccess access, FileShare share)
         {
 #if HAVE_SYNC_OVER_ASYNC
-            // if (_options.Async) 
-            {
-                return System.Threading.Tasks.Task.Run(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE))
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-#endif
+            return System.Threading.Tasks.Task.Run(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE))
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+#else
             return new FileStream(path, mode, access, share, 
                 BasePage.PAGE_SIZE,
                 System.IO.FileOptions.RandomAccess);
+#endif
         }
 
         #endregion

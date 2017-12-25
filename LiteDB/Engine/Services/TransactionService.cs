@@ -64,23 +64,8 @@ namespace LiteDB
 
             _log.Write(Logger.DISK, "begin disk operations - changeID: {0}", header.ChangeID);
 
-            // write journal file in desc order to header be last page in disk
-            if (_disk.IsJournalEnabled)
-            {
-                _disk.WriteJournal(_cache.GetDirtyPages()
-                    .OrderByDescending(x => x.PageID)
-                    .Select(x => x.DiskData)
-                    .Where(x => x.Length > 0)
-                    .ToList(), header.LastPageID);
-
-                // mark header as recovery before start writing (in journal, must keep recovery = false)
-                header.Recovery = true;
-            }
-            else
-            {
-                // if no journal extend, resize file here to fast writes
-                _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));
-            }
+            // resize file here to fast writes
+            _disk.SetLength(BasePage.GetSizeOfPages(header.LastPageID + 1));
 
             // get all dirty page stating from Header page (SortedList)
             // header page (id=0) always must be first page to write on disk because it's will mark disk as "in recovery"
@@ -94,55 +79,11 @@ namespace LiteDB
                 _disk.WritePage(page.PageID, buffer);
             }
 
-            if (_disk.IsJournalEnabled)
-            {
-                // re-write header page but now with recovery=false
-                header.Recovery = false;
-
-                _log.Write(Logger.DISK, "re-write header page now with recovery = false");
-
-                _disk.WritePage(0, header.WritePage());
-            }
-
             // mark all dirty pages as clean pages (all are persisted in disk and are valid pages)
             _cache.MarkDirtyAsClean();
 
             // flush all data direct to disk
             _disk.Flush();
-
-            // discard journal file
-            _disk.ClearJournal(header.LastPageID);
-        }
-
-        /// <summary>
-        /// Get journal pages and override all into datafile
-        /// </summary>
-        public void Recovery()
-        {
-            _log.Write(Logger.RECOVERY, "initializing recovery mode");
-
-            using (_locker.Write())
-            {
-                // double check in header need recovery (could be already recover from another thread)
-                var header = BasePage.ReadPage(_disk.ReadPage(0)) as HeaderPage;
-
-                if (header.Recovery == false) return;
-
-                // read all journal pages
-                foreach (var buffer in _disk.ReadJournal(header.LastPageID))
-                {
-                    // read pageID (first 4 bytes)
-                    var pageID = BitConverter.ToUInt32(buffer, 0);
-
-                    _log.Write(Logger.RECOVERY, "recover page #{0:0000}", pageID);
-
-                    // write in stream (encrypt if datafile is encrypted)
-                    _disk.WritePage(pageID, _crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer));
-                }
-
-                // shrink datafile
-                _disk.ClearJournal(header.LastPageID);
-            }
         }
     }
 }

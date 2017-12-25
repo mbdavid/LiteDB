@@ -27,7 +27,7 @@ namespace LiteDB
                     if (reader.Initialize(stream, password) == false) return false;
 
                     // open new datafile to copy data from
-                    using (var engine = new LiteEngine(tempFile, false))
+                    using (var engine = new LiteEngine(tempFile))
                     {
                         foreach (var col in reader.GetCollections())
                         {

@@ -18,7 +18,7 @@ namespace LiteDB
         /// <summary>
         /// Datafile specification version
         /// </summary>
-        private const byte FILE_VERSION = 7;
+        private const byte FILE_VERSION = 8;
 
         /// <summary>
         /// Last modified transaction. Used to detect when other process change datafile and cache are not valid anymore
@@ -50,11 +50,6 @@ namespace LiteDB
         /// When using encryption, store salt for password
         /// </summary>
         public byte[] Salt { get; set; }
-
-        /// <summary>
-        /// Indicate if datafile need be recovered
-        /// </summary>
-        public bool Recovery { get; set; }
 
         /// <summary>
         /// Get a dictionary with all collection pages with pageID link
@@ -102,7 +97,6 @@ namespace LiteDB
             // use last page byte position for recovery mode only because i forgot to reserve area before collection names!
             // TODO: fix this in next change data structure
             reader.Position = BasePage.PAGE_SIZE - 1;
-            this.Recovery = reader.ReadBoolean();
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -124,7 +118,6 @@ namespace LiteDB
             }
 
             writer.Position = BasePage.PAGE_SIZE - 1;
-            writer.Write(this.Recovery);
         }
 
         #endregion

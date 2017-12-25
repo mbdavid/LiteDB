@@ -23,8 +23,8 @@ namespace LiteDB
 
         #region Initialize/Dispose disk
 
-        public FileDiskService(string filename, bool journal = true)
-            : this(filename, new FileOptions { Journal = journal })
+        public FileDiskService(string filename)
+            : this(filename, new FileOptions())
         {
         }
 
@@ -135,88 +135,6 @@ namespace LiteDB
         /// Returns file length
         /// </summary>
         public long FileLength { get { return _stream.Length; } }
-
-        #endregion
-
-        #region Journal file
-
-        /// <summary>
-        /// Indicate if journal are enabled or not based on file options
-        /// </summary>
-        public bool IsJournalEnabled { get { return _options.Journal; } }
-
-        /// <summary>
-        /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
-        /// </summary>
-        public void WriteJournal(ICollection<byte[]> pages, uint lastPageID)
-        {
-            // write journal only if enabled
-            if (_options.Journal == false) return;
-
-            var size = BasePage.GetSizeOfPages(lastPageID + 1) +
-                BasePage.GetSizeOfPages(pages.Count);
-
-            _log.Write(Logger.JOURNAL, "extend datafile to journal - {0} pages", pages.Count);
-
-            // set journal file length before write
-            _stream.SetLength(size);
-
-            // go to initial file position (after lastPageID)
-            _stream.Seek(BasePage.GetSizeOfPages(lastPageID + 1), SeekOrigin.Begin);
-
-            foreach(var buffer in pages)
-            {
-                // read pageID and pageType from buffer
-                var pageID = BitConverter.ToUInt32(buffer, 0);
-                var pageType = (PageType)buffer[PAGE_TYPE_POSITION];
-
-                _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, pageType);
-
-                // write page bytes
-                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
-            }
-
-            _log.Write(Logger.JOURNAL, "flush journal to disk");
-
-            // ensure all data are persisted in disk
-            this.Flush();
-        }
-
-        /// <summary>
-        /// Read journal file returning IEnumerable of pages
-        /// </summary>
-        public IEnumerable<byte[]> ReadJournal(uint lastPageID)
-        {
-            // position stream at begin journal area
-            var pos = BasePage.GetSizeOfPages(lastPageID + 1);
-
-            _stream.Seek(pos, SeekOrigin.Begin);
-
-            var buffer = new byte[BasePage.PAGE_SIZE];
-
-            while (_stream.Position < _stream.Length)
-            {
-                // read page bytes from journal file
-                _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
-
-                yield return buffer;
-
-                // now set position to next journal page
-                pos += BasePage.PAGE_SIZE;
-
-                _stream.Seek(pos, SeekOrigin.Begin);
-            }
-        }
-
-        /// <summary>
-        /// Shrink datafile to crop journal area
-        /// </summary>
-        public void ClearJournal(uint lastPageID)
-        {
-            _log.Write(Logger.JOURNAL, "shrink datafile to remove journal area");
-
-            this.SetLength(BasePage.GetSizeOfPages(lastPageID + 1));
-        }
 
         /// <summary>
         /// Flush data from memory to disk

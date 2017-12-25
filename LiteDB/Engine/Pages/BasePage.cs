@@ -64,11 +64,6 @@ namespace LiteDB
         /// </summary>
         public bool IsDirty { get; set; }
 
-        /// <summary>
-        /// This is the data when read first from disk - used to journal operations (IDiskService only will use)
-        /// </summary>
-        public byte[] DiskData { get; set; }
-
         public BasePage(uint pageID)
         {
             this.PageID = pageID;
@@ -76,7 +71,6 @@ namespace LiteDB
             this.NextPageID = uint.MaxValue;
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
-            this.DiskData = new byte[0];
         }
 
         /// <summary>
@@ -157,8 +151,6 @@ namespace LiteDB
             page.ReadHeader(reader);
             page.ReadContent(reader);
 
-            page.DiskData = buffer;
-
             return page;
         }
 
@@ -175,9 +167,6 @@ namespace LiteDB
             {
                 this.WriteContent(writer);
             }
-
-            // update data bytes
-            this.DiskData = writer.Buffer;
 
             return writer.Buffer;
         }

@@ -32,26 +32,6 @@ namespace LiteDB
         long FileLength { get; }
 
         /// <summary>
-        /// Get if journal are enabled or not. Can optimize with has no jounal
-        /// </summary>
-        bool IsJournalEnabled { get; }
-
-        /// <summary>
-        /// Read journal file returning IEnumerable of pages
-        /// </summary>
-        IEnumerable<byte[]> ReadJournal(uint lastPageID);
-
-        /// <summary>
-        /// Write original bytes page in a journal file (in sequence) - if journal not exists, create.
-        /// </summary>
-        void WriteJournal(ICollection<byte[]> pages, uint lastPageID);
-
-        /// <summary>
-        /// Clear journal file
-        /// </summary>
-        void ClearJournal(uint lastPageID);
-
-        /// <summary>
         /// Ensures all pages from the OS cache are persisted on medium
         /// </summary>
         void Flush();

@@ -26,9 +26,9 @@ namespace LiteDB.Tests
             }
         }
 
-        public IDiskService Disk(bool journal = true)
+        public IDiskService Disk()
         {
-            return new FileDiskService(Filename, journal);
+            return new FileDiskService(Filename);
         }
 
         public IDiskService Disk(FileOptions options)

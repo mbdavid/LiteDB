@@ -69,7 +69,6 @@ namespace LiteDB
 #endif
                 InitialSize = _connectionString.InitialSize,
                 LimitSize = _connectionString.LimitSize,
-                Journal = _connectionString.Journal,
                 ReadOnly = _connectionString.ReadOnly
             };
 
@@ -221,7 +220,7 @@ namespace LiteDB
                 var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
 
                 // get temp disk based on temp file
-                var tempDisk = new FileDiskService(tempFile, false);
+                var tempDisk = new FileDiskService(tempFile);
 
                 var reduced = _engine.Value.Shrink(password, tempDisk);
 

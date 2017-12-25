@@ -7,7 +7,7 @@ namespace LiteDB.Shell.Commands
         Category = "Shell",
         Name = "debug",
         Syntax = "debug [on|off|<level>]",
-        Description = "Enabled debug messages from database engine and write on console. Level can be defined as byte value: ERROR = 1; RECOVERY = 2; COMMAND = 4; LOCK = 8; QUERY = 16; JOURNAL = 32; CACHE = 64; DISK = 128; FULL = 255",
+        Description = "Enabled debug messages from database engine and write on console. Level can be defined as byte value: ERROR = 1; RECOVERY = 2; COMMAND = 4; LOCK = 8; QUERY = 16; CACHE = 32; DISK = 64; FULL = 255",
         Examples = new string[] {
             "debug 16",
             "debug on"

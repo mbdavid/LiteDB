@@ -70,16 +70,16 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using default FileDiskService
         /// </summary>
-        public LiteEngine(string filename, bool journal = true)
-            : this(new FileDiskService(filename, journal))
+        public LiteEngine(string filename)
+            : this(new FileDiskService(filename))
         {
         }
 
         /// <summary>
         /// Initialize LiteEngine with password encryption
         /// </summary>
-        public LiteEngine(string filename, string password, bool journal = true)
-            : this(new FileDiskService(filename, new FileOptions { Journal = journal }), password)
+        public LiteEngine(string filename, string password)
+            : this(new FileDiskService(filename), password)
         {
         }
 
@@ -131,12 +131,6 @@ namespace LiteDB
 
                 // initialize all services
                 this.InitializeServices();
-
-                // if header are marked with recovery, do it now
-                if (header.Recovery)
-                {
-                    _trans.Recovery();
-                }
             }
             catch (Exception)
             {
@@ -214,7 +208,7 @@ namespace LiteDB
 
         public void Dispose()
         {
-            // dispose datafile and journal file
+            // dispose datafile
             _disk.Dispose();
 
             // dispose crypto

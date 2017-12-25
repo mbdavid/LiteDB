@@ -20,11 +20,6 @@ namespace LiteDB
         public string Filename { get; set; }
 
         /// <summary>
-        /// "journal": Enabled or disable double write check to ensure durability (default: true)
-        /// </summary>
-        public bool Journal { get; set; }
-
-        /// <summary>
         /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
         /// </summary>
         public string Password { get; set; }
@@ -104,7 +99,6 @@ namespace LiteDB
 
             // setting values to properties
             this.Filename = values.GetValue("filename", "");
-            this.Journal = values.GetValue("journal", true);
             this.Password = values.GetValue<string>("password", null);
             this.CacheSize = values.GetValue(@"cache size", 5000);
             this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));

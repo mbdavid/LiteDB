@@ -18,10 +18,9 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(@"demo.db", onlyfile.Filename);
 
             // file with spaces without "
-            var normal = new ConnectionString(@"filename=c:\only file\demo.db; journal=false");
+            var normal = new ConnectionString(@"filename=c:\only file\demo.db");
 
             Assert.AreEqual(@"c:\only file\demo.db", normal.Filename);
-            Assert.AreEqual(false, normal.Journal);
 
             // filename with timeout
             var filenameTimeout = new ConnectionString(@"filename = my demo.db ; timeout = 1:00:00");
@@ -32,7 +31,6 @@ namespace LiteDB.Tests.Database
             // file with spaces with " and ;
             var full = new ConnectionString(
                 @"filename=""c:\only;file\""d\""emo.db""; 
-                  journal =false;
                   password =   ""john-doe "" ;
                   cache SIZE = 1000 ;
                   timeout = 00:05:00 ;
@@ -42,7 +40,6 @@ namespace LiteDB.Tests.Database
                   log = 255;utc=true");
 
             Assert.AreEqual(@"c:\only;file""d""emo.db", full.Filename);
-            Assert.AreEqual(false, full.Journal);
             Assert.AreEqual("john-doe ", full.Password);
             Assert.AreEqual(1000, full.CacheSize);
             Assert.IsTrue(full.ReadOnly);

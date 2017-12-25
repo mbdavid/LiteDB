@@ -96,12 +96,6 @@ namespace LiteDB
                 this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
 
                 pageID = free.PageID;
-
-                // if used page has original disk data, copy to my new page
-                if (free.DiskData.Length > 0)
-                {
-                    diskData = free.DiskData;
-                }
             }
             else
             {
@@ -112,9 +106,6 @@ namespace LiteDB
             }
 
             var page = BasePage.CreateInstance<T>(pageID);
-
-            // copy disk data from re-used page (or be an empty)
-            page.DiskData = diskData;
 
             // add page to cache with correct T type (could be an old Empty page type)
             this.SetDirty(page);
