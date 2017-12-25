@@ -20,19 +20,13 @@ namespace LiteDB
             this.Journal = true;
             this.InitialSize = 0;
             this.LimitSize = long.MaxValue;
-#if HAVE_LOCK
             this.FileMode = FileMode.Shared;
-#else
-            this.FileMode = FileMode.Exclusive;
-#endif
         }
     }
 
     public enum FileMode
     {
-#if HAVE_LOCK
         Shared,
-#endif
         Exclusive,
         ReadOnly
     }

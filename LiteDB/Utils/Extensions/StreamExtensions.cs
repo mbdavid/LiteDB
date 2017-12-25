@@ -30,7 +30,6 @@ namespace LiteDB
             }
         }
 
-#if HAVE_LOCK
         /// <summary>
         /// Try unlock stream segment. Do nothing if was not possible (it's not locked)
         /// </summary>
@@ -62,6 +61,5 @@ namespace LiteDB
                 stream.Lock(position, length);
             }, timeout);
         }
-#endif
     }
 }

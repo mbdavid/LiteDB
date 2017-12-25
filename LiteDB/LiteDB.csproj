@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net35;net40;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
     <FileVersion>5.0.0</FileVersion>
@@ -35,12 +35,8 @@
   HAVE_PROCESS
   HAVE_ENVIRONMENT
   HAVE_SYNC_OVER_ASYNC
-  HAVE_LOCK
-  HAVE_THREAD_ID
   HAVE_TYPE_INFO
-  HAVE_EXPRESSION_ASSIGN
   HAVE_TASK_DELAY
-  HAVE_ATTR_DEFINED
   -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -48,14 +44,14 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <DefineConstants>NET40;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_THREAD_ID;</DefineConstants>
+    <DefineConstants>NET40;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>NETSTANDARD20;HAVE_SYNC_OVER_ASYNC;HAVE_TYPE_INFO;HAVE_TASK_DELAY;</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
     <Reference Include="System" />
   </ItemGroup>
 

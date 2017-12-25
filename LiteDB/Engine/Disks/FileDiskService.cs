@@ -254,7 +254,6 @@ namespace LiteDB
         /// </summary>
         public int Lock(LockState state, TimeSpan timeout)
         {
-#if HAVE_LOCK
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared) return 0;
 
@@ -266,9 +265,6 @@ namespace LiteDB
             _stream.TryLock(position, length, timeout);
 
             return position;
-#else
-            return 0;
-#endif
         }
 
         /// <summary>
@@ -276,7 +272,6 @@ namespace LiteDB
         /// </summary>
         public void Unlock(LockState state, int position)
         {
-#if HAVE_LOCK
             // only shared mode lock datafile
             if (_options.FileMode != FileMode.Shared || state == LockState.Unlocked) return;
 
@@ -285,7 +280,6 @@ namespace LiteDB
             _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
 
             _stream.TryUnlock(position, length);
-#endif
         }
 
         #endregion

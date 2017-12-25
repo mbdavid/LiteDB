@@ -47,11 +47,7 @@ namespace LiteDB
         {
             get
             {
-#if HAVE_THREAD_ID
-                return Thread.CurrentThread.ManagedThreadId;
-#else
                 return System.Threading.Tasks.Task.CurrentId ?? 0;
-#endif
             }
         }
 

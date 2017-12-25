@@ -40,7 +40,6 @@ namespace LiteDB
 
         public static GenericSetter CreateGenericSetter(Type type, MemberInfo memberInfo)
         {
-#if HAVE_EXPRESSION_ASSIGN
             if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
             
             var fieldInfo = memberInfo as FieldInfo;
@@ -75,23 +74,6 @@ namespace LiteDB
             var conv = Expression.Convert(assign, typeof(object));
             
             return Expression.Lambda<GenericSetter>(conv, target, value).Compile();
-#else
-            // when member is a field, use simple Reflection
-            if (memberInfo is FieldInfo)
-            {
-                var fieldInfo = memberInfo as FieldInfo;
-
-                return fieldInfo.SetValue;
-            }
-
-            // if is property, use invoke from setMethod
-            var propertyInfo = memberInfo as PropertyInfo;
-            var setMethod = propertyInfo.GetSetMethod(true);
-
-            if (setMethod == null) return null;
-
-            return (target, value) => setMethod.Invoke(target, new[] { value });
-#endif
         }
     }
 }

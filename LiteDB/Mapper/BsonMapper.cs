@@ -331,11 +331,7 @@ namespace LiteDB
         protected virtual MemberInfo GetIdMember(IEnumerable<MemberInfo> members)
         {
             return Reflection.SelectMember(members,
-#if HAVE_ATTR_DEFINED
                 x => Attribute.IsDefined(x, typeof(BsonIdAttribute), true),
-#else
-                x => x.GetCustomAttribute(typeof(BsonIdAttribute)) != null,
-#endif
                 x => x.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
                 x => x.Name.Equals(x.DeclaringType.Name + "Id", StringComparison.OrdinalIgnoreCase));
         }
