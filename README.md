@@ -1,3 +1,10 @@
+# NEXT
+- Remove FileOptions, create EngineOptions or DatabaseOptions
+- Async?
+
+
+
+
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
 [![Join the chat at https://gitter.im/mbdavid/LiteDB](https://badges.gitter.im/mbdavid/LiteDB.svg)](https://gitter.im/mbdavid/LiteDB?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build status](https://ci.appveyor.com/api/projects/status/sfe8he0vik18m033?svg=true)](https://ci.appveyor.com/project/mbdavid/litedb) [![Build Status](https://travis-ci.org/mbdavid/LiteDB.svg?branch=master)](https://travis-ci.org/mbdavid/LiteDB)
@@ -6,7 +13,7 @@ LiteDB is a small, fast and lightweight NoSQL embedded database.
 
 - Serverless NoSQL Document Store
 - Simple API similar to MongoDB
-- 100% C# code for .NET 3.5 / .NET 4.0 / NETStandard 1.3 / NETStandard 2.0 in a single DLL (less than 300kb)
+- 100% C# code for .NET 4.5 / NETStandard 2.0 in a single DLL (less than 300kb)
 - Thread safe and process safe
 - ACID in document/operation level
 - Data recovery after write failure (journal mode)
