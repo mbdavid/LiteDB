@@ -10,7 +10,7 @@ namespace LiteDB
         public bool Journal { get; set; }
         public long InitialSize { get; set; }
         public long LimitSize { get; set; }
-        public FileMode FileMode { get; set; }
+        public bool ReadOnly { get; set; }
 #if HAVE_SYNC_OVER_ASYNC
         public bool Async { get; set; }
 #endif
@@ -20,14 +20,7 @@ namespace LiteDB
             this.Journal = true;
             this.InitialSize = 0;
             this.LimitSize = long.MaxValue;
-            this.FileMode = FileMode.Shared;
+            this.ReadOnly = false;
         }
-    }
-
-    public enum FileMode
-    {
-        Shared,
-        Exclusive,
-        ReadOnly
     }
 }

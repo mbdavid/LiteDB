@@ -167,30 +167,6 @@ namespace LiteDB
 
         #endregion
 
-        #region Lock / Unlock
-
-        /// <summary>
-        /// Indicate disk can be access by multiples processes or not
-        /// </summary>
-        public bool IsExclusive { get { return true; } }
-
-        /// <summary>
-        /// Exclusive - no lock
-        /// </summary>
-        public int Lock(LockState state, TimeSpan timeout)
-        {
-            return 0;
-        }
-
-        /// <summary>
-        /// Exclusive - no lock
-        /// </summary>
-        public void Unlock(LockState state, int position)
-        {
-        }
-
-        #endregion
-
         #region Create Stream
 
         /// <summary>

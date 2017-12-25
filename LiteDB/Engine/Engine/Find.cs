@@ -44,16 +44,6 @@ namespace LiteDB
                     // lock read mode
                     using (var l = _locker.Read())
                     {
-                        // if file was changed, re-run query and skip already returned documents
-                        if (l.Changed)
-                        {
-                            var col = this.GetCollectionPage(collection, false);
-                            
-                            if (col == null) yield break;
-                            
-                            cursor.ReQuery(query.Run(col, _indexer).GetEnumerator());
-                        }
-
                         cursor.Fetch(_trans, _data, _bsonReader);
                     }
 

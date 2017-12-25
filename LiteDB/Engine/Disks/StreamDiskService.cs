@@ -118,11 +118,6 @@ namespace LiteDB
         #region Not implemented in Stream
 
         /// <summary>
-        /// Single process only
-        /// </summary>
-        public bool IsExclusive { get { return true; } }
-
-        /// <summary>
         /// No journal in Stream
         /// </summary>
         public bool IsJournalEnabled { get { return false; } }

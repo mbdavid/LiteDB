@@ -15,20 +15,11 @@ namespace LiteDB
         /// </summary>
         private const int PAGE_TYPE_POSITION = 4;
 
-        /// <summary>
-        /// Map lock positions
-        /// </summary>
-        internal const int LOCK_INITIAL_POSITION = BasePage.PAGE_SIZE; // use second page
-        internal const int LOCK_READ_LENGTH = 1;
-        internal const int LOCK_WRITE_LENGTH = 3000;
-
         private FileStream _stream;
         private string _filename;
 
         private Logger _log; // will be initialize in "Initialize()"
         private FileOptions _options;
-
-        private Random _lockReadRand = new Random();
 
         #region Initialize/Dispose disk
 
@@ -53,16 +44,13 @@ namespace LiteDB
             // get log instance to disk
             _log = log;
 
-            // if is read only, journal must be disabled
-            if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
-
             _log.Write(Logger.DISK, "open datafile '{0}'", Path.GetFileName(_filename));
 
             // open/create file using read only/exclusive options
             _stream = this.CreateFileStream(_filename,
-                _options.FileMode == FileMode.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
-                _options.FileMode == FileMode.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                _options.FileMode == FileMode.Exclusive ? FileShare.None : FileShare.ReadWrite);
+                _options.ReadOnly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
+                _options.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
+                FileShare.None);
 
             // if file is new, initialize
             if (_stream.Length == 0)
@@ -238,48 +226,6 @@ namespace LiteDB
             _log.Write(Logger.DISK, "flush data from memory to disk");
 
             _stream.Flush();
-        }
-
-        #endregion
-
-        #region Lock / Unlock
-
-        /// <summary>
-        /// Indicate disk can be access by multiples processes or not
-        /// </summary>
-        public bool IsExclusive { get { return _options.FileMode == FileMode.Exclusive; } }
-
-        /// <summary>
-        /// Implement datafile lock. Return lock position
-        /// </summary>
-        public int Lock(LockState state, TimeSpan timeout)
-        {
-            // only shared mode lock datafile
-            if (_options.FileMode != FileMode.Shared) return 0;
-
-            var position = state == LockState.Read ? _lockReadRand.Next(LOCK_INITIAL_POSITION, LOCK_INITIAL_POSITION + LOCK_WRITE_LENGTH) : LOCK_INITIAL_POSITION;
-            var length = state == LockState.Read ? 1 : LOCK_WRITE_LENGTH;
-
-            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
-
-            _stream.TryLock(position, length, timeout);
-
-            return position;
-        }
-
-        /// <summary>
-        /// Unlock datafile based on state and position
-        /// </summary>
-        public void Unlock(LockState state, int position)
-        {
-            // only shared mode lock datafile
-            if (_options.FileMode != FileMode.Shared || state == LockState.Unlocked) return;
-
-            var length = state == LockState.Read ? LOCK_READ_LENGTH : LOCK_WRITE_LENGTH;
-
-            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
-
-            _stream.TryUnlock(position, length);
         }
 
         #endregion

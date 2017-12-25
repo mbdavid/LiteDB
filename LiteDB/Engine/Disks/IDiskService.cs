@@ -32,11 +32,6 @@ namespace LiteDB
         long FileLength { get; }
 
         /// <summary>
-        /// Indicate that disk/instance are data access exclusive (no other process can access)
-        /// </summary>
-        bool IsExclusive { get; }
-
-        /// <summary>
         /// Get if journal are enabled or not. Can optimize with has no jounal
         /// </summary>
         bool IsJournalEnabled { get; }
@@ -60,15 +55,5 @@ namespace LiteDB
         /// Ensures all pages from the OS cache are persisted on medium
         /// </summary>
         void Flush();
-
-        /// <summary>
-        /// Lock datafile returning lock position
-        /// </summary>
-        int Lock(LockState state, TimeSpan timeout);
-
-        /// <summary>
-        /// Unlock datafile based on last state
-        /// </summary>
-        void Unlock(LockState state, int position);
     }
 }

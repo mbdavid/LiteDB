@@ -22,7 +22,6 @@ namespace LiteDB.Demo
 
             var disk = new FileDiskService(filename, new FileOptions
             {
-                FileMode = FileMode.Exclusive,
                 Journal = false
             });
 

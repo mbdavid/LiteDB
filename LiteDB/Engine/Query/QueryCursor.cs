@@ -39,15 +39,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// ReQuery result and set skip counter to current position
-        /// </summary>
-        public void ReQuery(IEnumerator<IndexNode> nodes)
-        {
-            _nodes = nodes;
-            _skip = _position;
-        }
-
-        /// <summary>
         /// Fetch documents from enumerator and add to buffer. If cache recycle, stop read to execute in another read
         /// </summary>
         public void Fetch(TransactionService trans, DataService data, BsonReader bsonReader)

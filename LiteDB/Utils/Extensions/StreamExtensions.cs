@@ -29,37 +29,5 @@ namespace LiteDB
                 output.Write(buffer, 0, bytesRead);
             }
         }
-
-        /// <summary>
-        /// Try unlock stream segment. Do nothing if was not possible (it's not locked)
-        /// </summary>
-        public static bool TryUnlock(this FileStream stream, long position, long length)
-        {
-            if (length == 0) return true;
-
-            try
-            {
-                stream.Unlock(position, length);
-
-                return true;
-            }
-            catch (IOException)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Try lock a stream segment during timeout.
-        /// </summary>
-        public static void TryLock(this FileStream stream, long position, long length, TimeSpan timeout)
-        {
-            if (length == 0) return;
-
-            FileHelper.TryExec(() =>
-            {
-                stream.Lock(position, length);
-            }, timeout);
-        }
     }
 }

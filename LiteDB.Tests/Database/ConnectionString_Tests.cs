@@ -37,7 +37,7 @@ namespace LiteDB.Tests.Database
                   cache SIZE = 1000 ;
                   timeout = 00:05:00 ;
                   initial size = 10 MB ;
-                  mode =  excluSIVE ;
+                  read only =  TRUE;
                   limit SIZE = 20mb;
                   log = 255;utc=true");
 
@@ -45,7 +45,7 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(false, full.Journal);
             Assert.AreEqual("john-doe ", full.Password);
             Assert.AreEqual(1000, full.CacheSize);
-            Assert.AreEqual(FileMode.Exclusive, full.Mode);
+            Assert.IsTrue(full.ReadOnly);
             Assert.AreEqual(TimeSpan.FromMinutes(5), full.Timeout);
             Assert.AreEqual(10 * 1024 * 1024, full.InitialSize);
             Assert.AreEqual(20 * 1024 * 1024, full.LimitSize);

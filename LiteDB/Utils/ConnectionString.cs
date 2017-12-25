@@ -40,9 +40,9 @@ namespace LiteDB
         public TimeSpan Timeout { get; set; }
 
         /// <summary>
-        /// "mode": Define if datafile will be shared, exclusive or read only access (default: Shared)
+        /// "read only": Define if datafile will be read only, with no insert/update/delete data (default: false)
         /// </summary>
-        public FileMode Mode { get; set; }
+        public bool ReadOnly { get; set; }
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
@@ -108,7 +108,7 @@ namespace LiteDB
             this.Password = values.GetValue<string>("password", null);
             this.CacheSize = values.GetValue(@"cache size", 5000);
             this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));
-            this.Mode = values.GetValue("mode", FileMode.Shared);
+            this.ReadOnly = values.GetValue<bool>("read only", false);
             this.InitialSize = values.GetFileSize(@"initial size", 0);
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.Log = values.GetValue("log", Logger.NONE);
