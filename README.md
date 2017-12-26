@@ -1,16 +1,13 @@
 # NEXT
-
 - Internal visible in tests
 - Test password do not storing password sha1 
-- Review logs (with #DEBUG call)
-- Do tests with Async operations
 - Rename LiteEngine to DbEngine with minimum data access methods
 
-- Fix CreateDatabase initial size (back to simple way) + remove password in header
+
+
+# FUTURE
+- Review logs (with #DEBUG call)
 - Fix database info
-
-
-# TESTS REMOVED
 
 
 # LiteDB - A .NET NoSQL Document Store in a single data file
