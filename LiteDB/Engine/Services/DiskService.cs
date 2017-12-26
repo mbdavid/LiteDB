@@ -39,10 +39,7 @@ namespace LiteDB
             lock (_stream)
             {
                 // position cursor
-                if (_stream.Position != position)
-                {
-                    _stream.Seek(position, SeekOrigin.Begin);
-                }
+                _stream.Position = position;
 
                 // read bytes from data file
                 _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
@@ -62,13 +59,13 @@ namespace LiteDB
 
             _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
-            // position cursor
-            if (_stream.Position != position)
+            lock (_stream)
             {
-                _stream.Seek(position, SeekOrigin.Begin);
-            }
+                // position cursor
+                _stream.Position = position;
 
-            _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+                _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
+            }
         }
 
         public long FileLength => _stream.Length;

@@ -113,7 +113,7 @@ namespace LiteDB
             }
             else if (this.Filename == ":temp:")
             {
-                return new MemoryStream();
+                return new TempStream(5000 * BasePage.PAGE_SIZE);
             }
             else
             {

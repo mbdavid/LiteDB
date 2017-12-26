@@ -1,6 +1,6 @@
 # NEXT
-- Implement TempStream : Stream (using MemoryStream + FileStream after size X)
 
+- Internal visible in tests
 - Test password do not storing password sha1 
 - Review logs (with #DEBUG call)
 - Do tests with Async operations
