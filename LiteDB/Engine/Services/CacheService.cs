@@ -16,10 +16,10 @@ namespace LiteDB
         /// </summary>
         private Dictionary<uint, BasePage> _dirty = new Dictionary<uint, BasePage>();
 
-        private IDiskService _disk;
+        private DiskService _disk;
         private Logger _log;
 
-        public CacheService(IDiskService disk, Logger log)
+        public CacheService(DiskService disk, Logger log)
         {
             _disk = disk;
             _log = log;

@@ -23,7 +23,7 @@ namespace LiteDB.Tests.Engine
                 Assert.IsTrue(plain.ReadAsText().Contains("Mauricio David"));
 
                 // create a database with password
-                using (var db = new LiteEngine(encrypt.Filename, "abc123"))
+                using (var db = new LiteEngine(new ConnectionString { Filename = encrypt.Filename, Password = "abc123" }))
                 {
                     db.Insert("col", new BsonDocument { { "name", "Mauricio David" } });
                 }
@@ -34,7 +34,7 @@ namespace LiteDB.Tests.Engine
                 // try access using wrong password
                 try
                 {
-                    using (var db = new LiteEngine(encrypt.Filename, "abc1234"))
+                    using (var db = new LiteEngine(new ConnectionString { Filename = encrypt.Filename, Password = "abc1234" }))
                     {
                         Assert.Fail(); // can't work
                     }
@@ -45,14 +45,14 @@ namespace LiteDB.Tests.Engine
                 }
 
                 // open encrypted db and read document
-                using (var db = new LiteEngine(encrypt.Filename, "abc123"))
+                using (var db = new LiteEngine(new ConnectionString { Filename = encrypt.Filename, Password = "abc123" }))
                 {
                     var doc = db.Find("col", Query.All()).First();
 
                     Assert.AreEqual("Mauricio David", doc["name"].AsString);
 
                     // let's remove password to work CheckIntegrety
-                    db.Shrink(null, null);
+                    db.Shrink(null);
                 }
             }
         }

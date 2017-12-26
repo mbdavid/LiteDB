@@ -31,10 +31,9 @@ namespace LiteDB
                 var last = order == Query.Ascending ? BsonValue.MaxValue : BsonValue.MinValue;
                 var total = limit == int.MaxValue ? int.MaxValue : skip + limit;
                 var indexCounter = 0;
-                var disk = new TempDiskService();
 
                 // create memory database
-                using (var engine = new LiteEngine(disk))
+                using (var engine = new LiteEngine(new ConnectionString { Filename = ":temp:" }))
                 {
                     // get collection page
                     var col = this.GetCollectionPage(collection, false);

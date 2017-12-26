@@ -74,7 +74,7 @@ namespace LiteDB.Tests.Concurrency
                         {
                             { "_id", i },
                             { "updated", true },
-                            { "name", TempFile.LoremIpsum(5, 10, 1, 5, 1) }
+                            { "name", LoremIpsum.Generate(5, 10, 1, 5, 1) }
                         };
 
                         if (db.Update("col", doc)) i++;

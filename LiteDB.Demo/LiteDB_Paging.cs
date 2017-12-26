@@ -20,9 +20,7 @@ namespace LiteDB.Demo
         {
             File.Delete(filename);
 
-            var disk = new FileDiskService(filename);
-
-            _engine = new LiteEngine(disk, cacheSize: 50000);
+            _engine = new LiteEngine(filename);
         }
 
         public void Populate(IEnumerable<BsonDocument> docs)

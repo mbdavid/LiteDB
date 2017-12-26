@@ -10,8 +10,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_Order()
         {
-            using (var tmp = new TempFile())
-            using (var db = new LiteEngine(tmp.Filename))
+            using (var db = new LiteEngine())
             {
                 db.Insert("col", new BsonDocument { { "text", "D" } });
                 db.Insert("col", new BsonDocument { { "text", "A" } });

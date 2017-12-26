@@ -12,33 +12,10 @@ namespace LiteDB.Tests
 
         public string Filename { get; private set; }
 
-        public TempFile(string ext = "db", bool checkIntegrity = true)
+        public TempFile(bool checkIntegrity = true)
         {
-            this.Filename = Path.Combine(Path.GetTempPath(), string.Format("test-{0}.{1}", Guid.NewGuid(), ext));
+            this.Filename = Path.Combine(Path.GetTempPath(), string.Format("test-{0}.{1}", Guid.NewGuid(), ".db"));
             _checkIntegrity = checkIntegrity;
-        }
-
-        public void CreateDatafile()
-        {
-            using (var s = new FileStream(Filename, System.IO.FileMode.CreateNew))
-            {
-                LiteEngine.CreateDatabase(s);
-            }
-        }
-
-        public IDiskService Disk()
-        {
-            return new FileDiskService(Filename);
-        }
-
-        public IDiskService Disk(FileOptions options)
-        {
-            return new FileDiskService(Filename, options);
-        }
-
-        public string Conn(string connectionString)
-        {
-            return "filename=\"" + this.Filename + "\";" + connectionString;
         }
 
         #region Dispose
@@ -98,21 +75,21 @@ namespace LiteDB.Tests
             {
                 var cols = db.GetCollectionNames().ToArray();
 
-                foreach(var col in cols)
+                foreach (var col in cols)
                 {
                     var indexes = db.GetIndexes(col).ToArray();
 
-                    foreach(var idx in indexes)
+                    foreach (var idx in indexes)
                     {
                         var q = db.Find(col, Query.All(idx.Field));
 
-                        foreach(var doc in q)
+                        foreach (var doc in q)
                         {
                             // document are ok!
                         }
 
                         // lets drop this index (if not _id)
-                        if(idx.Field != "_id")
+                        if (idx.Field != "_id")
                         {
                             db.DropIndex(col, idx.Field);
                         }
@@ -126,40 +103,5 @@ namespace LiteDB.Tests
                 db.Shrink();
             }
         }
-
-        #region LoremIpsum Generator
-
-        public static string LoremIpsum(int minWords, int maxWords,
-            int minSentences, int maxSentences,
-            int numParagraphs)
-        {
-            var words = new[] { "lorem", "ipsum", "dolor", "sit", "amet", "consectetuer",
-                "adipiscing", "elit", "sed", "diam", "nonummy", "nibh", "euismod",
-                "tincidunt", "ut", "laoreet", "dolore", "magna", "aliquam", "erat" };
-
-            var rand = new Random(DateTime.Now.Millisecond);
-            var numSentences = rand.Next(maxSentences - minSentences) + minSentences + 1;
-            var numWords = rand.Next(maxWords - minWords) + minWords + 1;
-
-            var result = new StringBuilder();
-
-            for (int p = 0; p < numParagraphs; p++)
-            {
-                for (int s = 0; s < numSentences; s++)
-                {
-                    for (int w = 0; w < numWords; w++)
-                    {
-                        if (w > 0) { result.Append(" "); }
-                        result.Append(words[rand.Next(words.Length)]);
-                    }
-                    result.Append(". ");
-                }
-                result.AppendLine();
-            }
-
-            return result.ToString();
-        }
-
-        #endregion
     }
 }

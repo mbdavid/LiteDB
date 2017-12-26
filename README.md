@@ -1,11 +1,16 @@
 # NEXT
-- Hide Database, Mapper, FileStorage, Shell, +Tests from solution
-- Remove FileOptions, use only ConnectionString
-- Keep LiteEngine with minimum data access methods
+- Implement TempStream : Stream (using MemoryStream + FileStream after size X)
 
-- Async
+- Test password do not storing password sha1 
+- Review logs (with #DEBUG call)
+- Do tests with Async operations
+- Rename LiteEngine to DbEngine with minimum data access methods
+
+- Fix CreateDatabase initial size (back to simple way) + remove password in header
+- Fix database info
 
 
+# TESTS REMOVED
 
 
 # LiteDB - A .NET NoSQL Document Store in a single data file

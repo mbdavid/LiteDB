@@ -15,7 +15,7 @@ namespace LiteDB
 
         private LockService _locker;
 
-        private IDiskService _disk;
+        private DiskService _disk;
 
         private CacheService _cache;
 
@@ -31,102 +31,61 @@ namespace LiteDB
 
         private AesEncryption _crypto;
 
-        private int _cacheSize;
-
-        private TimeSpan _timeout;
-
         private BsonReader _bsonReader;
         private BsonWriter _bsonWriter = new BsonWriter();
+
+        private ConnectionString _options;
 
         /// <summary>
         /// Get log instance for debug operations
         /// </summary>
         public Logger Log { get { return _log; } }
 
-        /// <summary>
-        /// Get memory cache size limit. Works only with journal enabled (number in pages). If journal is disabled, pages in cache can exceed this limit. Default is 5000 pages
-        /// </summary>
-        public int CacheSize { get { return _cacheSize; } }
-
-        /// <summary>
-        /// Get how many pages are on cache
-        /// </summary>
-        public int CacheUsed { get { return _cache.CleanUsed; } }
-
-        /// <summary>
-        /// Gets time waiting write lock operation before throw LiteException timeout
-        /// </summary>
-        public TimeSpan Timeout { get { return _timeout; } }
-
-        /// <summary>
-        /// Instance of locker control
-        /// </summary>
-        public LockService Locker { get { return _locker; } }
-
         #endregion
 
         #region Ctor
 
         /// <summary>
-        /// Initialize LiteEngine using default FileDiskService
+        /// Initialize LiteEngine using memory database
         /// </summary>
-        public LiteEngine(string filename)
-            : this(new FileDiskService(filename))
+        public LiteEngine()
+            : this(new ConnectionString())
         {
         }
 
         /// <summary>
-        /// Initialize LiteEngine with password encryption
+        /// Initialize LiteEngine using default file implementation
         /// </summary>
-        public LiteEngine(string filename, string password)
-            : this(new FileDiskService(filename), password)
+        public LiteEngine(string connectionString)
+            : this(new ConnectionString(connectionString))
         {
         }
 
         /// <summary>
-        /// Initialize LiteEngine using StreamDiskService
+        /// Initialize LiteEngine using full connection string options, stream (if null use connection string GetStream()) and logger instance (if null create new)
         /// </summary>
-        public LiteEngine(Stream stream, string password = null)
-            : this(new StreamDiskService(stream), password)
+        public LiteEngine(ConnectionString connectionString, Stream datafile = null, Logger log = null)
         {
-        }
+            _options = connectionString;
+            _log = log ?? new Logger(_options.Log);
 
-        /// <summary>
-        /// Initialize LiteEngine using custom disk service implementation and full engine options
-        /// </summary>
-        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null, bool utcDate = false)
-        {
-            if (disk == null) throw new ArgumentNullException(nameof(disk));
+            // get stream implementation from connection string
+            var stream = datafile ?? _options.GetStream();
 
-            _timeout = timeout ?? TimeSpan.FromMinutes(1);
-            _cacheSize = cacheSize;
-            _disk = disk;
-            _log = log ?? new Logger();
-            _bsonReader = new BsonReader(utcDate);
+            // initialize disk and create new database if needed (dispose only if stream was not passed)
+            _disk = new DiskService(stream, _options.InitialSize, datafile == null, _log);
 
             try
             {
-                // initialize datafile (create) and set log instance
-                _disk.Initialize(_log, password);
-
                 var buffer = _disk.ReadPage(0);
 
                 // create header instance from array bytes
                 var header = BasePage.ReadPage(buffer) as HeaderPage;
 
-                // hash password with sha1 or keep as empty byte[20]
-                var sha1 = password == null ? new byte[20] : AesEncryption.HashSHA1(password);
-
-                // compare header password with user password even if not passed password (datafile can have password)
-                if (sha1.BinaryCompareTo(header.Password) != 0)
-                {
-                    throw LiteException.DatabaseWrongPassword();
-                }
-
                 // initialize AES encryptor
-                if (password != null)
+                if (_options.Password != null)
                 {
-                    _crypto = new AesEncryption(password, header.Salt);
+                    _crypto = new AesEncryption(_options.Password, header.Salt);
                 }
 
                 // initialize all services
@@ -145,12 +104,14 @@ namespace LiteDB
         /// </summary>
         private void InitializeServices()
         {
+            _bsonReader = new BsonReader(_options.UtcDate);
+
             _cache = new CacheService(_disk, _log);
-            _locker = new LockService(_disk, _cache, _timeout, _log);
+            _locker = new LockService(_disk, _cache, _options.Timeout, _log);
             _pager = new PageService(_disk, _crypto, _cache, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
-            _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _cacheSize, _log);
+            _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _log);
             _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 
@@ -213,61 +174,6 @@ namespace LiteDB
 
             // dispose crypto
             if (_crypto != null) _crypto.Dispose();
-        }
-
-        /// <summary>
-        /// Initialize new datafile with header page + lock reserved area zone
-        /// </summary>
-        public static void CreateDatabase(Stream stream, string password = null, long initialSize = 0)
-        {
-            // calculate how many empty pages will be added on disk
-            var emptyPages = initialSize == 0 ? 0 : (initialSize - (2 * BasePage.PAGE_SIZE)) / BasePage.PAGE_SIZE;
-
-            // if too small size (less than 2 pages), assume no initial size
-            if (emptyPages < 0) emptyPages = 0;
-
-            // create a new header page in bytes (keep second page empty)
-            var header = new HeaderPage
-            {
-                LastPageID = initialSize == 0 ? 1 : (uint)emptyPages + 1,
-                FreeEmptyPageID = initialSize == 0 ? uint.MaxValue : 2
-            };
-
-            if (password != null)
-            {
-                header.Password = AesEncryption.HashSHA1(password);
-                header.Salt = AesEncryption.Salt();
-            }
-
-            // point to begin file
-            stream.Seek(0, SeekOrigin.Begin);
-
-            // get header page in bytes
-            var buffer = header.WritePage();
-
-            stream.Write(buffer, 0, BasePage.PAGE_SIZE);
-
-            // write second page as an empty AREA (it's not a page) just to use as lock control
-            stream.Write(new byte[BasePage.PAGE_SIZE], 0, BasePage.PAGE_SIZE);
-
-            // if initial size is defined, lets create empty pages in a linked list
-            if (emptyPages > 0)
-            {
-                stream.SetLength(initialSize);
-
-                var pageID = 1u;
-
-                while(++pageID < (emptyPages + 2))
-                {
-                    var empty = new EmptyPage(pageID)
-                    {
-                        PrevPageID = pageID == 2 ? 0 : pageID - 1,
-                        NextPageID = pageID == emptyPages + 1 ? uint.MaxValue : pageID + 1
-                    };
-
-                    stream.Write(empty.WritePage(), 0, BasePage.PAGE_SIZE);
-                }
-            }
         }
     }
 }

@@ -7,11 +7,11 @@ namespace LiteDB
     internal class PageService
     {
         private CacheService _cache;
-        private IDiskService _disk;
+        private DiskService _disk;
         private AesEncryption _crypto;
         private Logger _log;
 
-        public PageService(IDiskService disk, AesEncryption crypto, CacheService cache, Logger log)
+        public PageService(DiskService disk, AesEncryption crypto, CacheService cache, Logger log)
         {
             _disk = disk;
             _crypto = crypto;

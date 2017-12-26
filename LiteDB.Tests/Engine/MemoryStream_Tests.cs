@@ -17,13 +17,13 @@ namespace LiteDB.Tests.Engine
         {
             var mem = new MemoryStream();
 
-            using (var db = new LiteEngine(mem))
+            using (var db = new LiteEngine(new ConnectionString(), mem))
             {
                 db.Insert("col", new BsonDocument { { "_id", 1 } , { "name", "John" } });
                 db.Insert("col", new BsonDocument { { "_id", 2 }, { "name", "Doe" } });
             }
 
-            using (var db = new LiteEngine(mem))
+            using (var db = new LiteEngine(new ConnectionString(), mem))
             {
                 var john = db.Find("col", Query.EQ("_id", 1)).FirstOrDefault();
                 var doe = db.Find("col", Query.EQ("_id", 2)).FirstOrDefault();

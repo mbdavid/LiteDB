@@ -9,10 +9,10 @@ namespace LiteDB.Tests.Concurrency
         [TestMethod]
         public void Loop_With_Update()
         {
-            using (var tmp = new TempFile())
+            using (var file = new TempFile())
             {
                 // initialize database with 4
-                using (var db = new LiteEngine(tmp.Filename))
+                using (var db = new LiteEngine(file.Filename))
                 {
                     db.Insert("col", new BsonDocument { { "Number", 1 } }, BsonType.Int32);
                     db.Insert("col", new BsonDocument { { "Number", 2 } }, BsonType.Int32);
@@ -21,7 +21,7 @@ namespace LiteDB.Tests.Concurrency
                     db.Insert("col", new BsonDocument { { "Number", 5 } }, BsonType.Int32);
                 }
 
-                using (var db = new LiteEngine(tmp.Filename))
+                using (var db = new LiteEngine(file.Filename))
                 {
                     foreach (var doc in db.Find("col", Query.All(), 0, 1000))
                     {

@@ -10,8 +10,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void DropCollection()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteEngine())
             {
                 Assert.IsFalse(db.GetCollectionNames().Any(x => x == "col"));
 

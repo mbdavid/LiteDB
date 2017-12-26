@@ -15,61 +15,54 @@ namespace LiteDB
     public class ConnectionString
     {
         /// <summary>
-        /// "filename": Full path or relative path from DLL directory
+        /// "filename": Full path or relative path from DLL directory (default: ':memory:')
         /// </summary>
-        public string Filename { get; set; }
+        public string Filename { get; set; } = ":memory:"; 
 
         /// <summary>
         /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
         /// </summary>
-        public string Password { get; set; }
-
-        /// <summary>
-        /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (default: 5000)
-        /// </summary>
-        public int CacheSize { get; set; }
+        public string Password { get; set; } = null;
 
         /// <summary>
         /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
-        public TimeSpan Timeout { get; set; }
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// "read only": Define if datafile will be read only, with no insert/update/delete data (default: false)
         /// </summary>
-        public bool ReadOnly { get; set; }
+        public bool ReadOnly { get; set; } = false;
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
         /// </summary>
-        public long InitialSize { get; set; }
+        public long InitialSize { get; set; } = 0;
 
         /// <summary>
         /// "limit size": Max limit of datafile - support KB, MB, GB (default: null)
         /// </summary>
-        public long LimitSize { get; set; }
+        public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
         /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
         /// </summary>
-        public byte Log { get; set; }
+        public byte Log { get; set; } = Logger.NONE;
 
         /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)
         /// </summary>
-        public bool UtcDate { get; set; }
+        public bool UtcDate { get; set; } = false;
 
-        /// <summary>
-        /// "upgrade": Test if database is in old version and update if needed (default: false)
-        /// </summary>
-        public bool Upgrade { get; set; }
-
-#if HAVE_SYNC_OVER_ASYNC
         /// <summary>
         /// "async": Use "sync over async" to UWP apps access any directory
         /// </summary>
-        public bool Async { get; set; }
-#endif
+        public bool Async { get; set; } = false;
+
+        /// <summary>
+        /// "flush": If true, force flush to disk (default: false)
+        /// </summary>
+        public bool Flush { get; set; } = false;
 
         /// <summary>
         /// Initialize empty connection string
@@ -98,19 +91,39 @@ namespace LiteDB
             }
 
             // setting values to properties
-            this.Filename = values.GetValue("filename", "");
+            this.Filename = values.GetValue<string>("filename", null);
             this.Password = values.GetValue<string>("password", null);
-            this.CacheSize = values.GetValue(@"cache size", 5000);
             this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));
             this.ReadOnly = values.GetValue<bool>("read only", false);
             this.InitialSize = values.GetFileSize(@"initial size", 0);
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.Log = values.GetValue("log", Logger.NONE);
             this.UtcDate = values.GetValue("utc", false);
-            this.Upgrade = values.GetValue("upgrade", false);
-#if HAVE_SYNC_OVER_ASYNC
             this.Async = values.GetValue("async", false);
-#endif
+        }
+
+        /// <summary>
+        /// Get stream implementation based on filename
+        /// </summary>
+        internal Stream GetStream()
+        {
+            if (this.Filename == ":memory:")
+            {
+                return new MemoryStream();
+            }
+            else if (this.Filename == ":temp:")
+            {
+                return new MemoryStream();
+            }
+            else
+            {
+                return new FileStream(this.Filename,
+                    this.ReadOnly ? FileMode.Open : FileMode.OpenOrCreate,
+                    this.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
+                    this.ReadOnly ? FileShare.Read : FileShare.None,
+                    BasePage.PAGE_SIZE,
+                    FileOptions.RandomAccess);
+            }
         }
     }
 }

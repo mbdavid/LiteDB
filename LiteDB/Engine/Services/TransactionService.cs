@@ -9,22 +9,20 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService
     {
-        private IDiskService _disk;
+        private DiskService _disk;
         private AesEncryption _crypto;
         private LockService _locker;
         private PageService _pager;
         private CacheService _cache;
         private Logger _log;
-        private int _cacheSize;
 
-        internal TransactionService(IDiskService disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, int cacheSize, Logger log)
+        internal TransactionService(DiskService disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, Logger log)
         {
             _disk = disk;
             _crypto = crypto;
             _cache = cache;
             _locker = locker;
             _pager = pager;
-            _cacheSize = cacheSize;
             _log = log;
         }
 
@@ -36,14 +34,14 @@ namespace LiteDB
         /// </summary>
         public bool CheckPoint()
         {
-            if (_cache.CleanUsed > _cacheSize)
-            {
-                _log.Write(Logger.CACHE, "cache size reached {0} pages, will clear now", _cache.CleanUsed);
-
-                _cache.ClearPages();
-
-                return true;
-            }
+            // if (_cache.CleanUsed > _cacheSize)
+            // {
+            //     _log.Write(Logger.CACHE, "cache size reached {0} pages, will clear now", _cache.CleanUsed);
+            // 
+            //     _cache.ClearPages();
+            // 
+            //     return true;
+            // }
 
             return false;
         }

@@ -42,11 +42,6 @@ namespace LiteDB
         public ushort UserVersion { get; set; }
 
         /// <summary>
-        /// Password hash in SHA1 [20 bytes]
-        /// </summary>
-        public byte[] Password { get; set; }
-
-        /// <summary>
         /// When using encryption, store salt for password
         /// </summary>
         public byte[] Salt { get; set; }
@@ -65,7 +60,6 @@ namespace LiteDB
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
             this.UserVersion = 0;
-            this.Password = new byte[20];
             this.Salt = new byte[16];
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
@@ -84,7 +78,6 @@ namespace LiteDB
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.UserVersion = reader.ReadUInt16();
-            this.Password = reader.ReadBytes(this.Password.Length);
             this.Salt = reader.ReadBytes(this.Salt.Length);
 
             // read page collections references (position on end of page)
@@ -93,10 +86,6 @@ namespace LiteDB
             {
                 this.CollectionPages.Add(reader.ReadString(), reader.ReadUInt32());
             }
-
-            // use last page byte position for recovery mode only because i forgot to reserve area before collection names!
-            // TODO: fix this in next change data structure
-            reader.Position = BasePage.PAGE_SIZE - 1;
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -107,7 +96,6 @@ namespace LiteDB
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.UserVersion);
-            writer.Write(this.Password);
             writer.Write(this.Salt);
 
             writer.Write((byte)this.CollectionPages.Count);
@@ -116,8 +104,6 @@ namespace LiteDB
                 writer.Write(key);
                 writer.Write(this.CollectionPages[key]);
             }
-
-            writer.Position = BasePage.PAGE_SIZE - 1;
         }
 
         #endregion

@@ -7,17 +7,18 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
-        /// Reduce disk size re-arranging unused spaces. Can change password. If temporary disk was not provided, use MemoryStream temp disk
+        /// Reduce disk size re-arranging unused spaces. Can change password.
         /// </summary>
-        public long Shrink(string password = null, IDiskService tempDisk = null)
+        public long Shrink(string password = null)
         {
             var originalSize = _disk.FileLength;
 
             // if temp disk are not passed, use memory stream disk
-            using (var temp = tempDisk ?? new StreamDiskService(new MemoryStream()))
             using (_locker.Write())
-            using (var engine = new LiteEngine(temp, password))
+            using (var engine = new LiteEngine(new ConnectionString { Filename = ":temp:", Password = password }))
             {
+                var temp = engine._disk;
+
                 // read all collection
                 foreach (var collectionName in this.GetCollectionNames())
                 {

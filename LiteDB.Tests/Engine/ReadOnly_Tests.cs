@@ -21,7 +21,7 @@ namespace LiteDB.Tests.Engine
                     db.Insert("col", new BsonDocument { { "_id", 1 } });
                 }
 
-                using (var r = new LiteEngine(new FileDiskService(file.Filename, new FileOptions { ReadOnly = true })))
+                using (var r = new LiteEngine(new ConnectionString { Filename = file.Filename, ReadOnly = true }))
                 {
                     var doc = r.Find("col", Query.EQ("_id", 1)).FirstOrDefault();
 

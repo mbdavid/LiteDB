@@ -84,7 +84,7 @@ namespace LiteDB.Tests.Engine
                 }
 
                 // re-open, again, but now with password
-                using (var db = new LiteEngine(file.Filename, "abc123"))
+                using (var db = new LiteEngine(new ConnectionString { Filename = file.Filename, Password = "abc123" }))
                 {
                     DoTest(db);
 
@@ -106,7 +106,7 @@ namespace LiteDB.Tests.Engine
                     { "_id", i },
                     { "name", Guid.NewGuid().ToString() },
                     { "first", "John" },
-                    { "lorem", TempFile.LoremIpsum(3, 5, 2, 3, 3) }
+                    { "lorem", LoremIpsum.Generate(3, 5, 2, 3, 3) }
                 };
             }
         }

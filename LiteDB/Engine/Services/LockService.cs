@@ -15,12 +15,12 @@ namespace LiteDB
         #region Properties + Ctor
 
         private TimeSpan _timeout;
-        private IDiskService _disk;
+        private DiskService _disk;
         private CacheService _cache;
         private Logger _log;
         private ReaderWriterLockSlim _thread = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
-        internal LockService(IDiskService disk, CacheService cache, TimeSpan timeout, Logger log)
+        internal LockService(DiskService disk, CacheService cache, TimeSpan timeout, Logger log)
         {
             _disk = disk;
             _cache = cache;

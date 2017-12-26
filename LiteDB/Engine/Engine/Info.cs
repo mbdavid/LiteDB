@@ -43,7 +43,7 @@ namespace LiteDB
                 return new BsonDocument
                 {
                     { "userVersion", (int)header.UserVersion },
-                    { "encrypted", header.Password.Any(x => x > 0) },
+//                    { "encrypted", header.Password.Any(x => x > 0) },
                     { "changeID", (int)header.ChangeID },
                     { "lastPageID", (int)header.LastPageID },
                     { "fileSize", BasePage.GetSizeOfPages(header.LastPageID + 1) },

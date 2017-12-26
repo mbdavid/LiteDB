@@ -37,8 +37,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Engine_Upsert_Documents()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteEngine())
             {
                 var doc1 = new BsonDocument { { "_id", 1 }, { "name", "John" } };
 
@@ -62,8 +61,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Engine_Delete_Documents()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteEngine())
             {
                 var doc1 = new BsonDocument { { "_id", 1 }, { "name", "John" } };
                 var doc2 = new BsonDocument { { "_id", 2 }, { "name", "Doe" } };
@@ -79,8 +77,7 @@ namespace LiteDB.Tests.Engine
 
         public void Engine_QueryUpdate_Documents()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteEngine())
             {
                 db.EnsureIndex("col", "name");
 

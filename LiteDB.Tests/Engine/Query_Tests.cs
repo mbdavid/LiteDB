@@ -26,7 +26,7 @@ namespace LiteDB.Tests.Engine
 
         public void ExecuteQuery(bool createIndex)
         {
-            using (var db = new LiteEngine(new MemoryStream()))
+            using (var db = new LiteEngine())
             {
                 db.Insert("col", new BsonDocument[]
                 {
@@ -83,8 +83,7 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Query_Using_First_Linq()
         {
-            using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteEngine())
             {
                 db.Insert("col", new BsonDocument[]
                 {
