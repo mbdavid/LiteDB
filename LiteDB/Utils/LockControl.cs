@@ -8,7 +8,11 @@ namespace LiteDB
     /// </summary>
     public class LockControl : IDisposable
     {
-        private Action _dispose;
+        private Action _dispose = null;
+
+        internal LockControl()
+        {
+        }
 
         internal LockControl(Action dispose)
         {

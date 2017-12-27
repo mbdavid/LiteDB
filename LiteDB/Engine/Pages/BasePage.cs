@@ -173,7 +173,7 @@ namespace LiteDB
 
         private void ReadHeader(ByteReader reader)
         {
-            // first 5 bytes (pageID + pageType) was readed before class create
+            // first 5 bytes (pageID + pageType) was read before class create
             // this.PageID
             // this.PageType
 

@@ -62,26 +62,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Initialize LiteEngine using full connection string options, stream (if null use connection string GetStream()) and logger instance (if null create new)
+        /// Initialize LiteEngine using full connection string options, stream factory (if null use connection string GetStream()) and logger instance (if null create new)
         /// </summary>
-        public LiteEngine(ConnectionString connectionString, Stream datafile = null, Logger log = null)
+        public LiteEngine(ConnectionString connectionString, Action<Stream> factory = null, Logger log = null)
         {
             _options = connectionString;
             _log = log ?? new Logger(_options.Log);
 
-            // get stream implementation from connection string
-            var stream = datafile ?? _options.GetStream();
-
-            // initialize disk and create new database if needed (dispose only if stream was not passed)
-            _disk = new DiskService(stream, _options.InitialSize, datafile == null, _log);
-
             try
             {
-                var buffer = _disk.ReadPage(0);
-
-                // create header instance from array bytes
-                var header = BasePage.ReadPage(buffer) as HeaderPage;
-
                 // initialize AES encryptor
                 if (_options.Password != null)
                 {
@@ -105,6 +94,9 @@ namespace LiteDB
         private void InitializeServices()
         {
             _bsonReader = new BsonReader(_options.UtcDate);
+
+            // initialize disk and create new database if needed (dispose only if stream was not passed)
+            _disk = new DiskService(factory ?? _options.GetStreamFactory());
 
             _cache = new CacheService(_disk, _log);
             _locker = new LockService(_disk, _cache, _options.Timeout, _log);
@@ -167,11 +159,29 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Create an empty database
+        /// </summary>
+        private void CreateEmptyDatabase(Stream stream, string password, long initialSize)
+        {
+            // create a new header page in bytes (keep second page empty)
+            var header = new HeaderPage
+            {
+                LastPageID = 1,
+                Salt = AesEncryption.Salt()
+            };
+
+            stream.WritePage(0, header.WritePage());
+
+            // if has initial size (at least 10 pages), alocate disk space now
+            if (initialSize > (BasePage.PAGE_SIZE * 10))
+            {
+                stream.SetLength(initialSize);
+            }
+        }
+
         public void Dispose()
         {
-            // dispose datafile
-            _disk.Dispose();
-
             // dispose crypto
             if (_crypto != null) _crypto.Dispose();
         }

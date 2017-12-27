@@ -105,22 +105,22 @@ namespace LiteDB
         /// <summary>
         /// Get stream implementation based on filename
         /// </summary>
-        internal Stream GetStream()
+        internal Func<Stream> GetStreamFactory()
         {
             if (this.Filename == ":memory:")
             {
-                return new MemoryStream();
+                return () => new MemoryStream();
             }
             else if (this.Filename == ":temp:")
             {
-                return new TempStream(5000 * BasePage.PAGE_SIZE);
+                return () => new TempStream(5000 * BasePage.PAGE_SIZE);
             }
             else
             {
-                return new FileStream(this.Filename,
+                return () => new FileStream(this.Filename,
                     this.ReadOnly ? FileMode.Open : FileMode.OpenOrCreate,
                     this.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                    this.ReadOnly ? FileShare.Read : FileShare.None,
+                    FileShare.ReadWrite,
                     BasePage.PAGE_SIZE,
                     FileOptions.RandomAccess);
             }

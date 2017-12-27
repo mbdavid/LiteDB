@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,114 +7,110 @@ using System.Threading;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement simple lock service (multi-reader/single-writer [with no-reader])
-    /// Use ReaderWriterLockSlim for thread lock and FileStream.Lock for file (inside disk impl)
-    /// [Thread Safe]
+    /// Lock service are collection-based locks. Lock will support any threads reading at same time. Writing operations will be locked
+    /// based on collection. Eventualy, write operation can change header page that has an exclusive locker for.
     /// </summary>
     public class LockService
     {
-        #region Properties + Ctor
-
         private TimeSpan _timeout;
-        private DiskService _disk;
-        private CacheService _cache;
-        private Logger _log;
-        private ReaderWriterLockSlim _thread = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
-        internal LockService(DiskService disk, CacheService cache, TimeSpan timeout, Logger log)
+        private ConcurrentDictionary<string, LockCollection> _collections = new ConcurrentDictionary<string, LockCollection>(StringComparer.OrdinalIgnoreCase);
+        private ReaderWriterLockSlim _main = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private ReaderWriterLockSlim _header = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
+        internal LockService(TimeSpan timeout, Logger log)
         {
-            _disk = disk;
-            _cache = cache;
-            _log = log;
             _timeout = timeout;
         }
 
         /// <summary>
-        /// Get current datafile lock state defined by thread only (do not check if datafile is locked)
-        /// </summary>
-        public LockState ThreadState
-        {
-            get
-            {
-                return _thread.IsWriteLockHeld ? LockState.Write :
-                    _thread.CurrentReadCount > 0 ? LockState.Read : LockState.Unlocked;
-            }
-        }
-
-        /// <summary>
-        /// Get current thread id
-        /// </summary>
-        public int ThreadId
-        {
-            get
-            {
-                return System.Threading.Tasks.Task.CurrentId ?? 0;
-            }
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        /// <summary>
-        /// Enter in Shared lock mode.
+        /// Lock current thread in read mode
         /// </summary>
         public LockControl Read()
         {
-            // if read or write
-            if (_thread.IsReadLockHeld || _thread.IsWriteLockHeld)
-            {
-                return new LockControl(() => { });
-            }
-
-            // try enter in read mode
-            if (!_thread.TryEnterReadLock(_timeout))
-            {
-                throw LiteException.LockTimeout(_timeout);
-            }
-
-            _log.Write(Logger.LOCK, "entered in read lock mode in thread #{0}", this.ThreadId);
+            // main locker in read lock
+            _main.TryEnterReadLock(_timeout);
 
             return new LockControl(() =>
             {
-                // exit thread lock mode
-                _thread.ExitReadLock();
-
-                _log.Write(Logger.LOCK, "exited read lock mode in thread #{0}", this.ThreadId);
+                _main.ExitReadLock();
             });
         }
 
         /// <summary>
-        /// Enter in Exclusive lock mode
+        /// Lock current thread in read mode + get collection locker to to write-lock
         /// </summary>
-        public LockControl Write()
+        public LockControl Write(string collectionName)
         {
-            // if already in exclusive, do nothing
-            if (_thread.IsWriteLockHeld)
-            {
-                return new LockControl(() => { });
-            }
+            // get collection locker from dictionary (or create new if doesnt exists)
+            var collection = _collections.GetOrAdd(collectionName, (s) => new LockCollection { Locker = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion), Header = false });
 
-            // let's test if is not in read lock
-            if (_thread.IsReadLockHeld) throw new NotSupportedException("Not support Write lock inside a Read lock");
+            // if current thread already in write lock, do nothig
+            if (collection.Locker.IsWriteLockHeld) return new LockControl();
 
-            // try enter in write mode (thread)
-            if (!_thread.TryEnterWriteLock(_timeout))
-            {
-                throw LiteException.LockTimeout(_timeout);
-            }
+            // lock collectionName in write mode
+            collection.Locker.TryEnterWriteLock(_timeout);
 
-            _log.Write(Logger.LOCK, "entered in write lock mode in thread #{0}", this.ThreadId);
+            // also, lock main locker in read mode
+            _main.TryEnterReadLock(_timeout);
 
+            // release both when dispose
             return new LockControl(() =>
             {
-                // release thread write
-                _thread.ExitWriteLock();
+                collection.Locker.ExitWriteLock();
 
-                _log.Write(Logger.LOCK, "exited write lock mode in thread #{0}", this.ThreadId);
+                // if collection
+                if (collection.Header)
+                {
+                    _header.ExitWriteLock();
+                }
+
+                _main.ExitReadLock();
             });
         }
 
-        #endregion
+        /// <summary>
+        /// Lock header page in write-mode. Need be inside a write lock collection. 
+        /// Will release header locker only when dispose collection locker
+        /// </summary>
+        public void Header(string collectionName)
+        {
+            // are this thread already in header lock-write? exit
+            if (_header.IsWriteLockHeld) return;
+
+            // lock-write header locker
+            _header.TryEnterReadLock(_timeout);
+
+            // get current lock from 
+            if (_collections.TryGetValue(collectionName, out var collection))
+            {
+                // mark current thread that will need release header lock when release collection locker
+                collection.Header = true;
+            }
+            else
+            {
+                throw new LiteException("Header lock must be do inside a collection lock");
+            }
+        }
+
+        /// <summary>
+        /// Do a exclusive read/write lock for all other threads. Only this thread can use database (for some WAL/Shrink operations)
+        /// </summary>
+        public LockControl Exclusive()
+        {
+            // write lock in main locker
+            _main.TryEnterWriteLock(_timeout);
+
+            return new LockControl(() =>
+            {
+                _main.ExitWriteLock();
+            });
+        }
+
+        private class LockCollection
+        {
+            public ReaderWriterLockSlim Locker { get; set; }
+            public bool Header { get; set; }
+        }
     }
 }

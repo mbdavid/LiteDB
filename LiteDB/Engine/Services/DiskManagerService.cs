@@ -6,13 +6,13 @@ using System.IO;
 
 namespace LiteDB
 {
-    internal class DiskService : IDisposable
+    internal class DiskManagerService : IDisposable
     {
         private ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
         private Func<Stream> _factory;
         private int _limit;
 
-        public DiskService(Func<Stream> factory, int limit)
+        public DiskManagerService(Func<Stream> factory, int limit)
         {
             _factory = factory;
             _limit = limit;
@@ -56,7 +56,7 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
-            while (_pool.TryTake(out var stream))
+            while(_pool.TryTake(out var stream))
             {
                 stream.Dispose();
             }

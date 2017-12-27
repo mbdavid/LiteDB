@@ -9,6 +9,8 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
+    <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
+    <AssemblyOriginatorKeyFile>LiteDB.Tests.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
