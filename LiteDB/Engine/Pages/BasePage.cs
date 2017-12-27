@@ -60,9 +60,9 @@ namespace LiteDB
         public int FreeBytes { get; set; }
 
         /// <summary>
-        /// Indicate that this page is dirty (was modified) and must persist when committed [not-persistable]
+        /// Indicate page version in cache [not-persistable]
         /// </summary>
-        public bool IsDirty { get; set; }
+        public uint Version { get; set; }
 
         public BasePage(uint pageID)
         {
