@@ -13,6 +13,7 @@ namespace LiteDB
         #region Properties
 
         private LiteDatabase _db = null;
+        private readonly bool _disposeDatabase;
 
         /// <summary>
         /// Get database instance
@@ -31,17 +32,17 @@ namespace LiteDB
         /// <summary>
         /// Creates an instance of the repository.
         /// </summary>
-        /// <param name="database">The LiteDB database instance.</param>
-        public LiteRepository(LiteDatabase database)
+        public LiteRepository(LiteDatabase database, bool disposeDatabase = false)
         {
             _db = database;
+            _disposeDatabase = disposeDatabase;
         }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteRepository(string connectionString, BsonMapper mapper = null)
-            : this(new LiteDatabase(connectionString, mapper))
+            : this(new LiteDatabase(connectionString, mapper), true)
         {
         }
 
@@ -49,7 +50,7 @@ namespace LiteDB
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteRepository(ConnectionString connectionString, BsonMapper mapper = null)
-            : this(new LiteDatabase(connectionString, mapper))
+            : this(new LiteDatabase(connectionString, mapper), true)
         {
         }
 
@@ -57,7 +58,7 @@ namespace LiteDB
         /// Starts LiteDB database using a Stream disk
         /// </summary>
         public LiteRepository(Stream stream, BsonMapper mapper = null, string password = null)
-            : this (new LiteDatabase(stream, mapper, password))
+            : this (new LiteDatabase(stream, mapper, password), true)
         {
         }
 
@@ -289,7 +290,11 @@ namespace LiteDB
 
         public void Dispose()
         {
-            _db?.Dispose();
+            if (_disposeDatabase)
+            {
+                _db?.Dispose();
+            }
+
             _db = null;
         }
     }
