@@ -3,52 +3,50 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace LiteDB
 {
+    /// <summary>
+    /// Implement a Stream queue to get/release 
+    /// </summary>
     internal class DiskService : IDisposable
     {
-        private ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
-        private Func<Stream> _factory;
-        private int _limit;
+        private ConcurrentBag<Stream> _dataPool = new ConcurrentBag<Stream>();
+        private ConcurrentBag<Stream> _walPool = new ConcurrentBag<Stream>();
+        private IDiskFactory _factory;
+        private TimeSpan _timeout;
 
-        public DiskService(Func<Stream> factory, int limit)
+        public DiskService(IDiskFactory factory, TimeSpan timeout)
         {
             _factory = factory;
-            _limit = limit;
+            _timeout = timeout;
         }
 
         /// <summary>
-        /// Get how many open stream are in stream pool
+        /// Get a new or re-used datafile stream from pool
         /// </summary>
-        private int Count => _pool.Count;
-
-        /// <summary>
-        /// Get a re-used stream or create new if no more inside pool
-        /// </summary>
-        public Stream GetStream()
+        public DiskFile GetDisk(bool includeWal)
         {
-            // if pool contains stream, remove and return
-            if (_pool.TryTake(out var stream))
+            var file = new DiskFile((d, w) =>
             {
-                return stream;
+                _dataPool.Add(d);
+                if (w != null) _walPool.Add(w);
+            });
+
+
+            if (_dataPool.TryTake(out var data))
+            {
+                file.Data = data;
             }
+            if (includeWal && _walPool.TryTake(out var wal))
+            {
+                file.Wal = wal;
+            }
+            d
 
             // otherwise create new stream (when release will be added to pool)
-            return _factory();
-        }
-
-        public void Release(Stream stream)
-        {
-            // release stream to pool only if pool are over limit, otherside, dispose
-            if (_pool.Count < _limit)
-            {
-                _pool.Add(stream);
-            }
-            else
-            {
-                stream.Dispose();
-            }
+            return _factory.GetDataFile();
         }
 
         /// <summary>
@@ -56,9 +54,15 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
-            while (_pool.TryTake(out var stream))
+            if (!_factory.Dispose) return;
+
+            while (_dataPool.TryTake(out var data))
             {
-                stream.Dispose();
+                data.Dispose();
+            }
+            while (_walPool.TryTake(out var wal))
+            {
+                wal.Dispose();
             }
         }
     }

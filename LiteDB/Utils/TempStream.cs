@@ -10,11 +10,11 @@ namespace LiteDB
     {
         private Stream _stream = new MemoryStream();
         private string _filename = null;
-        private long _limit;
+        private long _maxMemoryUsage;
 
-        public TempStream(long limit)
+        public TempStream(long maxMemoryUsage = 104857600 /* 100MB */)
         {
-            _limit = limit;
+            _maxMemoryUsage = maxMemoryUsage;
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace LiteDB
                 _stream.Position - offset;
 
             // if offset pass limit, change current _strem from MemoryStrem to FileStream with TempFileName()
-            if (position > _limit)
+            if (position > _maxMemoryUsage)
             {
                 _filename = Path.GetTempFileName();
                 var file = new FileStream(_filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE, FileOptions.RandomAccess);

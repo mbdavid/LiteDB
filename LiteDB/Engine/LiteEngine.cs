@@ -62,23 +62,24 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Initialize LiteEngine using full connection string options, stream factory (if null use connection string GetStream()) and logger instance (if null create new)
+        /// Initialize LiteEngine using full connection string options, stream factory (if null use connection string GetDiskFactory()) and logger instance (if null create new)
         /// </summary>
-        public LiteEngine(ConnectionString connectionString, Action<Stream> factory = null, Logger log = null)
+        public LiteEngine(ConnectionString connectionString, IDiskFactory factory = null, Logger log = null)
         {
             _options = connectionString;
             _log = log ?? new Logger(_options.Log);
 
             try
             {
-                // initialize AES encryptor
-                if (_options.Password != null)
-                {
-                    _crypto = new AesEncryption(_options.Password, header.Salt);
-                }
+                this.InitializeServices(factory ?? _options.GetDiskFactory());
+
+                // // initialize AES encryptor
+                // if (_options.Password != null)
+                // {
+                //     _crypto = new AesEncryption(_options.Password, header.Salt);
+                // }
 
                 // initialize all services
-                this.InitializeServices();
             }
             catch (Exception)
             {
@@ -91,16 +92,13 @@ namespace LiteDB
         /// <summary>
         /// Create instances for all engine services
         /// </summary>
-        private void InitializeServices()
+        private void InitializeServices(IDiskFactory factory)
         {
             _bsonReader = new BsonReader(_options.UtcDate);
-
-            // initialize disk and create new database if needed (dispose only if stream was not passed)
-            _disk = new DiskService(factory ?? _options.GetStreamFactory());
-
+            _disk = new DiskService(factory, _options.Timeout);
             _cache = new CacheService(_disk, _log);
-            _locker = new LockService(_disk, _cache, _options.Timeout, _log);
-            _pager = new PageService(_disk, _crypto, _cache, _log);
+            _locker = new LockService(_cache, _options.Timeout, _log);
+            _pager = new PageService(_crypto, _cache, _log);
             _indexer = new IndexService(_pager, _log);
             _data = new DataService(_pager, _log);
             _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _log);

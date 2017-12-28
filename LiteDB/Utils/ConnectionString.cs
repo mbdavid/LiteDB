@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -105,24 +106,19 @@ namespace LiteDB
         /// <summary>
         /// Get stream implementation based on filename
         /// </summary>
-        internal Func<Stream> GetStreamFactory()
+        internal IDiskFactory GetDiskFactory()
         {
             if (this.Filename == ":memory:")
             {
-                return () => new MemoryStream();
+                return new StreamDiskFactory(new MemoryStream());
             }
             else if (this.Filename == ":temp:")
             {
-                return () => new TempStream(5000 * BasePage.PAGE_SIZE);
+                return new StreamDiskFactory(new TempStream());
             }
             else
             {
-                return () => new FileStream(this.Filename,
-                    this.ReadOnly ? FileMode.Open : FileMode.OpenOrCreate,
-                    this.ReadOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                    FileShare.ReadWrite,
-                    BasePage.PAGE_SIZE,
-                    FileOptions.RandomAccess);
+                return new FileStreamDiskFactory(this.Filename, this.ReadOnly);
             }
         }
     }

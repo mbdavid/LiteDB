@@ -9,14 +9,14 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService
     {
-        private DiskService _disk;
+        private IDiskFactory _disk;
         private AesEncryption _crypto;
         private LockService _locker;
         private PageService _pager;
         private CacheService _cache;
         private Logger _log;
 
-        internal TransactionService(DiskService disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, Logger log)
+        internal TransactionService(IDiskFactory disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, Logger log)
         {
             _disk = disk;
             _crypto = crypto;
