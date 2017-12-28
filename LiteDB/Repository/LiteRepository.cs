@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LiteDB
@@ -14,6 +13,7 @@ namespace LiteDB
         #region Properties
 
         private LiteDatabase _db = null;
+        private readonly bool _disposeDatabase;
 
         /// <summary>
         /// Get database instance
@@ -30,27 +30,36 @@ namespace LiteDB
         #region Ctor
 
         /// <summary>
+        /// Creates an instance of the repository.
+        /// </summary>
+        public LiteRepository(LiteDatabase database, bool disposeDatabase = false)
+        {
+            _db = database;
+            _disposeDatabase = disposeDatabase;
+        }
+
+        /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteRepository(string connectionString, BsonMapper mapper = null)
+            : this(new LiteDatabase(connectionString, mapper), true)
         {
-            _db = new LiteDB.LiteDatabase(connectionString, mapper);
         }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
         public LiteRepository(ConnectionString connectionString, BsonMapper mapper = null)
+            : this(new LiteDatabase(connectionString, mapper), true)
         {
-            _db = new LiteDB.LiteDatabase(connectionString, mapper);
         }
 
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
         public LiteRepository(Stream stream, BsonMapper mapper = null, string password = null)
+            : this (new LiteDatabase(stream, mapper, password), true)
         {
-            _db = new LiteDB.LiteDatabase(stream, mapper, password);
         }
 
         #endregion
@@ -281,7 +290,12 @@ namespace LiteDB
 
         public void Dispose()
         {
-            _db.Dispose();
+            if (_disposeDatabase)
+            {
+                _db?.Dispose();
+            }
+
+            _db = null;
         }
     }
 }
