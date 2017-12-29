@@ -34,19 +34,30 @@ namespace LiteDB
                 if (w != null) _walPool.Add(w);
             });
 
-
+            // get (removing) datafile stream from pool or create a new if pool are empty
             if (_dataPool.TryTake(out var data))
             {
                 file.Data = data;
             }
-            if (includeWal && _walPool.TryTake(out var wal))
+            else
             {
-                file.Wal = wal;
+                file.Data = _factory.GetDataFile();
             }
-            d
 
-            // otherwise create new stream (when release will be added to pool)
-            return _factory.GetDataFile();
+            if (includeWal)
+            {
+                // get (removing) walfile stream from pool or create a new if pool are empty
+                if (_walPool.TryTake(out var wal))
+                {
+                    file.Wal = wal;
+                }
+                else
+                {
+                    file.Wal = _factory.GetWalFile();
+                }
+            }
+
+            return file;
         }
 
         /// <summary>

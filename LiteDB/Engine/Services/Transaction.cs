@@ -5,9 +5,8 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Manages all transactions and grantees concurrency and recovery
     /// </summary>
-    internal class TransactionService
+    internal class Transaction
     {
         private IDiskFactory _disk;
         private AesEncryption _crypto;
@@ -16,7 +15,7 @@ namespace LiteDB
         private CacheService _cache;
         private Logger _log;
 
-        internal TransactionService(IDiskFactory disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, Logger log)
+        internal Transaction(IDiskFactory disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, Logger log)
         {
             _disk = disk;
             _crypto = crypto;
@@ -26,13 +25,6 @@ namespace LiteDB
             _log = log;
         }
 
-        public Transaction Read()
-        {
-        }
-
-        public Transaction Write()
-        {
-        }
 
     }
 }
