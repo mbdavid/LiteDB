@@ -11,35 +11,24 @@ namespace LiteDB
     /// </summary>
     public class StreamDiskFactory : IDiskFactory
     {
-        private MemoryStream _wal = new MemoryStream();
-        private Stream _datafile;
+        private Stream _stream;
 
         public StreamDiskFactory(Stream stream)
         {
-            _datafile = stream;
+            _stream = stream;
         }
 
         /// <summary>
-        /// No concurrency
+        /// Get always same Stream instance, do dot accept concurrency
         /// </summary>
-        public int ConcurrencyLimit => 1;
+        public Stream GetStream()
+        {
+            return _stream;
+        }
 
         /// <summary>
         /// Do no dispose on finish
         /// </summary>
         public bool Dispose => false;
-
-        /// <summary>
-        /// Get always same Stream instance, do dot accept concurrency
-        /// </summary>
-        public Stream GetDataFile()
-        {
-            return _datafile;
-        }
-
-        public Stream GetWalFile()
-        {
-            return _wal;
-        }
     }
 }

@@ -16,9 +16,19 @@ namespace LiteDB
     public class ConnectionString
     {
         /// <summary>
+        /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). To use physical file, use "filename" attribute
+        /// </summary>
+        public Stream DataStream { get; set; } = null;
+
+        /// <summary>
+        /// Get/Set custom instance for Logger
+        /// </summary>
+        public Logger Log { get; set; } = null;
+
+        /// <summary>
         /// "filename": Full path or relative path from DLL directory (default: ':memory:')
         /// </summary>
-        public string Filename { get; set; } = ":memory:"; 
+        public string Filename { get; set; } = ":memory:";
 
         /// <summary>
         /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
@@ -48,7 +58,7 @@ namespace LiteDB
         /// <summary>
         /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
         /// </summary>
-        public byte Log { get; set; } = Logger.NONE;
+        public byte LogLevel { get; set; } = Logger.NONE;
 
         /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)
@@ -98,16 +108,21 @@ namespace LiteDB
             this.ReadOnly = values.GetValue<bool>("read only", false);
             this.InitialSize = values.GetFileSize(@"initial size", 0);
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
-            this.Log = values.GetValue("log", Logger.NONE);
+            this.LogLevel = values.GetValue("log", Logger.NONE);
             this.UtcDate = values.GetValue("utc", false);
             this.Async = values.GetValue("async", false);
         }
 
         /// <summary>
-        /// Get stream implementation based on filename
+        /// Get datafile/WAL disk factory based on DataStream (if used) or based on Filename
         /// </summary>
-        internal IDiskFactory GetDiskFactory()
+        internal IDiskFactory GetDiskFactory(bool wal)
         {
+            if (this.DataStream != null)
+            {
+                var stream = wal ? this.DataStream : (this.DataStream is TempStream ? (Stream)new TempStream() : new MemoryStream());
+                return new StreamDiskFactory(stream);
+            }
             if (this.Filename == ":memory:")
             {
                 return new StreamDiskFactory(new MemoryStream());
@@ -118,7 +133,8 @@ namespace LiteDB
             }
             else
             {
-                return new FileStreamDiskFactory(this.Filename, this.ReadOnly);
+                var name = wal ? FileHelper.GetTempFile(this.Filename, "-wal", false) : this.Filename;
+                return new FileStreamDiskFactory(name, this.ReadOnly);
             }
         }
     }

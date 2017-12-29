@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace LiteDB
 {
@@ -13,9 +14,19 @@ namespace LiteDB
         /// <summary>
         /// Dictionary to store pages in memory with page version support
         /// </summary>
-        private ConcurrentDictionary<uint, List<BasePage>> _cache = new ConcurrentDictionary<uint, List<BasePage>>();
+        private ConcurrentDictionary<uint, ConcurrentDictionary<uint, BasePage>> _cache = new ConcurrentDictionary<uint, ConcurrentDictionary<uint, BasePage>>();
+
+        /// <summary>
+        /// Get how many pages (with all versions) are inside cache
+        /// </summary>
+        private int _count;
 
         private Logger _log;
+
+        /// <summary>
+        /// Get how many pages (with all versions) are inside cache
+        /// </summary>
+        public int Count => _count;
 
         public CacheService(Logger log)
         {
@@ -27,19 +38,26 @@ namespace LiteDB
         /// </summary>
         public BasePage GetPage(uint pageID, uint version)
         {
-            // get page list versions
-            if(_cache.TryGetValue(pageID, out var pages))
+            // get page slot in cache
+            if (_cache.TryGetValue(pageID, out var slot))
             {
-                lock(pages)
+                // get all page versions avaiable in cache slot
+                var versions = slot.Keys.OrderBy(x => x);
+
+                // get best version for request verion
+                var v = versions.FirstOrDefault(x => x <= version);
+
+                // if versions on cache are higher then request, exit
+                if (v == 0) return null;
+
+                // try get for concurrent dict this page (it's possible this page are no anymore in cache - other concurrency thread clear cache)
+                if (slot.TryGetValue(v, out var page))
                 {
-                    // get page version 
-                    return pages.FirstOrDefault(x => x.Version <= version);
+                    return page;
                 }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         /// <summary>
@@ -47,15 +65,14 @@ namespace LiteDB
         /// </summary>
         public void AddPage(BasePage page, uint version)
         {
-            // get page from versionID
-            var pages = _cache.GetOrAdd(page.PageID, (v) => new List<BasePage>());
+            // get page slot in cache (or create if not exists)
+            var slot = _cache.GetOrAdd(page.PageID, new ConcurrentDictionary<uint, BasePage>());
 
-            // add page version (only if not exists)
-            lock(pages)
+            // add page to cache only if not exists (with this version)
+            if(slot.TryAdd(version, page))
             {
-                page.Version = version;
-
-                pages.Add(page);
+                // concurrency count increment
+                Interlocked.Increment(ref _count);
             }
         }
 
@@ -65,6 +82,8 @@ namespace LiteDB
         public void Clear()
         {
             _cache.Clear();
+
+            _count = 0;
         }
     }
 }

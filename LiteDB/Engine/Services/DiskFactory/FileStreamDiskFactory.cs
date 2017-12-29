@@ -11,33 +11,21 @@ namespace LiteDB
     /// </summary>
     public class FileStreamDiskFactory : IDiskFactory
     {
-        private string _dataFilename;
-        private string _walFilename;
+        private string _filename;
         private bool _readOnly;
 
         public FileStreamDiskFactory(string filename, bool readOnly)
         {
-            _dataFilename = filename;
-            _walFilename = FileHelper.GetTempFile(filename, "-wal", false);
+            _filename = filename;
             _readOnly = readOnly;
         }
 
         /// <summary>
-        /// Limit in 100 concurrency file stream opened (fixed for now)
-        /// </summary>
-        public int ConcurrencyLimit => 100;
-
-        /// <summary>
-        /// Close all stream on end
-        /// </summary>
-        public bool Dispose => true;
-
-        /// <summary>
         /// Create new FileStream instance based on dataFilename
         /// </summary>
-        public Stream GetDataFile()
+        public Stream GetStream()
         {
-            return new FileStream(_dataFilename,
+            return new FileStream(_filename,
                 _readOnly ? FileMode.Open : FileMode.OpenOrCreate,
                 _readOnly ? FileAccess.Read : FileAccess.ReadWrite,
                 FileShare.ReadWrite,
@@ -46,18 +34,8 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create new FileStream instance based on walFilename
+        /// Close all stream on end
         /// </summary>
-        public Stream GetWalFile()
-        {
-            if (_readOnly) throw LiteException.ReadOnlyDatabase();
-
-            return new FileStream(_dataFilename,
-                FileMode.OpenOrCreate,
-                FileAccess.ReadWrite,
-                FileShare.ReadWrite,
-                BasePage.PAGE_SIZE,
-                FileOptions.RandomAccess);
-        }
+        public bool Dispose => true;
     }
 }

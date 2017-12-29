@@ -15,18 +15,14 @@ namespace LiteDB
 
         private LockService _locker;
 
-        private DiskService _disk;
+        private FileService _datafile;
 
-        private CacheService _cache;
+        private FileService _walfile;
 
-        private TransactionService _trans;
-
-        private AesEncryption _crypto;
+        private WalService _wal;
 
         private BsonReader _bsonReader;
         private BsonWriter _bsonWriter = new BsonWriter();
-
-        private ConnectionString _options;
 
         /// <summary>
         /// Get log instance for debug operations
@@ -56,22 +52,36 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using full connection string options, stream factory (if null use connection string GetDiskFactory()) and logger instance (if null create new)
         /// </summary>
-        public LiteEngine(ConnectionString connectionString, IDiskFactory factory = null, Logger log = null)
+        public LiteEngine(ConnectionString options)
         {
-            _options = connectionString;
-            _log = log ?? new Logger(_options.Log);
-
             try
             {
-                this.InitializeServices(factory ?? _options.GetDiskFactory());
+                // create factory based on connection string if there is no factory
+                _log = options.Log;
 
-                // // initialize AES encryptor
-                // if (_options.Password != null)
-                // {
-                //     _crypto = new AesEncryption(_options.Password, header.Salt);
-                // }
+                _bsonReader = new BsonReader(options.UtcDate);
 
-                // initialize all services
+                _locker = new LockService(options.Timeout, _log);
+
+                _datafile = new FileService(options.GetDataFactory(), options.Timeout, options.LimitSize);
+
+                // create database if not exists
+                if (_datafile.IsEmpty())
+                {
+                    _datafile.CreateDatabase(options.InitialSize);
+                }
+
+                if (options.Password != null)
+                {
+                    _datafile.EnableEncryption(options.Password);
+                }
+
+                // create instance of WAL file (with no encryption)
+                _walfile = new FileService(options.GetWalFactory(), options.Timeout, long.MaxValue);
+
+                // inicialize wal file
+                _wal = new WalService();
+
             }
             catch (Exception)
             {
@@ -79,17 +89,6 @@ namespace LiteDB
                 this.Dispose();
                 throw;
             }
-        }
-
-        /// <summary>
-        /// Create instances for all engine services
-        /// </summary>
-        private void InitializeServices(IDiskFactory factory)
-        {
-            _bsonReader = new BsonReader(_options.UtcDate);
-            _disk = new DiskService(factory, _options.Timeout);
-            _locker = new LockService(_cache, _options.Timeout, _log);
-            _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _log);
         }
 
         #endregion
@@ -144,31 +143,12 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Create an empty database
-        /// </summary>
-        private void CreateEmptyDatabase(Stream stream, string password, long initialSize)
-        {
-            // create a new header page in bytes (keep second page empty)
-            var header = new HeaderPage
-            {
-                LastPageID = 1,
-                Salt = AesEncryption.Salt()
-            };
-
-            stream.WritePage(0, header.WritePage());
-
-            // if has initial size (at least 10 pages), alocate disk space now
-            if (initialSize > (BasePage.PAGE_SIZE * 10))
-            {
-                stream.SetLength(initialSize);
-            }
-        }
-
         public void Dispose()
         {
-            // dispose crypto
+            // close all Dispose services
             if (_crypto != null) _crypto.Dispose();
+            if (_datafile != null) _datafile.Dispose();
+            if (_walfile != null) _walfile.Dispose();
         }
     }
 }

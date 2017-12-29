@@ -39,7 +39,6 @@ namespace LiteDB
             unchecked
             {
                 int hash = 17;
-                // Maybe nullity checks, if these are objects not primitives!
                 hash = hash * 23 + (int)this.PageID;
                 hash = hash * 23 + this.Index;
                 return hash;
@@ -48,13 +47,13 @@ namespace LiteDB
 
         public PageAddress(uint pageID, ushort index)
         {
-            PageID = pageID;
-            Index = index;
+            this.PageID = pageID;
+            this.Index = index;
         }
 
         public override string ToString()
         {
-            return IsEmpty ? "----" : PageID.ToString() + ":" + Index.ToString();
+            return this.IsEmpty ? "----" : this.PageID.ToString() + ":" + this.Index.ToString();
         }
     }
 }

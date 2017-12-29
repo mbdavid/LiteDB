@@ -59,11 +59,6 @@ namespace LiteDB
         /// </summary>
         public int FreeBytes { get; set; }
 
-        /// <summary>
-        /// Indicate page version in cache [not-persistable]
-        /// </summary>
-        public uint Version { get; set; }
-
         public BasePage(uint pageID)
         {
             this.PageID = pageID;

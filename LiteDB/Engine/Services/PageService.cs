@@ -6,57 +6,16 @@ namespace LiteDB
 {
     internal class PageService
     {
-        private CacheService _cache;
-        private IDiskFactory _disk;
-        private AesEncryption _crypto;
+        private Transaction _trans;
         private Logger _log;
 
-        public PageService(IDiskFactory disk, AesEncryption crypto, CacheService cache, Logger log)
-        {
-            _disk = disk;
-            _crypto = crypto;
-            _cache = cache;
-            _log = log;
-        }
-
-        /// <summary>
-        /// Get a page from cache or from disk (get from cache or from disk)
-        /// </summary>
-        public T GetPage<T>(uint pageID)
-            where T : BasePage
-        {
-            lock(_disk)
-            {
-                var page = _cache.GetPage(pageID);
-
-                // is not on cache? load from disk
-                if (page == null)
-                {
-                    var buffer = _disk.ReadPage(pageID);
-
-                    // if datafile are encrypted, decrypt buffer (header are not encrypted)
-                    if (_crypto != null && pageID > 0)
-                    {
-                        buffer = _crypto.Decrypt(buffer);
-                    }
-
-                    page = BasePage.ReadPage(buffer);
-
-                    _cache.AddPage(page);
-                }
-
-                return (T)page;
-            }
-        }
-
-        /// <summary>
-        /// Set a page as dirty and ensure page are in cache. Should be used after any change on page 
-        /// Do not use on end of method because page can be deleted/change type
-        /// </summary>
-        public void SetDirty(BasePage page)
-        {
-            _cache.SetDirty(page);
-        }
+        // public PageService(IDiskFactory disk, AesEncryption crypto, CacheService cache, Logger log)
+        // {
+        //     _disk = disk;
+        //     _crypto = crypto;
+        //     _cache = cache;
+        //     _log = log;
+        // }
 
         /// <summary>
         /// Read all sequences pages from a start pageID (using NextPageID)
@@ -68,7 +27,7 @@ namespace LiteDB
 
             while (pageID != uint.MaxValue)
             {
-                var page = this.GetPage<T>(pageID);
+                var page = _trans.GetPage<T>(pageID);
 
                 pageID = page.NextPageID;
 
@@ -83,14 +42,14 @@ namespace LiteDB
             where T : BasePage
         {
             // get header
-            var header = this.GetPage<HeaderPage>(0);
+            var header = _trans.GetPage<HeaderPage>(0);
             var pageID = (uint)0;
             var diskData = new byte[0];
 
             // try get page from Empty free list
             if (header.FreeEmptyPageID != uint.MaxValue)
             {
-                var free = this.GetPage<BasePage>(header.FreeEmptyPageID);
+                var free = _trans.GetPage<BasePage>(header.FreeEmptyPageID);
 
                 // remove page from empty list
                 this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
@@ -133,7 +92,7 @@ namespace LiteDB
             var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { this.GetPage<BasePage>(pageID) };
 
             // get my header page
-            var header = this.GetPage<HeaderPage>(0);
+            var header = _trans.GetPage<HeaderPage>(0);
 
             // adding all pages to FreeList
             foreach (var page in pages)
@@ -158,7 +117,7 @@ namespace LiteDB
             if (startPageID != uint.MaxValue)
             {
                 // get the first page
-                var page = this.GetPage<T>(startPageID);
+                var page = _trans.GetPage<T>(startPageID);
 
                 // check if there space in this page
                 var free = page.FreeBytes;
@@ -220,7 +179,7 @@ namespace LiteDB
             // let's page in desc order
             while (nextPageID != uint.MaxValue)
             {
-                next = this.GetPage<BasePage>(nextPageID);
+                next = _trans.GetPage<BasePage>(nextPageID);
 
                 if (free >= next.FreeBytes)
                 {
@@ -244,7 +203,7 @@ namespace LiteDB
                     else
                     {
                         // if not the first, ajust links from previous page (set as dirty)
-                        var prev = this.GetPage<BasePage>(page.PrevPageID);
+                        var prev = _trans.GetPage<BasePage>(page.PrevPageID);
                         prev.NextPageID = page.PageID;
                         this.SetDirty(prev);
                     }
@@ -291,7 +250,7 @@ namespace LiteDB
             else
             {
                 // if not the first, get previous page to remove NextPageId
-                var prevPage = this.GetPage<BasePage>(page.PrevPageID);
+                var prevPage = _trans.GetPage<BasePage>(page.PrevPageID);
                 prevPage.NextPageID = page.NextPageID;
                 this.SetDirty(prevPage);
             }
@@ -299,7 +258,7 @@ namespace LiteDB
             // if my page is not the last on sequence, adjust the last page (set as dirty)
             if (page.NextPageID != uint.MaxValue)
             {
-                var nextPage = this.GetPage<BasePage>(page.NextPageID);
+                var nextPage = _trans.GetPage<BasePage>(page.NextPageID);
                 nextPage.PrevPageID = page.PrevPageID;
                 this.SetDirty(nextPage);
             }

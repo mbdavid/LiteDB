@@ -12,19 +12,9 @@ namespace LiteDB
     public interface IDiskFactory
     {
         /// <summary>
-        /// Get number of how many Stream concurrency support
+        /// Get new Stream instance of datafile/wal
         /// </summary>
-        int ConcurrencyLimit { get; }
-
-        /// <summary>
-        /// Get new Stream instance of datafile
-        /// </summary>
-        Stream GetDataFile();
-
-        /// <summary>
-        /// Get new Stream instance of walfile
-        /// </summary>
-        Stream GetWalFile();
+        Stream GetStream();
 
         /// <summary>
         /// Indicate that factory must be dispose on finish
