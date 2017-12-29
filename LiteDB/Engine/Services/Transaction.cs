@@ -6,14 +6,13 @@ namespace LiteDB
 {
     /// <summary>
     /// </summary>
-    internal class Transaction
+    internal class Transaction : IDisposable
     {
         // instances from Engine
-        private FileService _disk;
-        private AesEncryption _crypto;
+        private FileService _datafile;
+        private FileService _walfile;
         private WalService _wal;
         private LockService _locker;
-        private CacheService _cache;
         private Logger _log;
 
         // new instances
@@ -21,6 +20,36 @@ namespace LiteDB
         private IndexService _index;
         private CollectionService _collection;
         private DataService _data;
+
+        private Guid _transID;
+        private uint _readVersion;
+        private Dictionary<uint, BasePage> _dirtyPages = new Dictionary<uint, BasePage>();
+        private Dictionary<uint, long> _dirtyPagesWal = new Dictionary<uint, long>();
+
+
+        void SaveDirtyPagesToWal()
+        {
+
+        }
+
+        void Commit()
+        {
+
+        }
+
+        /// <summary>
+        /// Must be call before any page change
+        /// </summary>
+        public T SetDirty<T>(BasePage page)
+            where T : BasePage
+        {
+            // clone before edit
+            var clone = BasePage.ReadPage(page.WritePage());
+
+            _dirtyPages[clone.PageID] = clone;
+
+            return (T)clone;
+        }
 
         /// <summary>
         /// Get a page from cache or from disk (get from cache or from disk)
@@ -54,5 +83,8 @@ namespace LiteDB
         }
 
 
+        public void Dispose()
+        {
+        }
     }
 }
