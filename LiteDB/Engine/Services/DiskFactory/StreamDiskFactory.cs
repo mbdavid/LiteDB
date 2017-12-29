@@ -21,10 +21,7 @@ namespace LiteDB
         /// <summary>
         /// Get always same Stream instance, do dot accept concurrency
         /// </summary>
-        public Stream GetStream()
-        {
-            return _stream;
-        }
+        public Stream GetStream() => _stream;
 
         /// <summary>
         /// Do no dispose on finish

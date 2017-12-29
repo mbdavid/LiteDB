@@ -18,7 +18,6 @@ namespace LiteDB
         private IDiskFactory _factory;
         private TimeSpan _timeout;
         private AesEncryption _crypto = null;
-        private byte[] _salt = null;
         private Stream _writer = null;
 
         public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit)
@@ -32,19 +31,16 @@ namespace LiteDB
         /// </summary>
         public void EnableEncryption(string password)
         {
-            // if there is not salt loaded, read from header page (0)
-            if (_salt == null)
-            {
-                _salt = (this.ReadPage(0) as HeaderPage).Salt;
-            }
+            // if there is no Salt loaded, read from header page (0)
+            var salt = (this.ReadPage(0) as HeaderPage).Salt;
 
-            _crypto = new AesEncryption(password, _salt);
+            _crypto = new AesEncryption(password, salt);
         }
 
         /// <summary>
         /// Check if stream are empty
         /// </summary>
-        public bool IsEmpry()
+        public bool IsEmpty()
         {
             // get first stream and add into pool
             var reader = _factory.GetStream();

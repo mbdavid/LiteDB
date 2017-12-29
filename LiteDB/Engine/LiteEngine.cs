@@ -63,7 +63,7 @@ namespace LiteDB
 
                 _locker = new LockService(options.Timeout, _log);
 
-                _datafile = new FileService(options.GetDataFactory(), options.Timeout, options.LimitSize);
+                _datafile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize);
 
                 // create database if not exists
                 if (_datafile.IsEmpty())
@@ -71,13 +71,14 @@ namespace LiteDB
                     _datafile.CreateDatabase(options.InitialSize);
                 }
 
+                // if contains password, enable encryption
                 if (options.Password != null)
                 {
                     _datafile.EnableEncryption(options.Password);
                 }
 
                 // create instance of WAL file (with no encryption)
-                _walfile = new FileService(options.GetWalFactory(), options.Timeout, long.MaxValue);
+                _walfile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue);
 
                 // inicialize wal file
                 _wal = new WalService();
