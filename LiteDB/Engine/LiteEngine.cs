@@ -19,15 +19,7 @@ namespace LiteDB
 
         private CacheService _cache;
 
-        private PageService _pager;
-
         private TransactionService _trans;
-
-        private IndexService _indexer;
-
-        private DataService _data;
-
-        private CollectionService _collections;
 
         private AesEncryption _crypto;
 
@@ -96,13 +88,8 @@ namespace LiteDB
         {
             _bsonReader = new BsonReader(_options.UtcDate);
             _disk = new DiskService(factory, _options.Timeout);
-            _cache = new CacheService(_disk, _log);
             _locker = new LockService(_cache, _options.Timeout, _log);
-            _pager = new PageService(_crypto, _cache, _log);
-            _indexer = new IndexService(_pager, _log);
-            _data = new DataService(_pager, _log);
             _trans = new TransactionService(_disk, _crypto, _pager, _locker, _cache, _log);
-            _collections = new CollectionService(_pager, _indexer, _data, _trans, _log);
         }
 
         #endregion

@@ -9,12 +9,21 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService
     {
-        private IDiskFactory _disk;
+        private string collection;
         private AesEncryption _crypto;
         private LockService _locker;
         private PageService _pager;
-        private CacheService _cache;
+        private CollectionService _coll;
+        private DataService _data;
+        private IndexService _indexer;
+        private WalService _wal;
+        private DataFile _file;
+
+
+
         private Logger _log;
+
+
 
         internal TransactionService(IDiskFactory disk, AesEncryption crypto, PageService pager, LockService locker, CacheService cache, Logger log)
         {
@@ -24,6 +33,8 @@ namespace LiteDB
             _locker = locker;
             _pager = pager;
             _log = log;
+
+            _lock = _locker.Write("mycol");
         }
 
         public Transaction Read()
