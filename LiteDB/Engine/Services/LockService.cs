@@ -61,7 +61,7 @@ namespace LiteDB
             if (_header.IsWriteLockHeld) return;
 
             // lock-write header locker
-            _header.TryEnterReadLock(_timeout);
+            _header.TryEnterWriteLock(_timeout);
 
             locker.Header = _header;
         }

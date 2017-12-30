@@ -17,6 +17,11 @@ namespace LiteDB
         Stream GetStream();
 
         /// <summary>
+        /// Delete file/stream
+        /// </summary>
+        void Delete();
+
+        /// <summary>
         /// Indicate that factory must be dispose on finish
         /// </summary>
         bool Dispose { get; }

@@ -216,6 +216,11 @@ namespace LiteDB
             return BasePage.ReadPage(buffer);
         }
 
+        public override string ToString()
+        {
+            return this.PageID.ToString().PadLeft(4, '0') + " : " + this.PageType + " (" + this.ItemCount + ")";
+        }
+
         #endregion
     }
 }

@@ -51,7 +51,8 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.PageID.ToString() + ":" + this.Position.ToString();
+            return this.IsEmpty ? "----:----" :
+                (this.PageID == uint.MaxValue ? "----" : this.PageID.ToString()) + ":" + this.Position.ToString();
         }
     }
 }

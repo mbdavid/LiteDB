@@ -68,8 +68,8 @@ namespace LiteDB
             // add transaction to confirmed list
             _confirmedTransactions.Add(transactionID);
 
-            // write confirmed transaction page
-            _walfile.WritePagesSequencial(new BasePage[] { new TransactionPage(transactionID) });
+            // write confirmed transaction page (use ToArray to execute)
+            var confirm = _walfile.WritePagesSequencial(new BasePage[] { new TransactionPage(transactionID) }).First();
 
             // must lock commit operation to update index
             lock (_commitLocker)
@@ -129,8 +129,8 @@ namespace LiteDB
                     .ReadAllPages()
                     .Where(x => _confirmedTransactions.Contains(x.TransactionID) && x.PageType != PageType.Transaction);
 
-                // write on datafile each wal page
-                _datafile.WritePages(walpages);
+                // write on datafile (pageID position based) for each wal page
+                _datafile.WritePages(walpages).Execute();
 
                 // clear wal-file and wal-index and current version
                 _currentVersion = 0;

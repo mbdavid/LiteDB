@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace LiteDB
@@ -44,12 +45,11 @@ namespace LiteDB
         /// </summary>
         public bool IsEmpty()
         {
-            // get first stream and add into pool
-            var reader = _factory.GetStream();
+            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
-            _pool.Add(reader);
+            _pool.Add(stream);
 
-            return reader.Length == 0;
+            return stream.Length == 0;
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Write all pages bytes into disk using stream from pool (page position according pageID)
+        /// Write all pages bytes into disk using stream from pool (page position according pageID). Return an IEnumerable, so need execute ToArray()
         /// </summary>
         public IEnumerable<PagePosition> WritePages(IEnumerable<BasePage> pages)
         {
@@ -166,9 +166,12 @@ namespace LiteDB
             // encrypt if not header page
             var bytes = _crypto == null || page.PageID == 0 ? buffer : _crypto.Encrypt(buffer);
 
+            // get position before write on disk
+            var position = stream.Position;
+
             stream.Write(bytes, 0, BasePage.PAGE_SIZE);
 
-            return new PagePosition(page.PageID, stream.Position);
+            return new PagePosition(page.PageID, position);
         }
 
         /// <summary>
@@ -193,11 +196,10 @@ namespace LiteDB
             // create a new header page in bytes (keep second page empty)
             var header = new HeaderPage
             {
-                LastPageID = 1,
                 Salt = AesEncryption.Salt()
             };
 
-            this.WritePages(new BasePage[] { header });
+            this.WritePages(new BasePage[] { header }).Execute();
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
@@ -211,6 +213,17 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
+            this.Dispose(false);
+        }
+
+        /// <summary>
+        /// Dispose all stream in pool (with delete file option)
+        /// </summary>
+        public void Dispose(bool delete)
+        {
+            // delete file only if delete=true AND file content is empty (length = 0)
+            var empty = delete ? this.IsEmpty() : false;
+
             if (_crypto != null) _crypto.Dispose();
 
             if (!_factory.Dispose) return;
@@ -220,6 +233,11 @@ namespace LiteDB
             while (_pool.TryTake(out var stream))
             {
                 stream.Dispose();
+            }
+
+            if (empty)
+            {
+                _factory.Delete();
             }
         }
     }

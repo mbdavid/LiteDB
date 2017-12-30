@@ -34,6 +34,22 @@ namespace LiteDB
         #region Ctor
 
         /// <summary>
+        /// Initialize LiteEngine using connection memory database
+        /// </summary>
+        public LiteEngine()
+            : this(new ConnectionString())
+        {
+        }
+
+        /// <summary>
+        /// Initialize LiteEngine using connection string using key=value; parser
+        /// </summary>
+        public LiteEngine(string connectionString)
+            : this (new ConnectionString(connectionString))
+        {
+        }
+
+        /// <summary>
         /// Initialize LiteEngine using connection string options
         /// </summary>
         public LiteEngine(ConnectionString options)
@@ -93,9 +109,15 @@ namespace LiteDB
 
         public void Dispose()
         {
+            // do checkpoint before exit
+            if (_walfile != null && _walfile.IsEmpty() == false)
+            {
+                _wal.Checkpoint();
+            }
+
             // close all Dispose services
             if (_datafile != null) _datafile.Dispose();
-            if (_walfile != null) _walfile.Dispose();
+            if (_walfile != null) _walfile.Dispose(true);
         }
     }
 }

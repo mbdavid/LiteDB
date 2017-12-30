@@ -137,10 +137,12 @@ namespace LiteDB
             // update pages with transactionId in all dirty page
             var dirty = _local.Values
                 .Where(x => x.IsDirty)
-                .ForEach((i, p) => p.TransactionID = _transactionID);
+                .ForEach((i, p) => p.TransactionID = _transactionID)
+                .ToList();
 
-            // save all dirty pages into disk and get pages position reference
-            var saved = _walfile.WritePages(dirty);
+            // save all dirty pages into walfile (sequencial mode) and get pages position reference
+            var saved = _walfile.WritePagesSequencial(dirty)
+                .ToList();
 
             // clear dirtyPage list
             _local.Clear();

@@ -34,6 +34,17 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Delete file from file system (only if readOnly = false)
+        /// </summary>
+        public void Delete()
+        {
+            if (_readOnly == false)
+            {
+                File.Delete(_filename);
+            }
+        }
+
+        /// <summary>
         /// Close all stream on end
         /// </summary>
         public bool Dispose => true;

@@ -13,51 +13,32 @@ namespace LiteDB.Demo
     {
         static void Main(string[] args)
         {
-            var timer = new Stopwatch();
-            ITest test = new LiteDB_Paging();
-            //ITest test = new SQLite_Paging();
+            var datafile = @"c:\temp\app.db";
+            var walfile = @"c:\temp\app-wal.db";
 
-            Console.WriteLine("Testing: {0}", test.GetType().Name);
+            File.Delete(datafile);
+            File.Delete(walfile);
 
-            test.Init();
 
-            Console.WriteLine("Populating 100.000 documents...");
-
-            timer.Start();
-            test.Populate(ReadDocuments());
-            timer.Stop();
-
-            Console.WriteLine("Done in {0}ms", timer.ElapsedMilliseconds);
-
-            timer.Restart();
-            var counter = test.Count();
-            timer.Stop();
-            
-            Console.WriteLine("Result query counter: {0} ({1}ms)", counter, timer.ElapsedMilliseconds);
-            
-            var input = "0";
-            
-            while (input != "")
+            using (var db = new LiteEngine(datafile))
             {
-                var skip = Convert.ToInt32(input);
-                var limit = 10;
-            
-                timer.Restart();
-                var result = test.Fetch(skip, limit);
-                timer.Stop();
-            
-                foreach(var doc in result)
-                {
-                    Console.WriteLine(
-                        doc["_id"].AsString.PadRight(6) + " - " +
-                        doc["name"].AsString.PadRight(30) + "  -> " +
-                        doc["age"].AsInt32);
-                }
-            
-                Console.Write("\n({0}ms) => Enter skip index: ", timer.ElapsedMilliseconds);
-                input = Console.ReadLine();
+                db.Insert("col", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["name"] = "Mauricio David 2016" } }, BsonAutoId.ObjectId);
+                db.Insert("col", new BsonDocument[] { new BsonDocument { ["_id"] = 2, ["name"] = "Mauricio David 2017" } }, BsonAutoId.ObjectId);
+                db.Insert("col", new BsonDocument[] { new BsonDocument { ["_id"] = 3, ["name"] = "Mauricio David 2018" } }, BsonAutoId.ObjectId);
+
+                var d = db.Find("col", Query.EQ("_id", 1)).FirstOrDefault();
+
+                Console.WriteLine(d.ToString());
             }
-            
+
+            using (var db = new LiteEngine(datafile))
+            {
+                var d = db.Find("col", Query.EQ("_id", 3)).FirstOrDefault();
+
+                Console.WriteLine(d.ToString());
+            }
+
+
             Console.WriteLine("End");
             Console.ReadKey();
         }
