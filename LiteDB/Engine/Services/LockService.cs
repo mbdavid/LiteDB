@@ -26,18 +26,18 @@ namespace LiteDB
         /// <summary>
         /// Lock current thread in read mode
         /// </summary>
-        public LockControl Read()
+        public LockReadWrite Read()
         {
             // main locker in read lock
             _main.TryEnterReadLock(_timeout);
 
-            return new LockControl(_main);
+            return new LockReadWrite(_main);
         }
 
         /// <summary>
         /// Lock current thread in read mode + get collection locker to to write-lock
         /// </summary>
-        public void Write(LockControl locker, string collectionName)
+        public void Write(LockReadWrite locker, string collectionName)
         {
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -55,7 +55,7 @@ namespace LiteDB
         /// Lock header page in write-mode. Need be inside a write lock collection. 
         /// Will release header locker only when dispose collection locker
         /// </summary>
-        public void Header(LockControl locker)
+        public void Header(LockReadWrite locker)
         {
             // are this thread already in header lock-write? exit
             if (_header.IsWriteLockHeld) return;
@@ -69,15 +69,12 @@ namespace LiteDB
         /// <summary>
         /// Do a exclusive read/write lock for all other threads. Only this thread can use database (for some WAL/Shrink operations)
         /// </summary>
-        public LockControl Exclusive()
+        public LockExclusive Exclusive()
         {
             // write lock in main locker
             _main.TryEnterWriteLock(_timeout);
 
-            return new LockControl(() =>
-            {
-                _main.ExitWriteLock();
-            });
+            return new LockExclusive(_main);
         }
     }
 }

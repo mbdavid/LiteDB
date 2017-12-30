@@ -32,8 +32,6 @@ namespace LiteDB
 
                 if (col == null) return false;
 
-                _log.Write(Logger.COMMAND, "drop collection {0}", collection);
-
                 // lock collection
                 trans.WriteLock(collection);
 

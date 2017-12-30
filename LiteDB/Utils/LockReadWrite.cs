@@ -7,13 +7,13 @@ namespace LiteDB
     /// <summary>
     /// A class to control locking disposal states
     /// </summary>
-    public class LockControl : IDisposable
+    public class LockReadWrite : IDisposable
     {
-        public ReaderWriterLockSlim Reader { get; set; }
+        public ReaderWriterLockSlim Reader { get; private set; }
         public ReaderWriterLockSlim Header { get; set; } = null;
         public List<ReaderWriterLockSlim> Collections { get; set; } = new List<ReaderWriterLockSlim>();
 
-        internal LockControl(ReaderWriterLockSlim reader)
+        internal LockReadWrite(ReaderWriterLockSlim reader)
         {
             this.Reader = reader;
         }

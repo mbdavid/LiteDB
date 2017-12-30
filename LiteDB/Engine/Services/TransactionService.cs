@@ -24,7 +24,7 @@ namespace LiteDB
         // transaction controls
         private Guid _transactionID;
         private int _readVersion;
-        private LockControl _lockControl;
+        private LockReadWrite _lockReadWrite;
         private Dictionary<uint, BasePage> _local = new Dictionary<uint, BasePage>();
         private Dictionary<uint, PagePosition> _dirtyPagesWal = new Dictionary<uint, PagePosition>();
 
@@ -53,7 +53,7 @@ namespace LiteDB
             _transactionID = Guid.NewGuid();
             _readVersion = _wal.CurrentVersion;
 
-            _lockControl = locker.Read();
+            _lockReadWrite = locker.Read();
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace LiteDB
         /// </summary>
         public void WriteLock(string collection)
         {
-            _locker.Write(_lockControl, collection);
+            _locker.Write(_lockReadWrite, collection);
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace LiteDB
             // if is header page, lock header for other write transactions
             if (page.IsDirty == false && page.PageType == PageType.Header)
             {
-                _locker.Header(_lockControl);
+                _locker.Header(_lockReadWrite);
             }
 
             if (page.IsDirty == false || alwaysOverride)
@@ -169,7 +169,7 @@ namespace LiteDB
             _dirtyPagesWal.Clear();
 
             // release lock
-            _lockControl.Dispose();
+            _lockReadWrite.Dispose();
         }
     }
 }
