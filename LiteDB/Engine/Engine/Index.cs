@@ -9,25 +9,19 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string collection, string field, bool unique = false)
-        {
-            return this.EnsureIndex(collection, field, null, unique);
-        }
-
-        /// <summary>
-        /// Create a new index (or do nothing if already exists) to a collection/field
-        /// </summary>
-        public bool EnsureIndex(string collection, string field, string expression, bool unique = false)
+        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexPattern.ToString(), "field");
-            if (field == "_id") return false; // always exists
-            if (expression != null && expression.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
+            if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexNamePattern.ToString(), "field");
+            if (name == "_id") return false; // always exists
+            if (expression != null && expression.Source.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
 
-            return this.Transaction<bool>(collection, true, (col) =>
+            using (var trans = this.BeginTrans())
             {
+                var col = trans.Collection.GetOrAdd(collection);
+
                 // check if index already exists
-                var current = col.GetIndex(field);
+                var current = col.GetIndex(name);
 
                 // if already exists, just exit
                 if (current != null)
@@ -36,20 +30,21 @@ namespace LiteDB
                     return false;
                 }
 
-                // create index head
-                var index = _indexer.CreateIndex(col);
+                // lock collection
+                trans.WriteLock(collection);
 
-                index.Field = field;
-                index.Expression = expression ?? "$." + field;
+                // create index head
+                var index = trans.Indexer.CreateIndex(col);
+
+                index.Name = name;
+                index.Expression = expression.Source;
                 index.Unique = unique;
 
-                _log.Write(Logger.COMMAND, "create index on '{0}' :: {1} unique: {2}", collection, index.Expression, unique);
-
                 // read all objects (read from PK index)
-                foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
+                foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, trans.Indexer))
                 {
                     // read binary and deserialize document
-                    var buffer = _data.Read(pkNode.DataBlock);
+                    var buffer = trans.Data.Read(pkNode.DataBlock);
                     var doc = _bsonReader.Deserialize(buffer).AsDocument;
                     var expr = new BsonExpression(index.Expression);
 
@@ -60,54 +55,60 @@ namespace LiteDB
                     foreach (var key in keys)
                     {
                         // insert new index node
-                        var node = _indexer.AddNode(index, key, pkNode);
+                        var node = trans.Indexer.AddNode(index, key, pkNode);
 
                         // link index node to datablock
                         node.DataBlock = pkNode.DataBlock;
                     }
-
-                    // check memory usage
-                    _trans.CheckPoint();
                 }
 
+                // persist changes
+                trans.Commit();
+
                 return true;
-            });
+            }
         }
 
         /// <summary>
         /// Drop an index from a collection
         /// </summary>
-        public bool DropIndex(string collection, string field)
+        public bool DropIndex(string collection, string name)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            if (field == "_id") throw LiteException.IndexDropId();
+            if (name == "_id") throw LiteException.IndexDropId();
 
-            return this.Transaction<bool>(collection, false, (col) =>
+            using (var trans = this.BeginTrans())
             {
+                var col = trans.Collection.Get(collection);
+
                 // no collection, no index
                 if (col == null) return false;
 
                 // search for index reference
-                var index = col.GetIndex(field);
+                var index = col.GetIndex(name);
 
                 // no index, no drop
                 if (index == null) return false;
 
-                _log.Write(Logger.COMMAND, "drop index on '{0}' :: '{1}'", collection, field);
+                // lock collection for write operations
+                trans.WriteLock(collection);
 
                 // delete all data pages + indexes pages
-                _indexer.DropIndex(index);
+                trans.Indexer.DropIndex(index);
 
                 // clear index reference
                 index.Clear();
 
                 // mark collection page as dirty
-                _pager.SetDirty(col);
+                trans.SetDirty(col);
+
+                // persist changes
+                trans.Commit();
 
                 return true;
-            });
+            }
         }
 
         /// <summary>
@@ -117,9 +118,9 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var col = this.GetCollectionPage(collection, false);
+                var col = trans.Collection.Get(collection);
 
                 if (col == null) yield break;
 

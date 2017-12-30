@@ -81,7 +81,7 @@ namespace LiteDB.Tests
 
                     foreach (var idx in indexes)
                     {
-                        var q = db.Find(col, Query.All(idx.Field));
+                        var q = db.Find(col, Query.All(idx.Name));
 
                         foreach (var doc in q)
                         {
@@ -89,9 +89,9 @@ namespace LiteDB.Tests
                         }
 
                         // lets drop this index (if not _id)
-                        if (idx.Field != "_id")
+                        if (idx.Name != "_id")
                         {
-                            db.DropIndex(col, idx.Field);
+                            db.DropIndex(col, idx.Name);
                         }
                     }
 

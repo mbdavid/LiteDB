@@ -8,19 +8,26 @@ namespace LiteDB
 {
     internal class WalService
     {
-        private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
-        ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, PagePosition>> _pagesToConfirm;
-
-        private int _currentVersion = 0;
-
-        ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>> _index;
-
         private FileService _walfile = null;
         private FileService _datafile = null;
         private LockService _locker = null;
 
+        private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
+        private ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>>();
+
+        private int _currentVersion = 0;
         private object _commitLocker = new object();
 
+        public WalService(LockService locker, FileService datafile, FileService walfile)
+        {
+            _locker = locker;
+            _datafile = datafile;
+            _walfile = walfile;
+        }
+
+        /// <summary>
+        /// Get current read version for all new transactions
+        /// </summary>
         public int CurrentVersion => _currentVersion;
 
         /// <summary>

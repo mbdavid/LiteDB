@@ -34,23 +34,7 @@ namespace LiteDB
         #region Ctor
 
         /// <summary>
-        /// Initialize LiteEngine using memory database
-        /// </summary>
-        public LiteEngine()
-            : this(new ConnectionString())
-        {
-        }
-
-        /// <summary>
-        /// Initialize LiteEngine using default file implementation
-        /// </summary>
-        public LiteEngine(string connectionString)
-            : this(new ConnectionString(connectionString))
-        {
-        }
-
-        /// <summary>
-        /// Initialize LiteEngine using full connection string options, stream factory (if null use connection string GetDiskFactory()) and logger instance (if null create new)
+        /// Initialize LiteEngine using connection string options
         /// </summary>
         public LiteEngine(ConnectionString options)
         {
@@ -80,9 +64,14 @@ namespace LiteDB
                 // create instance of WAL file (with no encryption)
                 _walfile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue);
 
-                // inicialize wal file
-                _wal = new WalService();
+                // initialize wal file
+                _wal = new WalService(_locker, _datafile, _walfile);
 
+                // if WAL file have content, must run a checkpoint
+                if (_walfile.IsEmpty() == false)
+                {
+                    _wal.Checkpoint();
+                }
             }
             catch (Exception)
             {
@@ -95,11 +84,11 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Create new transaction. Use collectionName == null for read only transaction
+        /// Create new transaction
         /// </summary>
-        private TransactionService NewTransaction(string collectionName)
+        private TransactionService BeginTrans()
         {
-            return new TransactionService(null, _locker, _wal, _datafile, _walfile, _log);
+            return new TransactionService(_locker, _wal, _datafile, _walfile, _log);
         }
 
         public void Dispose()

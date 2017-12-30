@@ -11,7 +11,7 @@ namespace LiteDB
         internal IndexInfo(CollectionIndex index)
         {
             this.Slot = index.Slot;
-            this.Field = index.Field;
+            this.Name = index.Name;
             this.Expression = index.Expression;
             this.Unique = index.Unique;
             this.MaxLevel = index.MaxLevel;
@@ -23,9 +23,9 @@ namespace LiteDB
         public int Slot { get; private set; }
 
         /// <summary>
-        /// Field index name
+        /// Index name
         /// </summary>
-        public string Field { get; private set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Index Expression

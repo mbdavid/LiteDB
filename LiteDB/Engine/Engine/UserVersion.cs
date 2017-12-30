@@ -11,25 +11,27 @@ namespace LiteDB
         {
             get
             {
-                using (_locker.Read())
+                using (var trans = this.BeginTrans())
                 {
-                    var header = _pager.GetPage<HeaderPage>(0);
+                    var header = trans.GetPage<HeaderPage>(0);
 
                     return header.UserVersion;
                 }
             }
             set
             {
-                this.Transaction<bool>(null, false, (col) =>
+                using (var trans = this.BeginTrans())
                 {
-                    var header = _pager.GetPage<HeaderPage>(0);
+                    var header = trans.GetPage<HeaderPage>(0);
 
                     header.UserVersion = value;
 
-                    _pager.SetDirty(header);
+                    // there is no explicit lock because use only header page - that will be locked inside this SetDirty()
+                    trans.SetDirty(header);
 
-                    return true;
-                });
+                    // persist header change
+                    trans.Commit();
+                }
             }
         }
     }

@@ -13,9 +13,9 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var col = this.GetCollectionPage(collection, false);
+                var col = trans.Collection.Get(collection);
 
                 if (col == null) return BsonValue.MinValue;
 
@@ -24,8 +24,8 @@ namespace LiteDB
 
                 if (index == null) return BsonValue.MinValue;
 
-                var head = _indexer.GetNode(index.HeadNode);
-                var next = _indexer.GetNode(head.Next[0]);
+                var head = trans.Indexer.GetNode(index.HeadNode);
+                var next = trans.Indexer.GetNode(head.Next[0]);
 
                 if (next.IsHeadTail(index)) return BsonValue.MinValue;
 
@@ -41,9 +41,9 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var col = this.GetCollectionPage(collection, false);
+                var col = trans.Collection.Get(collection);
 
                 if (col == null) return BsonValue.MaxValue;
 
@@ -52,8 +52,8 @@ namespace LiteDB
 
                 if (index == null) return BsonValue.MaxValue;
 
-                var tail = _indexer.GetNode(index.TailNode);
-                var prev = _indexer.GetNode(tail.Prev[0]);
+                var tail = trans.Indexer.GetNode(index.TailNode);
+                var prev = trans.Indexer.GetNode(tail.Prev[0]);
 
                 if (prev.IsHeadTail(index)) return BsonValue.MaxValue;
 
@@ -68,22 +68,22 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var col = this.GetCollectionPage(collection, false);
+                var col = trans.Collection.Get(collection);
 
                 if (col == null) return 0;
 
                 if (query == null) return col.DocumentCount;
 
                 // run query in this collection
-                var nodes = query.Run(col, _indexer);
+                var nodes = query.Run(col, trans.Indexer);
 
                 if (query.UseFilter)
                 {
                     // count distinct documents
                     return nodes
-                        .Select(x => _bsonReader.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Select(x => _bsonReader.Deserialize(trans.Data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
                         .Distinct()
                         .LongCount();
@@ -107,20 +107,20 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var col = this.GetCollectionPage(collection, false);
+                var col = trans.Collection.Get(collection);
 
                 if (col == null) return false;
 
                 // run query in this collection
-                var nodes = query.Run(col, _indexer);
+                var nodes = query.Run(col, trans.Indexer);
 
                 if (query.UseFilter)
                 {
                     // check if has at least first document
                     return nodes
-                        .Select(x => _bsonReader.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Select(x => _bsonReader.Deserialize(trans.Data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
                         .Any();
                 }

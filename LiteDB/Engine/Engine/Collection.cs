@@ -11,9 +11,9 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var header = _pager.GetPage<HeaderPage>(0);
+                var header = trans.GetPage<HeaderPage>(0);
 
                 return header.CollectionPages.Keys.AsEnumerable();
             }
@@ -26,16 +26,24 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            return this.Transaction<bool>(collection, false, (col) =>
+            using (var trans = this.BeginTrans())
             {
+                var col = trans.Collection.Get(collection);
+
                 if (col == null) return false;
 
                 _log.Write(Logger.COMMAND, "drop collection {0}", collection);
 
-                _collections.Drop(col);
+                // lock collection
+                trans.WriteLock(collection);
+
+                trans.Collection.Drop(col);
+
+                // persist changes
+                trans.Commit();
 
                 return true;
-            });
+            }
         }
 
         /// <summary>
@@ -46,34 +54,22 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
 
-            return this.Transaction<bool>(collection, false, (col) =>
+            using (var trans = this.BeginTrans())
             {
+                var col = trans.Collection.Get(collection);
+
                 if (col == null) return false;
 
-                _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", collection, newName);
+                // lock collection
+                trans.WriteLock(collection);
 
-                // check if newName already exists
-                if (this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))
-                {
-                    throw LiteException.AlreadyExistsCollectionName(newName);
-                }
+                trans.Collection.Rename(col, newName);
 
-                // change collection name and save
-                col.CollectionName = newName;
-
-                // set collection page as dirty
-                _pager.SetDirty(col);
-
-                // update header collection reference
-                var header = _pager.GetPage<HeaderPage>(0);
-
-                header.CollectionPages.Remove(collection);
-                header.CollectionPages.Add(newName, col.PageID);
-
-                _pager.SetDirty(header);
+                // persist changes
+                trans.Commit();
 
                 return true;
-            });
+            };
         }
     }
 }

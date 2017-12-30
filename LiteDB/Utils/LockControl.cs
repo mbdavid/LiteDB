@@ -1,27 +1,39 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace LiteDB
 {
     /// <summary>
-    /// A class to control locking disposal. Can be a "new lock" - when a lock is not not coming from other lock state
+    /// A class to control locking disposal states
     /// </summary>
     public class LockControl : IDisposable
     {
-        private Action _dispose = null;
+        public ReaderWriterLockSlim Reader { get; set; }
+        public ReaderWriterLockSlim Header { get; set; } = null;
+        public List<ReaderWriterLockSlim> Collections { get; set; } = new List<ReaderWriterLockSlim>();
 
-        internal LockControl()
+        internal LockControl(ReaderWriterLockSlim reader)
         {
+            this.Reader = reader;
         }
 
-        internal LockControl(Action dispose)
-        {
-            _dispose = dispose;
-        }
-
+        /// <summary>
+        /// When dipose, exit all lock states
+        /// </summary>
         public void Dispose()
         {
-            if (_dispose != null) _dispose();
+            this.Reader.ExitReadLock();
+
+            if (this.Header != null)
+            {
+                this.Header.ExitWriteLock();
+            }
+
+            foreach(var col in this.Collections)
+            {
+                col.ExitWriteLock();
+            }
         }
     }
 }

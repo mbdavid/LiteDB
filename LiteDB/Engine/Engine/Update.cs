@@ -7,16 +7,6 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
-        /// Implement update command to a document inside a collection. Returns true if document was updated
-        /// </summary>
-        public bool Update(string collection, BsonDocument doc)
-        {
-            if (doc == null) throw new ArgumentNullException(nameof(doc));
-
-            return this.Update(collection, new BsonDocument[] { doc }) == 1;
-        }
-
-        /// <summary>
         /// Implement update command to a document inside a collection. Return number of documents updated
         /// </summary>
         public int Update(string collection, IEnumerable<BsonDocument> docs)
@@ -24,31 +14,37 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
-            return this.Transaction<int>(collection, false, (col) =>
+            using (var trans = this.BeginTrans())
             {
+                var col = trans.Collection.Get(collection);
+
                 // no collection, no updates
                 if (col == null) return 0;
 
                 var count = 0;
 
+                // lock collection
+                trans.WriteLock(collection);
+
                 foreach (var doc in docs)
                 {
-                    if (this.UpdateDocument(col, doc))
+                    if (this.UpdateDocument(trans, col, doc))
                     {
-                        _trans.CheckPoint();
-
                         count++;
                     }
                 }
 
+                // persist changes
+                trans.Commit();
+
                 return count;
-            });
+            }
         }
 
         /// <summary>
         /// Implement internal update document
         /// </summary>
-        private bool UpdateDocument(CollectionPage col, BsonDocument doc)
+        private bool UpdateDocument(TransactionService trans, CollectionPage col, BsonDocument doc)
         {
             // normalize id before find
             var id = doc["_id"];
@@ -59,10 +55,8 @@ namespace LiteDB
                 throw LiteException.InvalidDataType("_id", id);
             }
 
-            _log.Write(Logger.COMMAND, "update document on '{0}' :: _id = {1}", col.CollectionName, id.RawValue);
-
             // find indexNode from pk index
-            var pkNode = _indexer.Find(col.PK, id, false, Query.Ascending);
+            var pkNode = trans.Indexer.Find(col.PK, id, false, Query.Ascending);
 
             // if not found document, no updates
             if (pkNode == null) return false;
@@ -71,10 +65,10 @@ namespace LiteDB
             var bytes = _bsonWriter.Serialize(doc);
 
             // update data storage
-            var dataBlock = _data.Update(col, pkNode.DataBlock, bytes);
+            var dataBlock = trans.Data.Update(col, pkNode.DataBlock, bytes);
 
             // get all non-pk index nodes from this data block
-            var allNodes = _indexer.GetNodeList(pkNode, false).ToArray();
+            var allNodes = trans.Indexer.GetNodeList(pkNode, false).ToArray();
 
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
@@ -97,14 +91,14 @@ namespace LiteDB
                 // delete changed index nodes
                 foreach (var node in toDelete)
                 {
-                    _indexer.Delete(index, node.Position);
+                    trans.Indexer.Delete(index, node.Position);
                 }
 
                 // insert new nodes
                 foreach (var key in toInsert)
                 {
                     // and add a new one
-                    var node = _indexer.AddNode(index, key, pkNode);
+                    var node = trans.Indexer.AddNode(index, key, pkNode);
 
                     // link my node to data block
                     node.DataBlock = dataBlock.Position;

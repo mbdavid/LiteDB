@@ -64,6 +64,11 @@ namespace LiteDB
         /// </summary>
         public Guid TransactionID { get; set; }
 
+        /// <summary>
+        /// Set this pages that was changed and must be persist in disk [not peristable]
+        /// </summary>
+        public bool IsDirty { get; set; }
+
         public BasePage(uint pageID)
         {
             this.PageID = pageID;
@@ -72,6 +77,7 @@ namespace LiteDB
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.TransactionID = Guid.Empty;
+            this.IsDirty = false;
         }
 
         /// <summary>
@@ -109,6 +115,7 @@ namespace LiteDB
             if (type == typeof(DataPage)) return new DataPage(pageID) as T;
             if (type == typeof(ExtendPage)) return new ExtendPage(pageID) as T;
             if (type == typeof(EmptyPage)) return new EmptyPage(pageID) as T;
+            if (type == typeof(TransactionPage)) return new TransactionPage() as T;
 
             throw new Exception("Invalid base page type T");
         }
@@ -125,6 +132,7 @@ namespace LiteDB
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);
                 case PageType.Empty: return new EmptyPage(pageID);
+                case PageType.Transaction: return new TransactionPage();
                 // use Header as default, because header page will read fixed HEADER_INFO and validate file format (if is not valid datafile)
                 default: return new HeaderPage();
             }
@@ -145,7 +153,7 @@ namespace LiteDB
                 throw LiteException.InvalidDatabase();
             }
 
-            var page = CreateInstance(pageID, pageType);
+            var page = BasePage.CreateInstance(pageID, pageType);
 
             page.ReadHeader(reader);
             page.ReadContent(reader);
@@ -161,11 +169,7 @@ namespace LiteDB
             var writer = new ByteWriter(BasePage.PAGE_SIZE);
 
             this.WriteHeader(writer);
-
-            if (this.PageType != PageType.Empty)
-            {
-                this.WriteContent(writer);
-            }
+            this.WriteContent(writer);
 
             return writer.Buffer;
         }
@@ -202,6 +206,15 @@ namespace LiteDB
         protected abstract void ReadContent(ByteReader reader);
 
         protected abstract void WriteContent(ByteWriter writer);
+
+        /// <summary>
+        /// Make clone instance of this Page - by default: convert to bytes and read again (can be optimized)
+        /// </summary>
+        public virtual BasePage Clone()
+        {
+            var buffer = this.WritePage();
+            return BasePage.ReadPage(buffer);
+        }
 
         #endregion
     }

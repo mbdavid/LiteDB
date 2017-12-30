@@ -14,7 +14,7 @@ namespace LiteDB
     {
         private TimeSpan _timeout;
 
-        private ConcurrentDictionary<string, LockCollection> _collections = new ConcurrentDictionary<string, LockCollection>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
         private ReaderWriterLockSlim _main = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ReaderWriterLockSlim _header = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
@@ -31,49 +31,31 @@ namespace LiteDB
             // main locker in read lock
             _main.TryEnterReadLock(_timeout);
 
-            return new LockControl(() =>
-            {
-                _main.ExitReadLock();
-            });
+            return new LockControl(_main);
         }
 
         /// <summary>
         /// Lock current thread in read mode + get collection locker to to write-lock
         /// </summary>
-        public LockControl Write(string collectionName)
+        public void Write(LockControl locker, string collectionName)
         {
             // get collection locker from dictionary (or create new if doesnt exists)
-            var collection = _collections.GetOrAdd(collectionName, (s) => new LockCollection { Locker = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion), Header = false });
+            var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
 
-            // if current thread already in write lock, do nothig
-            if (collection.Locker.IsWriteLockHeld) return new LockControl();
+            // if current thread already has this lock, just exit
+            if (collection.IsWriteLockHeld) return;
 
             // lock collectionName in write mode
-            collection.Locker.TryEnterWriteLock(_timeout);
+            collection.TryEnterWriteLock(_timeout);
 
-            // also, lock main locker in read mode
-            _main.TryEnterReadLock(_timeout);
-
-            // release both when dispose
-            return new LockControl(() =>
-            {
-                collection.Locker.ExitWriteLock();
-
-                // if collection
-                if (collection.Header)
-                {
-                    _header.ExitWriteLock();
-                }
-
-                _main.ExitReadLock();
-            });
+            locker.Collections.Add(collection);
         }
 
         /// <summary>
         /// Lock header page in write-mode. Need be inside a write lock collection. 
         /// Will release header locker only when dispose collection locker
         /// </summary>
-        public void Header(string collectionName)
+        public void Header(LockControl locker)
         {
             // are this thread already in header lock-write? exit
             if (_header.IsWriteLockHeld) return;
@@ -81,16 +63,7 @@ namespace LiteDB
             // lock-write header locker
             _header.TryEnterReadLock(_timeout);
 
-            // get current lock from 
-            if (_collections.TryGetValue(collectionName, out var collection))
-            {
-                // mark current thread that will need release header lock when release collection locker
-                collection.Header = true;
-            }
-            else
-            {
-                throw new LiteException("Header lock must be do inside a collection lock");
-            }
+            locker.Header = _header;
         }
 
         /// <summary>
@@ -105,12 +78,6 @@ namespace LiteDB
             {
                 _main.ExitWriteLock();
             });
-        }
-
-        private class LockCollection
-        {
-            public ReaderWriterLockSlim Locker { get; set; }
-            public bool Header { get; set; }
         }
     }
 }

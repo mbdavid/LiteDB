@@ -35,7 +35,7 @@ namespace LiteDB.Tests.Engine
 
                 var indexes = db.GetIndexes("col");
 
-                Assert.AreEqual(1, indexes.Count(x => x.Field == "text"));
+                Assert.AreEqual(1, indexes.Count(x => x.Name == "text"));
 
             }
         }

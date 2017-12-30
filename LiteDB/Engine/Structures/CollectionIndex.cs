@@ -5,12 +5,12 @@ namespace LiteDB
 {
     internal class CollectionIndex
     {
-        public static Regex IndexPattern = new Regex(@"^[\w](\.?[\w\$][\w-]*){0,59}$", RegexOptions.Compiled);
+        public static Regex IndexNamePattern = new Regex(@"^\w{1,32}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Total indexes per collection - it's fixed because I will used fixed arrays allocations
         /// </summary>
-        public const int INDEX_PER_COLLECTION = 16;
+        public const int INDEX_PER_COLLECTION = 32;
 
         /// <summary>
         /// Represent slot position on index array on dataBlock/collection indexes - non-persistable
@@ -18,9 +18,9 @@ namespace LiteDB
         public int Slot { get; set; }
 
         /// <summary>
-        /// Field name
+        /// Index name
         /// </summary>
-        public string Field { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Get index expression (path or expr)
@@ -48,17 +48,17 @@ namespace LiteDB
         public uint FreeIndexPageID;
 
         /// <summary>
+        /// Persist max level used
+        /// </summary>
+        public byte MaxLevel { get; set; }
+
+        /// <summary>
         /// Returns if this index slot is empty and can be used as new index
         /// </summary>
         public bool IsEmpty
         {
-            get { return string.IsNullOrEmpty(this.Field); }
+            get { return string.IsNullOrEmpty(this.Name); }
         }
-
-        /// <summary>
-        /// Persist max level used
-        /// </summary>
-        public byte MaxLevel { get; set; }
 
         /// <summary>
         /// Get a reference for page
@@ -75,7 +75,7 @@ namespace LiteDB
         /// </summary>
         public void Clear()
         {
-            this.Field = string.Empty;
+            this.Name = string.Empty;
             this.Expression = string.Empty;
             this.Unique = false;
             this.HeadNode = PageAddress.Empty;

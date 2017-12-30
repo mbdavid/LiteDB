@@ -52,7 +52,7 @@ namespace LiteDB
         public CollectionPage Add(string name)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
-            if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
+            if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
             _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);
 
@@ -74,12 +74,12 @@ namespace LiteDB
             col.CollectionName = name;
 
             // set header page as dirty
-            _pager.SetDirty(header);
+            _trans.SetDirty(header);
 
             // create PK index
             var pk = _indexer.CreateIndex(col);
 
-            pk.Field = "_id";
+            pk.Name = "_id";
             pk.Expression = "$._id";
             pk.Unique = true;
 
@@ -97,6 +97,34 @@ namespace LiteDB
             {
                 yield return _trans.GetPage<CollectionPage>(pageID);
             }
+        }
+
+        /// <summary>
+        /// Rename collection
+        /// </summary>
+        public void Rename(CollectionPage col, string newName)
+        {
+            // check if newName already exists
+            if (this.GetAll().Select(x => x.CollectionName).Contains(newName, StringComparer.OrdinalIgnoreCase))
+            {
+                throw LiteException.AlreadyExistsCollectionName(newName);
+            }
+
+            var oldName = col.CollectionName;
+
+            // change collection name on collectio page
+            col.CollectionName = newName;
+
+            // set collection page as dirty
+            _trans.SetDirty(col);
+
+            // update header collection reference
+            var header = _trans.GetPage<HeaderPage>(0);
+
+            header.CollectionPages.Remove(oldName);
+            header.CollectionPages.Add(newName, col.PageID);
+
+            _trans.SetDirty(header);
         }
 
         /// <summary>
@@ -151,7 +179,7 @@ namespace LiteDB
             header.CollectionPages.Remove(col.CollectionName);
 
             // set header as dirty after remove
-            _pager.SetDirty(header);
+            _trans.SetDirty(header);
 
             _pager.DeletePage(col.PageID);
         }

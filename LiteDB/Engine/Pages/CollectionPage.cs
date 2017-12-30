@@ -13,9 +13,9 @@ namespace LiteDB
         /// <summary>
         /// Represent maximum bytes that all collections names can be used in header
         /// </summary>
-        public const ushort MAX_COLLECTIONS_SIZE = 3000;
+        public const ushort MAX_COLLECTIONS_SIZE = 7100;
 
-        public static Regex NamePattern = new Regex(@"^[\w-]{1,60}$", RegexOptions.Compiled);
+        public static Regex CollectionNamePattern = new Regex(@"^[\w]{1,60}$", RegexOptions.Compiled);
 
         /// <summary>
         /// Page type = Collection
@@ -39,14 +39,19 @@ namespace LiteDB
         public long DocumentCount { get; set; }
 
         /// <summary>
-        /// Get all indexes from this collection - includes non-used indexes
-        /// </summary>
-        public CollectionIndex[] Indexes { get; set; }
-
-        /// <summary>
         /// Storage number sequence to be used in auto _id values
         /// </summary>
         public long Sequence { get; set; }
+
+        /// <summary>
+        /// DateTime when collection was created
+        /// </summary>
+        public DateTime CreationTime { get; set; }
+
+        /// <summary>
+        /// Get all indexes from this collection - includes non-used indexes
+        /// </summary>
+        public CollectionIndex[] Indexes { get; set; }
 
         public CollectionPage(uint pageID)
             : base(pageID)
@@ -57,6 +62,7 @@ namespace LiteDB
             this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
             this.Indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
             this.Sequence = 0;
+            this.CreationTime = DateTime.Now;
 
             for (var i = 0; i < Indexes.Length; i++)
             {
@@ -71,40 +77,20 @@ namespace LiteDB
             this.CollectionName = reader.ReadString();
             this.DocumentCount = reader.ReadInt64();
             this.FreeDataPageID = reader.ReadUInt32();
+            this.Sequence = reader.ReadInt64();
+            this.CreationTime = reader.ReadDateTime();
 
             foreach (var index in this.Indexes)
             {
-                var field = reader.ReadString();
-                var eq = field.IndexOf('=');
-
-                // Use same string to avoid change file defition
-                if (eq > 0)
-                {
-                    index.Field = field.Substring(0, eq);
-                    index.Expression = field.Substring(eq + 1);
-                }
-                else
-                {
-                    index.Field = field;
-                    index.Expression = "$." + field;
-                }
+                index.Name = reader.ReadString();
+                index.Expression = reader.ReadString();
 
                 index.Unique = reader.ReadBoolean();
                 index.HeadNode = reader.ReadPageAddress();
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
+                index.MaxLevel = reader.ReadByte();
             }
-
-            // position on page-footer (avoid file structure change)
-            reader.Position = BasePage.PAGE_SIZE - 8 - CollectionIndex.INDEX_PER_COLLECTION;
-
-            foreach (var index in this.Indexes)
-            {
-                var maxLevel = reader.ReadByte();
-                index.MaxLevel = maxLevel == 0 ? (byte)IndexNode.MAX_LEVEL_LENGTH : maxLevel;
-            }
-
-            this.Sequence = reader.ReadInt64();
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -112,34 +98,19 @@ namespace LiteDB
             writer.Write(this.CollectionName);
             writer.Write(this.DocumentCount);
             writer.Write(this.FreeDataPageID);
+            writer.Write(this.Sequence);
+            writer.Write(this.CreationTime);
 
             foreach (var index in this.Indexes)
             {
-                // write Field+Expression only if index are used
-                if(index.Field.Length > 0)
-                {
-                    writer.Write(index.Field + "=" + index.Expression);
-                }
-                else
-                {
-                    writer.Write("");
-                }
-
+                writer.Write(index.Name);
+                writer.Write(index.Expression);
                 writer.Write(index.Unique);
                 writer.Write(index.HeadNode);
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);
-            }
-
-            // position on page-footer (avoid file structure change)
-            writer.Position = BasePage.PAGE_SIZE - 8 - CollectionIndex.INDEX_PER_COLLECTION;
-
-            foreach (var index in this.Indexes)
-            {
                 writer.Write(index.MaxLevel);
             }
-
-            writer.Write(this.Sequence);
         }
 
         #endregion
@@ -160,11 +131,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get index from field name (index field name is case sensitive) - returns null if not found
+        /// Get index from index name (index name is case sensitive) - returns null if not found
         /// </summary>
-        public CollectionIndex GetIndex(string field)
+        public CollectionIndex GetIndex(string name)
         {
-            return this.Indexes.FirstOrDefault(x => x.Field == field);
+            return this.Indexes.FirstOrDefault(x => x.Name == name);
         }
 
         /// <summary>

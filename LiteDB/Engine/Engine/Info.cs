@@ -11,14 +11,14 @@ namespace LiteDB
         /// </summary>
         public BsonDocument Info()
         {
-            using (_locker.Read())
+            using (var trans = this.BeginTrans())
             {
-                var header = _pager.GetPage<HeaderPage>(0);
+                var header = trans.GetPage<HeaderPage>(0);
                 var collections = new BsonArray();
 
                 foreach(var colName in header.CollectionPages.Keys)
                 {
-                    var col = this.GetCollectionPage(colName, false);
+                    var col = trans.Collection.Get(colName);
 
                     var colDoc = new BsonDocument
                     {
@@ -30,9 +30,10 @@ namespace LiteDB
                             col.Indexes.Where(x => !x.IsEmpty).Select(i => new BsonDocument
                             {
                                 {  "slot", i.Slot },
-                                {  "field", i.Field },
+                                {  "name", i.Name },
                                 {  "expression", i.Expression },
                                 {  "unique", i.Unique }
+//                                {  "maxLevel", BsonValue.Int32(i.MaxLevel) }
                             }))
                         }
                     };
@@ -43,10 +44,8 @@ namespace LiteDB
                 return new BsonDocument
                 {
                     { "userVersion", (int)header.UserVersion },
-//                    { "encrypted", header.Password.Any(x => x > 0) },
-                    { "changeID", (int)header.ChangeID },
                     { "lastPageID", (int)header.LastPageID },
-                    { "fileSize", BasePage.GetSizeOfPages(header.LastPageID + 1) },
+                    { "fileSize", BasePage.GetPagePosition((int)header.LastPageID + 1) },
                     { "collections", collections }
                 };
             }

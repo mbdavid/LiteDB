@@ -46,7 +46,7 @@ namespace LiteDB
             dataPage.AddBlock(block);
 
             // set page as dirty
-            _pager.SetDirty(dataPage);
+            _trans.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
@@ -55,7 +55,7 @@ namespace LiteDB
             col.DocumentCount++;
 
             // set collection page as dirty
-            _pager.SetDirty(col);
+            _trans.SetDirty(col);
 
             return block;
         }
@@ -105,7 +105,7 @@ namespace LiteDB
             }
 
             // set DataPage as dirty
-            _pager.SetDirty(dataPage);
+            _trans.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space AND its on/off free list
             _pager.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
@@ -174,7 +174,7 @@ namespace LiteDB
             page.DeleteBlock(block);
 
             // set page as dirty here
-            _pager.SetDirty(page);
+            _trans.SetDirty(page);
 
             // if there is no more datablocks, lets delete all page
             if (page.BlocksCount == 0)
@@ -193,7 +193,7 @@ namespace LiteDB
             col.DocumentCount--;
 
             // mark collection page as dirty
-            _pager.SetDirty(col);
+            _trans.SetDirty(col);
 
             return block;
         }
@@ -216,7 +216,7 @@ namespace LiteDB
                 offset += bytesToCopy;
 
                 // set extend page as dirty
-                _pager.SetDirty(page);
+                _trans.SetDirty(page);
 
                 // if has bytes left, let's get a new page
                 if (bytesLeft > 0)
@@ -238,7 +238,7 @@ namespace LiteDB
                 page.NextPageID = uint.MaxValue;
 
                 // set page as dirty
-                _pager.SetDirty(page);
+                _trans.SetDirty(page);
             }
         }
     }

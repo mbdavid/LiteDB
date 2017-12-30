@@ -53,7 +53,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read page bytes from disk (use stream pool)
+        /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance
         /// </summary>
         public BasePage ReadPage(long position)
         {

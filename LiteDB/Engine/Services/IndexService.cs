@@ -50,7 +50,7 @@ namespace LiteDB
             page.AddNode(head);
 
             // set index page as dirty
-            _pager.SetDirty(index.Page);
+            _trans.SetDirty(index.Page);
 
             // add indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
@@ -78,7 +78,7 @@ namespace LiteDB
             {
                 index.MaxLevel = level;
 
-                _pager.SetDirty(index.Page);
+                _trans.SetDirty(index.Page);
             }
 
             // call AddNode with key value
@@ -134,7 +134,7 @@ namespace LiteDB
                     var diff = cache.Key.CompareTo(key);
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
-                    if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Field, key);
+                    if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Name, key);
 
                     if (diff == 1) break;
                 }
@@ -144,7 +144,7 @@ namespace LiteDB
                     // cur = current (immediately before - prev)
                     // node = new inserted node
                     // next = next node (where cur is pointing)
-                    _pager.SetDirty(cur.Page);
+                    _trans.SetDirty(cur.Page);
 
                     node.Next[i] = cur.Next[i];
                     node.Prev[i] = cur.Position;
@@ -155,7 +155,7 @@ namespace LiteDB
                     if (next != null)
                     {
                         next.Prev[i] = node.Position;
-                        _pager.SetDirty(next.Page);
+                        _trans.SetDirty(next.Page);
                     }
                 }
             }
@@ -176,7 +176,7 @@ namespace LiteDB
                     node.PrevNode = last.Position;
                     node.NextNode = next.Position;
 
-                    _pager.SetDirty(next.Page);
+                    _trans.SetDirty(next.Page);
                 }
                 else
                 {
@@ -185,7 +185,7 @@ namespace LiteDB
                 }
 
                 // set last node page as dirty
-                _pager.SetDirty(last.Page);
+                _trans.SetDirty(last.Page);
             }
 
             return node;
@@ -228,7 +228,7 @@ namespace LiteDB
             var page = node.Page;
 
             // mark page as dirty here because, if deleted, page type will change
-            _pager.SetDirty(page);
+            _trans.SetDirty(page);
 
             for (int i = node.Prev.Length - 1; i >= 0; i--)
             {
@@ -239,12 +239,12 @@ namespace LiteDB
                 if (prev != null)
                 {
                     prev.Next[i] = node.Next[i];
-                    _pager.SetDirty(prev.Page);
+                    _trans.SetDirty(prev.Page);
                 }
                 if (next != null)
                 {
                     next.Prev[i] = node.Prev[i];
-                    _pager.SetDirty(next.Page);
+                    _trans.SetDirty(next.Page);
                 }
             }
 
@@ -271,12 +271,12 @@ namespace LiteDB
             if (prevNode != null)
             {
                 prevNode.NextNode = node.NextNode;
-                _pager.SetDirty(prevNode.Page);
+                _trans.SetDirty(prevNode.Page);
             }
             if (nextNode != null)
             {
                 nextNode.PrevNode = node.PrevNode;
-                _pager.SetDirty(nextNode.Page);
+                _trans.SetDirty(nextNode.Page);
             }
         }
 
@@ -300,12 +300,12 @@ namespace LiteDB
                 if (prevNode != null)
                 {
                     prevNode.NextNode = node.NextNode;
-                    _pager.SetDirty(prevNode.Page);
+                    _trans.SetDirty(prevNode.Page);
                 }
                 if (nextNode != null)
                 {
                     nextNode.PrevNode = node.PrevNode;
-                    _pager.SetDirty(nextNode.Page);
+                    _trans.SetDirty(nextNode.Page);
                 }
             }
 

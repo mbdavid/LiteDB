@@ -59,10 +59,6 @@ namespace LiteDB
                 {
                     continue;
                 }
-                else if (c == '-' && i > 0)
-                {
-                    continue;
-                }
                 else
                 {
                     return false;

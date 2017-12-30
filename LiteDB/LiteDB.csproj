@@ -81,11 +81,6 @@
 
   <ItemGroup>
     <Compile Remove="Engine\Engine\Shell.cs" />
-    <Compile Remove="Engine\Services\DiskManagerService.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Engine\Services\FileService.cs" />
   </ItemGroup>
 
 </Project>
