@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LiteDB
 {
-    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
+    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5, Transaction = 6 }
 
     internal abstract class BasePage
     {
@@ -15,9 +15,9 @@ namespace LiteDB
         public const int PAGE_SIZE = 4096;
 
         /// <summary>
-        /// This size is used bytes in header pages 17 bytes (+8 reserved to future use) = 25 bytes
+        /// This size is used bytes in header pages 33 bytes (+59 reserved to future use) = 92 bytes
         /// </summary>
-        public const int PAGE_HEADER_SIZE = 25;
+        public const int PAGE_HEADER_SIZE = 92;
 
         /// <summary>
         /// Bytes available to store data removing page header size - 4071 bytes
@@ -59,6 +59,11 @@ namespace LiteDB
         /// </summary>
         public int FreeBytes { get; set; }
 
+        /// <summary>
+        /// Represent transaction page ID that was stored
+        /// </summary>
+        public Guid TransactionID { get; set; }
+
         public BasePage(uint pageID)
         {
             this.PageID = pageID;
@@ -66,6 +71,7 @@ namespace LiteDB
             this.NextPageID = uint.MaxValue;
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
+            this.TransactionID = Guid.Empty;
         }
 
         /// <summary>
@@ -158,7 +164,7 @@ namespace LiteDB
 
             this.WriteHeader(writer);
 
-            if (this.PageType != LiteDB.PageType.Empty)
+            if (this.PageType != PageType.Empty)
             {
                 this.WriteContent(writer);
             }
@@ -176,7 +182,9 @@ namespace LiteDB
             this.NextPageID = reader.ReadUInt32();
             this.ItemCount = reader.ReadUInt16();
             this.FreeBytes = reader.ReadUInt16();
-            reader.Skip(8); // reserved 8 bytes
+            this.TransactionID = reader.ReadGuid();
+
+            reader.Skip(59); // reserved 59 bytes
         }
 
         private void WriteHeader(ByteWriter writer)
@@ -188,7 +196,9 @@ namespace LiteDB
             writer.Write(this.NextPageID);
             writer.Write((UInt16)this.ItemCount);
             writer.Write((UInt16)this.FreeBytes);
-            writer.Skip(8); // reserved 8 bytes
+            writer.Write(this.TransactionID);
+
+            writer.Skip(59); // reserved 59 bytes
         }
 
         protected abstract void ReadContent(ByteReader reader);

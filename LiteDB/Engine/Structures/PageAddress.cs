@@ -10,7 +10,7 @@ namespace LiteDB
     {
         public const int SIZE = 6;
 
-        public static PageAddress Empty = new PageAddress(uint.MaxValue, ushort.MaxValue);
+        public static PageAddress Empty => new PageAddress(uint.MaxValue, ushort.MaxValue);
 
         /// <summary>
         /// PageID (4 bytes)
@@ -22,10 +22,10 @@ namespace LiteDB
         /// </summary>
         public ushort Index;
 
-        public bool IsEmpty
-        {
-            get { return PageID == uint.MaxValue; }
-        }
+        /// <summary>
+        /// Returns true if this PageAdress is empty value
+        /// </summary>
+        public bool IsEmpty => this.PageID == uint.MaxValue && this.Index == ushort.MaxValue;
 
         public override bool Equals(object obj)
         {

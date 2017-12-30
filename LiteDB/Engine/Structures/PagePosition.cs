@@ -8,6 +8,8 @@ namespace LiteDB
     /// </summary>
     internal struct PagePosition
     {
+        public static PagePosition Empty => new PagePosition(uint.MaxValue, long.MaxValue);
+
         /// <summary>
         /// PageID (4 bytes)
         /// </summary>
@@ -17,6 +19,11 @@ namespace LiteDB
         /// Position in disk
         /// </summary>
         public long Position;
+
+        /// <summary>
+        /// Checks if current PagePosition is empty value
+        /// </summary>
+        public bool IsEmpty => this.PageID == uint.MaxValue && this.Position == long.MaxValue;
 
         public override bool Equals(object obj)
         {

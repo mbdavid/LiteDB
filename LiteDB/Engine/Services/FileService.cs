@@ -18,12 +18,14 @@ namespace LiteDB
         private IDiskFactory _factory;
         private TimeSpan _timeout;
         private AesEncryption _crypto = null;
-        private Stream _writer = null;
+        private Stream _writer;
 
         public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit)
         {
             _factory = factory;
             _timeout = timeout;
+
+            _writer = factory.GetStream();
         }
 
         /// <summary>
@@ -59,21 +61,10 @@ namespace LiteDB
 
             try
             {
-                var buffer = new byte[BasePage.PAGE_SIZE];
-
                 // position cursor
                 stream.Position = position;
 
-                // read bytes from data file
-                stream.Read(buffer, 0, BasePage.PAGE_SIZE);
-
-                // if datafile is encrypted and is not first header page
-                var bytes = _crypto == null || position == 0 ? buffer : _crypto.Decrypt(buffer);
-
-                // convert bytes into page
-                var page = BasePage.ReadPage(bytes);
-
-                return page;
+                return this.ReadPage(stream);
             }
             finally
             {
@@ -83,49 +74,115 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Persist single page in disk
+        /// Read all pages from stream starting in position 0
         /// </summary>
-        public PagePosition WritePage(BasePage page)
+        public IEnumerable<BasePage> ReadAllPages()
         {
-            // create single instance of Stream writer
-            if (_writer == null) _writer = _factory.GetStream();
+            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
-            // position cursor according pageID
-            _writer.Position = BasePage.GetSizeOfPages(page.PageID);
+            try
+            {
+                // read all pages from initial 0 position
+                stream.Position = 0;
 
-            // serialize page
-            var buffer = page.WritePage();
-
-            // if file is encrypted, encrypt bytes (if not header page)
-            var bytes = _crypto == null || page.PageID == 0 ? buffer : _crypto.Encrypt(buffer);
-
-            _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
-
-            return new PagePosition(page.PageID, _writer.Position);
+                while(stream.Position < stream.Length)
+                {
+                    yield return this.ReadPage(stream);
+                }
+            }
+            finally
+            {
+                // add stream back to pool
+                _pool.Add(stream);
+            }
         }
 
         /// <summary>
-        /// Persist all pages bytes to disk in sequece order (use single stream writer)
+        /// Read page from current reader stream position
         /// </summary>
-        public IEnumerable<PagePosition> WritePages(IEnumerable<BasePage> pages, long position = -1)
+        private BasePage ReadPage(Stream stream)
         {
-            // create single instance of Stream writer
+            var buffer = new byte[BasePage.PAGE_SIZE];
+
+            // read bytes from data file
+            stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+
+            // if datafile is encrypted and is not first header page
+            var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
+
+            // convert bytes into page
+            var page = BasePage.ReadPage(bytes);
+
+            return page;
+        }
+
+        /// <summary>
+        /// Write all pages bytes into disk using stream from pool (page position according pageID)
+        /// </summary>
+        public IEnumerable<PagePosition> WritePages(IEnumerable<BasePage> pages)
+        {
+            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
+
+            try
+            {
+                foreach (var page in pages)
+                {
+                    // position stream based on pageID
+                    stream.Position = BasePage.GetSizeOfPages(page.PageID);
+
+                    yield return this.WritePage(stream, page);
+                }
+            }
+            finally
+            {
+                // add stream back to pool
+                _pool.Add(stream);
+            }
+        }
+
+        /// <summary>
+        /// Write all pages bytes into disk using single stream (sequencial write)
+        /// </summary>
+        public IEnumerable<PagePosition> WritePagesSequencial(IEnumerable<BasePage> pages)
+        {
+            // write operation occurs in single process (can run in async queue task)
+            lock(_writer)
+            {
+                foreach (var page in pages)
+                {
+                    yield return this.WritePage(_writer, page);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Write a single page into curret Stream position
+        /// </summary>
+        private PagePosition WritePage(Stream stream, BasePage page)
+        {
+            // serialize page
+            var buffer = page.WritePage();
+
+            // encrypt if not header page
+            var bytes = _crypto == null || page.PageID == 0 ? buffer : _crypto.Encrypt(buffer);
+
+            stream.Write(bytes, 0, BasePage.PAGE_SIZE);
+
+            return new PagePosition(page.PageID, stream.Position);
+        }
+
+        /// <summary>
+        /// Clear all file content and position cursor to initial file. Do not delete file from disk
+        /// </summary>
+        public void Clear()
+        {
+            _cache.Clear();
+
+            // create single instance of Stream writer if not exists yet
             if (_writer == null) _writer = _factory.GetStream();
 
-            if (position > -1) _writer.Position = position;
-
-            foreach (var page in pages)
-            {
-                // serialize page
-                var buffer = page.WritePage();
-
-                // encrypt if not header page
-                var bytes = _crypto == null || page.PageID == 0 ? buffer : _crypto.Encrypt(buffer);
-
-                _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
-
-                yield return new PagePosition(page.PageID, _writer.Position);
-            }
+            _writer.SetLength(0);
+            _writer.Position = 0;
         }
 
         /// <summary>
@@ -133,17 +190,14 @@ namespace LiteDB
         /// </summary>
         public void CreateDatabase(long initialSize)
         {
-            // create new Salt for AES encryption
-            _salt = AesEncryption.Salt();
-
             // create a new header page in bytes (keep second page empty)
             var header = new HeaderPage
             {
                 LastPageID = 1,
-                Salt = _salt
+                Salt = AesEncryption.Salt()
             };
 
-            this.WritePage(header);
+            this.WritePages(new BasePage[] { header });
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))

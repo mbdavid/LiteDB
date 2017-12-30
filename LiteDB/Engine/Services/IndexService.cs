@@ -14,12 +14,14 @@ namespace LiteDB
         /// </summary>
         public const int MAX_INDEX_LENGTH = 512;
 
+        private TransactionService _trans;
         private PageService _pager;
         private Logger _log;
         private Random _rand = new Random();
 
-        public IndexService(PageService pager, Logger log)
+        public IndexService(TransactionService trans, PageService pager, Logger log)
         {
+            _trans = trans;
             _pager = pager;
             _log = log;
         }
@@ -320,7 +322,7 @@ namespace LiteDB
         public IndexNode GetNode(PageAddress address)
         {
             if (address.IsEmpty) return null;
-            var page = _pager.GetPage<IndexPage>(address.PageID);
+            var page = _trans.GetPage<IndexPage>(address.PageID);
             return page.GetNode(address.Index);
         }
 

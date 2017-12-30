@@ -95,59 +95,16 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Get the collection page only when needed. Gets from pager always to grantee that wil be the last (in case of clear cache will get a new one - pageID never changes)
+        /// Create new transaction. Use collectionName == null for read only transaction
         /// </summary>
-        private CollectionPage GetCollectionPage(string name, bool addIfNotExits)
+        private TransactionService NewTransaction(string collectionName)
         {
-            if (name == null) return null;
-
-            // search my page on collection service
-            var col = _collections.Get(name);
-
-            if (col == null && addIfNotExits)
-            {
-                _log.Write(Logger.COMMAND, "create new collection '{0}'", name);
-
-                col = _collections.Add(name);
-            }
-
-            return col;
-        }
-
-        /// <summary>
-        /// Encapsulate all operations in a single write transaction
-        /// </summary>
-        private T Transaction<T>(string collection, bool addIfNotExists, Func<CollectionPage, T> action)
-        {
-            // always starts write operation locking database
-            using (_locker.Write())
-            {
-                try
-                {
-                    var col = this.GetCollectionPage(collection, addIfNotExists);
-
-                    var result = action(col);
-
-                    _trans.PersistDirtyPages();
-
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    _log.Write(Logger.ERROR, ex.Message);
-
-                    // if an error occurs during an operation, rollback must be called to avoid datafile inconsistent
-                    _cache.DiscardDirtyPages();
-
-                    throw;
-                }
-            }
+            return new TransactionService(null, _locker, _wal, _datafile, _walfile, _log);
         }
 
         public void Dispose()
         {
             // close all Dispose services
-            if (_crypto != null) _crypto.Dispose();
             if (_datafile != null) _datafile.Dispose();
             if (_walfile != null) _walfile.Dispose();
         }

@@ -12,13 +12,21 @@ namespace LiteDB
         private TransactionService _trans;
         private Logger _log;
 
-        public CollectionService(PageService pager, IndexService indexer, DataService data, TransactionService trans, Logger log)
+        public CollectionService(TransactionService trans, PageService pager, IndexService indexer, DataService data, Logger log)
         {
+            _trans = trans;
             _pager = pager;
             _indexer = indexer;
             _data = data;
-            _trans = trans;
             _log = log;
+        }
+
+        /// <summary>
+        /// Get a collection or create a new if not exists
+        /// </summary>
+        public CollectionPage GetOrAdd(string name)
+        {
+            return this.Get(name) ?? this.Add(name);
         }
 
         /// <summary>
@@ -28,13 +36,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
 
-            var header = _pager.GetPage<HeaderPage>(0);
+            var header = _trans.GetPage<HeaderPage>(0);
 
-            uint pageID;
-
-            if (header.CollectionPages.TryGetValue(name, out pageID))
+            if (header.CollectionPages.TryGetValue(name, out uint pageID))
             {
-                return _pager.GetPage<CollectionPage>(pageID);
+                return _trans.GetPage<CollectionPage>(pageID);
             }
 
             return null;
@@ -51,7 +57,7 @@ namespace LiteDB
             _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);
 
             // get header marked as dirty because I will use header after (and NewPage can get another header instance)
-            var header = _pager.GetPage<HeaderPage>(0);
+            var header = _trans.GetPage<HeaderPage>(0);
 
             // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
             if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)
@@ -85,11 +91,11 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            var header = _pager.GetPage<HeaderPage>(0);
+            var header = _trans.GetPage<HeaderPage>(0);
 
             foreach (var pageID in header.CollectionPages.Values)
             {
-                yield return _pager.GetPage<CollectionPage>(pageID);
+                yield return _trans.GetPage<CollectionPage>(pageID);
             }
         }
 
@@ -123,9 +129,6 @@ namespace LiteDB
                         }
                     }
 
-                    // memory checkpoint
-                    _trans.CheckPoint();
-
                     // add index page to delete list page
                     pages.Add(node.Position.PageID);
                 }
@@ -140,13 +143,10 @@ namespace LiteDB
             {
                 // delete page
                 _pager.DeletePage(pageID);
-
-                // memory checkpoint
-                _trans.CheckPoint();
             }
 
             // get header page to remove from collection list links
-            var header = _pager.GetPage<HeaderPage>(0);
+            var header = _trans.GetPage<HeaderPage>(0);
 
             header.CollectionPages.Remove(col.CollectionName);
 

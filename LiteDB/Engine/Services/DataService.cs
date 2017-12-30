@@ -5,11 +5,13 @@ namespace LiteDB
 {
     internal class DataService
     {
+        private TransactionService _trans;
         private PageService _pager;
         private Logger _log;
 
-        public DataService(PageService pager, Logger log)
+        public DataService(TransactionService trans,PageService pager, Logger log)
         {
+            _trans = trans;
             _pager = pager;
             _log = log;
         }
@@ -64,7 +66,7 @@ namespace LiteDB
         public DataBlock Update(CollectionPage col, PageAddress blockAddress, byte[] data)
         {
             // get datapage and mark as dirty
-            var dataPage = _pager.GetPage<DataPage>(blockAddress.PageID);
+            var dataPage = _trans.GetPage<DataPage>(blockAddress.PageID);
             var block = dataPage.GetBlock(blockAddress.Index);
             var extend = dataPage.FreeBytes + block.Data.Length - data.Length <= 0;
 
@@ -84,7 +86,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    extendPage = _pager.GetPage<ExtendPage>(block.ExtendPageID);
+                    extendPage = _trans.GetPage<ExtendPage>(block.ExtendPageID);
                 }
 
                 this.StoreExtendData(extendPage, data);
@@ -132,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public DataBlock GetBlock(PageAddress blockAddress)
         {
-            var page = _pager.GetPage<DataPage>(blockAddress.PageID);
+            var page = _trans.GetPage<DataPage>(blockAddress.PageID);
             return page.GetBlock(blockAddress.Index);
         }
 
@@ -159,7 +161,7 @@ namespace LiteDB
         public DataBlock Delete(CollectionPage col, PageAddress blockAddress)
         {
             // get page and mark as dirty
-            var page = _pager.GetPage<DataPage>(blockAddress.PageID);
+            var page = _trans.GetPage<DataPage>(blockAddress.PageID);
             var block = page.GetBlock(blockAddress.Index);
 
             // if there a extended page, delete all
@@ -221,7 +223,7 @@ namespace LiteDB
                 {
                     // if i have a continuous page, get it... or create a new one
                     page = page.NextPageID != uint.MaxValue ?
-                        _pager.GetPage<ExtendPage>(page.NextPageID) :
+                        _trans.GetPage<ExtendPage>(page.NextPageID) :
                         _pager.NewPage<ExtendPage>(page);
                 }
             }

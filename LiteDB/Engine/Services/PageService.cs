@@ -6,16 +6,14 @@ namespace LiteDB
 {
     internal class PageService
     {
-        private Transaction _trans;
+        private TransactionService _trans;
         private Logger _log;
 
-        // public PageService(IDiskFactory disk, AesEncryption crypto, CacheService cache, Logger log)
-        // {
-        //     _disk = disk;
-        //     _crypto = crypto;
-        //     _cache = cache;
-        //     _log = log;
-        // }
+        public PageService(TransactionService trans, Logger log)
+        {
+            _trans = trans;
+            _log = log;
+        }
 
         /// <summary>
         /// Read all sequences pages from a start pageID (using NextPageID)
