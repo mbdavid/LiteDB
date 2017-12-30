@@ -11,7 +11,7 @@ namespace LiteDB
         public static byte[] ReadPage(this Stream stream, uint pageID)
         {
             var buffer = new byte[BasePage.PAGE_SIZE];
-            var position = BasePage.GetSizeOfPages(pageID);
+            var position = BasePage.GetPagePostion(pageID);
 
             // this lock is only for precaution
             lock (stream)
@@ -31,7 +31,7 @@ namespace LiteDB
         /// </summary>
         public static long WritePage(this Stream stream, uint pageID, byte[] buffer)
         {
-            var position = BasePage.GetSizeOfPages(pageID);
+            var position = BasePage.GetPagePostion(pageID);
 
             // this lock is only for precaution
             lock (stream)

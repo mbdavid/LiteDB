@@ -10,9 +10,9 @@ namespace LiteDB
         #region Page Constants
 
         /// <summary>
-        /// The size of each page in disk - 4096 is NTFS default
+        /// The size of each page in disk
         /// </summary>
-        public const int PAGE_SIZE = 4096;
+        public const int PAGE_SIZE = 8192;
 
         /// <summary>
         /// This size is used bytes in header pages 33 bytes (+59 reserved to future use) = 92 bytes
@@ -60,7 +60,7 @@ namespace LiteDB
         public int FreeBytes { get; set; }
 
         /// <summary>
-        /// Represent transaction page ID that was stored
+        /// Represent transaction page ID that was stored [16 bytes]
         /// </summary>
         public Guid TransactionID { get; set; }
 
@@ -77,21 +77,19 @@ namespace LiteDB
         /// <summary>
         /// Returns a size of specified number of pages
         /// </summary>
-        /// <param name="pageCount">The page count</param>
-        public static long GetSizeOfPages(uint pageCount)
+        public static long GetPagePostion(uint pageID)
         {
-            return checked((long)pageCount * BasePage.PAGE_SIZE);
+            return checked((long)pageID * BasePage.PAGE_SIZE);
         }
 
         /// <summary>
         /// Returns a size of specified number of pages
         /// </summary>
-        /// <param name="pageCount">The page count</param>
-        public static long GetSizeOfPages(int pageCount)
+        public static long GetPagePosition(int pageID)
         {
-            if (pageCount < 0) throw new ArgumentOutOfRangeException("pageCount", "Could not be less than 0.");
+            if (pageID < 0) throw new ArgumentOutOfRangeException(nameof(pageID), "Could not be less than 0.");
 
-            return BasePage.GetSizeOfPages((uint)pageCount);
+            return BasePage.GetPagePostion((uint)pageID);
         }
 
         #region Read/Write page

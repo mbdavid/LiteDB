@@ -79,7 +79,7 @@ namespace LiteDB
             }
 
             // for last way, look inside data file
-            var pagePosition = BasePage.GetSizeOfPages(pageID);
+            var pagePosition = BasePage.GetPagePostion(pageID);
 
             page = _datafile.ReadPage(pagePosition);
 
@@ -87,7 +87,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Must be call before any page change
+        /// Must be call before any page change and return new instance of page (changes must be done in new instance)
         /// </summary>
         public T SetDirty<T>(BasePage page)
             where T : BasePage

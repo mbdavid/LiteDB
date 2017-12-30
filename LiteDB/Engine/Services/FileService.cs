@@ -128,7 +128,7 @@ namespace LiteDB
                 foreach (var page in pages)
                 {
                     // position stream based on pageID
-                    stream.Position = BasePage.GetSizeOfPages(page.PageID);
+                    stream.Position = BasePage.GetPagePostion(page.PageID);
 
                     yield return this.WritePage(stream, page);
                 }
