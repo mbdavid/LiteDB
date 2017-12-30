@@ -21,6 +21,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get filename
+        /// </summary>
+        public string Filename => _filename;
+
+        /// <summary>
         /// Create new FileStream instance based on dataFilename
         /// </summary>
         public Stream GetStream()

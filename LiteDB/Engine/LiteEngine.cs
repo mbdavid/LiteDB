@@ -57,13 +57,13 @@ namespace LiteDB
             try
             {
                 // create factory based on connection string if there is no factory
-                _log = options.Log;
+                _log = options.Log ?? new Logger(options.LogLevel);
 
                 _bsonReader = new BsonReader(options.UtcDate);
 
                 _locker = new LockService(options.Timeout, _log);
 
-                _datafile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize);
+                _datafile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize, _log);
 
                 // create database if not exists
                 if (_datafile.IsEmpty())
@@ -78,7 +78,7 @@ namespace LiteDB
                 }
 
                 // create instance of WAL file (with no encryption)
-                _walfile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue);
+                _walfile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue, _log);
 
                 // initialize wal file
                 _wal = new WalService(_locker, _datafile, _walfile);
@@ -112,7 +112,7 @@ namespace LiteDB
             // do checkpoint before exit
             if (_walfile != null && _walfile.IsEmpty() == false)
             {
-                _wal.Checkpoint();
+                //_wal.Checkpoint();
             }
 
             // close all Dispose services

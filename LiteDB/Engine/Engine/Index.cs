@@ -14,7 +14,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexNamePattern.ToString(), "field");
             if (name == "_id") return false; // always exists
-            if (expression != null && expression.Source.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
+            if (expression == null || expression?.Source?.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
 
             using (var trans = this.BeginTrans())
             {
@@ -26,7 +26,7 @@ namespace LiteDB
                 // if already exists, just exit
                 if (current != null)
                 {
-                    // do not test any difference between current index and new defition
+                    // do not test any difference between current index and new definition
                     return false;
                 }
 

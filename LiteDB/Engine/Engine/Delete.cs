@@ -25,16 +25,12 @@ namespace LiteDB
                 // lock collection
                 trans.WriteLock(collection);
 
-                foreach (var id in ids)
+                var query = new QueryIn("_id", ids);
+
+                foreach (var pkNode in query.Run(col, trans.Indexer))
                 {
-                    // get node from PK index
-                    var node = trans.Indexer.Find(col.PK, id, false, Query.Ascending);
-
-                    // if not found, go to next id
-                    if (node == null) continue;
-
                     // get all indexes nodes from this data block
-                    var allNodes = trans.Indexer.GetNodeList(node, true).ToArray();
+                    var allNodes = trans.Indexer.GetNodeList(pkNode, true).ToArray();
 
                     // lets remove all indexes that point to this in dataBlock
                     foreach (var linkNode in allNodes)
@@ -45,7 +41,7 @@ namespace LiteDB
                     }
 
                     // remove object data
-                    trans.Data.Delete(col, node.DataBlock);
+                    trans.Data.Delete(col, pkNode.DataBlock);
 
                     count++;
                 }

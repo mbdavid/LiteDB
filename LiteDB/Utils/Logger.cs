@@ -10,12 +10,9 @@ namespace LiteDB
     {
         public const byte NONE = 0;
         public const byte ERROR = 1;
-        public const byte RECOVERY = 2;
-        public const byte COMMAND = 4;
-        public const byte LOCK = 8;
-        public const byte QUERY = 16;
-        public const byte CACHE = 32;
-        public const byte DISK = 64;
+        public const byte COMMAND = 2;
+        public const byte QUERY = 4;
+        public const byte DEBUG = 128;
         public const byte FULL = 255;
 
         /// <summary>
@@ -69,14 +66,11 @@ namespace LiteDB
 
                 var str =
                     level == ERROR ? "ERROR" :
-                    level == RECOVERY ? "RECOVERY" :
                     level == COMMAND ? "COMMAND" :
-                    level == LOCK ? "LOCK" :
                     level == QUERY ? "QUERY" :
-                    level == CACHE ? "CACHE" : 
-                    level == DISK ? "DISK" : "";
+                    level == DEBUG ? "DEBUG" : "";
 
-                var msg = DateTime.Now.ToString("HH:mm:ss.ffff") + " [" + str + "] " + text;
+                var msg = "[" + str + "] " + text;
 
                 try
                 {

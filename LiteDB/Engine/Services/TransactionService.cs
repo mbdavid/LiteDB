@@ -144,14 +144,14 @@ namespace LiteDB
             var saved = _walfile.WritePagesSequencial(dirty)
                 .ToList();
 
-            // clear dirtyPage list
-            _local.Clear();
-
             // update dictionary with page position references
             foreach (var position in saved)
             {
                 _dirtyPagesWal[position.PageID] = position;
             }
+
+            // clear dirtyPage list
+            _local.Clear();
         }
 
         /// <summary>

@@ -19,12 +19,16 @@ namespace LiteDB
         private IDiskFactory _factory;
         private TimeSpan _timeout;
         private AesEncryption _crypto = null;
+        private long _sizeLimit;
+        private Logger _log;
         private Stream _writer;
 
-        public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit)
+        public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, Logger log)
         {
             _factory = factory;
             _timeout = timeout;
+            _log = log;
+            _sizeLimit = sizeLimit;
 
             _writer = factory.GetStream();
         }
@@ -102,6 +106,21 @@ namespace LiteDB
         /// </summary>
         private BasePage ReadPage(Stream stream)
         {
+            // if page are inside local cache, return new instance of this page (avoid disk read)
+            if (_cache.TryGetValue(stream.Position, out var cached))
+            {
+#if DEBUG
+                _log.Write(Logger.DEBUG, "'{0}' read page cache: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), cached.PageID == uint.MaxValue ? "-" : cached.PageID.ToString(), cached.PageType, stream.Position);
+#endif
+
+                // move stream cursor
+                stream.Position += BasePage.PAGE_SIZE;
+
+                // return cloned page
+                return cached.Clone();
+            }
+
+            var position = stream.Position;
             var buffer = new byte[BasePage.PAGE_SIZE];
 
             // read bytes from data file
@@ -112,6 +131,13 @@ namespace LiteDB
 
             // convert bytes into page
             var page = BasePage.ReadPage(bytes);
+
+            // add this page to local cache
+            _cache.AddOrUpdate(position, page, (pos, pg) => page);
+
+#if DEBUG
+            _log.Write(Logger.DEBUG, "'{0}' read page disk: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position);
+#endif
 
             return page;
         }
@@ -169,7 +195,16 @@ namespace LiteDB
             // get position before write on disk
             var position = stream.Position;
 
+            if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
+
+#if DEBUG
+            _log.Write(Logger.DEBUG, "'{0}' write page disk: id {1} ({2}) on position {3} transaction '{4}'", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position, page.TransactionID.ToString().Substring(0, 4));
+#endif
+
             stream.Write(bytes, 0, BasePage.PAGE_SIZE);
+
+            // add this page to cache too
+            _cache.AddOrUpdate(position, page, (pos, pg) => page);
 
             return new PagePosition(page.PageID, position);
         }

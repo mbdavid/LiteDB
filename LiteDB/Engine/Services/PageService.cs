@@ -57,6 +57,9 @@ namespace LiteDB
             else
             {
                 pageID = ++header.LastPageID;
+
+                // set header page as dirty after increment LastPageID
+                _trans.SetDirty(header);
             }
 
             var page = BasePage.CreateInstance<T>(pageID);

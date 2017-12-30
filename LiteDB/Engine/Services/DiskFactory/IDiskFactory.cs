@@ -12,6 +12,11 @@ namespace LiteDB
     public interface IDiskFactory
     {
         /// <summary>
+        /// Get filename
+        /// </summary>
+        string Filename { get; }
+
+        /// <summary>
         /// Get new Stream instance of datafile/wal
         /// </summary>
         Stream GetStream();
