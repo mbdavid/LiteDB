@@ -58,16 +58,28 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Write lock in defined collection - no more can write (only read) in this collection
+        /// Write lock in defined collection - no more can write in this collection (readers only)
         /// </summary>
         public void WriteLock(string collection)
         {
             _locker.Write(_lockReadWrite, collection);
         }
 
-        public void LockHeader()
+        /// <summary>
+        /// Lock header and reset transaction
+        /// </summary>
+        public void HeaderLock()
         {
+            // checks if there is no dirty page
+            if (_dirtyPagesWal.Count > 0 || _local.Any(x => x.Value.IsDirty)) throw new InvalidOperationException("Lock header are not supported when transaction contains dirty pages");
+
             _locker.Header(_lockReadWrite);
+
+            // clear any local page (include clean ones)
+            _local.Clear();
+
+            // reset read version with most recent version
+            _readVersion = _wal.CurrentVersion;
         }
 
         /// <summary>

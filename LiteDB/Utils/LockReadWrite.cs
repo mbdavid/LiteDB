@@ -27,26 +27,15 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
-#if DEBUG
-            _log.Write(Logger.LOCK, "exiting read lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
-
             this.Reader.ExitReadLock();
 
             if (this.Header != null)
             {
-#if DEBUG
-                _log.Write(Logger.LOCK, "exiting header write lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
-
                 this.Header.ExitWriteLock();
             }
 
             foreach(var col in this.Collections)
             {
-#if DEBUG
-                _log.Write(Logger.LOCK, "exiting collection write lock mode in collection ?? on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
                 col.ExitWriteLock();
             }
         }

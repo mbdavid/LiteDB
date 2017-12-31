@@ -26,7 +26,15 @@ namespace LiteDB
         /// </summary>
         public CollectionPage GetOrAdd(string name)
         {
-            return this.Get(name) ?? this.Add(name);
+            var col = this.Get(name);
+
+            if (col == null)
+            {
+                _trans.HeaderLock();
+                col = this.Add(name);
+            }
+
+            return col;
         }
 
         /// <summary>

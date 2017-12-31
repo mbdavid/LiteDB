@@ -31,15 +31,8 @@ namespace LiteDB
         /// </summary>
         public LockReadWrite Read()
         {
-#if DEBUG
-            _log.Write(Logger.LOCK, "entering in read lock mode in thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
             // main locker in read lock
             _main.TryEnterReadLock(_timeout);
-
-#if DEBUG
-            _log.Write(Logger.LOCK, "entered in read lock mode in thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
 
             return new LockReadWrite(_main, _log);
         }
@@ -55,16 +48,8 @@ namespace LiteDB
             // if current thread already has this lock, just exit
             if (collection.IsWriteLockHeld) return;
 
-#if DEBUG
-            _log.Write(Logger.LOCK, "entering in write lock mode in collection '{0}' on thread {1}", collectionName, Thread.CurrentThread.ManagedThreadId);
-#endif
-
             // lock collectionName in write mode
             collection.TryEnterWriteLock(_timeout);
-
-#if DEBUG
-            _log.Write(Logger.LOCK, "entered in write lock mode in collection '{0}' on thread {1}", collectionName, Thread.CurrentThread.ManagedThreadId);
-#endif
 
             locker.Collections.Add(collection);
         }
@@ -78,16 +63,8 @@ namespace LiteDB
             // are this thread already in header lock-write? exit
             if (_header.IsWriteLockHeld) return;
 
-#if DEBUG
-            _log.Write(Logger.LOCK, "entering in header write lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
-
             // lock-write header locker
             _header.TryEnterWriteLock(_timeout);
-
-#if DEBUG
-            _log.Write(Logger.LOCK, "entered in header write lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
 
             locker.Header = _header;
         }
@@ -97,16 +74,8 @@ namespace LiteDB
         /// </summary>
         public LockExclusive Exclusive()
         {
-#if DEBUG
-            _log.Write(Logger.LOCK, "entering in exclusive lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
-
             // write lock in main locker
             _main.TryEnterWriteLock(_timeout);
-
-#if DEBUG
-            _log.Write(Logger.LOCK, "entered in exclusive lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
-#endif
 
             return new LockExclusive(_main);
         }

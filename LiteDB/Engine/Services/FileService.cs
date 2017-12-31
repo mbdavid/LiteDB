@@ -109,10 +109,6 @@ namespace LiteDB
             // if page are inside local cache, return new instance of this page (avoid disk read)
             if (_cache.TryGetValue(stream.Position, out var cached))
             {
-#if DEBUG
-                _log.Write(Logger.DISK, "'{0}' read page cache: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), cached.PageID == uint.MaxValue ? "-" : cached.PageID.ToString(), cached.PageType, stream.Position);
-#endif
-
                 // move stream cursor
                 stream.Position += BasePage.PAGE_SIZE;
 
@@ -134,10 +130,6 @@ namespace LiteDB
 
             // add this page to local cache
             _cache.AddOrUpdate(position, page, (pos, pg) => page);
-
-#if DEBUG
-            _log.Write(Logger.DISK, "'{0}' read page disk: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position);
-#endif
 
             return page;
         }
@@ -196,10 +188,6 @@ namespace LiteDB
             var position = stream.Position;
 
             if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
-
-#if DEBUG
-            _log.Write(Logger.DISK, "'{0}' write page disk: id {1} ({2}) on position {3} transaction '{4}'", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position, page.TransactionID.ToString().Substring(0, 4));
-#endif
 
             stream.Write(bytes, 0, BasePage.PAGE_SIZE);
 

@@ -102,9 +102,9 @@ namespace LiteDB
         /// <summary>
         /// Create new transaction
         /// </summary>
-        private TransactionService BeginTrans()
+        private TransactionService BeginTrans(bool headerLock = false)
         {
-            return new TransactionService(_locker, _wal, _datafile, _walfile, _log);
+            return new TransactionService(headerLock, _locker, _wal, _datafile, _walfile, _log);
         }
 
         public void Dispose()
