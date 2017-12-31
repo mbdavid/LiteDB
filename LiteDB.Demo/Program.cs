@@ -21,26 +21,32 @@ namespace LiteDB.Demo
             File.Delete(datafile);
             File.Delete(walfile);
 
-            var log = new Logger(Logger.FULL, (s) => Console.WriteLine("> " + s));
+            var log = new Logger(Logger.LOCK, (s) => Console.WriteLine("> " + s));
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Log = log }))
             {
                 var ts = new List<Task>();
                 sw.Start();
 
-                db.EnsureIndex("col1", "name", new BsonExpression("$.name"), false);
-                db.EnsureIndex("col2", "name", new BsonExpression("$.name"), false);
+                db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
 
-                //ts.Add(Task.Run(() =>
-                //{
+                Console.Clear();
+
+                ts.Add(Task.Run(() =>
+                {
                     db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
-                //}));
-                //ts.Add(Task.Run(() =>
-                //{
+                }));
+                ts.Add(Task.Run(() =>
+                {
                     db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
-                //}));
+                }));
 
                 Task.WaitAll(ts.ToArray());
+
+                // testing find in col2
+                var d = db.Find("col2", Query.EQ("_id", 3)).FirstOrDefault();
+                Console.WriteLine(d?.ToString());
 
                 Console.WriteLine("Total (b/WAL): " + sw.ElapsedMilliseconds);
 
@@ -55,6 +61,7 @@ namespace LiteDB.Demo
                 var s = db.Info();
                 //Console.WriteLine(JsonSerializer.Serialize(db.Info(), true));
 
+                // test find in col1
                 var d = db.Find("col1", Query.EQ("_id", 3)).FirstOrDefault();
 
                 Console.WriteLine(d?.ToString());

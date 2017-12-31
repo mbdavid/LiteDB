@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LiteDB
 {
@@ -13,9 +14,12 @@ namespace LiteDB
         public ReaderWriterLockSlim Header { get; set; } = null;
         public List<ReaderWriterLockSlim> Collections { get; set; } = new List<ReaderWriterLockSlim>();
 
-        internal LockReadWrite(ReaderWriterLockSlim reader)
+        private Logger _log;
+
+        internal LockReadWrite(ReaderWriterLockSlim reader, Logger log)
         {
             this.Reader = reader;
+            _log = log;
         }
 
         /// <summary>
@@ -23,15 +27,26 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
+#if DEBUG
+            _log.Write(Logger.LOCK, "exiting read lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
+#endif
+
             this.Reader.ExitReadLock();
 
             if (this.Header != null)
             {
+#if DEBUG
+                _log.Write(Logger.LOCK, "exiting header write lock mode on thread {0}", Thread.CurrentThread.ManagedThreadId);
+#endif
+
                 this.Header.ExitWriteLock();
             }
 
             foreach(var col in this.Collections)
             {
+#if DEBUG
+                _log.Write(Logger.LOCK, "exiting collection write lock mode in collection ?? on thread {0}", Thread.CurrentThread.ManagedThreadId);
+#endif
                 col.ExitWriteLock();
             }
         }

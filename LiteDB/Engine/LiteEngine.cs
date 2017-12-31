@@ -112,7 +112,7 @@ namespace LiteDB
             // do checkpoint before exit
             if (_walfile != null && _walfile.IsEmpty() == false)
             {
-                //_wal.Checkpoint();
+                _wal.Checkpoint();
             }
 
             // close all Dispose services

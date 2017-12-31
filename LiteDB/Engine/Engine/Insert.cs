@@ -16,6 +16,8 @@ namespace LiteDB
 
             using (var trans = this.BeginTrans())
             {
+                trans.LockHeader();
+
                 var col = trans.Collection.GetOrAdd(collection);
                 var count = 0;
 

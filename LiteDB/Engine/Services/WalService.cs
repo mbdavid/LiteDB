@@ -41,11 +41,12 @@ namespace LiteDB
             // get page slot in cache
             if (_index.TryGetValue(pageID, out var slot))
             {
-                // get all page versions avaiable in wal-index page slot
-                var versions = slot.Keys.OrderBy(x => x);
-
-                // get best version for request verion
-                var v = versions.FirstOrDefault(x => x <= version);
+                // get all page versions in wal-index
+                // and then filter only equals-or-less then selected version
+                var v = slot.Keys
+                    .Where(x => x <= version)
+                    .OrderByDescending(x => x)
+                    .FirstOrDefault();
 
                 // if versions on index are higher then request, exit
                 if (v == 0) return PagePosition.Empty;
@@ -125,9 +126,11 @@ namespace LiteDB
 
                 // read all pages from WAL that are confirmed (exclude TransactionPages)
                 // pages are in insert-order, do can re-write same pages many times with no problem (only last version will be valid)
+                // clear TransactionID before write on datafile
                 var walpages = _walfile
                     .ReadAllPages()
-                    .Where(x => _confirmedTransactions.Contains(x.TransactionID) && x.PageType != PageType.Transaction);
+                    .Where(x => _confirmedTransactions.Contains(x.TransactionID) && x.PageType != PageType.Transaction)
+                    .ForEach((i, p) => p.TransactionID = Guid.Empty);
 
                 // write on datafile (pageID position based) for each wal page
                 _datafile.WritePages(walpages).Execute();

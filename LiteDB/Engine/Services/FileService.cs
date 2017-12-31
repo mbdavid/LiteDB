@@ -110,7 +110,7 @@ namespace LiteDB
             if (_cache.TryGetValue(stream.Position, out var cached))
             {
 #if DEBUG
-                _log.Write(Logger.DEBUG, "'{0}' read page cache: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), cached.PageID == uint.MaxValue ? "-" : cached.PageID.ToString(), cached.PageType, stream.Position);
+                _log.Write(Logger.DISK, "'{0}' read page cache: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), cached.PageID == uint.MaxValue ? "-" : cached.PageID.ToString(), cached.PageType, stream.Position);
 #endif
 
                 // move stream cursor
@@ -136,7 +136,7 @@ namespace LiteDB
             _cache.AddOrUpdate(position, page, (pos, pg) => page);
 
 #if DEBUG
-            _log.Write(Logger.DEBUG, "'{0}' read page disk: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position);
+            _log.Write(Logger.DISK, "'{0}' read page disk: id {1} ({2}) on position {3}", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position);
 #endif
 
             return page;
@@ -198,12 +198,14 @@ namespace LiteDB
             if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
 #if DEBUG
-            _log.Write(Logger.DEBUG, "'{0}' write page disk: id {1} ({2}) on position {3} transaction '{4}'", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position, page.TransactionID.ToString().Substring(0, 4));
+            _log.Write(Logger.DISK, "'{0}' write page disk: id {1} ({2}) on position {3} transaction '{4}'", Path.GetFileName(_factory.Filename), page.PageID == uint.MaxValue ? "-" : page.PageID.ToString(), page.PageType, position, page.TransactionID.ToString().Substring(0, 4));
 #endif
 
             stream.Write(bytes, 0, BasePage.PAGE_SIZE);
 
-            // add this page to cache too
+            // add this page to cache too (mark as clean page)
+            page.IsDirty = false;
+
             _cache.AddOrUpdate(position, page, (pos, pg) => page);
 
             return new PagePosition(page.PageID, position);

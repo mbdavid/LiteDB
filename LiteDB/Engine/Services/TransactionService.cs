@@ -45,6 +45,9 @@ namespace LiteDB
             _walfile = walfile;
             _log = log;
 
+            // need lock before get current read version
+            _lockReadWrite = locker.Read();
+
             _pager = new PageService(this, _log);
             _data = new DataService(this, _pager, _log);
             _index = new IndexService(this, _pager, _log);
@@ -52,8 +55,6 @@ namespace LiteDB
 
             _transactionID = Guid.NewGuid();
             _readVersion = _wal.CurrentVersion;
-
-            _lockReadWrite = locker.Read();
         }
 
         /// <summary>
@@ -62,6 +63,11 @@ namespace LiteDB
         public void WriteLock(string collection)
         {
             _locker.Write(_lockReadWrite, collection);
+        }
+
+        public void LockHeader()
+        {
+            _locker.Header(_lockReadWrite);
         }
 
         /// <summary>

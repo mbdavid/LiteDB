@@ -12,7 +12,8 @@ namespace LiteDB
         public const byte ERROR = 1;
         public const byte COMMAND = 2;
         public const byte QUERY = 4;
-        public const byte DEBUG = 128;
+        public const byte LOCK = 64;
+        public const byte DISK = 128;
         public const byte FULL = 255;
 
         /// <summary>
@@ -68,7 +69,8 @@ namespace LiteDB
                     level == ERROR ? "ERROR" :
                     level == COMMAND ? "COMMAND" :
                     level == QUERY ? "QUERY" :
-                    level == DEBUG ? "DEBUG" : "";
+                    level == LOCK ? "LOCK" :
+                    level == DISK ? "DEBUG" : "";
 
                 var msg = "[" + str + "] " + text;
 
