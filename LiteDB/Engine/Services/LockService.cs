@@ -17,8 +17,8 @@ namespace LiteDB
         private Logger _log;
 
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
+        private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ReaderWriterLockSlim _main = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        private ReaderWriterLockSlim _header = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         internal LockService(TimeSpan timeout, Logger log)
         {
@@ -27,7 +27,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Lock current thread in read mode
+        /// Enter in read lock
         /// </summary>
         public LockReadWrite Read()
         {
@@ -38,7 +38,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Lock current thread in read mode + get collection locker to to write-lock
+        /// Enter in write lock - only single thread can write in this collection (but all others can read)
         /// </summary>
         public void Write(LockReadWrite locker, string collectionName)
         {
@@ -55,18 +55,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Lock header page in write-mode. Need be inside a write lock collection. 
-        /// Will release header locker only when dispose collection locker
+        /// Enter in reserved lock - only single thread can be in reserved mode (but all others can read)
         /// </summary>
-        public void Header(LockReadWrite locker)
+        public void Reserved(LockReadWrite locker)
         {
-            // are this thread already in header lock-write? exit
-            if (_header.IsWriteLockHeld) return;
+            // if current thread already has write-lock in collection page in lock
+            if (_reserved.IsWriteLockHeld) return;
 
-            // lock-write header locker
-            _header.TryEnterWriteLock(_timeout);
+            // lock-write reserved locker
+            _reserved.TryEnterWriteLock(_timeout);
 
-            locker.Header = _header;
+            locker.Reserved = _reserved;
         }
 
         /// <summary>

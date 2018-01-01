@@ -8,14 +8,19 @@ namespace LiteDB
     internal class PageService
     {
         private WalService _wal;
-        private FileService _datafile;
-        private FileService _walfile;
+        private FileService _dataFile;
+        private FileService _walFile;
+        private HeaderPage _header;
         private Logger _log;
 
         private Guid _transactionID;
         private int _readVersion;
-        private Dictionary<uint, BasePage> _local = new Dictionary<uint, BasePage>();
+        private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
         private Dictionary<uint, PagePosition> _dirtyPagesWal = new Dictionary<uint, PagePosition>();
+
+        // handle created pages during transaction (for rollback)
+        private List<uint> _newPages = new List<uint>();
+
 
         /// <summary>
         /// Transaction ReadVersion
@@ -27,11 +32,12 @@ namespace LiteDB
         /// </summary>
         public Guid TransactionID => _transactionID;
 
-        public PageService(WalService wal, FileService datafile, FileService walfile, Logger log)
+        public PageService(HeaderPage header, WalService wal, FileService dataFile, FileService walFile, Logger log)
         {
+            _header = header;
             _wal = wal;
-            _datafile = datafile;
-            _walfile = walfile;
+            _dataFile = dataFile;
+            _walFile = walFile;
             _log = log;
         }
 
@@ -41,9 +47,9 @@ namespace LiteDB
         public void Initialize()
         {
 #if DEBUG
-            if (_local.Any(x => x.Value.IsDirty) || _dirtyPagesWal.Count > 0) throw new InvalidOperationException("No dirty pages in transaction when initialize pager");
+            if (_localPages.Any(x => x.Value.IsDirty) || _dirtyPagesWal.Count > 0) throw new InvalidOperationException("No dirty pages in transaction when initialize pager");
 #endif
-            _local.Clear();
+            _localPages.Clear();
             _transactionID = Guid.NewGuid();
             _readVersion = _wal.CurrentReadVersion;
         }
@@ -55,7 +61,7 @@ namespace LiteDB
             where T : BasePage
         {
             // first, look for this page inside local pages
-            if (_local.TryGetValue(pageID, out var page))
+            if (_localPages.TryGetValue(pageID, out var page))
             {
                 return (T)page;
             }
@@ -63,10 +69,10 @@ namespace LiteDB
             // if not inside local pages, can be a dirty page already saved in wal file
             if (_dirtyPagesWal.TryGetValue(pageID, out var position))
             {
-                var dirty = (T)_walfile.ReadPage(position.Position);
+                var dirty = (T)_walFile.ReadPage(position.Position);
 
                 // add into local pages
-                _local[pageID] = dirty;
+                _localPages[pageID] = dirty;
 
                 return dirty;
             }
@@ -76,31 +82,26 @@ namespace LiteDB
 
             if (!pos.IsEmpty)
             {
-                var walpage = (T)_walfile.ReadPage(pos.Position);
+                var walpage = (T)_walFile.ReadPage(pos.Position);
 
                 // copy to my local pages
-                _local[pageID] = walpage;
+                _localPages[pageID] = walpage;
 
                 return walpage;
             }
 
-            // load special shared page
-            if (pageID == 1)
+            // load header page (is a global single instance)
+            if (pageID == 0)
             {
-                if (_wal.SharedPage == null)
-                {
-                    _wal.SharedPage = (SharedPage)_datafile.ReadPage(BasePage.PAGE_SIZE); // Page 1 position = (1 * BasePage.PAGE_SIZE)
-                }
-
-                return _wal.SharedPage as T;
+                return _header as T;
             }
 
             // for last chance, look inside original data file
             var pagePosition = BasePage.GetPagePostion(pageID);
 
-            var filepage = (T)_datafile.ReadPage(pagePosition);
+            var filepage = (T)_dataFile.ReadPage(pagePosition);
 
-            _local[pageID] = filepage;
+            _localPages[pageID] = filepage;
 
             return filepage;
         }
@@ -113,7 +114,7 @@ namespace LiteDB
             if (page.IsDirty == false || alwaysOverride)
             {
                 page.IsDirty = true;
-                _local[page.PageID] = page;
+                _localPages[page.PageID] = page;
             }
         }
 
@@ -125,13 +126,13 @@ namespace LiteDB
         public void PersistTransaction()
         {
             // update pages with transactionId in all dirty page
-            var dirty = _local.Values
+            var dirty = _localPages.Values
                 .Where(x => x.IsDirty)
                 .ForEach((i, p) => p.TransactionID = _transactionID)
                 .ToList();
 
             // save all dirty pages into walfile (sequencial mode) and get pages position reference
-            var saved = _walfile.WritePagesSequence(dirty)
+            var saved = _walFile.WritePagesSequence(dirty)
                 .ToList();
 
             // update dictionary with page position references
@@ -141,7 +142,7 @@ namespace LiteDB
             }
 
             // clear dirtyPage list
-            _local.Clear();
+            _localPages.Clear();
         }
 
         /// <summary>
@@ -149,7 +150,15 @@ namespace LiteDB
         /// </summary>
         public void WalCommit()
         {
-            _wal.Commit(_transactionID, _dirtyPagesWal.Values);
+            // create new header page with transaction ID commit
+            var copy = new HeaderPage()
+            {
+                TransactionID = _transactionID,
+                FreeEmptyPageID = _header.FreeEmptyPageID,
+                LastPageID = _header.LastPageID
+            };
+
+            _wal.Commit(copy, _dirtyPagesWal.Values);
         }
 
         /// <summary>
@@ -176,13 +185,11 @@ namespace LiteDB
         public T NewPage<T>(BasePage prevPage = null)
             where T : BasePage
         {
-            // get shared page
-            var shared = this.GetPage<SharedPage>(1);
             var pageID = (uint)0;
             var diskData = new byte[0];
 
             // try get page from Empty free list
-            if (shared.FreeEmptyPageID != uint.MaxValue)
+            if (_header.FreeEmptyPageID != uint.MaxValue)
             {
                 //var free = _trans.GetPage<BasePage>(header.FreeEmptyPageID);
                 //
@@ -195,9 +202,9 @@ namespace LiteDB
             else
             {
                 // increase LastPageID from shared page
-                lock(_wal)
+                lock (_header)
                 {
-                    pageID = ++shared.LastPageID;
+                    pageID = ++_header.LastPageID;
                 }
             }
 
@@ -215,7 +222,65 @@ namespace LiteDB
                 this.SetDirty(prevPage);
             }
 
+            // retain a list of created pages to, in a rollback situation, back pages to empty list
+            _newPages.Add(page.PageID);
+
             return page;
+        }
+
+        /// <summary>
+        /// Return added pages when occurs an rollback transaction (run this only in rollback). Create new transactionID and add into
+        /// WAL file all new pages as EmptyPage in a linked order - also, update SharedPage before store
+        /// </summary>
+        public void ReturnNewPages()
+        {
+            // if no new pages, just exit
+            if (_newPages.Count == 0) return;
+
+            var pages = new List<EmptyPage>();
+
+            // create new transaction ID
+            var transactionID = Guid.NewGuid();
+
+            // create list of empty pages with forward link pointer
+            for (var i = 0; i < _newPages.Count; i++)
+            {
+                var pageID = _newPages[i];
+                var next = i < _newPages.Count - 1 ? _newPages[i + 1] : uint.MaxValue;
+
+                pages.Add(new EmptyPage(pageID)
+                {
+                    NextPageID = next,
+                    TransactionID = transactionID,
+                    IsDirty = true
+                });
+            }
+
+            // persist all pages into wal-file
+            var pagePositions = _walFile.WritePagesSequence(pages)
+                .ToList();
+
+            // now lock header to update FreePageList
+            lock (_header)
+            {
+                // create copy of header page to sendo to wal file
+                var copy = new HeaderPage
+                {
+                    TransactionID = transactionID,
+                    FreeEmptyPageID = pages.First().PageID, // in this header page free empty list starts with my new empty list page
+                    LastPageID = _header.LastPageID
+                };
+
+                // and my last page will link to current first link
+                pages.Last().NextPageID = _header.FreeEmptyPageID;
+
+                // now commit last confirm page to wal file
+                _wal.Commit(copy, pagePositions);
+
+                // now can update global header version
+                _header.FreeEmptyPageID = copy.FreeEmptyPageID;
+            }
+
         }
 
         /// <summary>

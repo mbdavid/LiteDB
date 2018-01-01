@@ -15,11 +15,13 @@ namespace LiteDB
 
         private LockService _locker;
 
-        private FileService _datafile;
+        private FileService _dataFile;
 
-        private FileService _walfile;
+        private FileService _walFile;
 
         private WalService _wal;
+
+        private HeaderPage _header;
 
         private BsonReader _bsonReader;
         private BsonWriter _bsonWriter = new BsonWriter();
@@ -63,31 +65,34 @@ namespace LiteDB
 
                 _locker = new LockService(options.Timeout, _log);
 
-                _datafile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize, _log);
+                _dataFile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize, _log);
 
                 // create database if not exists
-                if (_datafile.IsEmpty())
+                if (_dataFile.IsEmpty())
                 {
-                    _datafile.CreateDatabase(options.InitialSize);
+                    _dataFile.CreateDatabase(options.InitialSize);
                 }
 
                 // if contains password, enable encryption
                 if (options.Password != null)
                 {
-                    _datafile.EnableEncryption(options.Password);
+                    _dataFile.EnableEncryption(options.Password);
                 }
 
                 // create instance of WAL file (with no encryption)
-                _walfile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue, _log);
+                _walFile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue, _log);
 
                 // initialize wal file
-                _wal = new WalService(_locker, _datafile, _walfile);
+                _wal = new WalService(_locker, _dataFile, _walFile);
 
                 // if WAL file have content, must run a checkpoint
-                if (_walfile.IsEmpty() == false)
+                if (_walFile.IsEmpty() == false)
                 {
                     _wal.Checkpoint();
                 }
+
+                // load header page
+                _header = (HeaderPage)_dataFile.ReadPage(0);
             }
             catch (Exception)
             {
@@ -104,20 +109,20 @@ namespace LiteDB
         /// </summary>
         private TransactionService NewTransaction(TransactionMode mode, string collection, bool addIfNotExists = false)
         {
-            return new TransactionService(mode, collection, addIfNotExists, _locker, _wal, _datafile, _walfile, _log);
+            return new TransactionService(mode, collection, addIfNotExists, _header, _locker, _wal, _dataFile, _walFile, _log);
         }
 
         public void Dispose()
         {
             // do checkpoint before exit
-            if (_walfile != null && _walfile.IsEmpty() == false)
+            if (_walFile != null && _walFile.IsEmpty() == false)
             {
                 _wal.Checkpoint();
             }
 
             // close all Dispose services
-            if (_datafile != null) _datafile.Dispose();
-            if (_walfile != null) _walfile.Dispose(true);
+            if (_dataFile != null) _dataFile.Dispose();
+            if (_walFile != null) _walFile.Dispose(true);
         }
     }
 }

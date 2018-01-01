@@ -13,9 +13,9 @@ namespace LiteDB
         {
             using (var trans = this.NewTransaction(TransactionMode.Read, null))
             {
-                var header = trans.Pager.GetPage<HeaderPage>(0);
+                var colList = trans.Pager.GetPage<CollectionListPage>(1);
 
-                return header.CollectionPages.Keys.AsEnumerable();
+                return colList.GetAll().Select(x => x.Key);
             }
         }
 
@@ -26,7 +26,7 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            using (var trans = this.NewTransaction(TransactionMode.WriteHeader, collection))
+            using (var trans = this.NewTransaction(TransactionMode.Reserved, collection))
             {
                 var col = trans.CollectionPage;
 
@@ -48,7 +48,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
 
-            using (var trans = this.NewTransaction(TransactionMode.WriteHeader, collection))
+            using (var trans = this.NewTransaction(TransactionMode.Reserved, collection))
             {
                 var col = trans.CollectionPage;
 

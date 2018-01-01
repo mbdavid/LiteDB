@@ -11,7 +11,7 @@ namespace LiteDB
     public class LockReadWrite : IDisposable
     {
         public ReaderWriterLockSlim Reader { get; private set; }
-        public ReaderWriterLockSlim Header { get; set; } = null;
+        public ReaderWriterLockSlim Reserved { get; set; } = null;
         public List<ReaderWriterLockSlim> Collections { get; set; } = new List<ReaderWriterLockSlim>();
 
         private Logger _log;
@@ -29,9 +29,9 @@ namespace LiteDB
         {
             this.Reader.ExitReadLock();
 
-            if (this.Header != null)
+            if (this.Reserved != null)
             {
-                this.Header.ExitWriteLock();
+                this.Reserved.ExitWriteLock();
             }
 
             foreach(var col in this.Collections)

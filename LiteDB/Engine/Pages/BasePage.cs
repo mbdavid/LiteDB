@@ -3,12 +3,10 @@ using System.Collections.Generic;
 
 namespace LiteDB
 {
-    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5, Shared = 6 }
+    public enum PageType { Empty = 0, Header = 1, CollectionList = 6, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 
     internal abstract class BasePage
     {
-        #region Page Constants
-
         /// <summary>
         /// The size of each page in disk
         /// </summary>
@@ -23,8 +21,6 @@ namespace LiteDB
         /// Bytes available to store data removing page header size - 4071 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
-
-        #endregion
 
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
@@ -80,86 +76,7 @@ namespace LiteDB
             this.IsDirty = false;
         }
 
-        /// <summary>
-        /// Returns a size of specified number of pages
-        /// </summary>
-        public static long GetPagePostion(uint pageID)
-        {
-            return checked((long)pageID * BasePage.PAGE_SIZE);
-        }
-
-        /// <summary>
-        /// Returns a size of specified number of pages
-        /// </summary>
-        public static long GetPagePosition(int pageID)
-        {
-            if (pageID < 0) throw new ArgumentOutOfRangeException(nameof(pageID), "Could not be less than 0.");
-
-            return BasePage.GetPagePostion((uint)pageID);
-        }
-
         #region Read/Write page
-
-        /// <summary>
-        /// Create a new instance of page based on T type
-        /// </summary>
-        public static T CreateInstance<T>(uint pageID)
-            where T : BasePage
-        {
-            var type = typeof(T);
-
-            // casting using "as T" #90 / thanks @Skysper
-            if (type == typeof(HeaderPage)) return new HeaderPage() as T;
-            if (type == typeof(CollectionPage)) return new CollectionPage(pageID) as T;
-            if (type == typeof(IndexPage)) return new IndexPage(pageID) as T;
-            if (type == typeof(DataPage)) return new DataPage(pageID) as T;
-            if (type == typeof(ExtendPage)) return new ExtendPage(pageID) as T;
-            if (type == typeof(EmptyPage)) return new EmptyPage(pageID) as T;
-            if (type == typeof(SharedPage)) return new SharedPage() as T;
-
-            throw new Exception("Invalid base page type T");
-        }
-
-        /// <summary>
-        /// Create a new instance of page based on PageType
-        /// </summary>
-        public static BasePage CreateInstance(uint pageID, PageType pageType)
-        {
-            switch (pageType)
-            {
-                case PageType.Collection: return new CollectionPage(pageID);
-                case PageType.Index: return new IndexPage(pageID);
-                case PageType.Data: return new DataPage(pageID);
-                case PageType.Extend: return new ExtendPage(pageID);
-                case PageType.Empty: return new EmptyPage(pageID);
-                case PageType.Shared: return new SharedPage();
-                // use Header as default, because header page will read fixed HEADER_INFO and validate file format (if is not valid datafile)
-                default: return new HeaderPage();
-            }
-        }
-
-        /// <summary>
-        /// Read a page with correct instance page object. Checks for pageType
-        /// </summary>
-        public static BasePage ReadPage(byte[] buffer)
-        {
-            var reader = new ByteReader(buffer);
-
-            var pageID = reader.ReadUInt32();
-            var pageType = (PageType)reader.ReadByte();
-
-            if (pageID == 0 && (byte)pageType > 5)
-            {
-                throw LiteException.InvalidDatabase();
-            }
-
-            var page = BasePage.CreateInstance(pageID, pageType);
-
-            page.ReadHeader(reader);
-            page.ReadContent(reader);
-
-            return page;
-        }
 
         /// <summary>
         /// Write a page to byte array
@@ -207,6 +124,91 @@ namespace LiteDB
 
         protected abstract void WriteContent(ByteWriter writer);
 
+        #endregion
+
+        #region Static Helper Methods
+
+        /// <summary>
+        /// Returns a size of specified number of pages
+        /// </summary>
+        public static long GetPagePostion(uint pageID)
+        {
+            return checked((long)pageID * BasePage.PAGE_SIZE);
+        }
+
+        /// <summary>
+        /// Returns a size of specified number of pages
+        /// </summary>
+        public static long GetPagePosition(int pageID)
+        {
+            if (pageID < 0) throw new ArgumentOutOfRangeException(nameof(pageID), "Could not be less than 0.");
+
+            return BasePage.GetPagePostion((uint)pageID);
+        }
+
+        /// <summary>
+        /// Create a new instance of page based on T type
+        /// </summary>
+        public static T CreateInstance<T>(uint pageID)
+            where T : BasePage
+        {
+            var type = typeof(T);
+
+            // casting using "as T" #90 / thanks @Skysper
+            if (type == typeof(HeaderPage)) return new HeaderPage() as T;
+            if (type == typeof(CollectionListPage)) return new CollectionListPage() as T;
+            if (type == typeof(CollectionPage)) return new CollectionPage(pageID) as T;
+            if (type == typeof(IndexPage)) return new IndexPage(pageID) as T;
+            if (type == typeof(DataPage)) return new DataPage(pageID) as T;
+            if (type == typeof(ExtendPage)) return new ExtendPage(pageID) as T;
+            if (type == typeof(EmptyPage)) return new EmptyPage(pageID) as T;
+
+            throw new Exception("Invalid base page type T");
+        }
+
+        /// <summary>
+        /// Create a new instance of page based on PageType
+        /// </summary>
+        public static BasePage CreateInstance(uint pageID, PageType pageType)
+        {
+            switch (pageType)
+            {
+                case PageType.Collection: return new CollectionPage(pageID);
+                case PageType.CollectionList: return new CollectionListPage();
+                case PageType.Index: return new IndexPage(pageID);
+                case PageType.Data: return new DataPage(pageID);
+                case PageType.Extend: return new ExtendPage(pageID);
+                case PageType.Empty: return new EmptyPage(pageID);
+                // use Header as default, because header page will read fixed HEADER_INFO and validate file format (if is not valid datafile)
+                default: return new HeaderPage();
+            }
+        }
+
+        /// <summary>
+        /// Read a page with correct instance page object. Checks for pageType
+        /// </summary>
+        public static BasePage ReadPage(byte[] buffer)
+        {
+            var reader = new ByteReader(buffer);
+
+            var pageID = reader.ReadUInt32();
+            var pageType = (PageType)reader.ReadByte();
+
+            if (pageID == 0 && (byte)pageType > 5)
+            {
+                throw LiteException.InvalidDatabase();
+            }
+
+            var page = BasePage.CreateInstance(pageID, pageType);
+
+            page.ReadHeader(reader);
+            page.ReadContent(reader);
+
+            return page;
+        }
+
+        #endregion
+
         /// <summary>
         /// Make clone instance of this Page - by default: convert to bytes and read again (can be optimized)
         /// </summary>
@@ -220,7 +222,5 @@ namespace LiteDB
         {
             return this.PageID.ToString().PadLeft(4, '0') + " : " + this.PageType + " (" + this.ItemCount + ")";
         }
-
-        #endregion
     }
 }

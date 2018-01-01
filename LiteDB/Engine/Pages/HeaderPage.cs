@@ -36,9 +36,14 @@ namespace LiteDB
         public DateTime CreationTime { get; set; }
 
         /// <summary>
-        /// Get a dictionary with all collection pages with pageID link
+        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page)
         /// </summary>
-        public Dictionary<string, uint> CollectionPages { get; set; }
+        public uint FreeEmptyPageID;
+
+        /// <summary>
+        /// Last created page - Used when there is no free page inside file
+        /// </summary>
+        public uint LastPageID;
 
         public HeaderPage()
             : base(0)
@@ -48,7 +53,8 @@ namespace LiteDB
             this.UserVersion = 0;
             this.Salt = new byte[16];
             this.CreationTime = DateTime.Now;
-            this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+            this.FreeEmptyPageID = uint.MaxValue;
+            this.LastPageID = 1; // CollectionListPage
         }
 
         #region Read/Write pages
@@ -64,13 +70,8 @@ namespace LiteDB
             this.UserVersion = reader.ReadUInt16();
             this.Salt = reader.ReadBytes(this.Salt.Length);
             this.CreationTime = reader.ReadDateTime();
-
-            // read page collections references (position on end of page)
-            var cols = reader.ReadByte();
-            for (var i = 0; i < cols; i++)
-            {
-                this.CollectionPages.Add(reader.ReadString(), reader.ReadUInt32());
-            }
+            this.FreeEmptyPageID = reader.ReadUInt32();
+            this.LastPageID = reader.ReadUInt32();
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -80,13 +81,8 @@ namespace LiteDB
             writer.Write(this.UserVersion);
             writer.Write(this.Salt);
             writer.Write(this.CreationTime);
-
-            writer.Write((byte)this.CollectionPages.Count);
-            foreach (var key in this.CollectionPages.Keys)
-            {
-                writer.Write(key);
-                writer.Write(this.CollectionPages[key]);
-            }
+            writer.Write(this.FreeEmptyPageID);
+            writer.Write(this.LastPageID);
         }
 
         #endregion

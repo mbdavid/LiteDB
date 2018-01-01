@@ -25,11 +25,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Represent the single instance of SharedPage (page 1)
-        /// </summary>
-        public SharedPage SharedPage { get; set; } = null;
-
-        /// <summary>
         /// Get current read version for all new transactions
         /// </summary>
         public int CurrentReadVersion => _currentReadVersion;
@@ -66,17 +61,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Confirm transaction ID version and return new current version number
+        /// Confirm transaction using new HeaderPage with transaction ID return new current version number
         /// </summary>
-        public int Commit(Guid transactionID, IEnumerable<PagePosition> pagePositions)
+        public int Commit(HeaderPage header, IEnumerable<PagePosition> pagePositions)
         {
             // add transaction to confirmed list
-            _confirmedTransactions.Add(transactionID);
+            _confirmedTransactions.Add(header.TransactionID);
 
-            // write confirmed shared page (use First() to execute)
-            var confirm = _walfile.WritePagesSequence(new BasePage[] { new SharedPage(transactionID) }).First();
+            // write confirmed header page (use First() to execute)
+            var confirm = _walfile.WritePagesSequence(new BasePage[] { header }).First();
 
-            // must lock commit operation to update index
+            // must lock commit operation to update WAL-Index (memory only operation)
             lock (_locker)
             {
                 // increment current version
@@ -118,10 +113,10 @@ namespace LiteDB
                 // if there is not confirmed transaction
                 if (_confirmedTransactions.Count == 0)
                 {
-                    // read all file get only confirmed transaction (with shared page in WAL)
+                    // read all file and get only confirmed transaction (with header page in WAL)
                     foreach(var transactionID in _walfile
                             .ReadAllPages()
-                            .Where(x => x.PageType == PageType.Shared)
+                            .Where(x => x.PageType == PageType.Header)
                             .Select(x => x.TransactionID))
                     {
                         _confirmedTransactions.Add(transactionID);

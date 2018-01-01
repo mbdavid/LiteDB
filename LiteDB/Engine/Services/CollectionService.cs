@@ -24,11 +24,13 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Get(string name)
         {
-            var header = _pager.GetPage<HeaderPage>(0);
+            var colList = _pager.GetPage<CollectionListPage>(1);
 
-            if (header.CollectionPages.TryGetValue(name, out uint pageID))
+            var pageID = colList.GetPageID(name);
+
+            if (pageID.HasValue)
             {
-                return _pager.GetPage<CollectionPage>(pageID);
+                return _pager.GetPage<CollectionPage>(pageID.Value);
             }
 
             return null;
@@ -41,27 +43,20 @@ namespace LiteDB
         {
             if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
-            // get header marked as dirty because I will use header after (and NewPage can get another header instance)
-            var header = _pager.GetPage<HeaderPage>(0);
-
-            // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
-            if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)
-            {
-                throw LiteException.CollectionLimitExceeded(CollectionPage.MAX_COLLECTIONS_SIZE);
-            }
-
             // get new collection page (marked as dirty)
             var col = _pager.NewPage<CollectionPage>();
 
-            // add this page to header page collection
-            header.CollectionPages.Add(name, col.PageID);
+            // get collection page list to add this new collection
+            var colList = _pager.GetPage<CollectionListPage>(1);
 
+            colList.Add(name, col.PageID);
+
+            _pager.SetDirty(colList);
+
+            // set name into collection page
             col.CollectionName = name;
 
-            // set header page as dirty
-            _pager.SetDirty(header);
-
-            // create PK index
+            // create PK index with _id key
             var pk = _indexer.CreateIndex(col);
 
             pk.Name = "_id";
@@ -76,11 +71,11 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            var header = _pager.GetPage<HeaderPage>(0);
+            var colList = _pager.GetPage<CollectionListPage>(1);
 
-            foreach (var pageID in header.CollectionPages.Values)
+            foreach (var col in colList.GetAll())
             {
-                yield return _pager.GetPage<CollectionPage>(pageID);
+                yield return _pager.GetPage<CollectionPage>(col.Value);
             }
         }
 
@@ -103,13 +98,12 @@ namespace LiteDB
             // set collection page as dirty
             _pager.SetDirty(col);
 
-            // update header collection reference
-            var header = _pager.GetPage<HeaderPage>(0);
+            // update collection list page reference
+            var colList = _pager.GetPage<CollectionListPage>(1);
 
-            header.CollectionPages.Remove(oldName);
-            header.CollectionPages.Add(newName, col.PageID);
+            colList.Rename(oldName, newName);
 
-            _pager.SetDirty(header);
+            _pager.SetDirty(colList);
         }
 
         /// <summary>
@@ -158,13 +152,13 @@ namespace LiteDB
                 _pager.DeletePage(pageID);
             }
 
-            // get header page to remove from collection list links
-            var header = _pager.GetPage<HeaderPage>(0);
+            // get collection page List
+            var colList = _pager.GetPage<CollectionListPage>(1);
 
-            header.CollectionPages.Remove(col.CollectionName);
+            colList.Delete(col.CollectionName);
 
             // set header as dirty after remove
-            _pager.SetDirty(header);
+            _pager.SetDirty(colList);
 
             _pager.DeletePage(col.PageID);
         }

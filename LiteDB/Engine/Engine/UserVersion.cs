@@ -20,7 +20,7 @@ namespace LiteDB
             }
             set
             {
-                using (var trans = this.NewTransaction(TransactionMode.WriteHeader, null))
+                using (var trans = this.NewTransaction(TransactionMode.Reserved, null))
                 {
                     var header = trans.Pager.GetPage<HeaderPage>(0);
 

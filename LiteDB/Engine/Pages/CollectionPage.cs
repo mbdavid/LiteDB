@@ -10,11 +10,6 @@ namespace LiteDB
     /// </summary>
     internal class CollectionPage : BasePage
     {
-        /// <summary>
-        /// Represent maximum bytes that all collections names can be used in header
-        /// </summary>
-        public const ushort MAX_COLLECTIONS_SIZE = 7100;
-
         public static Regex CollectionNamePattern = new Regex(@"^[\w]{1,60}$", RegexOptions.Compiled);
 
         /// <summary>

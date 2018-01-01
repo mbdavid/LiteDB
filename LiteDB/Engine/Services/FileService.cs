@@ -247,18 +247,18 @@ namespace LiteDB
         /// </summary>
         public void CreateDatabase(long initialSize)
         {
-            // create a new header page in bytes (keep second page empty)
+            // create a new header page in bytes (fixed in 0)
             var header = new HeaderPage
             {
                 Salt = AesEncryption.Salt()
             };
 
-            // create shared page on database initialization
-            var shared = new SharedPage
+            // create collection list page (fixed in 1)
+            var colList = new CollectionListPage()
             {
             };
 
-            this.WritePages(new BasePage[] { header, shared }).Execute();
+            this.WritePages(new BasePage[] { header, colList }).Execute();
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
