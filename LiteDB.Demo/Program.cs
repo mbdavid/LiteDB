@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +21,8 @@ namespace LiteDB.Demo
             File.Delete(datafile);
             File.Delete(walfile);
 
+            var sb = new StringBuilder();
+
             var sw = new Stopwatch();
             var log = new Logger(Logger.LOCK, (s) => Console.WriteLine("> " + s));
 
@@ -28,8 +31,8 @@ namespace LiteDB.Demo
                 var ts = new List<Task>();
                 sw.Start();
 
-                db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
-                db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
+                //db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
+                //db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
 
                 Console.Clear();
 
@@ -40,7 +43,18 @@ namespace LiteDB.Demo
                 catch
                 {
                 }
-                db.Insert("col1", ReadDocuments(400, true), BsonAutoId.ObjectId);
+
+                sb.AppendLine("After Erro 200\n=========================");
+                sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
+                sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
+                sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
+
+                db.Insert("col1", ReadDocuments(400, false), BsonAutoId.ObjectId);
+
+                sb.AppendLine("After Insert 400\n=========================");
+                sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
+                sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
+                sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
 
                 //ts.Add(Task.Run(() =>
                 //{
@@ -67,6 +81,11 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(datafile))
             {
+                sb.AppendLine("After Checkpoint\n=========================");
+                sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
+                sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
+                sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
+
                 //var s = db.Info();
                 //Console.WriteLine(JsonSerializer.Serialize(db.Info(), true));
 
@@ -76,6 +95,8 @@ namespace LiteDB.Demo
                 Console.WriteLine(d ?.AsDocument["name"].AsString);
             }
 
+
+            var j = sb.ToString();
 
             Console.WriteLine("End");
             Console.ReadKey();

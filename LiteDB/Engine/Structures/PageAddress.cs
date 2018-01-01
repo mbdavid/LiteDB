@@ -53,7 +53,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.IsEmpty ? "----" : this.PageID.ToString() + ":" + this.Index.ToString();
+            return this.IsEmpty ? "(empty)" : this.PageID.ToString() + ":" + this.Index.ToString();
         }
     }
 }

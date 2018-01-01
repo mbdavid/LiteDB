@@ -32,7 +32,7 @@ namespace LiteDB
                     // lets remove all indexes that point to this in dataBlock
                     foreach (var linkNode in allNodes)
                     {
-                        var index = col.Indexes[linkNode.Slot];
+                        var index = col.GetIndex(linkNode.Slot);
 
                         trans.Indexer.Delete(index, linkNode.Position);
                     }

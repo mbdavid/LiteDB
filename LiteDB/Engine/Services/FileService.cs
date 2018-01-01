@@ -61,6 +61,24 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return file size
+        /// </summary>
+        public long FileSize()
+        {
+            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
+
+            try
+            {
+                return stream.Length;
+            }
+            finally
+            {
+                // add stream back to pool
+                _pool.Add(stream);
+            }
+        }
+
+        /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance
         /// </summary>
         public BasePage ReadPage(long position)

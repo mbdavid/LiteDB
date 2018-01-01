@@ -46,7 +46,7 @@ namespace LiteDB
         /// <summary>
         /// Get all indexes from this collection - includes non-used indexes
         /// </summary>
-        public CollectionIndex[] Indexes { get; set; }
+        private CollectionIndex[] _indexes;
 
         public CollectionPage(uint pageID)
             : base(pageID)
@@ -55,13 +55,14 @@ namespace LiteDB
             this.DocumentCount = 0;
             this.ItemCount = 1; // fixed for CollectionPage
             this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
-            this.Indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
             this.Sequence = 0;
             this.CreationTime = DateTime.Now;
 
-            for (var i = 0; i < Indexes.Length; i++)
+            _indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
+
+            for (var i = 0; i < _indexes.Length; i++)
             {
-                this.Indexes[i] = new CollectionIndex() { Page = this, Slot = i };
+                _indexes[i] = new CollectionIndex() { Page = this, Slot = i };
             }
         }
 
@@ -75,7 +76,7 @@ namespace LiteDB
             this.Sequence = reader.ReadInt64();
             this.CreationTime = reader.ReadDateTime();
 
-            foreach (var index in this.Indexes)
+            foreach (var index in _indexes)
             {
                 index.Name = reader.ReadString();
                 index.Expression = reader.ReadString();
@@ -96,7 +97,7 @@ namespace LiteDB
             writer.Write(this.Sequence);
             writer.Write(this.CreationTime);
 
-            foreach (var index in this.Indexes)
+            foreach (var index in _indexes)
             {
                 writer.Write(index.Name);
                 writer.Write(index.Expression);
@@ -117,9 +118,9 @@ namespace LiteDB
         /// </summary>
         public CollectionIndex GetFreeIndex()
         {
-            for (byte i = 0; i < this.Indexes.Length; i++)
+            for (byte i = 0; i < _indexes.Length; i++)
             {
-                if (this.Indexes[i].IsEmpty) return this.Indexes[i];
+                if (_indexes[i].IsEmpty) return this._indexes[i];
             }
 
             throw LiteException.IndexLimitExceeded(this.CollectionName);
@@ -130,20 +131,28 @@ namespace LiteDB
         /// </summary>
         public CollectionIndex GetIndex(string name)
         {
-            return this.Indexes.FirstOrDefault(x => x.Name == name);
+            return _indexes.FirstOrDefault(x => x.Name == name);
+        }
+
+        /// <summary>
+        /// Get index from index slot
+        /// </summary>
+        public CollectionIndex GetIndex(int slot)
+        {
+            return _indexes[slot];
         }
 
         /// <summary>
         /// Get primary key index (_id index)
         /// </summary>
-        public CollectionIndex PK { get { return this.Indexes[0]; } }
+        public CollectionIndex PK { get { return this._indexes[0]; } }
 
         /// <summary>
         /// Returns all used indexes
         /// </summary>
         public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
         {
-            return this.Indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
+            return _indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
         }
 
         #endregion

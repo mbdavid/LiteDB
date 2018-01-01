@@ -15,17 +15,17 @@ namespace LiteDB
         /// <summary>
         /// Represent a Null bson type
         /// </summary>
-        public static readonly BsonValue Null = new BsonValue();
+        public static BsonValue Null => new BsonValue();
 
         /// <summary>
         /// Represent a MinValue bson type
         /// </summary>
-        public static readonly BsonValue MinValue = new BsonValue { Type = BsonType.MinValue, RawValue = "-oo" };
+        public static BsonValue MinValue => new BsonValue { Type = BsonType.MinValue, RawValue = "-oo" };
 
         /// <summary>
         /// Represent a MaxValue bson type
         /// </summary>
-        public static readonly BsonValue MaxValue = new BsonValue { Type = BsonType.MaxValue, RawValue = "+oo" };
+        public static BsonValue MaxValue => new BsonValue { Type = BsonType.MaxValue, RawValue = "+oo" };
 
         /// <summary>
         /// Indicate BsonType of this BsonValue

@@ -27,7 +27,7 @@ namespace LiteDB
 
         public override bool Equals(object obj)
         {
-            var other = (PageAddress)obj;
+            var other = (PagePosition)obj;
 
             return this.PageID == other.PageID && this.Position == other.PageID;
         }

@@ -123,21 +123,20 @@ namespace LiteDB
             {
                 var result = action(trans);
 
+                // persist changes in wal file
                 trans.Commit();
 
                 return result;
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                _log.Write(Logger.ERROR, ex.Message);
                 trans.Rollback();
                 throw;
             }
             finally
             {
-                if (trans != null)
-                {
-                    trans.Dispose();
-                }
+                if (trans != null) trans.Dispose();
             }
         }
 

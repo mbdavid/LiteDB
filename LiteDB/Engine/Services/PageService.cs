@@ -247,24 +247,24 @@ namespace LiteDB
             {
                 var pageID = _newPages[i];
                 var next = i < _newPages.Count - 1 ? _newPages[i + 1] : uint.MaxValue;
-                var prev = i > 0 ? _newPages[i - 1] : uint.MaxValue;
+                var prev = i > 0 ? _newPages[i - 1] : 0;
 
                 pages.Add(new EmptyPage(pageID)
                 {
                     NextPageID = next,
+                    PrevPageID = prev,
                     TransactionID = transactionID,
                     IsDirty = true
                 });
             }
 
-            // persist all pages into wal-file
-            var pagePositions = _walFile.WritePagesSequence(pages)
-                .ToList();
-
             // now lock header to update FreePageList
             lock (_header)
             {
-                // create copy of header page to sendo to wal file
+                // fix last page with current header free empty page
+                pages.Last().NextPageID = _header.FreeEmptyPageID;
+
+                // create copy of header page to send to wal file
                 var copy = new HeaderPage
                 {
                     TransactionID = transactionID,
@@ -272,8 +272,9 @@ namespace LiteDB
                     LastPageID = _header.LastPageID
                 };
 
-                // and my last page will link to current first link
-                pages.Last().NextPageID = _header.FreeEmptyPageID;
+                // persist all pages into wal-file (new run ToList now)
+                var pagePositions = _walFile.WritePagesSequence(pages)
+                    .ToList();
 
                 // now commit last confirm page to wal file
                 _wal.Commit(copy, pagePositions);
@@ -281,7 +282,6 @@ namespace LiteDB
                 // now can update global header version
                 _header.FreeEmptyPageID = copy.FreeEmptyPageID;
             }
-
         }
 
         /// <summary>

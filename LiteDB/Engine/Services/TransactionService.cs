@@ -52,7 +52,7 @@ namespace LiteDB
             _lockReadWrite = locker.Read();
 
             // if is write transaction, lock collection name
-            if ((mode == TransactionMode.Write || mode == TransactionMode.Reserved) && collection != null)
+            if (mode != TransactionMode.Read && collection != null)
             {
                 locker.Write(_lockReadWrite, collection);
             }

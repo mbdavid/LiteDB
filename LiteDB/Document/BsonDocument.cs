@@ -282,6 +282,19 @@ namespace LiteDB
             }
         }
 
+        public BsonDocument Extend(BsonDocument other)
+        {
+            var myDict = this.RawValue;
+            var otherDict = other.RawValue;
+
+            foreach (var key in other.RawValue.Keys)
+            {
+                myDict[key] = otherDict[key];
+            }
+
+            return this;
+        }
+
         public bool Remove(KeyValuePair<string, BsonValue> item)
         {
             return this.RawValue.Remove(item.Key);

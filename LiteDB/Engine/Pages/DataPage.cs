@@ -23,6 +23,11 @@ namespace LiteDB
         /// </summary>
         private Dictionary<ushort, DataBlock> _dataBlocks = new Dictionary<ushort, DataBlock>();
 
+        /// <summary>
+        /// Expose DataBlocks
+        /// </summary>
+        public Dictionary<ushort, DataBlock> DataBlocks => _dataBlocks;
+
         public DataPage(uint pageID)
             : base(pageID)
         {
@@ -109,5 +114,6 @@ namespace LiteDB
         }
 
         #endregion
+
     }
 }
