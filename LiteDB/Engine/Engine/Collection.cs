@@ -7,26 +7,13 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
-        /// Returns all collection inside datafile
-        /// </summary>
-        public IEnumerable<string> GetCollectionNames()
-        {
-            using (var trans = this.NewTransaction(TransactionMode.Read, null))
-            {
-                var colList = trans.Pager.GetPage<CollectionListPage>(1);
-
-                return colList.GetAll().Select(x => x.Key);
-            }
-        }
-
-        /// <summary>
         /// Drop collection including all documents, indexes and extended pages
         /// </summary>
         public bool DropCollection(string collection)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            using (var trans = this.NewTransaction(TransactionMode.Reserved, collection))
+            return this.WriteTransaction(TransactionMode.Reserved, collection, false, trans =>
             {
                 var col = trans.CollectionPage;
 
@@ -37,7 +24,7 @@ namespace LiteDB
                 trans.Commit();
 
                 return true;
-            }
+            });
         }
 
         /// <summary>
@@ -48,7 +35,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
 
-            using (var trans = this.NewTransaction(TransactionMode.Reserved, collection))
+            return this.WriteTransaction(TransactionMode.Reserved, collection, false, trans =>
             {
                 var col = trans.CollectionPage;
 
@@ -59,7 +46,7 @@ namespace LiteDB
                 trans.Commit();
 
                 return true;
-            };
+            });
         }
     }
 }

@@ -16,7 +16,7 @@ namespace LiteDB
             if (name == "_id") return false; // always exists
             if (expression == null || expression?.Source?.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
 
-            using (var trans = this.NewTransaction(TransactionMode.Write, collection, true))
+            return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
             {
                 var col = trans.CollectionPage;
 
@@ -63,7 +63,7 @@ namespace LiteDB
                 trans.Commit();
 
                 return true;
-            }
+            });
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace LiteDB
 
             if (name == "_id") throw LiteException.IndexDropId();
 
-            using (var trans = this.NewTransaction(TransactionMode.Write, collection))
+            return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
             {
                 var col = trans.CollectionPage;
 
@@ -102,27 +102,7 @@ namespace LiteDB
                 trans.Commit();
 
                 return true;
-            }
-        }
-
-        /// <summary>
-        /// List all indexes inside a collection
-        /// </summary>
-        public IEnumerable<IndexInfo> GetIndexes(string collection)
-        {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-
-            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
-            {
-                var col = trans.CollectionPage;
-
-                if (col == null) yield break;
-
-                foreach (var index in col.GetIndexes(true))
-                {
-                    yield return new IndexInfo(index);
-                }
-            }
+            });
         }
     }
 }

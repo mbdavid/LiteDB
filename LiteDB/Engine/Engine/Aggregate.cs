@@ -13,7 +13,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
+            using (var trans = this.ReadTransaction(collection))
             {
                 var col = trans.CollectionPage;
 
@@ -41,7 +41,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
+            using (var trans = this.ReadTransaction(collection))
             {
                 var col = trans.CollectionPage;
 
@@ -68,7 +68,7 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
+            using (var trans = this.ReadTransaction(collection))
             {
                 var col = trans.CollectionPage;
 
@@ -107,7 +107,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
+            using (var trans = this.ReadTransaction(collection))
             {
                 var col = trans.CollectionPage;
 

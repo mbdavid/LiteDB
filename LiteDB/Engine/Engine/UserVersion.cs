@@ -11,7 +11,7 @@ namespace LiteDB
         {
             get
             {
-                using (var trans = this.NewTransaction(TransactionMode.Read, null))
+                using (var trans = this.ReadTransaction(null))
                 {
                     var header = trans.Pager.GetPage<HeaderPage>(0);
 
@@ -20,7 +20,7 @@ namespace LiteDB
             }
             set
             {
-                using (var trans = this.NewTransaction(TransactionMode.Reserved, null))
+                this.WriteTransaction(TransactionMode.Reserved, null, false, trans =>
                 {
                     var header = trans.Pager.GetPage<HeaderPage>(0);
 
@@ -29,9 +29,8 @@ namespace LiteDB
                     // there is no explicit lock because use only header page - that will be locked inside this SetDirty()
                     trans.Pager.SetDirty(header);
 
-                    // persist header change
-                    trans.Commit();
-                }
+                    return true;
+                });
             }
         }
     }

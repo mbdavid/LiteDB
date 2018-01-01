@@ -25,7 +25,6 @@ namespace LiteDB
         private TransactionMode _mode;
         private LockReadWrite _lockReadWrite;
         private CollectionPage _collectionPage;
-        private bool _commited = false;
 
         // expose services
         public PageService Pager => _pager;
@@ -94,14 +93,12 @@ namespace LiteDB
             _pager.PersistTransaction();
 
             _pager.WalCommit();
-
-            _commited = true;
         }
 
         /// <summary>
         /// Transaction runs rollback if is a write-transaction with no commit (should be an error during transaction execution)
         /// </summary>
-        private void Rollback()
+        public void Rollback()
         {
             // checks if transaction add new pages and restore them to header free list
             _pager.ReturnNewPages();
@@ -109,12 +106,6 @@ namespace LiteDB
 
         public void Dispose()
         {
-            // if is a write transaction and had no commit, do rollback 
-            if (_commited == false && _mode != TransactionMode.Read)
-            {
-                this.Rollback();
-            }
-
             // release lock
             _lockReadWrite.Dispose();
         }

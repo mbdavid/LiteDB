@@ -188,22 +188,22 @@ namespace LiteDB
             var pageID = (uint)0;
             var diskData = new byte[0];
 
-            // try get page from Empty free list
-            if (_header.FreeEmptyPageID != uint.MaxValue)
+            // lock header instance to get new page
+            lock (_header)
             {
-                //var free = _trans.GetPage<BasePage>(header.FreeEmptyPageID);
-                //
-                //// remove page from empty list
-                //this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
-                //
-                //pageID = free.PageID;
-                throw new NotSupportedException();
-            }
-            else
-            {
-                // increase LastPageID from shared page
-                lock (_header)
+                // try get page from Empty free list
+                if (_header.FreeEmptyPageID != uint.MaxValue)
                 {
+                    var free = this.GetPage<BasePage>(_header.FreeEmptyPageID);
+                
+                    // remove page from empty list
+                    this.AddOrRemoveToFreeList(false, free, _header, ref _header.FreeEmptyPageID);
+                
+                    pageID = free.PageID;
+                }
+                else
+                {
+                    // increase LastPageID from shared page
                     pageID = ++_header.LastPageID;
                 }
             }
@@ -247,6 +247,7 @@ namespace LiteDB
             {
                 var pageID = _newPages[i];
                 var next = i < _newPages.Count - 1 ? _newPages[i + 1] : uint.MaxValue;
+                var prev = i > 0 ? _newPages[i - 1] : uint.MaxValue;
 
                 pages.Add(new EmptyPage(pageID)
                 {

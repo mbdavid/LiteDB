@@ -105,11 +105,40 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Create new transaction. If collection is passed, write-lock collection
+        /// Create new read transaction
         /// </summary>
-        private TransactionService NewTransaction(TransactionMode mode, string collection, bool addIfNotExists = false)
+        private TransactionService ReadTransaction(string collection)
         {
-            return new TransactionService(mode, collection, addIfNotExists, _header, _locker, _wal, _dataFile, _walFile, _log);
+            return new TransactionService(TransactionMode.Read, collection, false, _header, _locker, _wal, _dataFile, _walFile, _log);
+        }
+
+        /// <summary>
+        /// Create new write transaction in wrap try/catch error with commit/rollback calls. If collection is passed, write-lock collection
+        /// </summary>
+        private T WriteTransaction<T>(TransactionMode mode, string collection, bool addIfNotExists, Func<TransactionService, T> action)
+        {
+            var trans = new TransactionService(mode, collection, addIfNotExists, _header, _locker, _wal, _dataFile, _walFile, _log);
+
+            try
+            {
+                var result = action(trans);
+
+                trans.Commit();
+
+                return result;
+            }
+            catch(Exception)
+            {
+                trans.Rollback();
+                throw;
+            }
+            finally
+            {
+                if (trans != null)
+                {
+                    trans.Dispose();
+                }
+            }
         }
 
         public void Dispose()

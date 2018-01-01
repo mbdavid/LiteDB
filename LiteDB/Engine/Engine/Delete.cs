@@ -14,7 +14,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (ids == null) throw new ArgumentNullException(nameof(ids));
 
-            using (var trans = this.NewTransaction(TransactionMode.Write, collection))
+            return this.WriteTransaction(TransactionMode.Write, collection, false, trans =>
             {
                 var col = trans.CollectionPage;
 
@@ -47,7 +47,7 @@ namespace LiteDB
                 trans.Commit();
 
                 return count;
-            }
+            });
         }
     }
 }

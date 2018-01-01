@@ -11,16 +11,16 @@ namespace LiteDB.Demo
 {
     class Program
     {
+        private static string datafile = @"c:\temp\app.db";
+        private static string walfile = @"c:\temp\app-wal.db";
+
+
         static void Main(string[] args)
         {
-            var sw = new Stopwatch();
-
-            var datafile = @"c:\temp\app.db";
-            var walfile = @"c:\temp\app-wal.db";
-
             File.Delete(datafile);
             File.Delete(walfile);
 
+            var sw = new Stopwatch();
             var log = new Logger(Logger.LOCK, (s) => Console.WriteLine("> " + s));
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Log = log }))
@@ -33,14 +33,23 @@ namespace LiteDB.Demo
 
                 Console.Clear();
 
-                ts.Add(Task.Run(() =>
+                try
                 {
-                    db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
-                }));
-                ts.Add(Task.Run(() =>
+                    db.Insert("col1", ReadDocuments(200, true), BsonAutoId.ObjectId);
+                }
+                catch
                 {
-                    db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
-                }));
+                }
+                db.Insert("col1", ReadDocuments(400, true), BsonAutoId.ObjectId);
+
+                //ts.Add(Task.Run(() =>
+                //{
+                //    db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
+                //}));
+                //ts.Add(Task.Run(() =>
+                //{
+                //    db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
+                //}));
 
                 Task.WaitAll(ts.ToArray());
 
@@ -72,10 +81,8 @@ namespace LiteDB.Demo
             Console.ReadKey();
         }
 
-        static IEnumerable<BsonDocument> ReadDocuments()
+        static IEnumerable<BsonDocument> ReadDocuments(int counter = 100, bool duplicate = false)
         {
-            var counter = 10000;
-
             using (var s = File.OpenRead(@"datagen.txt"))
             {
                 var r = new StreamReader(s);
@@ -92,10 +99,16 @@ namespace LiteDB.Demo
                         {
                             ["_id"] = Convert.ToInt32(row[0]),
                             ["name"] = row[1],
-                            ["age"] = Convert.ToInt32(row[2]),
-                            ["lorem"] = "".PadLeft(9000, '-')
+                            ["age"] = Convert.ToInt32(row[2])
+                            //["lorem"] = "".PadLeft(9000, '-')
                         };
                     }
+                }
+
+                // simulate error
+                if (duplicate)
+                {
+                    yield return new BsonDocument { ["_id"] = 1 };
                 }
             }
         }
