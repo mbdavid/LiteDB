@@ -14,16 +14,13 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (ids == null) throw new ArgumentNullException(nameof(ids));
 
-            using (var trans = this.BeginTrans())
+            using (var trans = this.NewTransaction(TransactionMode.Write, collection))
             {
-                var col = trans.Collection.Get(collection);
+                var col = trans.CollectionPage;
 
                 if (col == null) return 0;
 
                 var count = 0;
-
-                // lock collection
-                trans.WriteLock(collection);
 
                 var query = new QueryIn("_id", ids);
 

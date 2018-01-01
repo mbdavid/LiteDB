@@ -14,14 +14,12 @@ namespace LiteDB
         /// </summary>
         public const int MAX_INDEX_LENGTH = 512;
 
-        private TransactionService _trans;
         private PageService _pager;
         private Logger _log;
         private Random _rand = new Random();
 
-        public IndexService(TransactionService trans, PageService pager, Logger log)
+        public IndexService(PageService pager, Logger log)
         {
-            _trans = trans;
             _pager = pager;
             _log = log;
         }
@@ -50,7 +48,7 @@ namespace LiteDB
             page.AddNode(head);
 
             // set index page as dirty
-            _trans.SetDirty(index.Page);
+            _pager.SetDirty(index.Page);
 
             // add indexPage on freelist if has space
             _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
@@ -78,7 +76,7 @@ namespace LiteDB
             {
                 index.MaxLevel = level;
 
-                _trans.SetDirty(index.Page);
+                _pager.SetDirty(index.Page);
             }
 
             // call AddNode with key value
@@ -144,7 +142,7 @@ namespace LiteDB
                     // cur = current (immediately before - prev)
                     // node = new inserted node
                     // next = next node (where cur is pointing)
-                    _trans.SetDirty(cur.Page);
+                    _pager.SetDirty(cur.Page);
 
                     node.Next[i] = cur.Next[i];
                     node.Prev[i] = cur.Position;
@@ -155,7 +153,7 @@ namespace LiteDB
                     if (next != null)
                     {
                         next.Prev[i] = node.Position;
-                        _trans.SetDirty(next.Page);
+                        _pager.SetDirty(next.Page);
                     }
                 }
             }
@@ -176,7 +174,7 @@ namespace LiteDB
                     node.PrevNode = last.Position;
                     node.NextNode = next.Position;
 
-                    _trans.SetDirty(next.Page);
+                    _pager.SetDirty(next.Page);
                 }
                 else
                 {
@@ -185,7 +183,7 @@ namespace LiteDB
                 }
 
                 // set last node page as dirty
-                _trans.SetDirty(last.Page);
+                _pager.SetDirty(last.Page);
             }
 
             return node;
@@ -228,7 +226,7 @@ namespace LiteDB
             var page = node.Page;
 
             // mark page as dirty here because, if deleted, page type will change
-            _trans.SetDirty(page);
+            _pager.SetDirty(page);
 
             for (int i = node.Prev.Length - 1; i >= 0; i--)
             {
@@ -239,12 +237,12 @@ namespace LiteDB
                 if (prev != null)
                 {
                     prev.Next[i] = node.Next[i];
-                    _trans.SetDirty(prev.Page);
+                    _pager.SetDirty(prev.Page);
                 }
                 if (next != null)
                 {
                     next.Prev[i] = node.Prev[i];
-                    _trans.SetDirty(next.Page);
+                    _pager.SetDirty(next.Page);
                 }
             }
 
@@ -271,12 +269,12 @@ namespace LiteDB
             if (prevNode != null)
             {
                 prevNode.NextNode = node.NextNode;
-                _trans.SetDirty(prevNode.Page);
+                _pager.SetDirty(prevNode.Page);
             }
             if (nextNode != null)
             {
                 nextNode.PrevNode = node.PrevNode;
-                _trans.SetDirty(nextNode.Page);
+                _pager.SetDirty(nextNode.Page);
             }
         }
 
@@ -300,12 +298,12 @@ namespace LiteDB
                 if (prevNode != null)
                 {
                     prevNode.NextNode = node.NextNode;
-                    _trans.SetDirty(prevNode.Page);
+                    _pager.SetDirty(prevNode.Page);
                 }
                 if (nextNode != null)
                 {
                     nextNode.PrevNode = node.PrevNode;
-                    _trans.SetDirty(nextNode.Page);
+                    _pager.SetDirty(nextNode.Page);
                 }
             }
 
@@ -322,7 +320,7 @@ namespace LiteDB
         public IndexNode GetNode(PageAddress address)
         {
             if (address.IsEmpty) return null;
-            var page = _trans.GetPage<IndexPage>(address.PageID);
+            var page = _pager.GetPage<IndexPage>(address.PageID);
             return page.GetNode(address.Index);
         }
 

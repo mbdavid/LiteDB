@@ -14,15 +14,10 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
-            using (var trans = this.BeginTrans())
+            using (var trans = this.NewTransaction(TransactionMode.Write, collection, true))
             {
-                trans.LockHeader();
-
-                var col = trans.Collection.GetOrAdd(collection);
+                var col = trans.CollectionPage;
                 var count = 0;
-
-                // lock collection
-                trans.WriteLock(collection);
 
                 foreach (var doc in docs)
                 {
@@ -46,7 +41,7 @@ namespace LiteDB
             // increase collection sequence _id
             col.Sequence++;
 
-            trans.SetDirty(col);
+            trans.Pager.SetDirty(col);
 
             // if no _id, add one
             if (!doc.RawValue.TryGetValue("_id", out var id))

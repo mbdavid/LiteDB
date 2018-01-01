@@ -1,18 +1,155 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace LiteDB
 {
     internal class PageService
     {
-        private TransactionService _trans;
+        private WalService _wal;
+        private FileService _datafile;
+        private FileService _walfile;
         private Logger _log;
 
-        public PageService(TransactionService trans, Logger log)
+        private Guid _transactionID;
+        private int _readVersion;
+        private Dictionary<uint, BasePage> _local = new Dictionary<uint, BasePage>();
+        private Dictionary<uint, PagePosition> _dirtyPagesWal = new Dictionary<uint, PagePosition>();
+
+        /// <summary>
+        /// Transaction ReadVersion
+        /// </summary>
+        public int ReadVersion => _readVersion;
+
+        /// <summary>
+        /// Transaction ID
+        /// </summary>
+        public Guid TransactionID => _transactionID;
+
+        public PageService(WalService wal, FileService datafile, FileService walfile, Logger log)
         {
-            _trans = trans;
+            _wal = wal;
+            _datafile = datafile;
+            _walfile = walfile;
             _log = log;
+        }
+
+        /// <summary>
+        /// Inicializer pager instance, cleaning any loadad page and getting new ReadVersion
+        /// </summary>
+        public void Initialize()
+        {
+#if DEBUG
+            if (_local.Any(x => x.Value.IsDirty) || _dirtyPagesWal.Count > 0) throw new InvalidOperationException("No dirty pages in transaction when initialize pager");
+#endif
+            _local.Clear();
+            _transactionID = Guid.NewGuid();
+            _readVersion = _wal.CurrentReadVersion;
+        }
+
+        /// <summary>
+        /// Get a page for this transaction: try local, wal-index or datafile. Must keep cloned instance of this page in this transaction
+        /// </summary>
+        public T GetPage<T>(uint pageID)
+            where T : BasePage
+        {
+            // first, look for this page inside local pages
+            if (_local.TryGetValue(pageID, out var page))
+            {
+                return (T)page;
+            }
+
+            // if not inside local pages, can be a dirty page already saved in wal file
+            if (_dirtyPagesWal.TryGetValue(pageID, out var position))
+            {
+                var dirty = (T)_walfile.ReadPage(position.Position);
+
+                // add into local pages
+                _local[pageID] = dirty;
+
+                return dirty;
+            }
+
+            // now, look inside wal-index
+            var pos = _wal.GetPageIndex(pageID, _readVersion);
+
+            if (!pos.IsEmpty)
+            {
+                var walpage = (T)_walfile.ReadPage(pos.Position);
+
+                // copy to my local pages
+                _local[pageID] = walpage;
+
+                return walpage;
+            }
+
+            // load special shared page
+            if (pageID == 1)
+            {
+                if (_wal.SharedPage == null)
+                {
+                    _wal.SharedPage = (SharedPage)_datafile.ReadPage(BasePage.PAGE_SIZE); // Page 1 position = (1 * BasePage.PAGE_SIZE)
+                }
+
+                return _wal.SharedPage as T;
+            }
+
+            // for last chance, look inside original data file
+            var pagePosition = BasePage.GetPagePostion(pageID);
+
+            var filepage = (T)_datafile.ReadPage(pagePosition);
+
+            _local[pageID] = filepage;
+
+            return filepage;
+        }
+
+        /// <summary>
+        /// Set page was dirty
+        /// </summary>
+        public void SetDirty(BasePage page, bool alwaysOverride = false)
+        {
+            if (page.IsDirty == false || alwaysOverride)
+            {
+                page.IsDirty = true;
+                _local[page.PageID] = page;
+            }
+        }
+
+        /// <summary>
+        /// Write all dirty pages into WAL file and get page references. 
+        /// Support write pages during transaction (before transaction finish). Useful for long transactions, like EnsureIndex in big collection
+        /// Clear all pages (including clean ones)
+        /// </summary>
+        public void PersistTransaction()
+        {
+            // update pages with transactionId in all dirty page
+            var dirty = _local.Values
+                .Where(x => x.IsDirty)
+                .ForEach((i, p) => p.TransactionID = _transactionID)
+                .ToList();
+
+            // save all dirty pages into walfile (sequencial mode) and get pages position reference
+            var saved = _walfile.WritePagesSequence(dirty)
+                .ToList();
+
+            // update dictionary with page position references
+            foreach (var position in saved)
+            {
+                _dirtyPagesWal[position.PageID] = position;
+            }
+
+            // clear dirtyPage list
+            _local.Clear();
+        }
+
+        /// <summary>
+        /// Call wal commit using current transaction
+        /// </summary>
+        public void WalCommit()
+        {
+            _wal.Commit(_transactionID, _dirtyPagesWal.Values);
         }
 
         /// <summary>
@@ -25,7 +162,7 @@ namespace LiteDB
 
             while (pageID != uint.MaxValue)
             {
-                var page = _trans.GetPage<T>(pageID);
+                var page = this.GetPage<T>(pageID);
 
                 pageID = page.NextPageID;
 
@@ -39,33 +176,35 @@ namespace LiteDB
         public T NewPage<T>(BasePage prevPage = null)
             where T : BasePage
         {
-            // get header
-            var header = _trans.GetPage<HeaderPage>(0);
+            // get shared page
+            var shared = this.GetPage<SharedPage>(1);
             var pageID = (uint)0;
             var diskData = new byte[0];
 
             // try get page from Empty free list
-            if (header.FreeEmptyPageID != uint.MaxValue)
+            if (shared.FreeEmptyPageID != uint.MaxValue)
             {
-                var free = _trans.GetPage<BasePage>(header.FreeEmptyPageID);
-
-                // remove page from empty list
-                this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
-
-                pageID = free.PageID;
+                //var free = _trans.GetPage<BasePage>(header.FreeEmptyPageID);
+                //
+                //// remove page from empty list
+                //this.AddOrRemoveToFreeList(false, free, header, ref header.FreeEmptyPageID);
+                //
+                //pageID = free.PageID;
+                throw new NotSupportedException();
             }
             else
             {
-                pageID = ++header.LastPageID;
-
-                // set header page as dirty after increment LastPageID
-                _trans.SetDirty(header);
+                // increase LastPageID from shared page
+                lock(_wal)
+                {
+                    pageID = ++shared.LastPageID;
+                }
             }
 
             var page = BasePage.CreateInstance<T>(pageID);
 
             // add page to cache with correct T type (could be an old Empty page type)
-            _trans.SetDirty(page, true);
+            this.SetDirty(page, true);
 
             // if there a page before, just fix NextPageID pointer
             if (prevPage != null)
@@ -73,7 +212,7 @@ namespace LiteDB
                 page.PrevPageID = prevPage.PageID;
                 prevPage.NextPageID = page.PageID;
 
-                _trans.SetDirty(prevPage);
+                this.SetDirty(prevPage);
             }
 
             return page;
@@ -86,24 +225,26 @@ namespace LiteDB
         /// </summary>
         public void DeletePage(uint pageID, bool addSequence = false)
         {
-            // get all pages in sequence or a single one
-            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { _trans.GetPage<BasePage>(pageID) };
+            throw new NotSupportedException();
 
-            // get my header page
-            var header = _trans.GetPage<HeaderPage>(0);
-
-            // adding all pages to FreeList
-            foreach (var page in pages)
-            {
-                // create a new empty page based on a normal page
-                var empty = new EmptyPage(page.PageID);
-
-                // add empty page to dirty pages in transaction
-                _trans.SetDirty(empty, true);
-
-                // add to empty free list
-                this.AddOrRemoveToFreeList(true, empty, header, ref header.FreeEmptyPageID);
-            }
+//            // get all pages in sequence or a single one
+//            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { _trans.GetPage<BasePage>(pageID) };
+//
+//            // get my header page
+//            var header = _trans.GetPage<HeaderPage>(0);
+//
+//            // adding all pages to FreeList
+//            foreach (var page in pages)
+//            {
+//                // create a new empty page based on a normal page
+//                var empty = new EmptyPage(page.PageID);
+//
+//                // add empty page to dirty pages in transaction
+//                _trans.SetDirty(empty, true);
+//
+//                // add to empty free list
+//                this.AddOrRemoveToFreeList(true, empty, header, ref header.FreeEmptyPageID);
+//            }
         }
 
         /// <summary>
@@ -115,7 +256,7 @@ namespace LiteDB
             if (startPageID != uint.MaxValue)
             {
                 // get the first page
-                var page = _trans.GetPage<T>(startPageID);
+                var page = this.GetPage<T>(startPageID);
 
                 // check if there space in this page
                 var free = page.FreeBytes;
@@ -177,7 +318,7 @@ namespace LiteDB
             // let's page in desc order
             while (nextPageID != uint.MaxValue)
             {
-                next = _trans.GetPage<BasePage>(nextPageID);
+                next = this.GetPage<BasePage>(nextPageID);
 
                 if (free >= next.FreeBytes)
                 {
@@ -189,21 +330,21 @@ namespace LiteDB
                     next.PrevPageID = page.PageID;
 
                     // mark next page as dirty
-                    _trans.SetDirty(next);
-                    _trans.SetDirty(page);
+                    this.SetDirty(next);
+                    this.SetDirty(page);
 
                     // my page is the new first page on list
                     if (page.PrevPageID == 0)
                     {
                         fieldPageID = page.PageID;
-                        _trans.SetDirty(startPage); // fieldPageID is from startPage
+                        this.SetDirty(startPage); // fieldPageID is from startPage
                     }
                     else
                     {
                         // if not the first, ajust links from previous page (set as dirty)
-                        var prev = _trans.GetPage<BasePage>(page.PrevPageID);
+                        var prev = this.GetPage<BasePage>(page.PrevPageID);
                         prev.NextPageID = page.PageID;
-                        _trans.SetDirty(prev);
+                        this.SetDirty(prev);
                     }
 
                     return; // job done - exit
@@ -219,7 +360,7 @@ namespace LiteDB
                 page.PrevPageID = 0;
                 fieldPageID = page.PageID;
 
-                _trans.SetDirty(startPage);
+                this.SetDirty(startPage);
             }
             else
             {
@@ -227,11 +368,11 @@ namespace LiteDB
                 page.PrevPageID = next.PageID;
                 next.NextPageID = page.PageID;
 
-                _trans.SetDirty(next);
+                this.SetDirty(next);
             }
 
             // set current page as dirty
-            _trans.SetDirty(page);
+            this.SetDirty(page);
         }
 
         /// <summary>
@@ -243,28 +384,28 @@ namespace LiteDB
             if (page.PrevPageID == 0)
             {
                 fieldPageID = page.NextPageID;
-                _trans.SetDirty(startPage); // fieldPageID is from startPage
+                this.SetDirty(startPage); // fieldPageID is from startPage
             }
             else
             {
                 // if not the first, get previous page to remove NextPageId
-                var prevPage = _trans.GetPage<BasePage>(page.PrevPageID);
+                var prevPage = this.GetPage<BasePage>(page.PrevPageID);
                 prevPage.NextPageID = page.NextPageID;
-                _trans.SetDirty(prevPage);
+                this.SetDirty(prevPage);
             }
 
             // if my page is not the last on sequence, adjust the last page (set as dirty)
             if (page.NextPageID != uint.MaxValue)
             {
-                var nextPage = _trans.GetPage<BasePage>(page.NextPageID);
+                var nextPage = this.GetPage<BasePage>(page.NextPageID);
                 nextPage.PrevPageID = page.PrevPageID;
-                _trans.SetDirty(nextPage);
+                this.SetDirty(nextPage);
             }
 
             page.PrevPageID = page.NextPageID = uint.MaxValue;
 
             // mark page that will be removed as dirty
-            _trans.SetDirty(page);
+            this.SetDirty(page);
         }
 
         /// <summary>

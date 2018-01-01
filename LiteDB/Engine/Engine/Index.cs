@@ -16,9 +16,9 @@ namespace LiteDB
             if (name == "_id") return false; // always exists
             if (expression == null || expression?.Source?.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
 
-            using (var trans = this.BeginTrans())
+            using (var trans = this.NewTransaction(TransactionMode.Write, collection, true))
             {
-                var col = trans.Collection.GetOrAdd(collection);
+                var col = trans.CollectionPage;
 
                 // check if index already exists
                 var current = col.GetIndex(name);
@@ -29,9 +29,6 @@ namespace LiteDB
                     // do not test any difference between current index and new definition
                     return false;
                 }
-
-                // lock collection
-                trans.WriteLock(collection);
 
                 // create index head
                 var index = trans.Indexer.CreateIndex(col);
@@ -79,9 +76,9 @@ namespace LiteDB
 
             if (name == "_id") throw LiteException.IndexDropId();
 
-            using (var trans = this.BeginTrans())
+            using (var trans = this.NewTransaction(TransactionMode.Write, collection))
             {
-                var col = trans.Collection.Get(collection);
+                var col = trans.CollectionPage;
 
                 // no collection, no index
                 if (col == null) return false;
@@ -92,9 +89,6 @@ namespace LiteDB
                 // no index, no drop
                 if (index == null) return false;
 
-                // lock collection for write operations
-                trans.WriteLock(collection);
-
                 // delete all data pages + indexes pages
                 trans.Indexer.DropIndex(index);
 
@@ -102,7 +96,7 @@ namespace LiteDB
                 index.Clear();
 
                 // mark collection page as dirty
-                trans.SetDirty(col);
+                trans.Pager.SetDirty(col);
 
                 // persist changes
                 trans.Commit();
@@ -118,9 +112,9 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            using (var trans = this.BeginTrans())
+            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
             {
-                var col = trans.Collection.Get(collection);
+                var col = trans.CollectionPage;
 
                 if (col == null) yield break;
 

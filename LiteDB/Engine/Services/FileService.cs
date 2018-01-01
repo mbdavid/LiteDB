@@ -18,10 +18,10 @@ namespace LiteDB
         private ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
         private IDiskFactory _factory;
         private TimeSpan _timeout;
-        private AesEncryption _crypto = null;
         private long _sizeLimit;
         private Logger _log;
-        private Stream _writer;
+        private AesEncryption _crypto = null;
+        private long _position = 0; // get writer position (for sequencial writes)
 
         public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, Logger log)
         {
@@ -29,8 +29,6 @@ namespace LiteDB
             _timeout = timeout;
             _log = log;
             _sizeLimit = sizeLimit;
-
-            _writer = factory.GetStream();
         }
 
         /// <summary>
@@ -51,9 +49,15 @@ namespace LiteDB
         {
             var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
-            _pool.Add(stream);
-
-            return stream.Length == 0;
+            try
+            {
+                return stream.Length == 0;
+            }
+            finally
+            {
+                // add stream back to pool
+                _pool.Add(stream);
+            }
         }
 
         /// <summary>
@@ -161,15 +165,29 @@ namespace LiteDB
         /// <summary>
         /// Write all pages bytes into disk using single stream (sequencial write)
         /// </summary>
-        public IEnumerable<PagePosition> WritePagesSequencial(IEnumerable<BasePage> pages)
+        public IEnumerable<PagePosition> WritePagesSequence(IEnumerable<BasePage> pages)
         {
-            // write operation occurs in single process (can run in async queue task)
-            lock(_writer)
+            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
+
+            try
             {
                 foreach (var page in pages)
                 {
-                    yield return this.WritePage(_writer, page);
+                    // locked get/update _position writer cursor - increase by PAGE_SIZE
+                    lock (_pool)
+                    {
+                        stream.Position = _position;
+
+                        _position += BasePage.PAGE_SIZE;
+                    }
+
+                    yield return this.WritePage(stream, page);
                 }
+            }
+            finally
+            {
+                // add stream back to pool
+                _pool.Add(stream);
             }
         }
 
@@ -204,13 +222,24 @@ namespace LiteDB
         /// </summary>
         public void Clear()
         {
-            _cache.Clear();
+            lock (_cache)
+            {
+                _cache.Clear();
 
-            // create single instance of Stream writer if not exists yet
-            if (_writer == null) _writer = _factory.GetStream();
+                // create single instance of Stream writer if not exists yet
+                var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
-            _writer.SetLength(0);
-            _writer.Position = 0;
+                try
+                {
+                    _position = 0;
+                    stream.SetLength(0);
+                }
+                finally
+                {
+                    // add stream back to pool
+                    _pool.Add(stream);
+                }
+            }
         }
 
         /// <summary>
@@ -224,12 +253,17 @@ namespace LiteDB
                 Salt = AesEncryption.Salt()
             };
 
-            this.WritePages(new BasePage[] { header }).Execute();
+            // create shared page on database initialization
+            var shared = new SharedPage
+            {
+            };
+
+            this.WritePages(new BasePage[] { header, shared }).Execute();
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
             {
-                _writer.SetLength(initialSize);
+                throw new NotImplementedException();
             }
         }
 
@@ -252,8 +286,6 @@ namespace LiteDB
             if (_crypto != null) _crypto.Dispose();
 
             if (!_factory.Dispose) return;
-
-            if (_writer != null) _writer.Dispose();
 
             while (_pool.TryTake(out var stream))
             {

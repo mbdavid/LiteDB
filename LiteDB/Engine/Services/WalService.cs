@@ -15,8 +15,7 @@ namespace LiteDB
         private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>>();
 
-        private int _currentVersion = 0;
-        private object _commitLocker = new object();
+        private int _currentReadVersion = 0;
 
         public WalService(LockService locker, FileService datafile, FileService walfile)
         {
@@ -26,9 +25,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Represent the single instance of SharedPage (page 1)
+        /// </summary>
+        public SharedPage SharedPage { get; set; } = null;
+
+        /// <summary>
         /// Get current read version for all new transactions
         /// </summary>
-        public int CurrentVersion => _currentVersion;
+        public int CurrentReadVersion => _currentReadVersion;
 
         /// <summary>
         /// Checks if an Page/Version are in WAL-index memory. Consider version that are below parameter. Returns PagePosition of this page inside WAL-file or Empty if page doesn't found.
@@ -69,22 +73,22 @@ namespace LiteDB
             // add transaction to confirmed list
             _confirmedTransactions.Add(transactionID);
 
-            // write confirmed transaction page (use ToArray to execute)
-            var confirm = _walfile.WritePagesSequencial(new BasePage[] { new TransactionPage(transactionID) }).First();
+            // write confirmed shared page (use First() to execute)
+            var confirm = _walfile.WritePagesSequence(new BasePage[] { new SharedPage(transactionID) }).First();
 
             // must lock commit operation to update index
-            lock (_commitLocker)
+            lock (_locker)
             {
                 // increment current version
-                _currentVersion++;
+                _currentReadVersion++;
 
                 // update wal-index
                 foreach (var pos in pagePositions)
                 {
-                    this.AddPageToIndex(pos, _currentVersion);
+                    this.AddPageToIndex(pos, _currentReadVersion);
                 }
 
-                return _currentVersion;
+                return _currentReadVersion;
             }
         }
 
@@ -114,10 +118,10 @@ namespace LiteDB
                 // if there is not confirmed transaction
                 if (_confirmedTransactions.Count == 0)
                 {
-                    // read all file get only confirmed transaction
+                    // read all file get only confirmed transaction (with shared page in WAL)
                     foreach(var transactionID in _walfile
                             .ReadAllPages()
-                            .Where(x => x.PageType == PageType.Transaction)
+                            .Where(x => x.PageType == PageType.Shared)
                             .Select(x => x.TransactionID))
                     {
                         _confirmedTransactions.Add(transactionID);
@@ -129,14 +133,14 @@ namespace LiteDB
                 // clear TransactionID before write on datafile
                 var walpages = _walfile
                     .ReadAllPages()
-                    .Where(x => _confirmedTransactions.Contains(x.TransactionID) && x.PageType != PageType.Transaction)
+                    .Where(x => _confirmedTransactions.Contains(x.TransactionID))
                     .ForEach((i, p) => p.TransactionID = Guid.Empty);
 
                 // write on datafile (pageID position based) for each wal page
                 _datafile.WritePages(walpages).Execute();
 
                 // clear wal-file and wal-index and current version
-                _currentVersion = 0;
+                _currentReadVersion = 0;
                 _walfile.Clear();
                 _index.Clear();
             }

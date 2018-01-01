@@ -100,11 +100,11 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Create new transaction
+        /// Create new transaction. If collection is passed, write-lock collection
         /// </summary>
-        private TransactionService BeginTrans(bool headerLock = false)
+        private TransactionService NewTransaction(TransactionMode mode, string collection, bool addIfNotExists = false)
         {
-            return new TransactionService(headerLock, _locker, _wal, _datafile, _walfile, _log);
+            return new TransactionService(mode, collection, addIfNotExists, _locker, _wal, _datafile, _walfile, _log);
         }
 
         public void Dispose()

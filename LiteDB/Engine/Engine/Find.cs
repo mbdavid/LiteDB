@@ -14,10 +14,9 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            using (var trans = this.BeginTrans())
+            using (var trans = this.NewTransaction(TransactionMode.Read, collection))
             {
-                // get my collection page
-                var col = trans.Collection.Get(collection);
+                var col = trans.CollectionPage;
 
                 // no collection, no documents
                 if (col == null) yield break;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LiteDB
 {
-    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5, Transaction = 6 }
+    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5, Shared = 6 }
 
     internal abstract class BasePage
     {
@@ -115,7 +115,7 @@ namespace LiteDB
             if (type == typeof(DataPage)) return new DataPage(pageID) as T;
             if (type == typeof(ExtendPage)) return new ExtendPage(pageID) as T;
             if (type == typeof(EmptyPage)) return new EmptyPage(pageID) as T;
-            if (type == typeof(TransactionPage)) return new TransactionPage() as T;
+            if (type == typeof(SharedPage)) return new SharedPage() as T;
 
             throw new Exception("Invalid base page type T");
         }
@@ -132,7 +132,7 @@ namespace LiteDB
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);
                 case PageType.Empty: return new EmptyPage(pageID);
-                case PageType.Transaction: return new TransactionPage();
+                case PageType.Shared: return new SharedPage();
                 // use Header as default, because header page will read fixed HEADER_INFO and validate file format (if is not valid datafile)
                 default: return new HeaderPage();
             }

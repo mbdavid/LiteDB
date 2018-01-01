@@ -21,17 +21,6 @@ namespace LiteDB
         private const byte FILE_VERSION = 8;
 
         /// <summary>
-        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page)
-        /// Must be a field to be used as "ref"
-        /// </summary>
-        public uint FreeEmptyPageID;
-
-        /// <summary>
-        /// Last created page - Used when there is no free page inside file
-        /// </summary>
-        public uint LastPageID { get; set; }
-
-        /// <summary>
         /// Database user version [2 bytes]
         /// </summary>
         public ushort UserVersion { get; set; }
@@ -54,8 +43,6 @@ namespace LiteDB
         public HeaderPage()
             : base(0)
         {
-            this.FreeEmptyPageID = uint.MaxValue;
-            this.LastPageID = 0;
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
             this.UserVersion = 0;
@@ -74,8 +61,6 @@ namespace LiteDB
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.FreeEmptyPageID = reader.ReadUInt32();
-            this.LastPageID = reader.ReadUInt32();
             this.UserVersion = reader.ReadUInt16();
             this.Salt = reader.ReadBytes(this.Salt.Length);
             this.CreationTime = reader.ReadDateTime();
@@ -92,8 +77,6 @@ namespace LiteDB
         {
             writer.Write(HEADER_INFO, HEADER_INFO.Length);
             writer.Write(FILE_VERSION);
-            writer.Write(this.FreeEmptyPageID);
-            writer.Write(this.LastPageID);
             writer.Write(this.UserVersion);
             writer.Write(this.Salt);
             writer.Write(this.CreationTime);

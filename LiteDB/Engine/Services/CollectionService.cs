@@ -9,12 +9,10 @@ namespace LiteDB
         private PageService _pager;
         private IndexService _indexer;
         private DataService _data;
-        private TransactionService _trans;
         private Logger _log;
 
-        public CollectionService(TransactionService trans, PageService pager, IndexService indexer, DataService data, Logger log)
+        public CollectionService(PageService pager, IndexService indexer, DataService data, Logger log)
         {
-            _trans = trans;
             _pager = pager;
             _indexer = indexer;
             _data = data;
@@ -22,33 +20,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get a collection or create a new if not exists
-        /// </summary>
-        public CollectionPage GetOrAdd(string name)
-        {
-            var col = this.Get(name);
-
-            if (col == null)
-            {
-                _trans.HeaderLock();
-                col = this.Add(name);
-            }
-
-            return col;
-        }
-
-        /// <summary>
         /// Get a exist collection. Returns null if not exists
         /// </summary>
         public CollectionPage Get(string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
-
-            var header = _trans.GetPage<HeaderPage>(0);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             if (header.CollectionPages.TryGetValue(name, out uint pageID))
             {
-                return _trans.GetPage<CollectionPage>(pageID);
+                return _pager.GetPage<CollectionPage>(pageID);
             }
 
             return null;
@@ -59,11 +39,10 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Add(string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
             if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
             // get header marked as dirty because I will use header after (and NewPage can get another header instance)
-            var header = _trans.GetPage<HeaderPage>(0);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
             if (header.CollectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= CollectionPage.MAX_COLLECTIONS_SIZE)
@@ -80,7 +59,7 @@ namespace LiteDB
             col.CollectionName = name;
 
             // set header page as dirty
-            _trans.SetDirty(header);
+            _pager.SetDirty(header);
 
             // create PK index
             var pk = _indexer.CreateIndex(col);
@@ -97,11 +76,11 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            var header = _trans.GetPage<HeaderPage>(0);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             foreach (var pageID in header.CollectionPages.Values)
             {
-                yield return _trans.GetPage<CollectionPage>(pageID);
+                yield return _pager.GetPage<CollectionPage>(pageID);
             }
         }
 
@@ -122,15 +101,15 @@ namespace LiteDB
             col.CollectionName = newName;
 
             // set collection page as dirty
-            _trans.SetDirty(col);
+            _pager.SetDirty(col);
 
             // update header collection reference
-            var header = _trans.GetPage<HeaderPage>(0);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             header.CollectionPages.Remove(oldName);
             header.CollectionPages.Add(newName, col.PageID);
 
-            _trans.SetDirty(header);
+            _pager.SetDirty(header);
         }
 
         /// <summary>
@@ -180,12 +159,12 @@ namespace LiteDB
             }
 
             // get header page to remove from collection list links
-            var header = _trans.GetPage<HeaderPage>(0);
+            var header = _pager.GetPage<HeaderPage>(0);
 
             header.CollectionPages.Remove(col.CollectionName);
 
             // set header as dirty after remove
-            _trans.SetDirty(header);
+            _pager.SetDirty(header);
 
             _pager.DeletePage(col.PageID);
         }

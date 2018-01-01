@@ -46,7 +46,7 @@ namespace LiteDB.Demo
 
                 // testing find in col2
                 var d = db.Find("col2", Query.EQ("_id", 3)).FirstOrDefault();
-                Console.WriteLine(d?.ToString());
+                Console.WriteLine(d?.AsDocument["name"].AsString);
 
                 Console.WriteLine("Total (b/WAL): " + sw.ElapsedMilliseconds);
 
@@ -58,13 +58,13 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(datafile))
             {
-                var s = db.Info();
+                //var s = db.Info();
                 //Console.WriteLine(JsonSerializer.Serialize(db.Info(), true));
 
                 // test find in col1
                 var d = db.Find("col1", Query.EQ("_id", 3)).FirstOrDefault();
 
-                Console.WriteLine(d?.ToString());
+                Console.WriteLine(d ?.AsDocument["name"].AsString);
             }
 
 
@@ -74,7 +74,7 @@ namespace LiteDB.Demo
 
         static IEnumerable<BsonDocument> ReadDocuments()
         {
-            var counter = 100;
+            var counter = 10000;
 
             using (var s = File.OpenRead(@"datagen.txt"))
             {
@@ -92,7 +92,8 @@ namespace LiteDB.Demo
                         {
                             ["_id"] = Convert.ToInt32(row[0]),
                             ["name"] = row[1],
-                            ["age"] = Convert.ToInt32(row[2])
+                            ["age"] = Convert.ToInt32(row[2]),
+                            ["lorem"] = "".PadLeft(9000, '-')
                         };
                     }
                 }
