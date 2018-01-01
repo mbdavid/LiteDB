@@ -1,14 +1,38 @@
-# NEXT
-- Internal visible in tests
-- Test password do not storing password sha1 
-- Rename LiteEngine to DbEngine with minimum data access methods
+# LiteDB v5
 
+> What can be expected in v5? Lot of changes...
 
+- New Storage Engine
+    - New WAL (Write-Ahead Logging) for fast durability
+    - Database lock per collection (multi write concurrency)
+    - No lock for any reader
+    - Snapshot read data version
+    - Multi readers and multi **writers** with async write support
+    - NET45 and NETStandard 2 only support (drop NET35/40)
 
-# FUTURE
-- Review logs (with #DEBUG call)
-- Fix database info
+- New SQL-Like Language    
+    - Support for many SQL command, like SELECT, INSERT, UPDATE
+    - New Expression parser/compiler for complex filters
+    - Support for OrderBy
+    - Support for GroupBy
+    - Drop shell commands
 
+- Server-Side support (LiteDB.Server.exe)
+    - NET Core 2 application
+    - HTTP/S REST API protocol
+    - Multi database
+    - Authentication
+    - Web Admin UI
+
+.. but still...    
+- Embedded support
+- Single database file 
+- Single DLL, no dependency and 100% C#
+- 100% free open source
+    
+> Roadmap: anytime in 2018 :)
+    
+---
 
 # LiteDB - A .NET NoSQL Document Store in a single data file
 
