@@ -159,19 +159,23 @@ namespace LiteDB
         /// <summary>
         /// Write all pages bytes into disk using stream from pool (page position according pageID). Return an IEnumerable, so need execute ToArray()
         /// </summary>
-        public IEnumerable<PagePosition> WritePages(IEnumerable<BasePage> pages)
+        public IList<PagePosition> WritePages(IEnumerable<BasePage> pages)
         {
             var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
             try
             {
+                var result = new List<PagePosition>();
+
                 foreach (var page in pages)
                 {
                     // position stream based on pageID
                     stream.Position = BasePage.GetPagePostion(page.PageID);
 
-                    yield return this.WritePage(stream, page);
+                    result.Add(this.WritePage(stream, page));
                 }
+
+                return result;
             }
             finally
             {
@@ -183,7 +187,7 @@ namespace LiteDB
         /// <summary>
         /// Write all pages bytes into disk using single stream (sequencial write)
         /// </summary>
-        public IEnumerable<PagePosition> WritePagesSequence(IEnumerable<BasePage> pages)
+        public void WritePagesSequence(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions = null)
         {
             var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
@@ -199,7 +203,13 @@ namespace LiteDB
                         _position += BasePage.PAGE_SIZE;
                     }
 
-                    yield return this.WritePage(stream, page);
+                    var pos = this.WritePage(stream, page);
+
+                    // if dictionary as passed, inserted position
+                    if (pagePositions != null)
+                    {
+                        pagePositions[page.PageID] = pos;
+                    }
                 }
             }
             finally

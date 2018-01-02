@@ -21,11 +21,12 @@ namespace LiteDB
                 if (col == null) return 0;
 
                 var count = 0;
+                var pk = col.PK;
 
-                var query = new QueryIn("_id", ids);
-
-                foreach (var pkNode in query.Run(col, trans.Indexer))
+                foreach(var id in ids)
                 {
+                    var pkNode = trans.Indexer.Find(pk, id, false, Query.Ascending);
+
                     // get all indexes nodes from this data block
                     var allNodes = trans.Indexer.GetNodeList(pkNode, true).ToArray();
 
@@ -42,9 +43,6 @@ namespace LiteDB
 
                     count++;
                 }
-
-                // persist changes
-                trans.Commit();
 
                 return count;
             });

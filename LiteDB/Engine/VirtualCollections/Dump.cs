@@ -111,7 +111,8 @@ namespace LiteDB
                     ["name"] = x.Name,
                     ["expression"] = x.Expression,
                     ["unique"] = x.Unique,
-                    ["maxLevel"] = (int)x.MaxLevel
+                    ["maxLevel"] = (int)x.MaxLevel,
+                    ["headPageID"] = (int)x.HeadNode.PageID
                 }));
             }
             // all other page types contains data-only

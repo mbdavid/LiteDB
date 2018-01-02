@@ -13,7 +13,7 @@ namespace LiteDB
         private LockService _locker = null;
 
         private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
-        private ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, PagePosition>>();
+        private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
@@ -32,10 +32,10 @@ namespace LiteDB
         /// <summary>
         /// Checks if an Page/Version are in WAL-index memory. Consider version that are below parameter. Returns PagePosition of this page inside WAL-file or Empty if page doesn't found.
         /// </summary>
-        public PagePosition GetPageIndex(uint pageID, int version)
+        public long GetPageIndex(uint pageID, int version)
         {
             // wal-index versions must be greater than 0 (version 0 is datafile)
-            if (version == 0) return PagePosition.Empty;
+            if (version == 0) return long.MaxValue;
 
             // get page slot in cache
             if (_index.TryGetValue(pageID, out var slot))
@@ -48,7 +48,7 @@ namespace LiteDB
                     .FirstOrDefault();
 
                 // if versions on index are higher then request, exit
-                if (v == 0) return PagePosition.Empty;
+                if (v == 0) return long.MaxValue;
 
                 // try get for concurrent dict this page (it's possible this page are no anymore in cache - other concurrency thread clear cache)
                 if (slot.TryGetValue(v, out var position))
@@ -57,19 +57,19 @@ namespace LiteDB
                 }
             }
 
-            return PagePosition.Empty;
+            return long.MaxValue;
         }
 
         /// <summary>
         /// Confirm transaction using new HeaderPage with transaction ID return new current version number
         /// </summary>
-        public int Commit(HeaderPage header, IEnumerable<PagePosition> pagePositions)
+        public int Commit(HeaderPage header, IDictionary<uint, PagePosition> pagePositions)
         {
             // add transaction to confirmed list
             _confirmedTransactions.Add(header.TransactionID);
 
             // write confirmed header page (use First() to execute)
-            var confirm = _walfile.WritePagesSequence(new BasePage[] { header }).First();
+            _walfile.WritePagesSequence(new BasePage[] { header });
 
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_locker)
@@ -80,23 +80,15 @@ namespace LiteDB
                 // update wal-index
                 foreach (var pos in pagePositions)
                 {
-                    this.AddPageToIndex(pos, _currentReadVersion);
+                    // get page slot in _index (by pageID) (or create if not exists)
+                    var slot = _index.GetOrAdd(pos.Key, new ConcurrentDictionary<int, long>());
+
+                    // add page version (update if already exists)
+                    slot.AddOrUpdate(_currentReadVersion, pos.Value.Position, (v, old) => pos.Value.Position);
                 }
 
                 return _currentReadVersion;
             }
-        }
-
-        /// <summary>
-        /// Add new page position into wal-index
-        /// </summary>
-        private void AddPageToIndex(PagePosition pos, int version)
-        {
-            // get page slot in cache (or create if not exists)
-            var slot = _index.GetOrAdd(pos.PageID, new ConcurrentDictionary<int, PagePosition>());
-
-            // add page version to wal-index (update if already exists)
-            slot.AddOrUpdate(version, pos, (v, old) => pos);
         }
 
         /// <summary>

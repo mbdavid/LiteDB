@@ -83,9 +83,9 @@ namespace LiteDB
             // now, look inside wal-index
             var pos = _wal.GetPageIndex(pageID, _readVersion);
 
-            if (!pos.IsEmpty)
+            if (pos != long.MaxValue)
             {
-                var walpage = (T)_walFile.ReadPage(pos.Position);
+                var walpage = (T)_walFile.ReadPage(pos);
 
                 // copy to my local pages
                 _localPages[pageID] = walpage;
@@ -131,18 +131,11 @@ namespace LiteDB
             // update pages with transactionId in all dirty page
             var dirty = _localPages.Values
                 .Where(x => x.IsDirty)
-                .ForEach((i, p) => p.TransactionID = _transactionID)
-                .ToList();
+                .ForEach((i, p) => p.TransactionID = _transactionID);
 
-            // save all dirty pages into walfile (sequencial mode) and get pages position reference
-            var saved = _walFile.WritePagesSequence(dirty)
-                .ToList();
-
-            // update dictionary with page position references
-            foreach (var position in saved)
-            {
-                _dirtyPagesWal[position.PageID] = position;
-            }
+            // save all dirty pages into walfile (sequencial mode)
+            // and write poisiton in my dirtyPagesWal dictionary
+            _walFile.WritePagesSequence(dirty, _dirtyPagesWal);
 
             // clear dirtyPage list
             _localPages.Clear();
@@ -188,7 +181,7 @@ namespace LiteDB
                     LastPageID = _header.LastPageID
                 };
 
-                _wal.Commit(copy, _dirtyPagesWal.Values);
+                _wal.Commit(copy, _dirtyPagesWal);
 
                 // if has deleted pages, update in global header instance
                 if (newEmptyPageID != uint.MaxValue)
@@ -310,8 +303,9 @@ namespace LiteDB
                 };
 
                 // persist all pages into wal-file (new run ToList now)
-                var pagePositions = _walFile.WritePagesSequence(pages)
-                    .ToList();
+                var pagePositions = new Dictionary<uint, PagePosition>();
+
+                _walFile.WritePagesSequence(pages, pagePositions);
 
                 // now commit last confirm page to wal file
                 _wal.Commit(copy, pagePositions);
