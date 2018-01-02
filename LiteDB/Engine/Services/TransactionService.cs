@@ -90,7 +90,7 @@ namespace LiteDB
         /// </summary>
         public void Commit()
         {
-            _pager.PersistTransaction();
+            _pager.PersistDirtyPages();
 
             _pager.WalCommit();
         }

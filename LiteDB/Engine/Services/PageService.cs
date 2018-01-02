@@ -21,6 +21,9 @@ namespace LiteDB
         // handle created pages during transaction (for rollback)
         private List<uint> _newPages = new List<uint>();
 
+        // first sequence deleted page (FreePageID) 
+        private HeaderPage _delHeaderPage = new HeaderPage();
+        private uint _delLastPageID = uint.MaxValue;
 
         /// <summary>
         /// Transaction ReadVersion
@@ -123,7 +126,7 @@ namespace LiteDB
         /// Support write pages during transaction (before transaction finish). Useful for long transactions, like EnsureIndex in big collection
         /// Clear all pages (including clean ones)
         /// </summary>
-        public void PersistTransaction()
+        public void PersistDirtyPages()
         {
             // update pages with transactionId in all dirty page
             var dirty = _localPages.Values
@@ -150,15 +153,49 @@ namespace LiteDB
         /// </summary>
         public void WalCommit()
         {
-            // create new header page with transaction ID commit
-            var copy = new HeaderPage()
+            // must lock lock global instance
+            lock (_header)
             {
-                TransactionID = _transactionID,
-                FreeEmptyPageID = _header.FreeEmptyPageID,
-                LastPageID = _header.LastPageID
-            };
+                // here, is has del page, must update 
+                var newEmptyPageID = uint.MaxValue;
 
-            _wal.Commit(copy, _dirtyPagesWal.Values);
+                if (_delHeaderPage.FreeEmptyPageID == uint.MaxValue)
+                {
+                    if (_header.FreeEmptyPageID != uint.MaxValue)
+                    {
+                        var page = this.GetPage<BasePage>(_header.FreeEmptyPageID);
+                        var last = this.GetPage<BasePage>(_delLastPageID);
+
+                        // add deleted pages in sequence with old sequence
+                        page.PrevPageID = last.PageID;
+                        last.NextPageID = page.PageID;
+
+                        this.SetDirty(page);
+                        this.SetDirty(last);
+
+                        // persist page changes (last page will write twice in wal)
+                        this.PersistDirtyPages();
+                    }
+
+                    newEmptyPageID = _delHeaderPage.FreeEmptyPageID;
+                }
+
+                // create new header page with transaction ID commit
+                var copy = new HeaderPage()
+                {
+                    TransactionID = _transactionID,
+                    FreeEmptyPageID = _header.FreeEmptyPageID,
+                    LastPageID = _header.LastPageID
+                };
+
+                _wal.Commit(copy, _dirtyPagesWal.Values);
+
+                // if has deleted pages, update in global header instance
+                if (newEmptyPageID != uint.MaxValue)
+                {
+                    _header.FreeEmptyPageID = newEmptyPageID;
+                }
+            }
         }
 
         /// <summary>
@@ -291,26 +328,24 @@ namespace LiteDB
         /// </summary>
         public void DeletePage(uint pageID, bool addSequence = false)
         {
-            throw new NotSupportedException();
+            // get all pages in sequence or a single one
+            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { this.GetPage<BasePage>(pageID) };
 
-//            // get all pages in sequence or a single one
-//            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { _trans.GetPage<BasePage>(pageID) };
-//
-//            // get my header page
-//            var header = _trans.GetPage<HeaderPage>(0);
-//
-//            // adding all pages to FreeList
-//            foreach (var page in pages)
-//            {
-//                // create a new empty page based on a normal page
-//                var empty = new EmptyPage(page.PageID);
-//
-//                // add empty page to dirty pages in transaction
-//                _trans.SetDirty(empty, true);
-//
-//                // add to empty free list
-//                this.AddOrRemoveToFreeList(true, empty, header, ref header.FreeEmptyPageID);
-//            }
+            // adding all pages to FreeList
+            foreach (var page in pages)
+            {
+                // create a new empty page based on a normal page
+                var empty = new EmptyPage(page.PageID);
+
+                // add empty page to dirty pages in transaction
+                this.SetDirty(empty, true);
+
+                // add to empty free list
+                this.AddOrRemoveToFreeList(true, empty, _delHeaderPage, ref _delHeaderPage.FreeEmptyPageID);
+
+                // keep last deleted to fix sequence on commit
+                _delLastPageID = page.PageID;
+            }
         }
 
         /// <summary>

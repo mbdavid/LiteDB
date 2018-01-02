@@ -31,8 +31,8 @@ namespace LiteDB.Demo
                 var ts = new List<Task>();
                 sw.Start();
 
-                //db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
-                //db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
 
                 Console.Clear();
 
@@ -44,26 +44,26 @@ namespace LiteDB.Demo
                 {
                 }
 
-                sb.AppendLine("After Erro 200\n=========================");
-                sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
-                sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
-                sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
+                //sb.AppendLine("After Erro 200\n=========================");
+                //sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
+                //sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
+                //sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
 
                 db.Insert("col1", ReadDocuments(400, false), BsonAutoId.ObjectId);
 
-                sb.AppendLine("After Insert 400\n=========================");
-                sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
-                sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
-                sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
+                //sb.AppendLine("After Insert 400\n=========================");
+                //sb.AppendLine("DataFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDataFile()), true));
+                //sb.AppendLine("\nWalFile:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpWalFile()), true));
+                //sb.AppendLine("\nDatabase:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
 
-                //ts.Add(Task.Run(() =>
-                //{
-                //    db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
-                //}));
-                //ts.Add(Task.Run(() =>
-                //{
-                //    db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
-                //}));
+                ts.Add(Task.Run(() =>
+                {
+                    db.Insert("col3", ReadDocuments(), BsonAutoId.ObjectId);
+                }));
+                ts.Add(Task.Run(() =>
+                {
+                    db.Insert("col4", ReadDocuments(), BsonAutoId.ObjectId);
+                }));
 
                 Task.WaitAll(ts.ToArray());
 
