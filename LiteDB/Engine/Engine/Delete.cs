@@ -27,6 +27,9 @@ namespace LiteDB
                 {
                     var pkNode = trans.Indexer.Find(pk, id, false, Query.Ascending);
 
+                    // if pk not found, continue
+                    if (pkNode == null) continue;
+
                     // get all indexes nodes from this data block
                     var allNodes = trans.Indexer.GetNodeList(pkNode, true).ToArray();
 

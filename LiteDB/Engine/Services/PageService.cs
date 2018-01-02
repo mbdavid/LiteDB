@@ -150,20 +150,20 @@ namespace LiteDB
             lock (_header)
             {
                 // here, is has del page, must update 
-                var newEmptyPageID = uint.MaxValue;
+                var newEmptyPageID = _header.FreeEmptyPageID;
 
-                if (_delHeaderPage.FreeEmptyPageID == uint.MaxValue)
+                if (_delHeaderPage.FreeEmptyPageID != uint.MaxValue)
                 {
                     if (_header.FreeEmptyPageID != uint.MaxValue)
                     {
-                        var page = this.GetPage<BasePage>(_header.FreeEmptyPageID);
+                        var first = this.GetPage<BasePage>(_header.FreeEmptyPageID);
                         var last = this.GetPage<BasePage>(_delLastPageID);
 
                         // add deleted pages in sequence with old sequence
-                        page.PrevPageID = last.PageID;
-                        last.NextPageID = page.PageID;
+                        first.PrevPageID = last.PageID;
+                        last.NextPageID = first.PageID;
 
-                        this.SetDirty(page);
+                        this.SetDirty(first);
                         this.SetDirty(last);
 
                         // persist page changes (last page will write twice in wal)
@@ -176,18 +176,21 @@ namespace LiteDB
                 // create new header page with transaction ID commit
                 var copy = new HeaderPage()
                 {
+                    UserVersion = _header.UserVersion,
+                    CreationTime = _header.CreationTime,
                     TransactionID = _transactionID,
-                    FreeEmptyPageID = _header.FreeEmptyPageID,
+                    FreeEmptyPageID = newEmptyPageID,
                     LastPageID = _header.LastPageID
                 };
 
                 _wal.Commit(copy, _dirtyPagesWal);
 
                 // if has deleted pages, update in global header instance
-                if (newEmptyPageID != uint.MaxValue)
-                {
-                    _header.FreeEmptyPageID = newEmptyPageID;
-                }
+                _header.FreeEmptyPageID = newEmptyPageID;
+
+                // clear variables
+                _delHeaderPage = null;
+                _delLastPageID = uint.MaxValue;
             }
         }
 
@@ -297,6 +300,8 @@ namespace LiteDB
                 // create copy of header page to send to wal file
                 var copy = new HeaderPage
                 {
+                    UserVersion = _header.UserVersion,
+                    CreationTime = _header.CreationTime,
                     TransactionID = transactionID,
                     FreeEmptyPageID = pages.First().PageID, // in this header page free empty list starts with my new empty list page
                     LastPageID = _header.LastPageID

@@ -32,7 +32,7 @@ namespace LiteDB.Demo
                 sw.Start();
 
                 db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
-                //db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
 
                 try
                 {
@@ -42,7 +42,7 @@ namespace LiteDB.Demo
                 {
                 }
 
-                db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
+                db.Insert("col1", ReadDocuments(5000), BsonAutoId.ObjectId);
                 db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
 
                 ts.Add(Task.Run(() =>
@@ -69,24 +69,20 @@ namespace LiteDB.Demo
                     db.Delete("col2", ids);
                 }));
                 
-                //ts.Add(Task.Run(() =>
-                //{
-                //    var ids = db.Find("col3", Query.All()).Select(x => x["_id"]).ToList();
-                //    db.Delete("col3", ids);
-                //}));
-                //
-                //ts.Add(Task.Run(() =>
-                //{
-                //    db.Insert("col5", ReadDocuments(), BsonAutoId.ObjectId);
-                //}));
+                ts.Add(Task.Run(() =>
+                {
+                    db.Insert("col5", ReadDocuments(), BsonAutoId.ObjectId);
+                }));
                 
                 Task.WaitAll(ts.ToArray());
-                // 
-                // db.DropCollection("col1");
-                // db.DropCollection("col2");
-                // db.DropCollection("col3");
-                // db.DropCollection("col4");
-                // db.DropCollection("col5");
+                
+                db.DropCollection("col1");
+                db.DropCollection("col2");
+                db.DropCollection("col3");
+                db.DropCollection("col4");
+                db.DropCollection("col5");
+
+                //db.Insert("col1", ReadDocuments(1), BsonAutoId.ObjectId);
 
                 Console.WriteLine("Total (b/WAL): " + sw.ElapsedMilliseconds);
 

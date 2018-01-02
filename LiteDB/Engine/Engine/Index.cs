@@ -59,9 +59,6 @@ namespace LiteDB
                     }
                 }
 
-                // persist changes
-                trans.Commit();
-
                 return true;
             });
         }
@@ -97,9 +94,6 @@ namespace LiteDB
 
                 // mark collection page as dirty
                 trans.Pager.SetDirty(col);
-
-                // persist changes
-                trans.Commit();
 
                 return true;
             });

@@ -155,21 +155,19 @@ namespace LiteDB
             return Encoding.UTF8.GetString(bytes, 0, length - 1);
         }
 
-        // use byte array buffer for CString (key-only)
-        private byte[] _strBuffer = new byte[1000];
-
         private string ReadCString(ByteReader reader)
         {
             var pos = 0;
+            var buffer = new byte[200];
 
             while (true)
             {
-                byte buf = reader.ReadByte();
-                if (buf == 0x00) break;
-                _strBuffer[pos++] = buf;
+                var data = reader.ReadByte();
+                if (data == 0x00 || pos == 200) break;
+                buffer[pos++] = data;
             }
 
-            return Encoding.UTF8.GetString(_strBuffer, 0, pos);
+            return Encoding.UTF8.GetString(buffer, 0, pos);
         }
     }
 }

@@ -21,8 +21,6 @@ namespace LiteDB
 
                 trans.Collection.Drop(col);
 
-                trans.Commit();
-
                 return true;
             });
         }
@@ -42,8 +40,6 @@ namespace LiteDB
                 if (col == null) return false;
 
                 trans.Collection.Rename(col, newName);
-
-                trans.Commit();
 
                 return true;
             });
