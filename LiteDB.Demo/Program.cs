@@ -24,15 +24,18 @@ namespace LiteDB.Demo
             var sb = new StringBuilder();
 
             var sw = new Stopwatch();
-            var log = new Logger(Logger.LOCK, (s) => Console.WriteLine("> " + s));
+            //var log = new Logger(Logger.LOCK, (s) => Console.WriteLine("> " + s));
 
-            using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Log = log }))
+            using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
             {
                 var ts = new List<Task>();
                 sw.Start();
 
                 db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
                 db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col3", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col4", "age", new BsonExpression("$.age"), false);
+                db.EnsureIndex("col5", "age", new BsonExpression("$.age"), false);
 
                 try
                 {

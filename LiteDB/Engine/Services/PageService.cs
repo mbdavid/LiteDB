@@ -187,10 +187,6 @@ namespace LiteDB
 
                 // if has deleted pages, update in global header instance
                 _header.FreeEmptyPageID = newEmptyPageID;
-
-                // clear variables
-                _delHeaderPage = null;
-                _delLastPageID = uint.MaxValue;
             }
         }
 
