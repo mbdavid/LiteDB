@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LiteDB
 {
@@ -22,6 +23,9 @@ namespace LiteDB
         private Logger _log;
         private AesEncryption _crypto = null;
         private long _position = 0; // get writer position (for sequencial writes)
+
+        private Task _asyncWriter = null;
+        private ConcurrentQueue<Tuple<long, byte[]>> _queueWriter = new ConcurrentQueue<Tuple<long, byte[]>>();
 
         public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, Logger log)
         {
@@ -133,7 +137,7 @@ namespace LiteDB
             {
                 // move stream cursor
                 stream.Position += BasePage.PAGE_SIZE;
-
+            
                 // return cloned page
                 return cached.Clone();
             }
