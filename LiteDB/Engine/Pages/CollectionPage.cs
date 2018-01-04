@@ -13,6 +13,22 @@ namespace LiteDB
         public static Regex CollectionNamePattern = new Regex(@"^[\w]{1,60}$", RegexOptions.Compiled);
 
         /// <summary>
+        /// Max length of all indexes names+expressions
+        /// </summary>
+        public const int MAX_INDEX_NAME_SIZE = BasePage.PAGE_AVAILABLE_BYTES - 100;
+
+        /// <summary>
+        /// Each index fixed size
+        /// </summary>
+        public const int FIXED_INDEX_SIZE = 4 + // Name (length)
+                                            4 + // Expression (length)
+                                            1 + // Unique
+                                            6 + // HeadNode
+                                            6 + // TailNode
+                                            4 + // FreeIndexPageID
+                                            1;  // MaxLevel; 
+
+        /// <summary>
         /// Page type = Collection
         /// </summary>
         public override PageType PageType { get { return PageType.Collection; } }
@@ -153,6 +169,16 @@ namespace LiteDB
         public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
         {
             return _indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
+        }
+
+        /// <summary>
+        /// Calculate if all indexes names and expressions fit on this page
+        /// </summary>
+        public void CalculateNameSize()
+        {
+            var sum = _indexes.Sum(x => x.Name.Length + x.Expression.Length + FIXED_INDEX_SIZE);
+
+            if (sum > MAX_INDEX_NAME_SIZE) throw LiteException.IndexNameLimitExceeded(MAX_INDEX_NAME_SIZE);
         }
 
         #endregion

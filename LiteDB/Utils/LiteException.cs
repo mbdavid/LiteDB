@@ -28,6 +28,7 @@ namespace LiteDB
         public const int READ_ONLY_DATABASE = 125;
         public const int TRANSACTION_NOT_SUPPORTED = 126;
         public const int SYNTAX_ERROR = 127;
+        public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -91,6 +92,11 @@ namespace LiteDB
         internal static LiteException CollectionLimitExceeded(int limit)
         {
             return new LiteException(COLLECTION_LIMIT_EXCEEDED, "This database exceeded the maximum limit of collection names size: {0} bytes", limit);
+        }
+
+        internal static LiteException IndexNameLimitExceeded(int limit)
+        {
+            return new LiteException(INDEX_NAME_LIMIT_EXCEEDED, "This collection exceeded the maximum limit of indexes names/expression size: {0} bytes", limit);
         }
 
         internal static LiteException IndexDropId()
