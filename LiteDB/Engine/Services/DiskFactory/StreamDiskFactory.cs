@@ -21,7 +21,7 @@ namespace LiteDB
         /// <summary>
         /// Stream has no name (use strem type)
         /// </summary>
-        public string Filename => _stream is MemoryStream ? ":memory:" : ":temp:";
+        public string Filename => _stream is MemoryStream ? ":memory:" : _stream is TempStream ? ":temp:" : ":stream:";
 
         /// <summary>
         /// Get always same Stream instance, do dot accept concurrency

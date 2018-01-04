@@ -40,10 +40,18 @@ namespace LiteDB
         /// </summary>
         public void EnableEncryption(string password)
         {
-            // if there is no Salt loaded, read from header page (0)
-            var salt = (this.ReadPage(0) as HeaderPage).Salt;
+            // read header from disk in page 0
+            var header = this.ReadPage(0) as HeaderPage;
 
-            _crypto = new AesEncryption(password, salt);
+            // test hash password
+            var hash = AesEncryption.HashPBKDF2(password, header.Salt);
+
+            if (hash.BinaryCompareTo(header.Password) != 0)
+            {
+                throw LiteException.DatabaseWrongPassword();
+            }
+
+            _crypto = new AesEncryption(password, header.Salt);
         }
 
         /// <summary>
@@ -277,13 +285,19 @@ namespace LiteDB
         /// <summary>
         /// Create new database based if Stream are empty
         /// </summary>
-        public void CreateDatabase(long initialSize)
+        public void CreateDatabase(string password, long initialSize)
         {
             // create a new header page in bytes (fixed in 0)
             var header = new HeaderPage
             {
                 Salt = AesEncryption.Salt()
             };
+
+            // hashing password using PBKDF2
+            if (password != null)
+            {
+                header.Password = AesEncryption.HashPBKDF2(password, header.Salt);
+            }
 
             // create collection list page (fixed in 1)
             var colList = new CollectionListPage()

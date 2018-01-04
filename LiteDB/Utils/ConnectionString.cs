@@ -120,7 +120,8 @@ namespace LiteDB
         {
             if (this.DataStream != null)
             {
-                var stream = wal ? this.DataStream : (this.DataStream is TempStream ? (Stream)new TempStream() : new MemoryStream());
+                var stream = wal ? new TempStream() : this.DataStream;
+
                 return new StreamDiskFactory(stream);
             }
             if (this.Filename == ":memory:")
@@ -134,6 +135,7 @@ namespace LiteDB
             else
             {
                 var name = wal ? FileHelper.GetTempFile(this.Filename, "-wal", false) : this.Filename;
+
                 return new FileStreamDiskFactory(name, this.ReadOnly);
             }
         }

@@ -26,7 +26,12 @@ namespace LiteDB
         public ushort UserVersion { get; set; }
 
         /// <summary>
-        /// When using encryption, store salt for password
+        /// Hash Password in PBKDF2 [20 bytes]
+        /// </summary>
+        public byte[] Password { get; set; }
+
+        /// <summary>
+        /// When using encryption, store salt for password [16 bytes]
         /// </summary>
         public byte[] Salt { get; set; }
 
@@ -51,10 +56,28 @@ namespace LiteDB
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
             this.UserVersion = 0;
+            this.Password = new byte[20];
             this.Salt = new byte[16];
             this.CreationTime = DateTime.Now;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 1; // CollectionListPage
+        }
+
+        /// <summary>
+        /// Create new copy of header page and keep non-changed values
+        /// </summary>
+        public HeaderPage Copy(Guid transactionID, uint freeEmptyPageID)
+        {
+            return new HeaderPage
+            {
+                Password = this.Password,
+                Salt = this.Salt,
+                UserVersion = this.UserVersion,
+                CreationTime = this.CreationTime,
+                LastPageID = this.LastPageID,
+                TransactionID = transactionID,
+                FreeEmptyPageID = freeEmptyPageID
+            };
         }
 
         #region Read/Write pages

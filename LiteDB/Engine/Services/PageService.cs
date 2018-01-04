@@ -174,14 +174,7 @@ namespace LiteDB
                 }
 
                 // create new header page with transaction ID commit
-                var copy = new HeaderPage()
-                {
-                    UserVersion = _header.UserVersion,
-                    CreationTime = _header.CreationTime,
-                    TransactionID = _transactionID,
-                    FreeEmptyPageID = newEmptyPageID,
-                    LastPageID = _header.LastPageID
-                };
+                var copy = _header.Copy(_transactionID, newEmptyPageID);
 
                 _wal.Commit(copy, _dirtyPagesWal);
 
@@ -294,14 +287,7 @@ namespace LiteDB
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
                 // create copy of header page to send to wal file
-                var copy = new HeaderPage
-                {
-                    UserVersion = _header.UserVersion,
-                    CreationTime = _header.CreationTime,
-                    TransactionID = transactionID,
-                    FreeEmptyPageID = pages.First().PageID, // in this header page free empty list starts with my new empty list page
-                    LastPageID = _header.LastPageID
-                };
+                var copy = _header.Copy(transactionID, pages.First().PageID);
 
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();

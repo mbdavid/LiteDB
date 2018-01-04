@@ -66,13 +66,16 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Hash a password using SHA1 just to verify password
+        /// Hash a password using PBKDF2 hash
         /// </summary>
-        public static byte[] HashSHA1(string password)
+        public static byte[] HashPBKDF2(string password, byte[] salt)
         {
-            var sha = SHA1.Create();
-            var shaBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return shaBytes;
+            var pbkdf2 = new Rfc2898DeriveBytes(password, salt)
+            {
+                IterationCount = 1000
+            };
+
+            return pbkdf2.GetBytes(20);
         }
 
         /// <summary>

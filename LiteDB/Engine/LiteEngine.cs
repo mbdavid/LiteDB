@@ -70,7 +70,7 @@ namespace LiteDB
                 // create database if not exists
                 if (_dataFile.IsEmpty())
                 {
-                    _dataFile.CreateDatabase(options.InitialSize);
+                    _dataFile.CreateDatabase(options.Password, options.InitialSize);
                 }
 
                 // if contains password, enable encryption
