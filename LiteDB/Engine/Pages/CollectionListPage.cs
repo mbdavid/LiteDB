@@ -45,7 +45,9 @@ namespace LiteDB
         public void Add(string name, uint pageID)
         {
             // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
-            if (_collectionPages.Sum(x => x.Key.Length + 8) + name.Length + 8 >= MAX_COLLECTIONS_SIZE)
+            var sum = _collectionPages.Sum(x => x.Key.Length + 8) + (name.Length + 8);
+
+            if (sum >= MAX_COLLECTIONS_SIZE)
             {
                 throw LiteException.CollectionLimitExceeded(MAX_COLLECTIONS_SIZE);
             }
@@ -57,6 +59,16 @@ namespace LiteDB
 
         public void Rename(string oldName, string newName)
         {
+            // check limit count (8 bytes per collection = 4 to string length, 4 for uint pageID)
+            var sum = _collectionPages
+                .Where(x => x.Key != oldName)
+                .Sum(x => x.Key.Length + 8) + (newName.Length + 8);
+
+            if (sum >= MAX_COLLECTIONS_SIZE)
+            {
+                throw LiteException.CollectionLimitExceeded(MAX_COLLECTIONS_SIZE);
+            }
+
             var pageID = _collectionPages[oldName];
 
             _collectionPages.Remove(oldName);

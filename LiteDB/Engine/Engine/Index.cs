@@ -38,7 +38,7 @@ namespace LiteDB
                 index.Unique = unique;
 
                 // test if this new name/expression fit on PAGE_SIZE
-                col.CheckIfAllNamesFit();
+                col.CalculateNameSize();
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, trans.Indexer))
