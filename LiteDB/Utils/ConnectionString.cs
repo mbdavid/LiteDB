@@ -46,6 +46,11 @@ namespace LiteDB
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
+        /// "memory": Max memory usage before clean up database memory cache (default: 100)
+        /// </summary>
+        public int Memory { get; set; } = 100;
+
+        /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
         /// </summary>
         public long InitialSize { get; set; } = 0;
@@ -69,11 +74,6 @@ namespace LiteDB
         /// "async": Use "sync over async" to UWP apps access any directory
         /// </summary>
         public bool Async { get; set; } = false;
-
-        /// <summary>
-        /// "flush": If true, force flush to disk (default: false)
-        /// </summary>
-        public bool Flush { get; set; } = false;
 
         /// <summary>
         /// Initialize empty connection string
@@ -110,6 +110,7 @@ namespace LiteDB
             this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
             this.LogLevel = values.GetValue("log", Logger.NONE);
             this.UtcDate = values.GetValue("utc", false);
+            this.Memory = values.GetValue("memory", 100);
             this.Async = values.GetValue("async", false);
         }
 
@@ -136,7 +137,7 @@ namespace LiteDB
             {
                 var name = wal ? FileHelper.GetTempFile(this.Filename, "_log", false) : this.Filename;
 
-                return new FileStreamDiskFactory(name, this.ReadOnly);
+                return new FileStreamDiskFactory(name, this.ReadOnly, this.Async);
             }
         }
     }

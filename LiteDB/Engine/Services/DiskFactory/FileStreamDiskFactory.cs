@@ -13,8 +13,9 @@ namespace LiteDB
     {
         private string _filename;
         private bool _readOnly;
+        private bool _async
 
-        public FileStreamDiskFactory(string filename, bool readOnly)
+        public FileStreamDiskFactory(string filename, bool readOnly, bool async)
         {
             _filename = filename;
             _readOnly = readOnly;
@@ -29,6 +30,20 @@ namespace LiteDB
         /// Create new FileStream instance based on dataFilename
         /// </summary>
         public Stream GetStream()
+        {
+#if HAVE_SYNC_OVER_ASYNC
+            if (_async)
+            {
+                return System.Threading.Tasks.Task.Run(GetStreamInternal)
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+            }
+#endif
+            return GetStreamInternal();
+        }
+
+        private Stream GetStreamInternal()
         {
             return new FileStream(_filename,
                 _readOnly ? FileMode.Open : FileMode.OpenOrCreate,

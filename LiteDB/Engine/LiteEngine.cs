@@ -21,6 +21,8 @@ namespace LiteDB
 
         private WalService _wal;
 
+        private MemoryMonitor _monitor;
+
         private HeaderPage _header;
 
         private BsonReader _bsonReader;
@@ -62,6 +64,8 @@ namespace LiteDB
                 _log = options.Log ?? new Logger(options.LogLevel);
 
                 _bsonReader = new BsonReader(options.UtcDate);
+
+                _monitor = new MemoryMonitor(options.Memory)
 
                 _locker = new LockService(options.Timeout, _log);
 
