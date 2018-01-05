@@ -13,7 +13,7 @@ namespace LiteDB
     {
         private string _filename;
         private bool _readOnly;
-        private bool _async
+        private bool _async;
 
         public FileStreamDiskFactory(string filename, bool readOnly, bool async)
         {
@@ -34,7 +34,7 @@ namespace LiteDB
 #if HAVE_SYNC_OVER_ASYNC
             if (_async)
             {
-                return System.Threading.Tasks.Task.Run(GetStreamInternal)
+                return System.Threading.Tasks.Task.Run(() => GetStreamInternal())
                     .ConfigureAwait(false)
                     .GetAwaiter()
                     .GetResult();

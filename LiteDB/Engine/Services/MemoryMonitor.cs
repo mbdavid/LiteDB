@@ -5,5 +5,8 @@ namespace LiteDB
 {
     internal class MemoryMonitor
     {
+        public MemoryMonitor(int limit)
+        {
+        }
     }
 }

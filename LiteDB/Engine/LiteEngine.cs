@@ -65,7 +65,7 @@ namespace LiteDB
 
                 _bsonReader = new BsonReader(options.UtcDate);
 
-                _monitor = new MemoryMonitor(options.Memory)
+                _monitor = new MemoryMonitor(options.Memory);
 
                 _locker = new LockService(options.Timeout, _log);
 
