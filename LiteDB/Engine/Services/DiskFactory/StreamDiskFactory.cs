@@ -36,6 +36,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Check if file exists
+        /// </summary>
+        public bool Exists() => _stream != null;
+
+        /// <summary>
         /// Do no dispose on finish
         /// </summary>
         public bool Dispose => false;

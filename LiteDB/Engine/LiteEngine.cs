@@ -128,12 +128,12 @@ namespace LiteDB
 
                 return result;
             }
-            //catch(Exception ex)
-            //{
-            //    _log.Write(Logger.ERROR, ex.Message);
-            //    trans.Rollback();
-            //    throw;
-            //}
+            catch(Exception ex)
+            {
+                _log.Write(Logger.ERROR, ex.Message);
+                trans.Rollback();
+                throw;
+            }
             finally
             {
                 if (trans != null) trans.Dispose();

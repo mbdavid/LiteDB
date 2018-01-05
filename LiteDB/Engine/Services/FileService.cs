@@ -59,6 +59,10 @@ namespace LiteDB
         /// </summary>
         public bool IsEmpty()
         {
+            // if file do not exists, return true without getting stream (get stream creates files)
+            if (_factory.Exists() == false) return true;
+
+            // now, get stream to test strem length
             var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
             try
@@ -331,11 +335,12 @@ namespace LiteDB
 
             if (_crypto != null) _crypto.Dispose();
 
-            if (!_factory.Dispose) return;
-
-            while (_pool.TryTake(out var stream))
+            if (_factory.Dispose)
             {
-                stream.Dispose();
+                while (_pool.TryTake(out var stream))
+                {
+                    stream.Dispose();
+                }
             }
 
             if (empty)

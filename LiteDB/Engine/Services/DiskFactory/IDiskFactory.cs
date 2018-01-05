@@ -27,6 +27,11 @@ namespace LiteDB
         void Delete();
 
         /// <summary>
+        /// Check if file exists
+        /// </summary>
+        bool Exists();
+
+        /// <summary>
         /// Indicate that factory must be dispose on finish
         /// </summary>
         bool Dispose { get; }

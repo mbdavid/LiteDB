@@ -33,57 +33,38 @@ namespace LiteDB.Demo
 
                 db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
                 db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
-                db.EnsureIndex("col3", "age", new BsonExpression("$.age"), false);
-                db.EnsureIndex("col4", "age", new BsonExpression("$.age"), false);
-                db.EnsureIndex("col5", "age", new BsonExpression("$.age"), false);
 
                 try
                 {
-                    db.Insert("col1", ReadDocuments(1000, true), BsonAutoId.ObjectId);
+                    db.Insert("col1", ReadDocuments(1, 10000, true), BsonAutoId.ObjectId);
                 }
                 catch
                 {
                 }
 
-                db.Insert("col1", ReadDocuments(5000), BsonAutoId.ObjectId);
-                db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
+                db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
 
                 ts.Add(Task.Run(() =>
                 {
-                    db.Insert("col3", ReadDocuments(), BsonAutoId.ObjectId);
+                    db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
                 }));
                 ts.Add(Task.Run(() =>
                 {
-                    db.Insert("col4", ReadDocuments(), BsonAutoId.ObjectId);
-                }));
-                
-                Task.WaitAll(ts.ToArray());
-                ts.Clear();
+                    for(var i = 1; i < 10000; i++)
+                    {
+                        var s = db.Find("col1", Query.EQ("_id", i)).FirstOrDefault();
 
-                ts.Add(Task.Run(() =>
-                {
-                    var ids = db.Find("col1", Query.All()).Select(x => x["_id"]).ToList();
-                    db.Delete("col1", ids);
-                }));
-
-                ts.Add(Task.Run(() =>
-                {
-                    var ids = db.Find("col2", Query.All()).Select(x => x["_id"]).ToList();
-                    db.Delete("col2", ids);
-                }));
-                
-                ts.Add(Task.Run(() =>
-                {
-                    db.Insert("col5", ReadDocuments(), BsonAutoId.ObjectId);
+                        if (s == null || s["_id"] != i)
+                        {
+                            throw new ArgumentNullException();
+                        }
+                   }
                 }));
                 
                 Task.WaitAll(ts.ToArray());
                 
                 db.DropCollection("col1");
                 db.DropCollection("col2");
-                db.DropCollection("col3");
-                db.DropCollection("col4");
-                db.DropCollection("col5");
 
                 //db.Insert("col1", ReadDocuments(1), BsonAutoId.ObjectId);
 
@@ -116,13 +97,15 @@ namespace LiteDB.Demo
             Console.ReadKey();
         }
 
-        static IEnumerable<BsonDocument> ReadDocuments(int counter = 100000, bool duplicate = false)
+        static IEnumerable<BsonDocument> ReadDocuments(int start = 1, int end = 100000, bool duplicate = false)
         {
+            var count = start;
+
             using (var s = File.OpenRead(@"datagen.txt"))
             {
                 var r = new StreamReader(s);
 
-                while(!r.EndOfStream && --counter > 0)
+                while(!r.EndOfStream && count <= end)
                 {
                     var line = r.ReadLine();
 
@@ -132,7 +115,7 @@ namespace LiteDB.Demo
 
                         yield return new BsonDocument
                         {
-                            ["_id"] = Convert.ToInt32(row[0]),
+                            ["_id"] = count++,
                             ["name"] = row[1],
                             ["age"] = Convert.ToInt32(row[2])
                             //["lorem"] = "".PadLeft(9000, '-')
@@ -143,7 +126,7 @@ namespace LiteDB.Demo
                 // simulate error
                 if (duplicate)
                 {
-                    yield return new BsonDocument { ["_id"] = 1 };
+                    yield return new BsonDocument { ["_id"] = start };
                 }
             }
         }

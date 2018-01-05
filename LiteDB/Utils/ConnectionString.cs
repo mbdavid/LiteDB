@@ -134,7 +134,7 @@ namespace LiteDB
             }
             else
             {
-                var name = wal ? FileHelper.GetTempFile(this.Filename, "-wal", false) : this.Filename;
+                var name = wal ? FileHelper.GetTempFile(this.Filename, "_log", false) : this.Filename;
 
                 return new FileStreamDiskFactory(name, this.ReadOnly);
             }

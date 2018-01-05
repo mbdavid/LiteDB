@@ -50,6 +50,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Check if file exists
+        /// </summary>
+        public bool Exists() => File.Exists(_filename);
+
+        /// <summary>
         /// Close all stream on end
         /// </summary>
         public bool Dispose => true;
