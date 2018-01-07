@@ -44,6 +44,8 @@ namespace LiteDB
                     // remove object data
                     trans.Data.Delete(col, pkNode.DataBlock);
 
+                    trans.Checkpoint();
+
                     count++;
                 }
 

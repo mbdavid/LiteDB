@@ -32,6 +32,8 @@ namespace LiteDB
                     // if query need filter document, filter now
                     if (query.UseFilter && query.FilterDocument(doc) == false) continue;
 
+                    trans.Checkpoint();
+
                     yield return doc;
                 }
             }

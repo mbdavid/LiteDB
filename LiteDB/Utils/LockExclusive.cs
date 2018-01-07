@@ -10,10 +10,12 @@ namespace LiteDB
     public class LockExclusive : IDisposable
     {
         private ReaderWriterLockSlim _exclusive;
+        private Logger _log;
 
-        internal LockExclusive(ReaderWriterLockSlim exclusive)
+        internal LockExclusive(ReaderWriterLockSlim exclusive, Logger log)
         {
             _exclusive = exclusive;
+            _log = log;
         }
 
         /// <summary>
@@ -21,6 +23,8 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
+            _log.LockExit(_exclusive);
+
             _exclusive.ExitWriteLock();
         }
     }

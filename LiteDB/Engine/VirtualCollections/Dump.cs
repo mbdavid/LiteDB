@@ -71,7 +71,6 @@ namespace LiteDB
             {
                 var header = page as HeaderPage;
 
-                doc["userVersion"] = (int)header.UserVersion;
                 doc["creationTime"] = header.CreationTime;
                 doc["freeEmptyPageID"] = (int)header.FreeEmptyPageID;
                 doc["lastPageID"] = (int)header.LastPageID;

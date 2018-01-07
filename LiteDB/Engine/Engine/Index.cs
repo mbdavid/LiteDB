@@ -60,6 +60,8 @@ namespace LiteDB
                         // link index node to datablock
                         node.DataBlock = pkNode.DataBlock;
                     }
+
+                    trans.Checkpoint();
                 }
 
                 return true;

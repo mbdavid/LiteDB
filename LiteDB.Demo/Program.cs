@@ -13,7 +13,7 @@ namespace LiteDB.Demo
     class Program
     {
         private static string datafile = @"c:\temp\app.db";
-        private static string walfile = @"c:\temp\app-wal.db";
+        private static string walfile = @"c:\temp\app_log.db";
 
 
         static void Main(string[] args)
@@ -24,9 +24,9 @@ namespace LiteDB.Demo
             var sb = new StringBuilder();
 
             var sw = new Stopwatch();
-            //var log = new Logger(Logger.LOCK, (s) => Console.WriteLine("> " + s));
+            //var log = new Logger(Logger.FULL, (s) => Console.WriteLine("> " + s));
 
-            using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
+            using (var db = new LiteEngine(new ConnectionString { Filename = datafile/*, Log = log*/ }))
             {
                 var ts = new List<Task>();
                 sw.Start();
@@ -53,7 +53,7 @@ namespace LiteDB.Demo
                     for(var i = 1; i < 10000; i++)
                     {
                         var s = db.Find("col1", Query.EQ("_id", i)).FirstOrDefault();
-
+                
                         if (s == null || s["_id"] != i)
                         {
                             throw new ArgumentNullException();
@@ -63,8 +63,8 @@ namespace LiteDB.Demo
                 
                 Task.WaitAll(ts.ToArray());
                 
-                db.DropCollection("col1");
-                db.DropCollection("col2");
+                // db.DropCollection("col1");
+                // db.DropCollection("col2");
 
                 //db.Insert("col1", ReadDocuments(1), BsonAutoId.ObjectId);
 
@@ -85,9 +85,9 @@ namespace LiteDB.Demo
                 //Console.WriteLine(JsonSerializer.Serialize(db.Info(), true));
 
                 // test find in col1
-                var d = db.Find("col1", Query.EQ("_id", 3)).FirstOrDefault();
+                var d = db.Find("col1", Query.EQ("_id", 77370)).FirstOrDefault();
 
-                Console.WriteLine(d ?.AsDocument["name"].AsString);
+                Console.WriteLine(d ?.AsDocument["name"].AsString); // Fallon Franks
             }
 
 

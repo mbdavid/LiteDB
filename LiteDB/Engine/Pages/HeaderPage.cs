@@ -21,11 +21,6 @@ namespace LiteDB
         private const byte FILE_VERSION = 8;
 
         /// <summary>
-        /// Database user version [2 bytes]
-        /// </summary>
-        public ushort UserVersion { get; set; }
-
-        /// <summary>
         /// Hash Password in PBKDF2 [20 bytes]
         /// </summary>
         public byte[] Password { get; set; }
@@ -55,7 +50,6 @@ namespace LiteDB
         {
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
-            this.UserVersion = 0;
             this.Password = new byte[20];
             this.Salt = new byte[16];
             this.CreationTime = DateTime.Now;
@@ -72,7 +66,6 @@ namespace LiteDB
             {
                 Password = this.Password,
                 Salt = this.Salt,
-                UserVersion = this.UserVersion,
                 CreationTime = this.CreationTime,
                 LastPageID = this.LastPageID,
                 TransactionID = transactionID,
@@ -90,7 +83,6 @@ namespace LiteDB
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.UserVersion = reader.ReadUInt16();
             this.Salt = reader.ReadBytes(this.Salt.Length);
             this.CreationTime = reader.ReadDateTime();
             this.FreeEmptyPageID = reader.ReadUInt32();
@@ -101,7 +93,6 @@ namespace LiteDB
         {
             writer.Write(HEADER_INFO, HEADER_INFO.Length);
             writer.Write(FILE_VERSION);
-            writer.Write(this.UserVersion);
             writer.Write(this.Salt);
             writer.Write(this.CreationTime);
             writer.Write(this.FreeEmptyPageID);

@@ -3,25 +3,29 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LiteDB
 {
     internal class WalService
     {
-        private FileService _walfile = null;
-        private FileService _datafile = null;
         private LockService _locker = null;
+        private FileService _dataFile = null;
+        private FileService _waFfile = null;
+        private Logger _log = null;
 
+        //TODO: change simple hash to TransactionInfo class with DateTime
         private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
-        public WalService(LockService locker, FileService datafile, FileService walfile)
+        public WalService(LockService locker, FileService dataFile, FileService walFile, Logger log)
         {
             _locker = locker;
-            _datafile = datafile;
-            _walfile = walfile;
+            _dataFile = dataFile;
+            _waFfile = walFile;
+            _log = log;
         }
 
         /// <summary>
@@ -69,7 +73,7 @@ namespace LiteDB
             _confirmedTransactions.Add(header.TransactionID);
 
             // write confirmed header page (use First() to execute)
-            _walfile.WritePagesSequence(new BasePage[] { header });
+            _waFfile.WritePagesSequence(new BasePage[] { header });
 
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_locker)
@@ -96,40 +100,49 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint()
         {
-            // if walfile are empty, just exit
-            if (_walfile.IsEmpty()) return;
-
-            // must enter in exclusive lock mode
-            using (_locker.Exclusive())
+            lock (_locker)
             {
-                // if there is not confirmed transaction
-                if (_confirmedTransactions.Count == 0)
+                // if walfile are empty, just exit
+                if (_waFfile.IsEmpty()) return;
+
+                // must enter in exclusive lock mode
+                using (_locker.Exclusive())
                 {
-                    // read all file and get only confirmed transaction (with header page in WAL)
-                    foreach(var transactionID in _walfile
-                            .ReadAllPages()
-                            .Where(x => x.PageType == PageType.Header)
-                            .Select(x => x.TransactionID))
+                    // if there is not confirmed transaction
+                    if (_confirmedTransactions.Count == 0)
                     {
-                        _confirmedTransactions.Add(transactionID);
+                        // read all file and get only confirmed transaction (with header page in WAL)
+                        foreach (var transactionID in _waFfile
+                                .ReadAllPages()
+                                .Where(x => x.PageType == PageType.Header)
+                                .Select(x => x.TransactionID))
+                        {
+                            _confirmedTransactions.Add(transactionID);
+                        }
                     }
+
+                    // if no confirmed transaction, exit
+                    if (_confirmedTransactions.Count == 0) return;
+
+                    _log.WalCheckpoint(_confirmedTransactions, _waFfile);
+
+                    // read all pages from WAL that are confirmed
+                    // pages are in insert-order, can re-write same pages many times with no problem (only last version will be valid)
+                    // clear TransactionID before write on datafile
+                    var walpages = _waFfile
+                        .ReadAllPages()
+                        .Where(x => _confirmedTransactions.Contains(x.TransactionID))
+                        .ForEach((i, p) => p.TransactionID = Guid.Empty);
+
+                    // write on datafile (pageID position based) for each wal page
+                    _dataFile.WritePages(walpages).Execute();
+
+                    // clear wal-file and wal-index and current version
+                    _confirmedTransactions.Clear();
+                    _currentReadVersion = 0;
+                    _waFfile.Clear();
+                    _index.Clear();
                 }
-
-                // read all pages from WAL that are confirmed (exclude TransactionPages)
-                // pages are in insert-order, do can re-write same pages many times with no problem (only last version will be valid)
-                // clear TransactionID before write on datafile
-                var walpages = _walfile
-                    .ReadAllPages()
-                    .Where(x => _confirmedTransactions.Contains(x.TransactionID))
-                    .ForEach((i, p) => p.TransactionID = Guid.Empty);
-
-                // write on datafile (pageID position based) for each wal page
-                _datafile.WritePages(walpages).Execute();
-
-                // clear wal-file and wal-index and current version
-                _currentReadVersion = 0;
-                _walfile.Clear();
-                _index.Clear();
             }
         }
     }

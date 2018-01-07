@@ -29,6 +29,8 @@ namespace LiteDB
                     {
                         count++;
                     }
+
+                    trans.Checkpoint();
                 }
 
                 return count;

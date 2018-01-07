@@ -16,9 +16,9 @@ namespace LiteDB
         private TimeSpan _timeout;
         private Logger _log;
 
-        private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
-        private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ReaderWriterLockSlim _main = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
 
         internal LockService(TimeSpan timeout, Logger log)
         {
@@ -31,8 +31,13 @@ namespace LiteDB
         /// </summary>
         public LockReadWrite Read()
         {
+            _log.LockRead(_main);
+
             // main locker in read lock
-            _main.TryEnterReadLock(_timeout);
+            if (_main.TryEnterReadLock(_timeout) == false)
+            {
+                throw LiteException.LockTimeout("read", _timeout);
+            }
 
             return new LockReadWrite(_main, _log);
         }
@@ -48,10 +53,15 @@ namespace LiteDB
             // if current thread already has this lock, just exit
             if (collection.IsWriteLockHeld) return;
 
-            // lock collectionName in write mode
-            collection.TryEnterWriteLock(_timeout);
+            _log.LockWrite(collection, collectionName);
 
-            locker.Collections.Add(collection);
+            // lock collectionName in write mode
+            if (collection.TryEnterWriteLock(_timeout) == false)
+            {
+                throw LiteException.LockTimeout("write '" + collectionName + "'", _timeout);
+            }
+
+            locker.Collections.Add(new Tuple<string, ReaderWriterLockSlim>(collectionName, collection));
         }
 
         /// <summary>
@@ -62,8 +72,13 @@ namespace LiteDB
             // if current thread already has write-lock in collection page in lock
             if (_reserved.IsWriteLockHeld) return;
 
+            _log.LockReserved(_reserved);
+
             // lock-write reserved locker
-            _reserved.TryEnterWriteLock(_timeout);
+            if (_reserved.TryEnterWriteLock(_timeout) == false)
+            {
+                throw LiteException.LockTimeout("reserved", _timeout);
+            }
 
             locker.Reserved = _reserved;
         }
@@ -73,10 +88,15 @@ namespace LiteDB
         /// </summary>
         public LockExclusive Exclusive()
         {
-            // write lock in main locker
-            _main.TryEnterWriteLock(_timeout);
+            _log.LockExclusive(_main);
 
-            return new LockExclusive(_main);
+            // write lock in main locker - use higher timespan because run in async task
+            if (_main.TryEnterWriteLock(TimeSpan.FromHours(1)) == false)
+            {
+                throw LiteException.LockTimeout("exclusive", TimeSpan.FromHours(1));
+            }
+
+            return new LockExclusive(_main, _log);
         }
     }
 }

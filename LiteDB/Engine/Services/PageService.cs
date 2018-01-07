@@ -35,6 +35,11 @@ namespace LiteDB
         /// </summary>
         public Guid TransactionID => _transactionID;
 
+        /// <summary>
+        /// Get how many pages are in local transaction memory
+        /// </summary>
+        public int LocalPageCount => _localPages.Count;
+
         public PageService(HeaderPage header, WalService wal, FileService dataFile, FileService walFile, Logger log)
         {
             _header = header;
@@ -103,8 +108,6 @@ namespace LiteDB
             var pagePosition = BasePage.GetPagePostion(pageID);
 
             var filepage = (T)_dataFile.ReadPage(pagePosition);
-
-            _localPages[pageID] = filepage;
 
             return filepage;
         }

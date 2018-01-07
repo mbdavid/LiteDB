@@ -11,6 +11,11 @@ namespace LiteDB
     /// </summary>
     internal class TransactionService : IDisposable
     {
+        /// <summary>
+        /// If local pages recah this limit, flush to wal disk transaction
+        /// </summary>
+        private const int MAX_PAGES_TRANSACTION = 1000;
+
         // instances from Engine
         private WalService _wal;
         private Logger _log;
@@ -86,6 +91,19 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// A safe point to check if max pages in memory exceed and must persit in wal disk
+        /// </summary>
+        public void Checkpoint()
+        {
+            if (_pager.LocalPageCount > MAX_PAGES_TRANSACTION)
+            {
+                _log.TransactionCheckpoint(_pager.LocalPageCount);
+
+                _pager.PersistDirtyPages();
+            }
+        }
+
+        /// <summary>
         /// Write pages into disk and confirm transaction in wal-index
         /// </summary>
         public void Commit()
@@ -107,7 +125,7 @@ namespace LiteDB
         public void Dispose()
         {
             // release lock
-            _lockReadWrite.Dispose();
+            if (_lockReadWrite != null) _lockReadWrite.Dispose();
         }
     }
 }

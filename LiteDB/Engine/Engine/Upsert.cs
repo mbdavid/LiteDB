@@ -30,6 +30,8 @@ namespace LiteDB
                         this.InsertDocument(trans, col, doc, autoId);
                         count++;
                     }
+
+                    trans.Checkpoint();
                 }
 
                 // returns how many document was inserted

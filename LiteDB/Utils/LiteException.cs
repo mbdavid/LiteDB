@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace LiteDB
 {
@@ -124,9 +125,9 @@ namespace LiteDB
             return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'.", collection, field);
         }
 
-        internal static LiteException LockTimeout(TimeSpan ts)
+        internal static LiteException LockTimeout(string mode, TimeSpan ts)
         {
-            return new LiteException(LOCK_TIMEOUT, "Timeout. Database is locked for more than {0}.", ts.ToString());
+            return new LiteException(LOCK_TIMEOUT, "Database lock timeout when entering in {0} mode after {1} (thread: {2})", mode, ts.ToString(), Task.CurrentId);
         }
 
         internal static LiteException InvalidCommand(string command)

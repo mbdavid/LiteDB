@@ -14,6 +14,8 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
+            _log.Insert(collection);
+
             return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
             {
                 var col = trans.CollectionPage;
@@ -22,6 +24,8 @@ namespace LiteDB
                 foreach (var doc in docs)
                 {
                     this.InsertDocument(trans, col, doc, autoId);
+
+                    trans.Checkpoint();
 
                     count++;
                 }

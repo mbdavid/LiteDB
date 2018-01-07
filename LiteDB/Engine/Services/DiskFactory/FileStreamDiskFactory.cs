@@ -60,7 +60,7 @@ namespace LiteDB
         {
             if (_readOnly == false)
             {
-                File.Delete(_filename);
+                FileHelper.TryDelete(_filename);
             }
         }
 

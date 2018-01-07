@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LiteDB
 {
@@ -12,8 +16,8 @@ namespace LiteDB
         public const byte ERROR = 1;
         public const byte COMMAND = 2;
         public const byte QUERY = 4;
-        public const byte LOCK = 64;
-        public const byte DISK = 128;
+        public const byte WAL = 8;
+        public const byte LOCK = 16;
         public const byte FULL = 255;
 
         /// <summary>
@@ -44,6 +48,71 @@ namespace LiteDB
             this.Level = NONE;
         }
 
+        internal void Error(string message)
+        {
+            this.Write(ERROR, message);
+        }
+
+        internal void Insert(string collection)
+        {
+            this.Write(COMMAND, "insert document(s) into '{0}'", collection);
+        }
+
+        internal void LockRead(ReaderWriterLockSlim reader)
+        {
+            this.Write(LOCK, "entering in read lock (read locks: {0} / waiting: {1})", 
+                reader.CurrentReadCount,
+                reader.WaitingReadCount);
+        }
+
+        internal void LockWrite(ReaderWriterLockSlim writer, string collectionName)
+        {
+            this.Write(LOCK, "entering in write lock on '{0}' (waiting: {1})", 
+                collectionName, 
+                writer.WaitingWriteCount);
+        }
+
+        internal void LockReserved(ReaderWriterLockSlim reserved)
+        {
+            this.Write(LOCK, "entering in reserved lock (waiting: {0})",
+                reserved.WaitingWriteCount);
+        }
+
+        internal void LockExclusive(ReaderWriterLockSlim exclusive)
+        {
+            this.Write(LOCK, "entering in exclusive lock (reading: {0} / waiting: {1})",
+                exclusive.CurrentReadCount,
+                exclusive.WaitingWriteCount);
+        }
+
+        internal void LockExit(ReaderWriterLockSlim reader, ReaderWriterLockSlim reserved, List<Tuple<string, ReaderWriterLockSlim>> collections)
+        {
+            this.Write(LOCK, "exiting read lock{0}{1} ({2})",
+                reserved == null ? "" : ", reserved lock",
+                collections.Count > 0 ? " and write lock" : "",
+                string.Join(", ", collections.Select(x => "'" + x.Item1 + "'")));
+        }
+
+        internal void LockExit(ReaderWriterLockSlim exclusive)
+        {
+            this.Write(LOCK, "exiting exclusive lock");
+        }
+
+        internal void WalCheckpoint(HashSet<Guid> _confirmedTransactions, FileService walFile)
+        {
+            this.Write(WAL, "checkpoint with {0} transactions and wal file size {1}", _confirmedTransactions.Count, StorageUnitHelper.FormatFileSize(walFile.FileSize()));
+        }
+
+        internal void TransactionCheckpoint(int localPageCount)
+        {
+            this.Write(WAL, "flush transaction pages into wal file");
+        }
+
+        internal void WalCheckpointAsync(FileService walFile)
+        {
+            this.Write(WAL, "start async checkpoint");
+        }
+
         /// <summary>
         /// Execute msg function only if level are enabled
         /// </summary>
@@ -70,9 +139,9 @@ namespace LiteDB
                     level == COMMAND ? "COMMAND" :
                     level == QUERY ? "QUERY" :
                     level == LOCK ? "LOCK" :
-                    level == DISK ? "DEBUG" : "";
+                    level == WAL ? "WAL" : "";
 
-                var msg = "[" + str + "] " + text;
+                var msg = Task.CurrentId.ToString().PadLeft(1, '0') + " [" + str + "] " + text;
 
                 try
                 {

@@ -21,11 +21,10 @@ namespace LiteDB
 
         private WalService _wal;
 
-        private MemoryMonitor _monitor;
-
         private HeaderPage _header;
 
         private BsonReader _bsonReader;
+
         private BsonWriter _bsonWriter = new BsonWriter();
 
         /// <summary>
@@ -65,8 +64,6 @@ namespace LiteDB
 
                 _bsonReader = new BsonReader(options.UtcDate);
 
-                _monitor = new MemoryMonitor(options.Memory);
-
                 _locker = new LockService(options.Timeout, _log);
 
                 _dataFile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize, _log);
@@ -87,7 +84,7 @@ namespace LiteDB
                 _walFile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue, _log);
 
                 // initialize wal file
-                _wal = new WalService(_locker, _dataFile, _walFile);
+                _wal = new WalService(_locker, _dataFile, _walFile, _log);
 
                 // if WAL file have content, must run a checkpoint
                 if (_walFile.IsEmpty() == false)
@@ -141,12 +138,18 @@ namespace LiteDB
             finally
             {
                 if (trans != null) trans.Dispose();
+
+                // if wal file exceed limit, do checkpoint before return result
+                if (_walFile.FileSize() > 1000 * BasePage.PAGE_SIZE)
+                {
+                    _wal.Checkpoint();
+                }
             }
         }
 
         public void Dispose()
         {
-            // do checkpoint before exit
+            // do checkpoint (sync) before exit
             if (_walFile != null && _walFile.IsEmpty() == false)
             {
                 _wal.Checkpoint();

@@ -12,7 +12,7 @@ namespace LiteDB
     {
         public ReaderWriterLockSlim Reader { get; private set; }
         public ReaderWriterLockSlim Reserved { get; set; } = null;
-        public List<ReaderWriterLockSlim> Collections { get; set; } = new List<ReaderWriterLockSlim>();
+        public List<Tuple<string, ReaderWriterLockSlim>> Collections { get; set; } = new List<Tuple<string, ReaderWriterLockSlim>>();
 
         private Logger _log;
 
@@ -27,6 +27,8 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
+            _log.LockExit(this.Reader, this.Reserved, this.Collections);
+
             this.Reader.ExitReadLock();
 
             if (this.Reserved != null)
@@ -36,7 +38,7 @@ namespace LiteDB
 
             foreach(var col in this.Collections)
             {
-                col.ExitWriteLock();
+                col.Item2.ExitWriteLock();
             }
         }
     }

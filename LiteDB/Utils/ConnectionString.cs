@@ -46,11 +46,6 @@ namespace LiteDB
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
-        /// "memory": Max memory usage before clean up database memory cache (default: 100)
-        /// </summary>
-        public int Memory { get; set; } = 100;
-
-        /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
         /// </summary>
         public long InitialSize { get; set; } = 0;
@@ -74,6 +69,11 @@ namespace LiteDB
         /// "async": Use "sync over async" to UWP apps access any directory
         /// </summary>
         public bool Async { get; set; } = false;
+
+        /// <summary>
+        /// "checkpoint": When wal file get this checkpoint limit, write over data disk
+        /// </summary>
+        public int Checkpoint { get; set; } = 1000;
 
         /// <summary>
         /// Initialize empty connection string
@@ -106,12 +106,12 @@ namespace LiteDB
             this.Password = values.GetValue<string>("password", null);
             this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));
             this.ReadOnly = values.GetValue<bool>("read only", false);
-            this.InitialSize = values.GetFileSize(@"initial size", 0);
-            this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
+            this.InitialSize = values.GetFileSize("initial size", 0);
+            this.LimitSize = values.GetFileSize("limit size", long.MaxValue);
             this.LogLevel = values.GetValue("log", Logger.NONE);
             this.UtcDate = values.GetValue("utc", false);
-            this.Memory = values.GetValue("memory", 100);
             this.Async = values.GetValue("async", false);
+            this.Checkpoint = values.GetValue("checkpoint", 1000);
         }
 
         /// <summary>

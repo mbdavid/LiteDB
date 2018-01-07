@@ -14,6 +14,8 @@ namespace LiteDB
     /// </summary>
     internal class FileService : IDisposable
     {
+        private const int MAX_CACHE_SIZE = 1000;
+
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
 
         private ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
@@ -166,8 +168,15 @@ namespace LiteDB
             // convert bytes into page
             var page = BasePage.ReadPage(bytes);
 
-            // add this page to local cache
-            _cache.AddOrUpdate(position, page, (pos, pg) => page);
+            // add this page to local cache or clear cache if reach max limit
+            if (_cache.Count < MAX_CACHE_SIZE)
+            {
+                _cache.AddOrUpdate(position, page, (pos, pg) => page);
+            }
+            else
+            {
+                _cache.Clear();
+            }
 
             return page;
         }
@@ -256,13 +265,21 @@ namespace LiteDB
             // add this page to cache too (mark as clean page)
             page.IsDirty = false;
 
-            _cache.AddOrUpdate(position, page, (pos, pg) => page);
+            // add this page to local cache or clear cache if reach max limit
+            if (_cache.Count < MAX_CACHE_SIZE)
+            {
+                _cache.AddOrUpdate(position, page, (pos, pg) => page);
+            }
+            else
+            {
+                _cache.Clear();
+            }
 
             return new PagePosition(page.PageID, position);
         }
 
         /// <summary>
-        /// Clear all file content and position cursor to initial file. Do not delete file from disk
+        /// Clear all file content and position cursor to initial file. Do not delete file from disk (only content)
         /// </summary>
         public void Clear()
         {
