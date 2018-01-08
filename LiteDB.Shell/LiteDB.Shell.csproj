@@ -6,9 +6,9 @@
     <PackageId>LiteDB.Shell</PackageId>    
     <OutputType>Exe</OutputType>
     <RootNamespace>LiteDB.Shell</RootNamespace>
-    <AssemblyVersion>4.1.0.0</AssemblyVersion>
-    <FileVersion>4.1.0</FileVersion>
-    <VersionPrefix>4.1.0</VersionPrefix>
+    <AssemblyVersion>4.1.1.0</AssemblyVersion>
+    <FileVersion>4.1.1</FileVersion>
+    <VersionPrefix>4.1.1</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Copyright>MIT</Copyright>
     <NeutralLanguage>en-US</NeutralLanguage>
