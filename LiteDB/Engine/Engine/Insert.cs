@@ -25,7 +25,7 @@ namespace LiteDB
                 {
                     this.InsertDocument(trans, col, doc, autoId);
 
-                    trans.Checkpoint();
+                    trans.Safepoint();
 
                     count++;
                 }

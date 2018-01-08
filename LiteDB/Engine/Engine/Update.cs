@@ -30,7 +30,7 @@ namespace LiteDB
                         count++;
                     }
 
-                    trans.Checkpoint();
+                    trans.Safepoint();
                 }
 
                 return count;

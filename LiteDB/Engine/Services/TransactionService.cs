@@ -93,12 +93,13 @@ namespace LiteDB
         /// <summary>
         /// A safe point to check if max pages in memory exceed and must persit in wal disk
         /// </summary>
-        public void Checkpoint()
+        public void Safepoint()
         {
             if (_pager.LocalPageCount > MAX_PAGES_TRANSACTION)
             {
-                _log.TransactionCheckpoint(_pager.LocalPageCount);
+                _log.Safepoint(_pager.LocalPageCount);
 
+                // flush memory dirty pages into wal file
                 _pager.PersistDirtyPages();
             }
         }

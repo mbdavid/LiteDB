@@ -124,7 +124,7 @@ namespace LiteDB
                     // if no confirmed transaction, exit
                     if (_confirmedTransactions.Count == 0) return;
 
-                    _log.WalCheckpoint(_confirmedTransactions, _waFfile);
+                    _log.Checkpoint(_confirmedTransactions, _waFfile);
 
                     // read all pages from WAL that are confirmed
                     // pages are in insert-order, can re-write same pages many times with no problem (only last version will be valid)

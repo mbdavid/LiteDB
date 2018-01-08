@@ -61,7 +61,7 @@ namespace LiteDB
                         node.DataBlock = pkNode.DataBlock;
                     }
 
-                    trans.Checkpoint();
+                    trans.Safepoint();
                 }
 
                 return true;

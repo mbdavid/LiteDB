@@ -98,19 +98,14 @@ namespace LiteDB
             this.Write(LOCK, "exiting exclusive lock");
         }
 
-        internal void WalCheckpoint(HashSet<Guid> _confirmedTransactions, FileService walFile)
+        internal void Checkpoint(HashSet<Guid> _confirmedTransactions, FileService walFile)
         {
             this.Write(WAL, "checkpoint with {0} transactions and wal file size {1}", _confirmedTransactions.Count, StorageUnitHelper.FormatFileSize(walFile.FileSize()));
         }
 
-        internal void TransactionCheckpoint(int localPageCount)
+        internal void Safepoint(int localPageCount)
         {
             this.Write(WAL, "flush transaction pages into wal file");
-        }
-
-        internal void WalCheckpointAsync(FileService walFile)
-        {
-            this.Write(WAL, "start async checkpoint");
         }
 
         /// <summary>

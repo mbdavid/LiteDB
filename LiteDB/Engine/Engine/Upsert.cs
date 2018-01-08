@@ -31,7 +31,7 @@ namespace LiteDB
                         count++;
                     }
 
-                    trans.Checkpoint();
+                    trans.Safepoint();
                 }
 
                 // returns how many document was inserted
