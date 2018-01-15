@@ -54,9 +54,6 @@ namespace LiteDB
         /// </summary>
         public void Initialize()
         {
-#if DEBUG
-            if (_localPages.Any(x => x.Value.IsDirty) || _dirtyPagesWal.Count > 0) throw new InvalidOperationException("No dirty pages in transaction when initialize pager");
-#endif
             _localPages.Clear();
             _transactionID = Guid.NewGuid();
             _readVersion = _wal.CurrentReadVersion;
