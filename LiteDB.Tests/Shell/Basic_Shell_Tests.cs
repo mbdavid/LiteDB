@@ -2,13 +2,13 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDB.Tests.Engine
+namespace LiteDB.Tests.Shell
 {
     [TestClass]
-    public class Shell_Tests
+    public class Basic_Shell_Tests
     {
         [TestMethod]
-        public void Shell_Commands()
+        public void Basic_Shell_Commands()
         {
             using (var db = new LiteEngine(new MemoryStream()))
             {
@@ -37,7 +37,6 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual(10, doc["Number"].AsInt32);
 
             }
-
         }
     }
 }
