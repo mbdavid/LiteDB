@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
@@ -40,17 +34,17 @@ namespace LiteDB
         public TimeSpan Timeout { get; set; }
 
         /// <summary>
-        /// "mode": Define if datafile will be shared, exclusive or read only access (default: Shared)
+        /// "mode": Define if datafile will be shared, exclusive or read only access (default in environments with file locking: Shared, otherwise: Exclusive)
         /// </summary>
         public FileMode Mode { get; set; }
 
         /// <summary>
-        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
+        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)
         /// </summary>
         public long InitialSize { get; set; }
 
         /// <summary>
-        /// "limit size": Max limit of datafile - support KB, MB, GB (default: null)
+        /// "limit size": Max limit of datafile - support KB, MB, GB (default: long.MaxValue - no limit)
         /// </summary>
         public long LimitSize { get; set; }
 
@@ -60,7 +54,7 @@ namespace LiteDB
         public byte Log { get; set; }
 
         /// <summary>
-        /// "utc": Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)
+        /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
         /// </summary>
         public bool UtcDate { get; set; }
 
@@ -71,7 +65,7 @@ namespace LiteDB
 
 #if HAVE_SYNC_OVER_ASYNC
         /// <summary>
-        /// "async": Use "sync over async" to UWP apps access any directory
+        /// "async": Use "sync over async" to UWP apps access any directory (default: false)
         /// </summary>
         public bool Async { get; set; }
 #endif
@@ -81,12 +75,31 @@ namespace LiteDB
         /// </summary>
         public ConnectionString()
         {
+            this.Filename = "";
+            this.Journal = true;
+            this.Password = null;
+            this.CacheSize = 5000;
+            this.Timeout = TimeSpan.FromMinutes(1);
+#if HAVE_LOCK
+            this.Mode = FileMode.Shared;
+#else
+            this.Mode = FileMode.Exclusive;
+#endif
+            this.InitialSize = 0;
+            this.LimitSize = long.MaxValue;
+            this.Log = Logger.NONE;
+            this.UtcDate = false;
+            this.Upgrade = false;
+#if HAVE_SYNC_OVER_ASYNC
+            this.Async = false;
+#endif
         }
 
         /// <summary>
         /// Initialize connection string parsing string in "key1=value1;key2=value2;...." format or only "filename" as default (when no ; char found)
         /// </summary>
         public ConnectionString(string connectionString)
+            : this()
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException(nameof(connectionString));
 
@@ -103,23 +116,19 @@ namespace LiteDB
             }
 
             // setting values to properties
-            this.Filename = values.GetValue("filename", "");
-            this.Journal = values.GetValue("journal", true);
-            this.Password = values.GetValue<string>("password", null);
-            this.CacheSize = values.GetValue(@"cache size", 5000);
-            this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));
-#if HAVE_LOCK
-            this.Mode = values.GetValue("mode", FileMode.Shared);
-#else
-            this.Mode = values.GetValue("mode", FileMode.Exclusive);
-#endif
-            this.InitialSize = values.GetFileSize(@"initial size", 0);
-            this.LimitSize = values.GetFileSize(@"limit size", long.MaxValue);
-            this.Log = values.GetValue("log", Logger.NONE);
-            this.UtcDate = values.GetValue("utc", false);
-            this.Upgrade = values.GetValue("upgrade", false);
+            this.Filename = values.GetValue("filename", this.Filename);
+            this.Journal = values.GetValue("journal", this.Journal);
+            this.Password = values.GetValue<string>("password", this.Password);
+            this.CacheSize = values.GetValue(@"cache size", this.CacheSize);
+            this.Timeout = values.GetValue("timeout", this.Timeout);
+            this.Mode = values.GetValue("mode", this.Mode);
+            this.InitialSize = values.GetFileSize(@"initial size", this.InitialSize);
+            this.LimitSize = values.GetFileSize(@"limit size", this.LimitSize);
+            this.Log = values.GetValue("log", this.Log);
+            this.UtcDate = values.GetValue("utc", this.UtcDate);
+            this.Upgrade = values.GetValue("upgrade", this.Upgrade);
 #if HAVE_SYNC_OVER_ASYNC
-            this.Async = values.GetValue("async", false);
+            this.Async = values.GetValue("async", this.Async);
 #endif
         }
     }
