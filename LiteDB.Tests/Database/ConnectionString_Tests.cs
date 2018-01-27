@@ -48,11 +48,8 @@ namespace LiteDB.Tests.Database
                   limit SIZE = 20mb;
                   log = 255 ;
                   utc=true ;
-                  upgrade=true";
-
-            if (LiteDbBuildConfiguration.HaveSyncOverAsync)
-            { fullConnectionString += ";async=true"; }
-
+                  upgrade=true;
+                  async=true";
             var full = new ConnectionString(fullConnectionString);
 
             Assert.AreEqual(@"c:\only;file""d""emo.db", full.Filename);
@@ -66,9 +63,7 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(255, full.Log);
             Assert.AreEqual(true, full.UtcDate);
             Assert.AreEqual(true, full.Upgrade);
-
-            if (LiteDbBuildConfiguration.HaveSyncOverAsync)
-            { Assert.AreEqual(true, GetAsync(full)); }
+            Assert.AreEqual(true, full.Async);
         }
 
         [TestMethod]
@@ -100,11 +95,9 @@ namespace LiteDB.Tests.Database
                 "LimitSize",
                 "Log",
                 "UtcDate",
-                "Upgrade"
+                "Upgrade",
+                "Async"
             };
-
-            if (LiteDbBuildConfiguration.HaveSyncOverAsync)
-            { expectedProperties.Add("Async"); }
 
             var actualProperties = new HashSet<string>(typeof(ConnectionString).GetProperties().Select(p => p.Name));
             actualProperties.ExceptWith(expectedProperties);
@@ -122,23 +115,13 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(null, connectionString.Password);
             Assert.AreEqual(5000, connectionString.CacheSize);
             Assert.AreEqual(new TimeSpan(0, 1, 0), connectionString.Timeout);
-            Assert.AreEqual(LiteDbBuildConfiguration.HaveLock ? FileMode.Shared : FileMode.Exclusive, connectionString.Mode);
+            Assert.AreEqual(FileMode.Shared, connectionString.Mode);
             Assert.AreEqual(0, connectionString.InitialSize);
             Assert.AreEqual(long.MaxValue, connectionString.LimitSize);
             Assert.AreEqual(Logger.NONE, connectionString.Log);
             Assert.AreEqual(false, connectionString.UtcDate);
             Assert.AreEqual(false, connectionString.Upgrade);
-
-            if (LiteDbBuildConfiguration.HaveSyncOverAsync)
-            { Assert.AreEqual(false, GetAsync(connectionString)); }
-        }
-
-        private bool GetAsync(ConnectionString connectionString)
-        {
-            if (!LiteDbBuildConfiguration.HaveSyncOverAsync)
-            { throw new InvalidOperationException("The LiteDB build being tested does not support the Async property."); }
-
-            return (bool)typeof(ConnectionString).GetProperty("Async").GetValue(connectionString);
+            Assert.AreEqual(false, connectionString.Async);
         }
     }
 }
