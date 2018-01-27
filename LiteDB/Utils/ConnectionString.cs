@@ -11,63 +11,67 @@ namespace LiteDB
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
         /// </summary>
-        public string Filename { get; set; }
+        public string Filename { get; set; } = "";
 
         /// <summary>
         /// "journal": Enabled or disable double write check to ensure durability (default: true)
         /// </summary>
-        public bool Journal { get; set; }
+        public bool Journal { get; set; } = true;
 
         /// <summary>
         /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; set; } = null;
 
         /// <summary>
         /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (default: 5000)
         /// </summary>
-        public int CacheSize { get; set; }
+        public int CacheSize { get; set; } = 5000;
 
         /// <summary>
         /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
-        public TimeSpan Timeout { get; set; }
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// "mode": Define if datafile will be shared, exclusive or read only access (default in environments with file locking: Shared, otherwise: Exclusive)
         /// </summary>
-        public FileMode Mode { get; set; }
+#if HAVE_LOCK
+        public FileMode Mode { get; set; } = FileMode.Shared;
+#else
+        public FileMode Mode { get; set; } = FileMode.Exclusive;
+#endif
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)
         /// </summary>
-        public long InitialSize { get; set; }
+        public long InitialSize { get; set; } = 0;
 
         /// <summary>
         /// "limit size": Max limit of datafile - support KB, MB, GB (default: long.MaxValue - no limit)
         /// </summary>
-        public long LimitSize { get; set; }
+        public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
         /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
         /// </summary>
-        public byte Log { get; set; }
+        public byte Log { get; set; } = Logger.NONE;
 
         /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
         /// </summary>
-        public bool UtcDate { get; set; }
+        public bool UtcDate { get; set; } = false;
 
         /// <summary>
         /// "upgrade": Test if database is in old version and update if needed (default: false)
         /// </summary>
-        public bool Upgrade { get; set; }
+        public bool Upgrade { get; set; } = false;
 
 #if HAVE_SYNC_OVER_ASYNC
         /// <summary>
         /// "async": Use "sync over async" to UWP apps access any directory (default: false)
         /// </summary>
-        public bool Async { get; set; }
+        public bool Async { get; set; } = false;
 #endif
 
         /// <summary>
@@ -75,31 +79,12 @@ namespace LiteDB
         /// </summary>
         public ConnectionString()
         {
-            this.Filename = "";
-            this.Journal = true;
-            this.Password = null;
-            this.CacheSize = 5000;
-            this.Timeout = TimeSpan.FromMinutes(1);
-#if HAVE_LOCK
-            this.Mode = FileMode.Shared;
-#else
-            this.Mode = FileMode.Exclusive;
-#endif
-            this.InitialSize = 0;
-            this.LimitSize = long.MaxValue;
-            this.Log = Logger.NONE;
-            this.UtcDate = false;
-            this.Upgrade = false;
-#if HAVE_SYNC_OVER_ASYNC
-            this.Async = false;
-#endif
         }
 
         /// <summary>
         /// Initialize connection string parsing string in "key1=value1;key2=value2;...." format or only "filename" as default (when no ; char found)
         /// </summary>
         public ConnectionString(string connectionString)
-            : this()
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException(nameof(connectionString));
 
