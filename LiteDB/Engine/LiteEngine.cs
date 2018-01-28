@@ -91,20 +91,16 @@ namespace LiteDB
         /// </summary>
         public LiteTransaction BeginTrans()
         {
-            return new LiteTransaction(_header, _locker, _wal, _datafile, _walFile, _log);
+            return new LiteTransaction(_header, _locker, _wal, _datafile, _log);
         }
 
         public void Dispose()
         {
-            // do checkpoint (sync) before exit
-            if (_walFile != null && _walFile.IsEmpty() == false)
-            {
-                _wal.Checkpoint();
-            }
-
             // close all Dispose services
-            if (_datafile != null) _datafile.Dispose();
-            if (_walFile != null) _walFile.Dispose(true);
+            if (_datafile != null)
+            {
+                _datafile.Dispose();
+            }
         }
     }
 }

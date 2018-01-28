@@ -26,6 +26,7 @@ namespace LiteDB
         public const int INVALID_COMMAND = 121;
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
         public const int DATABASE_WRONG_PASSWORD = 123;
+        public const int ALREADY_OPEN_DATAFILE = 124;
         public const int READ_ONLY_DATABASE = 125;
         public const int INVALID_TRANSACTION_STATE = 126;
         public const int SYNTAX_ERROR = 127;
@@ -143,6 +144,11 @@ namespace LiteDB
         internal static LiteException AlreadyExistsCollectionName(string newName)
         {
             return new LiteException(ALREADY_EXISTS_COLLECTION_NAME, "New collection name '{0}' already exists.", newName);
+        }
+
+        internal static LiteException AlreadyOpenDatafile(string filename)
+        {
+            return new LiteException(ALREADY_OPEN_DATAFILE, "Your datafile '{0}' is open in another process.", filename);
         }
 
         internal static LiteException DatabaseWrongPassword()

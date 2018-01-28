@@ -7,43 +7,14 @@ namespace LiteDB
 {
     public partial class LiteEngine
     {
-        public IEnumerable<BsonDocument> DumpDatabase()
+        public IEnumerable<BsonDocument> DumpDatafile()
         {
-            using (var trans = this.ReadTransaction(null))
-            {
-                var header = trans.Pager.GetPage<HeaderPage>(0);
-
-                yield return this.DumpPage(header)
-                    .Extend(new BsonDocument { ["version"] = trans.Pager.ReadVersion });
-
-                for (uint i = 1; i <= header.LastPageID; i++)
-                {
-                    var page = trans.Pager.GetPage<BasePage>(i);
-
-                    yield return this.DumpPage(page)
-                        .Extend(new BsonDocument { ["version"] = trans.Pager.ReadVersion });
-                }
-            }
-        }
-
-        public IEnumerable<BsonDocument> DumpDataFile()
-        {
-            return this.DumpFile(_datafile);
-        }
-
-        public IEnumerable<BsonDocument> DumpWalFile()
-        {
-            return this.DumpFile(_walFile);
-        }
-
-        private IEnumerable<BsonDocument> DumpFile(FileService file)
-        {
-            var length = file.FileSize();
+            var length = _datafile.Length;
             var position = 0;
 
             while (position < length)
             {
-                var page = file.ReadPage(position);
+                var page = _datafile.ReadPage(position);
 
                 yield return this.DumpPage(page);
 

@@ -109,7 +109,7 @@ namespace LiteDB
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
 
             // if current thread already has this lock, just exit
-            if (collection.IsWriteLockHeld);
+            if (collection.IsWriteLockHeld) return;
 
             // try enter in write lock in collection
             if (collection.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("write", collectionName, _timeout);

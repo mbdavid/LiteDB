@@ -13,8 +13,7 @@ namespace LiteDB
         private HeaderPage _header;
         private LockService _locker;
         private WalService _wal;
-        private FileService _dataFile;
-        private FileService _walFile;
+        private FileService _datafile;
 
         // instances from transaction
         private TransactionPages _transPages;
@@ -35,13 +34,13 @@ namespace LiteDB
         public Dictionary<uint, BasePage> LocalPages => _localPages;
         public Dictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
 
-        public Snapshot(string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService dataFile, FileService walFile)
+        public Snapshot(string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
         {
             _header = header;
+            _transPages = transPages;
             _locker = locker;
             _wal = wal;
-            _dataFile = dataFile;
-            _walFile = walFile;
+            _datafile = datafile;
 
             // always init a snapshot as read mode
             _mode = SnapshotMode.Read;
@@ -123,7 +122,7 @@ namespace LiteDB
             // if not inside local pages, can be a dirty page already saved in wal file
             if (_dirtyPagesWal.TryGetValue(pageID, out var position))
             {
-                var dirty = (T)_walFile.ReadPage(position.Position);
+                var dirty = (T)_datafile.ReadPage(position.Position);
 
                 // add into local pages
                 _localPages[pageID] = dirty;
@@ -139,7 +138,7 @@ namespace LiteDB
 
             if (pos != long.MaxValue)
             {
-                var walpage = (T)_walFile.ReadPage(pos);
+                var walpage = (T)_datafile.ReadPage(pos);
 
                 // copy to my local pages
                 _localPages[pageID] = walpage;
@@ -159,7 +158,7 @@ namespace LiteDB
             // for last chance, look inside original disk data file
             var pagePosition = BasePage.GetPagePosition(pageID);
 
-            var diskpage = (T)_dataFile.ReadPage(pagePosition);
+            var diskpage = (T)_datafile.ReadPage(pagePosition);
 
             // add this page into local pages
             _localPages[pageID] = diskpage;

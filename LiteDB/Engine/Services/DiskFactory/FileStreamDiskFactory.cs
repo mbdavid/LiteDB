@@ -19,6 +19,7 @@ namespace LiteDB
         {
             _filename = filename;
             _readOnly = readOnly;
+            _async = async;
         }
 
         /// <summary>

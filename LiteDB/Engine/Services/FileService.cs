@@ -49,10 +49,7 @@ namespace LiteDB
             }
 
             // lock datafile if stream are FileStream (single process)
-            if (_writer is FileStream)
-            {
-                ((FileStream)_writer).Lock(BasePage.GetPagePosition((uint)2), BasePage.PAGE_SIZE);
-            }
+            if (_writer.TryLock(_timeout)) throw LiteException.AlreadyOpenDatafile(factory.Filename);
 
             // enable encryption
             if (password != null)
@@ -224,6 +221,7 @@ namespace LiteDB
             // create empty page just for lock control (fixed in 2)
             var locker = new EmptyPage(2);
 
+            // write all pages into disk
             this.WritePages(new BasePage[] { header, colList, locker }, false, null);
 
             // if has initial size (at least 10 pages), alocate disk space now
@@ -246,10 +244,11 @@ namespace LiteDB
 
             if (_factory.CloseOnDispose)
             {
-                // first release single writer
+                // first dispose writer
+                _writer.TryUnlock();
                 _writer.Dispose();
 
-                // after, all readers
+                // after, dispose all readers
                 while (_pool.TryTake(out var stream))
                 {
                     stream.Dispose();

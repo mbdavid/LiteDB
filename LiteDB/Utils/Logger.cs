@@ -53,61 +53,6 @@ namespace LiteDB
             this.Write(ERROR, message);
         }
 
-        internal void Insert(string collection)
-        {
-            this.Write(COMMAND, "insert document(s) into '{0}'", collection);
-        }
-
-        internal void LockRead(ReaderWriterLockSlim reader)
-        {
-            this.Write(LOCK, "entering in read lock (read locks: {0} / waiting: {1})", 
-                reader.CurrentReadCount,
-                reader.WaitingReadCount);
-        }
-
-        internal void LockWrite(ReaderWriterLockSlim writer, string collectionName)
-        {
-            this.Write(LOCK, "entering in write lock on '{0}' (waiting: {1})", 
-                collectionName, 
-                writer.WaitingWriteCount);
-        }
-
-        internal void LockReserved(ReaderWriterLockSlim reserved)
-        {
-            this.Write(LOCK, "entering in reserved lock (waiting: {0})",
-                reserved.WaitingWriteCount);
-        }
-
-        internal void LockExclusive(ReaderWriterLockSlim exclusive)
-        {
-            this.Write(LOCK, "entering in exclusive lock (reading: {0} / waiting: {1})",
-                exclusive.CurrentReadCount,
-                exclusive.WaitingWriteCount);
-        }
-
-        internal void LockExit(ReaderWriterLockSlim reader, ReaderWriterLockSlim reserved, List<Tuple<string, ReaderWriterLockSlim>> collections)
-        {
-            this.Write(LOCK, "exiting read lock{0}{1} ({2})",
-                reserved == null ? "" : ", reserved lock",
-                collections.Count > 0 ? " and write lock" : "",
-                string.Join(", ", collections.Select(x => "'" + x.Item1 + "'")));
-        }
-
-        internal void LockExit(ReaderWriterLockSlim exclusive)
-        {
-            this.Write(LOCK, "exiting exclusive lock");
-        }
-
-        internal void Checkpoint(HashSet<Guid> _confirmedTransactions, FileService walFile)
-        {
-            this.Write(WAL, "checkpoint with {0} transactions and wal file size {1}", _confirmedTransactions.Count, StorageUnitHelper.FormatFileSize(walFile.FileSize()));
-        }
-
-        internal void Safepoint(int localPageCount)
-        {
-            this.Write(WAL, "flush transaction pages into wal file");
-        }
-
         /// <summary>
         /// Execute msg function only if level are enabled
         /// </summary>

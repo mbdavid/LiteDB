@@ -18,8 +18,7 @@ namespace LiteDB
         internal HeaderPage _header;
         internal WalService _wal;
         internal LockService _locker;
-        internal FileService _dataFile;
-        internal FileService _walFile;
+        internal FileService _datafile;
         internal Logger _log;
 
         // transaction controls
@@ -28,7 +27,7 @@ namespace LiteDB
         private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
 
-        internal LiteTransaction(HeaderPage header, LockService locker, WalService wal, FileService dataFile, FileService walFile, Logger log)
+        internal LiteTransaction(HeaderPage header, LockService locker, WalService wal, FileService datafile, Logger log)
         {
             _wal = wal;
             _log = log;
@@ -37,8 +36,7 @@ namespace LiteDB
             _header = header;
             _locker = locker;
             _wal = wal;
-            _dataFile = dataFile;
-            _walFile = walFile;
+            _datafile = datafile;
         }
 
         /// <summary>
@@ -51,7 +49,7 @@ namespace LiteDB
 
             lock(_snapshots)
             {
-                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(collectionName, _header, _transPages, _locker, _wal, _dataFile, _walFile));
+                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(collectionName, _header, _transPages, _locker, _wal, _datafile));
 
                 if (mode == SnapshotMode.Write)
                 {
@@ -102,7 +100,7 @@ namespace LiteDB
                     .ForEach((i, p) => p.TransactionID = _transactionID);
 
                 // write all pages, in sequence on wal-file
-                _walFile.WritePages(dirty, false, snapshot.DirtyPagesWal);
+                _datafile.WritePages(dirty, false, snapshot.DirtyPagesWal);
 
                 // clear local pages
                 snapshot.LocalPages.Clear();
@@ -136,7 +134,7 @@ namespace LiteDB
                     if (_header.FreeEmptyPageID != uint.MaxValue)
                     {
                         // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                        _walFile.WritePages(new BasePage[] { _transPages.LastDeletedPage }, false, null);
+                        _datafile.WritePages(new BasePage[] { _transPages.LastDeletedPage }, false, null);
                     }
                 }
 

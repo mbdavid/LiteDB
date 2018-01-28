@@ -33,6 +33,30 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Try execute some action while has lock exception
+        /// </summary>
+        public static bool TryExec(Action action, TimeSpan timeout)
+        {
+            var timer = DateTime.UtcNow.Add(timeout);
+
+            do
+            {
+                try
+                {
+                    action();
+                    return true;
+                }
+                catch (IOException ex)
+                {
+                    ex.WaitIfLocked(25);
+                }
+            }
+            while (DateTime.UtcNow < timer);
+
+            return false;
+        }
+
+        /// <summary>
         /// Try delete a file that can be in use by another
         /// </summary>
         public static bool TryDelete(string filename)

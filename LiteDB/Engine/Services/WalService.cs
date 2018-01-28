@@ -10,8 +10,7 @@ namespace LiteDB
     internal class WalService
     {
         private LockService _locker;
-        private FileService _dataFile;
-        private FileService _walfile;
+        private FileService _datafile;
         private Logger _log;
 
         private Queue<HeaderPage> _confirmedTransactions = new Queue<HeaderPage>();
@@ -19,11 +18,10 @@ namespace LiteDB
 
         private int _currentReadVersion = 0;
 
-        public WalService(LockService locker, FileService dataFile, FileService walFile, Logger log)
+        public WalService(LockService locker, FileService datafile, Logger log)
         {
             _locker = locker;
-            _dataFile = dataFile;
-            _walfile = walFile;
+            _datafile = datafile;
             _log = log;
         }
 
@@ -69,7 +67,7 @@ namespace LiteDB
         public void ConfirmTransaction(HeaderPage confirm, IList<PagePosition> pagePositions)
         {
             // write header-confirm transaction page in wal file
-            _walfile.WritePages(new HeaderPage[] { confirm }, false, null);
+            _datafile.WritePages(new HeaderPage[] { confirm }, false, null);
 
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Enqueue(confirm);

@@ -79,7 +79,7 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(datafile))
             {
                 sb.AppendLine("After Checkpoint\n=========================");
-                sb.AppendLine("Database:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatabase()), true));
+                sb.AppendLine("Database:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
 
                 //var s = db.Info();
                 //Console.WriteLine(JsonSerializer.Serialize(db.Info(), true));
