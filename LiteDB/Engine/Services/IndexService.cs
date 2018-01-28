@@ -14,14 +14,12 @@ namespace LiteDB
         /// </summary>
         public const int MAX_INDEX_LENGTH = 512;
 
-        private PageService _pager;
-        private Logger _log;
+        private Snapshot _snapshot;
         private Random _rand = new Random();
 
-        public IndexService(PageService pager, Logger log)
+        public IndexService(Snapshot snapshot)
         {
-            _pager = pager;
-            _log = log;
+            _snapshot = snapshot;
         }
 
         /// <summary>
@@ -33,7 +31,7 @@ namespace LiteDB
             var index = col.GetFreeIndex();
 
             // get a new index page for first index page
-            var page = _pager.NewPage<IndexPage>();
+            var page = _snapshot.NewPage<IndexPage>();
 
             // create a empty node with full max level
             var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH)
@@ -48,10 +46,10 @@ namespace LiteDB
             page.AddNode(head);
 
             // set index page as dirty
-            _pager.SetDirty(index.Page);
+            _snapshot.SetDirty(index.Page);
 
             // add indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
+            _snapshot.AddOrRemoveToFreeList(true, page, index.Page, ref index.FreeIndexPageID);
 
             // point the head/tail node to this new node position
             index.HeadNode = head.Position;
@@ -76,7 +74,7 @@ namespace LiteDB
             {
                 index.MaxLevel = level;
 
-                _pager.SetDirty(index.Page);
+                _snapshot.SetDirty(index.Page);
             }
 
             // call AddNode with key value
@@ -103,7 +101,7 @@ namespace LiteDB
             };
 
             // get a free page to insert my index node
-            var page = _pager.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
+            var page = _snapshot.GetFreePage<IndexPage>(index.FreeIndexPageID, node.Length);
 
             node.Page = page;
 
@@ -142,7 +140,7 @@ namespace LiteDB
                     // cur = current (immediately before - prev)
                     // node = new inserted node
                     // next = next node (where cur is pointing)
-                    _pager.SetDirty(cur.Page);
+                    _snapshot.SetDirty(cur.Page);
 
                     node.Next[i] = cur.Next[i];
                     node.Prev[i] = cur.Position;
@@ -153,13 +151,13 @@ namespace LiteDB
                     if (next != null)
                     {
                         next.Prev[i] = node.Position;
-                        _pager.SetDirty(next.Page);
+                        _snapshot.SetDirty(next.Page);
                     }
                 }
             }
 
             // add/remove indexPage on freelist if has space
-            _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            _snapshot.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
             // if last node exists, create a double link list
             if (last != null)
@@ -174,7 +172,7 @@ namespace LiteDB
                     node.PrevNode = last.Position;
                     node.NextNode = next.Position;
 
-                    _pager.SetDirty(next.Page);
+                    _snapshot.SetDirty(next.Page);
                 }
                 else
                 {
@@ -183,7 +181,7 @@ namespace LiteDB
                 }
 
                 // set last node page as dirty
-                _pager.SetDirty(last.Page);
+                _snapshot.SetDirty(last.Page);
             }
 
             return node;
@@ -226,7 +224,7 @@ namespace LiteDB
             var page = node.Page;
 
             // mark page as dirty here because, if deleted, page type will change
-            _pager.SetDirty(page);
+            _snapshot.SetDirty(page);
 
             for (int i = node.Prev.Length - 1; i >= 0; i--)
             {
@@ -237,12 +235,12 @@ namespace LiteDB
                 if (prev != null)
                 {
                     prev.Next[i] = node.Next[i];
-                    _pager.SetDirty(prev.Page);
+                    _snapshot.SetDirty(prev.Page);
                 }
                 if (next != null)
                 {
                     next.Prev[i] = node.Prev[i];
-                    _pager.SetDirty(next.Page);
+                    _snapshot.SetDirty(next.Page);
                 }
             }
 
@@ -252,14 +250,14 @@ namespace LiteDB
             if (page.NodesCount == 0)
             {
                 // first, remove from free list
-                _pager.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
+                _snapshot.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
 
-                _pager.DeletePage(page.PageID);
+                _snapshot.DeletePage(page.PageID);
             }
             else
             {
                 // add or remove page from free list
-                _pager.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
+                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
             // now remove node from nodelist 
@@ -269,12 +267,12 @@ namespace LiteDB
             if (prevNode != null)
             {
                 prevNode.NextNode = node.NextNode;
-                _pager.SetDirty(prevNode.Page);
+                _snapshot.SetDirty(prevNode.Page);
             }
             if (nextNode != null)
             {
                 nextNode.PrevNode = node.PrevNode;
-                _pager.SetDirty(nextNode.Page);
+                _snapshot.SetDirty(nextNode.Page);
             }
         }
 
@@ -298,19 +296,19 @@ namespace LiteDB
                 if (prevNode != null)
                 {
                     prevNode.NextNode = node.NextNode;
-                    _pager.SetDirty(prevNode.Page);
+                    _snapshot.SetDirty(prevNode.Page);
                 }
                 if (nextNode != null)
                 {
                     nextNode.PrevNode = node.PrevNode;
-                    _pager.SetDirty(nextNode.Page);
+                    _snapshot.SetDirty(nextNode.Page);
                 }
             }
 
             // now delete all pages
             foreach (var pageID in pages)
             {
-                _pager.DeletePage(pageID);
+                _snapshot.DeletePage(pageID);
             }
         }
 
@@ -320,7 +318,7 @@ namespace LiteDB
         public IndexNode GetNode(PageAddress address)
         {
             if (address.IsEmpty) return null;
-            var page = _pager.GetPage<IndexPage>(address.PageID);
+            var page = _snapshot.GetPage<IndexPage>(address.PageID);
             return page.GetNode(address.Index);
         }
 

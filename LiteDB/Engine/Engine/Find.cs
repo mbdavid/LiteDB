@@ -9,24 +9,27 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, LiteTransaction trans)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            using (var trans = this.ReadTransaction(collection))
+            return trans.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
             {
-                var col = trans.CollectionPage;
+                var col = snapshot.CollectionPage;
+                var data = new DataService(snapshot);
+                var indexer = new IndexService(snapshot);
+                var docs = new List<BsonDocument>();
 
                 // no collection, no documents
-                if (col == null) yield break;
+                if (col == null) return docs;
 
                 // get node list from query
-                var nodes = query.Run(col, trans.Indexer);
+                var nodes = query.Run(col, indexer);
 
                 foreach (var node in nodes)
                 {
-                    var buffer = trans.Data.Read(node.DataBlock);
+                    var buffer = data.Read(node.DataBlock);
                     var doc = _bsonReader.Deserialize(buffer).AsDocument;
 
                     // if query need filter document, filter now
@@ -34,9 +37,11 @@ namespace LiteDB
 
                     trans.Safepoint();
 
-                    yield return doc;
+                    docs.Add(doc);
                 }
-            }
+
+                return docs;
+            });
         }
     }
 }

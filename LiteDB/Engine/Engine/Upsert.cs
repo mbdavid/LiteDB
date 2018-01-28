@@ -14,29 +14,29 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
-
-            return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
-            {
-                var col = trans.CollectionPage;
-
-                var count = 0;
-
-                foreach (var doc in docs)
-                {
-                    // first try update document (if exists _id)
-                    // if not found, insert
-                    if (doc["_id"] == BsonValue.Null || this.UpdateDocument(trans, col, doc) == false)
-                    {
-                        this.InsertDocument(trans, col, doc, autoId);
-                        count++;
-                    }
-
-                    trans.Safepoint();
-                }
-
-                // returns how many document was inserted
-                return count;
-            });
+            return 0;
+            //return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
+            //{
+            //    var col = trans.CollectionPage;
+            //
+            //    var count = 0;
+            //
+            //    foreach (var doc in docs)
+            //    {
+            //        // first try update document (if exists _id)
+            //        // if not found, insert
+            //        if (doc["_id"] == BsonValue.Null || this.UpdateDocument(trans, col, doc) == false)
+            //        {
+            //            this.InsertDocument(trans, col, doc, autoId);
+            //            count++;
+            //        }
+            //
+            //        trans.Safepoint();
+            //    }
+            //
+            //    // returns how many document was inserted
+            //    return count;
+            //});
         }
     }
 }

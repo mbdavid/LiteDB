@@ -6,17 +6,11 @@ namespace LiteDB
 {
     internal class CollectionService
     {
-        private PageService _pager;
-        private IndexService _indexer;
-        private DataService _data;
-        private Logger _log;
+        private Snapshot _snapshot;
 
-        public CollectionService(PageService pager, IndexService indexer, DataService data, Logger log)
+        public CollectionService(Snapshot snapshot)
         {
-            _pager = pager;
-            _indexer = indexer;
-            _data = data;
-            _log = log;
+            _snapshot = snapshot;
         }
 
         /// <summary>
@@ -24,13 +18,13 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Get(string name)
         {
-            var colList = _pager.GetPage<CollectionListPage>(1);
+            var colList = _snapshot.GetPage<CollectionListPage>(1);
 
             var pageID = colList.GetPageID(name);
 
             if (pageID.HasValue)
             {
-                return _pager.GetPage<CollectionPage>(pageID.Value);
+                return _snapshot.GetPage<CollectionPage>(pageID.Value);
             }
 
             return null;
@@ -44,20 +38,20 @@ namespace LiteDB
             if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
             // get new collection page (marked as dirty)
-            var col = _pager.NewPage<CollectionPage>();
+            var col = _snapshot.NewPage<CollectionPage>();
 
             // get collection page list to add this new collection
-            var colList = _pager.GetPage<CollectionListPage>(1);
+            var colList = _snapshot.GetPage<CollectionListPage>(1);
 
             colList.Add(name, col.PageID);
 
-            _pager.SetDirty(colList);
+            _snapshot.SetDirty(colList);
 
             // set name into collection page
             col.CollectionName = name;
 
             // create PK index with _id key
-            var pk = _indexer.CreateIndex(col);
+            var pk = new IndexService(_snapshot).CreateIndex(col);
 
             pk.Name = "_id";
             pk.Expression = "$._id";
@@ -71,11 +65,11 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<CollectionPage> GetAll()
         {
-            var colList = _pager.GetPage<CollectionListPage>(1);
+            var colList = _snapshot.GetPage<CollectionListPage>(1);
 
             foreach (var col in colList.GetAll())
             {
-                yield return _pager.GetPage<CollectionPage>(col.Value);
+                yield return _snapshot.GetPage<CollectionPage>(col.Value);
             }
         }
 
@@ -96,14 +90,14 @@ namespace LiteDB
             col.CollectionName = newName;
 
             // set collection page as dirty
-            _pager.SetDirty(col);
+            _snapshot.SetDirty(col);
 
             // update collection list page reference
-            var colList = _pager.GetPage<CollectionListPage>(1);
+            var colList = _snapshot.GetPage<CollectionListPage>(1);
 
             colList.Rename(oldName, newName);
 
-            _pager.SetDirty(colList);
+            _snapshot.SetDirty(colList);
         }
 
         /// <summary>
@@ -113,12 +107,14 @@ namespace LiteDB
         {
             // add all pages to delete
             var pages = new HashSet<uint>();
+            var indexer = new IndexService(_snapshot);
+            var data = new DataService(_snapshot);
 
             // search for all data page and index page
             foreach (var index in col.GetIndexes(true))
             {
                 // get all nodes from index
-                var nodes = _indexer.FindAll(index, Query.Ascending);
+                var nodes = indexer.FindAll(index, Query.Ascending);
 
                 foreach (var node in nodes)
                 {
@@ -128,11 +124,11 @@ namespace LiteDB
                         pages.Add(node.DataBlock.PageID);
 
                         // read datablock to check if there is any extended page
-                        var block = _data.GetBlock(node.DataBlock);
+                        var block = data.GetBlock(node.DataBlock);
 
                         if (block.ExtendPageID != uint.MaxValue)
                         {
-                            _pager.DeletePage(block.ExtendPageID, true);
+                            _snapshot.DeletePage(block.ExtendPageID, true);
                         }
                     }
 
@@ -149,18 +145,18 @@ namespace LiteDB
             foreach (var pageID in pages)
             {
                 // delete page
-                _pager.DeletePage(pageID);
+                _snapshot.DeletePage(pageID);
             }
 
             // get collection page List
-            var colList = _pager.GetPage<CollectionListPage>(1);
+            var colList = _snapshot.GetPage<CollectionListPage>(1);
 
             colList.Delete(col.CollectionName);
 
             // set header as dirty after remove
-            _pager.SetDirty(colList);
+            _snapshot.SetDirty(colList);
 
-            _pager.DeletePage(col.PageID);
+            _snapshot.DeletePage(col.PageID);
         }
     }
 }

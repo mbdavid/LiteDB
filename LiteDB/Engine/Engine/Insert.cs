@@ -9,21 +9,23 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId = BsonAutoId.ObjectId)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId, LiteTransaction trans)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
             _log.Insert(collection);
 
-            return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
+            return trans.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
             {
-                var col = trans.CollectionPage;
+                var col = snapshot.CollectionPage;
                 var count = 0;
+                var indexer = new IndexService(snapshot);
+                var data = new DataService(snapshot);
 
                 foreach (var doc in docs)
                 {
-                    this.InsertDocument(trans, col, doc, autoId);
+                    this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
 
                     trans.Safepoint();
 
@@ -37,12 +39,12 @@ namespace LiteDB
         /// <summary>
         /// Internal implementation of insert a document
         /// </summary>
-        private void InsertDocument(TransactionService trans, CollectionPage col, BsonDocument doc, BsonAutoId autoId)
+        private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
         {
             // increase collection sequence _id
             col.Sequence++;
 
-            trans.Pager.SetDirty(col);
+            snapshot.SetDirty(col);
 
             // if no _id, add one
             if (!doc.RawValue.TryGetValue("_id", out var id))
@@ -73,10 +75,10 @@ namespace LiteDB
             var bytes = _bsonWriter.Serialize(doc);
 
             // storage in data pages - returns dataBlock address
-            var dataBlock = trans.Data.Insert(col, bytes);
+            var dataBlock = data.Insert(col, bytes);
 
             // store id in a PK index [0 array]
-            var pk = trans.Indexer.AddNode(col.PK, id, null);
+            var pk = indexer.AddNode(col.PK, id, null);
 
             // do link between index <-> data block
             pk.DataBlock = dataBlock.Position;
@@ -93,7 +95,7 @@ namespace LiteDB
                 foreach(var key in keys)
                 {
                     // insert node
-                    var node = trans.Indexer.AddNode(index, key, pk);
+                    var node = indexer.AddNode(index, key, pk);
 
                     // link my index node to data block address
                     node.DataBlock = dataBlock.Position;

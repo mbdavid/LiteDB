@@ -30,8 +30,6 @@ namespace LiteDB
 
         internal LiteTransaction(HeaderPage header, LockService locker, WalService wal, FileService dataFile, FileService walFile, Logger log)
         {
-            _transactionID = Guid.NewGuid();
-
             _wal = wal;
             _log = log;
 
@@ -53,18 +51,18 @@ namespace LiteDB
 
             lock(_snapshots)
             {
-                var snap = _snapshots.GetOrAdd(collectionName, c => new Snapshot(c));
+                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(collectionName, _header, _transPages, _locker, _wal, _dataFile, _walFile));
 
                 if (mode == SnapshotMode.Write)
                 {
-                    snap.WriteMode(addIfNotExists);
+                    snapshot.WriteMode(addIfNotExists);
                 }
 
                 try
                 {
                     _state = TransactionState.InUse;
 
-                    var result = fn(snap);
+                    var result = fn(snapshot);
 
                     return result;
                 }
@@ -81,7 +79,7 @@ namespace LiteDB
         /// <summary>
         /// Implement a safe point to clear all read-only pages or persist dirty pages (into wal) in all snaps
         /// </summary>
-        internal void SafePointCheck()
+        internal void Safepoint()
         {
             if (_transPages.PageCount > MAX_PAGES_TRANSACTION)
             {
@@ -96,18 +94,18 @@ namespace LiteDB
         /// </summary>
         private void PersistDirtyPages()
         {
-            foreach (var snap in _snapshots.Values)
+            foreach (var snapshot in _snapshots.Values)
             {
                 // set all dirty pages with my transactionID
-                var dirty = snap.Pager.LocalPages.Values
+                var dirty = snapshot.LocalPages.Values
                     .Where(x => x.IsDirty)
                     .ForEach((i, p) => p.TransactionID = _transactionID);
 
                 // write all pages, in sequence on wal-file
-                _walFile.WritePagesSequence(dirty, snap.Pager.DirtyPagesWal);
+                _walFile.WritePagesSequence(dirty, snapshot.DirtyPagesWal);
 
                 // clear local pages
-                snap.Pager.LocalPages.Clear();
+                snapshot.LocalPages.Clear();
             }
         }
 
@@ -148,9 +146,9 @@ namespace LiteDB
                 // create a single list of page position from wal file of this pages
                 var pagePositions = new List<PagePosition>();
 
-                foreach (var snap in _snapshots.Values)
+                foreach (var snapshot in _snapshots.Values)
                 {
-                    pagePositions.AddRange(snap.Pager.DirtyPagesWal.Values);
+                    pagePositions.AddRange(snapshot.DirtyPagesWal.Values);
                 }
 
                 // now, write confirm transaction (with header page) and update wal-index
@@ -161,9 +159,9 @@ namespace LiteDB
             }
 
             // dispose all snaps and release locks only after wal index are updated
-            foreach (var snap in _snapshots.Values)
+            foreach (var snaphost in _snapshots.Values)
             {
-                snap.Dispose();
+                snaphost.Dispose();
             }
 
             _state = TransactionState.Commited;
@@ -177,10 +175,13 @@ namespace LiteDB
             if (_state == TransactionState.New || _state == TransactionState.Aborted) return;
             if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Rollback", _state);
 
-            // TODO: DO ROLLBACK
+            // TODO: DO ROLLBACK of new pages (adding new transaction)
 
             // dispose all snaps an release locks
-            foreach (var snap in _snapshots.Values) snap.Dispose();
+            foreach (var snaphost in _snapshots.Values)
+            {
+                snaphost.Dispose();
+            }
 
             _state = TransactionState.Aborted;
         }

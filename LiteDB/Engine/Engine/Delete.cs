@@ -9,14 +9,16 @@ namespace LiteDB
         /// <summary>
         /// Implements delete based on IDs enumerable
         /// </summary>
-        public int Delete(string collection, IEnumerable<BsonValue> ids)
+        public int Delete(string collection, IEnumerable<BsonValue> ids, LiteTransaction trans)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (ids == null) throw new ArgumentNullException(nameof(ids));
 
-            return this.WriteTransaction(TransactionMode.Write, collection, false, trans =>
+            return trans.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
             {
-                var col = trans.CollectionPage;
+                var col = snapshot.CollectionPage;
+                var data = new DataService(snapshot);
+                var indexer = new IndexService(snapshot);
 
                 if (col == null) return 0;
 
@@ -25,24 +27,24 @@ namespace LiteDB
 
                 foreach(var id in ids)
                 {
-                    var pkNode = trans.Indexer.Find(pk, id, false, Query.Ascending);
+                    var pkNode = indexer.Find(pk, id, false, Query.Ascending);
 
                     // if pk not found, continue
                     if (pkNode == null) continue;
 
                     // get all indexes nodes from this data block
-                    var allNodes = trans.Indexer.GetNodeList(pkNode, true).ToArray();
+                    var allNodes = indexer.GetNodeList(pkNode, true).ToArray();
 
                     // lets remove all indexes that point to this in dataBlock
                     foreach (var linkNode in allNodes)
                     {
                         var index = col.GetIndex(linkNode.Slot);
 
-                        trans.Indexer.Delete(index, linkNode.Position);
+                        indexer.Delete(index, linkNode.Position);
                     }
 
                     // remove object data
-                    trans.Data.Delete(col, pkNode.DataBlock);
+                    data.Delete(col, pkNode.DataBlock);
 
                     trans.Safepoint();
 

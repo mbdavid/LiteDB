@@ -9,10 +9,10 @@ namespace LiteDB
 {
     internal class WalService
     {
-        private LockService _locker = null;
-        private FileService _dataFile = null;
-        private FileService _walfile = null;
-        private Logger _log = null;
+        private LockService _locker;
+        private FileService _dataFile;
+        private FileService _walfile;
+        private Logger _log;
 
         private Queue<HeaderPage> _confirmedTransactions = new Queue<HeaderPage>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
@@ -97,7 +97,7 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint()
         {
-
+            //TODO:
         }
     }
 }

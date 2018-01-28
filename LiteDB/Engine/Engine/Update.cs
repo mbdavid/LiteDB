@@ -13,34 +13,34 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
-
-            return this.WriteTransaction(TransactionMode.Write, collection, false, trans =>
-            {
-                var col = trans.CollectionPage;
-
-                // no collection, no updates
-                if (col == null) return 0;
-
-                var count = 0;
-
-                foreach (var doc in docs)
-                {
-                    if (this.UpdateDocument(trans, col, doc))
-                    {
-                        count++;
-                    }
-
-                    trans.Safepoint();
-                }
-
-                return count;
-            });
+            return 0;
+            //return this.WriteTransaction(TransactionMode.Write, collection, false, trans =>
+            //{
+            //    var col = trans.CollectionPage;
+            //
+            //    // no collection, no updates
+            //    if (col == null) return 0;
+            //
+            //    var count = 0;
+            //
+            //    foreach (var doc in docs)
+            //    {
+            //        if (this.UpdateDocument(trans, col, doc))
+            //        {
+            //            count++;
+            //        }
+            //
+            //        trans.Safepoint();
+            //    }
+            //
+            //    return count;
+            //});
         }
 
         /// <summary>
         /// Implement internal update document
         /// </summary>
-        private bool UpdateDocument(TransactionService trans, CollectionPage col, BsonDocument doc)
+        private bool UpdateDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc)
         {
             // normalize id before find
             var id = doc["_id"];
@@ -52,7 +52,7 @@ namespace LiteDB
             }
 
             // find indexNode from pk index
-            var pkNode = trans.Indexer.Find(col.PK, id, false, Query.Ascending);
+            var pkNode = snapshot.Indexer.Find(col.PK, id, false, Query.Ascending);
 
             // if not found document, no updates
             if (pkNode == null) return false;
@@ -61,10 +61,10 @@ namespace LiteDB
             var bytes = _bsonWriter.Serialize(doc);
 
             // update data storage
-            var dataBlock = trans.Data.Update(col, pkNode.DataBlock, bytes);
+            var dataBlock = snapshot.Data.Update(col, pkNode.DataBlock, bytes);
 
             // get all non-pk index nodes from this data block
-            var allNodes = trans.Indexer.GetNodeList(pkNode, false).ToArray();
+            var allNodes = snapshot.Indexer.GetNodeList(pkNode, false).ToArray();
 
             // delete/insert indexes - do not touch on PK
             foreach (var index in col.GetIndexes(false))
@@ -87,14 +87,14 @@ namespace LiteDB
                 // delete changed index nodes
                 foreach (var node in toDelete)
                 {
-                    trans.Indexer.Delete(index, node.Position);
+                    snapshot.Indexer.Delete(index, node.Position);
                 }
 
                 // insert new nodes
                 foreach (var key in toInsert)
                 {
                     // and add a new one
-                    var node = trans.Indexer.AddNode(index, key, pkNode);
+                    var node = snapshot.Indexer.AddNode(index, key, pkNode);
 
                     // link my node to data block
                     node.DataBlock = dataBlock.Position;
