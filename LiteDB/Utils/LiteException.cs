@@ -27,7 +27,7 @@ namespace LiteDB
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
         public const int DATABASE_WRONG_PASSWORD = 123;
         public const int READ_ONLY_DATABASE = 125;
-        public const int TRANSACTION_NOT_SUPPORTED = 126;
+        public const int INVALID_TRANSACTION_STATE = 126;
         public const int SYNTAX_ERROR = 127;
         public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
 
@@ -130,6 +130,11 @@ namespace LiteDB
             return new LiteException(LOCK_TIMEOUT, "Database lock timeout when entering in {0} mode after {1} (thread: {2})", mode, ts.ToString(), Task.CurrentId);
         }
 
+        internal static LiteException LockTimeout(string mode, string collection, TimeSpan ts)
+        {
+            return new LiteException(LOCK_TIMEOUT, "Collection '{0}' lock timeout when entering in {1} mode after {2} (thread: {3})", collection, mode, ts.ToString(), Task.CurrentId);
+        }
+
         internal static LiteException InvalidCommand(string command)
         {
             return new LiteException(INVALID_COMMAND, "Command '{0}' is not a valid shell command.", command);
@@ -155,9 +160,9 @@ namespace LiteDB
             return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path \"{0}\". Value must be document like {{ $ref: \"?\", $id: ? }}", path);
         }
 
-        internal static LiteException TransactionNotSupported(string method)
+        internal static LiteException InvalidTransactionState(string method, TransactionState state)
         {
-            return new LiteException(TRANSACTION_NOT_SUPPORTED, "Transactions are not supported here: " + method);
+            return new LiteException(INVALID_TRANSACTION_STATE, method + " are not supported because transaction are in " + state + " state");
         }
 
         internal static LiteException NeedRecover()

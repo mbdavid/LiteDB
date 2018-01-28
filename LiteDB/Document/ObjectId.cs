@@ -14,7 +14,7 @@ namespace LiteDB
         /// <summary>
         /// A zero 12-bytes ObjectId
         /// </summary>
-        public static readonly ObjectId Empty = new ObjectId();
+        public static ObjectId Empty => new ObjectId();
 
         #region Properties
 
@@ -213,8 +213,8 @@ namespace LiteDB
 
         public static bool operator ==(ObjectId lhs, ObjectId rhs)
         {
-            if (object.ReferenceEquals(lhs, null)) return object.ReferenceEquals(rhs, null);
-            if (object.ReferenceEquals(rhs, null)) return false; // don't check type because sometimes different types can be ==
+            if (lhs is null) return rhs is null;
+            if (rhs is null) return false; // don't check type because sometimes different types can be ==
 
             return lhs.Equals(rhs);
         }
@@ -280,7 +280,7 @@ namespace LiteDB
 #if HAVE_PROCESS
             return Process.GetCurrentProcess().Id;
 #else
-            return 1000; // Magic number
+            return (new Random()).Next(0, 5000); // Any same number for this process
 #endif
         }
 

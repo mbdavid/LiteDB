@@ -7,42 +7,28 @@ namespace LiteDB
 {
     internal class PageService
     {
+        // services instances
+        private HeaderPage _header;
         private WalService _wal;
+        private TransactionPages _transPages;
         private FileService _dataFile;
         private FileService _walFile;
-        private HeaderPage _header;
         private Logger _log;
 
-        private Guid _transactionID;
+        // local variabales
         private int _readVersion;
         private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
         private Dictionary<uint, PagePosition> _dirtyPagesWal = new Dictionary<uint, PagePosition>();
 
-        // handle created pages during transaction (for rollback)
-        private List<uint> _newPages = new List<uint>();
-
-        // first sequence deleted page (FreePageID) 
-        private HeaderPage _delHeaderPage = new HeaderPage();
-        private uint _delLastPageID = uint.MaxValue;
-
-        /// <summary>
-        /// Transaction ReadVersion
-        /// </summary>
+        // expose variables
         public int ReadVersion => _readVersion;
+        public Dictionary<uint, BasePage> LocalPages => _localPages;
+        public Dictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
 
-        /// <summary>
-        /// Transaction ID
-        /// </summary>
-        public Guid TransactionID => _transactionID;
-
-        /// <summary>
-        /// Get how many pages are in local transaction memory
-        /// </summary>
-        public int LocalPageCount => _localPages.Count;
-
-        public PageService(HeaderPage header, WalService wal, FileService dataFile, FileService walFile, Logger log)
+        public PageService(HeaderPage header, TransactionPages transPages, WalService wal, FileService dataFile, FileService walFile, Logger log)
         {
             _header = header;
+            _transPages = transPages;
             _wal = wal;
             _dataFile = dataFile;
             _walFile = walFile;
@@ -50,12 +36,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Inicializer pager instance, cleaning any loadad page and getting new ReadVersion
+        /// Initializer pager instance, cleaning any loadad page and getting new ReadVersion
         /// </summary>
         public void Initialize()
         {
             _localPages.Clear();
-            _transactionID = Guid.NewGuid();
             _readVersion = _wal.CurrentReadVersion;
         }
 
@@ -79,6 +64,9 @@ namespace LiteDB
                 // add into local pages
                 _localPages[pageID] = dirty;
 
+                // increment transaction page counter
+                _transPages.PageCount++;
+
                 return dirty;
             }
 
@@ -92,6 +80,9 @@ namespace LiteDB
                 // copy to my local pages
                 _localPages[pageID] = walpage;
 
+                // increment transaction page counter
+                _transPages.PageCount++;
+
                 return walpage;
             }
 
@@ -101,85 +92,32 @@ namespace LiteDB
                 return _header as T;
             }
 
-            // for last chance, look inside original data file
+            // for last chance, look inside original disk data file
             var pagePosition = BasePage.GetPagePostion(pageID);
 
-            var filepage = (T)_dataFile.ReadPage(pagePosition);
+            var diskpage = (T)_dataFile.ReadPage(pagePosition);
 
-            return filepage;
+            // add this page into local pages
+            _localPages[pageID] = diskpage;
+
+            // increment transaction page counter
+            _transPages.PageCount++;
+
+            return diskpage;
         }
 
         /// <summary>
         /// Set page was dirty
         /// </summary>
-        public void SetDirty(BasePage page, bool alwaysOverride = false)
+        public void SetDirty(BasePage page)
         {
-            if (page.IsDirty == false || alwaysOverride)
+            if (page.IsDirty == false)
             {
                 page.IsDirty = true;
                 _localPages[page.PageID] = page;
-            }
-        }
 
-        /// <summary>
-        /// Write all dirty pages into WAL file and get page references. 
-        /// Support write pages during transaction (before transaction finish). Useful for long transactions, like EnsureIndex in big collection
-        /// Clear all pages (including clean ones)
-        /// </summary>
-        public void PersistDirtyPages()
-        {
-            // update pages with transactionId in all dirty page
-            var dirty = _localPages.Values
-                .Where(x => x.IsDirty)
-                .ForEach((i, p) => p.TransactionID = _transactionID);
-
-            // save all dirty pages into walfile (sequencial mode)
-            // and write poisiton in my dirtyPagesWal dictionary
-            _walFile.WritePagesSequence(dirty, _dirtyPagesWal);
-
-            // clear dirtyPage list
-            _localPages.Clear();
-        }
-
-        /// <summary>
-        /// Call wal commit using current transaction
-        /// </summary>
-        public void WalCommit()
-        {
-            // must lock lock global instance
-            lock (_header)
-            {
-                // here, is has del page, must update 
-                var newEmptyPageID = _header.FreeEmptyPageID;
-
-                if (_delHeaderPage.FreeEmptyPageID != uint.MaxValue)
-                {
-                    if (_header.FreeEmptyPageID != uint.MaxValue)
-                    {
-                        var first = this.GetPage<BasePage>(_header.FreeEmptyPageID);
-                        var last = this.GetPage<BasePage>(_delLastPageID);
-
-                        // add deleted pages in sequence with old sequence
-                        first.PrevPageID = last.PageID;
-                        last.NextPageID = first.PageID;
-
-                        this.SetDirty(first);
-                        this.SetDirty(last);
-
-                        // persist page changes (last page will write twice in wal)
-                        this.PersistDirtyPages();
-                    }
-
-                    newEmptyPageID = _delHeaderPage.FreeEmptyPageID;
-                }
-
-                // create new header page with transaction ID commit
-                var copy = _header.Copy(_transactionID, newEmptyPageID);
-
-                _wal.Commit(copy, _dirtyPagesWal);
-
-                // if has deleted pages, update in global header instance
-                _header.FreeEmptyPageID = newEmptyPageID;
+                // increment transaction page counter
+                _transPages.PageCount++;
             }
         }
 
@@ -203,12 +141,12 @@ namespace LiteDB
 
         /// <summary>
         /// Get a new empty page - can be a reused page (EmptyPage) or a clean one (extend datafile)
+        /// FreeEmptyPageID use a single linked list to avoid read old pages. Insert/Delete pages from this list is always from begin
         /// </summary>
         public T NewPage<T>(BasePage prevPage = null)
             where T : BasePage
         {
-            var pageID = (uint)0;
-            var diskData = new byte[0];
+            var pageID = 0u;
 
             // lock header instance to get new page
             lock (_header)
@@ -217,9 +155,9 @@ namespace LiteDB
                 if (_header.FreeEmptyPageID != uint.MaxValue)
                 {
                     var free = this.GetPage<BasePage>(_header.FreeEmptyPageID);
-                
-                    // remove page from empty list
-                    this.AddOrRemoveToFreeList(false, free, _header, ref _header.FreeEmptyPageID);
+
+                    // set header free empty page to next free page
+                    _header.FreeEmptyPageID = free.NextPageID;
                 
                     pageID = free.PageID;
                 }
@@ -233,7 +171,8 @@ namespace LiteDB
             var page = BasePage.CreateInstance<T>(pageID);
 
             // add page to cache with correct T type (could be an old Empty page type)
-            this.SetDirty(page, true);
+            // page.IsDirty = false so will override on index
+            this.SetDirty(page);
 
             // if there a page before, just fix NextPageID pointer
             if (prevPage != null)
@@ -245,61 +184,9 @@ namespace LiteDB
             }
 
             // retain a list of created pages to, in a rollback situation, back pages to empty list
-            _newPages.Add(page.PageID);
+            _transPages.NewPages.Add(page.PageID);
 
             return page;
-        }
-
-        /// <summary>
-        /// Return added pages when occurs an rollback transaction (run this only in rollback). Create new transactionID and add into
-        /// WAL file all new pages as EmptyPage in a linked order - also, update SharedPage before store
-        /// </summary>
-        public void ReturnNewPages()
-        {
-            // if no new pages, just exit
-            if (_newPages.Count == 0) return;
-
-            var pages = new List<EmptyPage>();
-
-            // create new transaction ID
-            var transactionID = Guid.NewGuid();
-
-            // create list of empty pages with forward link pointer
-            for (var i = 0; i < _newPages.Count; i++)
-            {
-                var pageID = _newPages[i];
-                var next = i < _newPages.Count - 1 ? _newPages[i + 1] : uint.MaxValue;
-                var prev = i > 0 ? _newPages[i - 1] : 0;
-
-                pages.Add(new EmptyPage(pageID)
-                {
-                    NextPageID = next,
-                    PrevPageID = prev,
-                    TransactionID = transactionID,
-                    IsDirty = true
-                });
-            }
-
-            // now lock header to update FreePageList
-            lock (_header)
-            {
-                // fix last page with current header free empty page
-                pages.Last().NextPageID = _header.FreeEmptyPageID;
-
-                // create copy of header page to send to wal file
-                var copy = _header.Copy(transactionID, pages.First().PageID);
-
-                // persist all pages into wal-file (new run ToList now)
-                var pagePositions = new Dictionary<uint, PagePosition>();
-
-                _walFile.WritePagesSequence(pages, pagePositions);
-
-                // now commit last confirm page to wal file
-                _wal.Commit(copy, pagePositions);
-
-                // now can update global header version
-                _header.FreeEmptyPageID = copy.FreeEmptyPageID;
-            }
         }
 
         /// <summary>
@@ -310,22 +197,28 @@ namespace LiteDB
         public void DeletePage(uint pageID, bool addSequence = false)
         {
             // get all pages in sequence or a single one
-            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID).ToArray() : new BasePage[] { this.GetPage<BasePage>(pageID) };
+            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID) : new BasePage[] { this.GetPage<BasePage>(pageID) };
 
-            // adding all pages to FreeList
+            // adding all pages into a sequence using only NextPageID
             foreach (var page in pages)
             {
                 // create a new empty page based on a normal page
                 var empty = new EmptyPage(page.PageID);
 
                 // add empty page to dirty pages in transaction
-                this.SetDirty(empty, true);
+                this.SetDirty(empty);
 
-                // add to empty free list
-                this.AddOrRemoveToFreeList(true, empty, _delHeaderPage, ref _delHeaderPage.FreeEmptyPageID);
-
-                // keep last deleted to fix sequence on commit
-                _delLastPageID = page.PageID;
+                if (_transPages.FirstDeletedPage == null)
+                {
+                    // if first page in sequence
+                    _transPages.FirstDeletedPage = empty;
+                    _transPages.LastDeletedPage = empty;
+                }
+                else
+                {
+                    // link last page to this empty page
+                    _transPages.LastDeletedPage.NextPageID = empty.PageID;
+                }
             }
         }
 

@@ -103,15 +103,15 @@ namespace LiteDB
 
             // setting values to properties
             this.Filename = values.GetValue<string>("filename", null);
-            this.Password = values.GetValue<string>("password", null);
-            this.Timeout = values.GetValue("timeout", TimeSpan.FromMinutes(1));
-            this.ReadOnly = values.GetValue<bool>("read only", false);
-            this.InitialSize = values.GetFileSize("initial size", 0);
-            this.LimitSize = values.GetFileSize("limit size", long.MaxValue);
-            this.LogLevel = values.GetValue("log", Logger.NONE);
-            this.UtcDate = values.GetValue("utc", false);
-            this.Async = values.GetValue("async", false);
-            this.Checkpoint = values.GetValue("checkpoint", 1000);
+            this.Password = values.GetValue<string>("password", this.Password);
+            this.Timeout = values.GetValue("timeout", this.Timeout);
+            this.ReadOnly = values.GetValue<bool>("read only", this.ReadOnly);
+            this.InitialSize = values.GetFileSize("initial size", this.InitialSize);
+            this.LimitSize = values.GetFileSize("limit size", this.LimitSize);
+            this.LogLevel = values.GetValue("log", this.LogLevel);
+            this.UtcDate = values.GetValue("utc", this.UtcDate);
+            this.Async = values.GetValue("async", this.Async);
+            this.Checkpoint = values.GetValue("checkpoint", this.Checkpoint);
         }
 
         /// <summary>

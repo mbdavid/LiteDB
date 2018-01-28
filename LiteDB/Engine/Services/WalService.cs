@@ -11,11 +11,10 @@ namespace LiteDB
     {
         private LockService _locker = null;
         private FileService _dataFile = null;
-        private FileService _waFfile = null;
+        private FileService _walfile = null;
         private Logger _log = null;
 
-        //TODO: change simple hash to TransactionInfo class with DateTime
-        private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
+        private Queue<HeaderPage> _confirmedTransactions = new Queue<HeaderPage>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
@@ -24,7 +23,7 @@ namespace LiteDB
         {
             _locker = locker;
             _dataFile = dataFile;
-            _waFfile = walFile;
+            _walfile = walFile;
             _log = log;
         }
 
@@ -65,18 +64,18 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Confirm transaction using new HeaderPage with transaction ID return new current version number
+        /// Write last confirmation page into all and update all indexes
         /// </summary>
-        public int Commit(HeaderPage header, IDictionary<uint, PagePosition> pagePositions)
+        public void ConfirmTransaction(HeaderPage confirm, IList<PagePosition> pagePositions)
         {
-            // add transaction to confirmed list
-            _confirmedTransactions.Add(header.TransactionID);
+            // write header-confirm transaction page in wal file
+            _walfile.WritePagesSequence(confirm);
 
-            // write confirmed header page (use First() to execute)
-            _waFfile.WritePagesSequence(new BasePage[] { header });
+            // add confirm page into confirmed-queue to be used in checkpoint
+            _confirmedTransactions.Enqueue(confirm);
 
             // must lock commit operation to update WAL-Index (memory only operation)
-            lock (_locker)
+            lock (_index)
             {
                 // increment current version
                 _currentReadVersion++;
@@ -85,13 +84,11 @@ namespace LiteDB
                 foreach (var pos in pagePositions)
                 {
                     // get page slot in _index (by pageID) (or create if not exists)
-                    var slot = _index.GetOrAdd(pos.Key, new ConcurrentDictionary<int, long>());
+                    var slot = _index.GetOrAdd(pos.PageID, new ConcurrentDictionary<int, long>());
 
                     // add page version (update if already exists)
-                    slot.AddOrUpdate(_currentReadVersion, pos.Value.Position, (v, old) => pos.Value.Position);
+                    slot.AddOrUpdate(_currentReadVersion, pos.Position, (v, old) => pos.Position);
                 }
-
-                return _currentReadVersion;
             }
         }
 
@@ -100,50 +97,7 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint()
         {
-            lock (_locker)
-            {
-                // if walfile are empty, just exit
-                if (_waFfile.IsEmpty()) return;
 
-                // must enter in exclusive lock mode
-                using (_locker.Exclusive())
-                {
-                    // if there is not confirmed transaction
-                    if (_confirmedTransactions.Count == 0)
-                    {
-                        // read all file and get only confirmed transaction (with header page in WAL)
-                        foreach (var transactionID in _waFfile
-                                .ReadAllPages()
-                                .Where(x => x.PageType == PageType.Header)
-                                .Select(x => x.TransactionID))
-                        {
-                            _confirmedTransactions.Add(transactionID);
-                        }
-                    }
-
-                    // if no confirmed transaction, exit
-                    if (_confirmedTransactions.Count == 0) return;
-
-                    _log.Checkpoint(_confirmedTransactions, _waFfile);
-
-                    // read all pages from WAL that are confirmed
-                    // pages are in insert-order, can re-write same pages many times with no problem (only last version will be valid)
-                    // clear TransactionID before write on datafile
-                    var walpages = _waFfile
-                        .ReadAllPages()
-                        .Where(x => _confirmedTransactions.Contains(x.TransactionID))
-                        .ForEach((i, p) => p.TransactionID = Guid.Empty);
-
-                    // write on datafile (pageID position based) for each wal page
-                    _dataFile.WritePages(walpages).Execute();
-
-                    // clear wal-file and wal-index and current version
-                    _confirmedTransactions.Clear();
-                    _currentReadVersion = 0;
-                    _waFfile.Clear();
-                    _index.Clear();
-                }
-            }
         }
     }
 }

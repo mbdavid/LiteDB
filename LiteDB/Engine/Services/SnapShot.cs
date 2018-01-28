@@ -5,17 +5,15 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Represent a single transaction service. Need a new instance for each transaction
+    /// Represent a single snapshot
     /// </summary>
-    internal class SnapShot : IDisposable
+    internal class Snapshot : IDisposable
     {
-        /// <summary>
-        /// If local pages recah this limit, flush to wal disk transaction
-        /// </summary>
-        private const int MAX_PAGES_TRANSACTION = 1000;
-
         // instances from Engine
+        private LockService _locker;
         private WalService _wal;
+        private FileService _dataFile;
+        private FileService _walFile;
         private Logger _log;
 
         // new instances
@@ -24,10 +22,11 @@ namespace LiteDB
         private CollectionService _collection;
         private DataService _data;
 
-        // transaction controls
-        private TransactionMode _mode;
-        private LockReadWrite _lockReadWrite;
+        // snapshot controls
+        private SnapshotMode _mode;
         private CollectionPage _collectionPage;
+        private string _collectionName;
+        private bool _collectionPageLocked = false;
 
         // expose services
         public PageService Pager => _pager;
@@ -36,95 +35,71 @@ namespace LiteDB
         public DataService Data => _data;
         public CollectionPage CollectionPage => _collectionPage;
 
-        /// <summary>
-        /// Create new Transaction - if collection == null is read transaction
-        /// </summary>
-        public TransactionService(TransactionMode mode, string collection, bool addIfNotExists, HeaderPage header, LockService locker, WalService wal, FileService dataFile, FileService walFile, Logger log)
+        public Snapshot(string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService dataFile, FileService walFile, Logger log)
         {
-            _mode = mode;
+            _locker = locker;
             _wal = wal;
+            _dataFile = dataFile;
+            _walFile = walFile;
             _log = log;
 
+            // always init a snapshot as read mode
+            _mode = SnapshotMode.Read;
+
             // load services
-            _pager = new PageService(header, wal, dataFile, walFile, log);
+            _pager = new PageService(header, transPages, wal, dataFile, walFile, log);
             _data = new DataService(_pager, log);
             _index = new IndexService(_pager, log);
             _collection = new CollectionService(_pager, _index, _data, log);
 
-            // need lock before get current read version
-            _lockReadWrite = locker.Read();
-
-            // if is write transaction, lock collection name
-            if (mode != TransactionMode.Read && collection != null)
-            {
-                locker.Write(_lockReadWrite, collection);
-            }
-
-            // if need enter in reserved mode too
-            if (mode == TransactionMode.Reserved)
-            {
-                locker.Reserved(_lockReadWrite);
-            }
-
-            // start transaction and get current read version
+            // initialize pager and get read version
             _pager.Initialize();
 
-            // load collection page (or create one)
-            if (collection != null)
+            // get collection page (or null if collection not exists)
+            _collectionPage = _collection.Get(collectionName);
+        }
+
+        /// <summary>
+        /// Enter snapshot in write mode (if not already in write mode)
+        /// </summary>
+        public void WriteMode(bool addIfNotExits)
+        {
+            if (_mode == SnapshotMode.Read)
             {
-                _collectionPage = _collection.Get(collection);
+                _locker.EnterReserved(_collectionName);
 
-                // if need create collection, must enter in reserved mode
-                if (_collectionPage == null && addIfNotExists)
-                {
-                    locker.Reserved(_lockReadWrite);
+                _mode = SnapshotMode.Write;
+            }
 
-                    // also, need clear loaded pages and reset read version (to garantee that we are with lastest header version)
-                    _pager.Initialize();
+            if (_collectionPage == null && addIfNotExits)
+            {
+                // use '#collection_page' name for collection page lock
+                _locker.EnterReserved("#collection_page");
 
-                    // add new collection
-                    _collectionPage = _collection.Add(collection);
-                }
+                _collectionPageLocked = true;
+
+                _pager.Initialize();
+
+                _collectionPage = _collection.Add(_collectionName);
             }
         }
 
         /// <summary>
-        /// A safe point to check if max pages in memory exceed and must persit in wal disk
+        /// Unlock all collections locks on dispose
         /// </summary>
-        public void Safepoint()
-        {
-            if (_pager.LocalPageCount > MAX_PAGES_TRANSACTION)
-            {
-                _log.Safepoint(_pager.LocalPageCount);
-
-                // flush memory dirty pages into wal file
-                _pager.PersistDirtyPages();
-            }
-        }
-
-        /// <summary>
-        /// Write pages into disk and confirm transaction in wal-index
-        /// </summary>
-        public void Commit()
-        {
-            _pager.PersistDirtyPages();
-
-            _pager.WalCommit();
-        }
-
-        /// <summary>
-        /// Transaction runs rollback if is a write-transaction with no commit (should be an error during transaction execution)
-        /// </summary>
-        public void Rollback()
-        {
-            // checks if transaction add new pages and restore them to header free list
-            _pager.ReturnNewPages();
-        }
-
         public void Dispose()
         {
-            // release lock
-            if (_lockReadWrite != null) _lockReadWrite.Dispose();
+            if (_collectionPageLocked)
+            {
+                _locker.ExitReserved("#collection_page");
+            }
+
+            if (_mode == SnapshotMode.Write)
+            {
+                _locker.ExitReserved(_collectionName);
+            }
+
+            _locker.ExitRead(_collectionName);
         }
     }
 }

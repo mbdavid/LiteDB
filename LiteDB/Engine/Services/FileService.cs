@@ -26,9 +26,6 @@ namespace LiteDB
         private AesEncryption _crypto = null;
         private long _position = 0; // get writer position (for sequencial writes)
 
-        private Task _asyncWriter = null;
-        private ConcurrentQueue<Tuple<long, byte[]>> _queueWriter = new ConcurrentQueue<Tuple<long, byte[]>>();
-
         public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, Logger log)
         {
             _factory = factory;
@@ -210,6 +207,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Write page in wal
+        /// </summary>
+        public void WritePagesSequence(BasePage page)
+        {
+            this.WritePagesSequence(new BasePage[] { page });
+        }
+
+        /// <summary>
         /// Write all pages bytes into disk using single stream (sequencial write)
         /// </summary>
         public void WritePagesSequence(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions = null)
@@ -366,4 +371,4 @@ namespace LiteDB
             }
         }
     }
-}
+e}

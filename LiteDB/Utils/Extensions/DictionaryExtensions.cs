@@ -38,6 +38,18 @@ namespace LiteDB
             return defaultValue;
         }
 
+        public static T GetOrAdd<K, T>(this IDictionary<K, T> dict, K key, Func<K, T> valueFactoy)
+        {
+            if (dict.TryGetValue(key, out var value) == false)
+            {
+                value = valueFactoy(key);
+
+                dict.Add(key, value);
+            }
+
+            return value;
+        }
+
         public static void ParseKeyValue(this IDictionary<string, string> dict, string connectionString)
         {
             var s = new StringScanner(connectionString);

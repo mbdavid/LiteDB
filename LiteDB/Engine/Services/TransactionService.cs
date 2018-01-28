@@ -28,7 +28,7 @@ namespace LiteDB
 
         // transaction controls
         private TransactionMode _mode;
-        private LockReadWrite _lockReadWrite;
+        private LockControl _lockReadWrite;
         private CollectionPage _collectionPage;
 
         // expose services
