@@ -15,9 +15,7 @@ namespace LiteDB
 
         private LockService _locker;
 
-        private FileService _dataFile;
-
-        private FileService _walFile;
+        private FileService _datafile;
 
         private WalService _wal;
 
@@ -66,34 +64,17 @@ namespace LiteDB
 
                 _locker = new LockService(options.Timeout, _log);
 
-                _dataFile = new FileService(options.GetDiskFactory(false), options.Timeout, options.LimitSize, _log);
-
-                // create database if not exists
-                if (_dataFile.IsEmpty())
-                {
-                    _dataFile.CreateDatabase(options.Password, options.InitialSize);
-                }
-
-                // if contains password, enable encryption
-                if (options.Password != null)
-                {
-                    _dataFile.EnableEncryption(options.Password);
-                }
-
-                // create instance of WAL file (with no encryption)
-                _walFile = new FileService(options.GetDiskFactory(true), options.Timeout, long.MaxValue, _log);
+                // open datafile (crete new if stream are empty)
+                _datafile = new FileService(options.GetDiskFactory(), options.Password, options.Timeout, options.InitialSize, options.LimitSize, _log);
 
                 // initialize wal file
-                _wal = new WalService(_locker, _dataFile, _walFile, _log);
+                _wal = new WalService(_locker, _datafile, _log);
 
                 // if WAL file have content, must run a checkpoint
-                if (_walFile.IsEmpty() == false)
-                {
-                    _wal.Checkpoint();
-                }
+                _wal.Checkpoint();
 
                 // load header page
-                _header = (HeaderPage)_dataFile.ReadPage(0);
+                _header = (HeaderPage)_datafile.ReadPage(0);
             }
             catch (Exception)
             {
@@ -110,7 +91,7 @@ namespace LiteDB
         /// </summary>
         public LiteTransaction BeginTrans()
         {
-            return new LiteTransaction(_header, _locker, _wal, _dataFile, _walFile, _log);
+            return new LiteTransaction(_header, _locker, _wal, _datafile, _walFile, _log);
         }
 
         public void Dispose()
@@ -122,7 +103,7 @@ namespace LiteDB
             }
 
             // close all Dispose services
-            if (_dataFile != null) _dataFile.Dispose();
+            if (_datafile != null) _datafile.Dispose();
             if (_walFile != null) _walFile.Dispose(true);
         }
     }

@@ -18,16 +18,6 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Just run over all IEnumerable
-        /// </summary>
-        public static void Execute<T>(this IEnumerable<T> source)
-        {
-            foreach (var item in source)
-            {
-            }
-        }
-
         public static IEnumerable<IEnumerable<T>> Batch<T>(
             this IEnumerable<T> source, int batchSize)
         {

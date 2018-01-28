@@ -17,23 +17,13 @@ namespace LiteDB
         string Filename { get; }
 
         /// <summary>
-        /// Get new Stream instance of datafile/wal
+        /// Get new Stream instance of data stream
         /// </summary>
         Stream GetStream();
 
         /// <summary>
-        /// Delete file/stream
-        /// </summary>
-        void Delete();
-
-        /// <summary>
-        /// Check if file exists
-        /// </summary>
-        bool Exists();
-
-        /// <summary>
         /// Indicate that factory must be dispose on finish
         /// </summary>
-        bool Dispose { get; }
+        bool CloseOnDispose { get; }
     }
 }

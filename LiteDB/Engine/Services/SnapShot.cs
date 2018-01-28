@@ -98,7 +98,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Initializer pager instance, cleaning any loadad page and getting new ReadVersion
+        /// Initializer snapshot instance, cleaning any loadad page and getting new ReadVersion
         /// </summary>
         public void Initialize()
         {
@@ -157,7 +157,7 @@ namespace LiteDB
             }
 
             // for last chance, look inside original disk data file
-            var pagePosition = BasePage.GetPagePostion(pageID);
+            var pagePosition = BasePage.GetPagePosition(pageID);
 
             var diskpage = (T)_dataFile.ReadPage(pagePosition);
 

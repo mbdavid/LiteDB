@@ -19,30 +19,18 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Stream has no name (use strem type)
+        /// Stream has no name (use stream type)
         /// </summary>
         public string Filename => _stream is MemoryStream ? ":memory:" : _stream is TempStream ? ":temp:" : ":stream:";
 
         /// <summary>
-        /// Get always same Stream instance, do dot accept concurrency
+        /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetStream() => _stream;
-
-        /// <summary>
-        /// No action when came from Stream
-        /// </summary>
-        public void Delete()
-        {
-        }
-
-        /// <summary>
-        /// Check if file exists
-        /// </summary>
-        public bool Exists() => _stream != null;
+        public Stream GetStream() => new ConcurrentStream(_stream);
 
         /// <summary>
         /// Do no dispose on finish
         /// </summary>
-        public bool Dispose => false;
+        public bool CloseOnDispose => false;
     }
 }

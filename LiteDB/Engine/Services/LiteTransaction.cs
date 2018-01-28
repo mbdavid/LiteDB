@@ -102,7 +102,7 @@ namespace LiteDB
                     .ForEach((i, p) => p.TransactionID = _transactionID);
 
                 // write all pages, in sequence on wal-file
-                _walFile.WritePagesSequence(dirty, snapshot.DirtyPagesWal);
+                _walFile.WritePages(dirty, false, snapshot.DirtyPagesWal);
 
                 // clear local pages
                 snapshot.LocalPages.Clear();
@@ -136,7 +136,7 @@ namespace LiteDB
                     if (_header.FreeEmptyPageID != uint.MaxValue)
                     {
                         // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                        _walFile.WritePagesSequence(_transPages.LastDeletedPage);
+                        _walFile.WritePages(new BasePage[] { _transPages.LastDeletedPage }, false, null);
                     }
                 }
 

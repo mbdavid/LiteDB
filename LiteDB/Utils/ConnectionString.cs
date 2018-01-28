@@ -115,15 +115,13 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get datafile/WAL disk factory based on DataStream (if used) or based on Filename
+        /// Get datafile factory
         /// </summary>
-        internal IDiskFactory GetDiskFactory(bool wal)
+        internal IDiskFactory GetDiskFactory()
         {
             if (this.DataStream != null)
             {
-                var stream = wal ? new TempStream() : this.DataStream;
-
-                return new StreamDiskFactory(stream);
+                return new StreamDiskFactory(this.DataStream);
             }
             if (this.Filename == ":memory:")
             {
@@ -135,9 +133,7 @@ namespace LiteDB
             }
             else
             {
-                var name = wal ? FileHelper.GetTempFile(this.Filename, "_log", false) : this.Filename;
-
-                return new FileStreamDiskFactory(name, this.ReadOnly, this.Async);
+                return new FileStreamDiskFactory(this.Filename, this.ReadOnly, this.Async);
             }
         }
     }

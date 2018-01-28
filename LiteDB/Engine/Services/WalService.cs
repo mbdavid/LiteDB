@@ -69,7 +69,7 @@ namespace LiteDB
         public void ConfirmTransaction(HeaderPage confirm, IList<PagePosition> pagePositions)
         {
             // write header-confirm transaction page in wal file
-            _walfile.WritePagesSequence(confirm);
+            _walfile.WritePages(new HeaderPage[] { confirm }, false, null);
 
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Enqueue(confirm);

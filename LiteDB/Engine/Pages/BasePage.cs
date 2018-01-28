@@ -131,7 +131,7 @@ namespace LiteDB
         /// <summary>
         /// Returns a size of specified number of pages
         /// </summary>
-        public static long GetPagePostion(uint pageID)
+        public static long GetPagePosition(uint pageID)
         {
             return checked((long)pageID * BasePage.PAGE_SIZE);
         }
@@ -143,7 +143,7 @@ namespace LiteDB
         {
             if (pageID < 0) throw new ArgumentOutOfRangeException(nameof(pageID), "Could not be less than 0.");
 
-            return BasePage.GetPagePostion((uint)pageID);
+            return BasePage.GetPagePosition((uint)pageID);
         }
 
         /// <summary>

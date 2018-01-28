@@ -22,16 +22,43 @@ namespace LiteDB
         private IDiskFactory _factory;
         private TimeSpan _timeout;
         private long _sizeLimit;
-        private Logger _log;
         private AesEncryption _crypto = null;
-        private long _position = 0; // get writer position (for sequencial writes)
+        private Logger _log;
 
-        public FileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, Logger log)
+        private Stream _writer;
+
+        public FileService(IDiskFactory factory, string password, TimeSpan timeout, long initialSize, long sizeLimit, Logger log)
         {
             _factory = factory;
             _timeout = timeout;
-            _log = log;
             _sizeLimit = sizeLimit;
+            _log = log;
+
+            // create writer instance (single writer)
+            _writer = factory.GetStream();
+
+            // if stream are empty, create inital database
+            if (_writer.Length == 0)
+            {
+                this.CreateDatabase(password, initialSize);
+            }
+            else
+            {
+                // if file exits, position at end (to append wal data)
+                _writer.Position = _writer.Length;
+            }
+
+            // lock datafile if stream are FileStream (single process)
+            if (_writer is FileStream)
+            {
+                ((FileStream)_writer).Lock(BasePage.GetPagePosition((uint)2), BasePage.PAGE_SIZE);
+            }
+
+            // enable encryption
+            if (password != null)
+            {
+                this.EnableEncryption(password);
+            }
         }
 
         /// <summary>
@@ -54,44 +81,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Check if stream are empty
+        /// Return stream length
         /// </summary>
-        public bool IsEmpty()
-        {
-            // if file do not exists, return true without getting stream (get stream creates files)
-            if (_factory.Exists() == false) return true;
-
-            // now, get stream to test strem length
-            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
-
-            try
-            {
-                return stream.Length == 0;
-            }
-            finally
-            {
-                // add stream back to pool
-                _pool.Add(stream);
-            }
-        }
-
-        /// <summary>
-        /// Return file size
-        /// </summary>
-        public long FileSize()
-        {
-            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
-
-            try
-            {
-                return stream.Length;
-            }
-            finally
-            {
-                // add stream back to pool
-                _pool.Add(stream);
-            }
-        }
+        public long Length => _writer.Length;
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance
@@ -106,30 +98,6 @@ namespace LiteDB
                 stream.Position = position;
 
                 return this.ReadPage(stream);
-            }
-            finally
-            {
-                // add stream back to pool
-                _pool.Add(stream);
-            }
-        }
-
-        /// <summary>
-        /// Read all pages from stream starting in position 0
-        /// </summary>
-        public IEnumerable<BasePage> ReadAllPages()
-        {
-            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
-
-            try
-            {
-                // read all pages from initial 0 position
-                stream.Position = 0;
-
-                while(stream.Position < stream.Length)
-                {
-                    yield return this.ReadPage(stream);
-                }
             }
             finally
             {
@@ -179,131 +147,56 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Write all pages bytes into disk using stream from pool (page position according pageID). Return an IEnumerable, so need execute ToArray()
+        /// Get/Set position of writer stream
         /// </summary>
-        public IList<PagePosition> WritePages(IEnumerable<BasePage> pages)
-        {
-            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
-
-            try
-            {
-                var result = new List<PagePosition>();
-
-                foreach (var page in pages)
-                {
-                    // position stream based on pageID
-                    stream.Position = BasePage.GetPagePostion(page.PageID);
-
-                    result.Add(this.WritePage(stream, page));
-                }
-
-                return result;
-            }
-            finally
-            {
-                // add stream back to pool
-                _pool.Add(stream);
-            }
-        }
+        public long WriterPosition { get => _writer.Position; set => _writer.Position = value; }
 
         /// <summary>
-        /// Write page in wal
+        /// Write all pages into datafile using current writer position. Fill pagePositions for each page saved
         /// </summary>
-        public void WritePagesSequence(BasePage page)
+        public void WritePages(IEnumerable<BasePage> pages, bool absolute, IDictionary<uint, PagePosition> pagePositions)
         {
-            this.WritePagesSequence(new BasePage[] { page });
-        }
-
-        /// <summary>
-        /// Write all pages bytes into disk using single stream (sequencial write)
-        /// </summary>
-        public void WritePagesSequence(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions = null)
-        {
-            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
-
-            try
+            lock (_writer)
             {
                 foreach (var page in pages)
                 {
-                    // locked get/update _position writer cursor - increase by PAGE_SIZE
-                    lock (_pool)
+                    // serialize page
+                    var buffer = page.WritePage();
+
+                    // get position before write on disk
+                    var position = _writer.Position;
+
+                    // encrypt if not header page (exclusive on position 0)
+                    var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
+
+                    // if absolute position, set cursor position to pageID (otherwise use current position increment)
+                    if (absolute)
                     {
-                        stream.Position = _position;
-
-                        _position += BasePage.PAGE_SIZE;
+                        _writer.Position = BasePage.GetPagePosition(page.PageID);
                     }
 
-                    var pos = this.WritePage(stream, page);
+                    if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
-                    // if dictionary as passed, inserted position
+                    // write on disk
+                    _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
+
+                    // add this page to cache too (mark as clean page)
+                    page.IsDirty = false;
+
+                    // add this page to local cache or clear cache if reach max limit
+                    if (_cache.Count < MAX_CACHE_SIZE)
+                    {
+                        _cache.AddOrUpdate(position, page, (pos, pg) => page);
+                    }
+                    else
+                    {
+                        _cache.Clear();
+                    }
+
                     if (pagePositions != null)
                     {
-                        pagePositions[page.PageID] = pos;
+                        pagePositions[page.PageID] = new PagePosition(page.PageID, position);
                     }
-                }
-            }
-            finally
-            {
-                // add stream back to pool
-                _pool.Add(stream);
-            }
-        }
-
-        /// <summary>
-        /// Write a single page into curret Stream position
-        /// </summary>
-        private PagePosition WritePage(Stream stream, BasePage page)
-        {
-            // serialize page
-            var buffer = page.WritePage();
-
-            // encrypt if not header page
-            var bytes = _crypto == null || page.PageID == 0 ? buffer : _crypto.Encrypt(buffer);
-
-            // get position before write on disk
-            var position = stream.Position;
-
-            if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
-
-            stream.Write(bytes, 0, BasePage.PAGE_SIZE);
-
-            // add this page to cache too (mark as clean page)
-            page.IsDirty = false;
-
-            // add this page to local cache or clear cache if reach max limit
-            if (_cache.Count < MAX_CACHE_SIZE)
-            {
-                _cache.AddOrUpdate(position, page, (pos, pg) => page);
-            }
-            else
-            {
-                _cache.Clear();
-            }
-
-            return new PagePosition(page.PageID, position);
-        }
-
-        /// <summary>
-        /// Clear all file content and position cursor to initial file. Do not delete file from disk (only content)
-        /// </summary>
-        public void Clear()
-        {
-            lock (_cache)
-            {
-                _cache.Clear();
-
-                // create single instance of Stream writer if not exists yet
-                var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
-
-                try
-                {
-                    _position = 0;
-                    stream.SetLength(0);
-                }
-                finally
-                {
-                    // add stream back to pool
-                    _pool.Add(stream);
                 }
             }
         }
@@ -326,16 +219,17 @@ namespace LiteDB
             }
 
             // create collection list page (fixed in 1)
-            var colList = new CollectionListPage()
-            {
-            };
+            var colList = new CollectionListPage();
 
-            this.WritePages(new BasePage[] { header, colList }).Execute();
+            // create empty page just for lock control (fixed in 2)
+            var locker = new EmptyPage(2);
+
+            this.WritePages(new BasePage[] { header, colList, locker }, false, null);
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
             {
-                throw new NotImplementedException();
+                _writer.SetLength(initialSize);
             }
         }
 
@@ -344,31 +238,23 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
-            this.Dispose(false);
-        }
-
-        /// <summary>
-        /// Dispose all stream in pool (with delete file option)
-        /// </summary>
-        public void Dispose(bool delete)
-        {
-            // delete file only if delete=true AND file content is empty (length = 0)
-            var empty = delete ? this.IsEmpty() : false;
-
-            if (_crypto != null) _crypto.Dispose();
-
-            if (_factory.Dispose)
+            // dispose crypto
+            if (_crypto != null)
             {
+                _crypto.Dispose();
+            }
+
+            if (_factory.CloseOnDispose)
+            {
+                // first release single writer
+                _writer.Dispose();
+
+                // after, all readers
                 while (_pool.TryTake(out var stream))
                 {
                     stream.Dispose();
                 }
             }
-
-            if (empty)
-            {
-                _factory.Delete();
-            }
         }
     }
-e}
+}

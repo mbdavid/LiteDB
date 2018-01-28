@@ -28,7 +28,7 @@ namespace LiteDB
 
         public IEnumerable<BsonDocument> DumpDataFile()
         {
-            return this.DumpFile(_dataFile);
+            return this.DumpFile(_datafile);
         }
 
         public IEnumerable<BsonDocument> DumpWalFile()
