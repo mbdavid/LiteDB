@@ -4,12 +4,16 @@
 
 - New Storage Engine
     - New WAL (Write-Ahead Logging) for fast durability
-    - Database lock per collection (multi write concurrency)
-    - No lock for any reader
-    - Snapshot read data version
-    - Multi readers and multi **writers** with async write support
+    - Database lock per collection
+    - Data read version serialization (snapshots)
+    - Multi readers
+    - Single writer with async write support
+    - No lock for reader
+    - Atomic transactions will back
+    - Single physical file to store data and WAL
     - NET45 and NETStandard 2 only support (drop NET35/40)
-
+    - Single process only - multi thread
+    
 - New SQL-Like Language    
     - Support for many SQL command, like SELECT, INSERT, UPDATE
     - New Expression parser/compiler for complex filters
@@ -30,7 +34,7 @@
 - Single DLL, no dependency and 100% C#
 - 100% free open source
     
-> Roadmap: anytime in 2018 :)
+> Roadmap: late in 2018 :)
     
 ---
 
