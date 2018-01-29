@@ -30,8 +30,6 @@ namespace LiteDB.Demo
                 {
                     var count = engine.Insert(collection, docs, BsonAutoId.Int32, t);
 
-                    t.PersistDirtyPages();
-
                     t.Commit();
 
                     return count;

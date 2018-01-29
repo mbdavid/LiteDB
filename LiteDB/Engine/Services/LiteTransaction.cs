@@ -75,6 +75,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Create new (or get already created) snapshot exclusive for work with collection page list or header only
+        /// </summary>
+        internal T CreateSnapshot<T>(Func<Snapshot, T> fn)
+        {
+            return this.CreateSnapshot(SnapshotMode.Write, "#collection_page", false, fn);
+        }
+
+        /// <summary>
         /// Implement a safe point to clear all read-only pages or persist dirty pages (into wal) in all snaps
         /// </summary>
         internal void Safepoint()

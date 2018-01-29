@@ -9,12 +9,13 @@ namespace LiteDB
         /// <summary>
         /// Implements delete based on IDs enumerable
         /// </summary>
-        public int Delete(string collection, IEnumerable<BsonValue> ids, LiteTransaction trans)
+        public int Delete(string collection, IEnumerable<BsonValue> ids, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (ids == null) throw new ArgumentNullException(nameof(ids));
+            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            return trans.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
+            return transaction.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
             {
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
@@ -46,7 +47,7 @@ namespace LiteDB
                     // remove object data
                     data.Delete(col, pkNode.DataBlock);
 
-                    trans.Safepoint();
+                    transaction.Safepoint();
 
                     count++;
                 }

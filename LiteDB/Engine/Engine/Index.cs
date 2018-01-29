@@ -9,14 +9,17 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique, LiteTransaction trans)
+        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexNamePattern.ToString(), "field");
-            if (name == "_id") return false; // always exists
-            if (expression == null || expression?.Source?.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            return trans.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw LiteException.InvalidIndexName(name, collection);
+            if (name == "_id") return false; // always exists
+
+            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
             {
                 var col = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot);
@@ -63,7 +66,7 @@ namespace LiteDB
                         node.DataBlock = pkNode.DataBlock;
                     }
 
-                    trans.Safepoint();
+                    transaction.Safepoint();
                 }
 
                 return true;
@@ -73,38 +76,39 @@ namespace LiteDB
         /// <summary>
         /// Drop an index from a collection
         /// </summary>
-        public bool DropIndex(string collection, string name)
+        public bool DropIndex(string collection, string name, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
+            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
             if (name == "_id") throw LiteException.IndexDropId();
 
-            return false;
-            //return this.WriteTransaction(TransactionMode.Write, collection, true, trans =>
-            //{
-            //    var col = trans.CollectionPage;
-            //
-            //    // no collection, no index
-            //    if (col == null) return false;
-            //
-            //    // search for index reference
-            //    var index = col.GetIndex(name);
-            //
-            //    // no index, no drop
-            //    if (index == null) return false;
-            //
-            //    // delete all data pages + indexes pages
-            //    trans.Indexer.DropIndex(index);
-            //
-            //    // clear index reference
-            //    index.Clear();
-            //
-            //    // mark collection page as dirty
-            //    trans.Pager.SetDirty(col);
-            //
-            //    return true;
-            //});
+            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            {
+                var col = snapshot.CollectionPage;
+                var indexer = new IndexService(snapshot);
+            
+                // no collection, no index
+                if (col == null) return false;
+            
+                // search for index reference
+                var index = col.GetIndex(name);
+            
+                // no index, no drop
+                if (index == null) return false;
+
+                // delete all data pages + indexes pages
+                indexer.DropIndex(index);
+            
+                // clear index reference
+                index.Clear();
+            
+                // mark collection page as dirty
+                snapshot.SetDirty(col);
+            
+                return true;
+            });
         }
     }
 }

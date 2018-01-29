@@ -52,11 +52,12 @@ namespace LiteDB
         /// </summary>
         public void ExitRead(string collectionName)
         {
-            var collection = _collections[collectionName];
-
-            if (collection.IsReadLockHeld)
+            if (_collections.TryGetValue(collectionName, out var collection))
             {
-                collection.ExitReadLock();
+                if (collection.IsReadLockHeld)
+                {
+                    collection.ExitReadLock();
+                }
             }
 
             if (_exclusive.IsReadLockHeld)
@@ -91,11 +92,12 @@ namespace LiteDB
         /// </summary>
         public void ExitReserved(string collectionName)
         {
-            var collection = _collections[collectionName];
-
-            if (collection.IsUpgradeableReadLockHeld)
+            if (_collections.TryGetValue(collectionName, out var collection))
             {
-                collection.ExitUpgradeableReadLock();
+                if (collection.IsUpgradeableReadLockHeld)
+                {
+                    collection.ExitUpgradeableReadLock();
+                }
             }
 
             if (_reserved.IsReadLockHeld)

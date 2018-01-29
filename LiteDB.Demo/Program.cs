@@ -12,7 +12,7 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        private static string datafile = @"c:\temp\app.db";
+        private static string datafile = @"d:\temp\app-5.db";
 
         static void Main(string[] args)
         {
@@ -25,15 +25,17 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
             {
-                //db.EnsureIndex("col1", "age", "$.age");
-                //db.EnsureIndex("col2", "age", "$.age");
-                //db.EnsureIndex("col3", "age", "$.age");
-                //db.EnsureIndex("col4", "age", "$.age");
+                using (var t = db.BeginTrans())
+                {
+                    db.CreateCollection("col1", t);
+                    db.CreateCollection("col2", t);
+                    db.CreateCollection("col3", t);
+                    db.CreateCollection("col4", t);
 
-                //var x0 = db.Insert("col1", ReadDocuments(1, 1, false, true));
-                //var x1 = db.Insert("col2", ReadDocuments(1, 1, false, true));
-                //var x2 = db.Insert("col3", ReadDocuments(1, 1, false, true));
-                //var x3 = db.Insert("col4", ReadDocuments(1, 1, false, true));
+                    t.Commit();
+
+                    sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+                }
 
                 var t0 = db.InsertAsync("col1", ReadDocuments(1, 50000, false, true));
                 var t1 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
@@ -61,7 +63,7 @@ namespace LiteDB.Demo
 
             var debug = sb.ToString();
 
-            Console.WriteLine(debug);
+            //Console.WriteLine(debug);
 
             Console.WriteLine("End");
             Console.ReadKey();

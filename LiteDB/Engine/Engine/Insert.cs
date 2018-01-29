@@ -9,12 +9,13 @@ namespace LiteDB
         /// <summary>
         /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId, LiteTransaction trans)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
+            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            return trans.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
             {
                 var col = snapshot.CollectionPage;
                 var count = 0;
@@ -25,7 +26,7 @@ namespace LiteDB
                 {
                     this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
 
-                    trans.Safepoint();
+                    transaction.Safepoint();
 
                     count++;
                 }

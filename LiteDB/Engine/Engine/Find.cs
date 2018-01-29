@@ -9,12 +9,12 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Query query, LiteTransaction trans)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            return trans.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
+            return transaction.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
             {
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
@@ -35,7 +35,7 @@ namespace LiteDB
                     // if query need filter document, filter now
                     if (query.UseFilter && query.FilterDocument(doc) == false) continue;
 
-                    trans.Safepoint();
+                    transaction.Safepoint();
 
                     docs.Add(doc);
                 }
