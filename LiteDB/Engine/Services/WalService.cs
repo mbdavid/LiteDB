@@ -23,6 +23,8 @@ namespace LiteDB
             _locker = locker;
             _datafile = datafile;
             _log = log;
+
+            this.LoadConfirmedTransactions();
         }
 
         /// <summary>
@@ -95,77 +97,83 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint()
         {
-            // # Checkpoint
-            // - Ao abrir o banco: vai no LastPageID e percorre todas as paginas a partir do LastPageID e captura as paginas de confirmação
-            // ?? Ao iniciar o checkpoint, coloca o banco em modo de reserved completo - não teremos nenhuma transação de escrita durante checkpoint, mas de leitura sim
-            // - Posiciona o cursor em LastPageID + 1
-            // - Cria uma lista de RunningTransactions Dictionary<Guid, HeaderPage>
-            // - Cria lista de contador de locks por coleção Dictionary<string, int>
-            // - Para cada pagina lida no WAL (até final do arquivo):
-            //     - Se a transactionID não estiver na lista de confirmadas, continue;
-            //     - Se estiver na lista, mas não na RunningTransactions:
-            //         - Adiciona na lista de execução
-            //         - Das os locks de escrita para as coleções incrementando o contador de lock
-            //     - Se o transactionID da pagina não estiver na lista, continue;
-            //     - Limpa a transactionID
-            //     - Grava a pagina na posição correta
-            // - Faz shrink do arquivo (se fizer, precisa corrigir o initalSize)?    
-            // > Acho que não precisa bloquear novas transações durante o checkpoint, apenas fazer alguns locks antes e depois e usar novas listas (confirmTransaction/wal-index)
-            
+            // if has no confirmed transaction, exit
+            if (_confirmedTransactions.Count == 0) return;
 
-            // get header from disk (not current header)
+            // lock all database in reserved mode - other can read but cann't open write-transactions
+            _locker.EnterReserved();
+
+            try
+            {
+                // get header from disk (not current header)
+                var header = _datafile.ReadPage(0) as HeaderPage;
+
+                // get first page position in wal and datafile length
+                var position = BasePage.GetPagePosition(header.LastPageID + 1);
+                var length = _datafile.Length;
+
+                // if my position are afer datafile, there is no wal
+                if (position >= length) return;
+
+                while (position < length)
+                {
+                    var page = _datafile.ReadPage(position);
+
+                    position += BasePage.PAGE_SIZE;
+
+                    // continue only if page are in confirm transaction list
+                    if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
+
+                    // clear transactionID before write on disk 
+                    page.TransactionID = Guid.Empty;
+
+                    // write page on disk
+                    _datafile.WritePages(new BasePage[] { page }, true, null);
+                }
+
+                // read again header to fix file length
+                header = _datafile.ReadPage(0) as HeaderPage;
+
+                // shrink datafile and position writer cursor in end of file
+                _datafile.Length = BasePage.GetPagePosition(header.LastPageID + 1);
+
+                _datafile.WriterPosition = _datafile.Length;
+
+                // clear indexes/confirmed transactions
+                _index.Clear();
+                _confirmedTransactions.Clear();
+
+            }
+            finally
+            {
+                _locker.ExitReserved();
+            }
+        }
+
+        /// <summary>
+        /// Load all confirmed transactions from datafile (used only when open datafile)
+        /// </summary>
+        private void LoadConfirmedTransactions()
+        {
+            // get header from disk
             var header = _datafile.ReadPage(0) as HeaderPage;
 
             // get first page position in wal and datafile length
             var position = BasePage.GetPagePosition(header.LastPageID + 1);
             var length = _datafile.Length;
 
-            // if my position are afer datafile, there is no wal
-            if (position >= length) return;
-
-            var running = new HashSet<Guid>();
-            var locks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
+            // read all wal area to look for confirm HeaderPages
             while(position < length)
             {
                 var page = _datafile.ReadPage(position);
 
                 position += BasePage.PAGE_SIZE;
 
-                // continue only if page are in confirm transaction list
-                if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
-
-                // test if this transaction are running
-                if (!running.Contains(page.TransactionID))
-                {
-                    running.Add(page.TransactionID);
-
-                    // apply locks
-                }
-
-                // this page is confirmation page (last page on transaction)
                 if (page.PageID == 0)
                 {
-                    running.Remove(page.TransactionID);
-
-
+                    _confirmedTransactions.Add(page.TransactionID, page as HeaderPage);
                 }
-
-
-                // clear transactionID before write on disk 
-                page.TransactionID = Guid.Empty;
-
-                // write page on disk
-                _datafile.WritePages(new BasePage[] { page }, true, null);
             }
-
-            // read again header to fix file length
-            header = _datafile.ReadPage(0) as HeaderPage;
-
-            // shrink datafile and position writer cursor in end of file
-            _datafile.Length = BasePage.GetPagePosition(header.LastPageID + 1);
-
-            _datafile.WriterPosition = _datafile.Length;
         }
     }
 }

@@ -16,8 +16,9 @@ namespace LiteDB
         private TimeSpan _timeout;
         private Logger _log;
 
-        private ReaderWriterLockSlim _main = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
+        private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private ReaderWriterLockSlim _exclusive = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         internal LockService(TimeSpan timeout, Logger log)
         {
@@ -30,8 +31,11 @@ namespace LiteDB
         /// </summary>
         public void EnterRead(string collectionName)
         {
-            // main locker in read lock
-            if (_main.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("read", _timeout);
+            // if current thread already in exclusive or reserved mode, just exit
+            if (_exclusive.IsWriteLockHeld || _reserved.IsWriteLockHeld) return;
+
+            // exclusive locker in read lock
+            if (_exclusive.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("read", collectionName, _timeout);
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -55,9 +59,9 @@ namespace LiteDB
                 collection.ExitReadLock();
             }
 
-            if (_main.IsReadLockHeld)
+            if (_exclusive.IsReadLockHeld)
             {
-                _main.ExitReadLock();
+                _exclusive.ExitReadLock();
             }
         }
 
@@ -66,8 +70,11 @@ namespace LiteDB
         /// </summary>
         public void EnterReserved(string collectionName)
         {
-            // main locker in read lock
-            if (_main.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+            // if current thread already in exclusive or reserved mode, just exit
+            if (_exclusive.IsWriteLockHeld || _reserved.IsWriteLockHeld) return;
+
+            // reserved locker in read lock (if not already reserved in this thread)
+            if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _timeout);
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -91,45 +98,40 @@ namespace LiteDB
                 collection.ExitUpgradeableReadLock();
             }
 
-            if (_main.IsReadLockHeld)
+            if (_reserved.IsReadLockHeld)
             {
-                _main.ExitReadLock();
+                _reserved.ExitReadLock();
             }
         }
 
         /// <summary>
-        /// Enter collection in write lock mode
+        /// Enter all database in reserved lock - all others can read but not write
         /// </summary>
-        public void EnterWrite(string collectionName)
+        public void EnterReserved()
         {
-            // main locker in read lock
-            if (_main.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+            // if current thread already in exclusive or reserved mode, just exit
+            if (_exclusive.IsWriteLockHeld || _reserved.IsWriteLockHeld) return;
 
-            // get collection locker from dictionary (or create new if doesnt exists)
-            var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
+            // exclusive locker in read lock
+            if (_exclusive.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
 
-            // if current thread already has this lock, just exit
-            if (collection.IsWriteLockHeld) return;
-
-            // try enter in write lock in collection
-            if (collection.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("write", collectionName, _timeout);
+            // reserved locker in write lock
+            if (_reserved.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
         }
 
         /// <summary>
-        /// Exit write lock
+        /// Exit reserved lock
         /// </summary>
-        public void ExitWrite(string collectionName)
+        public void ExitReserved()
         {
-            var collection = _collections[collectionName];
-
-            if (collection.IsWriteLockHeld)
+            if (_reserved.IsWriteLockHeld)
             {
-                collection.ExitWriteLock();
+                _reserved.ExitWriteLock();
             }
 
-            if (_main.IsReadLockHeld)
+            if (_exclusive.IsReadLockHeld)
             {
-                _main.ExitReadLock();
+                _exclusive.ExitReadLock();
             }
         }
 
@@ -138,8 +140,8 @@ namespace LiteDB
         /// </summary>
         public void EnterExclusive()
         {
-            // main locker in write lock
-            if (_main.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("exclusive", _timeout);
+            // exclusive locker in write lock
+            if (_exclusive.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("exclusive", _timeout);
         }
 
         /// <summary>
@@ -147,9 +149,9 @@ namespace LiteDB
         /// </summary>
         public void ExitExclusive()
         {
-            if (_main.IsWriteLockHeld)
+            if (_exclusive.IsWriteLockHeld)
             {
-                _main.ExitWriteLock();
+                _exclusive.ExitWriteLock();
             }
         }
     }

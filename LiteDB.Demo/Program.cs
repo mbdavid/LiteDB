@@ -13,85 +13,55 @@ namespace LiteDB.Demo
     class Program
     {
         private static string datafile = @"c:\temp\app.db";
-        private static string walfile = @"c:\temp\app_log.db";
-
 
         static void Main(string[] args)
         {
             File.Delete(datafile);
-            File.Delete(walfile);
 
             var sb = new StringBuilder();
-
             var sw = new Stopwatch();
-            //var log = new Logger(Logger.FULL, (s) => Console.WriteLine("> " + s));
 
-            using (var db = new LiteEngine(new ConnectionString { Filename = datafile/*, Log = log*/ }))
+            sw.Start();
+
+            using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
             {
-                var ts = new List<Task>();
-                sw.Start();
+                //db.EnsureIndex("col1", "age", "$.age");
+                //db.EnsureIndex("col2", "age", "$.age");
+                //db.EnsureIndex("col3", "age", "$.age");
+                //db.EnsureIndex("col4", "age", "$.age");
 
-                db.EnsureIndex("col1", "age", new BsonExpression("$.age"), false);
-                db.EnsureIndex("col2", "age", new BsonExpression("$.age"), false);
+                //var x0 = db.Insert("col1", ReadDocuments(1, 1, false, true));
+                //var x1 = db.Insert("col2", ReadDocuments(1, 1, false, true));
+                //var x2 = db.Insert("col3", ReadDocuments(1, 1, false, true));
+                //var x3 = db.Insert("col4", ReadDocuments(1, 1, false, true));
 
-                try
-                {
-                    db.Insert("col1", ReadDocuments(1, 10000, true), BsonAutoId.ObjectId, t);
-                }
-                catch
-                {
-                }
+                var t0 = db.InsertAsync("col1", ReadDocuments(1, 50000, false, true));
+                var t1 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
+                var t2 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
+                var t3 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
 
-                db.Insert("col1", ReadDocuments(), BsonAutoId.ObjectId);
+                Task.WaitAll(new Task[] { t0, t1, t2, t3, t3 });
 
-                ts.Add(Task.Run(() =>
-                {
-                    db.Insert("col2", ReadDocuments(), BsonAutoId.ObjectId);
-                }));
-                ts.Add(Task.Run(() =>
-                {
-                    for(var i = 1; i < 10000; i++)
-                    {
-                        var s = db.Find("col1", Query.EQ("_id", i)).FirstOrDefault();
-                
-                        if (s == null || s["_id"] != i)
-                        {
-                            throw new ArgumentNullException();
-                        }
-                   }
-                }));
-                
-                Task.WaitAll(ts.ToArray());
-                
-                // db.DropCollection("col1");
-                // db.DropCollection("col2");
+                var r0 = db.FindById("col2", 2000);
 
-                //db.Insert("col1", ReadDocuments(1), BsonAutoId.ObjectId);
+                Console.WriteLine(JsonSerializer.Serialize(r0, true));
 
-                Console.WriteLine("Total (b/WAL): " + sw.ElapsedMilliseconds);
+                //sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+                Console.WriteLine("Total ms: " + sw.ElapsedMilliseconds);
+
+                db.Checkpoint();
+
+                //sb.AppendLine("After:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
 
             }
 
             sw.Stop();
-            Console.WriteLine("Total (a/WAL): " + sw.ElapsedMilliseconds);
 
+            Console.WriteLine("Total ms: " + sw.ElapsedMilliseconds);
 
-            using (var db = new LiteEngine(datafile))
-            {
-                sb.AppendLine("After Checkpoint\n=========================");
-                sb.AppendLine("Database:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+            var debug = sb.ToString();
 
-                //var s = db.Info();
-                //Console.WriteLine(JsonSerializer.Serialize(db.Info(), true));
-
-                // test find in col1
-                var d = db.Find("col1", Query.EQ("_id", 77370)).FirstOrDefault();
-
-                Console.WriteLine(d ?.AsDocument["name"].AsString); // Fallon Franks
-            }
-
-
-            var j = sb.ToString();
+            Console.WriteLine(debug);
 
             Console.WriteLine("End");
             Console.ReadKey();

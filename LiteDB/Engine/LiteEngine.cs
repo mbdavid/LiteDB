@@ -65,7 +65,9 @@ namespace LiteDB
                 _locker = new LockService(options.Timeout, _log);
 
                 // open datafile (crete new if stream are empty)
-                _datafile = new FileService(options.GetDiskFactory(), options.Password, options.Timeout, options.InitialSize, options.LimitSize, _log);
+                var factory = options.GetDiskFactory();
+
+                _datafile = new FileService(factory, options.Password, options.Timeout, options.InitialSize, options.LimitSize, _log);
 
                 // initialize wal file
                 _wal = new WalService(_locker, _datafile, _log);
@@ -74,7 +76,7 @@ namespace LiteDB
                 _wal.Checkpoint();
 
                 // load header page
-                _header = (HeaderPage)_datafile.ReadPage(0);
+                _header = _datafile.ReadPage(0) as HeaderPage;
             }
             catch (Exception)
             {

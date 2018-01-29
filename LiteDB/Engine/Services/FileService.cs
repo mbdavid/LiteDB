@@ -49,7 +49,7 @@ namespace LiteDB
             }
 
             // lock datafile if stream are FileStream (single process)
-            if (_writer.TryLock(_timeout)) throw LiteException.AlreadyOpenDatafile(factory.Filename);
+            if (_writer.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
 
             // enable encryption
             if (password != null)
@@ -111,9 +111,6 @@ namespace LiteDB
             // if page are inside local cache, return new instance of this page (avoid disk read)
             if (_cache.TryGetValue(stream.Position, out var cached))
             {
-                // move stream cursor
-                stream.Position += BasePage.PAGE_SIZE;
-            
                 // return cloned page
                 return cached.Clone();
             }
@@ -160,18 +157,19 @@ namespace LiteDB
                     // serialize page
                     var buffer = page.WritePage();
 
-                    // get position before write on disk
-                    var position = _writer.Position;
-
-                    // encrypt if not header page (exclusive on position 0)
-                    var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
-
                     // if absolute position, set cursor position to pageID (otherwise use current position increment)
                     if (absolute)
                     {
                         _writer.Position = BasePage.GetPagePosition(page.PageID);
                     }
 
+                    // get position before write on disk
+                    var position = _writer.Position;
+
+                    // encrypt if not header page (exclusive on position 0)
+                    var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
+
+                    // test max file size (includes wal operations)
                     if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
                     // write on disk
@@ -206,7 +204,8 @@ namespace LiteDB
             // create a new header page in bytes (fixed in 0)
             var header = new HeaderPage
             {
-                Salt = AesEncryption.Salt()
+                Salt = AesEncryption.Salt(),
+                LastPageID = 2
             };
 
             // hashing password using PBKDF2

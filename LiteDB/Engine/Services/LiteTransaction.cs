@@ -90,7 +90,7 @@ namespace LiteDB
         /// <summary>
         /// Persist all in-memory pages in all snapshots
         /// </summary>
-        private void PersistDirtyPages()
+        public void PersistDirtyPages()
         {
             foreach (var snapshot in _snapshots.Values)
             {
@@ -174,7 +174,7 @@ namespace LiteDB
             if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Rollback", _state);
 
             // if this aborted transaction request new pages, create new transaction do return this pages
-            if (_transPages.PageCount > 0)
+            if (_transPages.NewPages.Count > 0)
             {
                 this.ReturnNewPages();
             }
