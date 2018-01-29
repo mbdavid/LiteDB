@@ -94,6 +94,11 @@ namespace LiteDB
             return new LiteTransaction(_header, _locker, _wal, _datafile, _log);
         }
 
+        /// <summary>
+        /// Request a wal checkpoint
+        /// </summary>
+        public void Checkpoint() => _wal.Checkpoint();
+
         public void Dispose()
         {
             // close all Dispose services

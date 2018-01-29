@@ -13,7 +13,7 @@ namespace LiteDB
         private FileService _datafile;
         private Logger _log;
 
-        private Queue<HeaderPage> _confirmedTransactions = new Queue<HeaderPage>();
+        private Dictionary<Guid, HeaderPage> _confirmedTransactions = new Dictionary<Guid, HeaderPage>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
@@ -70,7 +70,7 @@ namespace LiteDB
             _datafile.WritePages(new HeaderPage[] { confirm }, false, null);
 
             // add confirm page into confirmed-queue to be used in checkpoint
-            _confirmedTransactions.Enqueue(confirm);
+            _confirmedTransactions.Add(confirm.TransactionID, confirm);
 
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_index)
@@ -111,6 +111,61 @@ namespace LiteDB
             //     - Grava a pagina na posição correta
             // - Faz shrink do arquivo (se fizer, precisa corrigir o initalSize)?    
             // > Acho que não precisa bloquear novas transações durante o checkpoint, apenas fazer alguns locks antes e depois e usar novas listas (confirmTransaction/wal-index)
+            
+
+            // get header from disk (not current header)
+            var header = _datafile.ReadPage(0) as HeaderPage;
+
+            // get first page position in wal and datafile length
+            var position = BasePage.GetPagePosition(header.LastPageID + 1);
+            var length = _datafile.Length;
+
+            // if my position are afer datafile, there is no wal
+            if (position >= length) return;
+
+            var running = new HashSet<Guid>();
+            var locks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            while(position < length)
+            {
+                var page = _datafile.ReadPage(position);
+
+                position += BasePage.PAGE_SIZE;
+
+                // continue only if page are in confirm transaction list
+                if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
+
+                // test if this transaction are running
+                if (!running.Contains(page.TransactionID))
+                {
+                    running.Add(page.TransactionID);
+
+                    // apply locks
+                }
+
+                // this page is confirmation page (last page on transaction)
+                if (page.PageID == 0)
+                {
+                    running.Remove(page.TransactionID);
+
+
+                }
+
+
+                // clear transactionID before write on disk 
+                page.TransactionID = Guid.Empty;
+
+                // write page on disk
+                _datafile.WritePages(new BasePage[] { page }, true, null);
+            }
+
+            // read again header to fix file length
+            header = _datafile.ReadPage(0) as HeaderPage;
+
+            // shrink datafile and position writer cursor in end of file
+            _datafile.Length = BasePage.GetPagePosition(header.LastPageID + 1);
+
+            _datafile.WriterPosition = _datafile.Length;
         }
     }
 }

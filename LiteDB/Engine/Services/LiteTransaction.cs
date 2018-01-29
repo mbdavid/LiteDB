@@ -139,7 +139,7 @@ namespace LiteDB
                 }
 
                 // create a header-confirm page based on current header page state
-                var confirm = _header.Copy(_transactionID, newEmptyPageID);
+                var confirm = _header.Copy(_transactionID, newEmptyPageID, _snapshots.Keys.ToArray());
 
                 // create a single list of page position from wal file of this pages
                 var pagePositions = new List<PagePosition>();
@@ -157,9 +157,9 @@ namespace LiteDB
             }
 
             // dispose all snaps and release locks only after wal index are updated
-            foreach (var snaphost in _snapshots.Values)
+            foreach (var snapshot in _snapshots.Values)
             {
-                snaphost.Dispose();
+                snapshot.Dispose();
             }
 
             _state = TransactionState.Commited;
@@ -222,7 +222,7 @@ namespace LiteDB
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
                 // create copy of header page to send to wal file
-                var confirm = _header.Copy(transactionID, pages.First().PageID);
+                var confirm = _header.Copy(transactionID, pages.First().PageID, new string[0]);
 
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();

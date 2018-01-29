@@ -78,9 +78,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return stream length
+        /// Get/Set stream length
         /// </summary>
-        public long Length => _writer.Length;
+        public long Length { get => _writer.Length; set => _writer.SetLength(value); }
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance
