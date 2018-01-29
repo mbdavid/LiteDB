@@ -174,6 +174,7 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
+            // mark as dirty only clean pages
             if (page.IsDirty == false)
             {
                 page.IsDirty = true;

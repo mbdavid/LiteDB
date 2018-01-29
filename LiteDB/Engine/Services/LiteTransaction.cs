@@ -94,9 +94,9 @@ namespace LiteDB
         {
             foreach (var snapshot in _snapshots.Values)
             {
-                // set all dirty pages with my transactionID
+                // set all dirty pages with my transactionID (do not persist header here, only as confirm page)
                 var dirty = snapshot.LocalPages.Values
-                    .Where(x => x.IsDirty)
+                    .Where(x => x.IsDirty && x.PageID > 0)
                     .ForEach((i, p) => p.TransactionID = _transactionID);
 
                 // write all pages, in sequence on wal-file

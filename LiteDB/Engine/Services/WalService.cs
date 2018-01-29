@@ -95,7 +95,22 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint()
         {
-            //TODO:
+            // # Checkpoint
+            // - Ao abrir o banco: vai no LastPageID e percorre todas as paginas a partir do LastPageID e captura as paginas de confirmação
+            // ?? Ao iniciar o checkpoint, coloca o banco em modo de reserved completo - não teremos nenhuma transação de escrita durante checkpoint, mas de leitura sim
+            // - Posiciona o cursor em LastPageID + 1
+            // - Cria uma lista de RunningTransactions Dictionary<Guid, HeaderPage>
+            // - Cria lista de contador de locks por coleção Dictionary<string, int>
+            // - Para cada pagina lida no WAL (até final do arquivo):
+            //     - Se a transactionID não estiver na lista de confirmadas, continue;
+            //     - Se estiver na lista, mas não na RunningTransactions:
+            //         - Adiciona na lista de execução
+            //         - Das os locks de escrita para as coleções incrementando o contador de lock
+            //     - Se o transactionID da pagina não estiver na lista, continue;
+            //     - Limpa a transactionID
+            //     - Grava a pagina na posição correta
+            // - Faz shrink do arquivo (se fizer, precisa corrigir o initalSize)?    
+            // > Acho que não precisa bloquear novas transações durante o checkpoint, apenas fazer alguns locks antes e depois e usar novas listas (confirmTransaction/wal-index)
         }
     }
 }

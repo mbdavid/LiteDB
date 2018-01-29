@@ -36,7 +36,7 @@ namespace LiteDB.Demo
 
                 try
                 {
-                    db.Insert("col1", ReadDocuments(1, 10000, true), BsonAutoId.ObjectId);
+                    db.Insert("col1", ReadDocuments(1, 10000, true), BsonAutoId.ObjectId, t);
                 }
                 catch
                 {
@@ -97,7 +97,7 @@ namespace LiteDB.Demo
             Console.ReadKey();
         }
 
-        static IEnumerable<BsonDocument> ReadDocuments(int start = 1, int end = 100000, bool duplicate = false)
+        static IEnumerable<BsonDocument> ReadDocuments(int start = 1, int end = 100000, bool duplicate = false, bool bigDoc = false)
         {
             var count = start;
 
@@ -116,9 +116,10 @@ namespace LiteDB.Demo
                         yield return new BsonDocument
                         {
                             ["_id"] = count++,
-                            ["name"] = row[1],
-                            ["age"] = Convert.ToInt32(row[2])
-                            //["lorem"] = "".PadLeft(9000, '-')
+                            ["name"] = row[0],
+                            ["age"] = Convert.ToInt32(row[1]),
+                            ["email"] = row[2],
+                            ["lorem"] = bigDoc ? row[3] : "-"
                         };
                     }
                 }
