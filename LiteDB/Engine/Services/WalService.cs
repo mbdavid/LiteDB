@@ -64,7 +64,7 @@ namespace LiteDB
         /// <summary>
         /// Write last confirmation page into all and update all indexes
         /// </summary>
-        public void ConfirmTransaction(HeaderPage confirm, IList<PagePosition> pagePositions)
+        public void ConfirmTransaction(HeaderPage confirm, IEnumerable<PagePosition> pagePositions)
         {
             // write header-confirm transaction page in wal file
             _datafile.WritePages(new HeaderPage[] { confirm }, false, null);

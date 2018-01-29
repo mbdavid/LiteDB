@@ -173,7 +173,11 @@ namespace LiteDB
             if (_state == TransactionState.New || _state == TransactionState.Aborted) return;
             if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Rollback", _state);
 
-            // TODO: DO ROLLBACK of new pages (adding new transaction)
+            // if this aborted transaction request new pages, create new transaction do return this pages
+            if (_transPages.PageCount > 0)
+            {
+                this.ReturnNewPages();
+            }
 
             // dispose all snaps an release locks
             foreach (var snaphost in _snapshots.Values)
@@ -183,6 +187,56 @@ namespace LiteDB
 
             _state = TransactionState.Aborted;
         }
+
+        /// <summary>
+        /// Return added pages when occurs an rollback transaction (run this only in rollback). Create new transactionID and add into
+        /// WAL file all new pages as EmptyPage in a linked order - also, update SharedPage before store
+        /// </summary>
+        public void ReturnNewPages()
+        {
+            var pages = new List<EmptyPage>();
+
+            // create new transaction ID
+            var transactionID = Guid.NewGuid();
+
+            // create list of empty pages with forward link pointer
+            for (var i = 0; i < _transPages.NewPages.Count; i++)
+            {
+                var pageID = _transPages.NewPages[i];
+                var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : uint.MaxValue;
+                var prev = i > 0 ? _transPages.NewPages[i - 1] : 0;
+
+                pages.Add(new EmptyPage(pageID)
+                {
+                    NextPageID = next,
+                    PrevPageID = prev,
+                    TransactionID = transactionID,
+                    IsDirty = true
+                });
+            }
+
+            // now lock header to update FreePageList
+            lock (_header)
+            {
+                // fix last page with current header free empty page
+                pages.Last().NextPageID = _header.FreeEmptyPageID;
+
+                // create copy of header page to send to wal file
+                var confirm = _header.Copy(transactionID, pages.First().PageID);
+
+                // persist all pages into wal-file (new run ToList now)
+                var pagePositions = new Dictionary<uint, PagePosition>();
+
+                _datafile.WritePages(pages, false, pagePositions);
+
+                // now commit last confirm page to wal file
+                _wal.ConfirmTransaction(confirm, pagePositions.Values);
+
+                // now can update global header version
+                _header.FreeEmptyPageID = confirm.FreeEmptyPageID;
+            }
+        }
+
 
         public void Dispose()
         {
