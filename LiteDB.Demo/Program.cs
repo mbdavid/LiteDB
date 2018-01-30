@@ -42,7 +42,7 @@ namespace LiteDB.Demo
                 //var t2 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
                 //var t3 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
 
-                db.DropCollection("col1");
+                //db.DropCollection("col1");
 
                 //Task.WaitAll(new Task[] { t0, t1, t2, t3, t3 });
 

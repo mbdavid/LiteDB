@@ -26,7 +26,9 @@ namespace LiteDB
                                             6 + // HeadNode
                                             6 + // TailNode
                                             4 + // FreeIndexPageID
-                                            1;  // MaxLevel; 
+                                            1 + // MaxLevel
+                                            4 + // KeyCount
+                                            4;  // UniqueKeyCount
 
         /// <summary>
         /// Page type = Collection
@@ -102,6 +104,8 @@ namespace LiteDB
                 index.TailNode = reader.ReadPageAddress();
                 index.FreeIndexPageID = reader.ReadUInt32();
                 index.MaxLevel = reader.ReadByte();
+                index.KeyCount = reader.ReadUInt32();
+                index.UniqueKeyCount = reader.ReadUInt32();
             }
         }
 
@@ -122,6 +126,8 @@ namespace LiteDB
                 writer.Write(index.TailNode);
                 writer.Write(index.FreeIndexPageID);
                 writer.Write(index.MaxLevel);
+                writer.Write(index.KeyCount);
+                writer.Write(index.UniqueKeyCount);
             }
         }
 

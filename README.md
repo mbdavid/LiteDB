@@ -6,26 +6,66 @@
     - New WAL (Write-Ahead Logging) for fast durability
     - Database lock per collection
     - Data read version serialization (snapshots)
-    - Multi readers
-    - Single writer with async write support
+    - Multi readers - single writer
     - No lock for reader
-    - Atomic transactions will back
+    - Up to 32 indexes per collection
+    - Atomic transactions are back (BeginTrans/Commit/Rollback)
     - Single physical file to store data and WAL
     - NET45 and NETStandard 2 only support (drop NET35/40)
-    - Single process only - multi thread
+    - Single process only - optimazed for multi thread
+    - Plans for async write support
+    - Plans for B+Tree implementation
     
 - New SQL-Like Language    
     - Support for many SQL command, like SELECT, INSERT, UPDATE
     - New Expression parser/compiler for complex filters
     - Support for OrderBy
     - Support for GroupBy
+    - Fluent complex Query
+    - QueryAnalyzer
     - Drop shell commands
 
+```SQL
+ SELECT { _id: _id, FullName: FirstName + LastName, Age: DATEDIFF('Y', DATE(), BirthDate) }
+   FROM customers
+  WHERE name > @0
+    AND UPPER($.FirstName) != UPPER($.LastName)
+INCLUDE orders
+  ORDER BY FirstName ASC
+  LIMIT 10
+ OFFSET 200
+```    
+    
+```C#
+// using BsonDocument
+
+engine.Query("customers")
+    .Where("name > @0", value) 
+    .Where("UPPER($.FirstName) != UPPER($.LastName)")
+    .Include("orders")
+    .OrderBy("FirstName", Query.Asc)
+    .Limit(10)
+    .Offset(200)
+    .Select("{ _id: _id, FullName: FirstName + LastName, Age: DATEDIFF('Y', DATE(), BirthDate) }")
+    .ToList(); // ToEnumerable(), First(), FirstOrDefault(), Count(), Exists(), Into(newCol)
+    
+// using Linq 
+collection.Query()
+    .Where(x => x.Name > value)
+    .Where(x => x.FirstName.ToUpperCase() != x.LastName.ToUpperCase())
+    .Include(x => x.Orders)
+    .OrderBy(x => x.FirstName)
+    .Limit(10)
+    .Offset(200)
+    .ToList()
+```
+    
 - Server-Side support (LiteDB.Server.exe)
     - NET Core 2 application
     - HTTP/S REST API protocol
     - Multi database
     - Authentication
+    - Background maintaince tasks
     - Web Admin UI
 
 .. but still...    
@@ -33,6 +73,15 @@
 - Single database file 
 - Single DLL, no dependency and 100% C#
 - 100% free open source
+
+### First performance test
+- 4 concurrent threads
+- 50,000 insert each thread
+
+|              |   v4    |    v5   |
+|--------------|---------|---------|
+|SSD disk      | 3,274ms | 1,612ms |
+|HDD 7200 disk | 7,253ms | 1,659ms |
     
 > Roadmap: late in 2018 :)
     

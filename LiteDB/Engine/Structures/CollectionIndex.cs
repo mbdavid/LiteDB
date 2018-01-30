@@ -53,6 +53,16 @@ namespace LiteDB
         public byte MaxLevel { get; set; }
 
         /// <summary>
+        /// Counter of keys in this index
+        /// </summary>
+        public uint KeyCount { get; set; }
+
+        /// <summary>
+        /// Counter of unique keys in this index (update only in analze command)
+        /// </summary>
+        public uint UniqueKeyCount { get; set; }
+
+        /// <summary>
         /// Returns if this index slot is empty and can be used as new index
         /// </summary>
         public bool IsEmpty
@@ -81,6 +91,8 @@ namespace LiteDB
             this.HeadNode = PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
             this.MaxLevel = 1;
+            this.KeyCount = 0;
+            this.UniqueKeyCount = 0;
         }
     }
 }

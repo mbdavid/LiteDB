@@ -58,6 +58,7 @@ namespace LiteDB
             var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH, null);
 
             index.TailNode = tail.Position;
+            index.KeyCount = 0; // reset counter
 
             return index;
         }
@@ -184,6 +185,10 @@ namespace LiteDB
                 _snapshot.SetDirty(last.Page);
             }
 
+            // increment keyCount on index
+            index.KeyCount++;
+            _snapshot.SetDirty(index.Page);
+
             return node;
         }
 
@@ -274,6 +279,10 @@ namespace LiteDB
                 nextNode.PrevNode = node.PrevNode;
                 _snapshot.SetDirty(nextNode.Page);
             }
+
+            // decrement key index counter (collection page must be set as dirty)
+            index.KeyCount--;
+            _snapshot.SetDirty(index.Page);
         }
 
         /// <summary>

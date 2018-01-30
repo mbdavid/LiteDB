@@ -72,16 +72,6 @@ namespace LiteDB
                     ["pageID"] = (int)x.Value
                 }));
             }
-            else if (page.PageType == PageType.CollectionList)
-            {
-                var colList = page as CollectionListPage;
-
-                doc["colections"] = new BsonArray(colList.GetAll().Select(x => new BsonDocument
-                {
-                    ["name"] = x.Key,
-                    ["pageID"] = (int)x.Value
-                }));
-            }
             else if (page.PageType == PageType.Collection)
             {
                 var colPage = page as CollectionPage;
@@ -97,8 +87,10 @@ namespace LiteDB
                     ["name"] = x.Name,
                     ["expression"] = x.Expression,
                     ["unique"] = x.Unique,
+                    ["headPageID"] = (int)x.HeadNode.PageID,
                     ["maxLevel"] = (int)x.MaxLevel,
-                    ["headPageID"] = (int)x.HeadNode.PageID
+                    ["keyCount"] = (int)x.KeyCount,
+                    ["uniqueKeyCount"] = (int)x.UniqueKeyCount
                 }));
             }
             // all other page types contains data-only
