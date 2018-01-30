@@ -278,10 +278,17 @@ namespace LiteDB
                     _transPages.FirstDeletedPage = empty;
                     _transPages.LastDeletedPage = empty;
                 }
+                else if(_transPages.FirstDeletedPage.PageID == _transPages.LastDeletedPage.PageID)
+                {
+                    // if is second page on sequence
+                    _transPages.FirstDeletedPage.NextPageID = empty.PageID;
+                    _transPages.LastDeletedPage = empty;
+                }
                 else
                 {
-                    // link last page to this empty page
+                    // if any other page, link last with current page
                     _transPages.LastDeletedPage.NextPageID = empty.PageID;
+                    _transPages.LastDeletedPage = empty;
                 }
             }
         }

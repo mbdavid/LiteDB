@@ -6,6 +6,9 @@ namespace LiteDB
 {
     public partial class LiteEngine
     {
+        /// <summary>
+        /// Create empty collection if not exits - return false if already exists
+        /// </summary>
         public bool CreateCollection(string collection, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));

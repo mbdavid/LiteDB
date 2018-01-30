@@ -16,7 +16,7 @@ namespace LiteDB
         public const int INVALID_DATABASE_VERSION = 104;
         public const int FILE_SIZE_EXCEEDED = 105;
         public const int COLLECTION_LIMIT_EXCEEDED = 106;
-        public const int INDEX_DROP_IP = 108;
+        public const int INDEX_DROP_ID = 108;
         public const int INDEX_LIMIT_EXCEEDED = 109;
         public const int INDEX_DUPLICATE_KEY = 110;
         public const int INDEX_KEY_TOO_LONG = 111;
@@ -32,6 +32,7 @@ namespace LiteDB
         public const int SYNTAX_ERROR = 127;
         public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
         public const int INVALID_INDEX_NAME = 129;
+        public const int INVALID_COLLECTION_NAME = 130;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -40,7 +41,6 @@ namespace LiteDB
         public const int INVALID_DATA_TYPE = 204;
         public const int PROPERTY_NOT_MAPPED = 206;
         public const int INVALID_TYPED_NAME = 207;
-        public const int NEED_RECOVER = 208;
         public const int PROPERTY_READ_WRITE = 209;
 
         #endregion
@@ -107,9 +107,14 @@ namespace LiteDB
             return new LiteException(INVALID_INDEX_NAME, "Invalid index name '{0}' on collection '{1}'", name, collection);
         }
 
+        internal static LiteException InvalidCollectionName(string name)
+        {
+            return new LiteException(INVALID_COLLECTION_NAME, "Invalid collection name '{0}'", name);
+        }
+
         internal static LiteException IndexDropId()
         {
-            return new LiteException(INDEX_DROP_IP, "Primary key index '_id' can't be dropped.");
+            return new LiteException(INDEX_DROP_ID, "Primary key index '_id' can't be dropped.");
         }
 
         internal static LiteException IndexLimitExceeded(string collection)
@@ -175,11 +180,6 @@ namespace LiteDB
         internal static LiteException InvalidTransactionState(string method, TransactionState state)
         {
             return new LiteException(INVALID_TRANSACTION_STATE, method + " are not supported because transaction are in " + state + " state");
-        }
-
-        internal static LiteException NeedRecover()
-        {
-            return new LiteException(NEED_RECOVER, "Your datafile did not terminate properly during the writing process. Reopen the file");
         }
 
         internal static LiteException InvalidFormat(string field)

@@ -41,6 +41,16 @@ namespace LiteDB.Demo
             }
         }
 
+        public static void DropCollection(this LiteEngine engine, string collection)
+        {
+            using (var t = engine.BeginTrans())
+            {
+                engine.DropCollection(collection, t);
+
+                t.Commit();
+            }
+        }
+
         public static Task<int> InsertAsync(this LiteEngine engine, string collection, IEnumerable<BsonDocument> docs)
         {
             return Task.Run<int>(() => Insert(engine, collection, docs));

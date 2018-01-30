@@ -12,7 +12,7 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        private static string datafile = @"d:\temp\app-5.db";
+        private static string datafile = @"c:\temp\app-5.db";
 
         static void Main(string[] args)
         {
@@ -25,35 +25,37 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
             {
-                using (var t = db.BeginTrans())
-                {
-                    db.CreateCollection("col1", t);
-                    db.CreateCollection("col2", t);
-                    db.CreateCollection("col3", t);
-                    db.CreateCollection("col4", t);
+                //using (var t = db.BeginTrans())
+                //{
+                //    db.CreateCollection("col1", t);
+                //    db.CreateCollection("col2", t);
+                //    db.CreateCollection("col3", t);
+                //    db.CreateCollection("col4", t);
+                //
+                //    t.Commit();
+                //
+                //    sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+                //}
 
-                    t.Commit();
+                var t0 = db.Insert("col1", ReadDocuments(1, 200, false, true));
+                //var t1 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
+                //var t2 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
+                //var t3 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
 
-                    sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
-                }
+                db.DropCollection("col1");
 
-                var t0 = db.InsertAsync("col1", ReadDocuments(1, 50000, false, true));
-                var t1 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
-                var t2 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
-                var t3 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
+                //Task.WaitAll(new Task[] { t0, t1, t2, t3, t3 });
 
-                Task.WaitAll(new Task[] { t0, t1, t2, t3, t3 });
+                //var r0 = db.FindById("col2", 2000);
 
-                var r0 = db.FindById("col2", 2000);
+                //Console.WriteLine(JsonSerializer.Serialize(r0, true));
 
-                Console.WriteLine(JsonSerializer.Serialize(r0, true));
-
-                //sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+                sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
                 Console.WriteLine("Total ms: " + sw.ElapsedMilliseconds);
 
                 db.Checkpoint();
 
-                //sb.AppendLine("After:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+                sb.AppendLine("After:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
 
             }
 

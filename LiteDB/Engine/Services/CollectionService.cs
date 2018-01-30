@@ -35,7 +35,7 @@ namespace LiteDB
         /// </summary>
         public CollectionPage Add(string name)
         {
-            if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
+            if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidCollectionName(name);
 
             // get new collection page (marked as dirty)
             var col = _snapshot.NewPage<CollectionPage>();
