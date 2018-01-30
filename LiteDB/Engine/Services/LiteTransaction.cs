@@ -162,6 +162,8 @@ namespace LiteDB
 
                 // if has deleted pages, update in global header instance
                 _header.FreeEmptyPageID = newEmptyPageID;
+                _header.CommitCount = confirm.CommitCount;
+                _header.LastCommit = confirm.LastCommit;
             }
 
             // dispose all snaps and release locks only after wal index are updated

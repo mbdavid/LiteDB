@@ -107,6 +107,7 @@ namespace LiteDB
             {
                 // get header from disk (not current header)
                 var header = _datafile.ReadPage(0) as HeaderPage;
+                HeaderPage lastHeader = null;
 
                 // get first page position in wal and datafile length
                 var position = BasePage.GetPagePosition(header.LastPageID + 1);
@@ -127,15 +128,24 @@ namespace LiteDB
                     // clear transactionID before write on disk 
                     page.TransactionID = Guid.Empty;
 
+                    // if page is a confirm header, let's update checkpoint time/counter
+                    if (page.PageType == PageType.Header)
+                    {
+                        lastHeader = page as HeaderPage;
+
+                        lastHeader.CheckpointCounter = header.CheckpointCounter + 1;
+                        lastHeader.LastCheckpoint = DateTime.Now;
+                    }
+
                     // write page on disk
                     _datafile.WritePages(new BasePage[] { page }, true, null);
                 }
 
-                // read again header to fix file length
-                header = _datafile.ReadPage(0) as HeaderPage;
+                // if has no confim header, no page was override (wal area contains only non confirmed pages)
+                if (lastHeader == null) return;
 
                 // shrink datafile and position writer cursor in end of file
-                _datafile.Length = BasePage.GetPagePosition(header.LastPageID + 1);
+                _datafile.Length = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
 
                 _datafile.WriterPosition = _datafile.Length;
 

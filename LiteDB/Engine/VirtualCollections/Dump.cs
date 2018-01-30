@@ -51,9 +51,16 @@ namespace LiteDB
             {
                 var header = page as HeaderPage;
 
-                doc["creationTime"] = header.CreationTime;
                 doc["freeEmptyPageID"] = (int)header.FreeEmptyPageID;
                 doc["lastPageID"] = (int)header.LastPageID;
+                doc["creationTime"] = header.CreationTime;
+                doc["lastCommit"] = header.LastCommit;
+                doc["lastCheckpoint"] = header.LastCheckpoint;
+                doc["lastAnalyze"] = header.LastAnalyze;
+                doc["lastVaccum"] = header.LastVaccum;
+                doc["lastShrink"] = header.LastShrink;
+                doc["commitCounter"] = (int)header.CommitCount;
+                doc["checkpointCounter"] = (int)header.CheckpointCounter;
             }
             else if (page.PageType == PageType.CollectionList)
             {
