@@ -113,11 +113,11 @@ namespace LiteDB
         {
             return new HeaderPage
             {
+                TransactionID = transactionID,
                 Password = this.Password,
                 Salt = this.Salt,
-                LastPageID = this.LastPageID,
-                TransactionID = transactionID,
                 FreeEmptyPageID = freeEmptyPageID,
+                LastPageID = this.LastPageID,
                 CreationTime = this.CreationTime,
                 LastCommit = DateTime.Now, // update last commit datetime
                 LastCheckpoint = this.LastCheckpoint,

@@ -75,11 +75,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create new (or get already created) snapshot exclusive for work with collection page list or header only
+        /// Create new (or get already created) snapshot exclusive for work with collection page list
         /// </summary>
-        internal T CreateSnapshot<T>(Func<Snapshot, T> fn)
+        internal T CreateSnapshot<T>(SnapshotMode mode, Func<Snapshot, T> fn)
         {
-            return this.CreateSnapshot(SnapshotMode.Write, "#collection_page", false, fn);
+            return this.CreateSnapshot(mode, "#collection_page", false, fn);
         }
 
         /// <summary>

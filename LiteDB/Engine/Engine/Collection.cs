@@ -15,7 +15,7 @@ namespace LiteDB
             if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
             // create snapshot for collection list page
-            return transaction.CreateSnapshot(snapshot =>
+            return transaction.CreateSnapshot(SnapshotMode.Write, snapshot =>
             {
                 var srv = new CollectionService(snapshot);
 
@@ -38,7 +38,7 @@ namespace LiteDB
             if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
             // lock collection list page
-            transaction.CreateSnapshot(snapshot => true);
+            transaction.CreateSnapshot(SnapshotMode.Write, snapshot => true);
 
             // and now lock collection
             return transaction.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
@@ -68,7 +68,7 @@ namespace LiteDB
             transaction.CreateSnapshot(SnapshotMode.Write, newName, false, snapshot => true);
 
             // and now, lock collection list page
-            return transaction.CreateSnapshot(snapshot =>
+            return transaction.CreateSnapshot(SnapshotMode.Write, snapshot =>
             {
                 var srv = new CollectionService(snapshot);
                 var col = srv.Get(collection);

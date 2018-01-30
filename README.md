@@ -29,7 +29,7 @@
  SELECT { _id: _id, FullName: FirstName + LastName, Age: DATEDIFF('Y', DATE(), BirthDate) }
    FROM customers
   WHERE name > @0
-    AND UPPER($.FirstName) != UPPER($.LastName)
+    AND UPPER(FirstName) != UPPER(LastName)
 INCLUDE orders
   ORDER BY FirstName ASC
   LIMIT 10

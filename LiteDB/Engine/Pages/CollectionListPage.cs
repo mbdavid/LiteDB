@@ -20,6 +20,11 @@ namespace LiteDB
         public override PageType PageType { get { return PageType.CollectionList; } }
 
         /// <summary>
+        /// Database user version (this property was moved to collection list page because Header page now are single instance with no locks)
+        /// </summary>
+        public int UserVersion { get; set; }
+
+        /// <summary>
         /// Get a dictionary with all collection pages with pageID link
         /// </summary>
         private Dictionary<string, uint> _collectionPages { get; set; }
@@ -27,6 +32,8 @@ namespace LiteDB
         public CollectionListPage()
             : base(1)
         {
+            this.UserVersion = 0;
+
             _collectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
 
             this.ItemCount = 0;
@@ -86,6 +93,8 @@ namespace LiteDB
 
         protected override void ReadContent(ByteReader reader)
         {
+            this.UserVersion = reader.ReadInt32();
+
             for (var i = 0; i < this.ItemCount; i++)
             {
                 _collectionPages.Add(reader.ReadString(), reader.ReadUInt32());
@@ -94,6 +103,8 @@ namespace LiteDB
 
         protected override void WriteContent(ByteWriter writer)
         {
+            writer.Write(this.UserVersion);
+
             foreach (var col in _collectionPages)
             {
                 writer.Write(col.Key);
