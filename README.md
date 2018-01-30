@@ -11,7 +11,7 @@
     - Up to 32 indexes per collection
     - Atomic transactions are back (BeginTrans/Commit/Rollback)
     - Single physical file to store data and WAL
-    - NET45 and NETStandard 2 only support (drop NET35/40)
+    - NET45 and NETStandard 2 support only (drop NET35/40)
     - Single process only - optimazed for multi thread
     - Plans for async write support
     - Plans for B+Tree implementation
@@ -41,7 +41,7 @@ INCLUDE orders
 
 engine.Query("customers")
     .Where("name > @0", value) 
-    .Where("UPPER($.FirstName) != UPPER($.LastName)")
+    .Where("UPPER(FirstName) != UPPER(LastName)")
     .Include("orders")
     .OrderBy("FirstName", Query.Asc)
     .Limit(10)
@@ -50,6 +50,7 @@ engine.Query("customers")
     .ToList(); // ToEnumerable(), First(), FirstOrDefault(), Count(), Exists(), Into(newCol)
     
 // using Linq 
+
 collection.Query()
     .Where(x => x.Name > value)
     .Where(x => x.FirstName.ToUpperCase() != x.LastName.ToUpperCase())
@@ -74,16 +75,17 @@ collection.Query()
 - Single DLL, no dependency and 100% C#
 - 100% free open source
 
-### First performance test
+### Very first performance test
 - 4 concurrent threads
-- 50,000 insert each thread
+- 4 collections
+- 50,000 insert each thread/collection
 
 |              |   v4    |    v5   |
 |--------------|---------|---------|
 |SSD disk      | 3,274ms | 1,612ms |
 |HDD 7200 disk | 7,253ms | 1,659ms |
     
-> Roadmap: late in 2018 :)
+> Roadmap: late in 2018 :smile:
     
 ---
 
