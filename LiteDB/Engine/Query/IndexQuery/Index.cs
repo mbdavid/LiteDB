@@ -28,7 +28,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents using field index order
+        /// Returns all documents using index order
         /// </summary>
         public static Index All(string name, int order = Query.Ascending)
         {
@@ -111,34 +111,34 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that has value in values list (IN)
         /// </summary>
-        public static Index In(string field, BsonArray value)
+        public static Index In(string name, BsonArray value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            return new IndexIn(field, value.RawValue);
+            return new IndexIn(name, value.RawValue);
         }
 
         /// <summary>
         /// Returns all documents that has value in values list (IN)
         /// </summary>
-        public static Index In(string field, params BsonValue[] values)
+        public static Index In(string name, params BsonValue[] values)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (values == null) throw new ArgumentNullException(nameof(values));
 
-            return new IndexIn(field, values);
+            return new IndexIn(name, values);
         }
 
         /// <summary>
         /// Returns all documents that has value in values list (IN)
         /// </summary>
-        public static Index In(string field, IEnumerable<BsonValue> values)
+        public static Index In(string name, IEnumerable<BsonValue> values)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (values == null) throw new ArgumentNullException(nameof(values));
 
-            return new IndexIn(field, values);
+            return new IndexIn(name, values);
         }
 
         /// <summary>

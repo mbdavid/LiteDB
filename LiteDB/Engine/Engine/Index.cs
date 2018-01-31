@@ -46,7 +46,7 @@ namespace LiteDB
                 col.CalculateNameSize();
 
                 // read all objects (read from PK index)
-                foreach (var pkNode in new QueryAll("_id", Index.Ascending).Run(col, indexer))
+                foreach (var pkNode in new IndexAll("_id", Query.Ascending).Run(col, indexer))
                 {
                     // read binary and deserialize document
                     var buffer = data.Read(pkNode.DataBlock);
