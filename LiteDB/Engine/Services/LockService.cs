@@ -16,6 +16,7 @@ namespace LiteDB
         private TimeSpan _timeout;
         private Logger _log;
 
+        private ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
         private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ReaderWriterLockSlim _exclusive = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
@@ -24,6 +25,32 @@ namespace LiteDB
         {
             _timeout = timeout;
             _log = log;
+        }
+
+        /// <summary>
+        /// Use ReaderWriterLockSlim to manage only one transaction per thread
+        /// </summary>
+        public void EnterTransaction()
+        {
+            try
+            {
+                _transaction.EnterReadLock();
+            }
+            catch(LockRecursionException)
+            {
+                throw LiteException.InvalidTransactionState();
+            }
+        }
+
+        /// <summary>
+        /// Exit transaction locker
+        /// </summary>
+        public void ExitTransaction()
+        {
+            if (_transaction.IsReadLockHeld)
+            {
+                _transaction.ExitReadLock();
+            }
         }
 
         /// <summary>

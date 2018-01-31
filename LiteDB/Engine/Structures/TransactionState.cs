@@ -29,6 +29,11 @@ namespace LiteDB
         /// Used NewPages are reverted in header page
         /// All snaps are clear and unlocked
         /// </summary>
-        Aborted
+        Aborted,
+
+        /// <summary>
+        /// Transaction was completed disposed and current thread now can open new transaction
+        /// </summary>
+        Disposed
     }
 }

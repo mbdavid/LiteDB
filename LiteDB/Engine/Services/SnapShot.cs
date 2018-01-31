@@ -33,6 +33,7 @@ namespace LiteDB
         public int ReadVersion => _readVersion;
         public Dictionary<uint, BasePage> LocalPages => _localPages;
         public Dictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
+        public SnapshotMode Mode => _mode;
 
         public Snapshot(string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
         {

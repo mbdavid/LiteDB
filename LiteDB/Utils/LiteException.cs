@@ -182,6 +182,11 @@ namespace LiteDB
             return new LiteException(INVALID_TRANSACTION_STATE, method + " are not supported because transaction are in " + state + " state");
         }
 
+        internal static LiteException InvalidTransactionState()
+        {
+            return new LiteException(INVALID_TRANSACTION_STATE, "The current thread already has an open transaction. Use the Dipose method to release the previous transaction.");
+        }
+
         internal static LiteException InvalidFormat(string field)
         {
             return new LiteException(INVALID_FORMAT, "Invalid format: {0}", field);

@@ -57,6 +57,8 @@ namespace LiteDB.Demo
 
                 sb.AppendLine("After:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
 
+                var tt = db.Transactions;
+
             }
 
             sw.Stop();

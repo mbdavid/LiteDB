@@ -32,11 +32,10 @@ namespace LiteDB
         public CollectionListPage()
             : base(1)
         {
+            this.ItemCount = 0;
             this.UserVersion = 0;
 
             _collectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
-
-            this.ItemCount = 0;
         }
 
         public uint? GetPageID(string name)

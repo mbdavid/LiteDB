@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 namespace LiteDB
@@ -9,6 +10,11 @@ namespace LiteDB
     /// </summary>
     public partial class LiteEngine : IDisposable
     {
+        /// <summary>
+        /// Max transactions must be keeped in queue
+        /// </summary>
+        private const int MAX_TRANSACTION_BUFFER = 100;
+
         #region Services instances
 
         private Logger _log;
@@ -24,6 +30,8 @@ namespace LiteDB
         private BsonReader _bsonReader;
 
         private BsonWriter _bsonWriter = new BsonWriter();
+
+        private ConcurrentQueue<LiteTransaction> _transactions = new ConcurrentQueue<LiteTransaction>();
 
         /// <summary>
         /// Get log instance for debug operations
@@ -93,7 +101,17 @@ namespace LiteDB
         /// </summary>
         public LiteTransaction BeginTrans()
         {
-            return new LiteTransaction(_header, _locker, _wal, _datafile, _log);
+            var transaction = new LiteTransaction(_header, _locker, _wal, _datafile, _log);
+
+            // add transaction to queue list to be avaiable for query
+            _transactions.Enqueue(transaction);
+
+            if (_transactions.Count > MAX_TRANSACTION_BUFFER)
+            {
+                _transactions.TryDequeue(out var dummy);
+            }
+
+            return transaction;
         }
 
         /// <summary>

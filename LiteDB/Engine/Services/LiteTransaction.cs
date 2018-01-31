@@ -27,6 +27,12 @@ namespace LiteDB
         private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
 
+        // transaction info
+        public Guid TransactionID => _transactionID;
+        public TransactionState State => _state;
+        public DateTime StartTime { get; private set; } = DateTime.Now;
+        public DateTime DisposeTime { get; private set; } = DateTime.MinValue;
+
         internal LiteTransaction(HeaderPage header, LockService locker, WalService wal, FileService datafile, Logger log)
         {
             _wal = wal;
@@ -37,6 +43,9 @@ namespace LiteDB
             _locker = locker;
             _wal = wal;
             _datafile = datafile;
+
+            // enter transaction locker to avoid 2 transactions in same thread
+            _locker.EnterTransaction();
         }
 
         /// <summary>
@@ -45,7 +54,7 @@ namespace LiteDB
         internal T CreateSnapshot<T>(SnapshotMode mode, string collectionName, bool addIfNotExists, Func<Snapshot, T> fn)
         {
             // if transaction are commited/aborted do not accept new snapshots
-            if (_state == TransactionState.Aborted || _state == TransactionState.Commited) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
+            if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
 
             lock(_snapshots)
             {
@@ -87,6 +96,9 @@ namespace LiteDB
         /// </summary>
         internal void Safepoint()
         {
+            // Safepoint are valid only during transaction execution
+            if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Safepoint", _state);
+
             if (_transPages.PageCount > MAX_PAGES_TRANSACTION)
             {
                 this.PersistDirtyPages();
@@ -100,6 +112,9 @@ namespace LiteDB
         /// </summary>
         public void PersistDirtyPages()
         {
+            // PersistDirtyPages are valid only during transaction execution
+            if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Safepoint", _state);
+
             foreach (var snapshot in _snapshots.Values)
             {
                 // set all dirty pages with my transactionID (do not persist header here, only as confirm page)
@@ -255,6 +270,11 @@ namespace LiteDB
             {
                 this.Rollback();
             }
+
+            _state = TransactionState.Disposed;
+            DisposeTime = DateTime.Now;
+
+            _locker.ExitTransaction();
         }
     }
 }
