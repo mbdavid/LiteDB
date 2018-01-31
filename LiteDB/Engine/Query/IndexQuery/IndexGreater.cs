@@ -4,7 +4,10 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal class QueryGreater : Query
+    /// <summary>
+    /// Implement index greater or equal than operation
+    /// </summary>
+    internal class IndexGreater : Index
     {
         private BsonValue _value;
         private bool _equals;
@@ -12,14 +15,14 @@ namespace LiteDB
         public BsonValue Value { get { return _value; } }
         public bool IsEquals { get { return _equals; } }
 
-        public QueryGreater(string field, BsonValue value, bool equals)
-            : base(field)
+        public IndexGreater(string name, BsonValue value, bool equals)
+            : base(name)
         {
             _value = value;
             _equals = equals;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
             var node = indexer.Find(index, _value, true, Query.Ascending);
@@ -44,22 +47,6 @@ namespace LiteDB
 
                 node = indexer.GetNode(node.Next[0]);
             }
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return this.Expression.Execute(doc, true)
-                .Where(x => x.Type == _value.Type || (x.IsNumber && _value.IsNumber))
-                .Any(x => x.CompareTo(_value) >= (_equals ? 0 : 1));
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}({1} >{2} {3})",
-                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Expression?.ToString() ?? this.Field,
-                _equals ? "=" : "",
-                _value);
         }
     }
 }

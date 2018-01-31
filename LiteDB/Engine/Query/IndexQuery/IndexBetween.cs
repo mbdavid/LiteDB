@@ -4,7 +4,10 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal class QueryBetween : Query
+    /// <summary>
+    /// Implement between operation
+    /// </summary>
+    internal class IndexBetween : Index
     {
         private BsonValue _start;
         private BsonValue _end;
@@ -12,8 +15,8 @@ namespace LiteDB
         private bool _startEquals;
         private bool _endEquals;
 
-        public QueryBetween(string field, BsonValue start, BsonValue end, bool startEquals, bool endEquals)
-            : base(field)
+        public IndexBetween(string name, BsonValue start, BsonValue end, bool startEquals, bool endEquals)
+            : base(name)
         {
             _start = start;
             _startEquals = startEquals;
@@ -21,7 +24,7 @@ namespace LiteDB
             _endEquals = endEquals;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // define order
             var order = _start.CompareTo(_end) <= 0 ? Query.Ascending : Query.Descending;
@@ -65,29 +68,6 @@ namespace LiteDB
 
                 node = indexer.GetNode(node.NextPrev(0, order));
             }
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return this.Expression.Execute(doc, false)
-                .Any(x =>
-                {
-                    return
-                        (_startEquals ? x.CompareTo(_start) >= 0 : x.CompareTo(_start) > 0) &&
-                        (_endEquals ? x.CompareTo(_end) <= 0 : x.CompareTo(_end) < 0);
-                });
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}({1} between {2}{3} and {4}{5})",
-                this.UseFilter ? "Filter" : this.UseIndex ? "IndexSeek" : "",
-                this.Expression?.ToString() ?? this.Field,
-                _startEquals ? "[" : "(",
-                _start, 
-                _end,
-                _endEquals ? "]" : ")"
-                );
         }
     }
 }

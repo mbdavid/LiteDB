@@ -4,7 +4,10 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal class QueryLess : Query
+    /// <summary>
+    /// Implement index operation less or equan than
+    /// </summary>
+    internal class IndexLess : Index
     {
         private BsonValue _value;
         private bool _equals;
@@ -12,14 +15,14 @@ namespace LiteDB
         public BsonValue Value { get { return _value; } }
         public bool IsEquals { get { return _equals; } }
 
-        public QueryLess(string field, BsonValue value, bool equals)
-            : base(field)
+        public IndexLess(string name, BsonValue value, bool equals)
+            : base(name)
         {
             _value = value;
             _equals = equals;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             foreach (var node in indexer.FindAll(index, Query.Ascending))
             {
@@ -35,22 +38,6 @@ namespace LiteDB
                     yield return node;
                 }
             }
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return this.Expression.Execute(doc, true)
-                .Where(x => x.Type == _value.Type || (x.IsNumber && _value.IsNumber))
-                .Any(x => x.CompareTo(_value) <= (_equals ? 0 : -1));
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}({1} <{2} {3})",
-                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Expression?.ToString() ?? this.Field,
-                _equals ? "=" : "",
-                _value);
         }
     }
 }

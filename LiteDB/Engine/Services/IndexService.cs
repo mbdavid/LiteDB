@@ -291,7 +291,7 @@ namespace LiteDB
         public void DropIndex(CollectionIndex index)
         {
             var pages = new HashSet<uint>();
-            var nodes = this.FindAll(index, Query.Ascending);
+            var nodes = this.FindAll(index, Index.Ascending);
 
             // get reference for pageID from all index nodes
             foreach (var node in nodes)
@@ -349,7 +349,7 @@ namespace LiteDB
 
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
+            var cur = this.GetNode(order == Index.Ascending ? index.HeadNode : index.TailNode);
 
             while (!cur.NextPrev(0, order).IsEmpty)
             {
@@ -368,7 +368,7 @@ namespace LiteDB
         /// </summary>
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
-            var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);
+            var cur = this.GetNode(order == Index.Ascending ? index.HeadNode : index.TailNode);
 
             for (var i = index.MaxLevel - 1; i >= 0; i--)
             {

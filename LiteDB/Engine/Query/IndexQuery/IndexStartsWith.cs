@@ -4,17 +4,17 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal class QueryStartsWith : Query
+    internal class IndexStartsWith : Index
     {
         private BsonValue _value;
 
-        public QueryStartsWith(string field, BsonValue value)
-            : base(field)
+        public IndexStartsWith(string name, BsonValue value)
+            : base(name)
         {
             _value = value;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
             var node = indexer.Find(index, _value, true, Query.Ascending);
@@ -40,21 +40,6 @@ namespace LiteDB
 
                 node = indexer.GetNode(node.Next[0]);
             }
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return this.Expression.Execute(doc, false)
-                .Where(x => x.IsString)
-                .Any(x => x.AsString.StartsWith(_value));
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}({1} startsWith {2})",
-                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Expression?.ToString() ?? this.Field,
-                _value);
         }
     }
 }

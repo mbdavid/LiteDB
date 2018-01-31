@@ -4,17 +4,20 @@ using System.Collections.Generic;
 
 namespace LiteDB
 {
-    internal class QueryEquals : Query
+    /// <summary>
+    /// Implement equals index operation =
+    /// </summary>
+    internal class IndexEquals : Index
     {
         private BsonValue _value;
 
-        public QueryEquals(string field, BsonValue value)
-            : base(field)
+        public IndexEquals(string name, BsonValue value)
+            : base(name)
         {
             _value = value;
         }
 
-        internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
+        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             var node = indexer.Find(index, _value, false, Query.Ascending);
 
@@ -32,20 +35,6 @@ namespace LiteDB
                     yield return node;
                 }
             }
-        }
-
-        internal override bool FilterDocument(BsonDocument doc)
-        {
-            return this.Expression.Execute(doc, true)
-                .Any(x => x.CompareTo(_value) == 0);
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}({1} = {2})",
-                this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
-                this.Expression?.ToString() ?? this.Field,
-                _value);
         }
     }
 }

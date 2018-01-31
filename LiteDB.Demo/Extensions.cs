@@ -60,11 +60,11 @@ namespace LiteDB.Demo
         {
             using (var t = engine.BeginTrans())
             {
-                return engine.Find(collection, Query.EQ("_id", id), t).FirstOrDefault();
+                return engine.Find(collection, Index.EQ("_id", id), t).FirstOrDefault();
             }
         }
 
-        public static List<BsonDocument> Find(this LiteEngine engine, string collection, Query query)
+        public static List<BsonDocument> Find(this LiteEngine engine, string collection, Index query)
         {
             using (var t = engine.BeginTrans())
             {

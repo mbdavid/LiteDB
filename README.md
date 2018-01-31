@@ -5,7 +5,7 @@
 - New Storage Engine
     - New WAL (Write-Ahead Logging) for fast durability
     - Database lock per collection
-    - Data read version serialization (snapshots)
+    - MultiVersion Concurrency Control (Snapshots & Checkpoint)
     - Multi readers - single writer
     - No lock for reader
     - Up to 32 indexes per collection
