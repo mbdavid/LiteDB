@@ -139,13 +139,14 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 - One database **per account/user** data store
 - Few concurrent write operations
 
-## Plugins
+## 3rd Party Tools for LiteDB
 
 - A GUI viewer tool: https://github.com/falahati/LiteDBViewer
 - A GUI editor tool: https://github.com/JosefNemec/LiteDbExplorer 
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 - LINQPad support: https://github.com/adospace/litedbpad
-- F# Support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
+- F# support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
+- PowerShell wrapper - https://github.com/v2kiran/PSLiteDB
 
 ## Changelog
 
