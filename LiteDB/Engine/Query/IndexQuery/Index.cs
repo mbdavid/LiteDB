@@ -5,12 +5,19 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Class helper to create query using indexes in database. All methods are statics.
-    /// Queries can be executed in 3 ways: Index Seek (fast), Index Scan (good), Full Scan (slow)
+    /// Class that implement higher level of index search operations (equals, greater, less, ...)
     /// </summary>
     public abstract class Index
     {
+        /// <summary>
+        /// Index name
+        /// </summary>
         public string Name { get; private set; }
+
+        /// <summary>
+        /// Index Node offset - Apply offset (skip) just after load IndexNode?
+        /// </summary>
+        public int Offset { get; set; }
 
         internal Index(string name)
         {
@@ -184,6 +191,24 @@ namespace LiteDB
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
         /// </summary>
         internal abstract IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index);
+
+        /// <summary>
+        /// Find witch index will be used and run Execute method
+        /// </summary>
+        internal virtual IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        {
+            // get index for this query
+            var index = col.GetIndex(this.Name);
+
+            if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Name);
+
+            // execute query to get all IndexNodes
+            // do DistinctBy datablock to not duplicate same document in results
+            // apply skip on IndxNode results
+            return this.Execute(indexer, index)
+                .DistinctBy(x => x.DataBlock, null)
+                .Skip(this.Offset);
+        }
 
         #endregion
     }

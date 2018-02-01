@@ -76,7 +76,7 @@ namespace LiteDB
         /// </summary>
         public PageAddress NextPrev(int index, int order)
         {
-            return order == Index.Ascending ? this.Next[index] : this.Prev[index];
+            return order == Query.Ascending ? this.Next[index] : this.Prev[index];
         }
 
         /// <summary>

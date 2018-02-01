@@ -40,7 +40,9 @@ namespace LiteDB
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-            return _(); IEnumerable<TSource> _()
+            return _();
+
+            IEnumerable<TSource> _()
             {
                 var knownKeys = new HashSet<TKey>(comparer);
                 foreach (var element in source)

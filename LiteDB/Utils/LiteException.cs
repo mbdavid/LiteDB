@@ -132,9 +132,9 @@ namespace LiteDB
             return new LiteException(INDEX_KEY_TOO_LONG, "Index key must be less than {0} bytes.", IndexService.MAX_INDEX_LENGTH);
         }
 
-        internal static LiteException IndexNotFound(string collection, string field)
+        internal static LiteException IndexNotFound(string collection, string name)
         {
-            return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'.", collection, field);
+            return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'.", collection, name);
         }
 
         internal static LiteException LockTimeout(string mode, TimeSpan ts)

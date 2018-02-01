@@ -9,39 +9,65 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Index query, LiteTransaction transaction)
+        public IEnumerable<BsonDocument> Find(string collection, Query query, LiteTransaction transaction)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            return transaction.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
+            // executing query
+            IEnumerable<BsonDocument> execute(Snapshot snapshot)
             {
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
-                var docs = new List<BsonDocument>();
 
                 // no collection, no documents
-                if (col == null) return docs;
+                if (col == null) yield break;
 
                 // get node list from query
-                var nodes = query.Run(col, indexer);
+                var nodes = query.Index.Run(col, indexer);
 
-                foreach (var node in nodes)
+                // load document from disk
+                var docs = loadDocument(nodes, data, query.KeyOnly, query.Index.Name);
+
+                // load pipe query to apply all query options
+                var pipe = new QueryPipe();
+
+                // call safepoint just before return each document
+                foreach (var doc in pipe.Pipe(docs, query))
                 {
-                    var buffer = data.Read(node.DataBlock);
-                    var doc = _bsonReader.Deserialize(buffer).AsDocument;
-
-                    // if query need filter document, filter now
-                    if (query.UseFilter && query.FilterDocument(doc) == false) continue;
-
                     transaction.Safepoint();
 
-                    docs.Add(doc);
+                    yield return doc;
                 }
+            }
 
-                return docs;
+            // load documents from disk or make a "fake" document using key only
+            IEnumerable<BsonDocument> loadDocument(IEnumerable<IndexNode> nodes, DataService data, bool keyOnly, string name)
+            {
+                foreach(var node in nodes)
+                {
+                    if (keyOnly)
+                    {
+                        yield return new BsonDocument { [name] = node.Key };
+                    }
+                    else
+                    {
+                        var buffer = data.Read(node.DataBlock);
+                        var doc = _bsonReader.Deserialize(buffer);
+
+                        yield return doc;
+                    }
+                }
+            }
+
+            // start execution
+            return transaction.CreateSnapshot(query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, collection, false, snapshot =>
+            {
+                // encapsulate method because yield return do not work inside Func
+                return execute(snapshot);
             });
+
         }
     }
 }
