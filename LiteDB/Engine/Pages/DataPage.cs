@@ -28,6 +28,10 @@ namespace LiteDB
         /// </summary>
         public Dictionary<ushort, DataBlock> DataBlocks => _dataBlocks;
 
+        private DataPage()
+        {
+        }
+
         public DataPage(uint pageID)
             : base(pageID)
         {
@@ -111,6 +115,26 @@ namespace LiteDB
                 writer.Write((ushort)block.Data.Length);
                 writer.Write(block.Data);
             }
+        }
+
+        public override BasePage Clone()
+        {
+            var blocks = new Dictionary<ushort, DataBlock>(_dataBlocks.Count);
+
+            foreach (var item in blocks) blocks.Add(item.Key, item.Value.Clone());
+
+            return new DataPage
+            {
+                // base page
+                PageID = this.PageID,
+                PrevPageID = this.PrevPageID,
+                NextPageID = this.NextPageID,
+                ItemCount = this.ItemCount,
+                FreeBytes = this.FreeBytes,
+                TransactionID = this.TransactionID,
+                // data page
+                _dataBlocks = blocks
+            };
         }
 
         #endregion

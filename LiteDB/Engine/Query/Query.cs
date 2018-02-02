@@ -27,27 +27,32 @@ namespace LiteDB
         /// <summary>
         /// List of filters of documents
         /// </summary>
-        public List<BsonExpression> Filters { get; set; }
+        public List<BsonExpression> Filters { get; set; } = new List<BsonExpression>();
 
         /// <summary>
         /// List of includes must be done BEFORE filter (it's not optimized but some filter will use this include)
         /// </summary>
-        public List<BsonExpression> IncludeBefore { get; set; }
+        public List<BsonExpression> IncludeBefore { get; set; } = new List<BsonExpression>();
 
         /// <summary>
         /// List of includes must be done AFTER filter (it's optimized because will include result only)
         /// </summary>
-        public List<BsonExpression> IncludeAfter { get; set; }
+        public List<BsonExpression> IncludeAfter { get; set; } = new List<BsonExpression>();
 
         /// <summary>
-        /// List of expression to order by results
+        /// Expression to order by resultset
         /// </summary>
-        public List<OrderBy> OrderBy { get; set; }
+        public BsonExpression OrderBy { get; set; } = null;
+
+        /// <summary>
+        /// Order used in OrderBy expression
+        /// </summary>
+        public int Order { get; set; } = Query.Ascending;
 
         /// <summary>
         /// Expression to group by result generation a new documents { key: [GroupByExpress], values: [Documents] }
         /// </summary>
-        public BsonExpression GroupBy { get; set; }
+        public BsonExpression GroupBy { get; set; } = null;
 
         /// <summary>
         /// Limit resultset

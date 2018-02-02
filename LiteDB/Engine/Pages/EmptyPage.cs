@@ -12,6 +12,10 @@ namespace LiteDB
         /// </summary>
         public override PageType PageType { get { return PageType.Empty; } }
 
+        private EmptyPage()
+        {
+        }
+
         public EmptyPage(uint pageID)
             : base(pageID)
         {
@@ -32,6 +36,20 @@ namespace LiteDB
 
         protected override void WriteContent(ByteWriter writer)
         {
+        }
+
+        public override BasePage Clone()
+        {
+            return new EmptyPage
+            {
+                // base page
+                PageID = this.PageID,
+                PrevPageID = this.PrevPageID,
+                NextPageID = this.NextPageID,
+                ItemCount = this.ItemCount,
+                FreeBytes = this.FreeBytes,
+                TransactionID = this.TransactionID
+            };
         }
 
         #endregion

@@ -22,6 +22,10 @@ namespace LiteDB
         /// </summary>
         public Dictionary<ushort, IndexNode> Nodes => _nodes;
 
+        private IndexPage()
+        {
+        }
+
         public IndexPage(uint pageID)
             : base(pageID)
         {
@@ -117,6 +121,26 @@ namespace LiteDB
                     writer.Write(node.Next[j]);
                 }
             }
+        }
+
+        public override BasePage Clone()
+        {
+            var nodes = new Dictionary<ushort, IndexNode>(_nodes.Count);
+
+            foreach (var item in _nodes) nodes.Add(item.Key, item.Value.Clone());
+
+            return new IndexPage
+            {
+                // base page
+                PageID = this.PageID,
+                PrevPageID = this.PrevPageID,
+                NextPageID = this.NextPageID,
+                ItemCount = this.ItemCount,
+                FreeBytes = this.FreeBytes,
+                TransactionID = this.TransactionID,
+                // index page
+                _nodes = nodes
+            };
         }
 
         #endregion

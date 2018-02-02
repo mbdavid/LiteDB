@@ -77,7 +77,6 @@ namespace LiteDB
 
         public CollectionIndex()
         {
-            this.Clear();
         }
 
         /// <summary>
@@ -89,10 +88,28 @@ namespace LiteDB
             this.Expression = string.Empty;
             this.Unique = false;
             this.HeadNode = PageAddress.Empty;
+            this.TailNode = PageAddress.Empty;
             this.FreeIndexPageID = uint.MaxValue;
             this.MaxLevel = 1;
             this.KeyCount = 0;
             this.UniqueKeyCount = 0;
+        }
+
+        public CollectionIndex Clone()
+        {
+            return new CollectionIndex
+            {
+                Slot = this.Slot,
+                Name = this.Name,
+                Expression = this.Expression,
+                Unique = this.Unique,
+                HeadNode = this.HeadNode,
+                TailNode = this.TailNode,
+                FreeIndexPageID = this.FreeIndexPageID,
+                MaxLevel = this.MaxLevel,
+                KeyCount = this.KeyCount,
+                UniqueKeyCount = this.UniqueKeyCount
+            };
         }
     }
 }

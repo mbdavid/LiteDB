@@ -9,6 +9,7 @@ namespace LiteDB
 {
     public partial class BsonExpression
     {
+        public bool IsPath { get; internal set; }
         #region Year/Month/Day/Hour/Minute/Second
 
         /// <summary>

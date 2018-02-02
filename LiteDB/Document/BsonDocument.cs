@@ -27,6 +27,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get/Set poisition of this document inside database. It's filled when used in Find operation.
+        /// </summary>
+        internal PageAddress RawId { get; set; } = PageAddress.Empty;
+
+        /// <summary>
         /// Get/Set a field for document. Fields are case sensitive
         /// </summary>
         public BsonValue this[string name]

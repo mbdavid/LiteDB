@@ -16,57 +16,56 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            File.Delete(datafile);
+            // File.Delete(datafile);
 
-            var sb = new StringBuilder();
-            var sw = new Stopwatch();
-
-            sw.Start();
+            var timer = new Stopwatch();
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
             {
-                //using (var t = db.BeginTrans())
-                //{
-                //    db.CreateCollection("col1", t);
-                //    db.CreateCollection("col2", t);
-                //    db.CreateCollection("col3", t);
-                //    db.CreateCollection("col4", t);
-                //
-                //    t.Commit();
-                //
-                //    sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
-                //}
+                // var t0 = db.Insert("col1", ReadDocuments(1, 100000, false, false));
+                // 
+                // db.EnsureIndex("col1", "age", "$.age");
 
-                var t0 = db.Insert("col1", ReadDocuments(1, 200, false, true));
-                //var t1 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
-                //var t2 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
-                //var t3 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
+                var input = "0";
 
-                //db.DropCollection("col1");
+                // Console.WriteLine("Count: " + db.Find("col1", new Query { Index = Index.EQ("age", 22), KeyOnly = true }).Count());
 
-                //Task.WaitAll(new Task[] { t0, t1, t2, t3, t3 });
+                while (input != "")
+                {
+                    var offset = Convert.ToInt32(input);
+                    var limit = 10;
 
-                //var r0 = db.FindById("col2", 2000);
+                    timer.Restart();
 
-                //Console.WriteLine(JsonSerializer.Serialize(r0, true));
+                    using (var t = db.BeginTrans())
+                    {
+                        var query = new Query
+                        {
+                            Index = Index.EQ("age", 22),
+                            Offset = offset,
+                            Limit = limit,
+                            //OrderBy = new BsonExpression("$.name")
+                        };
 
-                sb.AppendLine("Before:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
-                Console.WriteLine("Total ms: " + sw.ElapsedMilliseconds);
+                        var result = db.Find("col1", query, t);
 
-                db.Checkpoint();
+                        foreach (var doc in result)
+                        {
+                            Console.WriteLine(
+                                doc["_id"].AsString.PadRight(6) + " - " +
+                                doc["name"].AsString.PadRight(30) + "  -> " +
+                                doc["age"].AsInt32);
+                        }
+                    }
 
-                sb.AppendLine("After:\n" + JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true));
+                    timer.Stop();
 
+                    Console.Write("\n({0}ms) => Enter skip index: ", timer.ElapsedMilliseconds);
 
+                    input = Console.ReadLine();
+                    //input = "";
+                }
             }
-
-            sw.Stop();
-
-            Console.WriteLine("Total ms: " + sw.ElapsedMilliseconds);
-
-            var debug = sb.ToString();
-
-            //Console.WriteLine(debug);
 
             Console.WriteLine("End");
             Console.ReadKey();

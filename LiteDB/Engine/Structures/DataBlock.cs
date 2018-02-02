@@ -42,5 +42,19 @@ namespace LiteDB
             this.ExtendPageID = uint.MaxValue;
             this.Data = new byte[0];
         }
+
+        public DataBlock Clone()
+        {
+            var data = new byte[this.Data.Length];
+
+            Buffer.BlockCopy(this.Data, 0, data, 0, data.Length);
+
+            return new DataBlock
+            {
+                Position = this.Position,
+                ExtendPageID = this.ExtendPageID,
+                Data = data
+            };
+        }
     }
 }

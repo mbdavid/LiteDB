@@ -33,6 +33,8 @@ namespace LiteDB
         public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
         public const int INVALID_INDEX_NAME = 129;
         public const int INVALID_COLLECTION_NAME = 130;
+        public const int TEMP_ENGINE_ALREADY_DEFINED = 131;
+        public const int INVALID_EXPRESSION_TYPE = 132;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -115,6 +117,16 @@ namespace LiteDB
         internal static LiteException IndexDropId()
         {
             return new LiteException(INDEX_DROP_ID, "Primary key index '_id' can't be dropped.");
+        }
+
+        internal static Exception TempEngineAlreadyDefined()
+        {
+            return new LiteException(TEMP_ENGINE_ALREADY_DEFINED, "Temporary engine already defined or auto created.");
+        }
+
+        internal static Exception InvalidExpressionType(BsonExpression path)
+        {
+            return new LiteException(INVALID_EXPRESSION_TYPE, "Expression '{0}' must be a path only.", path.Source);
         }
 
         internal static LiteException IndexLimitExceeded(string collection)

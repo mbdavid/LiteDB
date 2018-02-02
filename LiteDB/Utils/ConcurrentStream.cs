@@ -50,7 +50,9 @@ namespace LiteDB
             lock(_stream)
             {
                 _stream.Position = _position;
-                return _stream.Read(buffer, offset, count);
+                var read = _stream.Read(buffer, offset, count);
+                _position = _stream.Position;
+                return read;
             }
         }
 
@@ -61,6 +63,7 @@ namespace LiteDB
             {
                 _stream.Position = _position;
                 _stream.Write(buffer, offset, count);
+                _position = _stream.Position;
             }
         }
     }

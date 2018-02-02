@@ -202,7 +202,7 @@ namespace LiteDB
         public void CreateDatabase(string password, long initialSize)
         {
             // create a new header page in bytes (fixed in 0)
-            var header = new HeaderPage
+            var header = new HeaderPage(0)
             {
                 Salt = AesEncryption.Salt(),
                 LastPageID = 2
@@ -215,7 +215,7 @@ namespace LiteDB
             }
 
             // create collection list page (fixed in 1)
-            var colList = new CollectionListPage();
+            var colList = new CollectionListPage(1);
 
             // create empty page just for lock control (fixed in 2)
             var locker = new EmptyPage(2);

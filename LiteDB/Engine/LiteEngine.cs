@@ -33,6 +33,32 @@ namespace LiteDB
 
         private ConcurrentQueue<LiteTransaction> _transactions = new ConcurrentQueue<LiteTransaction>();
 
+        private LiteEngine _tempdb = null;
+        private bool _disposeTempdb = false;
+
+        /// <summary>
+        /// Get/Set temporary engine database used to sort data
+        /// </summary>
+        public LiteEngine TempDB
+        {
+            get
+            {
+                if (_tempdb == null)
+                {
+                    _tempdb = new LiteEngine(new ConnectionString { Filename = ":temp:" });
+                }
+
+                return _tempdb;
+            }
+            set
+            {
+                if (_tempdb != null) throw LiteException.TempEngineAlreadyDefined();
+
+                _tempdb = value;
+                _disposeTempdb = false;
+            }
+        }
+
         /// <summary>
         /// Get log instance for debug operations
         /// </summary>
@@ -125,6 +151,11 @@ namespace LiteDB
             if (_datafile != null)
             {
                 _datafile.Dispose();
+            }
+
+            if (_disposeTempdb)
+            {
+                _tempdb.Dispose();
             }
         }
     }

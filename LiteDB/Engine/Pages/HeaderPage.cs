@@ -85,8 +85,12 @@ namespace LiteDB
         /// </summary>
         public string[] TransactionCollections { get; set; }
 
-        public HeaderPage()
-            : base(0)
+        private HeaderPage()
+        {
+        }
+
+        public HeaderPage(uint pageID)
+            : base(pageID)
         {
             this.ItemCount = 1; // fixed for header
             this.FreeBytes = 0; // no free bytes on header
@@ -107,27 +111,19 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create new copy of header page and keep non-changed values
+        /// Create a confirm wal page cloning this page and update some fields - after this page writes on disk, transaction are commited
         /// </summary>
-        public HeaderPage Copy(Guid transactionID, uint freeEmptyPageID, string[] transactionCollections)
+        public HeaderPage CreateConfirmPage(Guid transactionID, uint freeEmptyPageID, string[] transactionCollections)
         {
-            return new HeaderPage
-            {
-                TransactionID = transactionID,
-                Password = this.Password,
-                Salt = this.Salt,
-                FreeEmptyPageID = freeEmptyPageID,
-                LastPageID = this.LastPageID,
-                CreationTime = this.CreationTime,
-                LastCommit = DateTime.Now, // update last commit datetime
-                LastCheckpoint = this.LastCheckpoint,
-                LastAnalyze = this.LastAnalyze,
-                LastVaccum = this.LastVaccum,
-                LastShrink = this.LastShrink,
-                CommitCount = this.CommitCount + 1, // increment counter
-                CheckpointCounter = this.CheckpointCounter,
-                TransactionCollections = transactionCollections
-            };
+            var page = this.Clone() as HeaderPage;
+
+            page.TransactionID = transactionID;
+            page.FreeEmptyPageID = freeEmptyPageID;
+            page.TransactionCollections = transactionCollections;
+            page.CommitCount++;
+            page.LastCommit = DateTime.Now;
+
+            return page;
         }
 
         #region Read/Write pages
@@ -172,6 +168,34 @@ namespace LiteDB
             writer.Write(this.CheckpointCounter);
 
             writer.Write(string.Join(",", this.TransactionCollections));
+        }
+
+        public override BasePage Clone()
+        {
+            return new HeaderPage
+            {
+                // base page
+                PageID = this.PageID,
+                PrevPageID = this.PrevPageID,
+                NextPageID = this.NextPageID,
+                ItemCount = this.ItemCount,
+                FreeBytes = this.FreeBytes,
+                TransactionID = this.TransactionID,
+                // header page
+                Password = this.Password,
+                Salt = this.Salt,
+                FreeEmptyPageID = this.FreeEmptyPageID,
+                LastPageID = this.LastPageID,
+                CreationTime = this.CreationTime,
+                LastCommit = this.LastCommit,
+                LastCheckpoint = this.LastCheckpoint,
+                LastAnalyze = this.LastAnalyze,
+                LastVaccum = this.LastVaccum,
+                LastShrink = this.LastShrink,
+                CommitCount = this.CommitCount,
+                CheckpointCounter = this.CheckpointCounter,
+                TransactionCollections = this.TransactionCollections
+            };
         }
 
         #endregion

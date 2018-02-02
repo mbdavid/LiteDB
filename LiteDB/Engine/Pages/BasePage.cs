@@ -65,6 +65,10 @@ namespace LiteDB
         /// </summary>
         public bool IsDirty { get; set; }
 
+        public BasePage()
+        {
+        }
+
         public BasePage(uint pageID)
         {
             this.PageID = pageID;
@@ -155,8 +159,8 @@ namespace LiteDB
             var type = typeof(T);
 
             // casting using "as T" #90 / thanks @Skysper
-            if (type == typeof(HeaderPage)) return new HeaderPage() as T;
-            if (type == typeof(CollectionListPage)) return new CollectionListPage() as T;
+            if (type == typeof(HeaderPage)) return new HeaderPage(pageID) as T;
+            if (type == typeof(CollectionListPage)) return new CollectionListPage(pageID) as T;
             if (type == typeof(CollectionPage)) return new CollectionPage(pageID) as T;
             if (type == typeof(IndexPage)) return new IndexPage(pageID) as T;
             if (type == typeof(DataPage)) return new DataPage(pageID) as T;
@@ -174,13 +178,13 @@ namespace LiteDB
             switch (pageType)
             {
                 case PageType.Collection: return new CollectionPage(pageID);
-                case PageType.CollectionList: return new CollectionListPage();
+                case PageType.CollectionList: return new CollectionListPage(pageID);
                 case PageType.Index: return new IndexPage(pageID);
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);
                 case PageType.Empty: return new EmptyPage(pageID);
                 // use Header as default, because header page will read fixed HEADER_INFO and validate file format (if is not valid datafile)
-                default: return new HeaderPage();
+                default: return new HeaderPage(pageID);
             }
         }
 
@@ -212,11 +216,7 @@ namespace LiteDB
         /// <summary>
         /// Make clone instance of this Page - by default: convert to bytes and read again (can be optimized)
         /// </summary>
-        public virtual BasePage Clone()
-        {
-            var buffer = this.WritePage();
-            return BasePage.ReadPage(buffer);
-        }
+        public abstract BasePage Clone();
 
         public override string ToString()
         {

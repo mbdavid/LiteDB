@@ -27,10 +27,14 @@ namespace LiteDB
         /// <summary>
         /// Get a dictionary with all collection pages with pageID link
         /// </summary>
-        private Dictionary<string, uint> _collectionPages { get; set; }
+        private Dictionary<string, uint> _collectionPages;
 
-        public CollectionListPage()
-            : base(1)
+        private CollectionListPage()
+        {
+        }
+
+        public CollectionListPage(uint pageID)
+            : base(pageID)
         {
             this.ItemCount = 0;
             this.UserVersion = 0;
@@ -109,6 +113,23 @@ namespace LiteDB
                 writer.Write(col.Key);
                 writer.Write(col.Value);
             }
+        }
+
+        public override BasePage Clone()
+        {
+            return new CollectionListPage
+            {
+                // base page
+                PageID = this.PageID,
+                PrevPageID = this.PrevPageID,
+                NextPageID = this.NextPageID,
+                ItemCount = this.ItemCount,
+                FreeBytes = this.FreeBytes,
+                TransactionID = this.TransactionID,
+                // collection list page
+                UserVersion = this.UserVersion,
+                _collectionPages = new Dictionary<string, uint>(_collectionPages, StringComparer.OrdinalIgnoreCase)
+            };
         }
 
         #endregion

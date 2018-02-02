@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -105,6 +106,10 @@ namespace LiteDB
         /// </summary>
         public BsonDocument CacheDocument { get; set; }
 
+        private IndexNode()
+        {
+        }
+
         public IndexNode(byte level)
         {
             this.Position = PageAddress.Empty;
@@ -119,6 +124,22 @@ namespace LiteDB
                 this.Prev[i] = PageAddress.Empty;
                 this.Next[i] = PageAddress.Empty;
             }
+        }
+
+        public IndexNode Clone()
+        {
+            return new IndexNode
+            {
+                Position = this.Position,
+                Slot = this.Slot,
+                Key = new BsonValue(this.Key.RawValue),
+                KeyLength = this.KeyLength,
+                PrevNode = this.PrevNode,
+                NextNode = this.NextNode,
+                DataBlock = this.DataBlock,
+                Prev = this.Prev.ToArray(),
+                Next = this.Next.ToArray()
+            };
         }
     }
 
