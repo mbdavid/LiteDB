@@ -125,11 +125,7 @@ namespace LiteDB
 
         public override BasePage Clone()
         {
-            var nodes = new Dictionary<ushort, IndexNode>(_nodes.Count);
-
-            foreach (var item in _nodes) nodes.Add(item.Key, item.Value.Clone());
-
-            return new IndexPage
+            var page = new IndexPage
             {
                 // base page
                 PageID = this.PageID,
@@ -139,8 +135,12 @@ namespace LiteDB
                 FreeBytes = this.FreeBytes,
                 TransactionID = this.TransactionID,
                 // index page
-                _nodes = nodes
+                _nodes = new Dictionary<ushort, IndexNode>()
             };
+
+            foreach (var item in _nodes) page._nodes.Add(item.Key, item.Value.Clone(page));
+
+            return page;
         }
 
         #endregion

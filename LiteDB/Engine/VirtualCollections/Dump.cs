@@ -17,7 +17,7 @@ namespace LiteDB
                 // skip page 3 (lock page)
                 if (position != BasePage.GetPagePosition(2))
                 {
-                    var page = _datafile.ReadPage(position);
+                    var page = _datafile.ReadPage(position, false);
 
                     yield return this.DumpPage(page);
                 }

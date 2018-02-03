@@ -43,7 +43,7 @@ namespace LiteDB
             this.Data = new byte[0];
         }
 
-        public DataBlock Clone()
+        public DataBlock Clone(DataPage page)
         {
             var data = new byte[this.Data.Length];
 
@@ -51,6 +51,7 @@ namespace LiteDB
 
             return new DataBlock
             {
+                Page = page,
                 Position = this.Position,
                 ExtendPageID = this.ExtendPageID,
                 Data = data

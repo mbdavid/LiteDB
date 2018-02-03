@@ -16,15 +16,14 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            // File.Delete(datafile);
+            File.Delete(datafile);
 
             var timer = new Stopwatch();
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile }))
             {
-                // var t0 = db.Insert("col1", ReadDocuments(1, 100000, false, false));
-                // 
-                // db.EnsureIndex("col1", "age", "$.age");
+                db.EnsureIndex("col1", "age", "$.age");
+                db.Insert("col1", ReadDocuments(1, 100000, false, false));
 
                 var input = "0";
 
@@ -44,7 +43,7 @@ namespace LiteDB.Demo
                             Index = Index.EQ("age", 22),
                             Offset = offset,
                             Limit = limit,
-                            //OrderBy = new BsonExpression("$.name")
+                            OrderBy = new BsonExpression("$.name")
                         };
 
                         var result = db.Find("col1", query, t);

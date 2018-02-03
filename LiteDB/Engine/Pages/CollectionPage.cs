@@ -84,7 +84,7 @@ namespace LiteDB
 
             for (var i = 0; i < _indexes.Length; i++)
             {
-                _indexes[i] = new CollectionIndex() { Page = this, Slot = i, FreeIndexPageID = uint.MaxValue, MaxLevel = 1 };
+                _indexes[i] = new CollectionIndex() { Page = this, Slot = i };
             }
         }
 
@@ -137,7 +137,7 @@ namespace LiteDB
 
         public override BasePage Clone()
         {
-            return new CollectionPage
+            var page = new CollectionPage
             {
                 // base page
                 PageID = this.PageID,
@@ -151,9 +151,12 @@ namespace LiteDB
                 FreeDataPageID = this.FreeDataPageID,
                 DocumentCount = this.DocumentCount,
                 Sequence = this.Sequence,
-                CreationTime = this.CreationTime,
-                _indexes = _indexes.Select(x => x.Clone()).ToArray()
+                CreationTime = this.CreationTime
             };
+
+            page._indexes = _indexes.Select(x => x.Clone(page)).ToArray();
+
+            return page;
         }
 
         #endregion

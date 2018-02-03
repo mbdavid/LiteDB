@@ -106,7 +106,7 @@ namespace LiteDB
             try
             {
                 // get header from disk (not current header)
-                var header = _datafile.ReadPage(0) as HeaderPage;
+                var header = _datafile.ReadPage(0, true) as HeaderPage;
                 HeaderPage lastHeader = null;
 
                 // get first page position in wal and datafile length
@@ -118,7 +118,7 @@ namespace LiteDB
 
                 while (position < length)
                 {
-                    var page = _datafile.ReadPage(position);
+                    var page = _datafile.ReadPage(position, false);
 
                     position += BasePage.PAGE_SIZE;
 
@@ -166,7 +166,7 @@ namespace LiteDB
         private void LoadConfirmedTransactions()
         {
             // get header from disk
-            var header = _datafile.ReadPage(0) as HeaderPage;
+            var header = _datafile.ReadPage(0, false) as HeaderPage;
 
             // get first page position in wal and datafile length
             var position = BasePage.GetPagePosition(header.LastPageID + 1);
@@ -175,7 +175,7 @@ namespace LiteDB
             // read all wal area to look for confirm HeaderPages
             while(position < length)
             {
-                var page = _datafile.ReadPage(position);
+                var page = _datafile.ReadPage(position, false);
 
                 position += BasePage.PAGE_SIZE;
 

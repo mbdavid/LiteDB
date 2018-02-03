@@ -209,15 +209,11 @@ namespace LiteDB
                         }
 
                         // if memory pages excedded limit size, flush to temp disk
-                        transaction.Safepoint();
+                        // transaction.Safepoint();
                     }
                 }
 
-                // if offset is lower than limit, take nodes from skip from begin
-                // if offset is higher than limit, take nodes from end and revert order (avoid lots of skip)
-                var find = offset < limit ?
-                    indexer.FindAll(index, order).Skip(offset).Take(limit) : // get from original order
-                    indexer.FindAll(index, -order).Take(limit).Reverse(); // avoid long skips, take from end and revert
+                var find = indexer.FindAll(index, order).Skip(offset).Take(limit);
 
                 foreach (var node in find)
                 {
@@ -239,7 +235,7 @@ namespace LiteDB
                 // open read transaction because i dont want save in disk (only in wal if exceed memory usage)
                 return transaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false, snapshot =>
                 {
-                    return DoOrderBy(transaction, snapshot).ToList();
+                    return DoOrderBy(transaction, snapshot);
                 });
             }
         }

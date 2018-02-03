@@ -64,7 +64,7 @@ namespace LiteDB
         public void EnableEncryption(string password)
         {
             // read header from disk in page 0
-            var header = this.ReadPage(0) as HeaderPage;
+            var header = this.ReadPage(0, false) as HeaderPage;
 
             // test hash password
             var hash = AesEncryption.HashPBKDF2(password, header.Salt);
@@ -83,9 +83,9 @@ namespace LiteDB
         public long Length { get => _writer.Length; set => _writer.SetLength(value); }
 
         /// <summary>
-        /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance
+        /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
         /// </summary>
-        public BasePage ReadPage(long position)
+        public BasePage ReadPage(long position, bool clone)
         {
             var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
@@ -94,7 +94,7 @@ namespace LiteDB
                 // position cursor
                 stream.Position = position;
 
-                return this.ReadPage(stream);
+                return this.ReadPage(stream, clone);
             }
             finally
             {
@@ -106,13 +106,13 @@ namespace LiteDB
         /// <summary>
         /// Read page from current reader stream position
         /// </summary>
-        private BasePage ReadPage(Stream stream)
+        private BasePage ReadPage(Stream stream, bool clone)
         {
             // if page are inside local cache, return new instance of this page (avoid disk read)
             if (_cache.TryGetValue(stream.Position, out var cached))
             {
-                // return cloned page
-                return cached.Clone();
+                // if read for write transaction, clone page, otherwise, get same
+                return clone ? cached.Clone() : cached;
             }
 
             var position = stream.Position;

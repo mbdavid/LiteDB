@@ -110,7 +110,7 @@ namespace LiteDB
                 _wal.Checkpoint();
 
                 // load header page
-                _header = _datafile.ReadPage(0) as HeaderPage;
+                _header = _datafile.ReadPage(0, true) as HeaderPage;
             }
             catch (Exception)
             {

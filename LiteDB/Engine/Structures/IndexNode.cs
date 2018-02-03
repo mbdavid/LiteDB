@@ -126,19 +126,21 @@ namespace LiteDB
             }
         }
 
-        public IndexNode Clone()
+        public IndexNode Clone(IndexPage page)
         {
             return new IndexNode
             {
+                Page = page,
                 Position = this.Position,
                 Slot = this.Slot,
-                Key = new BsonValue(this.Key.RawValue),
+                Key = this.Key,
                 KeyLength = this.KeyLength,
                 PrevNode = this.PrevNode,
                 NextNode = this.NextNode,
                 DataBlock = this.DataBlock,
                 Prev = this.Prev.ToArray(),
-                Next = this.Next.ToArray()
+                Next = this.Next.ToArray(),
+                CacheDocument = this.CacheDocument
             };
         }
     }

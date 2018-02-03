@@ -20,12 +20,12 @@ namespace LiteDB
         /// <summary>
         /// Index name
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         /// <summary>
         /// Get index expression (path or expr)
         /// </summary>
-        public string Expression { get; set; }
+        public string Expression { get; set; } = "";
 
         /// <summary>
         /// Indicate if this index has distinct values only
@@ -35,32 +35,32 @@ namespace LiteDB
         /// <summary>
         /// Head page address for this index
         /// </summary>
-        public PageAddress HeadNode { get; set; }
+        public PageAddress HeadNode { get; set; } = PageAddress.Empty;
 
         /// <summary>
         /// A link pointer to tail node
         /// </summary>
-        public PageAddress TailNode { get; set; }
+        public PageAddress TailNode { get; set; } = PageAddress.Empty;
 
         /// <summary>
         /// Get a reference for the free list index page - its private list per collection/index (must be a Field to be used as reference parameter)
         /// </summary>
-        public uint FreeIndexPageID;
+        public uint FreeIndexPageID = uint.MaxValue;
 
         /// <summary>
         /// Persist max level used
         /// </summary>
-        public byte MaxLevel { get; set; }
+        public byte MaxLevel { get; set; } = 1;
 
         /// <summary>
         /// Counter of keys in this index
         /// </summary>
-        public uint KeyCount { get; set; }
+        public uint KeyCount { get; set; } = 0;
 
         /// <summary>
         /// Counter of unique keys in this index (update only in analze command)
         /// </summary>
-        public uint UniqueKeyCount { get; set; }
+        public uint UniqueKeyCount { get; set; } = 0;
 
         /// <summary>
         /// Returns if this index slot is empty and can be used as new index
@@ -84,8 +84,8 @@ namespace LiteDB
         /// </summary>
         public void Clear()
         {
-            this.Name = string.Empty;
-            this.Expression = string.Empty;
+            this.Name = "";
+            this.Expression = "";
             this.Unique = false;
             this.HeadNode = PageAddress.Empty;
             this.TailNode = PageAddress.Empty;
@@ -95,10 +95,11 @@ namespace LiteDB
             this.UniqueKeyCount = 0;
         }
 
-        public CollectionIndex Clone()
+        public CollectionIndex Clone(CollectionPage page)
         {
             return new CollectionIndex
             {
+                Page = page,
                 Slot = this.Slot,
                 Name = this.Name,
                 Expression = this.Expression,
