@@ -16,16 +16,13 @@ namespace LiteDB
     /// </summary>
     internal class FileService : IDisposable
     {
-        private const int MAX_CACHE_SIZE = 1000;
-
-        private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
-
         private ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
         private IDiskFactory _factory;
         private TimeSpan _timeout;
         private long _sizeLimit;
         private AesEncryption _crypto = null;
         private Logger _log;
+        private CacheService _cache;
 
         private Stream _writer;
         private long _writerPosition = 0;
@@ -40,6 +37,9 @@ namespace LiteDB
             _timeout = timeout;
             _sizeLimit = sizeLimit;
             _log = log;
+
+            // initialize cache service
+            _cache = new CacheService(_log);
 
             // create writer instance (single writer)
             _writer = factory.GetStream();
@@ -94,6 +94,11 @@ namespace LiteDB
         /// </summary>
         public BasePage ReadPage(long position, bool clone)
         {
+            // try get page from cache
+            var page = _cache.GetPage(position, clone);
+
+            if (page != null) return page;
+
             var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
 
             try
@@ -101,50 +106,27 @@ namespace LiteDB
                 // position cursor
                 stream.Position = position;
 
-                return this.ReadPage(stream, clone);
+                var buffer = new byte[BasePage.PAGE_SIZE];
+
+                // read bytes from data file
+                stream.Read(buffer, 0, BasePage.PAGE_SIZE);
+
+                // if datafile is encrypted and is not first header page
+                var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
+
+                // convert bytes into page
+                page = BasePage.ReadPage(bytes);
+
+                // add fresh disk page into cache
+                _cache.AddPage(position, page);
+
+                return page;
             }
             finally
             {
                 // add stream back to pool
                 _pool.Add(stream);
             }
-        }
-
-        /// <summary>
-        /// Read page from current reader stream position
-        /// </summary>
-        private BasePage ReadPage(Stream stream, bool clone)
-        {
-            // if page are inside local cache, return new instance of this page (avoid disk read)
-            if (_cache.TryGetValue(stream.Position, out var cached))
-            {
-                // if read for write transaction, clone page, otherwise, get same
-                return clone ? cached.Clone() : cached;
-            }
-
-            var position = stream.Position;
-            var buffer = new byte[BasePage.PAGE_SIZE];
-
-            // read bytes from data file
-            stream.Read(buffer, 0, BasePage.PAGE_SIZE);
-
-            // if datafile is encrypted and is not first header page
-            var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
-
-            // convert bytes into page
-            var page = BasePage.ReadPage(bytes);
-
-            // add this page to local cache or clear cache if reach max limit (must consider queue size)
-            // if (_cache.Count < MAX_CACHE_SIZE + _queue.Count)
-            // {
-                _cache.AddOrUpdate(position, page, (pos, pg) => page);
-            // }
-            // else
-            // {
-                _cache.Clear();
-            // }
-
-            return page;
         }
 
         /// <summary>
@@ -157,11 +139,12 @@ namespace LiteDB
         /// </summary>
         public void WritePages(IEnumerable<BasePage> pages, bool absolute, IDictionary<uint, PagePosition> pagePositions)
         {
+            // lock writer but don't use writer here (will be used only in async writer task)
             lock (_writer)
             {
                 foreach (var page in pages)
                 {
-                    // mark page as dirty (will be clean on async write)
+                    // mark sure that page are marked as dirty (will be clean on async write)
                     page.IsDirty = true;
 
                     // if absolute position, set cursor position to pageID (otherwise use current position increment)
@@ -174,7 +157,7 @@ namespace LiteDB
                     if (_writerPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
                     // add dirty page to cache
-                    _cache.AddOrUpdate(_writerPosition, page, (pos, pg) => page);
+                    _cache.AddPage(_writerPosition, page);
 
                     // add to writer queue
                     _queue.Enqueue(new Tuple<long, BasePage>(_writerPosition, page));
@@ -186,13 +169,13 @@ namespace LiteDB
                     }
 
                     _writerPosition += BasePage.PAGE_SIZE;
+                }
 
-                    // if async writer are not running, start now
-                    if (_async == null || _async.Status == TaskStatus.RanToCompletion)
-                    {
-                        _async = this.CreateAsyncWriter();
-                        _async.Start();
-                    }
+                // if async writer are not running, start now
+                if (_async == null || _async.Status == TaskStatus.RanToCompletion)
+                {
+                    _async = this.CreateAsyncWriter();
+                    _async.Start();
                 }
             }
         }
@@ -213,9 +196,6 @@ namespace LiteDB
                     var position = item.Item1;
                     var page = item.Item2;
 
-                    // mask as clean (can be removed from cache)
-                    page.IsDirty = false;
-
                     var buffer = page.WritePage();
 
                     // encrypt if not header page (exclusive on position 0)
@@ -224,6 +204,9 @@ namespace LiteDB
                     _writer.Position = position;
 
                     _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
+
+                    // notify cache that this page is not dirty anymore
+                    _cache.CleanDirtyPage(position, page);
                 }
             });
         }

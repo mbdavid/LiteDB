@@ -11,17 +11,25 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        private static string datafile = @"d:\git\temp\app-5.db";
+        private static string datafile = @"c:\git\temp\app-5.db";
 
         static void Main(string[] args)
         {
-            while (true) Run();
+            var total = 0d;
+            var counter = 0d;
+
+            while (true)
+            {
+                total += Run();
+                counter++;
+                Console.WriteLine("=> Média: " + (total / counter).ToString("0") + " (" + counter + ")");
+            }
 
             Console.WriteLine("End");
             Console.ReadKey();
         }
 
-        static void Run()
+        static long Run()
         {
             File.Delete(datafile);
 
@@ -81,6 +89,7 @@ namespace LiteDB.Demo
             Console.WriteLine("Finish checkpoint: " + tCheckpoint);
             Console.WriteLine("Finish close database: " + tClose);
 
+            return tClose;
         }
 
 
