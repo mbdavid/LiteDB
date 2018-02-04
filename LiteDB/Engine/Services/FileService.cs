@@ -1,4 +1,5 @@
-﻿// sync writer
+﻿// async writer
+// falta controle da cache de paginas sujas vs limpas
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -27,6 +28,11 @@ namespace LiteDB
         private Logger _log;
 
         private Stream _writer;
+        private long _writerPosition = 0;
+
+        // async writer control
+        private ConcurrentQueue<Tuple<long, BasePage>> _queue = new ConcurrentQueue<Tuple<long, BasePage>>();
+        private Task _async;
 
         public FileService(IDiskFactory factory, string password, TimeSpan timeout, long initialSize, long sizeLimit, Logger log)
         {
@@ -46,7 +52,7 @@ namespace LiteDB
             else
             {
                 // if file exits, position at end (to append wal data)
-                _writer.Position = _writer.Length;
+                _writerPosition = _writer.Length;
             }
 
             // lock datafile if stream are FileStream (single process)
@@ -128,15 +134,15 @@ namespace LiteDB
             // convert bytes into page
             var page = BasePage.ReadPage(bytes);
 
-            // add this page to local cache or clear cache if reach max limit
-            if (_cache.Count < MAX_CACHE_SIZE)
-            {
+            // add this page to local cache or clear cache if reach max limit (must consider queue size)
+            // if (_cache.Count < MAX_CACHE_SIZE + _queue.Count)
+            // {
                 _cache.AddOrUpdate(position, page, (pos, pg) => page);
-            }
-            else
-            {
+            // }
+            // else
+            // {
                 _cache.Clear();
-            }
+            // }
 
             return page;
         }
@@ -144,7 +150,7 @@ namespace LiteDB
         /// <summary>
         /// Get/Set position of writer stream
         /// </summary>
-        public long WriterPosition { get => _writer.Position; set => _writer.Position = value; }
+        public long WriterPosition { get => _writerPosition; set => _writerPosition = value; }
 
         /// <summary>
         /// Write all pages into datafile using current writer position. Fill pagePositions for each page saved
@@ -155,46 +161,71 @@ namespace LiteDB
             {
                 foreach (var page in pages)
                 {
-                    // serialize page
-                    var buffer = page.WritePage();
+                    // mark page as dirty (will be clean on async write)
+                    page.IsDirty = true;
 
                     // if absolute position, set cursor position to pageID (otherwise use current position increment)
                     if (absolute)
                     {
-                        _writer.Position = BasePage.GetPagePosition(page.PageID);
+                        _writerPosition = BasePage.GetPagePosition(page.PageID);
                     }
 
-                    // get position before write on disk
-                    var position = _writer.Position;
+                    // test max file size (includes wal operations)
+                    if (_writerPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
+
+                    // add dirty page to cache
+                    _cache.AddOrUpdate(_writerPosition, page, (pos, pg) => page);
+
+                    // add to writer queue
+                    _queue.Enqueue(new Tuple<long, BasePage>(_writerPosition, page));
+
+                    // return page position on disk (where will be write on disk)
+                    if (pagePositions != null)
+                    {
+                        pagePositions[page.PageID] = new PagePosition(page.PageID, _writerPosition);
+                    }
+
+                    _writerPosition += BasePage.PAGE_SIZE;
+
+                    // if async writer are not running, start now
+                    if (_async == null || _async.Status == TaskStatus.RanToCompletion)
+                    {
+                        _async = this.CreateAsyncWriter();
+                        _async.Start();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Implement async writer disk in a background task
+        /// </summary>
+        private Task CreateAsyncWriter()
+        {
+            return new Task(() =>
+            {
+                // write all pages that are in queue
+                while (!_queue.IsEmpty)
+                {
+                    // get page from queue
+                    if (!_queue.TryDequeue(out var item)) break;
+
+                    var position = item.Item1;
+                    var page = item.Item2;
+
+                    // mask as clean (can be removed from cache)
+                    page.IsDirty = false;
+
+                    var buffer = page.WritePage();
 
                     // encrypt if not header page (exclusive on position 0)
                     var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
 
-                    // test max file size (includes wal operations)
-                    if (position > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
+                    _writer.Position = position;
 
-                    // write on disk
                     _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
-
-                    // add this page to cache too (mark as clean page)
-                    page.IsDirty = false;
-
-                    // add this page to local cache or clear cache if reach max limit
-                    if (_cache.Count < MAX_CACHE_SIZE)
-                    {
-                        _cache.AddOrUpdate(position, page, (pos, pg) => page);
-                    }
-                    else
-                    {
-                        _cache.Clear();
-                    }
-
-                    if (pagePositions != null)
-                    {
-                        pagePositions[page.PageID] = new PagePosition(page.PageID, position);
-                    }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -232,10 +263,22 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Dispose all stream in pool
+        /// Dispose all stream in pool and async writer
         /// </summary>
         public void Dispose()
         {
+            // if has pages on queue but async writer are not running, run sync
+            if (_queue.IsEmpty == false && _async.Status == TaskStatus.RanToCompletion)
+            {
+                this.CreateAsyncWriter().RunSynchronously();
+            }
+
+            // if async writer are running, wait to finish
+            if (_async != null && _async.Status != TaskStatus.RanToCompletion)
+            {
+                _async.Wait();
+            }
+
             // dispose crypto
             if (_crypto != null)
             {
@@ -244,15 +287,15 @@ namespace LiteDB
 
             if (_factory.CloseOnDispose)
             {
-                // first, dispose all readers
+                // first dispose writer
+                _writer.TryUnlock();
+                _writer.Dispose();
+
+                // after, dispose all readers
                 while (_pool.TryTake(out var stream))
                 {
                     stream.Dispose();
                 }
-
-                // and than dispose writer (writer contains FileLock)
-                _writer.TryUnlock();
-                _writer.Dispose();
             }
         }
     }

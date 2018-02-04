@@ -11,7 +11,7 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        private static string datafile = @"c:\git\temp\app-5.db";
+        private static string datafile = @"d:\git\temp\app-5.db";
 
         static void Main(string[] args)
         {
