@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Represent maximum bytes that all collections names can be used in collection list page
         /// </summary>
-        public const ushort MAX_COLLECTIONS_SIZE = 7500;
+        public const ushort MAX_COLLECTIONS_SIZE = BasePage.PAGE_SIZE - 1000;
 
         /// <summary>
         /// Page type = Transaction

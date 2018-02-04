@@ -79,7 +79,6 @@ namespace LiteDB
                     this.Rollback();
                     throw;
                 }
-
             }
         }
 
@@ -271,8 +270,10 @@ namespace LiteDB
                 this.Rollback();
             }
 
+            // dispose transactio state and date time
             _state = TransactionState.Disposed;
-            DisposeTime = DateTime.Now;
+
+            this.DisposeTime = DateTime.Now;
 
             _locker.ExitTransaction();
         }

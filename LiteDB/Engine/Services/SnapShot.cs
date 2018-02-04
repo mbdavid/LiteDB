@@ -47,6 +47,9 @@ namespace LiteDB
             _mode = SnapshotMode.Read;
             _collectionName = collectionName;
 
+            // enter in read lock mode
+            _locker.EnterRead(_collectionName);
+
             // initialize version and get read version
             this.Initialize();
 
@@ -61,9 +64,14 @@ namespace LiteDB
         {
             if (_mode == SnapshotMode.Read)
             {
+                // enter in reserved mode (exit read first)
+                _locker.ExitRead(_collectionName);
                 _locker.EnterReserved(_collectionName);
 
                 _mode = SnapshotMode.Write;
+
+                // need initialize cache and wal version
+                this.Initialize();
             }
 
             if (_collectionPage == null && addIfNotExits)
@@ -89,12 +97,14 @@ namespace LiteDB
                 _locker.ExitReserved("#collection_page");
             }
 
-            if (_mode == SnapshotMode.Write)
+            if (_mode == SnapshotMode.Read)
+            {
+                _locker.ExitRead(_collectionName);
+            }
+            else
             {
                 _locker.ExitReserved(_collectionName);
             }
-
-            _locker.ExitRead(_collectionName);
         }
 
         /// <summary>

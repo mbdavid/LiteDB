@@ -1,4 +1,5 @@
-﻿using System;
+﻿// sync writer
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace LiteDB
     /// </summary>
     internal class FileService : IDisposable
     {
-        private const int MAX_CACHE_SIZE = 1000;
+        private const int MAX_CACHE_SIZE = 100000;
 
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
 
@@ -243,15 +244,15 @@ namespace LiteDB
 
             if (_factory.CloseOnDispose)
             {
-                // first dispose writer
-                _writer.TryUnlock();
-                _writer.Dispose();
-
-                // after, dispose all readers
+                // first, dispose all readers
                 while (_pool.TryTake(out var stream))
                 {
                     stream.Dispose();
                 }
+
+                // and than dispose writer (writer contains FileLock)
+                _writer.TryUnlock();
+                _writer.Dispose();
             }
         }
     }

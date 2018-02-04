@@ -39,6 +39,11 @@ namespace LiteDB.Demo
             {
                 return 0;
             }
+            catch(Exception ex)
+            {
+                Console.WriteLine("ERROR: " + ex.Message);
+                return 0;
+            }
         }
 
         public static void DropCollection(this LiteEngine engine, string collection)
