@@ -237,7 +237,11 @@ namespace LiteDB
         {
             _log.Write(Logger.DISK, "flush data from memory to disk");
 
+#if HAVE_FLUSH_DISK
+            _stream.Flush(_options.Flush);
+#else
             _stream.Flush();
+#endif
         }
 
         #endregion

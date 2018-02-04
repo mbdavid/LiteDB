@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>net35;net40;netstandard1.3;netstandard2.0</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
-    <AssemblyVersion>4.1.1.0</AssemblyVersion>
-    <FileVersion>4.1.1</FileVersion>
-    <VersionPrefix>4.1.1</VersionPrefix>
+    <AssemblyVersion>4.1.2.0</AssemblyVersion>
+    <FileVersion>4.1.2</FileVersion>
+    <VersionPrefix>4.1.2</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -34,6 +34,7 @@
   HAVE_APP_DOMAIN
   HAVE_PROCESS
   HAVE_ENVIRONMENT
+  HAVE_FLUSH_DISK
   HAVE_SYNC_OVER_ASYNC
   HAVE_LOCK
   HAVE_THREAD_ID
@@ -52,15 +53,15 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <DefineConstants>NET40;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_LOCK;HAVE_THREAD_ID;HAVE_EXPRESSION_ASSIGN;HAVE_ATTR_DEFINED</DefineConstants>
+    <DefineConstants>NET40;HAVE_APP_DOMAIN;HAVE_PROCESS;HAVE_ENVIRONMENT;HAVE_FLUSH_DISK;HAVE_LOCK;HAVE_THREAD_ID;HAVE_EXPRESSION_ASSIGN;HAVE_ATTR_DEFINED</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <DefineConstants>NETSTANDARD13;HAVE_SYNC_OVER_ASYNC;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY</DefineConstants>
+    <DefineConstants>NETSTANDARD13;HAVE_FLUSH_DISK;HAVE_SYNC_OVER_ASYNC;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETSTANDARD20;HAVE_SYNC_OVER_ASYNC;HAVE_LOCK;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY;HAVE_ATTR_DEFINED</DefineConstants>
+    <DefineConstants>NETSTANDARD20;HAVE_FLUSH_DISK;HAVE_SYNC_OVER_ASYNC;HAVE_LOCK;HAVE_TYPE_INFO;HAVE_EXPRESSION_ASSIGN;HAVE_TASK_DELAY;HAVE_ATTR_DEFINED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40'">

@@ -74,6 +74,13 @@ namespace LiteDB
         public bool Async { get; set; } = false;
 #endif
 
+#if HAVE_FLUSH_DISK
+        /// <summary>
+        /// "flush": If true, apply flush direct to disk, ignoring OS cache [FileStream.Flush(true)]
+        /// </summary>
+        public bool Flush { get; set; } = false;
+#endif
+
         /// <summary>
         /// Initialize empty connection string
         /// </summary>
@@ -115,6 +122,10 @@ namespace LiteDB
 #if HAVE_SYNC_OVER_ASYNC
             this.Async = values.GetValue("async", this.Async);
 #endif
+#if HAVE_FLUSH_DISK
+            this.Flush = values.GetValue("flush", this.Flush);
+#endif
+
         }
     }
 }

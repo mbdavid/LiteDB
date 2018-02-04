@@ -67,6 +67,9 @@ namespace LiteDB
 #if HAVE_SYNC_OVER_ASYNC
                 Async = _connectionString.Async,
 #endif
+#if HAVE_FLUSH_DISK
+                Flush = _connectionString.Flush,
+#endif
                 InitialSize = _connectionString.InitialSize,
                 LimitSize = _connectionString.LimitSize,
                 Journal = _connectionString.Journal,
