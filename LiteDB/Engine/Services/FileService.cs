@@ -15,7 +15,7 @@ namespace LiteDB
     /// </summary>
     internal class FileService : IDisposable
     {
-        private const int MAX_CACHE_SIZE = 100000;
+        private const int MAX_CACHE_SIZE = 1000;
 
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
 

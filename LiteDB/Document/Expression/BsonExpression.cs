@@ -68,7 +68,7 @@ namespace LiteDB
             // add this expression to cache if not exists
             if (!_cache.ContainsKey(this.Source))
             {
-                lock(_cache)
+                lock (_cache)
                 {
                     _cache[this.Source] = _func;
                 }

@@ -47,7 +47,7 @@ namespace LiteDB
         public override int Read(byte[] buffer, int offset, int count)
         {
             // lock internal stream and set position before read
-            lock(_stream)
+            lock (_stream)
             {
                 _stream.Position = _position;
                 var read = _stream.Read(buffer, offset, count);

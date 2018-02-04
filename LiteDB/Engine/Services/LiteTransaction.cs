@@ -56,7 +56,7 @@ namespace LiteDB
             // if transaction are commited/aborted do not accept new snapshots
             if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
 
-            lock(_snapshots)
+            lock (_snapshots)
             {
                 var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(collectionName, _header, _transPages, _locker, _wal, _datafile));
 
@@ -141,7 +141,7 @@ namespace LiteDB
             this.PersistDirtyPages();
 
             // lock header page to avoid concurrency when writing on header
-            lock(_header)
+            lock (_header)
             {
                 var newEmptyPageID = _header.FreeEmptyPageID;
 

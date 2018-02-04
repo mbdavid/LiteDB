@@ -7,22 +7,18 @@ namespace LiteDB
 {
     internal static class DictionaryExtensions
     {
-        private static Random _rnd = new Random();
-
         /// <summary>
-        /// Get free index based on random number (fast than search one-by-one)
+        /// Get free index based on dictionary count number (if is in use, move to next number)
         /// </summary>
         public static ushort NextIndex<T>(this Dictionary<ushort, T> dict)
         {
             if (dict.Count == 0) return 0;
 
-            //ushort next = 0;
-            var next = (ushort)_rnd.Next(1, ushort.MaxValue);
+            var next = (ushort)dict.Count;
 
             while (dict.ContainsKey(next))
             {
-                //next++;
-                next = (ushort)_rnd.Next(1, ushort.MaxValue);
+                next++;
             }
 
             return next;

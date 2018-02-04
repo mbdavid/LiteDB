@@ -15,6 +15,14 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
+            while (true) Run();
+
+            Console.WriteLine("End");
+            Console.ReadKey();
+        }
+
+        static void Run()
+        {
             File.Delete(datafile);
 
             var sw = new Stopwatch();
@@ -47,8 +55,13 @@ namespace LiteDB.Demo
                 var t2 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
                 var t3 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
                 var t4 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
-                
                 Task.WaitAll(new Task[] { t1, t2, t3, t4 });
+
+                //db.Insert("col1", ReadDocuments(1, 50000, false, true));
+                //db.Insert("col2", ReadDocuments(1, 50000, false, true));
+                //db.Insert("col3", ReadDocuments(1, 50000, false, true));
+                //db.Insert("col4", ReadDocuments(1, 50000, false, true));
+
 
                 tInsert = sw.ElapsedMilliseconds;
 
@@ -68,8 +81,6 @@ namespace LiteDB.Demo
             Console.WriteLine("Finish checkpoint: " + tCheckpoint);
             Console.WriteLine("Finish close database: " + tClose);
 
-            Console.WriteLine("End");
-            Console.ReadKey();
         }
 
 
