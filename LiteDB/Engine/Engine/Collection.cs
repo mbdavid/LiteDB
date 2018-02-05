@@ -37,18 +37,15 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            // lock collection list page
-            transaction.CreateSnapshot(SnapshotMode.Write, snapshot => true);
-
-            // and now lock collection
-            return transaction.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
+            return transaction.CreateSnapshot(SnapshotMode.Write, snapshot =>
             {
-                // if collection do not exist, just exit
-                if (snapshot.CollectionPage == null) return false;
-
                 var srv = new CollectionService(snapshot);
+                var col = srv.Get(collection);
 
-                srv.Drop(snapshot.CollectionPage);
+                // if collection do not exist, just exit
+                if (col == null) return false;
+
+                srv.Drop(col);
 
                 return true;
             });

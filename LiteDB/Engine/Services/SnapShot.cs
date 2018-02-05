@@ -112,11 +112,14 @@ namespace LiteDB
         /// </summary>
         public void Initialize()
         {
+#if DEBUG
+            if (_localPages.Where(x => x.Value.IsDirty).Count() > 0) throw new Exception("Snapshot initialize cann't contains dirty pages");
+#endif
             _localPages.Clear();
             _readVersion = _wal.CurrentReadVersion;
         }
 
-        #region Page Version functions
+#region Page Version functions
 
         /// <summary>
         /// Get a page for this transaction: try local, wal-index or datafile. Must keep cloned instance of this page in this transaction
@@ -301,6 +304,8 @@ namespace LiteDB
                     _transPages.LastDeletedPage.NextPageID = empty.PageID;
                     _transPages.LastDeletedPage = empty;
                 }
+
+                _transPages.DeletedPages++;
             }
         }
 
@@ -329,9 +334,9 @@ namespace LiteDB
             return this.NewPage<T>();
         }
 
-        #endregion
+#endregion
 
-        #region Add Or Remove do empty list
+#region Add Or Remove do empty list
 
         /// <summary>
         /// Add or Remove a page in a sequence
@@ -477,7 +482,7 @@ namespace LiteDB
             this.AddToFreeList(page, startPage, ref fieldPageID);
         }
 
-        #endregion
+#endregion
 
     }
 }

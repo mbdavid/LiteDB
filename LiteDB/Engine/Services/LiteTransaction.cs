@@ -21,6 +21,9 @@ namespace LiteDB
         internal FileService _datafile;
         internal Logger _log;
 
+        // event to capture when transaction finish
+        internal event EventHandler Done;
+
         // transaction controls
         private Guid _transactionID = Guid.NewGuid();
         private TransactionState _state = TransactionState.New;
@@ -101,8 +104,6 @@ namespace LiteDB
             if (_transPages.PageCount > MAX_PAGES_TRANSACTION)
             {
                 this.PersistDirtyPages();
-
-                _transPages.PageCount = 0;
             }
         }
 
@@ -116,7 +117,7 @@ namespace LiteDB
 
             foreach (var snapshot in _snapshots.Values)
             {
-                // set all dirty pages with my transactionID (do not persist header here, only as confirm page)
+                // set all dirty pages with my transactionID (do not persist header here)
                 var dirty = snapshot.LocalPages.Values
                     .Where(x => x.IsDirty && x.PageID > 0)
                     .ForEach((i, p) => p.TransactionID = _transactionID);
@@ -127,6 +128,9 @@ namespace LiteDB
                 // clear local pages
                 snapshot.LocalPages.Clear();
             }
+
+            // there is no local pages in cache and all dirty pages are in wal area, clear page count
+            _transPages.PageCount = 0;
         }
 
         /// <summary>
@@ -146,15 +150,17 @@ namespace LiteDB
                 var newEmptyPageID = _header.FreeEmptyPageID;
 
                 // if has deleted pages in this transaction, fix FreeEmptyPageID
-                if (_transPages.HasDeletedPages)
+                if (_transPages.DeletedPages > 0)
                 {
-                    _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
-
+                    // now, my free list will starts with first page ID
                     newEmptyPageID = _transPages.FirstDeletedPage.PageID;
 
-                    // if last page was modified, lets save on wal
+                    // if free empty list was not empty, let's fix my last page
                     if (_header.FreeEmptyPageID != uint.MaxValue)
                     {
+                        // update nextPageID of last deleted page to old first page ID
+                        _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
+
                         // this page will write twice on wal, but no problem, only this last version will be saved on data file
                         _datafile.WritePages(new BasePage[] { _transPages.LastDeletedPage }, false, null);
                     }
@@ -276,6 +282,12 @@ namespace LiteDB
             this.DisposeTime = DateTime.Now;
 
             _locker.ExitTransaction();
+
+            // call dispose event
+            if (this.Done != null)
+            {
+                this.Done(this, EventArgs.Empty);
+            }
         }
     }
 }

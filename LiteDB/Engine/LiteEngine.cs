@@ -31,7 +31,7 @@ namespace LiteDB
 
         private BsonWriter _bsonWriter = new BsonWriter();
 
-        private ConcurrentQueue<LiteTransaction> _transactions = new ConcurrentQueue<LiteTransaction>();
+        private ConcurrentDictionary<Guid, LiteTransaction> _transactions = new ConcurrentDictionary<Guid, LiteTransaction>();
 
         private LiteEngine _tempdb = null;
         private bool _disposeTempdb = false;
@@ -129,13 +129,16 @@ namespace LiteDB
         {
             var transaction = new LiteTransaction(_header, _locker, _wal, _datafile, _log);
 
-            // add transaction to queue list to be avaiable for query
-            _transactions.Enqueue(transaction);
+            // add transaction to execution transaction dict
+            _transactions[transaction.TransactionID] = transaction;
 
-            if (_transactions.Count > MAX_TRANSACTION_BUFFER)
+            // remove from transaction list when done
+            transaction.Done += (o, s) =>
             {
-                _transactions.TryDequeue(out var dummy);
-            }
+                var trans = o as LiteTransaction;
+
+                _transactions.TryRemove(trans.TransactionID, out var t);
+            };
 
             return transaction;
         }

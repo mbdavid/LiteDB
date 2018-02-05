@@ -10,12 +10,12 @@ namespace LiteDB
     internal class TransactionPages
     {
         /// <summary>
-        /// 
+        /// Get how many pages are involved in this current transaction across all snapshots
         /// </summary>
         public int PageCount { get; set; } = 0;
 
         /// <summary>
-        /// Handle created pages during transaction (for rollback)
+        /// Handle created pages during transaction (for rollback) - Is a list because order is important
         /// </summary>
         public List<uint> NewPages { get; private set; } = new List<uint>();
 
@@ -30,9 +30,9 @@ namespace LiteDB
         public BasePage LastDeletedPage { get; set; }
 
         /// <summary>
-        /// Indicate with has deleted pages
+        /// Get deleted page count
         /// </summary>
-        public bool HasDeletedPages => this.FirstDeletedPage != null;
+        public int DeletedPages { get; set; }
 
     }
 }

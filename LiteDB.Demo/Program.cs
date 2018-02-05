@@ -15,81 +15,84 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
+            File.Delete(datafile);
+
             var total = 0d;
             var counter = 0d;
 
-            while (true)
+            using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
-                total += Run();
-                counter++;
-                Console.WriteLine("=> Média: " + (total / counter).ToString("0") + " (" + counter + ")");
+                while (true)
+                {
+                    total += Run(db, (int)counter);
+                    counter++;
+                    Console.WriteLine("=> Average: " + (total / counter).ToString("0") + " (" + counter + ")");
+                }
             }
 
             Console.WriteLine("End");
             Console.ReadKey();
         }
 
-        static long Run()
+        static long Run(LiteEngine db, int count)
         {
-            File.Delete(datafile);
-
             var sw = new Stopwatch();
 
-            long tOpen, tCreate, tInsert, tCheckpoint, tClose = 0;
+            var COL1 = "col1_" + count;
+            var COL2 = "col2_" + count;
+            var COL3 = "col3_" + count;
+            var COL4 = "col4_" + count;
 
             sw.Start();
 
-            using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
+            using (var t = db.BeginTrans())
             {
-                tOpen = sw.ElapsedMilliseconds;
-
-                using (var t = db.BeginTrans())
-                {
-                    db.CreateCollection("col1", t);
-                    db.CreateCollection("col2", t);
-                    db.CreateCollection("col3", t);
-                    db.CreateCollection("col4", t);
-                    t.Commit();
-                }
-
-                tCreate = sw.ElapsedMilliseconds;
-
-                //db.EnsureIndex("col1", "age", "$.age");
-                //db.EnsureIndex("col2", "age", "$.age");
-                //db.EnsureIndex("col3", "age", "$.age");
-                //db.EnsureIndex("col4", "age", "$.age");
-
-                var t1 = db.InsertAsync("col1", ReadDocuments(1, 50000, false, true));
-                var t2 = db.InsertAsync("col2", ReadDocuments(1, 50000, false, true));
-                var t3 = db.InsertAsync("col3", ReadDocuments(1, 50000, false, true));
-                var t4 = db.InsertAsync("col4", ReadDocuments(1, 50000, false, true));
-                Task.WaitAll(new Task[] { t1, t2, t3, t4 });
-
-                //db.Insert("col1", ReadDocuments(1, 50000, false, true));
-                //db.Insert("col2", ReadDocuments(1, 50000, false, true));
-                //db.Insert("col3", ReadDocuments(1, 50000, false, true));
-                //db.Insert("col4", ReadDocuments(1, 50000, false, true));
-
-
-                tInsert = sw.ElapsedMilliseconds;
-
-                db.Checkpoint();
-
-                tCheckpoint = sw.ElapsedMilliseconds;
-
+                db.CreateCollection(COL1, t);
+                db.CreateCollection(COL2, t);
+                db.CreateCollection(COL3, t);
+                db.CreateCollection(COL4, t);
+                t.Commit();
             }
 
-            tClose = sw.ElapsedMilliseconds;
+            Console.WriteLine("Time to create collections: " + sw.ElapsedMilliseconds);
+
+            var ti1 = db.InsertAsync(COL1, ReadDocuments(1, 50000, false, true));
+            var ti2 = db.InsertAsync(COL2, ReadDocuments(1, 50000, false, true));
+            var ti3 = db.InsertAsync(COL3, ReadDocuments(1, 50000, false, true));
+            var ti4 = db.InsertAsync(COL4, ReadDocuments(1, 50000, false, true));
+            Task.WaitAll(new Task[] { ti1, ti2, ti3, ti4 });
+
+            Console.WriteLine("Time to insert documents: " + sw.ElapsedMilliseconds);
+
+            var tf1 = db.FindAllAsync(COL1);
+            var tf2 = db.FindAllAsync(COL2);
+            var tf3 = db.FindAllAsync(COL3);
+            var tf4 = db.FindAllAsync(COL4);
+            Task.WaitAll(new Task[] { tf1, tf2, tf3, tf4 });
+
+            Console.WriteLine("Time to find documents: " + sw.ElapsedMilliseconds);
+
+            // drop all collections
+            using (var t = db.BeginTrans())
+            {
+                db.DropCollection(COL1, t);
+                db.DropCollection(COL2, t);
+                db.DropCollection(COL3, t);
+                db.DropCollection(COL4, t);
+                t.Commit();
+            }
+
+            Console.WriteLine("Time to drop collections: " + sw.ElapsedMilliseconds);
+
+            db.Checkpoint();
+
+            Console.WriteLine("Time to checkpoint: " + sw.ElapsedMilliseconds);
 
             sw.Stop();
 
-            Console.WriteLine("Time to open database: " + tOpen);
-            Console.WriteLine("Finish create collections: " + tCreate);
-            Console.WriteLine("Finish insert: " + tInsert);
-            Console.WriteLine("Finish checkpoint: " + tCheckpoint);
-            Console.WriteLine("Finish close database: " + tClose);
+            var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
 
-            return tClose;
+            return sw.ElapsedMilliseconds;
         }
 
 

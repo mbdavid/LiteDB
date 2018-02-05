@@ -61,6 +61,17 @@ namespace LiteDB.Demo
             return Task.Run<int>(() => Insert(engine, collection, docs));
         }
 
+        public static Task FindAllAsync(this LiteEngine engine, string collection)
+        {
+            return Task.Run(() =>
+            {
+                using (var t = engine.BeginTrans())
+                {
+                    engine.Find(collection, new Query { Index = Index.All() }, t).ToArray();
+                }
+            });
+        }
+
         public static BsonDocument FindById(this LiteEngine engine, string collection, BsonValue id)
         {
             using (var t = engine.BeginTrans())

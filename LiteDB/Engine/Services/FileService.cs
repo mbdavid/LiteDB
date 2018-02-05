@@ -204,10 +204,18 @@ namespace LiteDB
                     _writer.Position = position;
 
                     _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
-
-                    // notify cache that this page is not dirty anymore
-                    _cache.CleanDirtyPage(position, page);
                 }
+
+                // lock writer to clear dirty cache
+                lock(_writer)
+                {
+                    // before clear cache, test if queue are empty, otherwise do not clear cache.
+                    if (_queue.IsEmpty)
+                    {
+                        _cache.ClearDirtyCache();
+                    }
+                }
+
             });
         }
 
