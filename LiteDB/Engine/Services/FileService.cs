@@ -26,6 +26,7 @@ namespace LiteDB
 
         private Stream _writer;
         private long _writerPosition = 0;
+        private long _fileLength = 0;
 
         // async writer control
         private ConcurrentQueue<Tuple<long, BasePage>> _queue = new ConcurrentQueue<Tuple<long, BasePage>>();
@@ -54,6 +55,9 @@ namespace LiteDB
                 // if file exits, position at end (to append wal data)
                 _writerPosition = _writer.Length;
             }
+
+            // update virtual file length with real file length
+            _fileLength = _writer.Length;
 
             // lock datafile if stream are FileStream (single process)
             if (_writer.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
@@ -85,9 +89,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get/Set stream length
+        /// Get/Set stream length - set operation must be sync before
         /// </summary>
-        public long Length { get => _writer.Length; set => _writer.SetLength(value); }
+        public long Length { get => _fileLength; set => _writer.SetLength(value); }
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
@@ -169,6 +173,9 @@ namespace LiteDB
                     }
 
                     _writerPosition += BasePage.PAGE_SIZE;
+
+                    // update "virtual" file size
+                    if (_writerPosition > _fileLength) _fileLength = _writerPosition;
                 }
 
                 // if async writer are not running, start now
@@ -220,6 +227,28 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Lock writer and wait all queue be write on disk
+        /// </summary>
+        public void WaitAsyncWrite()
+        {
+            // if has pages on queue but async writer are not running, run sync
+            if (_queue.IsEmpty == false && _async.Status == TaskStatus.RanToCompletion)
+            {
+                this.CreateAsyncWriter().RunSynchronously();
+            }
+
+            // if async writer are running, wait to finish
+            if (_async != null && _async.Status != TaskStatus.RanToCompletion)
+            {
+                _async.Wait();
+            }
+
+            // do a disk flush
+            //TODO: can I here do a full disk flush (true) ?
+            _writer.Flush();
+        }
+
+        /// <summary>
         /// Create new database based if Stream are empty
         /// </summary>
         public void CreateDatabase(string password, long initialSize)
@@ -255,17 +284,8 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
-            // if has pages on queue but async writer are not running, run sync
-            if (_queue.IsEmpty == false && _async.Status == TaskStatus.RanToCompletion)
-            {
-                this.CreateAsyncWriter().RunSynchronously();
-            }
-
-            // if async writer are running, wait to finish
-            if (_async != null && _async.Status != TaskStatus.RanToCompletion)
-            {
-                _async.Wait();
-            }
+            // wait async
+            this.WaitAsyncWrite();
 
             // dispose crypto
             if (_crypto != null)

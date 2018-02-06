@@ -45,50 +45,55 @@ namespace LiteDB.Demo
 
             sw.Start();
 
-            using (var t = db.BeginTrans())
-            {
-                db.CreateCollection(COL1, t);
-                db.CreateCollection(COL2, t);
-                db.CreateCollection(COL3, t);
-                db.CreateCollection(COL4, t);
-                t.Commit();
-            }
+            //using (var t = db.BeginTrans())
+            //{
+            //    db.CreateCollection(COL1, t);
+            //    db.CreateCollection(COL2, t);
+            //    db.CreateCollection(COL3, t);
+            //    db.CreateCollection(COL4, t);
+            //    t.Commit();
+            //}
 
             Console.WriteLine("Time to create collections: " + sw.ElapsedMilliseconds);
 
             var ti1 = db.InsertAsync(COL1, ReadDocuments(1, 50000, false, true));
-            var ti2 = db.InsertAsync(COL2, ReadDocuments(1, 50000, false, true));
-            var ti3 = db.InsertAsync(COL3, ReadDocuments(1, 50000, false, true));
-            var ti4 = db.InsertAsync(COL4, ReadDocuments(1, 50000, false, true));
-            Task.WaitAll(new Task[] { ti1, ti2, ti3, ti4 });
+            //var ti2 = db.InsertAsync(COL2, ReadDocuments(1, 50000, false, true));
+            //var ti3 = db.InsertAsync(COL3, ReadDocuments(1, 50000, false, true));
+            //var ti4 = db.InsertAsync(COL4, ReadDocuments(1, 50000, false, true));
+            Task.WaitAll(new Task[] { ti1/*, ti2, ti3, ti4 */});
 
-            Console.WriteLine("Time to insert documents: " + sw.ElapsedMilliseconds);
-
-            var tf1 = db.FindAllAsync(COL1);
-            var tf2 = db.FindAllAsync(COL2);
-            var tf3 = db.FindAllAsync(COL3);
-            var tf4 = db.FindAllAsync(COL4);
-            Task.WaitAll(new Task[] { tf1, tf2, tf3, tf4 });
-
-            Console.WriteLine("Time to find documents: " + sw.ElapsedMilliseconds);
-
-            // drop all collections
-            using (var t = db.BeginTrans())
-            {
-                db.DropCollection(COL1, t);
-                db.DropCollection(COL2, t);
-                db.DropCollection(COL3, t);
-                db.DropCollection(COL4, t);
-                t.Commit();
-            }
-
-            Console.WriteLine("Time to drop collections: " + sw.ElapsedMilliseconds);
+            // Console.WriteLine("Time to insert documents: " + sw.ElapsedMilliseconds);
+            // 
+            // var tf1 = db.FindAllAsync(COL1);
+            // var tf2 = db.FindAllAsync(COL2);
+            // var tf3 = db.FindAllAsync(COL3);
+            // var tf4 = db.FindAllAsync(COL4);
+            // Task.WaitAll(new Task[] { tf1, tf2, tf3, tf4 });
+            // 
+            // Console.WriteLine("Time to find documents: " + sw.ElapsedMilliseconds);
+            // 
+            // // drop all collections
+            // using (var t = db.BeginTrans())
+            // {
+            //     db.DropCollection(COL1, t);
+            //     db.DropCollection(COL2, t);
+            //     db.DropCollection(COL3, t);
+            //     db.DropCollection(COL4, t);
+            //     t.Commit();
+            // }
+            // 
+            // Console.WriteLine("Time to drop collections: " + sw.ElapsedMilliseconds);
+            // 
+            // db.Checkpoint();
+            // 
+            // Console.WriteLine("Time to checkpoint: " + sw.ElapsedMilliseconds);
+            // 
+            // sw.Stop();
+            // db.WaitAsyncWrite();
 
             db.Checkpoint();
 
-            Console.WriteLine("Time to checkpoint: " + sw.ElapsedMilliseconds);
-
-            sw.Stop();
+            db.WaitAsyncWrite();
 
             var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
 

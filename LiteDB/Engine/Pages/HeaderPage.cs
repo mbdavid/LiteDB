@@ -118,7 +118,7 @@ namespace LiteDB
         /// <summary>
         /// Create a confirm wal page cloning this page and update some fields - after this page writes on disk, transaction are commited
         /// </summary>
-        public HeaderPage CreateConfirmPage(Guid transactionID, uint freeEmptyPageID)
+        public HeaderPage CreateConfirmPage(Guid transactionID, uint freeEmptyPageID, TransactionPages transPages)
         {
             var page = this.Clone() as HeaderPage;
 
@@ -126,6 +126,30 @@ namespace LiteDB
             page.FreeEmptyPageID = freeEmptyPageID;
             page.CommitCount++;
             page.LastCommit = DateTime.Now;
+
+            // remove/add collections in header
+            if (transPages != null)
+            {
+                foreach (var p in transPages.DeletedCollections)
+                {
+                    if (page.Collections.Remove(p.Key) == false)
+                    {
+                        throw LiteException.CollectionNotFound(p.Key);
+                    }
+                }
+
+                foreach (var p in transPages.NewCollections)
+                {
+                    if (page.Collections.ContainsKey(p.Key))
+                    {
+                        throw LiteException.CollectionAlreadyExist(p.Key);
+                    }
+                    
+                    page.Collections.Add(p.Key, p.Value.PageID);
+                }
+
+                page.ItemCount = page.ItemCount - transPages.DeletedPages + transPages.NewCollections.Count;
+            }
 
             return page;
         }
@@ -166,9 +190,6 @@ namespace LiteDB
             this.LastShrink = reader.ReadDateTime();
             this.CommitCount = reader.ReadUInt32();
             this.CheckpointCounter = reader.ReadUInt32();
-
-            // updat item count before write
-            this.ItemCount = this.Collections.Count;
 
             for (var i = 0; i < this.ItemCount; i++)
             {

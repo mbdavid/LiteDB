@@ -144,15 +144,19 @@ namespace LiteDB
                 // if has no confim header, no page was override (wal area contains only non confirmed pages)
                 if (lastHeader == null) return;
 
+                // position writer on end of file
+                _datafile.WriterPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
+
+                // must write sync all data to shrink after
+                _datafile.WaitAsyncWrite();
+
                 // shrink datafile and position writer cursor in end of file
                 _datafile.Length = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
-
-                _datafile.WriterPosition = _datafile.Length;
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
                 _confirmedTransactions.Clear();
-
+                _currentReadVersion = 0;
             }
             finally
             {

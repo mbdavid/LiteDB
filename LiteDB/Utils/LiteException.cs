@@ -35,6 +35,8 @@ namespace LiteDB
         public const int INVALID_COLLECTION_NAME = 130;
         public const int TEMP_ENGINE_ALREADY_DEFINED = 131;
         public const int INVALID_EXPRESSION_TYPE = 132;
+        public const int COLLECTION_NOT_FOUND = 133;
+        public const int COLLECTION_ALREADY_EXIST = 134;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -119,14 +121,24 @@ namespace LiteDB
             return new LiteException(INDEX_DROP_ID, "Primary key index '_id' can't be dropped.");
         }
 
-        internal static Exception TempEngineAlreadyDefined()
+        internal static LiteException TempEngineAlreadyDefined()
         {
             return new LiteException(TEMP_ENGINE_ALREADY_DEFINED, "Temporary engine already defined or auto created.");
         }
 
-        internal static Exception InvalidExpressionType(BsonExpression path)
+        internal static LiteException CollectionNotFound(string key)
+        {
+            return new LiteException(COLLECTION_NOT_FOUND, "Collection not found: " + key);
+        }
+
+        internal static LiteException InvalidExpressionType(BsonExpression path)
         {
             return new LiteException(INVALID_EXPRESSION_TYPE, "Expression '{0}' must be a path only.", path.Source);
+        }
+
+        internal static LiteException CollectionAlreadyExist(string key)
+        {
+            return new LiteException(COLLECTION_ALREADY_EXIST, "Collection already exist: " + key);
         }
 
         internal static LiteException IndexLimitExceeded(string collection)

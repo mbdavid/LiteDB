@@ -159,7 +159,7 @@ namespace LiteDB
                 }
 
                 // create a header-confirm page based on current header page state
-                var confirm = _header.CreateConfirmPage(_transactionID, newEmptyPageID);
+                var confirm = _header.CreateConfirmPage(_transactionID, newEmptyPageID, _transPages);
 
                 // create a single list of page position from wal file of this pages
                 var pagePositions = new List<PagePosition>();
@@ -176,6 +176,7 @@ namespace LiteDB
                 _header.FreeEmptyPageID = newEmptyPageID;
                 _header.CommitCount = confirm.CommitCount;
                 _header.LastCommit = confirm.LastCommit;
+                _header.Collections = new Dictionary<string, uint>(confirm.Collections, StringComparer.OrdinalIgnoreCase);
             }
 
             // dispose all snaps and release locks only after wal index are updated
@@ -244,7 +245,7 @@ namespace LiteDB
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
                 // create copy of header page to send to wal file
-                var confirm = _header.CreateConfirmPage(transactionID, pages.First().PageID);
+                var confirm = _header.CreateConfirmPage(transactionID, pages.First().PageID, null);
 
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();

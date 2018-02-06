@@ -19,12 +19,12 @@ namespace LiteDB
                 {
                     var page = _datafile.ReadPage(position, false);
 
-                    yield return this.DumpPage(page);
+                    yield return this.DumpPage(position, page);
                 }
                 else
                 {
                     // lock page - just print empty page
-                    yield return this.DumpPage(new EmptyPage(2));
+                    yield return this.DumpPage(position, new EmptyPage(2));
                 }
 
                 position += BasePage.PAGE_SIZE;
@@ -34,10 +34,11 @@ namespace LiteDB
         /// <summary>
         /// Dump page information into a BsonDocument
         /// </summary>
-        private BsonDocument DumpPage(BasePage page)
+        private BsonDocument DumpPage(long position, BasePage page)
         {
             var doc = new BsonDocument
             {
+                ["_position"] = (int)position,
                 ["pageID"] = (int)page.PageID,
                 ["pageType"] = page.PageType.ToString(),
                 ["prevPageID"] = (int)page.PrevPageID,

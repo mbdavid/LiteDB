@@ -69,7 +69,7 @@ namespace LiteDB
                 this.Initialize();
             }
 
-            if (this.CollectionPage == null && addIfNotExits)
+            if (addIfNotExits && this.CollectionPage == null)
             {
                 var srv = new CollectionService(this, _header, _transPages);
 

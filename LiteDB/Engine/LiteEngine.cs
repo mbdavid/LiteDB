@@ -148,6 +148,11 @@ namespace LiteDB
         /// </summary>
         public void Checkpoint() => _wal.Checkpoint();
 
+        /// <summary>
+        /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
+        /// </summary>
+        public void WaitAsyncWrite() => _datafile.WaitAsyncWrite();
+
         public void Dispose()
         {
             // close all Dispose services
