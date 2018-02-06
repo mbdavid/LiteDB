@@ -22,14 +22,12 @@ namespace LiteDB
         private SnapshotMode _mode;
         private CollectionPage _collectionPage;
         private string _collectionName;
-        private bool _collectionPageLocked = false;
         private int _readVersion;
 
         private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
         private Dictionary<uint, PagePosition> _dirtyPagesWal = new Dictionary<uint, PagePosition>();
 
         // expose services
-        public CollectionPage CollectionPage => _collectionPage;
         public int ReadVersion => _readVersion;
         public Dictionary<uint, BasePage> LocalPages => _localPages;
         public Dictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
@@ -52,9 +50,6 @@ namespace LiteDB
 
             // initialize version and get read version
             this.Initialize();
-
-            // get collection page (or null if collection not exists)
-            _collectionPage = new CollectionService(this).Get(collectionName);
         }
 
         /// <summary>
@@ -74,17 +69,43 @@ namespace LiteDB
                 this.Initialize();
             }
 
-            if (_collectionPage == null && addIfNotExits)
+            if (this.CollectionPage == null && addIfNotExits)
             {
-                // use '#collection_page' name for collection page lock
-                _locker.EnterReserved("#collection_page");
+                var srv = new CollectionService(this, _header, _transPages);
 
-                _collectionPageLocked = true;
-
-                this.Initialize();
-
-                _collectionPage = new CollectionService(this).Add(_collectionName);
+                // create new collection and add into transaction
+                _collectionPage = srv.Add(_collectionName);
             }
+        }
+
+        /// <summary>
+        /// Get/Set collection reference. Returns null if not exists in collections
+        /// </summary>
+        public CollectionPage CollectionPage
+        {
+            get
+            {
+                if (_collectionPage == null)
+                {
+                    var srv = new CollectionService(this, _header, _transPages);
+
+                    _collectionPage = srv.Get(_collectionName);
+                }
+
+                return _collectionPage;
+            }
+            set
+            {
+                _collectionPage = value;
+            }
+        }
+
+        /// <summary>
+        /// Create instance of collection service using snapshot variables
+        /// </summary>
+        public CollectionService GetCollectionService()
+        {
+            return new CollectionService(this, _header, _transPages);
         }
 
         /// <summary>
@@ -92,11 +113,6 @@ namespace LiteDB
         /// </summary>
         public void Dispose()
         {
-            if (_collectionPageLocked)
-            {
-                _locker.ExitReserved("#collection_page");
-            }
-
             if (_mode == SnapshotMode.Read)
             {
                 _locker.ExitRead(_collectionName);

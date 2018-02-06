@@ -14,8 +14,8 @@ namespace LiteDB
 
             while (position < length)
             {
-                // skip page 3 (lock page)
-                if (position != BasePage.GetPagePosition(2))
+                // skip lock page
+                if (position != BasePage.GetPagePosition(BasePage.LOCK_PAGE_ID))
                 {
                     var page = _datafile.ReadPage(position, false);
 
@@ -61,16 +61,13 @@ namespace LiteDB
                 doc["lastShrink"] = header.LastShrink;
                 doc["commitCounter"] = (int)header.CommitCount;
                 doc["checkpointCounter"] = (int)header.CheckpointCounter;
-            }
-            else if (page.PageType == PageType.CollectionList)
-            {
-                var colList = page as CollectionListPage;
 
-                doc["colections"] = new BsonArray(colList.GetAll().Select(x => new BsonDocument
+                doc["colections"] = new BsonArray(header.Collections.Select(x => new BsonDocument
                 {
                     ["name"] = x.Key,
                     ["pageID"] = (int)x.Value
                 }));
+
             }
             else if (page.PageType == PageType.Collection)
             {

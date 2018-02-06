@@ -23,6 +23,11 @@ namespace LiteDB
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
         /// <summary>
+        /// Lock page ID that used to lock file
+        /// </summary>
+        public const uint LOCK_PAGE_ID = 1;
+
+        /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
         /// </summary>
         public uint PageID { get; set; }
@@ -160,7 +165,6 @@ namespace LiteDB
 
             // casting using "as T" #90 / thanks @Skysper
             if (type == typeof(HeaderPage)) return new HeaderPage(pageID) as T;
-            if (type == typeof(CollectionListPage)) return new CollectionListPage(pageID) as T;
             if (type == typeof(CollectionPage)) return new CollectionPage(pageID) as T;
             if (type == typeof(IndexPage)) return new IndexPage(pageID) as T;
             if (type == typeof(DataPage)) return new DataPage(pageID) as T;
@@ -178,7 +182,6 @@ namespace LiteDB
             switch (pageType)
             {
                 case PageType.Collection: return new CollectionPage(pageID);
-                case PageType.CollectionList: return new CollectionListPage(pageID);
                 case PageType.Index: return new IndexPage(pageID);
                 case PageType.Data: return new DataPage(pageID);
                 case PageType.Extend: return new ExtendPage(pageID);

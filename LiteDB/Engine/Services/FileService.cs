@@ -237,14 +237,11 @@ namespace LiteDB
                 header.Password = AesEncryption.HashPBKDF2(password, header.Salt);
             }
 
-            // create collection list page (fixed in 1)
-            var colList = new CollectionListPage(1);
-
-            // create empty page just for lock control (fixed in 2)
-            var locker = new EmptyPage(2);
+            // create empty page just for lock control (fixed in 1)
+            var locker = new EmptyPage(1);
 
             // write all pages into disk
-            this.WritePages(new BasePage[] { header, colList, locker }, false, null);
+            this.WritePages(new BasePage[] { header, locker }, false, null);
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))

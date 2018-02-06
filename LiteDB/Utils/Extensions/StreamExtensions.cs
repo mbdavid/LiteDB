@@ -16,7 +16,7 @@ namespace LiteDB
 
             return FileHelper.TryExec(() =>
             {
-                filestream.Lock(BasePage.GetPagePosition((uint)2), BasePage.PAGE_SIZE);
+                filestream.Lock(BasePage.GetPagePosition(BasePage.LOCK_PAGE_ID), BasePage.PAGE_SIZE);
             }, 
             timeout);
         }
@@ -29,7 +29,7 @@ namespace LiteDB
 
             try
             {
-                filestream.Lock(BasePage.GetPagePosition((uint)2), BasePage.PAGE_SIZE);
+                filestream.Lock(BasePage.GetPagePosition(BasePage.LOCK_PAGE_ID), BasePage.PAGE_SIZE);
             }
             catch
             {

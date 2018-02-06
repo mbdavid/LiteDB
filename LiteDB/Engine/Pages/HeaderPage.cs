@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
     internal class HeaderPage : BasePage
     {
+        /// <summary>
+        /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
+        /// </summary>
+        public const ushort MAX_COLLECTIONS_NAME_SIZE = PAGE_SIZE - 1000;
+
         /// <summary>
         /// Page type = Header
         /// </summary>
@@ -71,19 +77,19 @@ namespace LiteDB
         public DateTime LastShrink { get; set; }
 
         /// <summary>
-        /// Checkpoint counter - this counter reset after last vaccum/shrink
-        /// </summary>
-        public uint CheckpointCounter { get; set; }
-
-        /// <summary>
         /// Transaction commit counter - this counter reset after last vaccum/shrink
         /// </summary>
         public uint CommitCount { get; set; }
 
         /// <summary>
-        /// Store all collections used in current transaction. Useful only for checkpoint confim page
+        /// Checkpoint counter - this counter reset after last vaccum/shrink
         /// </summary>
-        public string[] TransactionCollections { get; set; }
+        public uint CheckpointCounter { get; set; }
+
+        /// <summary>
+        /// Contains all collection in database using PageID to direct access
+        /// </summary>
+        public Dictionary<string, uint> Collections { get; set; }
 
         private HeaderPage()
         {
@@ -92,7 +98,7 @@ namespace LiteDB
         public HeaderPage(uint pageID)
             : base(pageID)
         {
-            this.ItemCount = 1; // fixed for header
+            this.ItemCount = 0; // used to store collection names
             this.FreeBytes = 0; // no free bytes on header
             this.Password = new byte[20];
             this.Salt = new byte[16];
@@ -104,26 +110,39 @@ namespace LiteDB
             this.LastAnalyze = DateTime.MinValue;
             this.LastVaccum = DateTime.MinValue;
             this.LastShrink = DateTime.MinValue;
-            this.CheckpointCounter = 0;
             this.CommitCount = 0;
-
-            this.TransactionCollections = new string[0];
+            this.CheckpointCounter = 0;
+            this.Collections = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Create a confirm wal page cloning this page and update some fields - after this page writes on disk, transaction are commited
         /// </summary>
-        public HeaderPage CreateConfirmPage(Guid transactionID, uint freeEmptyPageID, string[] transactionCollections)
+        public HeaderPage CreateConfirmPage(Guid transactionID, uint freeEmptyPageID)
         {
             var page = this.Clone() as HeaderPage;
 
             page.TransactionID = transactionID;
             page.FreeEmptyPageID = freeEmptyPageID;
-            page.TransactionCollections = transactionCollections;
             page.CommitCount++;
             page.LastCommit = DateTime.Now;
 
             return page;
+        }
+
+        /// <summary>
+        /// Check if all new collection names fit on header page with all existing collection
+        /// </summary>
+        public void CheckCollectionsSize(IEnumerable<string> names)
+        {
+            var sum =
+                this.Collections.Sum(x => x.Key.Length + 8) +
+                names.Sum(x => x.Length + 8);
+
+            if (sum >= MAX_COLLECTIONS_NAME_SIZE)
+            {
+                throw LiteException.CollectionLimitExceeded(HeaderPage.MAX_COLLECTIONS_NAME_SIZE);
+            }
         }
 
         #region Read/Write pages
@@ -148,7 +167,13 @@ namespace LiteDB
             this.CommitCount = reader.ReadUInt32();
             this.CheckpointCounter = reader.ReadUInt32();
 
-            this.TransactionCollections = reader.ReadString().Split(',');
+            // updat item count before write
+            this.ItemCount = this.Collections.Count;
+
+            for (var i = 0; i < this.ItemCount; i++)
+            {
+                this.Collections.Add(reader.ReadString(), reader.ReadUInt32());
+            }
         }
 
         protected override void WriteContent(ByteWriter writer)
@@ -167,7 +192,11 @@ namespace LiteDB
             writer.Write(this.CommitCount);
             writer.Write(this.CheckpointCounter);
 
-            writer.Write(string.Join(",", this.TransactionCollections));
+            foreach (var col in this.Collections)
+            {
+                writer.Write(col.Key);
+                writer.Write(col.Value);
+            }
         }
 
         public override BasePage Clone()
@@ -194,7 +223,7 @@ namespace LiteDB
                 LastShrink = this.LastShrink,
                 CommitCount = this.CommitCount,
                 CheckpointCounter = this.CheckpointCounter,
-                TransactionCollections = this.TransactionCollections
+                Collections = new Dictionary<string, uint>(this.Collections)
             };
         }
 

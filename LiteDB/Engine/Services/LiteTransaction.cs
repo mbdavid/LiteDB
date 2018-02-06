@@ -15,11 +15,11 @@ namespace LiteDB
         private const int MAX_PAGES_TRANSACTION = 1000;
 
         // instances from Engine
-        internal HeaderPage _header;
-        internal WalService _wal;
-        internal LockService _locker;
-        internal FileService _datafile;
-        internal Logger _log;
+        private HeaderPage _header;
+        private WalService _wal;
+        private LockService _locker;
+        private FileService _datafile;
+        private Logger _log;
 
         // event to capture when transaction finish
         internal event EventHandler Done;
@@ -83,14 +83,6 @@ namespace LiteDB
                     throw;
                 }
             }
-        }
-
-        /// <summary>
-        /// Create new (or get already created) snapshot exclusive for work with collection page list
-        /// </summary>
-        internal T CreateSnapshot<T>(SnapshotMode mode, Func<Snapshot, T> fn)
-        {
-            return this.CreateSnapshot(mode, "#collection_page", false, fn);
         }
 
         /// <summary>
@@ -167,7 +159,7 @@ namespace LiteDB
                 }
 
                 // create a header-confirm page based on current header page state
-                var confirm = _header.CreateConfirmPage(_transactionID, newEmptyPageID, _snapshots.Keys.ToArray());
+                var confirm = _header.CreateConfirmPage(_transactionID, newEmptyPageID);
 
                 // create a single list of page position from wal file of this pages
                 var pagePositions = new List<PagePosition>();
@@ -252,7 +244,7 @@ namespace LiteDB
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
                 // create copy of header page to send to wal file
-                var confirm = _header.CreateConfirmPage(transactionID, pages.First().PageID, new string[0]);
+                var confirm = _header.CreateConfirmPage(transactionID, pages.First().PageID);
 
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();
