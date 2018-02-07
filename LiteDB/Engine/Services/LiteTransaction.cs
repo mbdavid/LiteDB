@@ -158,8 +158,11 @@ namespace LiteDB
                     }
                 }
 
-                // create a header-confirm page based on current header page state
-                var confirm = _header.CreateConfirmPage(_transactionID, newEmptyPageID, _transPages);
+                // create a header-confirm page based on current header page state (global header are in lock)
+                var confirm = _header.Clone() as HeaderPage;
+
+                // update this confirm page with current transactionID
+                confirm.Update(_transactionID, newEmptyPageID, _transPages);
 
                 // create a single list of page position from wal file of this pages
                 var pagePositions = new List<PagePosition>();
@@ -172,11 +175,8 @@ namespace LiteDB
                 // now, write confirm transaction (with header page) and update wal-index
                 _wal.ConfirmTransaction(confirm, pagePositions);
 
-                // if has deleted pages, update in global header instance
-                _header.FreeEmptyPageID = newEmptyPageID;
-                _header.CommitCount = confirm.CommitCount;
-                _header.LastCommit = confirm.LastCommit;
-                _header.Collections = new Dictionary<string, uint>(confirm.Collections, StringComparer.OrdinalIgnoreCase);
+                // update global header page to make equals to confirm page
+                _header.Update(Guid.Empty, newEmptyPageID, _transPages);
             }
 
             // dispose all snaps and release locks only after wal index are updated
@@ -245,7 +245,9 @@ namespace LiteDB
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
                 // create copy of header page to send to wal file
-                var confirm = _header.CreateConfirmPage(transactionID, pages.First().PageID, null);
+                var confirm = _header.Clone() as HeaderPage;
+
+                _header.Update(transactionID, pages.First().PageID, null);
 
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();
@@ -256,7 +258,7 @@ namespace LiteDB
                 _wal.ConfirmTransaction(confirm, pagePositions.Values);
 
                 // now can update global header version
-                _header.FreeEmptyPageID = confirm.FreeEmptyPageID;
+                _header.Update(Guid.Empty, confirm.FreeEmptyPageID, null);
             }
         }
 

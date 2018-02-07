@@ -46,6 +46,16 @@ namespace LiteDB.Demo
             }
         }
 
+        public static void Analyze(this LiteEngine engine)
+        {
+            using (var t = engine.BeginTrans())
+            {
+                engine.Analyze(null, t);
+
+                t.Commit();
+            }
+        }
+
         public static void DropCollection(this LiteEngine engine, string collection)
         {
             using (var t = engine.BeginTrans())

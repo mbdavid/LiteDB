@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -89,7 +90,7 @@ namespace LiteDB
         /// <summary>
         /// Contains all collection in database using PageID to direct access
         /// </summary>
-        public Dictionary<string, uint> Collections { get; set; }
+        public ConcurrentDictionary<string, uint> Collections { get; set; }
 
         private HeaderPage()
         {
@@ -112,27 +113,25 @@ namespace LiteDB
             this.LastShrink = DateTime.MinValue;
             this.CommitCount = 0;
             this.CheckpointCounter = 0;
-            this.Collections = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+            this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
-        /// Create a confirm wal page cloning this page and update some fields - after this page writes on disk, transaction are commited
+        /// Update header page with confirm data
         /// </summary>
-        public HeaderPage CreateConfirmPage(Guid transactionID, uint freeEmptyPageID, TransactionPages transPages)
+        public void Update(Guid transactionID, uint freeEmptyPageID, TransactionPages transPages)
         {
-            var page = this.Clone() as HeaderPage;
+            this.TransactionID = transactionID;
+            this.FreeEmptyPageID = freeEmptyPageID;
+            this.CommitCount++;
+            this.LastCommit = DateTime.Now;
 
-            page.TransactionID = transactionID;
-            page.FreeEmptyPageID = freeEmptyPageID;
-            page.CommitCount++;
-            page.LastCommit = DateTime.Now;
-
-            // remove/add collections in header
+            // remove/add collections based on transPages
             if (transPages != null)
             {
                 foreach (var p in transPages.DeletedCollections)
                 {
-                    if (page.Collections.Remove(p.Key) == false)
+                    if (this.Collections.TryRemove(p.Key, out var x) == false)
                     {
                         throw LiteException.CollectionNotFound(p.Key);
                     }
@@ -140,18 +139,16 @@ namespace LiteDB
 
                 foreach (var p in transPages.NewCollections)
                 {
-                    if (page.Collections.ContainsKey(p.Key))
+                    if (this.Collections.ContainsKey(p.Key))
                     {
                         throw LiteException.CollectionAlreadyExist(p.Key);
                     }
                     
-                    page.Collections.Add(p.Key, p.Value.PageID);
+                    this.Collections.TryAdd(p.Key, p.Value.PageID);
                 }
 
-                page.ItemCount = page.ItemCount - transPages.DeletedPages + transPages.NewCollections.Count;
+                this.ItemCount = this.ItemCount - transPages.DeletedPages + transPages.NewCollections.Count;
             }
-
-            return page;
         }
 
         /// <summary>
@@ -193,7 +190,7 @@ namespace LiteDB
 
             for (var i = 0; i < this.ItemCount; i++)
             {
-                this.Collections.Add(reader.ReadString(), reader.ReadUInt32());
+                this.Collections.TryAdd(reader.ReadString(), reader.ReadUInt32());
             }
         }
 
@@ -244,7 +241,7 @@ namespace LiteDB
                 LastShrink = this.LastShrink,
                 CommitCount = this.CommitCount,
                 CheckpointCounter = this.CheckpointCounter,
-                Collections = new Dictionary<string, uint>(this.Collections)
+                Collections = new ConcurrentDictionary<string, uint>(this.Collections)
             };
         }
 

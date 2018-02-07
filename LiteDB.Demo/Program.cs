@@ -91,6 +91,9 @@ namespace LiteDB.Demo
             // sw.Stop();
             // db.WaitAsyncWrite();
 
+
+            db.Analyze();
+
             db.Checkpoint();
 
             var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);

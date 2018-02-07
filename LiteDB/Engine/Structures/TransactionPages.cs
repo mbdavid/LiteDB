@@ -43,10 +43,5 @@ namespace LiteDB
         /// Deleted collections in this transaction
         /// </summary>
         public Dictionary<string, CollectionPage> DeletedCollections { get; set; } = new Dictionary<string, CollectionPage>(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
-        /// Renamed collections in this transaction
-        /// </summary>
-        public Dictionary<string, string> RenamedCollections { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     }
 }
