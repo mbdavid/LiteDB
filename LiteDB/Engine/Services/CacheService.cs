@@ -34,19 +34,20 @@ namespace LiteDB
         /// </summary>
         public void AddPage(long position, BasePage page)
         {
-            // first check cache size
-            if (_cache.Count > MAX_CACHE_SIZE)
-            {
-                _cache.Clear();
-            }
-
-            // add page into cache
-            _cache[position] = page;
-
-            // if page are dirty, add into dirty cache too
+            // add page in dirty/clean cache
             if (page.IsDirty)
             {
                 _dirty[position] = page;
+            }
+            else
+            {
+                // first check cache size
+                if (_cache.Count > MAX_CACHE_SIZE)
+                {
+                    _cache.Clear();
+                }
+
+                _cache[position] = page;
             }
         }
 
@@ -58,7 +59,9 @@ namespace LiteDB
             // first, try get from dirty list
             if (_dirty.TryGetValue(position, out var page))
             {
-                return clone ? page.Clone() : page;
+                // if page came from dirty cache, must be return a clone copy
+                // this avoid a read transaction get dirty instance page
+                return page.Clone();
             }
             
             // than, try get page from cache

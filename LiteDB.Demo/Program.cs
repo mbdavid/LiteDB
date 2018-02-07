@@ -62,6 +62,10 @@ namespace LiteDB.Demo
             //var ti4 = db.InsertAsync(COL4, ReadDocuments(1, 50000, false, true));
             Task.WaitAll(new Task[] { ti1/*, ti2, ti3, ti4 */});
 
+            db.EnsureIndex(COL1, "age", "$.age");
+            db.EnsureIndex(COL1, "email", "$.email");
+
+
             // Console.WriteLine("Time to insert documents: " + sw.ElapsedMilliseconds);
             // 
             // var tf1 = db.FindAllAsync(COL1);
@@ -95,6 +99,8 @@ namespace LiteDB.Demo
             db.Analyze();
 
             db.Checkpoint();
+
+            var total = db.Find(COL1, new Query { Index = Index.All() });
 
             var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
 

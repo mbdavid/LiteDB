@@ -23,8 +23,9 @@ namespace LiteDB
                 }
                 else
                 {
-                    // lock page - just print empty page
-                    yield return this.DumpPage(position, new EmptyPage(2));
+                    // lock page - just print empty page (i can read from disk, this page are locked)
+                    yield return this.DumpPage(position, new EmptyPage(BasePage.LOCK_PAGE_ID))
+                        .Extend(new BsonDocument { ["pageType"] = "Locker" });
                 }
 
                 position += BasePage.PAGE_SIZE;

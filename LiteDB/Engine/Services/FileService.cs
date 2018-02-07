@@ -278,7 +278,7 @@ namespace LiteDB
             var header = new HeaderPage(0)
             {
                 Salt = AesEncryption.Salt(),
-                LastPageID = 2
+                LastPageID = 1 // 0 - Header, 1 - Locker
             };
 
             // hashing password using PBKDF2

@@ -20,7 +20,7 @@ namespace LiteDB
                 var dict = new Dictionary<string, uint>();
 
                 // first, only read collection all index keys from all indexes
-                var found = transaction.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
+                transaction.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
                 {
                     var col = snapshot.CollectionPage;
 
@@ -52,8 +52,6 @@ namespace LiteDB
 
                     return true;
                 });
-
-                if (found == false) continue;
 
                 // update each index in collection with counter
                 transaction.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>

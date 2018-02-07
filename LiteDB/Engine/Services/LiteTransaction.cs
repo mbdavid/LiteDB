@@ -95,7 +95,7 @@ namespace LiteDB
 
             if (_transPages.PageCount > MAX_PAGES_TRANSACTION)
             {
-                this.PersistDirtyPages();
+                //this.PersistDirtyPages();
             }
         }
 

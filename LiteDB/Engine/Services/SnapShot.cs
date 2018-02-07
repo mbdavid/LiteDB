@@ -126,9 +126,10 @@ namespace LiteDB
         /// <summary>
         /// Initializer snapshot instance, cleaning any loadad page and getting new ReadVersion
         /// </summary>
-        public void Initialize()
+        private void Initialize()
         {
 #if DEBUG
+            // for debug propose
             if (_localPages.Where(x => x.Value.IsDirty).Count() > 0) throw new Exception("Snapshot initialize cann't contains dirty pages");
 #endif
             _localPages.Clear();
