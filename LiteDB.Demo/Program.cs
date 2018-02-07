@@ -93,8 +93,6 @@ namespace LiteDB.Demo
 
             db.Checkpoint();
 
-            db.WaitAsyncWrite();
-
             var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
 
             return sw.ElapsedMilliseconds;

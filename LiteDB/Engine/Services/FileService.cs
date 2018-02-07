@@ -91,7 +91,20 @@ namespace LiteDB
         /// <summary>
         /// Get/Set stream length - set operation must be sync before
         /// </summary>
-        public long Length { get => _fileLength; set => _writer.SetLength(value); }
+        public long Length { get => _fileLength; }
+
+        /// <summary>
+        /// Set new length for datafile in async mode - will be executed in queue order
+        /// </summary>
+        public void SetLength(long length)
+        {
+            // this queue item will be executed in queue async writer
+            // will be run as a SetLength method on stream
+            _queue.Enqueue(new Tuple<long, BasePage>(length, null));
+
+            // update virtual file length
+            _fileLength = length;
+        }
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
@@ -202,6 +215,14 @@ namespace LiteDB
 
                     var position = item.Item1;
                     var page = item.Item2;
+
+                    // if page is empty, this is special queue item: SetLength
+                    if (page == null)
+                    {
+                        // use position as file length
+                        _writer.SetLength(position);
+                        continue;
+                    }
 
                     var buffer = page.WritePage();
 

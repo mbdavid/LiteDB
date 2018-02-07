@@ -100,7 +100,8 @@ namespace LiteDB
             // if has no confirmed transaction, exit
             if (_confirmedTransactions.Count == 0) return;
 
-            // lock all database in reserved mode - other can read but cann't open write-transactions
+            // enter in special database reserved lock
+            // only new readers are allowed and no writers
             _locker.EnterReserved();
 
             try
@@ -148,10 +149,7 @@ namespace LiteDB
                 _datafile.WriterPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
 
                 // must write sync all data to shrink after
-                _datafile.WaitAsyncWrite();
-
-                // shrink datafile and position writer cursor in end of file
-                _datafile.Length = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
+                _datafile.SetLength(BasePage.GetPagePosition(lastHeader.LastPageID + 1));
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
