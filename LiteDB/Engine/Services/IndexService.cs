@@ -187,6 +187,7 @@ namespace LiteDB
 
             // increment keyCount on index
             index.KeyCount++;
+
             _snapshot.SetDirty(index.Page);
 
             return node;

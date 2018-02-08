@@ -146,7 +146,7 @@ namespace LiteDB
                 if (lastHeader == null) return;
 
                 // position writer on end of file
-                _datafile.WriterPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
+                _datafile.VirtualPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
 
                 // must write sync all data to shrink after
                 _datafile.SetLength(BasePage.GetPagePosition(lastHeader.LastPageID + 1));

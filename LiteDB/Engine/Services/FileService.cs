@@ -1,6 +1,4 @@
-﻿// async writer
-// falta controle da cache de paginas sujas vs limpas
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,7 +10,11 @@ using System.Threading.Tasks;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement datafile read/write operation with encryption and stream pool
+    /// Implement thread safe stream data access
+    /// - Pages can be encrypted in write and decrypted on read (except header page)
+    /// - Pages are stored in memory cache
+    /// - Read operations use pool of streams - multiple reads
+    /// - Single writer operation that use queue to run in async task
     /// </summary>
     internal class FileService : IDisposable
     {
@@ -25,8 +27,8 @@ namespace LiteDB
         private CacheService _cache;
 
         private Stream _writer;
-        private long _writerPosition = 0;
-        private long _fileLength = 0;
+        private long _virtualPosition = 0;
+        private long _virtualLength = 0;
 
         // async writer control
         private ConcurrentQueue<Tuple<long, BasePage>> _queue = new ConcurrentQueue<Tuple<long, BasePage>>();
@@ -45,19 +47,15 @@ namespace LiteDB
             // create writer instance (single writer)
             _writer = factory.GetStream();
 
-            // if stream are empty, create inital database
+            // if stream are empty, create inital database (sync)
             if (_writer.Length == 0)
             {
                 this.CreateDatabase(password, initialSize);
             }
-            else
-            {
-                // if file exits, position at end (to append wal data)
-                _writerPosition = _writer.Length;
-            }
 
             // update virtual file length with real file length
-            _fileLength = _writer.Length;
+            _virtualPosition = _writer.Length;
+            _virtualLength = _writer.Length;
 
             // lock datafile if stream are FileStream (single process)
             if (_writer.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
@@ -91,19 +89,22 @@ namespace LiteDB
         /// <summary>
         /// Get/Set stream length - set operation must be sync before
         /// </summary>
-        public long Length { get => _fileLength; }
+        public long Length { get => _virtualLength; }
 
         /// <summary>
         /// Set new length for datafile in async mode - will be executed in queue order
         /// </summary>
         public void SetLength(long length)
         {
-            // this queue item will be executed in queue async writer
-            // will be run as a SetLength method on stream
-            _queue.Enqueue(new Tuple<long, BasePage>(length, null));
+            lock(_writer)
+            {
+                // this queue item will be executed in queue async writer
+                // will be run as a SetLength method on stream
+                _queue.Enqueue(new Tuple<long, BasePage>(length, null));
 
-            // update virtual file length
-            _fileLength = length;
+                // update virtual file length
+                _virtualLength = length;
+            }
         }
 
         /// <summary>
@@ -147,12 +148,28 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get/Set position of writer stream
+        /// Get/Set position of virtual writer stream (lock with _writer)
         /// </summary>
-        public long WriterPosition { get => _writerPosition; set => _writerPosition = value; }
+        public long VirtualPosition
+        {
+            get
+            {
+                lock (_writer)
+                {
+                    return _virtualPosition;
+                }
+            }
+            set
+            {
+                lock(_writer)
+                {
+                    _virtualPosition = value;
+                }
+            }
+        }
 
         /// <summary>
-        /// Write all pages into datafile using current writer position. Fill pagePositions for each page saved
+        /// Add all pages to queue using virtual position. Pages in this queue will be write on disk in async task
         /// </summary>
         public void WritePages(IEnumerable<BasePage> pages, bool absolute, IDictionary<uint, PagePosition> pagePositions)
         {
@@ -167,31 +184,31 @@ namespace LiteDB
                     // if absolute position, set cursor position to pageID (otherwise use current position increment)
                     if (absolute)
                     {
-                        _writerPosition = BasePage.GetPagePosition(page.PageID);
+                        _virtualPosition = BasePage.GetPagePosition(page.PageID);
                     }
 
                     // test max file size (includes wal operations)
-                    if (_writerPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
+                    if (_virtualPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
                     // add dirty page to cache
-                    _cache.AddPage(_writerPosition, page);
+                    _cache.AddPage(_virtualPosition, page);
 
                     // add to writer queue
-                    _queue.Enqueue(new Tuple<long, BasePage>(_writerPosition, page));
+                    _queue.Enqueue(new Tuple<long, BasePage>(_virtualPosition, page));
 
                     // return page position on disk (where will be write on disk)
                     if (pagePositions != null)
                     {
-                        pagePositions[page.PageID] = new PagePosition(page.PageID, _writerPosition);
+                        pagePositions[page.PageID] = new PagePosition(page.PageID, _virtualPosition);
                     }
 
-                    _writerPosition += BasePage.PAGE_SIZE;
+                    _virtualPosition += BasePage.PAGE_SIZE;
 
                     // update "virtual" file size
-                    if (_writerPosition > _fileLength) _fileLength = _writerPosition;
+                    if (_virtualPosition > _virtualLength) _virtualLength = _virtualPosition;
                 }
 
-                // if async writer are not running, start now
+                // if async writer are not running, start/re-start now
                 if (_async == null || _async.Status == TaskStatus.RanToCompletion)
                 {
                     _async = this.CreateAsyncWriter();
@@ -201,7 +218,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Implement async writer disk in a background task
+        /// Implement async writer disk in a background task - will consume all items on queue
         /// </summary>
         private Task CreateAsyncWriter()
         {
@@ -243,7 +260,6 @@ namespace LiteDB
                         _cache.ClearDirtyCache();
                     }
                 }
-
             });
         }
 
@@ -290,12 +306,14 @@ namespace LiteDB
             // create empty page just for lock control (fixed in 1)
             var locker = new EmptyPage(1);
 
-            // write all pages into disk
-            this.WritePages(new BasePage[] { header, locker }, false, null);
+            // write initial database pages (sync writes)
+            _writer.Write(header.WritePage(), 0, BasePage.PAGE_SIZE);
+            _writer.Write(locker.WritePage(), 0, BasePage.PAGE_SIZE);
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
             {
+                //TODO must implement linked list - this initial will shrink in first checkpoint
                 _writer.SetLength(initialSize);
             }
         }

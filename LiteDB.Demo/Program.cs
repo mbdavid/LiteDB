@@ -54,19 +54,19 @@ namespace LiteDB.Demo
             //    t.Commit();
             //}
 
-            Console.WriteLine("Time to create collections: " + sw.ElapsedMilliseconds);
+            //Console.WriteLine("Time to create collections: " + sw.ElapsedMilliseconds);
 
             var ti1 = db.InsertAsync(COL1, ReadDocuments(1, 50000, false, true));
             //var ti2 = db.InsertAsync(COL2, ReadDocuments(1, 50000, false, true));
             //var ti3 = db.InsertAsync(COL3, ReadDocuments(1, 50000, false, true));
             //var ti4 = db.InsertAsync(COL4, ReadDocuments(1, 50000, false, true));
-            Task.WaitAll(new Task[] { ti1/*, ti2, ti3, ti4 */});
+            Task.WaitAll(new Task[] { ti1/*, ti2, ti3, ti4*/ });
 
-            db.EnsureIndex(COL1, "age", "$.age");
-            db.EnsureIndex(COL1, "email", "$.email");
+            //db.EnsureIndex(COL1, "age", "$.age");
+            //db.EnsureIndex(COL1, "email", "$.email");
 
 
-            // Console.WriteLine("Time to insert documents: " + sw.ElapsedMilliseconds);
+            //Console.WriteLine("Time to insert documents: " + sw.ElapsedMilliseconds);
             // 
             // var tf1 = db.FindAllAsync(COL1);
             // var tf2 = db.FindAllAsync(COL2);
@@ -96,19 +96,20 @@ namespace LiteDB.Demo
             // db.WaitAsyncWrite();
 
 
-            db.Analyze();
-
-            db.Checkpoint();
-
-            var total = db.Find(COL1, new Query { Index = Index.All() });
-
-            var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
+            // db.Analyze();
+            // 
+            // db.Checkpoint();
+            // db.WaitAsyncWrite();
+            // 
+            // var total = db.Find(COL1, new Query { Index = Index.All() });
+            // 
+            // var d = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
 
             return sw.ElapsedMilliseconds;
         }
 
 
-        static IEnumerable<BsonDocument> ReadDocuments(int start = 1, int end = 100000, bool duplicate = false, bool bigDoc = false)
+        static IEnumerable<BsonDocument> ReadDocuments(int start = 1, int end = 50000, bool duplicate = false, bool bigDoc = false)
         {
             var count = start;
 
