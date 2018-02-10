@@ -31,6 +31,17 @@ namespace LiteDB
                     var docs = this.Find(collectionName, Query.All());
 
                     engine.InsertBulk(collectionName, docs);
+
+                    // fix collection sequence number
+                    var seq = _collections.Get(collectionName).Sequence;
+
+                    engine.Transaction(collectionName, true, (col) =>
+                    {
+                        col.Sequence = seq;
+                        engine._pager.SetDirty(col);
+                        return true;
+                    });
+
                 }
 
                 // copy user version
