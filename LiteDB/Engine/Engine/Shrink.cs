@@ -45,6 +45,9 @@ namespace LiteDB
                 // copy (as is) all pages from temp disk to original disk
                 for (uint i = 0; i <= header.LastPageID; i++)
                 {
+                    // skip lock page
+                    if (i == 1) continue;
+
                     var page = temp.ReadPage(i);
 
                     _disk.WritePage(i, page);
