@@ -96,7 +96,8 @@ namespace LiteDB.Tests.Database
                 "Log",
                 "UtcDate",
                 "Upgrade",
-                "Async"
+                "Async",
+                "Flush"
             };
 
             var actualProperties = new HashSet<string>(typeof(ConnectionString).GetProperties().Select(p => p.Name));
