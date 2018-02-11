@@ -82,7 +82,8 @@ namespace LiteDB.Tests.Repository
                 // query with StringEQ
                 Assert.IsNotNull(db.Query<RCustomer>().Where(Query.EQ(nameof(RCustomer.CustomerName), "John")).FirstOrDefault());
                 Assert.IsNull(db.Query<RCustomer>().Where(Query.EQ(nameof(RCustomer.CustomerName), "john")).FirstOrDefault());
-                Assert.IsNotNull(db.Query<RCustomer>().Where(Query.StringEQ(nameof(RCustomer.CustomerName), "john", ignoreCase: true)).FirstOrDefault());
+                Assert.IsNotNull(db.Query<RCustomer>().Where(Query.StringEQ(nameof(RCustomer.CustomerName), "john", StringComparison.OrdinalIgnoreCase)).FirstOrDefault());
+                Assert.IsNull(db.Query<RCustomer>().Where(Query.StringEQ(nameof(RCustomer.CustomerName), "john", StringComparison.Ordinal)).FirstOrDefault());
 
                 // check is exists
                 var r2 = db.Query<ROrder>()

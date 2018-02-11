@@ -7,25 +7,24 @@ namespace LiteDB
     internal class QueryStringEquals : Query
     {
         private BsonValue _value;
-        private bool _ignoreCase;
-        private StringComparison _strComp => _ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        private StringComparison _comparison;
 
-        public QueryStringEquals(string field, string value, bool ignoreCase)
+        public QueryStringEquals(string field, string value, StringComparison comparison)
             : base(field)
         {
             _value = value;
-            _ignoreCase = ignoreCase;
+            _comparison = comparison;
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
             return indexer
                 .FindAll(index, Query.Ascending)
-                .Where(x => x.Key.IsString && x.Key.AsString.Equals(_value, _strComp));
+                .Where(x => x.Key.IsString && x.Key.AsString.Equals(_value, _comparison));
         }
 
         internal override bool FilterDocument(BsonDocument doc)
-            => Expression.Execute(doc, true).Any(x => string.Equals(_value.AsString, x.AsString, _strComp));
+            => Expression.Execute(doc, true).Any(x => string.Equals(_value.AsString, x.AsString, _comparison));
 
         public override string ToString()
             => $"{(UseFilter ? "Filter" : UseIndex ? "Seek" : "")}({Expression?.ToString() ?? Field} = {_value})";

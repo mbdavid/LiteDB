@@ -61,11 +61,11 @@ namespace LiteDB
             return new QueryEquals(field, value ?? BsonValue.Null);
         }
 
-        public static Query StringEQ(string field, string value, bool ignoreCase)
+        public static Query StringEQ(string field, string value, StringComparison comparison)
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            return new QueryStringEquals(field, value ?? BsonValue.Null, ignoreCase);
+            return new QueryStringEquals(field, value ?? BsonValue.Null, comparison);
         }
 
         /// <summary>
