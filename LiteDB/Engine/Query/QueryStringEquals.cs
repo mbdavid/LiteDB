@@ -8,8 +8,9 @@ namespace LiteDB
     {
         private BsonValue _value;
         private bool _ignoreCase;
+        private StringComparison _strComp => _ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-        public QueryStringEquals(string field, BsonValue value, bool ignoreCase)
+        public QueryStringEquals(string field, string value, bool ignoreCase)
             : base(field)
         {
             _value = value;
@@ -18,26 +19,13 @@ namespace LiteDB
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
         {
-            var node = indexer.Find(index, _value, false, Query.Ascending);
-
-            if (node == null) yield break;
-
-            yield return node;
-
-            if (index.Unique == false)
-            {
-                // navigate using next[0] do next node - if equals, returns
-                while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(_value) == 0))
-                {
-                    if (node.IsHeadTail(index)) yield break;
-
-                    yield return node;
-                }
-            }
+            return indexer
+                .FindAll(index, Query.Ascending)
+                .Where(x => x.Key.IsString && x.Key.AsString.Equals(_value, _strComp));
         }
 
         internal override bool FilterDocument(BsonDocument doc)
-            => Expression.Execute(doc, true).Any(x => string.Equals(_value.AsString, x.AsString, _ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+            => Expression.Execute(doc, true).Any(x => string.Equals(_value.AsString, x.AsString, _strComp));
 
         public override string ToString()
             => $"{(UseFilter ? "Filter" : UseIndex ? "Seek" : "")}({Expression?.ToString() ?? Field} = {_value})";
