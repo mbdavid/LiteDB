@@ -187,6 +187,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Search for a single instance of T by Id. Shortcut from Query.SingleOrDefaultById
+        /// </summary>
+        public T SingleOrDefaultById<T>(BsonValue id, string collectionName = null)
+        {
+            return this.Query<T>(collectionName).SingleOrDefaultById(id);
+        }
+
+        /// <summary>
         /// Execute Query[T].Where(query).ToList();
         /// </summary>
         public List<T> Fetch<T>(Query query = null, string collectionName = null)

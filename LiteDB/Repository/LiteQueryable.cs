@@ -152,6 +152,16 @@ namespace LiteDB
             return this.ToEnumerable().Single();
         }
 
+        /// <summary>
+        /// Return entity by _id key. Throws InvalidOperationException if no document
+        /// </summary>
+        public T SingleOrDefaultById(BsonValue id)
+        {
+            _query = Query.EQ("_id", id);
+
+            return this.ToEnumerable().SingleOrDefault();
+        }
+
         #endregion
 
         #region Execute Lists
