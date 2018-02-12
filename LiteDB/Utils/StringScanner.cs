@@ -43,6 +43,18 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Read current char an move to next
+        /// </summary>
+        public char Current()
+        {
+            var c = this.Source.Substring(this.Index, 1);
+
+            this.Index++;
+
+            return c.ToCharArray()[0];
+        }
+
+        /// <summary>
         /// Indicate that cursor is EOF
         /// </summary>
         public bool HasTerminated
@@ -50,12 +62,14 @@ namespace LiteDB
             get { return this.Index >= this.Source.Length; }
         }
 
+        #region Scan Method
+
         /// <summary>
         /// Scan in current cursor position for this patterns. If found, returns string and run with cursor
         /// </summary>
         public string Scan(string pattern)
         {
-            return this.Scan(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace));
+            return this.Scan(Create(pattern), 0);
         }
 
         /// <summary>
@@ -63,17 +77,7 @@ namespace LiteDB
         /// </summary>
         public string Scan(Regex regex)
         {
-            var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
-
-            if (match.Success)
-            {
-                this.Index += match.Length;
-                return match.Value;
-            }
-            else
-            {
-                return string.Empty;
-            }
+            return this.Scan(regex, 0);
         }
 
         /// <summary>
@@ -81,9 +85,32 @@ namespace LiteDB
         /// </summary>
         public string Scan(string pattern, int group)
         {
-            return this.Scan(new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace), group);
+            return this.Scan(Create(pattern), group);
         }
 
+        /// <summary>
+        /// Scan in current cursor position for this patterns. Returns true if found and update output value parameter
+        /// </summary>
+        public bool Scan(string pattern, out string value)
+        {
+            value = this.Scan(Create(pattern), 0);
+
+            return value.Length > 0;
+        }
+
+        /// <summary>
+        /// Scan in current cursor position for this patterns. Returns true if found and update output value parameter with group based
+        /// </summary>
+        public bool Scan(string pattern, int group, out string value)
+        {
+            value = this.Scan(Create(pattern), group);
+
+            return value.Length > 0;
+        }
+
+        /// <summary>
+        /// Scan pattern and returns group string index 1 based. If group = 0, return all match
+        /// </summary>
         public string Scan(Regex regex, int group)
         {
             var match = regex.Match(this.Source, this.Index, this.Source.Length - this.Index);
@@ -91,13 +118,20 @@ namespace LiteDB
             if (match.Success)
             {
                 this.Index += match.Length;
-                return group >= match.Groups.Count ? "" : match.Groups[group].Value;
+
+                return 
+                    group == 0 ? match.Value :
+                    group >= match.Groups.Count ? "" : match.Groups[group].Value;
             }
             else
             {
-                return string.Empty;
+                return "";
             }
         }
+
+        #endregion
+
+        #region Match
 
         /// <summary>
         /// Match if pattern is true in current cursor position. Do not change cursor position
@@ -116,6 +150,55 @@ namespace LiteDB
             return match.Success;
         }
 
+        #endregion
+
+        /// <summary>
+        /// Read string until finish - must be consume first quote (single or double)
+        /// </summary>
+        public string ReadString(char quote)
+        {
+            var current = this.Current();
+            var sb = new StringBuilder();
+
+            while (current != quote && !this.HasTerminated)
+            {
+                if (current == '\\')
+                {
+                    current = this.Current();
+
+                    if (current == quote)
+                    {
+                        sb.Append(quote);
+                    }
+                    else
+                    {
+                        switch (current)
+                        {
+                            case '\\': sb.Append('\\'); break;
+                            case '/': sb.Append('/'); break;
+                            case 'b': sb.Append('\b'); break;
+                            case 'f': sb.Append('\f'); break;
+                            case 'n': sb.Append('\n'); break;
+                            case 'r': sb.Append('\r'); break;
+                            case 't': sb.Append('\t'); break;
+                            case 'u':
+                                var codePoint = JsonTokenizer.ParseUnicode(this.Current(), this.Current(), this.Current(), this.Current());
+                                sb.Append((char)codePoint);
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    sb.Append(current);
+                }
+
+                current = this.Current();
+            }
+
+            return sb.ToString();
+        }
+
         /// <summary>
         /// Throw syntax exception if not terminate string
         /// </summary>
@@ -124,6 +207,14 @@ namespace LiteDB
             this.Scan(@"\s*");
 
             if (!this.HasTerminated) throw LiteException.SyntaxError(this);
+        }
+
+        /// <summary>
+        /// Create (or get from cache) regular expression from an string
+        /// </summary>
+        public static Regex Create(string pattern)
+        {
+            return new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace);
         }
     }
 }
