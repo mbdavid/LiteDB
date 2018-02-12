@@ -34,7 +34,7 @@ namespace LiteDB
         /// <summary>
         /// Get/Set a field for document. Fields are case sensitive
         /// </summary>
-        public BsonValue this[string name]
+        public override BsonValue this[string name]
         {
             get
             {

@@ -65,5 +65,24 @@ namespace LiteDB.Tests.Document
             //TODO: implement get from another way
             // Assert.IsTrue(result.All(kv => object.ReferenceEquals(document.Get(kv.Key), kv.Value)));
         }
+
+        [TestMethod]
+        public void Value_Index_From_BsonValue()
+        {
+            var arr = JsonSerializer.Deserialize("[0, 1, 2, 3]");
+            var doc = JsonSerializer.Deserialize("{a:1,b:2,c:3}");
+
+            Assert.AreEqual(0, arr[0].RawValue);
+            Assert.AreEqual(3, arr[3].RawValue);
+
+            Assert.AreEqual(1, doc["a"].RawValue);
+            Assert.AreEqual(3, doc["c"].RawValue);
+
+            arr[1] = 111;
+            doc["b"] = 222;
+
+            Assert.AreEqual(111, arr[1].RawValue);
+            Assert.AreEqual(222, doc["b"].RawValue);
+        }
     }
 }

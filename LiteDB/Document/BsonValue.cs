@@ -195,6 +195,28 @@ namespace LiteDB
 
         #endregion
 
+        #region Index "this" property
+
+        /// <summary>
+        /// Get/Set a field for document. Fields are case sensitive - Works only when value are document
+        /// </summary>
+        public virtual BsonValue this[string name]
+        {
+            get => throw new InvalidOperationException("Cannot access non-document type value on " + this.RawValue);
+            set => throw new InvalidOperationException("Cannot access non-document type value on " + this.RawValue);
+        }
+
+        /// <summary>
+        /// Get/Set value in array position. Works only when value are array
+        /// </summary>
+        public virtual BsonValue this[int index]
+        {
+            get => throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+            set => throw new InvalidOperationException("Cannot access non-array type value on " + this.RawValue);
+        }
+
+        #endregion
+
         #region Convert types
 
         public BsonArray AsArray

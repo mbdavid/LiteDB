@@ -207,7 +207,7 @@ namespace LiteDB
 
                 if (value != null)
                 {
-                    doc[key] = value;
+                    doc[key.AsString] = value;
                 }
             }
 

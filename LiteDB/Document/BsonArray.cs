@@ -50,7 +50,7 @@ namespace LiteDB
             }
         }
 
-        public BsonValue this[int index]
+        public override BsonValue this[int index]
         {
             get
             {

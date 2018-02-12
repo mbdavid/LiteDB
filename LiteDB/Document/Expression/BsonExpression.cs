@@ -252,13 +252,24 @@ namespace LiteDB
                     // read simple or complex document key name
                     var key = this.ReadKey(s).ThrowIfEmpty("Invalid token", s);
 
-                    // read separetor between key and value
-                    s.Scan(@"\s*:\s*"); 
-
                     _source.Append(":");
 
+                    // test if is simplified document notation { a, b, c } == { a: $.a, b: $.b, c: $.c }
+                    var simplified = s.Match(@"\s*([,\}])");
+                    var scanner = s;
+
+                    if (simplified)
+                    {
+                        scanner = new StringScanner("$.['" + key + "']");
+                    }
+                    else
+                    {
+                        // default notation = key: value - read : here
+                        s.Scan(@"\s*:\s*").ThrowIfEmpty("Missing : after key", s);
+                    }
+
                     // read value by parsing as expression
-                    var value = this.ParseFullExpression(s, root, current, isRoot);
+                    var value = this.ParseFullExpression(scanner, root, current, isRoot);
 
                     // add key and value to parameter list (as an expression)
                     keys.Add(Expression.Constant(new BsonValue(key)));
