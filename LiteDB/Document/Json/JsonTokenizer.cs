@@ -219,7 +219,7 @@ namespace LiteDB
                         case 'r': sb.Append('\r'); break;
                         case 't': sb.Append('\t'); break;
                         case 'u':
-                            var codePoint = this.ParseUnicode(this.Read(), this.Read(), this.Read(), this.Read());
+                            var codePoint = ParseUnicode(this.Read(), this.Read(), this.Read(), this.Read());
                             sb.Append((char)codePoint);
                             break;
                     }
@@ -237,17 +237,17 @@ namespace LiteDB
             return sb.ToString();
         }
 
-        private uint ParseUnicode(char c1, char c2, char c3, char c4)
+        public static uint ParseUnicode(char c1, char c2, char c3, char c4)
         {
-            uint p1 = this.ParseSingleChar(c1, 0x1000);
-            uint p2 = this.ParseSingleChar(c2, 0x100);
-            uint p3 = this.ParseSingleChar(c3, 0x10);
-            uint p4 = this.ParseSingleChar(c4, 1);
+            uint p1 = ParseSingleChar(c1, 0x1000);
+            uint p2 = ParseSingleChar(c2, 0x100);
+            uint p3 = ParseSingleChar(c3, 0x10);
+            uint p4 = ParseSingleChar(c4, 1);
 
             return p1 + p2 + p3 + p4;
         }
 
-        private uint ParseSingleChar(char c1, uint multiplier)
+        public static uint ParseSingleChar(char c1, uint multiplier)
         {
             uint p1 = 0;
             if (c1 >= '0' && c1 <= '9')

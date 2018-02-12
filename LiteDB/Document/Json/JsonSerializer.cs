@@ -32,10 +32,24 @@ namespace LiteDB
         /// </summary>
         public static void Serialize(BsonValue value, TextWriter writer, bool pretty = false, bool writeBinary = true)
         {
-            var w = new JsonWriter(writer);
-            w.Pretty = pretty;
-            w.WriteBinary = writeBinary;
+            var w = new JsonWriter(writer)
+            {
+                Pretty = pretty,
+                WriteBinary = writeBinary
+            };
+
             w.Serialize(value ?? BsonValue.Null);
+        }
+
+        /// <summary>
+        /// Json serialize a BsonValue into a StringBuilder
+        /// </summary>
+        public static void Serialize(BsonValue value, StringBuilder sb, bool pretty = false, bool writeBinary = true)
+        {
+            using (var writer = new StringWriter(sb))
+            {
+                Serialize(value, writer, pretty, writeBinary);
+            }
         }
 
         #endregion
