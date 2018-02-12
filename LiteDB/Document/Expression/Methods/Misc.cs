@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal partial class BsonExpressionMethods
     {
         /// <summary>
         /// Get all KEYS names from a document. Support multiple values (document only)

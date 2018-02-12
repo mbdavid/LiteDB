@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal partial class BsonExpressionMethods
     {
         /// <summary>
         /// Count all values. Return a single value

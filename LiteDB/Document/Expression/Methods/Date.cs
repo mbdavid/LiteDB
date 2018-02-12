@@ -7,9 +7,8 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal partial class BsonExpressionMethods
     {
-        public bool IsPath { get; internal set; }
         #region Year/Month/Day/Hour/Minute/Second
 
         /// <summary>

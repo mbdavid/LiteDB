@@ -8,7 +8,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal partial class BsonExpressionMethods
     {
         /// <summary>
         /// Parse a JSON string into a new BsonValue. Support multiple values (string only)

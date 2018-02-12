@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    public partial class BsonExpression
+    internal partial class BsonExpressionMethods
     {
         /// <summary>
         /// Return lower case from string value. Support multiple values (only string)
