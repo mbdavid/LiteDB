@@ -42,35 +42,8 @@ namespace LiteDB
             }
             set
             {
-                if (!IsValidFieldName(name)) throw new ArgumentException(string.Format("Field '{0}' has an invalid name.", name));
-
                 this.RawValue[name] = value ?? BsonValue.Null;
             }
-        }
-
-        /// <summary>
-        /// Test if field name is a valid string: only [\w$]+[\w-]*
-        /// </summary>
-        internal static bool IsValidFieldName(string field)
-        {
-            if (string.IsNullOrEmpty(field)) return false;
-
-            // do not use regex because is too slow
-            for (var i = 0; i < field.Length; i++)
-            {
-                var c = field[i];
-
-                if (char.IsLetterOrDigit(c) || c == '_' || (c == '$' && i == 0))
-                {
-                    continue;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         #region Update support with expressions
@@ -80,7 +53,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonValue> Get(string path, bool includeNullIfEmpty = false)
         {
-            var expr = new BsonExpression(new StringScanner(path), true, true);
+            var expr = BsonExpression.Create(path);
 
             return expr.Execute(this, includeNullIfEmpty);
         }
