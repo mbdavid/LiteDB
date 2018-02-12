@@ -153,7 +153,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return entity by _id key. Throws InvalidOperationException if no document
+        /// Return entity by _id key, or default() if no document.
         /// </summary>
         public T SingleOrDefaultById(BsonValue id)
         {
