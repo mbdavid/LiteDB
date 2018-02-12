@@ -14,40 +14,52 @@ namespace LiteDB.Tests.Document
     {
         private static string jdoc = @"
         {
-            _id: 1,
+            _id: 1, $ref: 1.1
             a: 2,
             b: [3, 4, 5],
             c: null,
             d: [6, { e: 7, f: [8, 9] } ],
             f: { g: 10 },
-            h: ""litedb""
+            h: ""litedb"",
+            ""i!"": 11,
+            ""j!"": { ""k!"": 12, ""l!"" : [13,14] }
         }";
 
 
         [TestMethod]
         public void Json_Paths()
         {
-            Assert.AreEqual("1", Exec("$._id")); // direct access
-            Assert.AreEqual("", Exec("$._id2")); // missing field
-            Assert.AreEqual("2", Exec("$.a")); // direct field access
-            Assert.AreEqual("[3,4,5]", Exec("$.b")); // direct access returns array
-            Assert.AreEqual("3", Exec("$.b[0]")); // fixed array position
-            Assert.AreEqual("3;4;5", Exec("$.b[*]")); // all array items (IEnumerable)
-            Assert.AreEqual("4;5", Exec("$.b[@>=4]")); // array condition
-            Assert.AreEqual("3;5", Exec("$.b[@ % 2 = 1]")); // more complex array condition
-            Assert.AreEqual("", Exec("$.c")); // null value
-            Assert.AreEqual("8", Exec("$.d[1].f[0]")); // inner array item
-            Assert.AreEqual("9", Exec("$.d[1].f[-1]")); // last item (-1)
-            Assert.AreEqual("", Exec("$.d[1].f[777]")); // missing array index
-            Assert.AreEqual("8;9", Exec("$.d[1].f[*]")); // all items inside inner array
-            Assert.AreEqual("{\"g\":10}", Exec("$.f")); // direct access return document
-            Assert.AreEqual("10", Exec("$.f.g")); // inner document field access
-            Assert.AreEqual("", Exec("$.f.g.hhh")); // inner document missing field
+            // all test must return a value (if no value to return, returns null)
+
+            // Test("$", JsonSerializer.Serialize(JsonSerializer.Deserialize(jdoc))); // full document (as empty)
+            // Test("_id", "1").AssertEquals("$._id"); // direct access
+            // Test("_id2", "<null>"); // missing field
+            // Test("a", "2").AssertEquals("$.a"); // direct field access
+            // Test("$.['i!']", "11").AssertEquals("$.[\"i!\"]"); // access field using [ ] - must use $ before
+            // Test("$.['j!'].[\"k!\"]", "12").AssertEquals("$.[\"j!\"].[\"k!\"]"); // access field using [ ] - must use $ before
+            // Test("$.['j!'].['l!'][ * ]", "13;14").AssertEquals("$.[\"j!\"].[\"l!\"][*]"); ; // access field using [ ] - must use $ before
+            // Test("b", "[3,4,5]"); // direct access returns array
+            // Test("b[0]", "3"); // fixed array position
+            // Test("b[*]", "3;4;5"); // all array items (IEnumerable)
+            // Test("c", "<null>"); // null value
+            // Test("d[1].f[0]", "8"); // inner array item
+            // Test("d[1].f[-1]", "9"); // last item (-1)
+            // Test("d[1].f[777]", "<null>"); // missing array index
+            // Test("d[1].f[*]", "8;9"); // all items inside inner array
+            // Test("f", "{\"g\":10}"); // direct access return document
+            // Test("f.g", "10"); // inner document field access
+            // Test("f.g.hhh", "<null>"); // inner document missing field
+
+
+            Test("b[@>=4]", "4;5"); // array condition
+            Test("b[@ % 2 = 1]", "3;5"); // more complex array condition
+
         }
 
         [TestMethod]
         public void Json_Expressions()
         {
+            /*
             Assert.AreEqual("2", Exec("1 + 1")); // simple arithmetic 
             Assert.AreEqual("7", Exec("1 + (2 * 3)")); // using order
             Assert.AreEqual("7", Exec("$._id + (2 * 3)")); // adding document field
@@ -74,7 +86,7 @@ namespace LiteDB.Tests.Document
             // more methods
             Assert.AreEqual("_id;a;b;c;d;f;h", Exec("KEYS($)")); // get keys from document
             Assert.AreEqual("lower;lower;gt5", Exec("IIF($.b[*] >= 5, 'gt' + $.b[*], 'lower')")); // conditional inside IEnumerable
-
+            */
 
         }
 
@@ -103,13 +115,30 @@ namespace LiteDB.Tests.Document
             Assert.IsFalse(doc.Set("_id", new BsonExpression("$._id + 1 - 1")));
         }
 
-        private static string Exec(string expr)
+        /// <summary>
+        /// Run expression and returns formatted expression
+        /// </summary>
+        private static string Test(string expr, string expected)
         {
             var e = new BsonExpression(expr);
             var doc = JsonSerializer.Deserialize(jdoc);
             var result = e.Execute(doc.AsDocument);
 
-            return string.Join(";", result.Select(x => x.IsArray || x.IsDocument ? JsonSerializer.Serialize(x) : x.AsString));
+            var str = string.Join(";", result.Select(x => x.IsArray || x.IsDocument ? JsonSerializer.Serialize(x) : x.IsNull ? "<null>" : x.AsString));
+
+            Assert.AreEqual(expected, str);
+
+            var source = e.ToString();
+
+            return source;
+        }
+    }
+
+    public static class StringExtensionAssert
+    {
+        public static void AssertEquals(this string str, string expect)
+        {
+            Assert.AreEqual(expect, str);
         }
     }
 }
