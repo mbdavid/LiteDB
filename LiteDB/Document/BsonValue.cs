@@ -28,6 +28,11 @@ namespace LiteDB
         public static BsonValue MaxValue => new BsonValue { Type = BsonType.MaxValue, RawValue = "+oo" };
 
         /// <summary>
+        /// Create a new document used in DbRef => { $id: id, $ref: collection }
+        /// </summary>
+        public static BsonDocument DbRef(BsonValue id, string collection) => new BsonDocument { ["$id"] = id, ["$ref"] = collection };
+
+        /// <summary>
         /// Indicate BsonType of this BsonValue
         /// </summary>
         public BsonType Type { get; private set; }
