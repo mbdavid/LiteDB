@@ -46,9 +46,10 @@ namespace LiteDB
         #region Regular expression definitions
 
         /// <summary>
-        /// + - * / = > ... (startsWith, like, between, ....)
+        /// + - * / = > ...
         /// </summary>
-        private static Regex RE_OPERATORS = new Regex(@"^\s*(\+|\-|\*|\/|%|=|!=|>=|>|<=|<|&&|\|\|)\s*");
+        private static Regex RE_OPERATORS = new Regex(@"^\s*(\+|\-|\*|\/|%|=|!=|>=|>|<=|<|&&|\|\|)\s*", RegexOptions.Compiled);
+        private static Regex RE_SIMPLE_FIELD = new Regex(@"^[$\w]+$", RegexOptions.Compiled);
 
         #endregion
 

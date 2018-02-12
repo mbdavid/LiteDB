@@ -249,13 +249,13 @@ namespace LiteDB
 
                 while (!s.HasTerminated)
                 {
-                    // read key
-                    var key = s.Scan(@"([\$\w]\w+)\s*", 1).ThrowIfEmpty("Invalid token", s);
+                    // read simple or complex document key name
+                    var key = this.ReadKey(s).ThrowIfEmpty("Invalid token", s);
 
                     // read separetor between key and value
-                    s.Scan(@":\s*"); 
+                    s.Scan(@"\s*:\s*"); 
 
-                    _source.Append(key + ":");
+                    _source.Append(":");
 
                     // read value by parsing as expression
                     var value = this.ParseFullExpression(s, root, current, isRoot);
@@ -373,7 +373,7 @@ namespace LiteDB
 
                 _source.Append(scope);
 
-                field = this.GetField(s, field);
+                field = this.ReadField(s, field);
 
                 var name = Expression.Constant(field);
                 var expr = Expression.Call(_rootMethod, scope == "$" ? root : current, name) as Expression;
@@ -401,7 +401,7 @@ namespace LiteDB
         {
             if (s.Scan(@"\.(\[\s*['""]|[\$\w]+)", 1, out var field))
             {
-                field = this.GetField(s, field);
+                field = this.ReadField(s, field);
 
                 var name = Expression.Constant(field);
 
@@ -442,38 +442,61 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get field from simples \w regex or ['complex'] - also, add into source
+        /// Get field from simples \w regex or ['comp-lex'] - also, add into source
         /// </summary>
-        private string GetField(StringScanner s, string field)
+        private string ReadField(StringScanner s, string field)
         {
-            var complex = false;
-
             // if field are complex
             if (field.StartsWith("["))
             {
                 field = s.ReadString(field.EndsWith("'") ? '\'' : '"');
                 s.Scan(@"\s*\]");
-                complex = true;
             }
 
             if (field.Length > 0)
             {
                 _source.Append(".");
 
-                if (complex)
+                if (RE_SIMPLE_FIELD.IsMatch(field))
+                {
+                    _source.Append(field);
+                }
+                else
                 {
                     _source.Append("[");
                     JsonSerializer.Serialize(field, _source);
                     _source.Append("]");
                 }
-                else
-                {
-                    _source.Append(field);
-                }
             }
 
             return field;
         }
+
+        /// <summary>
+        /// Read key in document definition with single word or "comp-lex"
+        /// </summary>
+        private string ReadKey(StringScanner s)
+        {
+            var key = s.Scan(@"(['""]|[$\w]+)");
+
+            // if key are complex, read as string
+            if (key == "'" || key == "\"")
+            {
+                key = s.ReadString(key == "'" ? '\'' : '"');
+            }
+
+            if (RE_SIMPLE_FIELD.IsMatch(key))
+            {
+                _source.Append(key);
+            }
+            else
+            {
+                JsonSerializer.Serialize(key, _source);
+            }
+
+            return key;
+        }
+
 
         #endregion
 

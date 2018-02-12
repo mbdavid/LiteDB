@@ -1,0 +1,79 @@
+﻿# BsonExpression Unit Test
+#   "{" new document to be used in next tests
+#	">" indicate new expression to test
+#   "~" expected expression formatted
+#   "=" expected result (support multilines per test)
+
+# Simple data types
+{ a: 1, b: null, c: true, d:[1,2], e:{d:4} }
+> a
+= 1
+> b
+= null
+> c
+= true
+> d
+= [1,2]
+> e
+= {d:4}
+
+# Subdocument
+{ a: { b: { c: { d: 1 } } } }
+> a
+= { b: { c: { d: 1 } } }
+> a.b
+= { c: { d: 1 } }
+> a.b.c
+= { d: 1 }
+> a.b.c.d
+= 1
+
+# Missing field
+{ a: { b: 1 } }
+> b
+= null
+> a.c
+= null
+> x.j
+= null
+
+# Array position
+{ a: [1, 2, 3] }
+> a[0]
+= 1
+> a[1]
+= 2
+> a[-1]
+= 3
+> a[99]
+= null
+
+# Complex field name
+{ "a b": 1, "c d": { "x y": 2 }, x: { "$y!z\"'": 3 } }
+> $.["a b"]
+= 1
+> $.['c d'].['x y']
+= 2
+> $.x.["$y!z\"'"]
+= 3
+> $.x.['$y!z"\'']
+= 3
+
+# Document creation
+{}
+> { a : 1}
+= { a: 1}
+> { b: 1+1 }
+= { b: 2 }
+> {'a-b':1, "x+1": 2, 'y': 3}
+= {"a-b": 1, "x+1": 2, y: 3 }
+
+# Document simple notation (value == key)
+{ a: 1, b: 2, c: 3, d: {e: 4, f: 5 }}
+> { a }
+= { a: 1 }
+> { a, c }
+= { a: 1, c: 3 }
+> { d, z: d.e }
+= { d: { e: 4, f: 5 }, z: 4 }
+
