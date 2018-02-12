@@ -15,11 +15,10 @@ namespace LiteDB.Tests.Document
     public class BsonExpression_Tests
     {
         [TestMethod]
-        public void BsonExpression_AllTests()
-        {
-            this.RunTest("Path.txt");
-            this.RunTest("Format.txt");
-        }
+        public void BsonExpression_Path() => this.RunTest("Path.txt");
+
+        [TestMethod]
+        public void BsonExpression_Format() => this.RunTest("Format.txt");
 
         public void RunTest(string filename)
         {

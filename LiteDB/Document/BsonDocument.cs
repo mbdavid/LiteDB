@@ -59,6 +59,22 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Copy all properties from other document inside this current document
+        /// </summary>
+        public BsonDocument Extend(BsonDocument other)
+        {
+            var myDict = this.RawValue;
+            var otherDict = other.RawValue;
+
+            foreach (var key in other.RawValue.Keys)
+            {
+                myDict[key] = otherDict[key];
+            }
+
+            return this;
+        }
+
+        /// <summary>
         /// Find the field inside document tree, using json-like path, and update with an expression paramter. If field nod exists, create new field. Return true if document was changed
         /// </summary>
         public bool Set(string path, BsonExpression expr)
@@ -133,7 +149,6 @@ namespace LiteDB
 
             return changed;
         }
-
 
         #endregion
 
@@ -258,19 +273,6 @@ namespace LiteDB
             {
                 otherDict[key] = myDict[key];
             }
-        }
-
-        public BsonDocument Extend(BsonDocument other)
-        {
-            var myDict = this.RawValue;
-            var otherDict = other.RawValue;
-
-            foreach (var key in other.RawValue.Keys)
-            {
-                myDict[key] = otherDict[key];
-            }
-
-            return this;
         }
 
         public bool Remove(KeyValuePair<string, BsonValue> item)

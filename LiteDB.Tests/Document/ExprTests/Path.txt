@@ -77,7 +77,10 @@
 > { d, z: d.e }
 = { d: { e: 4, f: 5 }, z: 4 }
 
+# Document simplified notation with complex key
 { "a b": 1, c: 2 }
 > { 'a b' }
 ~ {"a b":$.["a b"]}
 = { "a b": 1 }
+> { 'c' }
+= { c: 2 }
