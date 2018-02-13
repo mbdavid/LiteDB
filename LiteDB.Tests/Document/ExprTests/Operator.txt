@@ -1,0 +1,25 @@
+﻿# BsonExpression Unit Test
+#   "{" new document to be used in next tests
+#	">" indicate new expression to test
+#   "~" expected expression formatted
+#   "=" expected result (support multilines per test)
+
+# Operators order
+{ a: 1, b: 2, c: 3 }
+> a + 1 - c
+= -1
+> 5 + c * 2
+= 11
+> (5 + c) * 2
+= 16
+
+# Comparer operators
+{ a: 1, b: 2, c: 3 }
+> 1 = 1
+= true
+> a = 1
+= true
+> a > 0 && c = 3
+= true
+> a = 0 || b = 1 || c = 2 || 1=1
+= true

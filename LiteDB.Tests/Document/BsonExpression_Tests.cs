@@ -20,6 +20,9 @@ namespace LiteDB.Tests.Document
         [TestMethod]
         public void BsonExpression_Format() => this.RunTest("Format.txt");
 
+        [TestMethod]
+        public void BsonExpression_Operator() => this.RunTest("Operator.txt");
+
         public void RunTest(string filename)
         {
             var tests = this.ReadTests("LiteDB.Tests.Document.ExprTests." + filename);

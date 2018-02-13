@@ -39,11 +39,13 @@
 
   <ItemGroup>
     <None Remove="Document\ExprTests\Format.txt" />
+    <None Remove="Document\ExprTests\Operator.txt" />
     <None Remove="Document\Path.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Document\ExprTests\Format.txt" />
+    <EmbeddedResource Include="Document\ExprTests\Operator.txt" />
     <EmbeddedResource Include="Document\ExprTests\Path.txt" />
   </ItemGroup>
 
