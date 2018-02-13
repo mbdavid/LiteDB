@@ -4,7 +4,7 @@
 #   "~" expected expression formatted
 #   "=" expected result (support multilines per test)
 
-# Simple data types
+# Simple path navigation
 { a: 1, b: null, c: true, d:[1,2], e:{d:4} }
 > a
 = 1
@@ -17,7 +17,7 @@
 > e
 = {d:4}
 
-# Subdocument
+# Navigation on subdocument
 { a: { b: { c: { d: 1 } } } }
 > a
 = { b: { c: { d: 1 } } }
@@ -59,9 +59,14 @@
 > $.x.['$y!z"\'']
 = 3
 
-# Document creation
-{}
-> { a : 1}
+# Object creation
+> 'lite' + "db"
+= "litedb" 
+> true
+= true
+> 123
+= 123
+> { a: 1}
 = { a: 1}
 > { b: 1+1 }
 = { b: 2 }

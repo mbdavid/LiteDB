@@ -1,0 +1,55 @@
+﻿# BsonExpression Unit Test
+#   "{" new document to be used in next tests
+#	">" indicate new expression to test
+#   "~" expected expression formatted
+#   "=" expected result (support multilines per test)
+
+# String functions
+> "Lite" + "DB" + "v" + 5
+= "LiteDBv5"
+> upper("liteDB")
+= "LITEDB"
+> LOWER("LiteDB")
+= "litedb"
+> UPPER("LiteDB" + "-ok")
+= "LITEDB-OK"
+> UPPER("LiteDB") + "-ok"
+= "LITEDB-ok"
+> UPPER(3)
+= null
+> SUBSTRING("LiteDB", 0, 2)
+= "Li"
+> LOWER(SUBSTRING("LiteDB", 4))
+= "db"
+> LPAD(27, 5, "0")
+= "00027"
+> RPAD(27, 5, "0")
+= "27000"
+
+# String in array items
+{ arr: ["one", "two"] }
+> UPPER(arr[*])
+= "ONE"
+= "TWO"
+> SUBSTRING(arr[*], 0, 1)
+= "o"
+= "t"
+
+# JSON Parser
+> JSON('{a:1, b:"string"}')
+= { a: 1, b: "string" }
+> JSON('"string-only"')
+= "string-only"
+> JSON('error')
+= null
+
+# EXTEND document
+{a:1}
+> EXTEND($, {b:2})
+= {a:1, b:2}
+> EXTEND($, {a:2})
+= {a:2}
+> EXTEND($, {a:2, b:{c:2}})
+= {a: 2, b: {c: 2} }
+> EXTEND({a:true}, {a: false})
+= {a:false}

@@ -71,7 +71,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return value string with left padding. Support multiple values (only string)
+        /// Return value string with left padding. Support multiple values
         /// </summary>
         public static IEnumerable<BsonValue> LPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
@@ -86,7 +86,7 @@ namespace LiteDB
 
 
         /// <summary>
-        /// Return value string with right padding. Support multiple values (only string)
+        /// Return value string with right padding. Support multiple values
         /// </summary>
         public static IEnumerable<BsonValue> RPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {

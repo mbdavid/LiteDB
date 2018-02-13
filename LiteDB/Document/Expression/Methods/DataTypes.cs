@@ -16,9 +16,20 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> JSON(IEnumerable<BsonValue> values)
         {
-            foreach (var value in values.Where(x => x.IsString))
+            foreach (var str in values.Where(x => x.IsString))
             {
-                yield return JsonSerializer.Deserialize(value);
+                BsonValue value;
+
+                try
+                {
+                    value = JsonSerializer.Deserialize(str);
+                }
+                catch(LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
+                {
+                    value = BsonValue.Null;
+                }
+
+                yield return value;
             }
         }
 

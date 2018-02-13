@@ -23,6 +23,9 @@ namespace LiteDB.Tests.Document
         [TestMethod]
         public void BsonExpression_Operator() => this.RunTest("Operator.txt");
 
+        [TestMethod]
+        public void BsonExpression_Method() => this.RunTest("Method.txt");
+
         public void RunTest(string filename)
         {
             var tests = this.ReadTests("LiteDB.Tests.Document.ExprTests." + filename);
@@ -40,7 +43,9 @@ namespace LiteDB.Tests.Document
                 if (test.Results.Count == 0) continue;
 
                 // test result
-                var result = expr.Execute(test.Document, true).ToList();
+                var doc = JsonSerializer.Deserialize(test.JsonDocument ?? "{}") as BsonDocument;
+
+                var result = expr.Execute(doc, true).ToList();
 
                 if (!result.SequenceEqual(test.Results))
                 {
@@ -60,7 +65,7 @@ namespace LiteDB.Tests.Document
             {
                 var s = new StringScanner(reader.ReadToEnd().Trim() + "\n");
 
-                BsonDocument doc = null;
+                string json = null;
                 ExprTest test = null;
                 var comment = "";
 
@@ -68,7 +73,7 @@ namespace LiteDB.Tests.Document
                 {
                     if (s.Match(@">")) // new test
                     {
-                        test = new ExprTest { Document = doc, Expression = s.Scan(@">\s*([\s\S]*?)\n", 1).Trim(), Comment = comment };
+                        test = new ExprTest { JsonDocument = json, Expression = s.Scan(@">\s*([\s\S]*?)\n", 1).Trim(), Comment = comment };
                         tests.Add(test);
                     }
                     else if (s.Match("=")) // new result
@@ -85,7 +90,9 @@ namespace LiteDB.Tests.Document
                     }
                     else if (s.Match(@"\{")) // new doc
                     {
-                        doc = JsonSerializer.Deserialize(s) as BsonDocument;
+                        var pos = s.Index;
+                        JsonSerializer.Deserialize(s);
+                        json = s.Source.Substring(pos, s.Index - pos);
                     }
                     else
                     {
@@ -101,7 +108,7 @@ namespace LiteDB.Tests.Document
 
     public class ExprTest
     {
-        public BsonDocument Document { get; set; }
+        public string JsonDocument { get; set; }
         public string Expression { get; set; }
         public string Formatted { get; set; }
         public List<BsonValue> Results { get; set; } = new List<BsonValue>();
