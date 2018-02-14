@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,8 +16,9 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            var e = BsonExpression.Create("DATE()");
+            var e = BsonExpression.Parse(new StringScanner("_id=1 and name='John'"), true);
 
+            //var r = e.Execute(new BsonDocument()).First();
 
             ;
 

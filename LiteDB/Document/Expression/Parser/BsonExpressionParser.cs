@@ -19,34 +19,39 @@ namespace LiteDB
         #region Operators quick access
 
         /// <summary>
-        /// Operation definition by methods
+        /// Operation definition by methods with defined expression type
         /// </summary>
-        private static Dictionary<string, MethodInfo> _operators = new Dictionary<string, MethodInfo>
+        private static Dictionary<string, Tuple<MethodInfo, BsonExpressionType>> _operators = new Dictionary<string, Tuple<MethodInfo, BsonExpressionType>>
         {
-            ["%"] = typeof(BsonExpressionOperators).GetMethod("MOD"),
-            ["/"] = typeof(BsonExpressionOperators).GetMethod("DIVIDE"),
-            ["*"] = typeof(BsonExpressionOperators).GetMethod("MULTIPLY"),
-            ["+"] = typeof(BsonExpressionOperators).GetMethod("ADD"),
-            ["-"] = typeof(BsonExpressionOperators).GetMethod("MINUS"),
-            [">"] = typeof(BsonExpressionOperators).GetMethod("GT"),
-            [">="] = typeof(BsonExpressionOperators).GetMethod("GTE"),
-            ["<"] = typeof(BsonExpressionOperators).GetMethod("LT"),
-            ["<="] = typeof(BsonExpressionOperators).GetMethod("LTE"),
-            ["="] = typeof(BsonExpressionOperators).GetMethod("EQ"),
-            ["!="] = typeof(BsonExpressionOperators).GetMethod("NEQ"),
+            // arithmetic
+            ["%"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MOD"), BsonExpressionType.Modulo),
+            ["/"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("DIVIDE"), BsonExpressionType.Divide),
+            ["*"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MULTIPLY"), BsonExpressionType.Multiply),
+            ["+"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("ADD"), BsonExpressionType.Add),
+            ["-"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MINUS"), BsonExpressionType.Subtract),
+
+            // conditional
+            [">"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT"), BsonExpressionType.GreaterThan),
+            [">="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE"), BsonExpressionType.GreaterThanOrEqual),
+            ["<"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT"), BsonExpressionType.LessThan),
+            ["<="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE"), BsonExpressionType.LessThanOrEqual),
+            ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
+            ["!="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ"), BsonExpressionType.NotEqual),
             //["startswith"] = typeof(ExpressionOperators).GetMethod("STARTSWITH"),
             //["endswith"] = typeof(ExpressionOperators).GetMethod("ENDSWITH"),
             //["between"] = typeof(ExpressionOperators).GetMethod("BETWEEN"),
-            [" OR "] = typeof(BsonExpressionOperators).GetMethod("OR"),
-            [" AND "] = typeof(BsonExpressionOperators).GetMethod("AND")
+
+            // logic
+            [" OR "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or),
+            [" AND "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("AND"), BsonExpressionType.And)
         };
 
-        private static MethodInfo _rootPathMethod = typeof(ExpressionAccess).GetMethod("ROOT");
-        private static MethodInfo _memberPathMethod = typeof(ExpressionAccess).GetMethod("MEMBER");
-        private static MethodInfo _arrayPathMethod = typeof(ExpressionAccess).GetMethod("ARRAY");
+        private static MethodInfo _rootPathMethod = typeof(BsonExpressionOperators).GetMethod("ROOT_PATH");
+        private static MethodInfo _memberPathMethod = typeof(BsonExpressionOperators).GetMethod("MEMBER_PATH");
+        private static MethodInfo _arrayPathMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_PATH");
 
-        private static MethodInfo _documentInitMethod = typeof(ExpressionAccess).GetMethod("DOCUMENT");
-        private static MethodInfo _arrayInitMethod = typeof(ExpressionAccess).GetMethod("ARRAY");
+        private static MethodInfo _documentInitMethod = typeof(BsonExpressionOperators).GetMethod("DOCUMENT_INIT");
+        private static MethodInfo _arrayInitMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_INIT");
 
         #endregion
 
@@ -55,7 +60,7 @@ namespace LiteDB
         /// <summary>
         /// + - * / = > ...
         /// </summary>
-        private static Regex RE_OPERATORS = new Regex(@"^\s*(\+|\-|\*|\/|%|=|!=|>=|>|<=|<|\sAND\s|\sOR\s)\s*", RegexOptions.Compiled);
+        private static Regex RE_OPERATORS = new Regex(@"^\s*(\+|\-|\*|\/|%|=|!=|>=|>|<=|<|\sAND\s|\sOR\s)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex RE_SIMPLE_FIELD = new Regex(@"^[$\w]+$", RegexOptions.Compiled);
 
         #endregion
@@ -112,7 +117,7 @@ namespace LiteDB
             while (!s.HasTerminated)
             {
                 // read operator between expressions
-                var op = s.Scan(RE_OPERATORS, 1);
+                var op = s.Scan(RE_OPERATORS, 1).ToUpper();
 
                 // if no valid operator, stop reading string
                 if (op.Length == 0) break;
@@ -127,7 +132,7 @@ namespace LiteDB
             var andOperator = _operators.Count - 1; // last operator are AND
 
             // now, process operator in correct order
-            while (values.Count >= 2 || (onlyTerms && order == andOperator))
+            while (values.Count >= 2 && (onlyTerms == false || order < andOperator))
             {
                 var op = _operators.ElementAt(order);
                 var n = ops.IndexOf(op.Key);
@@ -141,18 +146,14 @@ namespace LiteDB
                     // get left/right values to execute operator
                     var left = values.ElementAt(n);
                     var right = values.ElementAt(n + 1);
-                    var conditional = op.Key.Trim();
 
                     // process result in a single value
                     var result = new BsonExpression
                     {
-                        Type = 
-                            conditional == "OR" ? BsonExpressionType.Or :
-                            conditional == "AND" ? BsonExpressionType.And : BsonExpressionType.Conditional,
+                        Type = op.Value.Item2,
                         IsConstant = left.IsConstant && right.IsConstant,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
-                        Conditional = conditional,
-                        Expression = Expression.Call(op.Value, left.Expression, right.Expression),
+                        Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
                         Right = right,
                         Source = left.Source + op.Key + right.Source
@@ -201,7 +202,7 @@ namespace LiteDB
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Constant,
+                Type = BsonExpressionType.Double,
                 IsConstant = true,
                 IsImmutable = true,
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
@@ -221,7 +222,7 @@ namespace LiteDB
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Constant,
+                Type = BsonExpressionType.Int,
                 IsConstant = true,
                 IsImmutable = true,
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
@@ -241,7 +242,7 @@ namespace LiteDB
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Constant,
+                Type = BsonExpressionType.Boolean,
                 IsConstant = true,
                 IsImmutable = true,
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
@@ -260,7 +261,7 @@ namespace LiteDB
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Constant,
+                Type = BsonExpressionType.Null,
                 IsConstant = true,
                 IsImmutable = true,
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
@@ -281,7 +282,7 @@ namespace LiteDB
 
             return new BsonExpression
             {
-                Type = BsonExpressionType.Constant,
+                Type = BsonExpressionType.String,
                 IsConstant = true,
                 IsImmutable = true,
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
@@ -336,6 +337,9 @@ namespace LiteDB
                 // add key and value to parameter list (as an expression)
                 keys.Add(Expression.Constant(new BsonValue(key)));
                 values.Add(value.Expression);
+
+                // include value source in current source
+                source.Append(value.Source);
 
                 if (s.Scan(@"\s*,\s*").Length > 0)
                 {

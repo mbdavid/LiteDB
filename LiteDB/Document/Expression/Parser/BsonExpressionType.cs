@@ -10,13 +10,32 @@ namespace LiteDB
     public enum BsonExpressionType
     {
         Empty,
-        Constant,
-        Parameter,
+
+        Double,
+        Int,
+        String,
+        Boolean,
+        Null,
         Array,
         Document,
+
+        Parameter,
         Call,
         Path,
-        Conditional,
+
+        Modulo,
+        Add,
+        Subtract,
+        Multiply,
+        Divide,
+
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+        Equal,
+        NotEqual,
+
         Or,
         And
     }

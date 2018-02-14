@@ -45,14 +45,22 @@ namespace LiteDB.Tests.Document
                 // test result
                 var doc = JsonSerializer.Deserialize(test.JsonDocument ?? "{}") as BsonDocument;
 
-                var result = expr.Execute(doc, true).ToList();
-
-                if (!result.SequenceEqual(test.Results))
+                try
                 {
-                    Assert.AreEqual(string.Join("; ", result.Select(x => x.ToString())),
-                        string.Join("; ", test.Results.Select(x => x.ToString())),
-                        test.Comment + " : " + test.Expression + " (" + filename + ")");
+                    var result = expr.Execute(doc, true).ToList();
+
+                    if (!result.SequenceEqual(test.Results))
+                    {
+                        Assert.AreEqual(string.Join("; ", result.Select(x => x.ToString())),
+                            string.Join("; ", test.Results.Select(x => x.ToString())),
+                            test.Comment + " : " + test.Expression + " (" + filename + ")");
+                    }
                 }
+                catch(Exception ex)
+                {
+                    Assert.Fail($"ERROR in {test.Expression}: {ex.Message}");
+                }
+
             }
         }
 

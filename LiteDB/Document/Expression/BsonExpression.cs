@@ -47,14 +47,20 @@ namespace LiteDB
         internal BsonExpression Right { get; set; }
 
         /// <summary>
-        /// In conditional expression, indicate operator ("=", ">", ...)
-        /// </summary>
-        internal string Conditional { get; set; }
-
-        /// <summary>
         /// Get transformed LINQ expression
         /// </summary>
         internal Expression Expression { get; set; }
+
+        /// <summary>
+        /// Indicate that expression are binary conditional expression (=, >, ...)
+        /// </summary>
+        internal bool IsConditional =>
+            this.Type == BsonExpressionType.GreaterThan ||
+            this.Type == BsonExpressionType.GreaterThanOrEqual ||
+            this.Type == BsonExpressionType.LessThan ||
+            this.Type == BsonExpressionType.LessThanOrEqual ||
+            this.Type == BsonExpressionType.NotEqual ||
+            this.Type == BsonExpressionType.Equal;
 
         /// <summary>
         /// Compiled Expression into a function to be executed
@@ -145,5 +151,10 @@ namespace LiteDB
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return $"{this.Source} ({this.Type})";
+        }
     }
 }
