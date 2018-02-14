@@ -15,6 +15,13 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
+            var e = BsonExpression.Create("DATE()");
+
+
+            ;
+
+
+            /*
             File.Delete(datafile);
 
             var total = 0d;
@@ -29,6 +36,7 @@ namespace LiteDB.Demo
                     Console.WriteLine("=> Average: " + (total / counter).ToString("0") + " (" + counter + ")");
                 }
             }
+            */
 
             Console.WriteLine("End");
             Console.ReadKey();

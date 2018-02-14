@@ -7,7 +7,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ExpressionOperators
+    internal class BsonExpressionOperators
     {
         /// <summary>
         /// Add two number values. If any side are string, concat left+right as string. Support multiples values

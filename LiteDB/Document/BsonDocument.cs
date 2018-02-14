@@ -97,7 +97,7 @@ namespace LiteDB
             var field = path.StartsWith("$") ? path : "$." + path;
             var parent = field.Substring(0, field.LastIndexOf('.'));
             var key = field.Substring(field.LastIndexOf('.') + 1);
-            var expr = new BsonExpression(parent);
+            var expr = BsonExpression.Create(parent);
             var changed = false;
 
             foreach (var item in expr.Execute(this, false).Where(x => x.IsDocument))
@@ -138,7 +138,7 @@ namespace LiteDB
 
             if (addInArray == false) return this.Set(path, value);
 
-            var expr = new BsonExpression(path.StartsWith("$") ? path : "$." + path);
+            var expr = BsonExpression.Create(path);
             var changed = false;
 
             foreach (var arr in expr.Execute(this, false).Where(x => x.IsArray))

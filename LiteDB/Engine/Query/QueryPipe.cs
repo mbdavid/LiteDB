@@ -72,7 +72,7 @@ namespace LiteDB
         /// </summary>
         private IEnumerable<BsonDocument> Include(IEnumerable<BsonDocument> source, BsonExpression path)
         {
-            if (path.IsPath == false) throw LiteException.InvalidExpressionType(path);
+            if (path.Type == BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path);
 
             foreach(var doc in source)
             {

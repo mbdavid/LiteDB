@@ -32,7 +32,7 @@ namespace LiteDB.Tests.Document
 
             foreach(var test in tests)
             {
-                var expr = new BsonExpression(test.Expression);
+                var expr = BsonExpression.Create(test.Expression);
                 
                 // test formatted source
                 if (test.Formatted != null)

@@ -59,7 +59,7 @@ namespace LiteDB
                     var arr = value.AsArray;
 
                     // [<expr>] - index are an expression
-                    if (expr.IsEmpty == false)
+                    if (expr.Type != BsonExpressionType.Empty)
                     {
                         foreach (var item in arr)
                         {

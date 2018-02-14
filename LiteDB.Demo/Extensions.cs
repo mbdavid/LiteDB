@@ -16,7 +16,7 @@ namespace LiteDB.Demo
         {
             using (var t = engine.BeginTrans())
             {
-                engine.EnsureIndex(collection, name, new BsonExpression(expr), unique, t);
+                engine.EnsureIndex(collection, name, BsonExpression.Create(expr), unique, t);
 
                 t.Commit();
             }

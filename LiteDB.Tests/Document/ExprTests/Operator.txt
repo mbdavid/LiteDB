@@ -19,7 +19,7 @@
 = true
 > a = 1
 = true
-> a > 0 && c = 3
+> a > 0 and c = 3
 = true
-> a = 0 || b = 1 || c = 2 || 1=1
+> a = 0 or b = 1 or c = 2 or 1=1
 = true
