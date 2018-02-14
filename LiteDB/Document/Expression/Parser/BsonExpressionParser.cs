@@ -107,9 +107,9 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        public static List<BsonExpression> ParseFullExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot, bool onlyTerms)
+        public static List<BsonExpression> ParseFullExpression(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot, bool onlyTerms)
         {
-            var first = ParseSingleExpression(s, root, current, isRoot);
+            var first = ParseSingleExpression(s, root, current, parameters, isRoot);
             var values = new List<BsonExpression> { first };
             var ops = new List<string>();
 
@@ -122,7 +122,7 @@ namespace LiteDB
                 // if no valid operator, stop reading string
                 if (op.Length == 0) break;
 
-                var expr = ParseSingleExpression(s, root, current, isRoot);
+                var expr = ParseSingleExpression(s, root, current, parameters, isRoot);
 
                 values.Add(expr);
                 ops.Add(op);
@@ -174,7 +174,7 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        private static BsonExpression ParseSingleExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
+        private static BsonExpression ParseSingleExpression(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             return
                 TryParseDouble(s) ??
@@ -182,11 +182,12 @@ namespace LiteDB
                 TryParseBool(s) ??
                 TryParseNull(s) ??
                 TryParseString(s) ??
-                TryParseDocument(s, root, current, isRoot) ??
-                TryParseArray(s, root, current, isRoot) ??
-                TryParseInnerExpression(s, root, current, isRoot) ??
-                TryParseMethodCall(s, root, current, isRoot) ??
-                TryParsePath(s, root, current, isRoot) ??
+                TryParseDocument(s, root, current, parameters, isRoot) ??
+                TryParseArray(s, root, current, parameters, isRoot) ??
+                TryParseParameter(s, root, current, parameters, isRoot) ??
+                TryParseInnerExpression(s, root, current, parameters, isRoot) ??
+                TryParseMethodCall(s, root, current, parameters, isRoot) ??
+                TryParsePath(s, root, current, parameters, isRoot) ??
                 throw LiteException.SyntaxError(s);
         }
 
@@ -293,7 +294,7 @@ namespace LiteDB
         /// <summary>
         /// Try parse json document - return null if not document token
         /// </summary>
-        private static BsonExpression TryParseDocument(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
+        private static BsonExpression TryParseDocument(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (s.Scan(@"\{\s*").Length == 0) return null;
 
@@ -328,7 +329,7 @@ namespace LiteDB
                 }
 
                 // read value by parsing as expression
-                var value = ParseFullExpression(scanner, root, current, isRoot, false).Single();
+                var value = ParseFullExpression(scanner, root, current, parameters, isRoot, false).Single();
 
                 // update isImmutable/isConstant only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -368,7 +369,7 @@ namespace LiteDB
         /// <summary>
         /// Try parse array - return null if not array token
         /// </summary>
-        private static BsonExpression TryParseArray(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
+        private static BsonExpression TryParseArray(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (s.Scan(@"\[\s*").Length == 0) return null;
 
@@ -382,7 +383,7 @@ namespace LiteDB
             while (!s.HasTerminated)
             {
                 // read value expression
-                var value = ParseFullExpression(s, root, current, isRoot, false).Single();
+                var value = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
 
                 // update isImmutable/isConstant only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -414,14 +415,33 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Try parse parameter - return null if not parameter token
+        /// </summary>
+        private static BsonExpression TryParseParameter(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        {
+            if (!s.Scan(@"\@(\w+)", 1, out var parameterName)) return null;
+
+            var name = Expression.Constant(parameterName);
+
+            return new BsonExpression
+            {
+                Type = BsonExpressionType.Parameter,
+                IsConstant = false,
+                IsImmutable = true,
+                Expression = Expression.Call(_rootPathMethod, parameters, name),
+                Source = "@" + parameterName
+            };
+        }
+
+        /// <summary>
         /// Try parse inner expression - return null if not bracket token
         /// </summary>
-        private static BsonExpression TryParseInnerExpression(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
+        private static BsonExpression TryParseInnerExpression(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (s.Scan(@"\(\s*").Length == 0) return null;
 
             // read a inner expression inside ( and )
-            var inner = ParseFullExpression(s, root, current, isRoot, false).Single();
+            var inner = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
 
             if (s.Scan(@"\s*\)").Length == 0) throw LiteException.SyntaxError(s);
 
@@ -438,12 +458,12 @@ namespace LiteDB
         /// <summary>
         /// Try parse method call - return null if not method call
         /// </summary>
-        private static BsonExpression TryParseMethodCall(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
+        private static BsonExpression TryParseMethodCall(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             if (!s.Scan(@"(\w+)\s*\(", 1, out var methodName)) return null;
 
             // get static method from this class
-            var parameters = new List<Expression>();
+            var pars = new List<Expression>();
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
@@ -454,13 +474,13 @@ namespace LiteDB
             {
                 while (!s.HasTerminated)
                 {
-                    var parameter = ParseFullExpression(s, root, current, isRoot, false).Single();
+                    var parameter = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
 
                     // update isImmutable/isConstant only when came false
                     if (parameter.IsImmutable == false) isImmutable = false;
                     if (parameter.IsConstant == false) isConstant = false;
 
-                    parameters.Add(parameter.Expression);
+                    pars.Add(parameter.Expression);
 
                     if (s.Scan(@"\s*,\s*").Length > 0)
                     {
@@ -474,7 +494,7 @@ namespace LiteDB
 
             source.Append(")");
 
-            var method = GetMethod(methodName, parameters.Count);
+            var method = GetMethod(methodName, pars.Count);
 
             if (method == null) throw LiteException.SyntaxError(s, "Method " + methodName + " not exist or invalid parameter count");
 
@@ -489,7 +509,7 @@ namespace LiteDB
                 Type = BsonExpressionType.Call,
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
-                Expression = Expression.Call(method, parameters.ToArray()),
+                Expression = Expression.Call(method, pars.ToArray()),
                 Source = source.ToString()
             };
         }
@@ -497,7 +517,7 @@ namespace LiteDB
         /// <summary>
         /// Try parse JSON-Path - return null if not method call
         /// </summary>
-        private static BsonExpression TryParsePath(StringScanner s, ParameterExpression root, ParameterExpression current, bool isRoot)
+        private static BsonExpression TryParsePath(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             //TODO precisa arrumar aqui: não pode aceitar $teste ou @campo (sem ponto)
             var scope = s.Scan(@"([\$\@])\.?", 1);
@@ -520,7 +540,7 @@ namespace LiteDB
             // parse the rest of path
             while (!s.HasTerminated)
             {
-                var result = ParsePath(s, expr, root, source, ref isImmutable);
+                var result = ParsePath(s, expr, root, parameters, source, ref isImmutable);
 
                 if (result == null) break;
 
@@ -540,7 +560,7 @@ namespace LiteDB
         /// <summary>
         /// Implement a JSON-Path like navigation on BsonDocument. Support a simple range of paths
         /// </summary>
-        private static Expression ParsePath(StringScanner s, Expression expr, ParameterExpression root, StringBuilder source, ref bool isImmutable)
+        private static Expression ParsePath(StringScanner s, Expression expr, ParameterExpression root, ParameterExpression parameters, StringBuilder source, ref bool isImmutable)
         {
             if (s.Scan(@"\.(\[\s*['""]|[\$\w]+)", 1, out var field))
             {
@@ -579,7 +599,7 @@ namespace LiteDB
 
                 source.Append("]");
 
-                return Expression.Call(_arrayPathMethod, expr, Expression.Constant(index), Expression.Constant(inner), root);
+                return Expression.Call(_arrayPathMethod, expr, Expression.Constant(index), Expression.Constant(inner), root, parameters);
             }
             else
             {

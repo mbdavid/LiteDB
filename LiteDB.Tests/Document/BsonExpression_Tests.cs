@@ -11,6 +11,17 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Tests.Document
 {
+    /// <summary>
+    /// BsonExpression unit test from external text file 
+    /// File format:
+    /// "#" new comment used in next tests
+    /// "{" new document to be used in next tests
+    /// ">" indicate new expression to test
+    /// "~" expect expression formatted
+    /// "@" expect parameter value  
+    /// "=" expect result (support multilines per test)
+    /// </summary>
+
     [TestClass]
     public class BsonExpression_Tests
     {
@@ -25,6 +36,9 @@ namespace LiteDB.Tests.Document
 
         [TestMethod]
         public void BsonExpression_Method() => this.RunTest("Method.txt");
+
+        [TestMethod]
+        public void BsonExpression_Parameter() => this.RunTest("Parameter.txt");
 
         public void RunTest(string filename)
         {
@@ -41,6 +55,8 @@ namespace LiteDB.Tests.Document
                 }
 
                 if (test.Results.Count == 0) continue;
+
+                test.Parameters.CopyTo(expr.Parameters);
 
                 // test result
                 var doc = JsonSerializer.Deserialize(test.JsonDocument ?? "{}") as BsonDocument;
@@ -60,7 +76,6 @@ namespace LiteDB.Tests.Document
                 {
                     Assert.Fail($"ERROR in {test.Expression}: {ex.Message}");
                 }
-
             }
         }
 
@@ -92,6 +107,10 @@ namespace LiteDB.Tests.Document
                     {
                         test.Formatted = s.Scan(@"~\s*([\s\S]*?)\n", 1).Trim();
                     }
+                    else if (s.Match(@"\@\w+")) // expected parameter
+                    {
+                        test.Parameters[s.Scan(@"\@(\w+)\s+", 1)] = JsonSerializer.Deserialize(s.Scan(@"([\s\S]*?)\n", 1).Trim());
+                    }
                     else if (s.Match(@"\#")) // comment in test
                     {
                         comment = s.Scan(@"\#\s*([\s\S]*?)\n", 1).Trim();
@@ -120,6 +139,7 @@ namespace LiteDB.Tests.Document
         public string Expression { get; set; }
         public string Formatted { get; set; }
         public List<BsonValue> Results { get; set; } = new List<BsonValue>();
+        public BsonDocument Parameters { get; set; } = new BsonDocument();
         public string Comment { get; set; }
     }
 }

@@ -16,7 +16,12 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            var e = BsonExpression.Parse(new StringScanner("_id=1 and name='John'"), true);
+            var e = BsonExpression.Create("arr[@p1]");
+
+            e.Parameters["p1"] = 0;
+
+
+            var r = e.Execute(new BsonDocument { ["a"] = 1 }).First();
 
             //var r = e.Execute(new BsonDocument()).First();
 

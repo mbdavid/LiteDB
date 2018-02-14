@@ -1,8 +1,4 @@
 ﻿# BsonExpression Unit Test
-#   "{" new document to be used in next tests
-#	">" indicate new expression to test
-#   "~" expected expression formatted
-#   "=" expected result (support multilines per test)
 
 # Operators order
 { a: 1, b: 2, c: 3 }

@@ -234,7 +234,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all values from array according index. If index are MaxValue, return all values
         /// </summary>
-        public static IEnumerable<BsonValue> ARRAY_PATH(IEnumerable<BsonValue> values, int index, BsonExpression expr, BsonDocument root)
+        public static IEnumerable<BsonValue> ARRAY_PATH(IEnumerable<BsonValue> values, int index, BsonExpression expr, BsonDocument root, BsonDocument parameters)
         {
             foreach (var value in values)
             {
@@ -245,6 +245,9 @@ namespace LiteDB
                     // [<expr>] - index are an expression
                     if (expr.Type != BsonExpressionType.Empty)
                     {
+                        // update parameters in expression
+                        parameters.CopyTo(expr.Parameters);
+
                         foreach (var item in arr)
                         {
                             // execute for each child value and except a first bool value (returns if true)

@@ -37,6 +37,11 @@ namespace LiteDB
         internal bool IsConstant { get; set; }
 
         /// <summary>
+        /// Get/Set parameter values that will be used on expression execution
+        /// </summary>
+        public BsonDocument Parameters { get; private set; } = new BsonDocument();
+
+        /// <summary>
         /// In conditional/or/and expressions, indicate Left side
         /// </summary>
         internal BsonExpression Left { get; set; }
@@ -65,7 +70,7 @@ namespace LiteDB
         /// <summary>
         /// Compiled Expression into a function to be executed
         /// </summary>
-        private Func<BsonDocument, BsonValue, IEnumerable<BsonValue>> _func;
+        private Func<BsonDocument, BsonValue, BsonDocument, IEnumerable<BsonValue>> _func;
 
         /// <summary>
         /// Only internal ctor (from BsonParserExpression)
@@ -96,7 +101,7 @@ namespace LiteDB
             else
             {
                 var index = 0;
-                var values = _func(root, current ?? root);
+                var values = _func(root, current ?? root, this.Parameters);
 
                 foreach (var value in values)
                 {
@@ -136,15 +141,15 @@ namespace LiteDB
         {
             var root = Expression.Parameter(typeof(BsonDocument), "root");
             var current = Expression.Parameter(typeof(BsonValue), "current");
+            var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
-            var exprList = BsonExpressionParser.ParseFullExpression(s, root, current, true, onlyTerms);
+            var exprList = BsonExpressionParser.ParseFullExpression(s, root, current, parameters, true, onlyTerms);
 
             foreach(var expr in exprList)
             {
-                var lambda = System.Linq.Expressions.Expression.Lambda<Func<BsonDocument, BsonValue, IEnumerable<BsonValue>>>(expr.Expression, root, current);
+                var lambda = System.Linq.Expressions.Expression.Lambda<Func<BsonDocument, BsonValue, BsonDocument, IEnumerable<BsonValue>>>(expr.Expression, root, current, parameters);
 
                 expr._func = lambda.Compile();
-
             }
 
             return exprList;
