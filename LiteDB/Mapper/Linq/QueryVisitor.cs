@@ -315,53 +315,53 @@ namespace LiteDB
             {
                 var entity = _mapper.GetEntityMapper(type);
                 var part = parts[i];
-				var prop = entity.Members.Find(x => x.MemberName == part);
+                var prop = entity.Members.Find(x => x.MemberName == part);
 
-				//
-				// Moved the code to a method, so it could be used by the `IncludeAll`
-				//
-				string field = GetField( prop, showArrayItems, ref isdbref );
+                //
+                // Moved the code to a method, so it could be used by the `IncludeAll`
+                //
+                string field = GetField( prop, showArrayItems, ref isdbref );
 
-				if( field == null )
-				{
-					throw new NotSupportedException( property + " not mapped in " + type.Name );
-				}
+                if( field == null )
+                {
+                    throw new NotSupportedException( property + " not mapped in " + type.Name );
+                }
             }
 
             return string.Join(".", fields);
         }
 
-		public string GetField( MemberMapper memberMapper, Boolean showArrayItems, ref Boolean isdbref )
-		{
-			if( memberMapper == null )
-			{
-				return null;
-			}
+        public string GetField( MemberMapper memberMapper, Boolean showArrayItems, ref Boolean isdbref )
+        {
+            if( memberMapper == null )
+            {
+                return null;
+            }
 
-			// if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
-			Type type = memberMapper.UnderlyingType;
+            // if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
+            Type type = memberMapper.UnderlyingType;
 
-			string field = memberMapper.FieldName;
+            string field = memberMapper.FieldName;
 
-			if( showArrayItems && memberMapper.IsList )
-			{
-				field += "[*]";
-			}
+            if( showArrayItems && memberMapper.IsList )
+            {
+                field += "[*]";
+            }
 
-			if( memberMapper.FieldName == "_id" && isdbref )
-			{
-				isdbref = false;
-				field = "$id";
-			}
+            if( memberMapper.FieldName == "_id" && isdbref )
+            {
+                isdbref = false;
+                field = "$id";
+            }
 
-			// if this property is DbRef, so if next property is _id, change to $id
-			if( memberMapper.IsDbRef )
-			{
-				isdbref = true;
-			}
+            // if this property is DbRef, so if next property is _id, change to $id
+            if( memberMapper.IsDbRef )
+            {
+                isdbref = true;
+            }
 
-			return field;
-		}
+            return field;
+        }
 
         /// <summary>
         /// Convert a LINQ expression into a JSON path.
