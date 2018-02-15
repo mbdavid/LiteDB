@@ -19,7 +19,7 @@ namespace LiteDB.Demo
             var e = BsonExpression.Create("arr[@p1]");
 
             e.Parameters["p1"] = 0;
-
+            
 
             var r = e.Execute(new BsonDocument { ["a"] = 1 }).First();
 

@@ -6,19 +6,22 @@
     - New WAL (Write-Ahead Logging) for fast durability
     - Database lock per collection
     - MultiVersion Concurrency Control (Snapshots & Checkpoint)
-    - Multi readers - single writer
+    - Multi concurrent `Stream` readers - Single async writer
     - No lock for reader
     - Up to 32 indexes per collection
     - Atomic transactions are back (BeginTrans/Commit/Rollback)
     - Single physical file to store data and WAL
     - NET45 and NETStandard 2 support only (drop NET35/40)
     - Single process only - optimazed for multi thread
-    - Plans for async write support
     - Plans for B+Tree implementation
     
 - New SQL-Like Language    
     - Support for many SQL command, like SELECT, INSERT, UPDATE
     - New Expression parser/compiler for complex filters
+        - Optional `$`/`@` representation for simple field name: `phones[type='mobile'].number`
+        - Support complex field name (need `$`): `$.["first name"]`
+        - Simplified document notation: `{ _id, name, age }`
+        - Parameter support: `2018 - @age`
     - Support for OrderBy
     - Support for GroupBy
     - Fluent complex Query
