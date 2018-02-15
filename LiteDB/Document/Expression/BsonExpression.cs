@@ -131,6 +131,44 @@ namespace LiteDB
         {
             var expr = _cache.GetOrAdd(expression, (k) => Parse(new StringScanner(expression), false).Single());
 
+            // return a copy from cache WITHOUT parameters
+            return new BsonExpression
+            {
+                Expression = expr.Expression,
+                IsConstant = expr.IsConstant,
+                IsImmutable = expr.IsImmutable,
+                Left = expr.Left,
+                Right = expr.Right,
+                Source = expr.Source,
+                Type = expr.Type,
+                _func = expr._func
+            };
+        }
+
+        /// <summary>
+        /// Parse string and create new instance of BsonExpression - can be cached
+        /// </summary>
+        public static BsonExpression Create(string expression, params BsonValue[] args)
+        {
+            var expr = Create(expression);
+
+            for(var i = 0; i < args.Length; i++)
+            {
+                expr.Parameters[i.ToString()] = args[i];
+            }
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Parse string and create new instance of BsonExpression - can be cached
+        /// </summary>
+        public static BsonExpression Create(string expression, BsonDocument parameters)
+        {
+            var expr = Create(expression);
+
+            expr.Parameters = parameters;
+
             return expr;
         }
 
