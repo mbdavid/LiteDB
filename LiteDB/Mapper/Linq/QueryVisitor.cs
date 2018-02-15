@@ -315,32 +315,53 @@ namespace LiteDB
             {
                 var entity = _mapper.GetEntityMapper(type);
                 var part = parts[i];
-                var prop = entity.Members.Find(x => x.MemberName == part);
+				var prop = entity.Members.Find(x => x.MemberName == part);
 
-                if (prop == null) throw new NotSupportedException(property + " not mapped in " + type.Name);
+				//
+				// Moved the code to a method, so it could be used by the `IncludeAll`
+				//
+				string field = GetField( prop, showArrayItems, ref isdbref );
 
-                // if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
-                type = prop.UnderlyingType;
-
-                fields[i] = prop.FieldName;
-
-                if (showArrayItems && prop.IsList)
-                {
-                    fields[i] += "[*]";
-                }
-
-                if (prop.FieldName == "_id" && isdbref)
-                {
-                    isdbref = false;
-                    fields[i] = "$id";
-                }
-
-                // if this property is DbRef, so if next property is _id, change to $id
-                if (prop.IsDbRef) isdbref = true;
+				if( field == null )
+				{
+					throw new NotSupportedException( property + " not mapped in " + type.Name );
+				}
             }
 
             return string.Join(".", fields);
         }
+
+		public string GetField( MemberMapper memberMapper, Boolean showArrayItems, ref Boolean isdbref )
+		{
+			if( memberMapper == null )
+			{
+				return null;
+			}
+
+			// if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
+			Type type = memberMapper.UnderlyingType;
+
+			string field = memberMapper.FieldName;
+
+			if( showArrayItems && memberMapper.IsList )
+			{
+				field += "[*]";
+			}
+
+			if( memberMapper.FieldName == "_id" && isdbref )
+			{
+				isdbref = false;
+				field = "$id";
+			}
+
+			// if this property is DbRef, so if next property is _id, change to $id
+			if( memberMapper.IsDbRef )
+			{
+				isdbref = true;
+			}
+
+			return field;
+		}
 
         /// <summary>
         /// Convert a LINQ expression into a JSON path.
