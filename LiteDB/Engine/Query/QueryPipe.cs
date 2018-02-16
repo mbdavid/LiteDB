@@ -72,8 +72,6 @@ namespace LiteDB
         /// </summary>
         private IEnumerable<BsonDocument> Include(IEnumerable<BsonDocument> source, BsonExpression path)
         {
-            if (path.Type == BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path);
-
             foreach(var doc in source)
             {
                 foreach (var value in path.Execute(doc, false)
@@ -94,22 +92,23 @@ namespace LiteDB
                         Index = Index.EQ("_id", refId)
                     };
 
+                    //TODO implement include again
                     // now, find document reference
-                    var refDoc = _engine.Find(refCol, query, _transaction).FirstOrDefault();
-
-                    // if found, change with current document
-                    if (refDoc != null)
-                    {
-                        value.Remove("$id");
-                        value.Remove("$ref");
-
-                        refDoc.CopyTo(value);
-                    }
-                    else
-                    {
-                        // remove value from parent (document or array)
-                        value.Destroy();
-                    }
+                    // var refDoc = _engine.Find(refCol, query, _transaction).FirstOrDefault();
+                    // 
+                    // // if found, change with current document
+                    // if (refDoc != null)
+                    // {
+                    //     value.Remove("$id");
+                    //     value.Remove("$ref");
+                    // 
+                    //     refDoc.CopyTo(value);
+                    // }
+                    // else
+                    // {
+                    //     // remove value from parent (document or array)
+                    //     value.Destroy();
+                    // }
                 }
 
                 yield return doc;

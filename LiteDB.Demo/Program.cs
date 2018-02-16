@@ -16,10 +16,15 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            var e = BsonExpression.Create("arr[@p1]");
+            var e = BsonExpression.Create("@0 + 1", 5);
 
-            e.Parameters["p1"] = 0;
-            
+            var db = new LiteEngine();
+
+            db.Query("col", null)
+                .Where("_id = @0", 1)
+                .ToEnumerable();
+
+
 
             var r = e.Execute(new BsonDocument { ["a"] = 1 }).First();
 

@@ -41,7 +41,7 @@ namespace LiteDB
                         var last = BsonValue.MinValue;
                         var counter = 0u;
 
-                        foreach(var node in indexer.FindAll(index, Query.Ascending))
+                        foreach(var node in indexer.FindAll(index, LiteDB.Query.Ascending))
                         {
                             counter += node.Key.Equals(last) ? 0u : 1u;
                             last = node.Key;
