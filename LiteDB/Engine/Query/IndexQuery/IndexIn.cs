@@ -27,5 +27,10 @@ namespace LiteDB
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return string.Format("IN({0})", this.Name);
+        }
     }
 }

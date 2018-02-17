@@ -31,7 +31,9 @@ namespace LiteDB
                 // if already exists, just exit
                 if (current != null)
                 {
-                    // do not test any difference between current index and new definition
+                    // but if expression are different, throw error
+                    if (current.Expression != expression.Source) throw LiteException.IndexAlreadyExist(name);
+
                     return false;
                 }
 
@@ -51,10 +53,9 @@ namespace LiteDB
                     // read binary and deserialize document
                     var buffer = data.Read(pkNode.DataBlock);
                     var doc = _bsonReader.Deserialize(buffer).AsDocument;
-                    var expr = BsonExpression.Create(index.Expression);
 
                     // get values from expression in document
-                    var keys = expr.Execute(doc, true);
+                    var keys = expression.Execute(doc, true);
 
                     // adding index node for each value
                     foreach (var key in keys)

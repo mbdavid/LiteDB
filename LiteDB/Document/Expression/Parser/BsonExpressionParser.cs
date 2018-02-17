@@ -426,8 +426,8 @@ namespace LiteDB
             return new BsonExpression
             {
                 Type = BsonExpressionType.Parameter,
-                IsConstant = false,
-                IsImmutable = true,
+                IsConstant = true,
+                IsImmutable = false,
                 Expression = Expression.Call(_rootPathMethod, parameters, name),
                 Source = "@" + parameterName
             };
@@ -460,7 +460,7 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseMethodCall(StringScanner s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (!s.Scan(@"(\w+)\s*\(", 1, out var methodName)) return null;
+            if (!s.Scan(@"(\w+)\s*\(\s*", 1, out var methodName)) return null;
 
             // get static method from this class
             var pars = new List<Expression>();
@@ -481,6 +481,9 @@ namespace LiteDB
                     if (parameter.IsConstant == false) isConstant = false;
 
                     pars.Add(parameter.Expression);
+
+                    // append source string
+                    source.Append(parameter.Source);
 
                     if (s.Scan(@"\s*,\s*").Length > 0)
                     {

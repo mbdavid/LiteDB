@@ -27,7 +27,7 @@ namespace LiteDB
         public BsonExpressionType Type { get; internal set; }
 
         /// <summary>
-        /// If true, this expression do not change if same document/paramter are passed (only few methods change - like NOW())
+        /// If true, this expression do not change if same document/paramter are passed (only few methods change - like NOW() - or parameters)
         /// </summary>
         internal bool IsImmutable { get; set; }
 
@@ -185,12 +185,22 @@ namespace LiteDB
 
             foreach(var expr in exprList)
             {
-                var lambda = System.Linq.Expressions.Expression.Lambda<Func<BsonDocument, BsonValue, BsonDocument, IEnumerable<BsonValue>>>(expr.Expression, root, current, parameters);
-
-                expr._func = lambda.Compile();
+                // compile expression
+                Compile(expr, root, current, parameters);
             }
 
             return exprList;
+        }
+
+        private static void Compile(BsonExpression expr, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)
+        {
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<BsonDocument, BsonValue, BsonDocument, IEnumerable<BsonValue>>>(expr.Expression, root, current, parameters);
+
+            expr._func = lambda.Compile();
+
+            // compile child expressions (left/right)
+            if (expr.Left != null) Compile(expr.Left, root, current, parameters);
+            if (expr.Right != null) Compile(expr.Right, root, current, parameters);
         }
 
         #endregion

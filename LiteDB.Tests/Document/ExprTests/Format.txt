@@ -27,3 +27,7 @@
 ~ 1 OR "two" OR $.three
 > ( 1 + 2) = 3    and X  +  y = 9
 ~ (1+2)=3 AND $.X+$.y=9
+
+# Methods
+> UPPER( "lite" + "db" )
+~ UPPER("lite"+"db")

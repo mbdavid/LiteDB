@@ -58,7 +58,7 @@ namespace LiteDB
             var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH, null);
 
             index.TailNode = tail.Position;
-            index.KeyCount = 0; // reset counter
+            index.KeyCount = index.UniqueKeyCount = 0; // reset counter
 
             return index;
         }
@@ -89,6 +89,7 @@ namespace LiteDB
         {
             // calc key size
             var keyLength = key.GetBytesCount(false);
+            var isUniqueKey = true;
 
             // test for index key maxlength
             if (keyLength > MAX_INDEX_LENGTH) throw LiteException.IndexKeyTooLong();
@@ -132,6 +133,8 @@ namespace LiteDB
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
                     if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Name, key);
+
+                    if (diff == 0) isUniqueKey = false;
 
                     if (diff == 1) break;
                 }
@@ -185,8 +188,9 @@ namespace LiteDB
                 _snapshot.SetDirty(last.Page);
             }
 
-            // increment keyCount on index
+            // increment keyCount/unique index count on index
             index.KeyCount++;
+            index.UniqueKeyCount += isUniqueKey ? 1u : 0u;
 
             _snapshot.SetDirty(index.Page);
 
@@ -282,7 +286,9 @@ namespace LiteDB
             }
 
             // decrement key index counter (collection page must be set as dirty)
+            // when delete a node it's not possible resolve UniqueKeyCount (will fix only on next Analyze)
             index.KeyCount--;
+
             _snapshot.SetDirty(index.Page);
         }
 

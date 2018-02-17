@@ -37,6 +37,7 @@ namespace LiteDB
         public const int INVALID_EXPRESSION_TYPE = 132;
         public const int COLLECTION_NOT_FOUND = 133;
         public const int COLLECTION_ALREADY_EXIST = 134;
+        public const int INDEX_ALREADY_EXIST = 135;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -128,7 +129,7 @@ namespace LiteDB
 
         internal static LiteException CollectionNotFound(string key)
         {
-            return new LiteException(COLLECTION_NOT_FOUND, "Collection not found: " + key);
+            return new LiteException(COLLECTION_NOT_FOUND, "Collection not found: '{0}'", key);
         }
 
         internal static LiteException InvalidExpressionType(BsonExpression path, BsonExpressionType type)
@@ -143,7 +144,12 @@ namespace LiteDB
 
         internal static LiteException CollectionAlreadyExist(string key)
         {
-            return new LiteException(COLLECTION_ALREADY_EXIST, "Collection already exist: " + key);
+            return new LiteException(COLLECTION_ALREADY_EXIST, "Collection already exist: '{0}'", key);
+        }
+
+        internal static LiteException IndexAlreadyExist(string name)
+        {
+            return new LiteException(INDEX_ALREADY_EXIST, "Index name '{0}' already exist with a differnt expression. Try drop index first.", name);
         }
 
         internal static LiteException IndexLimitExceeded(string collection)
@@ -203,12 +209,12 @@ namespace LiteDB
 
         internal static LiteException InvalidDbRef(string path)
         {
-            return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path \"{0}\". Value must be document like {{ $ref: \"?\", $id: ? }}", path);
+            return new LiteException(INVALID_DBREF, "Invalid value for DbRef in path '{0}'. Value must be document like {{ $ref: \"?\", $id: ? }}", path);
         }
 
         internal static LiteException InvalidTransactionState(string method, TransactionState state)
         {
-            return new LiteException(INVALID_TRANSACTION_STATE, method + " are not supported because transaction are in " + state + " state");
+            return new LiteException(INVALID_TRANSACTION_STATE, "{0} are not supported because transaction are in {1} state", method, state);
         }
 
         internal static LiteException InvalidTransactionState()

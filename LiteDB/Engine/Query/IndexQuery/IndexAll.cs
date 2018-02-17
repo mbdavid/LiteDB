@@ -21,5 +21,10 @@ namespace LiteDB
         {
             return indexer.FindAll(index, _order);
         }
+
+        public override string ToString()
+        {
+            return string.Format("ALL({0}, {1})", this.Name,  _order);
+        }
     }
 }

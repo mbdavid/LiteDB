@@ -69,5 +69,10 @@ namespace LiteDB
                 node = indexer.GetNode(node.NextPrev(0, order));
             }
         }
+
+        public override string ToString()
+        {
+            return string.Format("BETWEEN({0})", this.Name);
+        }
     }
 }

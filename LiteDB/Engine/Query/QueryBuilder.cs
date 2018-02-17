@@ -7,16 +7,17 @@ namespace LiteDB
     /// <summary>
     /// Class to provider a fluent query API to complex queries. This class will be optimied to convert into Query class before run
     /// </summary>
-    public class QueryBuilder
+    public partial class QueryBuilder
     {
         private string _collection;
         private LiteTransaction _transaction;
         private LiteEngine _engine;
 
-
-
         private QueryPlan _query = new QueryPlan();
         private List<BsonExpression> _where = new List<BsonExpression>();
+        private BsonExpression _orderBy = null;
+        private int _order = Query.Ascending;
+        private List<BsonExpression> _includes = new List<BsonExpression>();
 
         public QueryBuilder()
         {
@@ -29,13 +30,13 @@ namespace LiteDB
             _engine = engine;
         }
 
-        #region FluentApi
-
         /// <summary>
         /// Add new WHERE statement in your query. Can be executed with an index or via full scan
         /// </summary>
         public QueryBuilder Where(BsonExpression predicate)
         {
+            if (_optimized) throw new InvalidOperationException("Where() is not avaiable in executed query");
+
             // add expression in where list breaking AND statments
             if (predicate.IsConditional || predicate.Type == BsonExpressionType.Or)
             {
@@ -71,17 +72,17 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Load cross reference documents from path expression (DbRef reference). Call this method before Where() if you want use this reference in your filter (slow).
+        /// Load cross reference documents from path expression (DbRef reference)
         /// </summary>
         public QueryBuilder Include(string include)
         {
+            if (_optimized) throw new InvalidOperationException("Include() is not avaiable in executed query");
+
             var path = BsonExpression.Create(include);
 
             if (path.Type == BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path, BsonExpressionType.Path);
 
-            var list = _where.Count == 0 ? _query.IncludeBefore : _query.IncludeAfter;
-
-            list.Add(path);
+            _includes.Add(path);
 
             return this;
         }
@@ -91,14 +92,23 @@ namespace LiteDB
         /// </summary>
         public QueryBuilder OrderBy(string orderBy, int order = Query.Ascending)
         {
-            _query.OrderBy = BsonExpression.Create(orderBy);
-            _query.Order = order;
+            if (_optimized) throw new InvalidOperationException("OrderBy() is not avaiable in executed query");
+
+            _orderBy = BsonExpression.Create(orderBy);
+            _order = order;
 
             return this;
         }
 
+        /// <summary>
+        /// Group by results document into new document { key: $.key, values: $.values }
+        /// </summary>
         public QueryBuilder GroupBy(string groupBy)
         {
+            if (_optimized) throw new InvalidOperationException("GroupBy() is not avaiable in executed query");
+
+            _query.GroupBy = BsonExpression.Create(groupBy);
+
             return this;
         }
 
@@ -127,6 +137,8 @@ namespace LiteDB
         /// </summary>
         public QueryBuilder Select(string select)
         {
+            if (_optimized) throw new InvalidOperationException("Select() is not avaiable in executed query");
+
             _query.Select = BsonExpression.Create(select);
 
             return this;
@@ -144,163 +156,16 @@ namespace LiteDB
 
         /// <summary>
         /// Define your own index conditional expression to run over collection. 
-        /// If not defined (default), QueryAnalyzer will be auto select best option or create a new one.
-        /// Use this option only if you want define index and do not use QueryAnalyzer.
+        /// If not defined (default), optimization will be auto select best option or create a new one.
+        /// Use this option only if you want define index and do not use optimize function.
         /// </summary>
         public QueryBuilder Index(Index index)
         {
+            if (_optimized) throw new InvalidOperationException("Index() is not avaiable in executed query");
+
             _query.Index = index;
 
             return this;
         }
-
-        #endregion
-
-        #region Internal Execute
-
-        /// <summary>
-        /// Find for documents in a collection using Query definition
-        /// </summary>
-        internal IEnumerable<BsonDocument> Run(bool countOnly)
-        {
-            // call DoFind inside snapshot
-            return _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false, snapshot =>
-            {
-                // execute query analyze before run query (will change _query instance)
-                var analyzer = new QueryAnalyzer(snapshot, _query, _where, countOnly, true);
-
-                analyzer.RunAnalyzer();
-
-                return DoFind(snapshot);
-            });
-
-            // executing query
-            IEnumerable<BsonDocument> DoFind(Snapshot snapshot)
-            {
-                var col = snapshot.CollectionPage;
-                var data = new DataService(snapshot);
-                var indexer = new IndexService(snapshot);
-                var loader = new DocumentLoader(data, _engine.BsonReader);
-
-                // no collection, no documents
-                if (col == null) yield break;
-
-                // get node list from query
-                var nodes = _query.Index.Run(col, indexer);
-
-                // load document from disk
-                var docs = LoadDocument(nodes, loader, _query.KeyOnly, _query.Index.Name);
-
-                // load pipe query to apply all query options
-                var pipe = new QueryPipe(_engine, _transaction, loader);
-
-                // call safepoint just before return each document
-                foreach (var doc in pipe.Pipe(docs, _query))
-                {
-                    _transaction.Safepoint();
-
-                    yield return doc;
-                }
-            }
-
-            // load documents from disk or make a "fake" document using key only (useful for COUNT/EXISTS)
-            IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, IDocumentLoader loader, bool keyOnly, string name)
-            {
-                foreach (var node in nodes)
-                {
-                    yield return keyOnly ?
-                        new BsonDocument { [name] = node.Key } :
-                        loader.Load(node.DataBlock);
-                }
-            }
-        }
-
-        #endregion
-
-        #region Query Shortcut
-
-        /// <summary>
-        /// Execute query and return documents as IEnumerable
-        /// </summary>
-        public List<BsonDocument> ToEnumerable()
-        {
-            return this.Run(false).ToList();
-        }
-
-        /// <summary>
-        /// Execute query and return as List of BsonDocument
-        /// </summary>
-        public List<BsonDocument> ToList()
-        {
-            return this.Run(false).ToList();
-        }
-
-        /// <summary>
-        /// Execute query and return as array of BsonDocument
-        /// </summary>
-        public BsonDocument[] ToArray()
-        {
-            return this.Run(false).ToArray();
-        }
-
-        /// <summary>
-        /// Execute Single over ToEnumerable result documents
-        /// </summary>
-        public BsonDocument SingleById(BsonValue id)
-        {
-            return this
-                .Index(LiteDB.Index.EQ("_id", id))
-                .Single();
-        }
-
-        /// <summary>
-        /// Execute Single over ToEnumerable result documents
-        /// </summary>
-        public BsonDocument Single()
-        {
-            return this.Run(false).Single();
-        }
-
-        /// <summary>
-        /// Execute SingleOrDefault over ToEnumerable result documents
-        /// </summary>
-        public BsonDocument SingleOrDefault()
-        {
-            return this.Run(false).SingleOrDefault();
-        }
-
-        /// <summary>
-        /// Execute First over ToEnumerable result documents
-        /// </summary>
-        public BsonDocument First()
-        {
-            return this.Run(false).First();
-        }
-
-        /// <summary>
-        /// Execute FirstOrDefault over ToEnumerable result documents
-        /// </summary>
-        public BsonDocument FirstOrDefault()
-        {
-            return this.Run(false).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Execute count over document resultset
-        /// </summary>
-        public int Count()
-        {
-            return this.Run(true).Count();
-        }
-
-        /// <summary>
-        /// Execute exists over document resultset
-        /// </summary>
-        public bool Exists()
-        {
-            return this.Run(true).Any();
-        }
-
-        #endregion
     }
 }

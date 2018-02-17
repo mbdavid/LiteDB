@@ -25,5 +25,10 @@ namespace LiteDB
                 .FindAll(index, _order)
                 .Where(i => _func(i.Key));
         }
+
+        public override string ToString()
+        {
+            return string.Format("SCAN({0})", this.Name);
+        }
     }
 }

@@ -57,23 +57,10 @@ namespace LiteDB
         /// </summary>
         public uint KeyCount { get; set; } = 0;
 
-        private uint _uniqueKeyCount = 0;
-
         /// <summary>
-        /// Counter of unique keys in this index (update only in analze command) - If index are unique, return same keyCount
+        /// Counter of unique keys in this index (online but be dirty on delete index nodes... will fix on next analyze)
         /// </summary>
-        public uint UniqueKeyCount
-        {
-            get
-            {
-                return this.Unique ? this.KeyCount : _uniqueKeyCount;
-            }
-            set
-            {
-                _uniqueKeyCount = value;
-            }
-        }
-
+        public uint UniqueKeyCount { get; set; } = 0;
 
         /// <summary>
         /// Returns if this index slot is empty and can be used as new index

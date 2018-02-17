@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace LiteDB
 {
     /// <summary>
-    /// Class is a result from optimized QueryBuild. Indicate how engine must run query - there is no more decisions to engine made, must only execute as query was defined
+    /// This class are result from optimization from QueryBuild in QueryAnalyzer. Indicate how engine must run query - there is no more decisions to engine made, must only execute as query was defined
+    /// Contains used index and estimate cost to run
     /// </summary>
-    internal class QueryPlan
+    public class QueryPlan
     {
         /// <summary>
         /// Index used on query (required)
         /// </summary>
-        public Index Index { get; set; } = Index.All("_id", Query.Ascending);
+        public Index Index { get; set; } = null;
 
         /// <summary>
         /// If true, gereate document result only with IndexNode.Key (avoid load all document)
@@ -68,5 +70,25 @@ namespace LiteDB
         /// Transaformation data before return - if null there is no transform (return document)
         /// </summary>
         public BsonExpression Select { get; set; } = null;
+
+        /// <summary>
+        /// Get index score from 0 (worst - full scan) to 1 (best - equals unique key)
+        /// </summary>
+        public double IndexScore { get; set; } = -1; // not calculated
+
+        /// <summary>
+        /// Get explain plan engine will execute
+        /// </summary>
+        internal string ExplainPlan
+        {
+            get
+            {
+                return
+                    "Index Score: " + this.IndexScore + Environment.NewLine +
+                    "Index: " + this.Index.ToString() + Environment.NewLine +
+                    "Filters: " + string.Join(" AND ", this.Filters.Select(x => $"({x.Source})")) + Environment.NewLine +
+                    "OrderBy: " + (this.OrderBy?.Source ?? "-none-") + " " + this.Order;
+            }
+        }
     }
 }

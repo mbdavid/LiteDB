@@ -56,14 +56,12 @@ namespace LiteDB.Tests.Document
 
                 if (test.Results.Count == 0) continue;
 
-                test.Parameters.CopyTo(expr.Parameters);
-
                 // test result
                 var doc = JsonSerializer.Deserialize(test.JsonDocument ?? "{}") as BsonDocument;
 
                 try
                 {
-                    var result = expr.Execute(doc, true).ToList();
+                    var result = expr.Execute(doc, test.Parameters, true).ToList();
 
                     if (!result.SequenceEqual(test.Results))
                     {

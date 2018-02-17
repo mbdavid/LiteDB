@@ -41,5 +41,10 @@ namespace LiteDB
                 node = indexer.GetNode(node.Next[0]);
             }
         }
+
+        public override string ToString()
+        {
+            return string.Format("STARTSWITH({0})", this.Name);
+        }
     }
 }

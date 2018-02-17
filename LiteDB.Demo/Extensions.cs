@@ -92,14 +92,5 @@ namespace LiteDB.Demo
                     .FirstOrDefault();
             }
         }
-
-        //public static List<BsonDocument> Find(this LiteEngine engine, string collection, QueryBuilder query)
-        //{
-        //    using (var t = engine.BeginTrans())
-        //    {
-        //        return engine.Query(collection, t)
-        //            .ToList();
-        //    }
-        //}
     }
 }

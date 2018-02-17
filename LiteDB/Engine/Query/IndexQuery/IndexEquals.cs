@@ -36,5 +36,10 @@ namespace LiteDB
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return string.Format("EQ({0})", this.Name);
+        }
     }
 }
