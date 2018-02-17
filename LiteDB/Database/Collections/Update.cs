@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LiteDB
 {
@@ -45,5 +46,22 @@ namespace LiteDB
 
             return _engine.Value.Update(_name, documents.Select(x => _mapper.ToDocument(x)));
         }
+        
+        /// <summary>
+        /// Update Selections Documents
+        /// </summary>
+         public int Update(Expression<Func<T, bool>> predicate,Action<T> Updator)
+        {
+            var Selets = Find(predicate);
+            int Result = 0;
+            foreach (T Selected in Selets)
+            {
+                Updator(Selected);
+                if (Update(Selected))
+                    Result += 1;
+            }
+            return Result;
+        }
+   
     }
 }
