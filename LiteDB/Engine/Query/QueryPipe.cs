@@ -23,7 +23,7 @@ namespace LiteDB
         /// <summary>
         /// Start pipe documents process
         /// </summary>
-        public IEnumerable<BsonDocument> Pipe(IEnumerable<BsonDocument> source, Query query)
+        public IEnumerable<BsonDocument> Pipe(IEnumerable<BsonDocument> source, QueryPlan query)
         {
             // do includes in result before filter
             foreach (var path in query.IncludeBefore)
@@ -87,7 +87,7 @@ namespace LiteDB
                     if (refId.IsNull || !refCol.IsString) continue;
 
                     // create query for find by _id
-                    var query = new Query
+                    var query = new QueryPlan
                     {
                         Index = Index.EQ("_id", refId)
                     };

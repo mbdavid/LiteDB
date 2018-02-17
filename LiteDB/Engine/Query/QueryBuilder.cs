@@ -9,20 +9,24 @@ namespace LiteDB
     /// </summary>
     public class QueryBuilder
     {
-        private LiteEngine _engine;
         private string _collection;
         private LiteTransaction _transaction;
-        private BsonReader _bsonReader;
+        private LiteEngine _engine;
 
-        private Query _query = new Query();
+
+
+        private QueryPlan _query = new QueryPlan();
         private List<BsonExpression> _where = new List<BsonExpression>();
 
-        internal QueryBuilder(string collection, LiteEngine engine, LiteTransaction transaction, BsonReader bsonReader)
+        public QueryBuilder()
+        {
+        }
+
+        public QueryBuilder(string collection, LiteTransaction transaction, LiteEngine engine)
         {
             _collection = collection;
-            _engine = engine;
             _transaction = transaction;
-            _bsonReader = bsonReader;
+            _engine = engine;
         }
 
         #region FluentApi
@@ -157,13 +161,13 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        private IEnumerable<BsonDocument> Execute()
+        internal IEnumerable<BsonDocument> Run(bool countOnly)
         {
             // call DoFind inside snapshot
             return _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false, snapshot =>
             {
                 // execute query analyze before run query (will change _query instance)
-                var analyzer = new QueryAnalyzer(snapshot, _query, _where);
+                var analyzer = new QueryAnalyzer(snapshot, _query, _where, countOnly, true);
 
                 analyzer.RunAnalyzer();
 
@@ -176,7 +180,7 @@ namespace LiteDB
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
-                var loader = new DocumentLoader(data, _bsonReader);
+                var loader = new DocumentLoader(data, _engine.BsonReader);
 
                 // no collection, no documents
                 if (col == null) yield break;
@@ -209,6 +213,92 @@ namespace LiteDB
                         loader.Load(node.DataBlock);
                 }
             }
+        }
+
+        #endregion
+
+        #region Query Shortcut
+
+        /// <summary>
+        /// Execute query and return documents as IEnumerable
+        /// </summary>
+        public List<BsonDocument> ToEnumerable()
+        {
+            return this.Run(false).ToList();
+        }
+
+        /// <summary>
+        /// Execute query and return as List of BsonDocument
+        /// </summary>
+        public List<BsonDocument> ToList()
+        {
+            return this.Run(false).ToList();
+        }
+
+        /// <summary>
+        /// Execute query and return as array of BsonDocument
+        /// </summary>
+        public BsonDocument[] ToArray()
+        {
+            return this.Run(false).ToArray();
+        }
+
+        /// <summary>
+        /// Execute Single over ToEnumerable result documents
+        /// </summary>
+        public BsonDocument SingleById(BsonValue id)
+        {
+            return this
+                .Index(LiteDB.Index.EQ("_id", id))
+                .Single();
+        }
+
+        /// <summary>
+        /// Execute Single over ToEnumerable result documents
+        /// </summary>
+        public BsonDocument Single()
+        {
+            return this.Run(false).Single();
+        }
+
+        /// <summary>
+        /// Execute SingleOrDefault over ToEnumerable result documents
+        /// </summary>
+        public BsonDocument SingleOrDefault()
+        {
+            return this.Run(false).SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Execute First over ToEnumerable result documents
+        /// </summary>
+        public BsonDocument First()
+        {
+            return this.Run(false).First();
+        }
+
+        /// <summary>
+        /// Execute FirstOrDefault over ToEnumerable result documents
+        /// </summary>
+        public BsonDocument FirstOrDefault()
+        {
+            return this.Run(false).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Execute count over document resultset
+        /// </summary>
+        public int Count()
+        {
+            return this.Run(true).Count();
+        }
+
+        /// <summary>
+        /// Execute exists over document resultset
+        /// </summary>
+        public bool Exists()
+        {
+            return this.Run(true).Any();
         }
 
         #endregion

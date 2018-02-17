@@ -33,6 +33,8 @@ namespace LiteDB
 
         private ConcurrentDictionary<Guid, LiteTransaction> _transactions = new ConcurrentDictionary<Guid, LiteTransaction>();
 
+        #region TempDB
+
         private LiteEngine _tempdb = null;
         private bool _disposeTempdb = false;
 
@@ -58,6 +60,13 @@ namespace LiteDB
                 _disposeTempdb = false;
             }
         }
+
+        #endregion
+
+        /// <summary>
+        /// Expose internal current BsonReader instance
+        /// </summary>
+        internal BsonReader BsonReader => _bsonReader;
 
         /// <summary>
         /// Get log instance for debug operations

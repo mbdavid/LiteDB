@@ -185,7 +185,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Executing Query
+        #region Executing Index Search
 
         /// <summary>
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index

@@ -77,7 +77,8 @@ namespace LiteDB.Demo
             {
                 using (var t = engine.BeginTrans())
                 {
-                    engine.Find(collection, new Query { Index = Index.All() }, t).ToArray();
+                    engine.Query(collection, t)
+                        .ToArray();
                 }
             });
         }
@@ -86,21 +87,19 @@ namespace LiteDB.Demo
         {
             using (var t = engine.BeginTrans())
             {
-                var q = new Query
-                {
-                    Index = Index.EQ("_id", id)
-                };
-
-                return engine.Find(collection, q, t).FirstOrDefault();
+                return engine.Query(collection, t)
+                    .Index(Index.EQ("_id", id))
+                    .FirstOrDefault();
             }
         }
 
-        public static List<BsonDocument> Find(this LiteEngine engine, string collection, Query query)
-        {
-            using (var t = engine.BeginTrans())
-            {
-                return engine.Find(collection, query, t).ToList();
-            }
-        }
+        //public static List<BsonDocument> Find(this LiteEngine engine, string collection, QueryBuilder query)
+        //{
+        //    using (var t = engine.BeginTrans())
+        //    {
+        //        return engine.Query(collection, t)
+        //            .ToList();
+        //    }
+        //}
     }
 }
