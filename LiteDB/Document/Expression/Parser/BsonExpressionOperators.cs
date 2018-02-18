@@ -123,15 +123,15 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left and right starts with same value. Returns true or false. Support multiples values. Works only when left and right are string
+        /// Test if left is "SQL LIKE" with right. Returns true or false. Support multiples values. Works only when left and right are string
         /// </summary>
-        public static IEnumerable<BsonValue> STARTSWITH(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static IEnumerable<BsonValue> LIKE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
             {
                 if (value.First.IsString && value.Second.IsString)
                 {
-                    yield return value.First.AsString.StartsWith(value.Second.AsString);
+                    yield return value.First.AsString.SqlLike(value.Second.AsString);
                 }
                 else
                 {
@@ -201,42 +201,6 @@ namespace LiteDB
             foreach (var value in left.ZipValues(right))
             {
                 yield return value.First <= value.Second;
-            }
-        }
-
-        /// <summary>
-        /// Test if left contains substring value of right. Returns true or false. Support multiples values. Works only when left and right are string
-        /// </summary>
-        public static IEnumerable<BsonValue> CONTAINS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in left.ZipValues(right))
-            {
-                if (value.First.IsString && value.Second.IsString)
-                {
-                    yield return value.First.AsString.Contains(value.Second.AsString);
-                }
-                else
-                {
-                    yield return false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Test if left endswith value of right. Returns true or false. Support multiples values. Works only when left and right are string
-        /// </summary>
-        public static IEnumerable<BsonValue> ENDSWITH(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
-        {
-            foreach (var value in left.ZipValues(right))
-            {
-                if (value.First.IsString && value.Second.IsString)
-                {
-                    yield return value.First.AsString.EndsWith(value.Second.AsString);
-                }
-                else
-                {
-                    yield return false;
-                }
             }
         }
 

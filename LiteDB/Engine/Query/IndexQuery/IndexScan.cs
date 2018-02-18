@@ -19,6 +19,12 @@ namespace LiteDB
             _order = order;
         }
 
+        internal override double GetScore(CollectionIndex index)
+        {
+            // full index scan
+            return 0;
+        }
+
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             return indexer

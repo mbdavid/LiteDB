@@ -61,14 +61,12 @@ namespace LiteDB
         /// </summary>
         internal bool IsConditional =>
             this.Type == BsonExpressionType.Equal ||
-            this.Type == BsonExpressionType.StartsWith ||
+            this.Type == BsonExpressionType.Like ||
             this.Type == BsonExpressionType.Between ||
             this.Type == BsonExpressionType.GreaterThan ||
             this.Type == BsonExpressionType.GreaterThanOrEqual ||
             this.Type == BsonExpressionType.LessThan ||
             this.Type == BsonExpressionType.LessThanOrEqual ||
-            this.Type == BsonExpressionType.Contains ||
-            this.Type == BsonExpressionType.EndsWith ||
             this.Type == BsonExpressionType.NotEqual;
 
         /// <summary>

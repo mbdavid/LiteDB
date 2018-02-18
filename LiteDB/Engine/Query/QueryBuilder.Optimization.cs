@@ -55,7 +55,7 @@ namespace LiteDB
                 // if found an index, use-it
                 if (indexScore != null)
                 {
-                    _query.Index = indexScore.CreateIndexQuery();
+                    _query.Index = indexScore.Index;
                 }
                 else
                 {
@@ -64,7 +64,7 @@ namespace LiteDB
 
                     if (indexScore != null)
                     {
-                        _query.Index = indexScore.CreateIndexQuery();
+                        _query.Index = indexScore.Index;
                     }
                     else
                     {

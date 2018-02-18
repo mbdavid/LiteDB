@@ -100,14 +100,22 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents that starts with value (LIKE)
+        /// Returns all documents that "Sql Like" with value
         /// </summary>
-        public static Index StartsWith(string name, string value)
+        public static Index Like(string name, string value)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
-            return new IndexStartsWith(name, value);
+            return new IndexLike(name, value);
+        }
+
+        /// <summary>
+        /// Returns all documents that startsWith value [index scan]
+        /// </summary>
+        public static Index StartsWith(string name, string value, int order = Query.Ascending)
+        {
+            return Like(name, value + "%");
         }
 
         /// <summary>
@@ -122,15 +130,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents that are not equals to value (not equals) [index scan]
-        /// </summary>
-        public static Index Not(string name, BsonValue value, int order = Query.Ascending)
-        {
-            return Scan(name, x => x.CompareTo(value ?? BsonValue.Null) != 0, order);
-        }
-
-        /// <summary>
-        /// Returns all documents that contains value (CONTAINS) [index scan]
+        /// Returns all documents that contains value [index scan]
         /// </summary>
         public static Index Contains(string name, string value, int order = Query.Ascending)
         {
@@ -138,16 +138,30 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all documents that ends with string (ENDWITH) [index scan]
+        /// Returns all documents that ends with string [index scan]
         /// </summary>
         public static Index EndsWith(string name, string value, int order = Query.Ascending)
         {
             return Scan(name, x => x.IsString && x.AsString.EndsWith(value ?? BsonValue.Null), order);
         }
 
+        /// <summary>
+        /// Returns all documents that are not equals to value (not equals) [index scan]
+        /// </summary>
+        public static Index Not(string name, BsonValue value, int order = Query.Ascending)
+        {
+            return Scan(name, x => x.CompareTo(value ?? BsonValue.Null) != 0, order);
+        }
+
         #endregion
 
         #region Executing Index Search
+
+        /// <summary>
+        /// Calculate score based on type/value/collection - Number are from 1 (best) to 0 (worst)
+        /// It will be used to decide best index to use
+        /// </summary>
+        internal abstract double GetScore(CollectionIndex index);
 
         /// <summary>
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index

@@ -41,18 +41,20 @@
 > 2 <= "a"
 = true
 
-# String
-> "John" startswith "J"
+# String Like
+> "John" LIKE "J"
+= false
+> "John" LIKE "J%"
 = true
-> "John" contains @0
-@0 "o"
+> "John" LIKE @0
+@0 "%o%"
 = true
-> "John" endswith 1
+> "John" LIKE 1
 = false
 { names: ["John", "Joana", "Carlos"] }
-> names[*] startswith "J"
+> names[*] LIKE "J%"
 = true
 = true
 = false
-> ARRAY(names[@ startswith "J"])
+> ARRAY(names[@ LIKE "J%"])
 = ["John", "Joana"]

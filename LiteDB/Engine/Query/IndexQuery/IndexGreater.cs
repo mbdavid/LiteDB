@@ -22,6 +22,12 @@ namespace LiteDB
             _equals = equals;
         }
 
+        internal override double GetScore(CollectionIndex index)
+        {
+            // need some statistics here
+            return 0.01;
+        }
+
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode

@@ -17,6 +17,12 @@ namespace LiteDB
             _indexes = indexes;
         }
 
+        internal override double GetScore(CollectionIndex index)
+        {
+            // for OR, return an average from all
+            return _indexes.Average(x => x.GetScore(index));
+        }
+
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             throw new NotSupportedException();

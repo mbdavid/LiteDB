@@ -30,14 +30,12 @@ namespace LiteDB
         Divide,
 
         Equal,
-        StartsWith,
+        Like,
         Between,
         GreaterThan,
         GreaterThanOrEqual,
         LessThan,
         LessThanOrEqual,
-        Contains,
-        EndsWith,
         NotEqual,
 
         Or,

@@ -17,6 +17,16 @@ namespace LiteDB
             _value = value;
         }
 
+        internal override double GetScore(CollectionIndex index)
+        {
+            // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
+            // 1 - Only unique values (best)
+            // 0 - All nodes are same value (worst) - or not analyzed
+            var u = (double)Math.Min(index.UniqueKeyCount, index.KeyCount) / (double)index.KeyCount;
+
+            return u;
+        }
+
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             var node = indexer.Find(index, _value, false, Query.Ascending);

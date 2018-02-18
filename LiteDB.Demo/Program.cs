@@ -23,22 +23,22 @@ namespace LiteDB.Demo
                 db.Insert("col1", ReadDocuments(1, 1000));
 
                 //db.EnsureIndex("col1", "idx_age", "age");
-                //db.EnsureIndex("col1", "idx_name", "name");
+                db.EnsureIndex("col1", "idx_name", "name");
                 //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
                 //db.EnsureIndex("col1", "idx_email", "email");
 
                 var r = db.Query("col1")
-                    .Where("age  <= @0", 63)
-                    .Where("name  >= @0", "Iliana Wilson")
-                    .Where("UPPER(name) = @0", "ILIANA WILSON")
-                    .Where("email = @0", "Piper@molestie.org")
-                    .Where("_id +0  = @0", 199)
-                    .FirstOrDefault();
+                    //.Where("age  <= @0", 63)
+                    //.Where("name like @0", "Iliana%")
+                    //.Where("UPPER(name) = @0", "ILIANA WILSON")
+                    //.Where("email = @0", "Piper@molestie.org")
+                    //.Where("_id +0  = @0", 199)
+                    .ToArray();
 
                 // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}
 
                 Console.WriteLine();
-                Console.WriteLine(r?.ToString() ?? "<null>");
+                Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r.Select(x => x.AsDocument)), true));
 
                 ;
             }
