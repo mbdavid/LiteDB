@@ -121,6 +121,17 @@ namespace LiteDB
 
                 var expr = ParseSingleExpression(s, root, current, parameters, isRoot);
 
+                // special BETWEEN "AND" read
+                if (op == " BETWEEN ")
+                {
+                    s.Scan(@"\s+AND\s+").ThrowIfEmpty("Missing AND statement on BETWEEN", s);
+
+                    var expr2 = ParseSingleExpression(s, root, current, parameters, isRoot);
+
+                    // convert expr and expr2 into an array with 2 values
+                    expr = NewArray(expr, expr2);
+                }
+
                 values.Add(expr);
                 ops.Add(op);
             }
@@ -605,6 +616,27 @@ namespace LiteDB
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Create an array expression with 2 values (used only in BETWEEN statement)
+        /// </summary>
+        private static BsonExpression NewArray(BsonExpression item0, BsonExpression item1)
+        {
+            var values = new Expression[] { item0.Expression, item1.Expression };
+            var isConstant = item0.IsConstant && item1.IsConstant;    
+            var isImmutable = item0.IsImmutable && item1.IsImmutable;
+
+            var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+
+            return new BsonExpression
+            {
+                Type = BsonExpressionType.Array,
+                IsConstant = isConstant,
+                IsImmutable = isImmutable,
+                Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
+                Source = item0.Source + " AND " + item1.Source
+            };
         }
 
         /// <summary>

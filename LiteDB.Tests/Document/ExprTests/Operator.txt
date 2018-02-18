@@ -22,9 +22,10 @@
 
 # Between
 { a: 50, b: "m" }
-> 5 between [1, 10]
+> 5 between 1 AND 10
 = true
-> b between [@0, @1]
+> b between @0   and @1
+~ $.b BETWEEN @0 AND @1
 @0 "a"
 @1 "z"
 = true

@@ -214,7 +214,7 @@ namespace LiteDB
         /// </summary>
         public static Regex Create(string pattern)
         {
-            return new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace);
+            return new Regex((pattern.StartsWith("^") ? "" : "^") + pattern, RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase);
         }
     }
 }
