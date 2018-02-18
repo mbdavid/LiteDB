@@ -29,11 +29,15 @@ namespace LiteDB
         Multiply,
         Divide,
 
+        Equal,
+        StartsWith,
+        Between,
         GreaterThan,
         GreaterThanOrEqual,
         LessThan,
         LessThanOrEqual,
-        Equal,
+        Contains,
+        EndsWith,
         NotEqual,
 
         Or,

@@ -14,11 +14,6 @@ namespace LiteDB
         /// </summary>
         public string Name { get; private set; }
 
-        /// <summary>
-        /// Index Node offset - Apply offset (skip) just after load IndexNode?
-        /// </summary>
-        public int Offset { get; set; }
-
         internal Index(string name)
         {
             this.Name = name;
@@ -97,11 +92,11 @@ namespace LiteDB
         /// <summary>
         /// Returns all document that values are between "start" and "end" values (BETWEEN)
         /// </summary>
-        public static Index Between(string name, BsonValue start, BsonValue end, bool startEquals = true, bool endEquals = true)
+        public static Index Between(string name, BsonValue start, BsonValue end)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, start ?? BsonValue.Null, end ?? BsonValue.Null, startEquals, endEquals);
+            return new IndexBetween(name, start ?? BsonValue.Null, end ?? BsonValue.Null);
         }
 
         /// <summary>
@@ -113,39 +108,6 @@ namespace LiteDB
             if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
             return new IndexStartsWith(name, value);
-        }
-
-        /// <summary>
-        /// Returns all documents that has value in values list (IN)
-        /// </summary>
-        public static Index In(string name, BsonArray value)
-        {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
-            if (value == null) throw new ArgumentNullException(nameof(value));
-
-            return new IndexIn(name, value.RawValue);
-        }
-
-        /// <summary>
-        /// Returns all documents that has value in values list (IN)
-        /// </summary>
-        public static Index In(string name, params BsonValue[] values)
-        {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
-            if (values == null) throw new ArgumentNullException(nameof(values));
-
-            return new IndexIn(name, values);
-        }
-
-        /// <summary>
-        /// Returns all documents that has value in values list (IN)
-        /// </summary>
-        public static Index In(string name, IEnumerable<BsonValue> values)
-        {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
-            if (values == null) throw new ArgumentNullException(nameof(values));
-
-            return new IndexIn(name, values);
         }
 
         /// <summary>
@@ -203,11 +165,7 @@ namespace LiteDB
             if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Name);
 
             // execute query to get all IndexNodes
-            // do DistinctBy datablock to not duplicate same document in results
-            // apply skip on IndxNode results
-            return this.Execute(indexer, index)
-                .DistinctBy(x => x.DataBlock, null)
-                .Skip(this.Offset);
+            return this.Execute(indexer, index);
         }
 
         #endregion

@@ -42,7 +42,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("LT{0}({1})", this.Name, _equals ? "E" : "");
+            return string.Format("LT{0}({1})", _equals ? "E" : "", this.Name);
         }
     }
 }

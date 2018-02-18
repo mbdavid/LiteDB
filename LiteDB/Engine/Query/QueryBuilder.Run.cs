@@ -61,8 +61,10 @@ namespace LiteDB
                 // no collection, no documents
                 if (col == null) yield break;
 
-                // get node list from query
-                var nodes = _query.Index.Run(col, indexer);
+                // get node list from query - distinct by dataBlock (avoid duplicate) and skip
+                var nodes = _query.Index.Run(col, indexer)
+                    .DistinctBy(x => x.DataBlock, null)
+                    .Skip(_query.Offset);
 
                 // load document from disk
                 var docs = LoadDocument(nodes, loader, _query.KeyOnly, _query.Index.Name);

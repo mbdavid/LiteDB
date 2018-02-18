@@ -31,15 +31,16 @@ namespace LiteDB
             ["-"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("MINUS"), BsonExpressionType.Subtract),
 
             // conditional
+            ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
+            [" STARTSWITH "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("STARTSWITH"), BsonExpressionType.StartsWith),
+            [" BETWEEN "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN"), BsonExpressionType.Between),
             [">"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT"), BsonExpressionType.GreaterThan),
             [">="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE"), BsonExpressionType.GreaterThanOrEqual),
             ["<"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT"), BsonExpressionType.LessThan),
             ["<="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE"), BsonExpressionType.LessThanOrEqual),
-            ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
+            [" CONTAINS "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("CONTAINS"), BsonExpressionType.Contains),
+            [" ENDSWITH "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("ENDSWITH"), BsonExpressionType.EndsWith),
             ["!="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ"), BsonExpressionType.NotEqual),
-            //["startswith"] = typeof(ExpressionOperators).GetMethod("STARTSWITH"),
-            //["endswith"] = typeof(ExpressionOperators).GetMethod("ENDSWITH"),
-            //["between"] = typeof(ExpressionOperators).GetMethod("BETWEEN"),
 
             // logic
             [" OR "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or),
@@ -60,7 +61,7 @@ namespace LiteDB
         /// <summary>
         /// + - * / = > ...
         /// </summary>
-        private static Regex RE_OPERATORS = new Regex(@"^\s*(\+|\-|\*|\/|%|=|!=|>=|>|<=|<|\sAND\s|\sOR\s)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex RE_OPERATORS = new Regex(@"^\s*(\+|\-|\*|\/|%|=|\sSTARTSWITH\s|\sBETWEEN\s|!=|>=|>|<=|<|\sCONTAINS\s|\sENDSWITH\s|\sOR\s|\sAND\s)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex RE_SIMPLE_FIELD = new Regex(@"^[$\w]+$", RegexOptions.Compiled);
 
         #endregion

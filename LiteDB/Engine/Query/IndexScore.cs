@@ -33,14 +33,28 @@ namespace LiteDB
             // 0 - All nodes are same value (worst) - or not analyzed
             var u = (double)Math.Min(index.UniqueKeyCount, index.KeyCount) / (double)index.KeyCount;
 
-            // determine a score multiplication
-            // 1 for Equals (best - few (or single) results)
-            // 0 for NotEquals (worst - (is basicly full scan)
-            // .5 for interval (>, >=, <, <=, BETWEEN, STARTSWITH, ...)
-            var m = 
-                _type == BsonExpressionType.Equal ? 1d :
-                _type == BsonExpressionType.NotEqual ? 0d : .5d;
+            double m = 0;
 
+            // determine a score multiplication by operation (from best=1 to worst=0)
+            switch (_type)
+            {
+                case BsonExpressionType.Equal:
+                //case BsonExpressionType.In:
+                    m = 1; break;
+                //case BsonExpressionType.Between:
+                //case BsonExpressionType.StartsWith:
+                //    m = 0.1; break;
+                case BsonExpressionType.GreaterThan:
+                case BsonExpressionType.GreaterThanOrEqual:
+                case BsonExpressionType.LessThan:
+                case BsonExpressionType.LessThanOrEqual:
+                    m = 0.01; break;
+                default:
+                    m = 0.0001;
+                    break;
+            }
+
+            // calcs index score
             this.Score = u * m;
         }
 
@@ -49,16 +63,31 @@ namespace LiteDB
         /// </summary>
         public Index CreateIndexQuery()
         {
-            var value = _value.Execute(null).First();
+            var indexes = _value.Execute(null).Select(x => this.GetIndex(x)).ToList();
 
-            var index =
+            if (indexes.Count == 1)
+            {
+                return indexes[0];
+            }
+            else
+            {
+                return new IndexOr(indexes);
+            }
+        }
+
+        private Index GetIndex(BsonValue value)
+        {
+            return
                 _type == BsonExpressionType.Equal ? LiteDB.Index.EQ(_name, value) :
+                _type == BsonExpressionType.Between ? LiteDB.Index.Between(_name, value.AsArray[0], value.AsArray[1]) :
+                _type == BsonExpressionType.StartsWith ? LiteDB.Index.StartsWith(_name, value.AsString) :
+                _type == BsonExpressionType.GreaterThan ? LiteDB.Index.GT(_name, value) :
+                _type == BsonExpressionType.GreaterThanOrEqual ? LiteDB.Index.GTE(_name, value) :
                 _type == BsonExpressionType.LessThan ? LiteDB.Index.LT(_name, value) :
                 _type == BsonExpressionType.LessThanOrEqual ? LiteDB.Index.LTE(_name, value) :
-                _type == BsonExpressionType.GreaterThan ? LiteDB.Index.GT(_name, value) :
-                _type == BsonExpressionType.GreaterThanOrEqual ? LiteDB.Index.GTE(_name, value) : null;
-
-            return index;
+                _type == BsonExpressionType.Contains ? LiteDB.Index.Contains(_name, value) :
+                _type == BsonExpressionType.EndsWith ? LiteDB.Index.EndsWith(_name, value) :
+                _type == BsonExpressionType.NotEqual ? LiteDB.Index.Not(_name, value) : null;
         }
     }
 }

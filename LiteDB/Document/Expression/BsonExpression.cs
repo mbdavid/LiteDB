@@ -60,12 +60,16 @@ namespace LiteDB
         /// Indicate that expression are binary conditional expression (=, >, ...)
         /// </summary>
         internal bool IsConditional =>
+            this.Type == BsonExpressionType.Equal ||
+            this.Type == BsonExpressionType.StartsWith ||
+            this.Type == BsonExpressionType.Between ||
             this.Type == BsonExpressionType.GreaterThan ||
             this.Type == BsonExpressionType.GreaterThanOrEqual ||
             this.Type == BsonExpressionType.LessThan ||
             this.Type == BsonExpressionType.LessThanOrEqual ||
-            this.Type == BsonExpressionType.NotEqual ||
-            this.Type == BsonExpressionType.Equal;
+            this.Type == BsonExpressionType.Contains ||
+            this.Type == BsonExpressionType.EndsWith ||
+            this.Type == BsonExpressionType.NotEqual;
 
         /// <summary>
         /// Compiled Expression into a function to be executed

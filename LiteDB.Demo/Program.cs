@@ -22,15 +22,17 @@ namespace LiteDB.Demo
             {
                 db.Insert("col1", ReadDocuments(1, 1000));
 
-                db.EnsureIndex("col1", "idx_age", "age");
-                db.EnsureIndex("col1", "idx_name", "name");
-                db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
+                //db.EnsureIndex("col1", "idx_age", "age");
+                //db.EnsureIndex("col1", "idx_name", "name");
+                //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
+                //db.EnsureIndex("col1", "idx_email", "email");
 
                 var r = db.Query("col1")
-                    .Where("age  = @0", 63)
-                    .Where("name  = @0", "Iliana Wilson")
+                    .Where("age  <= @0", 63)
+                    .Where("name  >= @0", "Iliana Wilson")
                     .Where("UPPER(name) = @0", "ILIANA WILSON")
-                    .Where("_id  = @0", 199)
+                    .Where("email = @0", "Piper@molestie.org")
+                    .Where("_id +0  = @0", 199)
                     .FirstOrDefault();
 
                 // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}

@@ -19,3 +19,40 @@
 = true
 > a = 0 or b = 1 or c = 2 or 1=1
 = true
+
+# Between
+{ a: 50, b: "m" }
+> 5 between [1, 10]
+= true
+> b between [@0, @1]
+@0 "a"
+@1 "z"
+= true
+
+# Greater and Less
+> 1 < 3.0
+= true
+> 4 < 8
+= true
+> 3 >= 3
+= true
+> 2 <= 1
+= false
+> 2 <= "a"
+= true
+
+# String
+> "John" startswith "J"
+= true
+> "John" contains @0
+@0 "o"
+= true
+> "John" endswith 1
+= false
+{ names: ["John", "Joana", "Carlos"] }
+> names[*] startswith "J"
+= true
+= true
+= false
+> ARRAY(names[@ startswith "J"])
+= ["John", "Joana"]

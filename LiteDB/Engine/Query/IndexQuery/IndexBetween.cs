@@ -12,16 +12,11 @@ namespace LiteDB
         private BsonValue _start;
         private BsonValue _end;
 
-        private bool _startEquals;
-        private bool _endEquals;
-
-        public IndexBetween(string name, BsonValue start, BsonValue end, bool startEquals, bool endEquals)
+        public IndexBetween(string name, BsonValue start, BsonValue end)
             : base(name)
         {
             _start = start;
-            _startEquals = startEquals;
             _end = end;
-            _endEquals = endEquals;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
@@ -40,10 +35,7 @@ namespace LiteDB
                 // if current value are not equals start, go out this loop
                 if (diff != 0) break;
 
-                if (_startEquals)
-                {
-                    yield return node;
-                }
+                yield return node;
 
                 node = indexer.GetNode(node.NextPrev(0, order));
             }
@@ -53,11 +45,7 @@ namespace LiteDB
             {
                 var diff = node.Key.CompareTo(_end);
 
-                if (_endEquals && diff == 0)
-                {
-                    yield return node;
-                }
-                else if (diff == -order)
+                if (diff == 0 || diff == -order)
                 {
                     yield return node;
                 }

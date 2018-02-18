@@ -56,23 +56,19 @@ namespace LiteDB.Tests.Document
 
                 if (test.Results.Count == 0) continue;
 
+                expr.Parameters.Clear();
+                test.Parameters.CopyTo(expr.Parameters);
+
                 // test result
                 var doc = JsonSerializer.Deserialize(test.JsonDocument ?? "{}") as BsonDocument;
 
-                try
-                {
-                    var result = expr.Execute(doc, test.Parameters, true).ToList();
+                var result = expr.Execute(doc, true).ToList();
 
-                    if (!result.SequenceEqual(test.Results))
-                    {
-                        Assert.AreEqual(string.Join("; ", result.Select(x => x.ToString())),
-                            string.Join("; ", test.Results.Select(x => x.ToString())),
-                            test.Comment + " : " + test.Expression + " (" + filename + ")");
-                    }
-                }
-                catch(Exception ex)
+                if (!result.SequenceEqual(test.Results))
                 {
-                    Assert.Fail($"ERROR in {test.Expression}: {ex.Message}");
+                    Assert.AreEqual(string.Join("; ", result.Select(x => x.ToString())),
+                        string.Join("; ", test.Results.Select(x => x.ToString())),
+                        test.Comment + " : " + test.Expression + " (" + filename + ")");
                 }
             }
         }

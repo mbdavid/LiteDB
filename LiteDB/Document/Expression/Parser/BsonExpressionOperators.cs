@@ -9,6 +9,8 @@ namespace LiteDB
 {
     internal class BsonExpressionOperators
     {
+        #region Arithmetic
+
         /// <summary>
         /// Add two number values. If any side are string, concat left+right as string. Support multiples values
         /// </summary>
@@ -105,6 +107,10 @@ namespace LiteDB
             }
         }
 
+        #endregion
+
+        #region Conditional
+
         /// <summary>
         /// Test if left and right are same value. Returns true or false. Support multiples values
         /// </summary>
@@ -117,13 +123,40 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left and right are not same value. Returns true or false. Support multiples values
+        /// Test if left and right starts with same value. Returns true or false. Support multiples values. Works only when left and right are string
         /// </summary>
-        public static IEnumerable<BsonValue> NEQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        public static IEnumerable<BsonValue> STARTSWITH(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
             foreach (var value in left.ZipValues(right))
             {
-                yield return value.First != value.Second;
+                if (value.First.IsString && value.Second.IsString)
+                {
+                    yield return value.First.AsString.StartsWith(value.Second.AsString);
+                }
+                else
+                {
+                    yield return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Test if left is between right-array. Returns true or false. Right value must be an array. Support multiple values
+        /// </summary>
+        public static IEnumerable<BsonValue> BETWEEN(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in left.ZipValues(right))
+            {
+                if (!value.Second.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+
+                var arr = value.Second.AsArray;
+
+                if (arr.Count != 2) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
+
+                var start = arr[0];
+                var end = arr[1];
+
+                yield return value.First >= start && value.First <= end;
             }
         }
 
@@ -172,6 +205,57 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Test if left contains substring value of right. Returns true or false. Support multiples values. Works only when left and right are string
+        /// </summary>
+        public static IEnumerable<BsonValue> CONTAINS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in left.ZipValues(right))
+            {
+                if (value.First.IsString && value.Second.IsString)
+                {
+                    yield return value.First.AsString.Contains(value.Second.AsString);
+                }
+                else
+                {
+                    yield return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Test if left endswith value of right. Returns true or false. Support multiples values. Works only when left and right are string
+        /// </summary>
+        public static IEnumerable<BsonValue> ENDSWITH(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in left.ZipValues(right))
+            {
+                if (value.First.IsString && value.Second.IsString)
+                {
+                    yield return value.First.AsString.EndsWith(value.Second.AsString);
+                }
+                else
+                {
+                    yield return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Test if left and right are not same value. Returns true or false. Support multiples values
+        /// </summary>
+        public static IEnumerable<BsonValue> NEQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in left.ZipValues(right))
+            {
+                yield return value.First != value.Second;
+            }
+        }
+
+        #endregion
+
+        #region Logic
+
+        /// <summary>
         /// Test left AND right value. Returns true or false. Support multiples values
         /// </summary>
         public static IEnumerable<BsonValue> AND(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
@@ -192,6 +276,10 @@ namespace LiteDB
                 yield return value.First || value.Second;
             }
         }
+
+        #endregion
+
+        #region Path Navigation
 
         /// <summary>
         /// Returns value from root document. Returns same document if name are empty
@@ -292,6 +380,10 @@ namespace LiteDB
             }
         }
 
+        #endregion
+
+        #region Object Creation
+
         /// <summary>
         /// Create a single document based on key-value pairs on parameters. DOCUMENT('_id', 1)
         /// </summary>
@@ -320,5 +412,7 @@ namespace LiteDB
         {
             yield return new BsonArray(values.SelectMany(x => x));
         }
+
+        #endregion
     }
 }

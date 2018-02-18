@@ -19,18 +19,11 @@ namespace LiteDB
         /// </summary>
         private bool _optimized = false;
 
-        //private QueryPlan _query = new QueryPlan();
-        //private List<BsonExpression> _where = new List<BsonExpression>();
-        //private BsonExpression _orderBy = null;
-        //private int _order = Query.Ascending;
-        //private List<BsonExpression> _includes = new List<BsonExpression>();
-
         /// <summary>
         /// Fill QueryPlan instance (_query)
         /// - Select best index option (or create new one)
         /// - Fill includes 
         /// - Set orderBy
-        /// - Calculate estimate cost
         /// </summary>
         private void OptimizeQuery(Snapshot snapshot)
         {
@@ -137,6 +130,7 @@ namespace LiteDB
             // must be condition, left side must be a path and immutable and right side must be a constant
             var expr = _where
                 .Where(x => x.IsConditional && x.Left.Type == BsonExpressionType.Path && x.Left.IsImmutable && x.Right.IsConstant)
+                .OrderBy(x => x.Type)
                 .FirstOrDefault();
 
             // not a good condition? do not create index
