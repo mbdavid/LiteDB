@@ -10,8 +10,8 @@ namespace LiteDB
         private bool _testSqlLike;
         private string _pattern;
 
-        public IndexLike(string name, BsonValue value)
-            : base(name)
+        public IndexLike(string name, BsonValue value, int order)
+            : base(name, order)
         {
             _pattern = value.AsString;
             _startsWith = _pattern.SqlLikeStartsWith(out _testSqlLike);
@@ -81,7 +81,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("LIKE({0})", this.Name);
+            return string.Format("LIKE({0}) {1}", this.Name, this.Order == Query.Ascending ? "ASC" : "DESC");
         }
     }
 }

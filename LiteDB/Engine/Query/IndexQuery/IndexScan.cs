@@ -10,13 +10,11 @@ namespace LiteDB
     internal class IndexScan : Index
     {
         private Func<BsonValue, bool> _func;
-        private int _order;
 
         public IndexScan(string name, Func<BsonValue, bool> func, int order)
-            : base(name)
+            : base(name, order)
         {
             _func = func;
-            _order = order;
         }
 
         internal override double GetScore(CollectionIndex index)
@@ -28,13 +26,13 @@ namespace LiteDB
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             return indexer
-                .FindAll(index, _order)
+                .FindAll(index, this.Order)
                 .Where(i => _func(i.Key));
         }
 
         public override string ToString()
         {
-            return string.Format("SCAN({0})", this.Name);
+            return string.Format("SCAN({0}) {1}", this.Name, this.Order == Query.Ascending ? "ASC" : "DESC");
         }
     }
 }

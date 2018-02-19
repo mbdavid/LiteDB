@@ -104,16 +104,22 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ALL(IEnumerable<BsonValue> values)
         {
-            foreach (var value in values.Where(x => x.IsBoolean).Select(x => x.AsBoolean))
-            {
-                if (value == false)
-                {
-                    yield return false;
-                    yield break;
-                }
-            }
+            yield return values
+                .Where(x => x.IsBoolean)
+                .Select(x => x.AsBoolean)
+                .All(x => x == true);
+        }
 
-            yield return true;
+        /// <summary>
+        /// Return "true" if any values are true
+        /// ANY($._id = ITEMS([1, 2, 3, 4]))
+        /// </summary>
+        public static IEnumerable<BsonValue> ANY(IEnumerable<BsonValue> values)
+        {
+            yield return values
+                .Where(x => x.IsBoolean)
+                .Select(x => x.AsBoolean)
+                .Any(x => x == true);
         }
 
         /// <summary>

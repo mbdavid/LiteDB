@@ -18,5 +18,232 @@ namespace LiteDB
         /// Indicate when a query must execute in descending order
         /// </summary>
         public const int Descending = -1;
+
+        /// <summary>
+        /// Returns all documents that value are equals to value (=)
+        /// </summary>
+        public static BsonExpression EQ(string field, BsonValue value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} = @{p}");
+            expr.Parameters[p] = value ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that value are less than value (&lt;)
+        /// </summary>
+        public static BsonExpression LT(string field, BsonValue value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} < @{p}");
+            expr.Parameters[p] = value ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that value are less than or equals value (&lt;=)
+        /// </summary>
+        public static BsonExpression LTE(string field, BsonValue value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} <= @{p}");
+            expr.Parameters[p] = value ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all document that value are greater than value (&gt;)
+        /// </summary>
+        public static BsonExpression GT(string field, BsonValue value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} > @{p}");
+            expr.Parameters[p] = value ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that value are greater than or equals value (&gt;=)
+        /// </summary>
+        public static BsonExpression GTE(string field, BsonValue value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} >= @{p}");
+            expr.Parameters[p] = value ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all document that values are between "start" and "end" values (BETWEEN)
+        /// </summary>
+        public static BsonExpression Between(string field, BsonValue start, BsonValue end)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var s = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+            var e = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} BETWEEN @{s} AND @{e}");
+            expr.Parameters[s] = start ?? BsonValue.Null;
+            expr.Parameters[e] = end ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that starts with value (LIKE)
+        /// </summary>
+        public static BsonExpression StartsWith(string field, string value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} LIKE @{p}");
+            expr.Parameters[p] = value + "%";
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that contains value (CONTAINS)
+        /// </summary>
+        public static BsonExpression Contains(string field, string value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} LIKE @{p}");
+            expr.Parameters[p] = "%" + value + "%";
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that are not equals to value (not equals)
+        /// </summary>
+        public static BsonExpression Not(string field, BsonValue value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} != @{p}");
+            expr.Parameters[p] = value ?? BsonValue.Null;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that has value in values list (IN)
+        /// </summary>
+        public static BsonExpression In(string field, BsonArray value)
+        {
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+
+            var expr = BsonExpression.Create($"{field} = ITEMS(@{p})");
+            expr.Parameters[p] = value;
+
+            return expr;
+        }
+
+        /// <summary>
+        /// Returns all documents that has value in values list (IN)
+        /// </summary>
+        public static BsonExpression In(string field, params BsonValue[] values)
+        {
+            return In(field, new BsonArray(values));
+        }
+
+        /// <summary>
+        /// Returns all documents that has value in values list (IN)
+        /// </summary>
+        public static BsonExpression In(string field, IEnumerable<BsonValue> values)
+        {
+            return In(field, new BsonArray(values));
+        }
+
+        /// <summary>
+        /// Returns document that exists in BOTH queries results. If both queries has indexes, left query has index preference (other side will be run in full scan)
+        /// </summary>
+        public static BsonExpression And(BsonExpression left, BsonExpression right)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+
+            return BsonExpressionParser.CreateBinaryExpression(" AND ", left, right);
+        }
+
+        /// <summary>
+        /// Returns document that exists in ALL queries results.
+        /// </summary>
+        public static BsonExpression And(params BsonExpression[] queries)
+        {
+            if (queries == null || queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+
+            var left = queries[0];
+
+            for (int i = 1; i < queries.Length; i++)
+            {
+                left = And(left, queries[i]);
+            }
+
+            return left;
+        }
+
+        /// <summary>
+        /// Returns documents that exists in ANY queries results (Union).
+        /// </summary>
+        public static BsonExpression Or(BsonExpression left, BsonExpression right)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+
+            return BsonExpressionParser.CreateBinaryExpression(" OR ", left, right);
+        }
+
+        /// <summary>
+        /// Returns document that exists in ANY queries results (Union).
+        /// </summary>
+        public static BsonExpression Or(params BsonExpression[] queries)
+        {
+            if (queries == null || queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+
+            var left = queries[0];
+
+            for (int i = 1; i < queries.Length; i++)
+            {
+                left = Or(left, queries[i]);
+            }
+
+            return left;
+        }
     }
 }

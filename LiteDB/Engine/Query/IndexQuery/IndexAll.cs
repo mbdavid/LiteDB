@@ -9,27 +9,25 @@ namespace LiteDB
     /// </summary>
     internal class IndexAll : Index
     {
-        private int _order;
-
         public IndexAll(string name, int order)
-            : base(name)
+            : base(name, order)
         {
-            _order = order;
         }
 
         internal override double GetScore(CollectionIndex index)
         {
-            return 0; // full index scan
+            // full index scan - worst case
+            return 0;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
-            return indexer.FindAll(index, _order);
+            return indexer.FindAll(index, this.Order);
         }
 
         public override string ToString()
         {
-            return string.Format("ALL({0}, {1})", this.Name,  _order);
+            return string.Format("ALL({0}) {1}", this.Name, this.Order == Query.Ascending ? "ASC" : "DESC");
         }
     }
 }

@@ -32,7 +32,9 @@ namespace LiteDB.Demo
                     //.Where("name like @0", "Iliana%")
                     //.Where("UPPER(name) = @0", "ILIANA WILSON")
                     //.Where("email = @0", "Piper@molestie.org")
-                    //.Where("_id +0  = @0", 199)
+                    //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
+                    .Index(Index.Between("_id", 1, 2, -1))
+                    .Select("_id")
                     .ToArray();
 
                 // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}

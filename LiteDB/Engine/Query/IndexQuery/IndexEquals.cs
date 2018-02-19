@@ -12,7 +12,7 @@ namespace LiteDB
         private BsonValue _value;
 
         public IndexEquals(string name, BsonValue value)
-            : base(name)
+            : base(name, Query.Ascending)
         {
             _value = value;
         }

@@ -14,9 +14,15 @@ namespace LiteDB
         /// </summary>
         public string Name { get; private set; }
 
-        internal Index(string name)
+        /// <summary>
+        /// Get/Set index order
+        /// </summary>
+        public int Order { get; private set; }
+
+        internal Index(string name, int order)
         {
             this.Name = name;
+            this.Order = order;
         }
 
         #region Static Methods
@@ -52,62 +58,62 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that value are less than value (&lt;)
         /// </summary>
-        public static Index LT(string name, BsonValue value)
+        public static Index LT(string name, BsonValue value, int order = Query.Ascending)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexLess(name, value ?? BsonValue.Null, false);
+            return new IndexBetween(name, BsonValue.MinValue, value, true, false, order);
         }
 
         /// <summary>
         /// Returns all documents that value are less than or equals value (&lt;=)
         /// </summary>
-        public static Index LTE(string name, BsonValue value)
+        public static Index LTE(string name, BsonValue value, int order = Query.Ascending)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexLess(name, value ?? BsonValue.Null, true);
+            return new IndexBetween(name, BsonValue.MinValue, value, true, true, order);
         }
 
         /// <summary>
         /// Returns all document that value are greater than value (&gt;)
         /// </summary>
-        public static Index GT(string name, BsonValue value)
+        public static Index GT(string name, BsonValue value, int order = Query.Ascending)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexGreater(name, value ?? BsonValue.Null, false);
+            return new IndexBetween(name, value, BsonValue.MaxValue, false, true, order);
         }
 
         /// <summary>
         /// Returns all documents that value are greater than or equals value (&gt;=)
         /// </summary>
-        public static Index GTE(string name, BsonValue value)
+        public static Index GTE(string name, BsonValue value, int order = Query.Ascending)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexGreater(name, value ?? BsonValue.Null, true);
+            return new IndexBetween(name, value, BsonValue.MaxValue, true, true, order);
         }
 
         /// <summary>
         /// Returns all document that values are between "start" and "end" values (BETWEEN)
         /// </summary>
-        public static Index Between(string name, BsonValue start, BsonValue end)
+        public static Index Between(string name, BsonValue start, BsonValue end, int order = Query.Ascending)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, start ?? BsonValue.Null, end ?? BsonValue.Null);
+            return new IndexBetween(name, start ?? BsonValue.Null, end ?? BsonValue.Null, true, true, order);
         }
 
         /// <summary>
         /// Returns all documents that "Sql Like" with value
         /// </summary>
-        public static Index Like(string name, string value)
+        public static Index Like(string name, string value, int order = Query.Ascending)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
-            return new IndexLike(name, value);
+            return new IndexLike(name, value, order);
         }
 
         /// <summary>
@@ -115,7 +121,7 @@ namespace LiteDB
         /// </summary>
         public static Index StartsWith(string name, string value, int order = Query.Ascending)
         {
-            return Like(name, value + "%");
+            return Like(name, value + "%", order);
         }
 
         /// <summary>

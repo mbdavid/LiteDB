@@ -12,7 +12,7 @@ namespace LiteDB
         private List<Index> _indexes;
 
         public IndexOr(List<Index> indexes)
-            : base("OR")
+            : base("OR", Query.Ascending)
         {
             _indexes = indexes;
         }

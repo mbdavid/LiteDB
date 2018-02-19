@@ -640,6 +640,30 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Create new binary expression based in 2 sides expression
+        /// </summary>
+        internal static BsonExpression CreateBinaryExpression(string op, BsonExpression left, BsonExpression right)
+        {
+            // create new binary expression based in 2 other expressions
+            var result = new BsonExpression
+            {
+                Type = _operators[op].Item2,
+                IsConstant = left.IsConstant && right.IsConstant,
+                IsImmutable = left.IsImmutable && right.IsImmutable,
+                Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),
+                Left = left,
+                Right = right,
+                Source = left.Source + op + right.Source
+            };
+
+            // copy their parameters into result
+            left.Parameters.CopyTo(result.Parameters);
+            right.Parameters.CopyTo(result.Parameters);
+
+            return result;
+        }
+
+        /// <summary>
         /// Get field from simples \w regex or ['comp-lex'] - also, add into source
         /// </summary>
         private static string ReadField(StringScanner s, string field, StringBuilder source)
