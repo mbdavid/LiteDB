@@ -22,6 +22,15 @@ namespace LiteDB.Demo
             {
                 db.Insert("col1", ReadDocuments(1, 1000));
 
+                db.Insert("col1", new BsonDocument[] {
+                    new BsonDocument {
+                        ["_id"] = 1001,
+                        ["idx"] = BsonValue.MaxValue,
+                        ["name"] = "nome"
+                    }
+                });
+
+                //db.EnsureIndex("col1", "idx", "idx");
                 //db.EnsureIndex("col1", "idx_age", "age");
                 db.EnsureIndex("col1", "idx_name", "name");
                 //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
@@ -33,8 +42,8 @@ namespace LiteDB.Demo
                     //.Where("UPPER(name) = @0", "ILIANA WILSON")
                     //.Where("email = @0", "Piper@molestie.org")
                     //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
-                    .Index(Index.Between("_id", 1, 2, -1))
-                    .Select("_id")
+                    .Index(Index.Like("idx_name", "Il%", 1))
+                    //.Index(Index.EQ("idx", BsonValue.MaxValue))
                     .ToArray();
 
                 // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}
@@ -67,12 +76,15 @@ namespace LiteDB.Demo
 
                         yield return new BsonDocument
                         {
-                            ["_id"] = count++,
+                            ["_id"] = count,
+                            ["idx"] = count,
                             ["name"] = row[0],
                             ["age"] = Convert.ToInt32(row[1]),
                             ["email"] = row[2],
                             ["lorem"] = bigDoc ? row[3] : "-"
                         };
+
+                        count++;
                     }
                 }
 

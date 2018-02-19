@@ -47,9 +47,8 @@ namespace LiteDB
         private IEnumerable<IndexNode> ExecuteStartsWith(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
-            var node = indexer.Find(index, _startsWith, true, Query.Ascending);
+            var node = indexer.Find(index, _startsWith, true, this.Order);
 
-            // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
                 var valueString = node.Key.AsString;
@@ -68,14 +67,14 @@ namespace LiteDB
                     break; // if no more starts with, stop scanning
                 }
 
-                node = indexer.GetNode(node.Next[0]);
+                node = indexer.GetNode(node.NextPrev(0, this.Order));
             }
         }
 
         private IEnumerable<IndexNode> ExecuteLike(IndexService indexer, CollectionIndex index)
         {
             return indexer
-                .FindAll(index, Query.Ascending)
+                .FindAll(index, this.Order)
                 .Where(x => x.Key.IsString && x.Key.AsString.SqlLike(_pattern));
         }
 
