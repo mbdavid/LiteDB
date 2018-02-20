@@ -68,7 +68,10 @@ namespace LiteDB
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue key, IndexNode last)
         {
-            var level = this.FlipCoin();
+            // when min/max values, use max level
+            var level = 
+                key.Type == BsonType.MinValue || key.Type == BsonType.MaxValue ?
+                (byte)IndexNode.MAX_LEVEL_LENGTH : this.FlipCoin();
 
             // set index collection with max-index level
             if (level > index.MaxLevel)

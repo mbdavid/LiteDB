@@ -20,7 +20,7 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
-                db.Insert("col1", ReadDocuments(1, 1000));
+                //db.Insert("col1", ReadDocuments(1, 1000));
 
                 db.Insert("col1", new BsonDocument[] {
                     new BsonDocument {
@@ -30,9 +30,9 @@ namespace LiteDB.Demo
                     }
                 });
 
-                //db.EnsureIndex("col1", "idx", "idx");
+                db.EnsureIndex("col1", "idx", "idx");
                 //db.EnsureIndex("col1", "idx_age", "age");
-                db.EnsureIndex("col1", "idx_name", "name");
+                //db.EnsureIndex("col1", "idx_name", "name");
                 //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
                 //db.EnsureIndex("col1", "idx_email", "email");
 
@@ -42,8 +42,8 @@ namespace LiteDB.Demo
                     //.Where("UPPER(name) = @0", "ILIANA WILSON")
                     //.Where("email = @0", "Piper@molestie.org")
                     //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
-                    .Index(Index.Like("idx_name", "Il%", 1))
-                    //.Index(Index.EQ("idx", BsonValue.MaxValue))
+                    //.Index(Index.GTE("idx", 999, 1))
+                    .Index(Index.GTE("idx", 1000))
                     .ToArray();
 
                 // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}

@@ -36,8 +36,8 @@ namespace LiteDB
         {
             // find first indexNode (or get from head/tail if Min/Max value)
             var node = 
-                _start == BsonValue.MinValue ? indexer.GetNode(index.HeadNode) :
-                _start == BsonValue.MaxValue ? indexer.GetNode(index.TailNode) :
+                _start.Type == BsonType.MinValue ? indexer.GetNode(index.HeadNode) :
+                _start.Type == BsonType.MaxValue ? indexer.GetNode(index.TailNode) :
                 indexer.Find(index, _start, true, this.Order);
 
             // returns (or not) equals start value
