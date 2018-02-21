@@ -14,10 +14,10 @@ namespace LiteDB
         {
         }
 
-        internal override double GetScore(CollectionIndex index)
+        internal override long GetCost(CollectionIndex index)
         {
-            // full index scan - worst case
-            return 0;
+            // full index scan => read all index keys
+            return index.KeyCount;
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

@@ -10,7 +10,6 @@ namespace LiteDB
     internal class IndexEquals : Index
     {
         private BsonValue _value;
-        private bool _unique;
 
         public IndexEquals(string name, BsonValue value)
             : base(name, Query.Ascending)
@@ -18,17 +17,19 @@ namespace LiteDB
             _value = value;
         }
 
-        internal override double GetScore(CollectionIndex index)
+        internal override long GetCost(CollectionIndex index)
         {
-            // update unique info
-            _unique = index.Unique;
+            if (index.Unique)
+            {
+                return 1; // best case, ever!
+            }
+            else
+            {
+                // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
+                var uniq = (double)Math.Min(index.UniqueKeyCount, index.KeyCount);
 
-            // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
-            // 1 - Only unique values (best)
-            // 0 - All nodes are same value (worst) - or not analyzed
-            var u = (double)Math.Min(index.UniqueKeyCount, index.KeyCount) / (double)index.KeyCount;
-
-            return u;
+                return (long)(index.KeyCount * uniq);
+            }
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
@@ -53,7 +54,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("INDEX{0} SCAN({1})", _unique ? " UNIQUE" : "", this.Name);
+            return string.Format("INDEX SCAN({0})", this.Name);
         }
     }
 }

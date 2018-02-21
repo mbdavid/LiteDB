@@ -72,23 +72,55 @@ namespace LiteDB
         public BsonExpression Select { get; set; } = null;
 
         /// <summary>
-        /// Get index score from 0 (worst - full scan) to 1 (best - equals unique key)
+        /// Get index cost (lower is best)
         /// </summary>
-        public double IndexScore { get; set; } = -1; // not calculated
+        public long IndexCost { get; internal set; } = 0; // not calculated
 
         /// <summary>
-        /// Get explain plan engine will execute
+        /// Get index expression source
         /// </summary>
-        internal string ExplainPlan
+        public string IndexExpression { get; internal set; }
+
+        #region Explain Plan
+
+        /// <summary>
+        /// Get detail plan engine will execute
+        /// </summary>
+        public string GetExplainPlan()
         {
-            get
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Cost: " + this.IndexCost);
+            sb.AppendLine("Index: " + this.Index.ToString() + " " + (this.Index.Order == Query.Ascending ? "ASC" : "DESC"));
+
+            if (this.Filters.Count > 0)
             {
-                return
-                    "Index Score: " + this.IndexScore + Environment.NewLine +
-                    "Index: " + this.Index.ToString() + Environment.NewLine +
-                    "Filters: " + string.Join(" AND ", this.Filters.Select(x => $"({x.Source})")) + Environment.NewLine +
-                    "OrderBy: " + (this.OrderBy?.Source ?? "-none-") + " " + this.Order;
+                sb.AppendLine("Filters: " + string.Join(" AND ", this.Filters.Select(x => $"({x.Source})")));
             }
+
+            if (this.Select != null)
+            {
+                sb.AppendLine("Select: " + this.Select.Source);
+            }
+
+            if (this.OrderBy != null)
+            {
+                sb.AppendLine("OrderBy: " + this.OrderBy.Source + (this.Order == Query.Ascending ? " ASC" : " DESC"));
+            }
+
+            if (this.Limit != int.MaxValue)
+            {
+                sb.AppendLine("Limit: " + this.Limit);
+            }
+
+            if (this.Offset > 0)
+            {
+                sb.AppendLine("Offset: " + this.Offset);
+            }
+
+            return sb.ToString();
         }
+
+        #endregion
     }
 }

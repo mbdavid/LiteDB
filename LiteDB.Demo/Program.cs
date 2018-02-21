@@ -29,11 +29,12 @@ namespace LiteDB.Demo
 
                 var r = db.Query("col1")
                     //.Where("_id = @0 or _id=64", 63)
-                    .Where("_id = ITEMS([@0,64])", 63)
+                    //.Where("_id = ITEMS([@0,64])", 63)
                     //.Where("name like @0", "Iliana%")
                     //.Where("UPPER(name) = @0", "ILIANA WILSON")
                     //.Where("email = @0", "Piper@molestie.org")
                     //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
+                    .OrderBy("name")
                     .Limit(5)
                     .ToArray();
 

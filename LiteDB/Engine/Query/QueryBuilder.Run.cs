@@ -32,7 +32,7 @@ namespace LiteDB
                     this.OptimizeQuery(snapshot);
 
                     //TODO: remove this execution plan
-                    Console.WriteLine(_query.ExplainPlan);
+                    Console.WriteLine(_query.GetExplainPlan());
 
                     return DoFind(snapshot);
                 });

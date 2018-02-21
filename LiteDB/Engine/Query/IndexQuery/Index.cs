@@ -17,7 +17,7 @@ namespace LiteDB
         /// <summary>
         /// Get/Set index order
         /// </summary>
-        public int Order { get; private set; }
+        public int Order { get; set; }
 
         internal Index(string name, int order)
         {
@@ -164,10 +164,9 @@ namespace LiteDB
         #region Executing Index Search
 
         /// <summary>
-        /// Calculate score based on type/value/collection - Number are from 1 (best) to 0 (worst)
-        /// It will be used to decide best index to use
+        /// Calculate cost based on type/value/collection - From 1 (best) to Collection.KeyCount (worst)
         /// </summary>
-        internal abstract double GetScore(CollectionIndex index);
+        internal abstract long GetCost(CollectionIndex index);
 
         /// <summary>
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index

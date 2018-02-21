@@ -17,21 +17,16 @@ namespace LiteDB
             _startsWith = _pattern.SqlLikeStartsWith(out _testSqlLike);
         }
 
-        internal override double GetScore(CollectionIndex index)
+        internal override long GetCost(CollectionIndex index)
         {
             if (_startsWith.Length > 0)
             {
-                // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
-                // 1 - Only unique values (best)
-                // 0 - All nodes are same value (worst) - or not analyzed
-                var u = (double)Math.Min(index.UniqueKeyCount, index.KeyCount) / (double)index.KeyCount;
-
-                return u;
+                // need some statistics here... assuming read 20% of total
+                return (long)(index.KeyCount * (0.2));
             }
             else
             {
-                // index full scan
-                return 0;
+                return index.KeyCount;
             }
         }
 

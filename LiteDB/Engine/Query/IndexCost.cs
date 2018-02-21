@@ -5,16 +5,16 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Calculate index score based on expression/collection index. 
-    /// Score are any value between 0 (best) and 1 (worst)
+    /// Calculate index cost based on expression/collection index. 
+    /// Lower cost is better - lowest will be selected
     /// </summary>
-    internal class IndexScore
+    internal class IndexCost
     {
-        public double Score { get; private set; }
+        public long Cost { get; private set; }
         public BsonExpression Expression { get; private set; }
         public Index Index { get; private set; }
 
-        public IndexScore(CollectionIndex index, BsonExpression expr, BsonExpression value)
+        public IndexCost(CollectionIndex index, BsonExpression expr, BsonExpression value)
         {
             // copy root expression parameters to my value expression
             expr.Parameters.CopyTo(value.Parameters);
@@ -26,8 +26,8 @@ namespace LiteDB
 
             this.Index = indexes.Count == 1 ? indexes[0] : new IndexOr(indexes);
 
-            // calcs index score
-            this.Score = this.Index.GetScore(index);
+            // calcs index cost
+            this.Cost = this.Index.GetCost(index);
         }
 
         /// <summary>

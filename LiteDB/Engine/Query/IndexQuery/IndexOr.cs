@@ -12,15 +12,14 @@ namespace LiteDB
         private List<Index> _indexes;
 
         public IndexOr(List<Index> indexes)
-            : base("OR", Query.Ascending)
+            : base("OR", indexes.FirstOrDefault()?.Order ?? Query.Ascending)
         {
             _indexes = indexes;
         }
 
-        internal override double GetScore(CollectionIndex index)
+        internal override long GetCost(CollectionIndex index)
         {
-            // for OR, return an average from all
-            return _indexes.Average(x => x.GetScore(index));
+            return _indexes.Sum(x => x.GetCost(index));
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

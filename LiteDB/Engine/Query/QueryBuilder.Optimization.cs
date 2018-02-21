@@ -27,19 +27,39 @@ namespace LiteDB
         /// </summary>
         private void OptimizeQuery(Snapshot snapshot)
         {
-            // if already has estimate cost, no need optimze
+            // if this query already optimazed, do not optmize again
             if (_optimized) return;
+
+            // try merge multiples OR into same conditional
+            this.TryMergeOrExpression();
 
             // define index (can create if needed)
             this.DefineIndex(snapshot);
 
-            //TODO do smart choices
-            _query.IncludeAfter.AddRange(_includes);
-            _query.Order = _order;
-            _query.OrderBy = _orderBy;
+            // try re-use same index order or define a new one
+            this.DefineOrderBy();
+
+            // define if includes must run before/after filter data (before is better)
+            this.DefineIncludesOrder();
 
             _optimized = true;
         }
+
+        #region Merge OR clausule
+
+        /// <summary>
+        /// Find OR expression with same left side + operator
+        /// </summary>
+        private void TryMergeOrExpression()
+        {
+
+
+        }
+
+
+        #endregion
+
+        #region Index Definition
 
         private void DefineIndex(Snapshot snapshot)
         {
@@ -50,34 +70,48 @@ namespace LiteDB
             if (_query.Index == null)
             {
                 // try select best index (or any index)
-                var indexScore = this.ChooseIndex(snapshot);
+                var indexCost = this.ChooseIndex(snapshot);
 
                 // if found an index, use-it
-                if (indexScore != null)
+                if (indexCost != null)
                 {
-                    _query.Index = indexScore.Index;
+                    _query.Index = indexCost.Index;
+                    _query.IndexCost = indexCost.Cost;
+                    _query.IndexExpression = indexCost.Expression.Source;
                 }
                 else
                 {
                     // try create an index
-                    indexScore = this.TryCreateIndex(snapshot);
+                    indexCost = this.TryCreateIndex(snapshot);
 
-                    if (indexScore != null)
+                    if (indexCost != null)
                     {
-                        _query.Index = indexScore.Index;
+                        _query.Index = indexCost.Index;
+                        _query.IndexCost = indexCost.Cost;
                     }
                     else
                     {
                         // if no index was created, use full scan over _id
+                        var pk = snapshot.CollectionPage.GetIndex(0);
+
                         _query.Index = new IndexAll("_id", _order);
+                        _query.IndexCost = _query.Index.GetCost(pk);
+                        _query.IndexExpression = pk.Expression;
                     }
                 }
 
                 // get selected expression used as index
-                selected = indexScore?.Expression;
+                selected = indexCost?.Expression;
+            }
+            else
+            {
+                // find query user defined index (must exists)
+                var idx = snapshot.CollectionPage.GetIndex(_query.Index.Name);
 
-                // fill index score
-                _query.IndexScore = indexScore?.Score ?? 0;
+                if (idx == null) throw LiteException.IndexNotFound(_query.Index.Name, snapshot.CollectionPage.CollectionName);
+
+                _query.IndexCost = _query.Index.GetCost(idx);
+                _query.IndexExpression = idx.Expression;
             }
 
             // fill filter using all expressions
@@ -85,12 +119,13 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Try select best index (highest score) to this list of where expressions
+        /// Try select best index (lowest cost) to this list of where expressions
         /// </summary>
-        private IndexScore ChooseIndex(Snapshot snapshot)
+        private IndexCost ChooseIndex(Snapshot snapshot)
         {
             var indexes = snapshot.CollectionPage.GetIndexes(true).ToArray();
-            IndexScore highest = null;
+
+            IndexCost lowest = null;
 
             // test all possible condition in where (must be conditional)
             foreach (var expr in _where.Where(x => x.IsConditional))
@@ -107,21 +142,21 @@ namespace LiteDB
                 if (index == null) continue;
 
                 // calculate index score and store highest score
-                var current = new IndexScore(index.Item1, expr, index.Item2);
+                var current = new IndexCost(index.Item1, expr, index.Item2);
 
-                if (highest == null || current.Score > highest.Score)
+                if (lowest == null || current.Cost < lowest.Cost)
                 {
-                    highest = current;
+                    lowest = current;
                 }
             }
 
-            return highest;
+            return lowest;
         }
 
         /// <summary>
         /// Try create an index over collection using _where conditionals.
         /// </summary>
-        private IndexScore TryCreateIndex(Snapshot snapshot)
+        private IndexCost TryCreateIndex(Snapshot snapshot)
         {
             // at least a minimum document count
             if (snapshot.CollectionPage.DocumentCount < DOCUMENT_COUNT_TO_CREATE_INDEX) return null;
@@ -144,10 +179,44 @@ namespace LiteDB
 
             var index = snapshot.CollectionPage.GetIndex(name);
 
-            // create index score
-            var score = new IndexScore(index, expr, expr.Right);
+            // get index cost
+            var cost = new IndexCost(index, expr, expr.Right);
 
-            return score;
+            return cost;
         }
+
+        #endregion
+
+        #region OrderBy Definition
+
+        /// <summary>
+        /// Define order expression and try re-use same index order by (if possible)
+        /// </summary>
+        private void DefineOrderBy()
+        {
+            // if index expression are same as orderBy, use index to sort - just update index order
+            if (_query.IndexExpression == _orderBy.Source)
+            {
+                _query.Index.Order = _order;
+            }
+            else
+            {
+                _query.OrderBy = _orderBy;
+                _query.Order = _order;
+            }
+        }
+
+        #endregion
+
+        #region Define Includes
+
+        /// <summary>
+        /// Define if each include can be called after filter (best option) or must be run before (because filter needs)
+        /// </summary>
+        private void DefineIncludesOrder()
+        {
+        }
+
+        #endregion
     }
 }
