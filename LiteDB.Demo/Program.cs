@@ -22,46 +22,19 @@ namespace LiteDB.Demo
             {
                 db.Insert("col1", ReadDocuments(1, 1000));
 
-
-                db.Insert("col1", new BsonDocument[] {
-                    new BsonDocument {
-                        ["_id"] = 1001,
-                        ["idx"] = BsonValue.MaxValue,
-                        ["name"] = "nome1"
-                    }
-                });
-
-                db.Insert("col1", ReadDocuments(1005, 1009));
-
-                db.Insert("col1", new BsonDocument[] {
-                    new BsonDocument {
-                        ["_id"] = 1002,
-                        ["idx"] = BsonValue.MaxValue,
-                        ["name"] = "nome2"
-                    }
-                }); db.Insert("col1", new BsonDocument[] {
-                    new BsonDocument {
-                        ["_id"] = 1003,
-                        ["idx"] = BsonValue.MaxValue,
-                        ["name"] = "nome3"
-                    }
-                });
-
-                db.EnsureIndex("col1", "idx", "idx");
-
-                //db.EnsureIndex("col1", "idx_age", "age");
-                //db.EnsureIndex("col1", "idx_name", "name");
+                db.EnsureIndex("col1", "idx_age", "age");
+                db.EnsureIndex("col1", "idx_name", "name");
                 //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
                 //db.EnsureIndex("col1", "idx_email", "email");
 
                 var r = db.Query("col1")
-                    //.Where("age  <= @0", 63)
+                    //.Where("_id = @0 or _id=64", 63)
+                    .Where("_id = ITEMS([@0,64])", 63)
                     //.Where("name like @0", "Iliana%")
                     //.Where("UPPER(name) = @0", "ILIANA WILSON")
                     //.Where("email = @0", "Piper@molestie.org")
                     //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
-                    //.Index(Index.GTE("idx", 999, 1))
-                    .Index(Index.GTE("idx", 1000))
+                    .Limit(5)
                     .ToArray();
 
                 // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}
