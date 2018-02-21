@@ -71,6 +71,20 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns replaced string changing oldValue with newValue. Support multiple values (only string)
+        /// </summary>
+        public static IEnumerable<BsonValue> REPLACE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> oldValues, IEnumerable<BsonValue> newValues)
+        {
+            foreach (var value in values.ZipValues(oldValues, newValues))
+            {
+                if (value.First.IsString && value.Second.IsString && value.Third.IsString)
+                {
+                    yield return value.First.AsString.Replace(value.Second.AsString, value.Third.AsString);
+                }
+            }
+        }
+
+        /// <summary>
         /// Return value string with left padding. Support multiple values
         /// </summary>
         public static IEnumerable<BsonValue> LPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)

@@ -21,6 +21,11 @@
 = "00027"
 > RPAD(27, 5, "0")
 = "27000"
+> REPLACE("Hi", "i", "I")
+= "HI"
+> REPLACE(ITEMS(["Lite", "LiteDB"]), "L", "x")
+= "xite"
+= "xiteDB"
 
 # String in array items
 { arr: ["one", "two"] }
