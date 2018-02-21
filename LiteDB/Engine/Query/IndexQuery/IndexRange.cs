@@ -5,9 +5,9 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement between operation - in asc or desc way - can be used as LT, LTE, GT, GTE too because support MinValue/MaxValue
+    /// Implement range operation - in asc or desc way - can be used as LT, LTE, GT, GTE too because support MinValue/MaxValue
     /// </summary>
-    internal class IndexBetween : Index
+    internal class IndexRange : Index
     {
         private BsonValue _start;
         private BsonValue _end;
@@ -15,7 +15,7 @@ namespace LiteDB
         private bool _startEquals;
         private bool _endEquals;
 
-        public IndexBetween(string name, BsonValue start, BsonValue end, bool startEquals, bool endEquals, int order)
+        public IndexRange(string name, BsonValue start, BsonValue end, bool startEquals, bool endEquals, int order)
             : base(name, order)
         {
             // if order as desc, use swap start/end values
@@ -80,7 +80,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("INTERVAL({0}) {1}", this.Name, this.Order == Query.Ascending ? "ASC" : "DESC");
+            return string.Format("RANGE({0})");
         }
     }
 }

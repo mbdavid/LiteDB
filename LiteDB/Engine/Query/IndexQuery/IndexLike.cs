@@ -80,7 +80,9 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("LIKE({0}) {1}", this.Name, this.Order == Query.Ascending ? "ASC" : "DESC");
+            return string.Format("{0}({1})",
+                _startsWith.Length == 0 ? "RANGE" : "FULL SCAN",
+                this.Name);
         }
     }
 }

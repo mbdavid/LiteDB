@@ -41,7 +41,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("OR({0} : {1})", _indexes.FirstOrDefault()?.ToString(), _indexes.Count);
+            return string.Join(" OR ", _indexes.Select(x => x.ToString()));
         }
     }
 }

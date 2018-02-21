@@ -62,7 +62,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, BsonValue.MinValue, value, true, false, order);
+            return new IndexRange(name, BsonValue.MinValue, value, true, false, order);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, BsonValue.MinValue, value, true, true, order);
+            return new IndexRange(name, BsonValue.MinValue, value, true, true, order);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, value, BsonValue.MaxValue, false, true, order);
+            return new IndexRange(name, value, BsonValue.MaxValue, false, true, order);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, value, BsonValue.MaxValue, true, true, order);
+            return new IndexRange(name, value, BsonValue.MaxValue, true, true, order);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new IndexBetween(name, start ?? BsonValue.Null, end ?? BsonValue.Null, true, true, order);
+            return new IndexRange(name, start ?? BsonValue.Null, end ?? BsonValue.Null, true, true, order);
         }
 
         /// <summary>

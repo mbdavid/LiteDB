@@ -32,7 +32,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("SCAN({0}) {1}", this.Name, this.Order == Query.Ascending ? "ASC" : "DESC");
+            return string.Format("FULL SCAN({0})", this.Name);
         }
     }
 }
