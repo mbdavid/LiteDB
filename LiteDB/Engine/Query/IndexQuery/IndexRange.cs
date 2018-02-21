@@ -80,7 +80,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("RANGE SCAN({0})", this.Name);
+            return string.Format("INDEX RANGE SCAN({0})", this.Name);
         }
     }
 }

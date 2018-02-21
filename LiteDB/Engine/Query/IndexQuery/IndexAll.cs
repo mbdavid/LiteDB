@@ -16,7 +16,7 @@ namespace LiteDB
 
         internal override long GetCost(CollectionIndex index)
         {
-            // full index scan => read all index keys
+            // always worst cost - return all documents with no index use (just for order)
             return index.KeyCount;
         }
 

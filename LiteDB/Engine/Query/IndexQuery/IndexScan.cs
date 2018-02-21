@@ -32,7 +32,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return string.Format("FULL SCAN({0})", this.Name);
+            return string.Format("INDEX FULL SCAN({0})", this.Name);
         }
     }
 }
