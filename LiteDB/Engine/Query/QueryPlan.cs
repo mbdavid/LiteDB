@@ -76,11 +76,6 @@ namespace LiteDB
         /// </summary>
         public long IndexCost { get; internal set; } = 0; // not calculated
 
-        /// <summary>
-        /// Get index expression source
-        /// </summary>
-        public string IndexExpression { get; internal set; }
-
         #region Explain Plan
 
         /// <summary>

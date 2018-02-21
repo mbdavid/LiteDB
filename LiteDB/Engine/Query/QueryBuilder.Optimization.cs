@@ -37,7 +37,7 @@ namespace LiteDB
             this.DefineIndex(snapshot);
 
             // try re-use same index order or define a new one
-            this.DefineOrderBy();
+            this.DefineOrderBy(snapshot);
 
             // define if includes must run before/after filter data (before is better)
             this.DefineIncludesOrder();
@@ -77,7 +77,6 @@ namespace LiteDB
                 {
                     _query.Index = indexCost.Index;
                     _query.IndexCost = indexCost.Cost;
-                    _query.IndexExpression = indexCost.Expression.Source;
                 }
                 else
                 {
@@ -96,7 +95,6 @@ namespace LiteDB
 
                         _query.Index = new IndexAll("_id", _order);
                         _query.IndexCost = _query.Index.GetCost(pk);
-                        _query.IndexExpression = pk.Expression;
                     }
                 }
 
@@ -111,7 +109,6 @@ namespace LiteDB
                 if (idx == null) throw LiteException.IndexNotFound(_query.Index.Name, snapshot.CollectionPage.CollectionName);
 
                 _query.IndexCost = _query.Index.GetCost(idx);
-                _query.IndexExpression = idx.Expression;
             }
 
             // fill filter using all expressions
@@ -192,10 +189,23 @@ namespace LiteDB
         /// <summary>
         /// Define order expression and try re-use same index order by (if possible)
         /// </summary>
-        private void DefineOrderBy()
+        private void DefineOrderBy(Snapshot snapshot)
         {
+            if (_orderBy == null) return;
+
+            // if index use OR, is not valid for orderBy
+            if (_query.Index is IndexOr)
+            {
+                _query.OrderBy = _orderBy;
+                _query.Order = _order;
+                return;
+            }
+
+            // get index (here, always exists - never return null)
+            var index = snapshot.CollectionPage.GetIndex(_query.Index.Name);
+
             // if index expression are same as orderBy, use index to sort - just update index order
-            if (_query.IndexExpression == _orderBy.Source)
+            if (index.Expression == _orderBy.Source)
             {
                 _query.Index.Order = _order;
             }
