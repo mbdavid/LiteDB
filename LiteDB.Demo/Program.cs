@@ -20,17 +20,35 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
-                //db.Insert("col1", ReadDocuments(1, 1000));
+                db.Insert("col1", ReadDocuments(1, 1000));
+
 
                 db.Insert("col1", new BsonDocument[] {
                     new BsonDocument {
                         ["_id"] = 1001,
                         ["idx"] = BsonValue.MaxValue,
-                        ["name"] = "nome"
+                        ["name"] = "nome1"
+                    }
+                });
+
+                db.Insert("col1", ReadDocuments(1005, 1009));
+
+                db.Insert("col1", new BsonDocument[] {
+                    new BsonDocument {
+                        ["_id"] = 1002,
+                        ["idx"] = BsonValue.MaxValue,
+                        ["name"] = "nome2"
+                    }
+                }); db.Insert("col1", new BsonDocument[] {
+                    new BsonDocument {
+                        ["_id"] = 1003,
+                        ["idx"] = BsonValue.MaxValue,
+                        ["name"] = "nome3"
                     }
                 });
 
                 db.EnsureIndex("col1", "idx", "idx");
+
                 //db.EnsureIndex("col1", "idx_age", "age");
                 //db.EnsureIndex("col1", "idx_name", "name");
                 //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");

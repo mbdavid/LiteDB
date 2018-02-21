@@ -119,6 +119,9 @@ namespace LiteDB
             // using as cache last
             IndexNode cache = null;
 
+            // check key is adding max-value key node (need added before tail)
+            var isMax = !index.TailNode.IsEmpty && key.Type == BsonType.MaxValue;
+
             // scan from top left
             for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
@@ -148,6 +151,12 @@ namespace LiteDB
                     // node = new inserted node
                     // next = next node (where cur is pointing)
                     _snapshot.SetDirty(cur.Page);
+
+                    // if inserting MaxValue, left add just before tail Node (and not after tail)
+                    if (isMax && cur.Position.Equals(index.TailNode))
+                    {
+                        cur = this.GetNode(cur.Prev[0]);
+                    }
 
                     node.Next[i] = cur.Next[i];
                     node.Prev[i] = cur.Position;
