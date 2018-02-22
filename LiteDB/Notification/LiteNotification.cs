@@ -86,7 +86,7 @@ namespace LiteDB
         /// <param name="collectionName">Name of the collection to check</param>
         private void CheckNotification(string collectionName)
         {
-            if (!_delegates.ContainsKey(collectionName))
+            if (_delegates != null && _delegates.ContainsKey(collectionName))
             {
                 foreach (UpdateHandler handler in _delegates[collectionName])
                 {
