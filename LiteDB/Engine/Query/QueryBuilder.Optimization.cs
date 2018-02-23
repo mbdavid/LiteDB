@@ -141,7 +141,7 @@ namespace LiteDB
                 // calculate index score and store highest score
                 var current = new IndexCost(index.Item1, expr, index.Item2);
 
-                if (lowest == null || current.Cost < lowest.Cost)
+                if (lowest == null || lowest.Cost < current.Cost)
                 {
                     lowest = current;
                 }

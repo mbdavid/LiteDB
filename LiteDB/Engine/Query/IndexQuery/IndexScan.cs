@@ -17,7 +17,7 @@ namespace LiteDB
             _func = func;
         }
 
-        internal override long GetCost(CollectionIndex index)
+        internal override uint GetCost(CollectionIndex index)
         {
             // index full scan
             return index.KeyCount;

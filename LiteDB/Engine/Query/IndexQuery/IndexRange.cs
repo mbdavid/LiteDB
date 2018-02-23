@@ -26,10 +26,10 @@ namespace LiteDB
             _endEquals = order == Query.Ascending ? endEquals : startEquals;
         }
 
-        internal override long GetCost(CollectionIndex index)
+        internal override uint GetCost(CollectionIndex index)
         {
             // need some statistics here... assuming read 20% of total
-            return (long)(index.KeyCount * (0.2));
+            return (uint)(index.KeyCount * (0.2));
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)

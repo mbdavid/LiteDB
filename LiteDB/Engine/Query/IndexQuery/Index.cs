@@ -166,7 +166,7 @@ namespace LiteDB
         /// <summary>
         /// Calculate cost based on type/value/collection - From 1 (best) to Collection.KeyCount (worst)
         /// </summary>
-        internal abstract long GetCost(CollectionIndex index);
+        internal abstract uint GetCost(CollectionIndex index);
 
         /// <summary>
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index

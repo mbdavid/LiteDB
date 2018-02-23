@@ -17,7 +17,7 @@ namespace LiteDB
             _value = value;
         }
 
-        internal override long GetCost(CollectionIndex index)
+        internal override uint GetCost(CollectionIndex index)
         {
             if (index.Unique)
             {
@@ -28,7 +28,7 @@ namespace LiteDB
                 // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
                 var uniq = (double)Math.Min(index.UniqueKeyCount, index.KeyCount);
 
-                return (long)(index.KeyCount * uniq);
+                return (uint)(index.KeyCount / uniq);
             }
         }
 

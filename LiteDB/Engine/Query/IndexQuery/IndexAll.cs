@@ -14,7 +14,7 @@ namespace LiteDB
         {
         }
 
-        internal override long GetCost(CollectionIndex index)
+        internal override uint GetCost(CollectionIndex index)
         {
             // always worst cost - return all documents with no index use (just for order)
             return index.KeyCount;

@@ -17,12 +17,12 @@ namespace LiteDB
             _startsWith = _pattern.SqlLikeStartsWith(out _testSqlLike);
         }
 
-        internal override long GetCost(CollectionIndex index)
+        internal override uint GetCost(CollectionIndex index)
         {
             if (_startsWith.Length > 0)
             {
                 // need some statistics here... assuming read 20% of total
-                return (long)(index.KeyCount * (0.2));
+                return (uint)(index.KeyCount * (0.2));
             }
             else
             {

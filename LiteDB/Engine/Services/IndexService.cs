@@ -200,9 +200,8 @@ namespace LiteDB
                 _snapshot.SetDirty(last.Page);
             }
 
-            // increment keyCount/unique index count on index
             index.KeyCount++;
-            index.UniqueKeyCount += isUniqueKey ? 1u : 0u;
+            if (isUniqueKey) index.UniqueKeyCount++;
 
             _snapshot.SetDirty(index.Page);
 
@@ -244,6 +243,7 @@ namespace LiteDB
         {
             var node = this.GetNode(nodeAddress);
             var page = node.Page;
+            var isUniqueKey = false;
 
             // mark page as dirty here because, if deleted, page type will change
             _snapshot.SetDirty(page);
@@ -263,6 +263,12 @@ namespace LiteDB
                 {
                     next.Prev[i] = node.Prev[i];
                     _snapshot.SetDirty(next.Page);
+                }
+
+                // in level 0, if any sibling are same value it's not an unique key
+                if (i == 0)
+                {
+                    isUniqueKey = next?.Key == node.Key || prev?.Key == node.Key || false;
                 }
             }
 
@@ -297,9 +303,8 @@ namespace LiteDB
                 _snapshot.SetDirty(nextNode.Page);
             }
 
-            // decrement key index counter (collection page must be set as dirty)
-            // when delete a node it's not possible resolve UniqueKeyCount (will fix only on next Analyze)
             index.KeyCount--;
+            if (isUniqueKey) index.UniqueKeyCount--;
 
             _snapshot.SetDirty(index.Page);
         }

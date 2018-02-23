@@ -24,17 +24,17 @@ namespace LiteDB.Demo
 
                 db.EnsureIndex("col1", "idx_age", "age");
                 db.EnsureIndex("col1", "idx_name", "name");
-                //db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
+                db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
                 //db.EnsureIndex("col1", "idx_email", "email");
 
                 var r = db.Query("col1")
-                    //.Where("_id = @0 or _id=64", 63)
-                    //.Where("_id = ITEMS([@0,64])", 63)
-                    .Where("name like @0", "Il%")
+                    .Where("_id = items([@0,@1])", 63, 64)
+                    //.Where("age = @0", 63)
+                    //.Where("name like @0", "Il%")
                     //.Where("UPPER(name) = @0", "ILIANA WILSON")
                     //.Where("email = @0", "Piper@molestie.org")
                     //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
-                    .OrderBy("name", Query.Descending)
+                    //.OrderBy("upper( name)", Query.Ascending)
                     .Limit(5)
                     .ToArray();
 

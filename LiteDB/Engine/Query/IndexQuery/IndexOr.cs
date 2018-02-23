@@ -17,9 +17,9 @@ namespace LiteDB
             _indexes = indexes;
         }
 
-        internal override long GetCost(CollectionIndex index)
+        internal override uint GetCost(CollectionIndex index)
         {
-            return _indexes.Sum(x => x.GetCost(index));
+            return (uint)_indexes.Sum(x => x.GetCost(index));
         }
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
