@@ -39,9 +39,6 @@ namespace LiteDB
             // try re-use same index order or define a new one
             this.DefineOrderBy(snapshot);
 
-            // define if includes must run before/after filter data (before is better)
-            this.DefineIncludesOrder();
-
             _optimized = true;
         }
 
@@ -214,17 +211,6 @@ namespace LiteDB
                 _query.OrderBy = _orderBy;
                 _query.Order = _order;
             }
-        }
-
-        #endregion
-
-        #region Define Includes
-
-        /// <summary>
-        /// Define if each include can be called after filter (best option) or must be run before (because filter needs)
-        /// </summary>
-        private void DefineIncludesOrder()
-        {
         }
 
         #endregion

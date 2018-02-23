@@ -17,7 +17,6 @@ namespace LiteDB
         private List<BsonExpression> _where = new List<BsonExpression>();
         private BsonExpression _orderBy = null;
         private int _order = Query.Ascending;
-        private List<BsonExpression> _includes = new List<BsonExpression>();
 
         public QueryBuilder()
         {
@@ -72,7 +71,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Load cross reference documents from path expression (DbRef reference)
+        /// Load cross reference documents from path expression (DbRef reference). 
+        /// If called before Where() will load references before filter (worst). If called after Where() will load references only in filtered results.
+        /// Use before Where only if you need add this include in filter expression
         /// </summary>
         public QueryBuilder Include(string include)
         {
@@ -82,7 +83,14 @@ namespace LiteDB
 
             if (path.Type == BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path, BsonExpressionType.Path);
 
-            _includes.Add(path);
+            if (_where.Count == 0)
+            {
+                _query.IncludeBefore.Add(path);
+            }
+            else
+            {
+                _query.IncludeAfter.Add(path);
+            }
 
             return this;
         }
