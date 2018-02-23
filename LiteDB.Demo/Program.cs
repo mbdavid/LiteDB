@@ -27,23 +27,28 @@ namespace LiteDB.Demo
                 db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
                 //db.EnsureIndex("col1", "idx_email", "email");
 
-                var r = db.Query("col1")
-                    .Where("_id = items([@0,@1])", 63, 64)
-                    //.Where("age = @0", 63)
-                    //.Where("name like @0", "Il%")
-                    //.Where("UPPER(name) = @0", "ILIANA WILSON")
-                    //.Where("email = @0", "Piper@molestie.org")
-                    //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
-                    //.OrderBy("upper( name)", Query.Ascending)
-                    .Limit(5)
-                    .ToArray();
+                using (var t = db.BeginTrans())
+                {
+                    var r = db.Query("col1", t)
+                        .Where("_id = items([@0,@1])", 63, 64)
+                        //.Where("age = @0", 63)
+                        //.Where("name like @0", "Il%")
+                        //.Where("UPPER(name) = @0", "ILIANA WILSON")
+                        //.Where("email = @0", "Piper@molestie.org")
+                        //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
+                        //.OrderBy("upper( name)", Query.Ascending)
+                        .Limit(5)
+                        .ToArray();
 
-                // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}
+                    // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}
 
-                Console.WriteLine();
-                Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r.Select(x => x.AsDocument)), true));
+                    Console.WriteLine();
+                    Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r.Select(x => x.AsDocument)), true));
 
-                ;
+                    ;
+
+                }
+
             }
 
             Console.WriteLine("End");

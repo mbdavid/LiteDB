@@ -113,6 +113,11 @@ namespace LiteDB
                 sb.AppendLine("Offset: " + this.Offset);
             }
 
+            if (this.KeyOnly)
+            {
+                sb.AppendLine("KeyOnly: true");
+            }
+
             return sb.ToString();
         }
 

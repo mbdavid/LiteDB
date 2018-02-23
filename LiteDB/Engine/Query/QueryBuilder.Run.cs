@@ -14,41 +14,17 @@ namespace LiteDB
         /// </summary>
         internal IEnumerable<BsonDocument> Run(bool countOnly)
         {
-            // support _transaction be null - will create new transaction for single execution
-            var newTransaction = _transaction == null;
-
-            try
+            // call DoFind inside snapshot
+            return _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false, snapshot =>
             {
-                // create new transaction if null
-                if (newTransaction)
-                {
-                    _transaction = _engine.BeginTrans();
-                }
+                // execute optimization before run query (will fill missing _query properties instance)
+                this.OptimizeQuery(snapshot);
 
-                // call DoFind inside snapshot
-                return _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false, snapshot =>
-                {
-                    // execute optimization before run query (will fill missing _query properties instance)
-                    this.OptimizeQuery(snapshot);
+                //TODO: remove this execution plan
+                Console.WriteLine(_query.GetExplainPlan());
 
-                    //TODO: remove this execution plan
-                    Console.WriteLine(_query.GetExplainPlan());
-
-                    return DoFind(snapshot);
-                });
-
-            }
-            catch
-            {
-                // if throw any error, dispose new transaction before throw
-                if (newTransaction && _transaction != null)
-                {
-                    _transaction.Dispose();
-                    _transaction = null;
-                }
-
-                throw;
-            }
+                return DoFind(snapshot);
+            });
 
             // executing query
             IEnumerable<BsonDocument> DoFind(Snapshot snapshot)
@@ -67,7 +43,7 @@ namespace LiteDB
                     .Skip(_query.Offset);
 
                 // load document from disk
-                var docs = LoadDocument(nodes, loader, _query.KeyOnly, _query.Index.Name);
+                var docs = LoadDocument(nodes, loader, countOnly || _query.KeyOnly, _query.Index.Name);
 
                 // load pipe query to apply all query options
                 var pipe = new QueryPipe(_engine, _transaction, loader);
@@ -78,13 +54,6 @@ namespace LiteDB
                     _transaction.Safepoint();
 
                     yield return doc;
-                }
-
-                // dipose transaction after read all resultset (if is new transaction)
-                if (newTransaction && _transaction != null)
-                {
-                    _transaction.Dispose();
-                    _transaction = null;
                 }
             }
 
