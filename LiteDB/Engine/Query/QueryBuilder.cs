@@ -153,6 +153,18 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// If use keyOnly = true, do not load document - use only index key
+        /// </summary>
+        public QueryBuilder Select(bool keyOnly)
+        {
+            if (_optimized) throw new InvalidOperationException("Select() is not avaiable in executed query");
+
+            _query.KeyOnly = keyOnly;
+
+            return this;
+        }
+
+        /// <summary>
         /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends.
         /// </summary>
         public QueryBuilder ForUpdate()
