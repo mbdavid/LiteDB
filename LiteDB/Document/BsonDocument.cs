@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +10,11 @@ namespace LiteDB
     {
         public BsonDocument()
             : base(new Dictionary<string, BsonValue>())
+        {
+        }
+
+        public BsonDocument(ConcurrentDictionary<string, BsonValue> dict)
+            : this(new Dictionary<string, BsonValue>(dict))
         {
         }
 

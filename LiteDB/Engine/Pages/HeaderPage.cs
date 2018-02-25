@@ -8,9 +8,18 @@ namespace LiteDB
     internal class HeaderPage : BasePage
     {
         /// <summary>
+        /// Represent maximum bytes that all parameters must store in header page
+        /// </summary>
+        public const ushort MAX_PARAMETERS_SIZE = 1000;
+
+        /// <summary>
         /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
         /// </summary>
-        public const ushort MAX_COLLECTIONS_NAME_SIZE = PAGE_SIZE - 1000;
+        public const ushort MAX_COLLECTIONS_NAME_SIZE = PAGE_SIZE -
+            PAGE_HEADER_SIZE -
+            128 - // used in header page
+            172 - // reserved
+            MAX_PARAMETERS_SIZE;
 
         /// <summary>
         /// Page type = Header
@@ -18,12 +27,12 @@ namespace LiteDB
         public override PageType PageType { get { return PageType.Header; } }
 
         /// <summary>
-        /// Header info the validate that datafile is a LiteDB file (27 bytes)
+        /// Header info the validate that datafile is a LiteDB file [27 bytes]
         /// </summary>
         private const string HEADER_INFO = "** This is a LiteDB file **";
 
         /// <summary>
-        /// Datafile specification version
+        /// Datafile specification version [1 byte]
         /// </summary>
         private const byte FILE_VERSION = 8;
 
@@ -38,52 +47,52 @@ namespace LiteDB
         public byte[] Salt { get; set; }
 
         /// <summary>
-        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page)
+        /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
         /// </summary>
         public uint FreeEmptyPageID;
 
         /// <summary>
-        /// Last created page - Used when there is no free page inside file
+        /// Last created page - Used when there is no free page inside file [4 bytes]
         /// </summary>
         public uint LastPageID;
 
         /// <summary>
-        /// DateTime when database was created
+        /// DateTime when database was created [8 bytes]
         /// </summary>
         public DateTime CreationTime { get; set; }
 
         /// <summary>
-        /// DateTime when database was changed (commited)
+        /// DateTime when database was changed (commited) [8 bytes]
         /// </summary>
         public DateTime LastCommit { get; set; }
 
         /// <summary>
-        /// DateTime when database run checkpoint
+        /// DateTime when database run checkpoint [8 bytes]
         /// </summary>
         public DateTime LastCheckpoint { get; set; }
 
         /// <summary>
-        /// DateTime when database run analyze
+        /// DateTime when database run analyze [8 bytes]
         /// </summary>
         public DateTime LastAnalyze { get; set; }
 
         /// <summary>
-        /// DateTime when database run vaccum
+        /// DateTime when database run vaccum [8 bytes]
         /// </summary>
         public DateTime LastVaccum { get; set; }
 
         /// <summary>
-        /// DateTime when database run shrink
+        /// DateTime when database run shrink [8 bytes]
         /// </summary>
         public DateTime LastShrink { get; set; }
 
         /// <summary>
-        /// Transaction commit counter - this counter reset after last vaccum/shrink
+        /// Transaction commit counter - this counter reset after last vaccum/shrink [4 bytes]
         /// </summary>
         public uint CommitCount { get; set; }
 
         /// <summary>
-        /// Checkpoint counter - this counter reset after last vaccum/shrink
+        /// Checkpoint counter - this counter reset after last vaccum/shrink [4 bytes]
         /// </summary>
         public uint CheckpointCounter { get; set; }
 
@@ -91,6 +100,11 @@ namespace LiteDB
         /// Contains all collection in database using PageID to direct access
         /// </summary>
         public ConcurrentDictionary<string, uint> Collections { get; set; }
+
+        /// <summary>
+        /// Contains all database persisted parameters, like "userVersion", "autoIndex", "utcDate", "checkPoint", "maxMemoryCache"
+        /// </summary>
+        public ConcurrentDictionary<string, BsonValue> Parameters { get; set; }
 
         private HeaderPage()
         {
@@ -114,6 +128,7 @@ namespace LiteDB
             this.CommitCount = 0;
             this.CheckpointCounter = 0;
             this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+            this.Parameters = new ConcurrentDictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -188,6 +203,10 @@ namespace LiteDB
             this.CommitCount = reader.ReadUInt32();
             this.CheckpointCounter = reader.ReadUInt32();
 
+            var parameters = new BsonReader(false).ReadDocument(reader);
+
+            this.Parameters = new ConcurrentDictionary<string, BsonValue>(parameters.RawValue as Dictionary<string, BsonValue>);
+
             for (var i = 0; i < this.ItemCount; i++)
             {
                 this.Collections.TryAdd(reader.ReadString(), reader.ReadUInt32());
@@ -209,6 +228,10 @@ namespace LiteDB
             writer.Write(this.LastShrink);
             writer.Write(this.CommitCount);
             writer.Write(this.CheckpointCounter);
+
+            var parameters = new BsonDocument(this.Parameters);
+
+            new BsonWriter().WriteDocument(writer, parameters);
 
             foreach (var col in this.Collections)
             {
@@ -241,7 +264,8 @@ namespace LiteDB
                 LastShrink = this.LastShrink,
                 CommitCount = this.CommitCount,
                 CheckpointCounter = this.CheckpointCounter,
-                Collections = new ConcurrentDictionary<string, uint>(this.Collections)
+                Collections = new ConcurrentDictionary<string, uint>(this.Collections),
+                Parameters = new ConcurrentDictionary<string, BsonValue>(this.Parameters)
             };
         }
 
