@@ -15,17 +15,18 @@ namespace LiteDB
             while (position < length)
             {
                 // skip lock page
-                if (position != BasePage.GetPagePosition(BasePage.LOCK_PAGE_ID))
+                if (position == BasePage.GetPagePosition(BasePage.LOCK_PAGE_ID))
+                {
+                    // lock page - just print empty page (i cann't read from disk, this page are locked)
+                    yield return this.DumpPage(position, new EmptyPage(BasePage.LOCK_PAGE_ID))
+                        .Extend(new BsonDocument { ["pageType"] = "Locker" });
+                }
+                // all other pages, get from disk/cache
+                else
                 {
                     var page = _datafile.ReadPage(position, false);
 
                     yield return this.DumpPage(position, page);
-                }
-                else
-                {
-                    // lock page - just print empty page (i can read from disk, this page are locked)
-                    yield return this.DumpPage(position, new EmptyPage(BasePage.LOCK_PAGE_ID))
-                        .Extend(new BsonDocument { ["pageType"] = "Locker" });
                 }
 
                 position += BasePage.PAGE_SIZE;
@@ -63,6 +64,7 @@ namespace LiteDB
                 doc["lastShrink"] = header.LastShrink;
                 doc["commitCounter"] = (int)header.CommitCount;
                 doc["checkpointCounter"] = (int)header.CheckpointCounter;
+                doc["parameters"] = new BsonDocument(header.Parameters);
 
                 doc["colections"] = new BsonArray(header.Collections.Select(x => new BsonDocument
                 {

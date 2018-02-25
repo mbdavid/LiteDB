@@ -262,7 +262,6 @@ namespace LiteDB
             }
         }
 
-
         public void Dispose()
         {
             // if no commit/rollback are invoke before dipose, let's rollback by default

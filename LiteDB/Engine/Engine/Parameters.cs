@@ -28,18 +28,18 @@ namespace LiteDB
             lock (_header)
             {
                 // clone header to use in writer
-                var clone = _header.Clone() as HeaderPage;
+                var confirm = _header.Clone() as HeaderPage;
 
-                clone.Parameters[name] = value;
-                clone.TransactionID = Guid.NewGuid();
+                confirm.Parameters[name] = value;
+                confirm.TransactionID = Guid.NewGuid();
 
                 // convert parameter into BsonDocument to calculate length
-                var len = new BsonDocument(clone.Parameters).GetBytesCount(false);
+                var len = new BsonDocument(confirm.Parameters).GetBytesCount(false);
 
                 if (len > HeaderPage.MAX_PARAMETERS_SIZE) throw LiteException.ParameterLimitExceeded(name);
 
                 // create fake transaction with no pages to update (only header)
-                _wal.ConfirmTransaction(clone, new PagePosition[0]);
+                _wal.ConfirmTransaction(confirm, new PagePosition[0]);
 
                 // update header instance
                 _header.Parameters[name] = value;

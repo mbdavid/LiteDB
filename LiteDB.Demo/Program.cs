@@ -20,6 +20,32 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
+                Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
+
+                db.SetParameter("userVersion", 887);
+
+                Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
+
+                db.SetParameter("userVersion", 999);
+            }
+
+
+            using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
+            {
+                var dA = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
+
+                //Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
+
+                db.SetParameter("userVersion", 2);
+
+                var dB = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
+
+                db.Checkpoint();
+                db.WaitAsyncWrite();
+                //Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
+
+                var dC = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
+
                 db.Insert("col1", ReadDocuments(1, 1000));
 
                 db.EnsureIndex("col1", "idx_age", "age");

@@ -79,7 +79,8 @@ namespace LiteDB
         /// </summary>
         public void ClearDirtyCache()
         {
-            _dirty.Clear();
+            //TODO: acho que antes de limpar a cache suja (pq ja foi salva em disco) devo remover ela da limpa
+            //_dirty.Clear();
         }
     }
 }

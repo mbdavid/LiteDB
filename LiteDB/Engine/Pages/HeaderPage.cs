@@ -264,12 +264,11 @@ namespace LiteDB
                 LastShrink = this.LastShrink,
                 CommitCount = this.CommitCount,
                 CheckpointCounter = this.CheckpointCounter,
-                Collections = new ConcurrentDictionary<string, uint>(this.Collections),
-                Parameters = new ConcurrentDictionary<string, BsonValue>(this.Parameters)
+                Parameters = new ConcurrentDictionary<string, BsonValue>(this.Parameters),
+                Collections = new ConcurrentDictionary<string, uint>(this.Collections)
             };
         }
 
         #endregion
-
     }
 }
