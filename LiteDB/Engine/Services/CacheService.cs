@@ -20,7 +20,7 @@ namespace LiteDB
         private const int MAX_CACHE_SIZE = 1000;
 
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
-        private ConcurrentDictionary<long, BasePage> _dirty = new ConcurrentDictionary<long, BasePage>();
+        private HashSet<long> _dirty = new HashSet<long>();
 
         private Logger _log;
 
@@ -30,57 +30,67 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Add page into general cache and if page are dirty, add into dirty cache too
+        /// Add page in cache. If page are marked as dirty, add position in a list of dirty pages
         /// </summary>
         public void AddPage(long position, BasePage page)
         {
-            // add page in dirty/clean cache
             if (page.IsDirty)
             {
-                _dirty[position] = page;
-            }
-            else
-            {
-                // first check cache size
-                if (_cache.Count > MAX_CACHE_SIZE)
+                lock (_dirty)
                 {
-                    _cache.Clear();
+                    _dirty.Add(position);
                 }
-
-                _cache[position] = page;
             }
+
+            _cache[position] = page;
         }
 
         /// <summary>
-        /// Get page first from dirty cache, otherwise from normal cache
+        /// Get page from cache. Use clone = true if you need change this page. Return null if not found
         /// </summary>
         public BasePage GetPage(long position, bool clone)
         {
-            // first, try get from dirty list
-            if (_dirty.TryGetValue(position, out var page))
-            {
-                // if page came from dirty cache, must be return a clone copy
-                // this avoid a read transaction get dirty instance page
-                return page.Clone();
-            }
-            
-            // than, try get page from cache
-            if (_cache.TryGetValue(position, out page))
+            if (_cache.TryGetValue(position, out var page))
             {
                 return clone ? page.Clone() : page;
             }
 
-            // if not found in any cache dict, returns null
             return null;
         }
 
         /// <summary>
-        /// Clear dirty cache
+        /// Mark all cache as clean pages - no dirty page on cache anymore
         /// </summary>
-        public void ClearDirtyCache()
+        public void ClearDirty()
         {
-            //TODO: acho que antes de limpar a cache suja (pq ja foi salva em disco) devo remover ela da limpa
-            //_dirty.Clear();
+            lock(_dirty)
+            {
+                _dirty.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Clear all clean pages in cache. Do not remove dirty pages. Return how many pages was deleted from cache;
+        /// </summary>
+        public int Clear()
+        {
+            lock(_dirty)
+            {
+                if (_dirty.Count == 0)
+                {
+                    _cache.Clear();
+                    return 0;
+                }
+
+                var keys = _cache.Keys.Except(_dirty).ToArray();
+
+                foreach(var key in keys)
+                {
+                    _cache.TryRemove(key, out var page);
+                }
+
+                return keys.Length;
+            }
         }
     }
 }

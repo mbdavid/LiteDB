@@ -257,7 +257,7 @@ namespace LiteDB
                     // before clear cache, test if queue are empty, otherwise do not clear cache.
                     if (_queue.IsEmpty)
                     {
-                        _cache.ClearDirtyCache();
+                        _cache.ClearDirty();
                     }
                 }
             });
