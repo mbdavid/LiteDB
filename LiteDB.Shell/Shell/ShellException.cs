@@ -2,6 +2,7 @@
 
 namespace LiteDB.Shell
 {
+    [Serializable]
     internal class ShellException : Exception
     {
         public ShellException(string message)
