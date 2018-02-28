@@ -45,7 +45,7 @@ namespace LiteDB
             [" AND "] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("AND"), BsonExpressionType.And)
         };
 
-        private static MethodInfo _rootPathMethod = typeof(BsonExpressionOperators).GetMethod("ROOT_PATH");
+        private static MethodInfo _parameterPathMethod = typeof(BsonExpressionOperators).GetMethod("PARAMETER_PATH");
         private static MethodInfo _memberPathMethod = typeof(BsonExpressionOperators).GetMethod("MEMBER_PATH");
         private static MethodInfo _arrayPathMethod = typeof(BsonExpressionOperators).GetMethod("ARRAY_PATH");
 
@@ -436,7 +436,7 @@ namespace LiteDB
                 Type = BsonExpressionType.Parameter,
                 IsConstant = true,
                 IsImmutable = false,
-                Expression = Expression.Call(_rootPathMethod, parameters, name),
+                Expression = Expression.Call(_parameterPathMethod, parameters, name),
                 Source = "@" + parameterName
             };
         }
@@ -546,7 +546,7 @@ namespace LiteDB
             field = ReadField(s, field, source);
 
             var name = Expression.Constant(field);
-            var expr = Expression.Call(_rootPathMethod, scope == "$" ? root : current, name) as Expression;
+            var expr = Expression.Call(_memberPathMethod, scope == "$" ? root : current, name) as Expression;
 
             // parse the rest of path
             while (!s.HasTerminated)

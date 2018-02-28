@@ -72,7 +72,7 @@ namespace LiteDB
         /// <summary>
         /// Compiled Expression into a function to be executed
         /// </summary>
-        private Func<BsonDocument, BsonValue, BsonDocument, IEnumerable<BsonValue>> _func;
+        private Func<IEnumerable<BsonDocument>, IEnumerable<BsonValue>, BsonDocument, IEnumerable<BsonValue>> _func;
 
         /// <summary>
         /// Only internal ctor (from BsonParserExpression)
@@ -84,9 +84,29 @@ namespace LiteDB
         #region Compile and execute
 
         /// <summary>
+        /// Execute expression with an empty document (used only for resolve math/functions) (can returns NULL if no elements).
+        /// </summary>
+        public IEnumerable<BsonValue> Execute(bool includeNullIfEmpty = true)
+        {
+            var docs = new BsonDocument[] { new BsonDocument() };
+
+            return this.Execute(docs, docs, includeNullIfEmpty);
+        }
+
+        /// <summary>
         /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
         /// </summary>
         public IEnumerable<BsonValue> Execute(BsonDocument doc, bool includeNullIfEmpty = true)
+        {
+            var docs = new BsonDocument[] { doc };
+
+            return this.Execute(docs, docs, includeNullIfEmpty);
+        }
+
+        /// <summary>
+        /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
+        /// </summary>
+        public IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> doc, bool includeNullIfEmpty = true)
         {
             return this.Execute(doc, doc, includeNullIfEmpty);
         }
@@ -94,11 +114,14 @@ namespace LiteDB
         /// <summary>
         /// Execute expression and returns IEnumerable values (can returns NULL if no elements).
         /// </summary>
-        public IEnumerable<BsonValue> Execute(BsonDocument root, BsonValue current, bool includeNullIfEmpty = true)
+        internal IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> root, IEnumerable<BsonValue> current, bool includeNullIfEmpty = true)
         {
             if (this.Type == BsonExpressionType.Empty)
             {
-                yield return root;
+                foreach(var doc in root)
+                {
+                    yield return doc;
+                }
             }
             else
             {
@@ -179,8 +202,8 @@ namespace LiteDB
         /// </summary>
         public static List<BsonExpression> Parse(StringScanner s, bool onlyTerms)
         {
-            var root = Expression.Parameter(typeof(BsonDocument), "root");
-            var current = Expression.Parameter(typeof(BsonValue), "current");
+            var root = Expression.Parameter(typeof(IEnumerable<BsonDocument>), "root");
+            var current = Expression.Parameter(typeof(IEnumerable<BsonValue>), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
             var exprList = BsonExpressionParser.ParseFullExpression(s, root, current, parameters, true, onlyTerms);
@@ -196,7 +219,7 @@ namespace LiteDB
 
         private static void Compile(BsonExpression expr, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)
         {
-            var lambda = System.Linq.Expressions.Expression.Lambda<Func<BsonDocument, BsonValue, BsonDocument, IEnumerable<BsonValue>>>(expr.Expression, root, current, parameters);
+            var lambda = System.Linq.Expressions.Expression.Lambda<Func<IEnumerable<BsonDocument>, IEnumerable<BsonValue>, BsonDocument, IEnumerable<BsonValue>>>(expr.Expression, root, current, parameters);
 
             expr._func = lambda.Compile();
 

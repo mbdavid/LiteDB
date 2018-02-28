@@ -22,7 +22,7 @@ namespace LiteDB
             this.Expression = expr;
 
             // create index instances
-            var indexes = value.Execute(null).Select(x => this.CreateIndex(expr.Type, index.Name, x)).ToList();
+            var indexes = value.Execute().Select(x => this.CreateIndex(expr.Type, index.Name, x)).ToList();
 
             this.Index = indexes.Count == 1 ? indexes[0] : new IndexOr(indexes);
 

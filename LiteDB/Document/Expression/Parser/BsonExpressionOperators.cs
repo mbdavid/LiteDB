@@ -246,9 +246,9 @@ namespace LiteDB
         #region Path Navigation
 
         /// <summary>
-        /// Returns value from root document. Returns same document if name are empty
+        /// Returns value from root document (used in parameter). Returns same document if name are empty
         /// </summary>
-        public static IEnumerable<BsonValue> ROOT_PATH(BsonValue value, string name)
+        public static IEnumerable<BsonValue> PARAMETER_PATH(BsonValue value, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -271,14 +271,23 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> MEMBER_PATH(IEnumerable<BsonValue> values, string name)
         {
-            foreach (var doc in values.Where(x => x.IsDocument).Select(x => x.AsDocument))
+            foreach (var value in values)
             {
-                if (doc.TryGetValue(name, out BsonValue item))
+                if (string.IsNullOrEmpty(name))
                 {
-                    // fill destroy action to remove value from parent document
-                    item.Destroy = () => doc.Remove(name);
+                    yield return value;
+                }
+                else if (value.IsDocument)
+                {
+                    var doc = value.AsDocument;
 
-                    yield return item;
+                    if (doc.TryGetValue(name, out BsonValue item))
+                    {
+                        // fill destroy action to remove value from parent document
+                        item.Destroy = () => doc.Remove(name);
+
+                        yield return item;
+                    }
                 }
             }
         }
@@ -286,7 +295,7 @@ namespace LiteDB
         /// <summary>
         /// Returns all values from array according index. If index are MaxValue, return all values
         /// </summary>
-        public static IEnumerable<BsonValue> ARRAY_PATH(IEnumerable<BsonValue> values, int index, BsonExpression expr, BsonDocument root, BsonDocument parameters)
+        public static IEnumerable<BsonValue> ARRAY_PATH(IEnumerable<BsonValue> values, int index, BsonExpression expr, IEnumerable<BsonDocument> root, BsonDocument parameters)
         {
             foreach (var value in values)
             {
@@ -303,7 +312,7 @@ namespace LiteDB
                         foreach (var item in arr)
                         {
                             // execute for each child value and except a first bool value (returns if true)
-                            var c = expr.Execute(root, item, true).First();
+                            var c = expr.Execute(root, new BsonValue[] { item }, true).First();
 
                             if (c.IsBoolean && c.AsBoolean == true)
                             {

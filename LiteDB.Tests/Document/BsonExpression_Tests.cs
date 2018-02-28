@@ -15,8 +15,9 @@ namespace LiteDB.Tests.Document
     /// BsonExpression unit test from external text file 
     /// File format:
     /// "#" new comment used in next tests
-    /// "{" new document to be used in next tests
-    /// ">" indicate new expression to test
+    /// "{" new document to be used in next tests (support many)
+    /// ">" indicate new expression to test (execute over each input document)
+    /// ">>" indicate new expression to test in aggregate mode (execute over all input document)
     /// "~" expect expression formatted
     /// "@" expect parameter value  
     /// "=" expect result (support multilines per test)
@@ -25,6 +26,9 @@ namespace LiteDB.Tests.Document
     [TestClass]
     public class BsonExpression_Tests
     {
+        [TestMethod]
+        public void BsonExpression_Aggregate() => this.RunTest("Aggregate.txt");
+
         [TestMethod]
         public void BsonExpression_Path() => this.RunTest("Path.txt");
 
@@ -60,16 +64,42 @@ namespace LiteDB.Tests.Document
                 test.Parameters.CopyTo(expr.Parameters);
 
                 // test result
-                var doc = JsonSerializer.Deserialize(test.JsonDocument ?? "{}") as BsonDocument;
+                var inputs = new List<BsonDocument>();
 
-                var result = expr.Execute(doc, true).ToList();
+                if (test.Documents.Count == 0)
+                {
+                    inputs.Add(new BsonDocument());
+                }
+                else
+                {
+                    foreach (var d in test.Documents)
+                    {
+                        inputs.Add(JsonSerializer.Deserialize(d) as BsonDocument);
+                    }
+                }
 
-                var jsonResult = JsonSerializer.Serialize(new BsonArray(result));
+                var results = new List<BsonValue>();
+
+                if (test.Aggregate)
+                {
+                    results.Add(expr.Execute(inputs, true).First());
+                }
+                else
+                {
+                    foreach(var doc in inputs)
+                    {
+                        var r = expr.Execute(doc, true);
+
+                        results.AddRange(r);
+                    }
+                }
+
+                var jsonResult = JsonSerializer.Serialize(new BsonArray(results));
                 var jsonExpect = JsonSerializer.Serialize(new BsonArray(test.Results));
 
                 if (jsonResult != jsonExpect)
                 {
-                    Assert.AreEqual(string.Join("; ", result.Select(x => x.ToString())),
+                    Assert.AreEqual(string.Join("; ", results.Select(x => x.ToString())),
                         string.Join("; ", test.Results.Select(x => x.ToString())),
                         test.Comment + " : " + test.Expression + " (" + filename + ")");
                 }
@@ -85,7 +115,8 @@ namespace LiteDB.Tests.Document
             {
                 var s = new StringScanner(reader.ReadToEnd().Trim() + "\n");
 
-                string json = null;
+                var docs = new List<string>();
+                var clearDocs = true;
                 ExprTest test = null;
                 var comment = "";
 
@@ -93,8 +124,15 @@ namespace LiteDB.Tests.Document
                 {
                     if (s.Match(@">")) // new test
                     {
-                        test = new ExprTest { JsonDocument = json, Expression = s.Scan(@">\s*([\s\S]*?)\n", 1).Trim(), Comment = comment };
+                        test = new ExprTest
+                        {
+                            Aggregate = s.Scan(">>").Length > 0,
+                            Documents = new List<string>(docs),
+                            Expression = s.Scan(@">?\s*([\s\S]*?)\n", 1).Trim(),
+                            Comment = comment
+                        };
                         tests.Add(test);
+                        clearDocs = true;
                     }
                     else if (s.Match("=")) // new result
                     {
@@ -114,9 +152,14 @@ namespace LiteDB.Tests.Document
                     }
                     else if (s.Match(@"\{")) // new doc
                     {
+                        if (clearDocs) docs.Clear();
+
                         var pos = s.Index;
                         JsonSerializer.Deserialize(s);
-                        json = s.Source.Substring(pos, s.Index - pos);
+                        var d = s.Source.Substring(pos, s.Index - pos);
+                        docs.Add(d);
+
+                        clearDocs = false;
                     }
                     else
                     {
@@ -132,9 +175,10 @@ namespace LiteDB.Tests.Document
 
     public class ExprTest
     {
-        public string JsonDocument { get; set; }
+        public List<string> Documents { get; set; }
         public string Expression { get; set; }
         public string Formatted { get; set; }
+        public bool Aggregate { get; set; }
         public List<BsonValue> Results { get; set; } = new List<BsonValue>();
         public BsonDocument Parameters { get; set; } = new BsonDocument();
         public string Comment { get; set; }

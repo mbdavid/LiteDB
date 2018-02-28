@@ -24,9 +24,12 @@ namespace LiteDB
         {
             var min = BsonValue.MaxValue;
 
-            foreach(var value in values.Where(x => x.IsNumber))
+            foreach(var value in values)
             {
-                min = value < min ? value : min;
+                if (value.CompareTo(min) <= 0)
+                {
+                    min = value;
+                }
             }
 
             yield return min == BsonValue.MaxValue ? BsonValue.MinValue : min;
@@ -39,9 +42,12 @@ namespace LiteDB
         {
             var max = BsonValue.MinValue;
 
-            foreach (var value in values.Where(x => x.IsNumber))
+            foreach (var value in values)
             {
-                max = value > max ? value : max;
+                if (value.CompareTo(max) >= 0)
+                {
+                    max = value;
+                }
             }
 
             yield return max == BsonValue.MinValue ? BsonValue.MaxValue : max;
