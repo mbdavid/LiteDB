@@ -30,6 +30,11 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get how many clean pages are in cache
+        /// </summary>
+        public int Length => _cache.Count - _dirty.Count;
+
+        /// <summary>
         /// Add page in cache. If page are marked as dirty, add position in a list of dirty pages
         /// </summary>
         public void AddPage(long position, BasePage page)
@@ -40,6 +45,11 @@ namespace LiteDB
                 {
                     _dirty.Add(position);
                 }
+            }
+
+            if (this.Length > MAX_CACHE_SIZE)
+            {
+                this.Clear();
             }
 
             _cache[position] = page;

@@ -7,13 +7,13 @@ namespace LiteDB
     /// <summary>
     /// Class to pipe documents and apply Load/Filter/Includes/OrderBy commands
     /// </summary>
-    internal class QueryPipe
+    internal class QueryPipeline
     {
         private readonly LiteEngine _engine;
         private readonly LiteTransaction _transaction;
         private readonly IDocumentLoader _loader;
 
-        public QueryPipe(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
+        public QueryPipeline(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
         {
             _engine = engine;
             _transaction = transaction;

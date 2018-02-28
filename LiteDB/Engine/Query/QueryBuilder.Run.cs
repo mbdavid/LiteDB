@@ -46,7 +46,7 @@ namespace LiteDB
                 var docs = LoadDocument(nodes, loader, countOnly || _query.KeyOnly, _query.Index.Name);
 
                 // load pipe query to apply all query options
-                var pipe = new QueryPipe(_engine, _transaction, loader);
+                var pipe = new QueryPipeline(_engine, _transaction, loader);
 
                 // call safepoint just before return each document
                 foreach (var doc in pipe.Pipe(docs, _query))

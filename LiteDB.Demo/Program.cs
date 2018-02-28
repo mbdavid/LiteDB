@@ -16,6 +16,34 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
+            // via string 7772
+            // via bvalue 7885
+            // via bsonvalue 9445
+
+            var s = new Stopwatch();
+
+            //var a = "mauricio";
+            //var b = "david";
+            //var a = new BValue<String> { Value = ("mauricio") };
+            //var b = new BValue<String> { Value = ("david") };
+            var a = new BsonValue("mauricio");
+            var b = new BsonValue("david");
+
+            s.Start();
+
+            for(var i = 0; i < 100000000; i++)
+            {
+                var r = a < b;
+            }
+
+            s.Stop();
+
+            Console.WriteLine(s.ElapsedMilliseconds);
+            Console.ReadKey();
+            return;
+
+            ;
+
             File.Delete(datafile);
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
@@ -119,4 +147,5 @@ namespace LiteDB.Demo
             }
         }
     }
+
 }

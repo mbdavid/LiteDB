@@ -64,7 +64,10 @@ namespace LiteDB.Tests.Document
 
                 var result = expr.Execute(doc, true).ToList();
 
-                if (!result.SequenceEqual(test.Results))
+                var jsonResult = JsonSerializer.Serialize(new BsonArray(result));
+                var jsonExpect = JsonSerializer.Serialize(new BsonArray(test.Results));
+
+                if (jsonResult != jsonExpect)
                 {
                     Assert.AreEqual(string.Join("; ", result.Select(x => x.ToString())),
                         string.Join("; ", test.Results.Select(x => x.ToString())),
