@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        internal IEnumerable<BsonDocument> Run(bool countOnly)
+        internal IEnumerable<BsonValue> Run()
         {
             // call DoFind inside snapshot
             return _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false, snapshot =>
@@ -27,7 +27,7 @@ namespace LiteDB
             });
 
             // executing query
-            IEnumerable<BsonDocument> DoFind(Snapshot snapshot)
+            IEnumerable<BsonValue> DoFind(Snapshot snapshot)
             {
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
@@ -43,17 +43,20 @@ namespace LiteDB
                     .Skip(_query.Offset);
 
                 // load document from disk
-                var docs = LoadDocument(nodes, loader, countOnly || _query.KeyOnly, _query.Index.Name);
+                var docs = LoadDocument(nodes, loader, _query.KeyOnly, _query.Index.Name);
 
                 // load pipe query to apply all query options
-                var pipe = new QueryPipeline(_engine, _transaction, loader);
+                // load according normal query or groupby query
+                var pipe = _query.GroupBy != null ?
+                    new GroupByPipe(_engine, _transaction, loader) :
+                    (BasePipe)new QueryPipe(_engine, _transaction, loader);
 
                 // call safepoint just before return each document
-                foreach (var doc in pipe.Pipe(docs, _query))
+                foreach (var value in pipe.Pipe(docs, _query))
                 {
                     _transaction.Safepoint();
 
-                    yield return doc;
+                    yield return value;
                 }
             }
 
@@ -74,9 +77,9 @@ namespace LiteDB
         /// <summary>
         /// Execute query and return documents as IEnumerable
         /// </summary>
-        public List<BsonDocument> ToEnumerable()
+        public IEnumerable<BsonDocument> ToEnumerable()
         {
-            return this.Run(false).ToList();
+            return this.Run().Select(x => x as BsonDocument);
         }
 
         /// <summary>
@@ -84,7 +87,7 @@ namespace LiteDB
         /// </summary>
         public List<BsonDocument> ToList()
         {
-            return this.Run(false).ToList();
+            return this.ToEnumerable().ToList();
         }
 
         /// <summary>
@@ -92,7 +95,7 @@ namespace LiteDB
         /// </summary>
         public BsonDocument[] ToArray()
         {
-            return this.Run(false).ToArray();
+            return this.ToEnumerable().ToArray();
         }
 
         /// <summary>
@@ -110,7 +113,7 @@ namespace LiteDB
         /// </summary>
         public BsonDocument Single()
         {
-            return this.Run(false).Single();
+            return this.ToEnumerable().Single();
         }
 
         /// <summary>
@@ -118,7 +121,7 @@ namespace LiteDB
         /// </summary>
         public BsonDocument SingleOrDefault()
         {
-            return this.Run(false).SingleOrDefault();
+            return this.ToEnumerable().SingleOrDefault();
         }
 
         /// <summary>
@@ -126,7 +129,7 @@ namespace LiteDB
         /// </summary>
         public BsonDocument First()
         {
-            return this.Run(false).First();
+            return this.ToEnumerable().First();
         }
 
         /// <summary>
@@ -134,7 +137,17 @@ namespace LiteDB
         /// </summary>
         public BsonDocument FirstOrDefault()
         {
-            return this.Run(false).FirstOrDefault();
+            return this.ToEnumerable().FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Execute query running SELECT expression over all resultset
+        /// </summary>
+        public BsonValue Aggregate()
+        {
+            _query.Aggregate = true;
+
+            return this.Run().FirstOrDefault();
         }
 
         /// <summary>
@@ -142,7 +155,7 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            return this.Run(true).Count();
+            return this.Run().Count();
         }
 
         /// <summary>
@@ -150,7 +163,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            return this.Run(true).Any();
+            return this.Run().Any();
         }
 
         #endregion

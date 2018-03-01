@@ -109,13 +109,14 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Group by results document into new document { key: $.key, values: $.values }
+        /// Define GroupBy expression
         /// </summary>
-        public QueryBuilder GroupBy(string groupBy)
+        public QueryBuilder GroupBy(string groupBy, int order)
         {
             if (_optimized) throw new InvalidOperationException("GroupBy() is not avaiable in executed query");
 
             _query.GroupBy = BsonExpression.Create(groupBy);
+            _query.GroupByOrder = order;
 
             return this;
         }

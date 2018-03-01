@@ -5,15 +5,15 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Class to pipe documents and apply Load/Filter/Includes/OrderBy commands
+    /// Abstract class with workflow method to be used in pipeline implementation
     /// </summary>
-    internal class QueryPipeline
+    internal abstract class BasePipe
     {
         private readonly LiteEngine _engine;
         private readonly LiteTransaction _transaction;
         private readonly IDocumentLoader _loader;
 
-        public QueryPipeline(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
+        public BasePipe(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
         {
             _engine = engine;
             _transaction = transaction;
@@ -21,56 +21,14 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Start pipe documents process
+        /// Abstract method to be implement according pipe workflow
         /// </summary>
-        public IEnumerable<BsonDocument> Pipe(IEnumerable<BsonDocument> source, QueryPlan query)
-        {
-            // do includes in result before filter
-            foreach (var path in query.IncludeBefore)
-            {
-                source = this.Include(source, path);
-            }
-
-            // filter results according expressions
-            foreach (var expr in query.Filters)
-            {
-                source = this.Filter(source, expr);
-            }
-
-            if (query.OrderBy != null)
-            {
-                // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit);
-            }
-            else
-            {
-                // pipe: apply offset (no orderby)
-                if (query.Offset > 0) source = source.Skip(query.Offset);
-
-                // pipe: apply limit (no orderby)
-                if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-            }
-
-            // do includes in result before filter
-            foreach (var path in query.IncludeAfter)
-            {
-                source = this.Include(source, path);
-            }
-
-            // transfom result if contains select expression
-            if (query.Select != null)
-            {
-                source = this.Select(source, query.Select);
-            }
-
-            // return document pipe
-            return source;
-        }
+        public abstract IEnumerable<BsonValue> Pipe(IEnumerable<BsonDocument> source, QueryPlan query);
 
         /// <summary>
         /// Pipe: Do include in result document according path expression
         /// </summary>
-        private IEnumerable<BsonDocument> Include(IEnumerable<BsonDocument> source, BsonExpression path)
+        protected IEnumerable<BsonDocument> Include(IEnumerable<BsonDocument> source, BsonExpression path)
         {
             foreach(var doc in source)
             {
@@ -118,7 +76,7 @@ namespace LiteDB
         /// <summary>
         /// Pipe: Filter document according expression. Expression must be an Bool result
         /// </summary>
-        private IEnumerable<BsonDocument> Filter(IEnumerable<BsonDocument> source, BsonExpression expr)
+        protected IEnumerable<BsonDocument> Filter(IEnumerable<BsonDocument> source, BsonExpression expr)
         {
             foreach(var doc in source)
             {
@@ -135,7 +93,7 @@ namespace LiteDB
         /// <summary>
         /// Pipe: Transaform final result appling expressin transform. Expression must return an BsonDocument (or will be converter into a new documnet)
         /// </summary>
-        private IEnumerable<BsonDocument> Select(IEnumerable<BsonDocument> source, BsonExpression expr)
+        protected IEnumerable<BsonDocument> Select(IEnumerable<BsonDocument> source, BsonExpression expr)
         {
             foreach(var doc in source)
             {
@@ -157,7 +115,7 @@ namespace LiteDB
         /// <summary>
         /// Pipe: OrderBy documents according orderby expression/order
         /// </summary>
-        private IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
+        protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
             IEnumerable<BsonDocument> DoOrderBy(LiteTransaction transaction, Snapshot snapshot)
             {

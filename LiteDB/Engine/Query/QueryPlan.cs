@@ -17,6 +17,11 @@ namespace LiteDB
         public Index Index { get; set; } = null;
 
         /// <summary>
+        /// If true, select expressoin must run over all resultset. Otherwise, each document result will be transformed by select expression
+        /// </summary>
+        public bool Aggregate { get; set; } = false;
+
+        /// <summary>
         /// If true, gereate document result only with IndexNode.Key (avoid load all document)
         /// </summary>
         public bool KeyOnly { get; set; } = false;
@@ -52,9 +57,14 @@ namespace LiteDB
         public int Order { get; set; } = Query.Ascending;
 
         /// <summary>
-        /// Expression to group by result generation a new documents { key: [GroupByExpress], values: [Documents] }
+        /// Expression to group by document results
         /// </summary>
         public BsonExpression GroupBy { get; set; } = null;
+
+        /// <summary>
+        /// Define group by order
+        /// </summary>
+        public int GroupByOrder { get; set; } = Query.Ascending;
 
         /// <summary>
         /// Limit resultset
@@ -116,6 +126,11 @@ namespace LiteDB
             if (this.KeyOnly)
             {
                 sb.AppendLine("KeyOnly: true");
+            }
+
+            if (this.Aggregate)
+            {
+                sb.AppendLine("Aggregate: true");
             }
 
             return sb.ToString();
