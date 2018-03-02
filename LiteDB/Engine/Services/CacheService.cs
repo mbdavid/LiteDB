@@ -62,7 +62,8 @@ namespace LiteDB
         {
             if (_cache.TryGetValue(position, out var page))
             {
-                return clone ? page.Clone() : page;
+                // if page are dirty, return a clone version marked as clean
+                return clone || page.IsDirty ? page.Clone() : page;
             }
 
             return null;

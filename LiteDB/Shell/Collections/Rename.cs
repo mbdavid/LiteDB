@@ -19,7 +19,7 @@ namespace LiteDB.Shell
             return this.IsCollectionCommand(s, "rename");
         }
 
-        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
+        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine, LiteTransaction transaction)
         {
             var col = this.ReadCollection(engine, s);
             var newName = s.Scan(@"[\w-]+").ThrowIfEmpty("Invalid new collection name", s);

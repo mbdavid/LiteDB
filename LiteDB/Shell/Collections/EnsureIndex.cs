@@ -22,7 +22,7 @@ namespace LiteDB.Shell
             return this.IsCollectionCommand(s, "ensure[iI]ndex");
         }
 
-        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
+        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine, LiteTransaction transaction)
         {
             var col = this.ReadCollection(engine, s);
             var field = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Invalid field/index name", s);

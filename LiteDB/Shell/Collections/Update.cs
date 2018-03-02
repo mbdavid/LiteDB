@@ -22,7 +22,7 @@ namespace LiteDB.Shell
             return this.IsCollectionCommand(s, "update");
         }
 
-        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
+        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine, LiteTransaction transaction)
         {
             var col = this.ReadCollection(engine, s);
 

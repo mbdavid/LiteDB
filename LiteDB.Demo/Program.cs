@@ -16,93 +16,25 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            // via string 7772
-            // via bvalue 7885
-            // via bsonvalue 9445
-
-            var s = new Stopwatch();
-
-            //var a = "mauricio";
-            //var b = "david";
-            //var a = new BValue<String> { Value = ("mauricio") };
-            //var b = new BValue<String> { Value = ("david") };
-            var a = new BsonValue("mauricio");
-            var b = new BsonValue("david");
-
-            s.Start();
-
-            for(var i = 0; i < 100000000; i++)
-            {
-                var r = a < b;
-            }
-
-            s.Stop();
-
-            Console.WriteLine(s.ElapsedMilliseconds);
-            Console.ReadKey();
-            return;
-
-            ;
-
             File.Delete(datafile);
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
-                Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
-
-                db.SetParameter("userVersion", 887);
-
-                Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
-
-                db.SetParameter("userVersion", 999);
-            }
-
-
-            using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
-            {
-                var dA = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
-
-                //Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
-
-                db.SetParameter("userVersion", 2);
-
-                var dB = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
-
-                db.Checkpoint();
-                db.WaitAsyncWrite();
-                //Console.WriteLine(db.GetParameter("userVersion", -1).RawValue);
-
-                var dC = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
-
-                db.Insert("col1", ReadDocuments(1, 1000));
-
-                db.EnsureIndex("col1", "idx_age", "age");
-                db.EnsureIndex("col1", "idx_name", "name");
-                db.EnsureIndex("col1", "idx_name_upper", "UPPER(name)");
-                //db.EnsureIndex("col1", "idx_email", "email");
+                db.Insert("col1", ReadDocuments(1, 100));
+                db.EnsureIndex("col", "age", "age");
 
                 using (var t = db.BeginTrans())
                 {
                     var r = db.Query("col1", t)
-                        .Where("_id = items([@0,@1])", 63, 64)
-                        //.Where("age = @0", 63)
-                        //.Where("name like @0", "Il%")
-                        //.Where("UPPER(name) = @0", "ILIANA WILSON")
-                        //.Where("email = @0", "Piper@molestie.org")
-                        //.Where("_id  = ITEMS(@0)", new BsonArray(new BsonValue[] { -5, 199, 200, 99999 }))
-                        //.OrderBy("upper( name)", Query.Ascending)
-                        .Limit(5)
-                        .ToArray();
+                        .Where("age between 14 and 20")
+                        .GroupBy("age")
+                        .Select("{ age, t: sum(age), total: count($) }")
+                        .ToList();
 
-                    // {"_id":199,"name":"Iliana Wilson","age":63,"email":"Piper@molestie.org","lorem":"-"}
 
-                    Console.WriteLine();
-                    Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r.Select(x => x.AsDocument)), true));
-
-                    ;
-
+                    Console.WriteLine("LENGTH: {0}", r.Count);
+                    Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r), true));
                 }
-
             }
 
             Console.WriteLine("End");

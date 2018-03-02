@@ -166,6 +166,14 @@ namespace LiteDB
             return this.Run().Any();
         }
 
+        /// <summary>
+        /// Execute query and insert result into new collection
+        /// </summary>
+        public int Into(string newCollection, BsonAutoId autoId = BsonAutoId.ObjectId)
+        {
+            return _engine.Insert(newCollection, this.ToEnumerable(), autoId, _transaction);
+        }
+
         #endregion
     }
 }

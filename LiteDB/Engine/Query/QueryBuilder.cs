@@ -75,11 +75,10 @@ namespace LiteDB
         /// If called before Where() will load references before filter (worst). If called after Where() will load references only in filtered results.
         /// Use before Where only if you need add this include in filter expression
         /// </summary>
-        public QueryBuilder Include(string include)
+        public QueryBuilder Include(BsonExpression path)
         {
+            if (path == null) throw new NullReferenceException(nameof(path));
             if (_optimized) throw new InvalidOperationException("Include() is not avaiable in executed query");
-
-            var path = BsonExpression.Create(include);
 
             if (path.Type == BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path, BsonExpressionType.Path);
 
@@ -96,14 +95,47 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Load cross reference documents from path expression (DbRef reference). 
+        /// If called before Where() will load references before filter (worst). If called after Where() will load references only in filtered results.
+        /// Use before Where only if you need add this include in filter expression
+        /// </summary>
+        public QueryBuilder Include(string path)
+        {
+            return this.Include(BsonExpression.Create(path));
+        }
+
+        /// <summary>
+        /// Add order by on your result. OrderBy paramter can be an expression
+        /// </summary>
+        public QueryBuilder OrderBy(BsonExpression orderBy, int order = Query.Ascending)
+        {
+            if (orderBy == null) throw new ArgumentNullException(nameof(orderBy));
+            if (_optimized) throw new InvalidOperationException("OrderBy() is not avaiable in executed query");
+
+            _orderBy = orderBy;
+            _order = order;
+
+            return this;
+        }
+
+        /// <summary>
         /// Add order by on your result. OrderBy paramter can be an expression
         /// </summary>
         public QueryBuilder OrderBy(string orderBy, int order = Query.Ascending)
         {
-            if (_optimized) throw new InvalidOperationException("OrderBy() is not avaiable in executed query");
+            return this.OrderBy(BsonExpression.Create(orderBy), order);
+        }
 
-            _orderBy = BsonExpression.Create(orderBy);
-            _order = order;
+        /// <summary>
+        /// Define GroupBy expression
+        /// </summary>
+        public QueryBuilder GroupBy(BsonExpression groupBy, int order = Query.Ascending)
+        {
+            if (groupBy == null) throw new ArgumentNullException(nameof(groupBy));
+            if (_optimized) throw new InvalidOperationException("GroupBy() is not avaiable in executed query");
+
+            _query.GroupBy = groupBy;
+            _query.GroupByOrder = order;
 
             return this;
         }
@@ -111,14 +143,9 @@ namespace LiteDB
         /// <summary>
         /// Define GroupBy expression
         /// </summary>
-        public QueryBuilder GroupBy(string groupBy, int order)
+        public QueryBuilder GroupBy(string groupBy, int order = Query.Ascending)
         {
-            if (_optimized) throw new InvalidOperationException("GroupBy() is not avaiable in executed query");
-
-            _query.GroupBy = BsonExpression.Create(groupBy);
-            _query.GroupByOrder = order;
-
-            return this;
+            return this.GroupBy(BsonExpression.Create(groupBy), order);
         }
 
         /// <summary>
@@ -144,13 +171,22 @@ namespace LiteDB
         /// <summary>
         /// Transform your output document using this select expression
         /// </summary>
-        public QueryBuilder Select(string select)
+        public QueryBuilder Select(BsonExpression select)
         {
+            if (select == null) throw new ArgumentNullException(nameof(select));
             if (_optimized) throw new InvalidOperationException("Select() is not avaiable in executed query");
 
-            _query.Select = BsonExpression.Create(select);
+            _query.Select = select;
 
             return this;
+        }
+
+        /// <summary>
+        /// Transform your output document using this select expression
+        /// </summary>
+        public QueryBuilder Select(string select)
+        {
+            return this.Select(BsonExpression.Create(select));
         }
 
         /// <summary>
@@ -182,6 +218,7 @@ namespace LiteDB
         /// </summary>
         public QueryBuilder Index(Index index)
         {
+            if (index == null) throw new ArgumentNullException(nameof(index));
             if (_optimized) throw new InvalidOperationException("Index() is not avaiable in executed query");
 
             _query.Index = index;

@@ -8,6 +8,6 @@ namespace LiteDB.Shell
     {
         bool IsCommand(StringScanner s);
 
-        IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine);
+        IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine, LiteTransaction transaction);
     }
 }

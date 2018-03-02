@@ -37,8 +37,13 @@ namespace LiteDB
                 source = this.Include(source, path);
             }
 
+            // if expression contains more than 1 aggregate function must use in-memory collection
+            // to avoid re-load all documents (and, in this case, it's not possible because mess with group order
+            // this solution can cause leak memory - must be check better solution later
+            var inMemory = query?.Select.AggregateCount > 1;
+
             // apply groupby
-            var groups = this.GroupBy(source, query.GroupBy);
+            var groups = this.GroupBy(source, query.GroupBy, inMemory);
 
             // now, get only first document from each group
             source = this.SelectGroupBy(groups, query.Select);
@@ -65,30 +70,41 @@ namespace LiteDB
         /// <summary>
         /// Apply groupBy expression and transform results
         /// </summary>
-        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, BsonExpression expr)
+        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, BsonExpression expr, bool inMemory)
         {
             using (var enumerator = source.GetEnumerator())
             {
-                while (enumerator.MoveNext())
+                var done = new Done { Running = enumerator.MoveNext() };
+
+                while (done.Running)
                 {
-                    yield return YieldDocuments(enumerator, expr);
+                    var group = YieldDocuments(enumerator, expr, done);
+
+                    if (inMemory)
+                    {
+                        yield return group.ToList();
+                    }
+                    else
+                    {
+                        yield return group;
+                    }
                 }
             }
         }
 
-        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> docs, BsonExpression expr)
+        private IEnumerable<BsonDocument> YieldDocuments(IEnumerator<BsonDocument> source, BsonExpression expr, Done done)
         {
-            var current = expr.Execute(docs.Current, true).First();
+            var current = expr.Execute(source.Current, true).First();
 
-            yield return docs.Current;
+            yield return source.Current;
 
-            while(docs.MoveNext())
+            while (done.Running = source.MoveNext())
             {
-                var key = expr.Execute(docs.Current, true).First();
+                var key = expr.Execute(source.Current, true).First();
 
                 if (key == current)
                 {
-                    yield return docs.Current;
+                    yield return source.Current;
                 }
                 else
                 {
@@ -126,6 +142,14 @@ namespace LiteDB
                     yield return group.First();
                 }
             }
+        }
+
+        /// <summary>
+        /// Bool inside a class to be used as "ref" parameter on ienumerable
+        /// </summary>
+        private class Done
+        {
+            public bool Running = false;
         }
     }
 }

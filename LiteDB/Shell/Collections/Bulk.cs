@@ -21,7 +21,7 @@ namespace LiteDB.Shell
             return this.IsCollectionCommand(s, "bulk");
         }
 
-        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
+        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine, LiteTransaction transaction)
         {
             var col = this.ReadCollection(engine, s);
             var filename = s.Scan(@".*");

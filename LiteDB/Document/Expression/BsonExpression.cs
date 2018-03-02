@@ -57,6 +57,11 @@ namespace LiteDB
         internal Expression Expression { get; set; }
 
         /// <summary>
+        /// Count how many aggregate methods this expression (and child expressions) contains
+        /// </summary>
+        internal int AggregateCount { get; set; }
+
+        /// <summary>
         /// Indicate that expression are binary conditional expression (=, >, ...)
         /// </summary>
         internal bool IsConditional =>
@@ -98,6 +103,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonValue> Execute(BsonDocument doc, bool includeNullIfEmpty = true)
         {
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
+
             var docs = new BsonDocument[] { doc };
 
             return this.Execute(docs, docs, includeNullIfEmpty);
@@ -108,6 +115,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonValue> Execute(IEnumerable<BsonDocument> doc, bool includeNullIfEmpty = true)
         {
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
+
             return this.Execute(doc, doc, includeNullIfEmpty);
         }
 
@@ -154,6 +163,8 @@ namespace LiteDB
         /// </summary>
         public static BsonExpression Create(string expression)
         {
+            if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
+
             var expr = _cache.GetOrAdd(expression, (k) => Parse(new StringScanner(expression), false).Single());
 
             // return a copy from cache WITHOUT parameters
@@ -162,6 +173,7 @@ namespace LiteDB
                 Expression = expr.Expression,
                 IsConstant = expr.IsConstant,
                 IsImmutable = expr.IsImmutable,
+                AggregateCount = expr.AggregateCount,
                 Left = expr.Left,
                 Right = expr.Right,
                 Source = expr.Source,
@@ -202,6 +214,8 @@ namespace LiteDB
         /// </summary>
         public static List<BsonExpression> Parse(StringScanner s, bool onlyTerms)
         {
+            if (s == null) throw new ArgumentNullException(nameof(s));
+
             var root = Expression.Parameter(typeof(IEnumerable<BsonDocument>), "root");
             var current = Expression.Parameter(typeof(IEnumerable<BsonValue>), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");

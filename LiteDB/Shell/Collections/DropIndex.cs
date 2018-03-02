@@ -20,7 +20,7 @@ namespace LiteDB.Shell
             return this.IsCollectionCommand(s, "drop[iI]ndex");
         }
 
-        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
+        public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine, LiteTransaction transaction)
         {
             var col = this.ReadCollection(engine, s);
             var index = s.Scan(this.FieldPattern).Trim().ThrowIfEmpty("Missing field index name", s);

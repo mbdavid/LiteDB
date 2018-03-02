@@ -12,9 +12,9 @@ namespace LiteDB
         private static List<ICommand> _commands = new List<ICommand>();
 
         /// <summary>
-        /// Run a shell command from a string. Execute command in current database and returns an IEnumerable collection of results
+        /// Run a shell command from a string. Execute command in current database and returns an IList collection of results
         /// </summary>
-        public IList<BsonValue> Run(string command)
+        public IList<BsonValue> Run(string command, BsonDocument parameters, LiteTransaction transaction)
         {
             if (_commands.Count == 0)
             {
@@ -28,7 +28,7 @@ namespace LiteDB
             {
                 if (!cmd.IsCommand(s)) continue;
 
-                var values = cmd.Execute(s, this);
+                var values = cmd.Execute(s, this, transaction, parameters);
 
                 return values.ToList();
             }
