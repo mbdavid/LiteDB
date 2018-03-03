@@ -14,30 +14,20 @@
     - NET45 and NETStandard 2 support only (drop NET35/40)
     - Single process only - optimazed for multi thread
     - Plans for B+Tree implementation
-    
-- New SQL-Like Language    
-    - Support for many SQL command, like SELECT, INSERT, UPDATE
-    - New Expression parser/compiler for complex filters
-        - Optional `$`/`@` representation for simple field name: `phones[type='mobile'].number`
-        - Support complex field name (need `$`): `$.["first name"]`
-        - Simplified document notation: `{ _id, name, age }`
-        - Parameter support: `2018 - @age`
-    - Support for OrderBy
-    - Support for GroupBy
-    - Fluent complex Query
-    - QueryAnalyzer
-    - Drop shell commands
 
-```SQL
- SELECT { _id: _id, FullName: FirstName + LastName, Age: DATEDIFF('Y', DATE(), BirthDate) }
-   FROM customers
-  WHERE name > @0
-    AND UPPER(FirstName) != UPPER(LastName)
-INCLUDE orders
-  ORDER BY FirstName ASC
-  LIMIT 10
- OFFSET 200
-```    
+- New BsonExpression
+    - Clean syntax with optional use of `$`
+    - Parameter support: `@name`
+    - Support complext field name using `$.["first name"]`
+    - Simplified document notation `{ _id, name, year }`
+    - Strings supports single/double quotes
+    
+- New QueryBuilder
+    - Fluent API for write queries
+    - Simple syntax using BsonExpressions
+    - Support OrderBy/GroupBy expressions
+    - Query optimization
+    - Aggregate functions (execute expression over all resultset at once)
     
 ```C#
 // using BsonDocument
@@ -51,6 +41,17 @@ engine.Query("customers")
     .Offset(200)
     .Select("{ _id: _id, FullName: FirstName + LastName, Age: DATEDIFF('Y', DATE(), BirthDate) }")
     .ToList(); // ToEnumerable(), First(), FirstOrDefault(), Count(), Exists(), Into(newCol)
+
+engine.Query("order")
+    .Where("YEAR(sale_date) = @0", 2018)
+    .Select("SUM(price)")
+    .Aggregate();
+
+engine.Query("order")
+    .Where("status = 'Confirmed')
+    .GroupBy("YEAR(sale_date)")
+    .Select("{ year: YEAR(sale_date), total: SUM(price) }")
+    .ToList();
     
 // using Linq 
 

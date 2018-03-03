@@ -37,7 +37,7 @@ namespace LiteDB
             this.DefineIndex(snapshot);
 
             // try re-use same index order or define a new one
-            this.DefineOrderBy(snapshot);
+            this.DefineOrderByGroupBy(snapshot);
 
             _optimized = true;
         }
@@ -186,10 +186,8 @@ namespace LiteDB
         /// <summary>
         /// Define order expression and try re-use same index order by (if possible)
         /// </summary>
-        private void DefineOrderBy(Snapshot snapshot)
+        private void DefineOrderByGroupBy(Snapshot snapshot)
         {
-            if (_orderBy == null) return;
-
             // if index use OR, is not valid for orderBy
             if (_query.Index is IndexOr)
             {
@@ -202,7 +200,7 @@ namespace LiteDB
             var index = snapshot.CollectionPage.GetIndex(_query.Index.Name);
 
             // if index expression are same as orderBy, use index to sort - just update index order
-            if (index.Expression == _orderBy.Source)
+            if (_orderBy?.Source == index.Expression)
             {
                 _query.Index.Order = _order;
             }
@@ -210,6 +208,13 @@ namespace LiteDB
             {
                 _query.OrderBy = _orderBy;
                 _query.Order = _order;
+            }
+
+            // if groupby use same expression in index, set group by order to MaxValue to not run
+            if (_query.GroupBy?.Source == index.Expression)
+            {
+                _query.RunOrderByOverGroupBy = false;
+                _query.Index.Order = _query.GroupByOrder;
             }
         }
 

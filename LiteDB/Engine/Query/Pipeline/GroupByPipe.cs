@@ -29,7 +29,10 @@ namespace LiteDB
             }
 
             // pipe: orderby using groupy expression
-            source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue);
+            if (query.RunOrderByOverGroupBy)
+            {
+                source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue);
+            }
 
             // do includes in result before filter
             foreach (var path in query.IncludeAfter)
@@ -37,13 +40,12 @@ namespace LiteDB
                 source = this.Include(source, path);
             }
 
-            // if expression contains more than 1 aggregate function must use in-memory collection
-            // to avoid re-load all documents (and, in this case, it's not possible because mess with group order
-            // this solution can cause leak memory - must be check better solution later
-            var inMemory = query?.Select.AggregateCount > 1;
+            // if expression contains more than 1 aggregate function will run more than once only grup result
+            // this will mess with my group by operation - must use tempdb to store RawId
+            var useTempDB = query?.Select.AggregateCount > 1;
 
             // apply groupby
-            var groups = this.GroupBy(source, query.GroupBy, inMemory);
+            var groups = this.GroupBy(source, query.GroupBy, useTempDB);
 
             // now, get only first document from each group
             source = this.SelectGroupBy(groups, query.Select);
@@ -82,7 +84,8 @@ namespace LiteDB
 
                     if (inMemory)
                     {
-                        yield return group.ToList();
+                        //yield return  group.ToList();
+                        yield return new DocumentEnumerable(group, _loader);
                     }
                     else
                     {

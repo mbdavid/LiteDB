@@ -20,15 +20,15 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
-                db.Insert("col1", ReadDocuments(1, 100));
+                db.Insert("col1", ReadDocuments(1, 50000, false, true));
                 db.EnsureIndex("col", "age", "age");
 
                 using (var t = db.BeginTrans())
                 {
                     var r = db.Query("col1", t)
-                        .Where("age between 14 and 20")
-                        .GroupBy("age")
-                        .Select("{ age, t: sum(age), total: count($) }")
+                        //.Where("age between 14 and 20")
+                        .GroupBy("_id > 0")
+                        .Select("{ s: count($), total: count($) }")
                         .ToList();
 
 
@@ -64,7 +64,7 @@ namespace LiteDB.Demo
                             ["name"] = row[0],
                             ["age"] = Convert.ToInt32(row[1]),
                             ["email"] = row[2],
-                            ["lorem"] = bigDoc ? row[3] : "-"
+                            ["lorem"] = bigDoc ? row[3].PadLeft(1000) : "-"
                         };
 
                         count++;

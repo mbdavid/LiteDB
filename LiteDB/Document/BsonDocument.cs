@@ -33,7 +33,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get/Set poisition of this document inside database. It's filled when used in Find operation.
+        /// Get/Set position of this document inside database. It's filled when used in Find operation.
         /// </summary>
         internal PageAddress RawId { get; set; } = PageAddress.Empty;
 

@@ -67,6 +67,11 @@ namespace LiteDB
         public int GroupByOrder { get; set; } = Query.Ascending;
 
         /// <summary>
+        /// If contains group by expression, must be run OrderBy over GroupBy or already sorted?
+        /// </summary>
+        public bool RunOrderByOverGroupBy { get; set; } = true;
+
+        /// <summary>
         /// Limit resultset
         /// </summary>
         public int Limit { get; set; } = int.MaxValue;
@@ -121,6 +126,11 @@ namespace LiteDB
             if (this.Offset > 0)
             {
                 sb.AppendLine("Offset: " + this.Offset);
+            }
+
+            if (this.GroupBy != null)
+            {
+                sb.AppendLine("GroupBy: " + this.GroupBy.Source);
             }
 
             if (this.KeyOnly)

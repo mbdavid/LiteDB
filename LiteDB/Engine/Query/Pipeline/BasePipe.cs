@@ -9,9 +9,9 @@ namespace LiteDB
     /// </summary>
     internal abstract class BasePipe
     {
-        private readonly LiteEngine _engine;
-        private readonly LiteTransaction _transaction;
-        private readonly IDocumentLoader _loader;
+        protected readonly LiteEngine _engine;
+        protected readonly LiteTransaction _transaction;
+        protected readonly IDocumentLoader _loader;
 
         public BasePipe(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
         {
@@ -166,7 +166,10 @@ namespace LiteDB
                         }
 
                         // if memory pages excedded limit size, flush to temp disk
+
+                        //TODO must have safepoint - but not working here for now
                         // transaction.Safepoint();
+
                     }
                 }
 
