@@ -9,18 +9,18 @@ namespace LiteDB
         /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
-        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique, LiteTransaction transaction)
+        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (expression == null) throw new ArgumentNullException(nameof(expression));
-            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
             if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw LiteException.InvalidIndexName(name, collection);
             if (name == "_id") return false; // always exists
 
-            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            return this.Transaction(transaction =>
             {
+                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
                 var col = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
@@ -77,16 +77,16 @@ namespace LiteDB
         /// <summary>
         /// Drop an index from a collection
         /// </summary>
-        public bool DropIndex(string collection, string name, LiteTransaction transaction)
+        public bool DropIndex(string collection, string name)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
-            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
             if (name == "_id") throw LiteException.IndexDropId();
 
-            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            return this.Transaction(transaction =>
             {
+                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot);
             

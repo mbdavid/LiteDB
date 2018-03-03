@@ -10,17 +10,17 @@ namespace LiteDB
         /// then any documents not updated are then attempted to insert.
         /// This will have the side effect of throwing if duplicate items are attempted to be inserted.
         /// </summary>
-        public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId, LiteTransaction transaction)
+        public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
-            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            return this.Transaction(transaction =>
             {
-                var col = snapshot.CollectionPage;
+                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
+                var col = snapshot.CollectionPage;
                 var count = 0;
                 
                 foreach (var doc in docs)

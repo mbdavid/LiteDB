@@ -169,7 +169,7 @@ namespace LiteDB
             var name = "idx_auto_" + Guid.NewGuid().ToString("n").Substring(0, 5).ToLower();
 
             // create index
-            _engine.EnsureIndex(_collection, name, expr.Left, false, _transaction);
+            _engine.EnsureIndex(_collection, name, expr.Left, false);
 
             var index = snapshot.CollectionPage.GetIndex(name);
 
@@ -219,6 +219,5 @@ namespace LiteDB
         }
 
         #endregion
-
     }
 }

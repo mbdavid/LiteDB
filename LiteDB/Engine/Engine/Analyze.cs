@@ -9,27 +9,28 @@ namespace LiteDB
         /// <summary>
         /// Analyze collection indexes to update UniqueKey counter. If collections parameter are null, analyze all collections
         /// </summary>
-        public void Analyze(string[] collections, LiteTransaction transaction)
+        public int Analyze(string[] collections)
         {
-            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
-
             var cols = collections ?? _header.Collections.Keys.ToArray();
+            var count = 0;
 
-            foreach(var collection in cols)
+            foreach (var collection in cols)
             {
                 var dict = new Dictionary<string, uint>();
 
-                // first, only read collection all index keys from all indexes
-                transaction.CreateSnapshot(SnapshotMode.Read, collection, false, snapshot =>
+                // create one transaction per colection to avoid lock all database
+                this.Transaction(transaction =>
                 {
+                    // first, get read-only snapshot
+                    var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, collection, false);
                     var col = snapshot.CollectionPage;
 
-                    if (col == null) return false;
+                    if (col == null) return 0;
 
                     var indexer = new IndexService(snapshot);
-                    var indexes = col.GetIndexes(true);
+                    var indexes = col.GetIndexes(true).ToArray();
 
-                    foreach(var index in indexes)
+                    foreach (var index in indexes)
                     {
                         // if unique index, 1 document = 1 unique key
                         if (index.Unique)
@@ -41,7 +42,7 @@ namespace LiteDB
                         var last = BsonValue.MinValue;
                         var counter = 0u;
 
-                        foreach(var node in indexer.FindAll(index, LiteDB.Query.Ascending))
+                        foreach (var node in indexer.FindAll(index, LiteDB.Query.Ascending))
                         {
                             counter += node.Key.Equals(last) ? 0u : 1u;
                             last = node.Key;
@@ -50,19 +51,10 @@ namespace LiteDB
                         dict[index.Name] = counter;
                     }
 
-                    return true;
-                });
+                    // after do all analyze, update snapshot to write mode
+                    snapshot.WriteMode(false);
 
-                // update each index in collection with counter
-                transaction.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
-                {
-                    var col = snapshot.CollectionPage;
-
-                    if (col == null) return false;
-
-                    var indexes = col.GetIndexes(true);
-
-                    foreach(var index in indexes)
+                    foreach (var index in indexes)
                     {
                         if (dict.TryGetValue(index.Name, out var counter))
                         {
@@ -72,9 +64,11 @@ namespace LiteDB
 
                     snapshot.SetDirty(col);
 
-                    return true;
+                    return ++count;
                 });
             }
+
+            return count;
         }
     }
 }

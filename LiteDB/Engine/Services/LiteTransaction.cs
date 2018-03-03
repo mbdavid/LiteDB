@@ -76,26 +76,6 @@ namespace LiteDB
             }
         }
 
-        [Obsolete]
-        internal T CreateSnapshot<T>(SnapshotMode mode, string collectionName, bool addIfNotExists, Func<Snapshot, T> fn)
-        {
-            try
-            {
-                var snapshot = this.CreateSnapshot(mode, collectionName, addIfNotExists);
-
-                var result = fn(snapshot);
-
-                return result;
-            }
-            catch
-            {
-                // must rollback transaction because dirty pages are not valid
-                this.Rollback();
-                throw;
-            }
-        }
-
-
         /// <summary>
         /// Implement a safe point to clear all read-only pages or persist dirty pages (into wal) in all snaps
         /// </summary>
@@ -275,6 +255,8 @@ namespace LiteDB
 
         public void Dispose()
         {
+            if (_state == TransactionState.Disposed) return;
+
             // if no commit/rollback are invoke before dipose, let's rollback by default
             if (_state == TransactionState.InUse)
             {

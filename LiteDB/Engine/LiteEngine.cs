@@ -32,8 +32,6 @@ namespace LiteDB
 
         private BsonWriter _bsonWriter = new BsonWriter();
 
-        private ConcurrentDictionary<Guid, LiteTransaction> _transactions = new ConcurrentDictionary<Guid, LiteTransaction>();
-
         #region TempDB
 
         private LiteEngine _tempdb = null;
@@ -131,27 +129,6 @@ namespace LiteDB
         }
 
         #endregion
-
-        /// <summary>
-        /// Initialize a new transaction
-        /// </summary>
-        public LiteTransaction BeginTrans()
-        {
-            var transaction = new LiteTransaction(_header, _locker, _wal, _datafile, _log);
-
-            // add transaction to execution transaction dict
-            _transactions[transaction.TransactionID] = transaction;
-
-            // remove from transaction list when done
-            transaction.Done += (o, s) =>
-            {
-                var trans = o as LiteTransaction;
-
-                _transactions.TryRemove(trans.TransactionID, out var t);
-            };
-
-            return transaction;
-        }
 
         /// <summary>
         /// Request a wal checkpoint

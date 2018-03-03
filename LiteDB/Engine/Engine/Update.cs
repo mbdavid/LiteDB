@@ -9,18 +9,18 @@ namespace LiteDB
         /// <summary>
         /// Implement update command to a document inside a collection. Return number of documents updated
         /// </summary>
-        public int Update(string collection, IEnumerable<BsonDocument> docs, LiteTransaction transaction)
+        public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
-            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            return transaction.CreateSnapshot(SnapshotMode.Write, collection, true, snapshot =>
+            return this.Transaction(transaction =>
             {
-                var col = snapshot.CollectionPage;
-                var count = 0;
+                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
+                var col = snapshot.CollectionPage;
+                var count = 0;
 
                 foreach (var doc in docs)
                 {

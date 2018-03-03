@@ -10,7 +10,6 @@ namespace LiteDB
     public partial class QueryBuilder
     {
         private string _collection;
-        private LiteTransaction _transaction;
         private LiteEngine _engine;
 
         private QueryPlan _query = new QueryPlan();
@@ -22,10 +21,9 @@ namespace LiteDB
         {
         }
 
-        public QueryBuilder(string collection, LiteTransaction transaction, LiteEngine engine)
+        public QueryBuilder(string collection, LiteEngine engine)
         {
             _collection = collection;
-            _transaction = transaction;
             _engine = engine;
         }
 

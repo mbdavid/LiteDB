@@ -21,7 +21,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Set database parameter value
+        /// Set database parameter value (this operation occurs without transaction)
         /// </summary>
         public void SetParameter(string name, BsonValue value)
         {

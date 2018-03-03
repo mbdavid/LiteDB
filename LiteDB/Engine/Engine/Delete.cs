@@ -9,14 +9,14 @@ namespace LiteDB
         /// <summary>
         /// Implements delete based on IDs enumerable
         /// </summary>
-        public int Delete(string collection, IEnumerable<BsonValue> ids, LiteTransaction transaction)
+        public int Delete(string collection, IEnumerable<BsonValue> ids)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (ids == null) throw new ArgumentNullException(nameof(ids));
-            if (transaction == null) throw new ArgumentNullException(nameof(transaction));
 
-            return transaction.CreateSnapshot(SnapshotMode.Write, collection, false, snapshot =>
+            return this.Transaction(transaction =>
             {
+                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);

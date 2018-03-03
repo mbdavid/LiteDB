@@ -14,39 +14,61 @@ namespace LiteDB
         /// </summary>
         internal IEnumerable<BsonValue> Run()
         {
-            // call DoFind inside snapshot
-            var snapshot = _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false);
+            var transaction = _engine.GetTransaction(out var isNew);
 
-            var col = snapshot.CollectionPage;
-            var data = new DataService(snapshot);
-            var indexer = new IndexService(snapshot);
-            var loader = new DocumentLoader(data, _engine.BsonReader);
-
-            // no collection, no documents
-            if (col == null) yield break;
-
-            // execute optimization before run query (will fill missing _query properties instance)
-            this.OptimizeQuery(snapshot);
-
-            //TODO: remove this execution plan
-            Console.WriteLine(_query.GetExplainPlan());
-
-            // get node list from query - distinct by dataBlock (avoid duplicate)
-            var nodes = _query.Index.Run(col, indexer)
-                    .DistinctBy(x => x.DataBlock, null);
-
-            // get corrent query pipe: normal or groupby pipe
-            var pipe = _query.GroupBy != null ?
-                new GroupByPipe(_engine, _transaction, loader) :
-                (BasePipe)new QueryPipe(_engine, _transaction, loader);
-
-            // call safepoint just before return each document
-            foreach (var value in pipe.Pipe(nodes, _query))
+            try
             {
-                _transaction.Safepoint();
-
-                yield return value;
+                // encapsulate all execution to catch any error
+                return RunQuery();
             }
+            catch
+            {
+                // if any error, rollback transaction
+                transaction.Dispose();
+                throw;
+            }
+
+            IEnumerable<BsonValue> RunQuery()
+            {
+                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false);
+
+                var col = snapshot.CollectionPage;
+                var data = new DataService(snapshot);
+                var indexer = new IndexService(snapshot);
+                var loader = new DocumentLoader(data, _engine.BsonReader);
+
+                // no collection, no documents
+                if (col == null) yield break;
+
+                // execute optimization before run query (will fill missing _query properties instance)
+                this.OptimizeQuery(snapshot);
+
+                //TODO: remove this execution plan
+                Console.WriteLine(_query.GetExplainPlan());
+
+                // get node list from query - distinct by dataBlock (avoid duplicate)
+                var nodes = _query.Index.Run(col, indexer)
+                        .DistinctBy(x => x.DataBlock, null);
+
+                // get current query pipe: normal or groupby pipe
+                var pipe = _query.GroupBy != null ?
+                    new GroupByPipe(_engine, transaction, loader) :
+                    (BasePipe)new QueryPipe(_engine, transaction, loader);
+
+                // call safepoint just before return each document
+                foreach (var value in pipe.Pipe(nodes, _query))
+                {
+                    transaction.Safepoint();
+
+                    yield return value;
+                }
+
+                // if is a new transaction, dipose now
+                if (isNew)
+                {
+                    transaction.Dispose();
+                }
+            };
         }
 
         #region Execute Shortcut (First/Single/ToList/...)
@@ -148,7 +170,7 @@ namespace LiteDB
         /// </summary>
         public int Into(string newCollection, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            return _engine.Insert(newCollection, this.ToEnumerable(), autoId, _transaction);
+            return _engine.Insert(newCollection, this.ToEnumerable(), autoId);
         }
 
         #endregion
