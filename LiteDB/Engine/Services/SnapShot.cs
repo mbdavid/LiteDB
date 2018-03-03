@@ -35,7 +35,7 @@ namespace LiteDB
         public ConcurrentDictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
         public SnapshotMode Mode => _mode;
 
-        public Snapshot(string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
+        public Snapshot(SnapshotMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
         {
             _header = header;
             _transPages = transPages;
@@ -43,12 +43,18 @@ namespace LiteDB
             _wal = wal;
             _datafile = datafile;
 
-            // always init a snapshot as read mode
-            _mode = SnapshotMode.Read;
             _collectionName = collectionName;
+            _mode = mode;
 
-            // enter in read lock mode
-            _locker.EnterRead(_collectionName);
+            // enter in lock mode according initial mode
+            if (_mode == SnapshotMode.Read)
+            {
+                _locker.EnterRead(_collectionName);
+            }
+            else
+            {
+                _locker.EnterReserved(_collectionName);
+            }
 
             // initialize version and get read version
             this.Initialize();

@@ -32,8 +32,6 @@ namespace LiteDB.Demo
                         .Select("{_id,data:DATE(), name,age}")
                         .Into("col0");
 
-                    db.Checkpoint();
-
                     //foreach(var x in r)
                     //{
                     //    x["data"] = DateTime.Now;
@@ -45,6 +43,7 @@ namespace LiteDB.Demo
 
                     t.Commit();
                 }
+                db.Checkpoint();
 
                 using (var t = db.BeginTrans())
                 {

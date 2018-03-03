@@ -100,6 +100,9 @@ namespace LiteDB
             // if has no confirmed transaction, exit
             if (_confirmedTransactions.Count == 0) return;
 
+            // checkpoint can run only without any open transaction in current thread
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.InUse);
+
             // enter in special database reserved lock
             // only new readers are allowed and no writers
             _locker.EnterReserved();

@@ -62,10 +62,11 @@ namespace LiteDB
                 // if transaction are commited/aborted do not accept new snapshots
                 if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
 
-                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(collectionName, _header, _transPages, _locker, _wal, _datafile));
+                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _wal, _datafile));
 
                 if (mode == SnapshotMode.Write)
                 {
+                    // will create collection if needed only here
                     snapshot.WriteMode(addIfNotExists);
                 }
 
