@@ -19,7 +19,7 @@ namespace LiteDB
                 var dict = new Dictionary<string, uint>();
 
                 // create one transaction per colection to avoid lock all database
-                this.Transaction(transaction =>
+                this.AutoTransaction(transaction =>
                 {
                     // first, get read-only snapshot
                     var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, collection, false);

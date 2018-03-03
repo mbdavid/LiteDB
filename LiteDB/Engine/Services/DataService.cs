@@ -112,10 +112,8 @@ namespace LiteDB
         /// <summary>
         /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage.
         /// </summary>
-        public byte[] Read(PageAddress blockAddress)
+        public byte[] Read(DataBlock block)
         {
-            var block = this.GetBlock(blockAddress);
-
             // if there is a extend page, read bytes all bytes from extended pages
             if (block.ExtendPageID != uint.MaxValue)
             {

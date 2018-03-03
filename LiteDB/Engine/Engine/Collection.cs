@@ -13,7 +13,7 @@ namespace LiteDB
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            return this.Transaction(transaction =>
+            return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
                 var col = snapshot.CollectionPage;

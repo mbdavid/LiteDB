@@ -44,6 +44,24 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Set an in-use transaction into current thread. Throw InvalidTransactionState exception if not found or not valid state
+        /// WARNING: Do not set same transaction in more then 1 thread!
+        /// </summary>
+        public LiteTransaction SetTransaction(Guid transactionID)
+        {
+            if (_transactions.TryGetValue(transactionID, out var transaction) == false) throw LiteException.InvalidTransactionState("SetTransaction", TransactionState.Disposed);
+
+            if (transaction.State == TransactionState.New || transaction.State == TransactionState.InUse)
+            {
+                Thread.SetData(_slot, transaction);
+
+                return transaction;
+            }
+
+            throw LiteException.InvalidTransactionState("SetTransaction", transaction.State);
+        }
+
+        /// <summary>
         /// Initialize a new transaction
         /// </summary>
         public LiteTransaction BeginTrans()
@@ -58,7 +76,7 @@ namespace LiteDB
         /// <summary>
         /// Create (or reuse) a transaction an add try/catch block. Commit transaction if is new transaction
         /// </summary>
-        private T Transaction<T>(Func<LiteTransaction, T> fn)
+        private T AutoTransaction<T>(Func<LiteTransaction, T> fn)
         {
             var transaction = this.GetTransaction(out var isNew);
 

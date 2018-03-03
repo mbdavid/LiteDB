@@ -18,7 +18,7 @@ namespace LiteDB
             if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw LiteException.InvalidIndexName(name, collection);
             if (name == "_id") return false; // always exists
 
-            return this.Transaction(transaction =>
+            return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
                 var col = snapshot.CollectionPage;
@@ -51,7 +51,7 @@ namespace LiteDB
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
                 {
                     // read binary and deserialize document
-                    var buffer = data.Read(pkNode.DataBlock);
+                    var buffer = data.Read(data.GetBlock(pkNode.DataBlock));
                     var doc = _bsonReader.Deserialize(buffer).AsDocument;
 
                     // get values from expression in document
@@ -84,7 +84,7 @@ namespace LiteDB
 
             if (name == "_id") throw LiteException.IndexDropId();
 
-            return this.Transaction(transaction =>
+            return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
                 var col = snapshot.CollectionPage;

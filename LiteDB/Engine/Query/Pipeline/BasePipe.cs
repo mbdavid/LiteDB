@@ -41,7 +41,13 @@ namespace LiteDB
         /// </summary>
         protected IEnumerable<BsonDocument> Include(IEnumerable<BsonDocument> source, BsonExpression path)
         {
-            foreach(var doc in source)
+            // cached services
+            string last = null;
+            Snapshot snapshot = null;
+            IndexService indexer = null;
+            CollectionIndex index = null;
+
+            foreach (var doc in source)
             {
                 foreach (var value in path.Execute(doc, false)
                                         .Where(x => x.IsDocument)
@@ -55,29 +61,42 @@ namespace LiteDB
                     // if has no reference, just go out
                     if (refId.IsNull || !refCol.IsString) continue;
 
-                    // create query for find by _id
-                    var query = new QueryPlan
+                    // do some cache re-using when is same $ref (almost always is the same $ref collection)
+                    if (last != refCol.AsString)
                     {
-                        Index = Index.EQ("_id", refId)
-                    };
+                        last = refCol.AsString;
 
-                    //TODO implement include again
-                    // now, find document reference
-                    // var refDoc = _engine.Find(refCol, query, _transaction).FirstOrDefault();
-                    // 
-                    // // if found, change with current document
-                    // if (refDoc != null)
-                    // {
-                    //     value.Remove("$id");
-                    //     value.Remove("$ref");
-                    // 
-                    //     refDoc.CopyTo(value);
-                    // }
-                    // else
-                    // {
-                    //     // remove value from parent (document or array)
-                    //     value.Destroy();
-                    // }
+                        // initialize services
+                        snapshot = _transaction.CreateSnapshot(SnapshotMode.Read, last, false);
+                        indexer = new IndexService(snapshot);
+                        index = snapshot.CollectionPage?.PK;
+                    }
+
+                    // if there is no ref collection
+                    if (index == null)
+                    {
+                        value.Destroy();
+                    }
+                    else
+                    {
+                        var node = indexer.Find(index, refId, false, Query.Ascending);
+
+                        // if _id was not found in $ref collection, remove value
+                        if (node == null)
+                        {
+                            value.Destroy();
+                        }
+                        else
+                        {
+                            // load document based on dataBlock position
+                            var refDoc = _loader.Load(node.DataBlock);
+
+                            value.Remove("$id");
+                            value.Remove("$ref");
+                            
+                            refDoc.CopyTo(value);
+                        }
+                    }
                 }
 
                 yield return doc;

@@ -78,7 +78,7 @@ namespace LiteDB
             if (path == null) throw new NullReferenceException(nameof(path));
             if (_optimized) throw new InvalidOperationException("Include() is not avaiable in executed query");
 
-            if (path.Type == BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path, BsonExpressionType.Path);
+            if (path.Type != BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path, BsonExpressionType.Path);
 
             if (_where.Count == 0)
             {

@@ -36,6 +36,11 @@ namespace LiteDB
             get { return DataBlock.DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
         }
 
+        /// <summary>
+        /// Cached document - if null, use Data[]
+        /// </summary>
+        public BsonDocument CacheDocument { get; set; }
+
         public DataBlock()
         {
             this.Position = PageAddress.Empty;
