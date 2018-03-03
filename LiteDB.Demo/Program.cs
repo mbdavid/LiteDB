@@ -29,17 +29,17 @@ namespace LiteDB.Demo
                         //.Where("age between 14 and 20")
                         //.GroupBy("_id > 0")
                         //.Select("{ s: count($), total: count($) }")
-                        .Select("{_id,data:DATE(), name,age}")
-                        .Into("col0");
+                        //.Select("{_id,data:DATE(), name,age}")
+                        .ToEnumerable();
 
-                    //foreach(var x in r)
-                    //{
-                    //    x["data"] = DateTime.Now;
-                    //
-                    //    db.Insert("col0", new BsonDocument[] { x }, BsonAutoId.Int32, t);
-                    //}
-                    //
-                    //Console.WriteLine("LENGTH: {0}", r.Count());
+                    foreach(var x in r)
+                    {
+                        x["data"] = DateTime.Now;
+                    
+                        db.Update("col1", new BsonDocument[] { x }, t);
+                    }
+                    
+                    Console.WriteLine("LENGTH: {0}", r.Count());
 
                     t.Commit();
                 }

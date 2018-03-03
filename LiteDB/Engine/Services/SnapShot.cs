@@ -12,18 +12,18 @@ namespace LiteDB
     internal class Snapshot : IDisposable
     {
         // instances from Engine
-        private HeaderPage _header;
-        private LockService _locker;
-        private WalService _wal;
-        private FileService _datafile;
+        private readonly HeaderPage _header;
+        private readonly LockService _locker;
+        private readonly WalService _wal;
+        private readonly FileService _datafile;
 
         // instances from transaction
-        private TransactionPages _transPages;
+        private readonly TransactionPages _transPages;
 
         // snapshot controls
+        private readonly string _collectionName;
         private SnapshotMode _mode;
         private CollectionPage _collectionPage;
-        private string _collectionName;
         private int _readVersion;
 
         private ConcurrentDictionary<uint, BasePage> _localPages = new ConcurrentDictionary<uint, BasePage>();
