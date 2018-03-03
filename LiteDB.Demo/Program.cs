@@ -20,19 +20,35 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
             {
-                db.Insert("col1", ReadDocuments(1, 50000, false, true));
-                db.EnsureIndex("col", "age", "age");
+                db.Insert("col1", ReadDocuments(1, 10, false, true));
+                //db.EnsureIndex("col1", "age", "age");
 
                 using (var t = db.BeginTrans())
                 {
                     var r = db.Query("col1", t)
                         //.Where("age between 14 and 20")
-                        .GroupBy("_id > 0")
-                        .Select("{ s: count($), total: count($) }")
-                        .ToList();
+                        //.GroupBy("_id > 0")
+                        //.Select("{ s: count($), total: count($) }")
+                        .Select("{_id,data:DATE(), name,age}")
+                        .Into("col0");
 
+                    db.Checkpoint();
 
-                    Console.WriteLine("LENGTH: {0}", r.Count);
+                    //foreach(var x in r)
+                    //{
+                    //    x["data"] = DateTime.Now;
+                    //
+                    //    db.Insert("col0", new BsonDocument[] { x }, BsonAutoId.Int32, t);
+                    //}
+                    //
+                    //Console.WriteLine("LENGTH: {0}", r.Count());
+
+                    t.Commit();
+                }
+
+                using (var t = db.BeginTrans())
+                {
+                    var r = db.Query("col0", t).ToList();
                     Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r), true));
                 }
             }

@@ -15,60 +15,37 @@ namespace LiteDB
         internal IEnumerable<BsonValue> Run()
         {
             // call DoFind inside snapshot
-            return _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false, snapshot =>
+            var snapshot = _transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false);
+
+            var col = snapshot.CollectionPage;
+            var data = new DataService(snapshot);
+            var indexer = new IndexService(snapshot);
+            var loader = new DocumentLoader(data, _engine.BsonReader);
+
+            // no collection, no documents
+            if (col == null) yield break;
+
+            // execute optimization before run query (will fill missing _query properties instance)
+            this.OptimizeQuery(snapshot);
+
+            //TODO: remove this execution plan
+            Console.WriteLine(_query.GetExplainPlan());
+
+            // get node list from query - distinct by dataBlock (avoid duplicate)
+            var nodes = _query.Index.Run(col, indexer)
+                    .DistinctBy(x => x.DataBlock, null);
+
+            // get corrent query pipe: normal or groupby pipe
+            var pipe = _query.GroupBy != null ?
+                new GroupByPipe(_engine, _transaction, loader) :
+                (BasePipe)new QueryPipe(_engine, _transaction, loader);
+
+            // call safepoint just before return each document
+            foreach (var value in pipe.Pipe(nodes, _query))
             {
-                // execute optimization before run query (will fill missing _query properties instance)
-                this.OptimizeQuery(snapshot);
+                _transaction.Safepoint();
 
-                //TODO: remove this execution plan
-                Console.WriteLine(_query.GetExplainPlan());
-
-                return DoFind(snapshot);
-            });
-
-            // executing query
-            IEnumerable<BsonValue> DoFind(Snapshot snapshot)
-            {
-                var col = snapshot.CollectionPage;
-                var data = new DataService(snapshot);
-                var indexer = new IndexService(snapshot);
-                var loader = new DocumentLoader(data, _engine.BsonReader);
-
-                // no collection, no documents
-                if (col == null) yield break;
-
-                // get node list from query - distinct by dataBlock (avoid duplicate) and skip
-                var nodes = _query.Index.Run(col, indexer)
-                    .DistinctBy(x => x.DataBlock, null)
-                    .Skip(_query.Offset);
-
-                // load document from disk
-                var docs = LoadDocument(nodes, loader, _query.KeyOnly, _query.Index.Name);
-
-                // load pipe query to apply all query options
-                // load according normal query or groupby query
-                var pipe = _query.GroupBy != null ?
-                    new GroupByPipe(_engine, _transaction, loader) :
-                    (BasePipe)new QueryPipe(_engine, _transaction, loader);
-
-                // call safepoint just before return each document
-                foreach (var value in pipe.Pipe(docs, _query))
-                {
-                    _transaction.Safepoint();
-
-                    yield return value;
-                }
-            }
-
-            // load documents from disk or make a "fake" document using key only (useful for COUNT/EXISTS)
-            IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, IDocumentLoader loader, bool keyOnly, string name)
-            {
-                foreach (var node in nodes)
-                {
-                    yield return keyOnly ?
-                        new BsonDocument { [name] = node.Key } :
-                        loader.Load(node.DataBlock);
-                }
+                yield return value;
             }
         }
 

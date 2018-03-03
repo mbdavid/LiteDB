@@ -62,7 +62,7 @@ namespace LiteDB
             if (_exclusive.IsWriteLockHeld || _reserved.IsWriteLockHeld) return;
 
             // exclusive locker in read lock
-            if (_exclusive.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("read", collectionName, _timeout);
+            if (_exclusive.IsReadLockHeld == false && _exclusive.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("read", collectionName, _timeout);
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));

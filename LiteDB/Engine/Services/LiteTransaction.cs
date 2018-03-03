@@ -27,7 +27,7 @@ namespace LiteDB
         // transaction controls
         private Guid _transactionID = Guid.NewGuid();
         private TransactionState _state = TransactionState.New;
-        private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, Snapshot> _snapshots = new ConcurrentDictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
 
         // transaction info
@@ -52,15 +52,16 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create new (or get already created) snapshot. This process are not thread-safe, so NO 2 snaps from same transaction at same time
+        /// Create (or get from cache) snapshot and return. Snapshot are thread-safe. Do not call Dispose of snapshot because transaction will do this on end
         /// </summary>
-        internal T CreateSnapshot<T>(SnapshotMode mode, string collectionName, bool addIfNotExists, Func<Snapshot, T> fn)
+        internal Snapshot CreateSnapshot(SnapshotMode mode, string collectionName, bool addIfNotExists)
         {
-            // if transaction are commited/aborted do not accept new snapshots
-            if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
-
+            // lock here only to get ensure that will be 1 request per time
             lock (_snapshots)
             {
+                // if transaction are commited/aborted do not accept new snapshots
+                if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
+
                 var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(collectionName, _header, _transPages, _locker, _wal, _datafile));
 
                 if (mode == SnapshotMode.Write)
@@ -68,22 +69,31 @@ namespace LiteDB
                     snapshot.WriteMode(addIfNotExists);
                 }
 
-                try
-                {
-                    _state = TransactionState.InUse;
+                _state = TransactionState.InUse;
 
-                    var result = fn(snapshot);
-
-                    return result;
-                }
-                catch
-                {
-                    // must rollback transaction because dirty pages are not valid
-                    this.Rollback();
-                    throw;
-                }
+                return snapshot;
             }
         }
+
+        [Obsolete]
+        internal T CreateSnapshot<T>(SnapshotMode mode, string collectionName, bool addIfNotExists, Func<Snapshot, T> fn)
+        {
+            try
+            {
+                var snapshot = this.CreateSnapshot(mode, collectionName, addIfNotExists);
+
+                var result = fn(snapshot);
+
+                return result;
+            }
+            catch
+            {
+                // must rollback transaction because dirty pages are not valid
+                this.Rollback();
+                throw;
+            }
+        }
+
 
         /// <summary>
         /// Implement a safe point to clear all read-only pages or persist dirty pages (into wal) in all snaps
@@ -100,7 +110,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Persist all in-memory pages in all snapshots
+        /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
         public void PersistDirtyPages()
         {

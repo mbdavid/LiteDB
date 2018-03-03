@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace LiteDB
 {
@@ -24,13 +26,13 @@ namespace LiteDB
         private string _collectionName;
         private int _readVersion;
 
-        private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
-        private Dictionary<uint, PagePosition> _dirtyPagesWal = new Dictionary<uint, PagePosition>();
+        private ConcurrentDictionary<uint, BasePage> _localPages = new ConcurrentDictionary<uint, BasePage>();
+        private ConcurrentDictionary<uint, PagePosition> _dirtyPagesWal = new ConcurrentDictionary<uint, PagePosition>();
 
         // expose services
         public int ReadVersion => _readVersion;
-        public Dictionary<uint, BasePage> LocalPages => _localPages;
-        public Dictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
+        public ConcurrentDictionary<uint, BasePage> LocalPages => _localPages;
+        public ConcurrentDictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
         public SnapshotMode Mode => _mode;
 
         public Snapshot(string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
@@ -136,7 +138,7 @@ namespace LiteDB
             _readVersion = _wal.CurrentReadVersion;
         }
 
-#region Page Version functions
+        #region Page Version functions
 
         /// <summary>
         /// Get a page for this transaction: try local, wal-index or datafile. Must keep cloned instance of this page in this transaction
@@ -159,7 +161,7 @@ namespace LiteDB
                 _localPages[pageID] = dirty;
 
                 // increment transaction page counter
-                _transPages.PageCount++;
+                Interlocked.Increment(ref _transPages.PageCount);
 
                 return dirty;
             }
@@ -175,7 +177,7 @@ namespace LiteDB
                 _localPages[pageID] = walpage;
 
                 // increment transaction page counter
-                _transPages.PageCount++;
+                Interlocked.Increment(ref _transPages.PageCount);
 
                 return walpage;
             }
@@ -195,7 +197,7 @@ namespace LiteDB
             _localPages[pageID] = diskpage;
 
             // increment transaction page counter
-            _transPages.PageCount++;
+            Interlocked.Increment(ref _transPages.PageCount);
 
             return diskpage;
         }
@@ -212,7 +214,7 @@ namespace LiteDB
                 _localPages[page.PageID] = page;
 
                 // increment transaction page counter
-                _transPages.PageCount++;
+                Interlocked.Increment(ref _transPages.PageCount);
             }
         }
 
@@ -351,9 +353,9 @@ namespace LiteDB
             return this.NewPage<T>();
         }
 
-#endregion
+        #endregion
 
-#region Add Or Remove do empty list
+        #region Add Or Remove do empty list
 
         /// <summary>
         /// Add or Remove a page in a sequence
@@ -499,7 +501,7 @@ namespace LiteDB
             this.AddToFreeList(page, startPage, ref fieldPageID);
         }
 
-#endregion
+        #endregion
 
     }
 }

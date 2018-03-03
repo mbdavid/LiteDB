@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// Get how many pages are involved in this current transaction across all snapshots
         /// </summary>
-        public int PageCount { get; set; } = 0;
+        public int PageCount = 0;
 
         /// <summary>
         /// Handle created pages during transaction (for rollback) - Is a list because order is important

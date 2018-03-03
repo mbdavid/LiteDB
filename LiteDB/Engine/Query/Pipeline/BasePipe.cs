@@ -23,7 +23,18 @@ namespace LiteDB
         /// <summary>
         /// Abstract method to be implement according pipe workflow
         /// </summary>
-        public abstract IEnumerable<BsonValue> Pipe(IEnumerable<BsonDocument> source, QueryPlan query);
+        public abstract IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
+
+        // load documents from disk or make a "fake" document using key only (useful for COUNT/EXISTS)
+        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool keyOnly, string name)
+        {
+            foreach (var node in nodes)
+            {
+                yield return keyOnly ?
+                    new BsonDocument { [name] = node.Key } :
+                    _loader.Load(node.DataBlock);
+            }
+        }
 
         /// <summary>
         /// Pipe: Do include in result document according path expression
@@ -117,7 +128,22 @@ namespace LiteDB
         /// </summary>
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
-            IEnumerable<BsonDocument> DoOrderBy(LiteTransaction transaction, Snapshot snapshot)
+            // using tempdb for store sort data
+            var transaction = _engine.TempDB.BeginTrans();
+            var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false);
+
+            // keep transaction/snapshot outside from "using" because return IEnumerable and will run much later than using
+            try
+            {
+                return DoOrderBy();
+            }
+            catch
+            {
+                transaction.Dispose();
+                throw;
+            }
+
+            IEnumerable<BsonDocument> DoOrderBy()
             {
                 var indexer = new IndexService(snapshot);
 
@@ -168,8 +194,7 @@ namespace LiteDB
                         // if memory pages excedded limit size, flush to temp disk
 
                         //TODO must have safepoint - but not working here for now
-                        // transaction.Safepoint();
-
+                        transaction.Safepoint();
                     }
                 }
 
@@ -186,17 +211,11 @@ namespace LiteDB
                     }
 
                     yield return doc;
-                }
-            }
 
-            // using tempdb for store sort data
-            using (var transaction = _engine.TempDB.BeginTrans())
-            {
-                // open read transaction because i dont want save in disk (only in wal if exceed memory usage)
-                return transaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false, snapshot =>
-                {
-                    return DoOrderBy(transaction, snapshot);
-                });
+                    transaction.Safepoint();
+                }
+
+                transaction.Dispose();
             }
         }
     }
