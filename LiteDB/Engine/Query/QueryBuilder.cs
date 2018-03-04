@@ -21,10 +21,23 @@ namespace LiteDB
         {
         }
 
+        /// <summary>
+        /// Initalize QueryBuilder with a database collection
+        /// </summary>
         public QueryBuilder(string collection, LiteEngine engine)
         {
             _collection = collection;
             _engine = engine;
+        }
+
+        /// <summary>
+        /// Initialize QueryBuilder using an virtual collection
+        /// </summary>
+        public QueryBuilder(string collection, LiteEngine engine, IEnumerable<BsonDocument> source)
+            : this(collection, engine)
+        {
+            _query.IsVirtual = true;
+            _query.Index = new IndexVirtual(source);
         }
 
         /// <summary>

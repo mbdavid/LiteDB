@@ -49,10 +49,8 @@ namespace LiteDB
         /// </summary>
         private void TryMergeOrExpression()
         {
-
-
+            //TODO implement TryMergeOrExpression optimization
         }
-
 
         #endregion
 

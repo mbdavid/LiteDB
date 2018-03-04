@@ -7,6 +7,14 @@ namespace LiteDB
     public partial class LiteEngine
     {
         /// <summary>
+        /// Returns all collection inside datafile
+        /// </summary>
+        public IEnumerable<string> GetCollectionNames()
+        {
+            return _header.Collections.Keys.AsEnumerable();
+        }
+
+        /// <summary>
         /// Drop collection including all documents, indexes and extended pages
         /// </summary>
         public bool DropCollection(string collection)

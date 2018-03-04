@@ -32,10 +32,18 @@ namespace LiteDB
             {
                 var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false);
 
+                // if virtual collection, create a virtual collection page
+                if (_query.IsVirtual)
+                {
+                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
+                }
+
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
-                var loader = new DocumentLoader(data, _engine.BsonReader);
+                var loader = _query.IsVirtual ?
+                    (IDocumentLoader)_query.Index :
+                    new DocumentLoader(data, _engine.BsonReader);
 
                 // no collection, no documents
                 if (col == null) yield break;

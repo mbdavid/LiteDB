@@ -34,7 +34,7 @@ namespace LiteDB
             // pipe: orderby using groupy expression
             if (query.RunOrderByOverGroupBy)
             {
-                source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue);
+                source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue, query.OrderBy == null);
             }
 
             // do includes in result before filter
@@ -57,7 +57,7 @@ namespace LiteDB
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit);
+                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit, true);
             }
             else
             {

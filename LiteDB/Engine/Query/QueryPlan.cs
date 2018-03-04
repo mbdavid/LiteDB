@@ -91,6 +91,11 @@ namespace LiteDB
         /// </summary>
         public long IndexCost { get; internal set; } = 0; // not calculated
 
+        /// <summary>
+        /// Get this this plan run over an virtual collection
+        /// </summary>
+        public bool IsVirtual { get; set; } = false;
+
         #region Explain Plan
 
         /// <summary>

@@ -145,10 +145,10 @@ namespace LiteDB
         /// <summary>
         /// Pipe: OrderBy documents according orderby expression/order
         /// </summary>
-        protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
+        protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit, bool dispose)
         {
             // using tempdb for store sort data
-            var transaction = _engine.TempDB.BeginTrans();
+            var transaction = _engine.TempDB.GetTransaction(out var isNew);
             var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false);
 
             // keep transaction/snapshot outside from "using" because return IEnumerable and will run much later than using
@@ -211,8 +211,6 @@ namespace LiteDB
                         }
 
                         // if memory pages excedded limit size, flush to temp disk
-
-                        //TODO must have safepoint - but not working here for now
                         transaction.Safepoint();
                     }
                 }
@@ -234,7 +232,10 @@ namespace LiteDB
                     transaction.Safepoint();
                 }
 
-                transaction.Dispose();
+                if (dispose)
+                {
+                    transaction.Dispose();
+                }
             }
         }
     }

@@ -14,6 +14,12 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(collection)) throw new ArgumentNullException(nameof(collection));
 
+            // test if is an virtual collection
+            if (collection.StartsWith("$") && _virtualCollections.TryGetValue(collection, out var factory))
+            {
+                return new QueryBuilder(collection, this, factory());
+            }
+
             return new QueryBuilder(collection, this);
         }
     }

@@ -50,6 +50,7 @@ namespace LiteDB.Demo
                 //
                 //var r0 = db.Query("col1").ToList();
                 //Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r0), true));
+
                 db.Insert("endereco", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["rua"] = "Ipiranga" } }, BsonAutoId.ObjectId);
                 db.Insert("endereco", new BsonDocument[] { new BsonDocument { ["_id"] = 2, ["rua"] = "Protasio" } }, BsonAutoId.ObjectId);
 
@@ -57,8 +58,13 @@ namespace LiteDB.Demo
                 db.Insert("cliente", new BsonDocument[] { new BsonDocument { ["_id"] = 2, ["nome"] = "Carlos", ["endereco"] = BsonValue.DbRef(1, "endereco") } }, BsonAutoId.ObjectId);
                 db.Insert("cliente", new BsonDocument[] { new BsonDocument { ["_id"] = 3, ["nome"] = "Maria", ["endereco"] = BsonValue.DbRef(3, "endereco") } }, BsonAutoId.ObjectId);
 
-                var r = db.Query("cliente")
-                    .Include("endereco")
+                //db.Checkpoint();
+
+                var r = db.Query("$dump")
+                    //.Where("pageID = 0")
+                    .GroupBy("pageType")
+                    .Select("{pageType,tot: COUNT($)}")
+                    .OrderBy("tot", -1)
                     .ToList();
 
                 Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r), true));
