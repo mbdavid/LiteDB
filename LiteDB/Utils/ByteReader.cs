@@ -129,7 +129,12 @@ namespace LiteDB
 
         public DateTime ReadDateTime()
         {
-            return new DateTime(this.ReadInt64(), DateTimeKind.Utc);
+            // fix #921 converting index key into LocalTime
+            // this is not best solution because uctDate must be a global parameter
+            // this will be review in v5
+            var date = new DateTime(this.ReadInt64(), DateTimeKind.Utc);
+
+            return date.ToLocalTime();
         }
 
         public Guid ReadGuid()
