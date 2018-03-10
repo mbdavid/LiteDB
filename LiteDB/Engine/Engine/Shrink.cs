@@ -65,6 +65,8 @@ namespace LiteDB
                 }
 
                 // create/destroy crypto class
+                if (_crypto != null) _crypto.Dispose();
+
                 _crypto = password == null ? null : new AesEncryption(password, header.Salt);
 
                 // initialize all services again (crypto can be changed)

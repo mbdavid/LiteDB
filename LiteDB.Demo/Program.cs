@@ -1,90 +1,130 @@
-﻿using LiteDB;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using LiteDB;
 
-namespace LiteDB.Demo
+namespace litedb_test
 {
-    class Program
+    /// <summary>
+    /// Test record from desktop app
+    /// </summary>
+
+    public class UnreadNotificationRecord
     {
-        static void Main(string[] args)
+        public enum NotificationTypeEnum
         {
-            var timer = new Stopwatch();
-            ITest test = new LiteDB_Paging();
-            //ITest test = new SQLite_Paging();
-
-            Console.WriteLine("Testing: {0}", test.GetType().Name);
-
-            test.Init();
-
-            Console.WriteLine("Populating 100.000 documents...");
-
-            timer.Start();
-            test.Populate(ReadDocuments());
-            timer.Stop();
-
-            Console.WriteLine("Done in {0}ms", timer.ElapsedMilliseconds);
-
-            timer.Restart();
-            var counter = test.Count();
-            timer.Stop();
-            
-            Console.WriteLine("Result query counter: {0} ({1}ms)", counter, timer.ElapsedMilliseconds);
-            
-            var input = "0";
-            
-            while (input != "")
-            {
-                var skip = Convert.ToInt32(input);
-                var limit = 10;
-            
-                timer.Restart();
-                var result = test.Fetch(skip, limit);
-                timer.Stop();
-            
-                foreach(var doc in result)
-                {
-                    Console.WriteLine(
-                        doc["_id"].AsString.PadRight(6) + " - " +
-                        doc["name"].AsString.PadRight(30) + "  -> " +
-                        doc["age"].AsInt32);
-                }
-            
-                Console.Write("\n({0}ms) => Enter skip index: ", timer.ElapsedMilliseconds);
-                input = Console.ReadLine();
-            }
-            
-            Console.WriteLine("End");
-            Console.ReadKey();
+            Info,
+            Error
         }
 
-        static IEnumerable<BsonDocument> ReadDocuments()
+        [BsonId]
+        public int Id { get; set; }
+
+        public Guid UserId { get; set; }
+
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public NotificationTypeEnum NotificationType { get; set; }
+
+        public DateTime When { get; set; }
+    }
+
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+
+    internal class Program1
+    {
+
+        /// <summary>
+        /// Defines the entry point of the application.
+        /// </summary>
+        /// <param name="args">The args.</param>
+        [STAThread]
+        static void Main0(string[] args)
         {
-            using (var s = File.OpenRead(@"datagen.txt"))
+            /*
+             * Important!: 
+             * `connectionString`
+             * has to be path to **NON-SSD** drive
+             */
+
+            const string connectionString = "d://generated.litedb";
+
+            //Some GUID keys to share across all processes
+            Guid[] sharedGuids = {
+                Guid.Parse("B9321547-D4BE-461F-B7F9-2E2600839428"),
+                Guid.Parse("1F0689E8-121A-414D-80D1-2A54B516A6AC")
+            };
+
+            // main start point
+            if (args.Length == 0)
             {
-                var r = new StreamReader(s);
+                File.Delete(connectionString);
 
-                while(!r.EndOfStream)
+                const int processCount = 15;
+
+                Console.WriteLine($"Spawning {processCount} child processes");
+
+                for (int i = 0; i < processCount; i++)
+                    Process.Start(Process.GetCurrentProcess().MainModule.FileName, $"child_{i}");
+
+                return;
+            }
+
+            var procId = args[0];
+
+            Console.WriteLine($"Running as `{procId}`");
+
+            try
+            {
+                using (var database = new LiteDatabase(connectionString))
                 {
-                    var line = r.ReadLine();
 
-                    if (!string.IsNullOrEmpty(line))
+                    database.Shrink();
+
+                    var collection = database.GetCollection<UnreadNotificationRecord>();
+                    collection.EnsureIndex(x => x.UserId);
+
+                    for (int i = 0; i < 50; i++)
                     {
-                        var row = line.Split(',');
+                        var random = new Random();
 
-                        yield return new BsonDocument
+                        var record = new UnreadNotificationRecord
                         {
-                            ["_id"] = Convert.ToInt32(row[0]),
-                            ["name"] = row[1],
-                            ["age"] = Convert.ToInt32(row[2])
+                            UserId = sharedGuids[random.Next() % sharedGuids.Length],
                         };
+
+                        Console.WriteLine($"Item[{i}]: {procId}");
+
+                        //Every 2nd iteration run some query that actually has to yield some results
+
+                        if (i % 2 == 0)
+                            collection.
+                                Find(Query.EQ(nameof(UnreadNotificationRecord.UserId), sharedGuids[random.Next() % sharedGuids.Length])).
+                                ToArray();
+
+                        //Every iteration insert new record
+
+                        collection.Insert(record);
                     }
+
+                    Console.WriteLine($"{procId} process finished");
+
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.ReadKey();
             }
         }
     }
+
+
 }

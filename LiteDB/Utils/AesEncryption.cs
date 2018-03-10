@@ -17,13 +17,12 @@ namespace LiteDB
             _aes = Aes.Create();
             _aes.Padding = PaddingMode.Zeros;
 
+            var pdb = new Rfc2898DeriveBytes(password, salt);
+
+            using (pdb as IDisposable)
             {
-                var pdb = new Rfc2898DeriveBytes(password, salt);
-                using (pdb as IDisposable)
-                {
-                    _aes.Key = pdb.GetBytes(32);
-                    _aes.IV = pdb.GetBytes(16);
-                }
+                _aes.Key = pdb.GetBytes(32);
+                _aes.IV = pdb.GetBytes(16);
             }
         }
 

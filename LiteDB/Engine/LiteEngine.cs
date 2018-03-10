@@ -261,6 +261,9 @@ namespace LiteDB
             // write second page as an empty AREA (it's not a page) just to use as lock control
             stream.Write(new byte[BasePage.PAGE_SIZE], 0, BasePage.PAGE_SIZE);
 
+            // create crypto class if has password
+            var crypto = password != null ? new AesEncryption(password, header.Salt) : null;
+
             // if initial size is defined, lets create empty pages in a linked list
             if (emptyPages > 0)
             {
@@ -276,9 +279,18 @@ namespace LiteDB
                         NextPageID = pageID == emptyPages + 1 ? uint.MaxValue : pageID + 1
                     };
 
-                    stream.Write(empty.WritePage(), 0, BasePage.PAGE_SIZE);
+                    var bytes = empty.WritePage();
+
+                    if (password != null)
+                    {
+                        bytes = crypto.Encrypt(bytes);
+                    }
+
+                    stream.Write(bytes, 0, BasePage.PAGE_SIZE);
                 }
             }
+
+            if (crypto != null) crypto.Dispose();
         }
     }
 }

@@ -209,7 +209,7 @@ namespace LiteDB
         /// </summary>
         public long Shrink()
         {
-            return this.Shrink(_connectionString == null ? null : _connectionString.Password);
+            return this.Shrink(_connectionString?.Password);
         }
 
         /// <summary>
