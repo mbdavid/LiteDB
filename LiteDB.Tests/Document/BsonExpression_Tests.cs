@@ -18,8 +18,8 @@ namespace LiteDB.Tests.Document
     /// "{" new document to be used in next tests (support many)
     /// ">" indicate new expression to test (execute over each input document)
     /// ">>" indicate new expression to test in aggregate mode (execute over all input document)
-    /// "~" expect expression formatted
-    /// "-" expect used fields (comma separated)
+    /// "~" expect expression formatted (Source)
+    /// "-" expect used fields (comma separated) (Fields)
     /// "@" expect parameter value  
     /// "=" expect result (support multilines per test)
     /// </summary>

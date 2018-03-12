@@ -369,7 +369,7 @@ namespace LiteDB
                 var key = pair.First;
                 var value = pair.Second;
 
-                doc[key.AsString] = value;
+                doc[key.AsString] = value ?? BsonValue.Null;
             }
 
             yield return doc;
