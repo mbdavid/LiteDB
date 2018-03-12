@@ -369,10 +369,7 @@ namespace LiteDB
                 var key = pair.First;
                 var value = pair.Second;
 
-                if (value != null)
-                {
-                    doc[key.AsString] = value;
-                }
+                doc[key.AsString] = value;
             }
 
             yield return doc;

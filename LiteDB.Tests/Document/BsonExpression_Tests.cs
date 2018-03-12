@@ -19,6 +19,7 @@ namespace LiteDB.Tests.Document
     /// ">" indicate new expression to test (execute over each input document)
     /// ">>" indicate new expression to test in aggregate mode (execute over all input document)
     /// "~" expect expression formatted
+    /// "-" expect used fields (comma separated)
     /// "@" expect parameter value  
     /// "=" expect result (support multilines per test)
     /// </summary>
@@ -56,6 +57,16 @@ namespace LiteDB.Tests.Document
                 if (test.Formatted != null)
                 {
                     Assert.AreEqual(test.Formatted, expr.Source, "Invalid formatted in " + test.Expression + " (" + filename + ")");
+                }
+
+                // test fields
+                if (test.Fields != null)
+                {
+                    var areEquivalent = 
+                        (expr.Fields.Count == test.Fields.Length) && 
+                        !expr.Fields.Except(test.Fields).Any();
+
+                    Assert.IsTrue(areEquivalent, "Invalid Fields");
                 }
 
                 if (test.Results.Count == 0) continue;
@@ -142,6 +153,10 @@ namespace LiteDB.Tests.Document
                     {
                         test.Formatted = s.Scan(@"~\s*([\s\S]*?)\n", 1).Trim();
                     }
+                    else if (s.Match("-")) // expected fields
+                    {
+                        test.Fields = s.Scan(@"-\s*([\s\S]*?)\n", 1).Trim().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
+                    }
                     else if (s.Match(@"\@\w+")) // expected parameter
                     {
                         test.Parameters[s.Scan(@"\@(\w+)\s+", 1)] = JsonSerializer.Deserialize(s.Scan(@"([\s\S]*?)\n", 1).Trim());
@@ -179,6 +194,7 @@ namespace LiteDB.Tests.Document
         public string Expression { get; set; }
         public string Formatted { get; set; }
         public bool Aggregate { get; set; }
+        public string[] Fields { get; set; }
         public List<BsonValue> Results { get; set; } = new List<BsonValue>();
         public BsonDocument Parameters { get; set; } = new BsonDocument();
         public string Comment { get; set; }

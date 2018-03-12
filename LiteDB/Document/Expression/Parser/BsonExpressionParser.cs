@@ -162,6 +162,7 @@ namespace LiteDB
                         IsConstant = left.IsConstant && right.IsConstant,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
                         AggregateCount = left.AggregateCount + right.AggregateCount,
+                        Fields = new HashSet<string>(left.Fields).AddRange(right.Fields),
                         Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
                         Right = right,
@@ -216,6 +217,7 @@ namespace LiteDB
                 IsConstant = true,
                 IsImmutable = true,
                 AggregateCount = 0,
+                Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
             };
@@ -237,6 +239,7 @@ namespace LiteDB
                 IsConstant = true,
                 IsImmutable = true,
                 AggregateCount = 0,
+                Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
             };
@@ -258,6 +261,7 @@ namespace LiteDB
                 IsConstant = true,
                 IsImmutable = true,
                 AggregateCount = 0,
+                Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = boolean.ToString().ToLower()
             };
@@ -278,6 +282,7 @@ namespace LiteDB
                 IsConstant = true,
                 IsImmutable = true,
                 AggregateCount = 0,
+                Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = "null"
             };
@@ -300,6 +305,7 @@ namespace LiteDB
                 IsConstant = true,
                 IsImmutable = true,
                 AggregateCount = 0,
+                Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = JsonSerializer.Serialize(bstr)
             };
@@ -319,6 +325,7 @@ namespace LiteDB
             var isConstant = true;
             var isImmutable = true;
             var aggregateCount = 0;
+            var fields = new HashSet<string>();
 
             source.Append("{");
 
@@ -351,6 +358,7 @@ namespace LiteDB
                 if (value.IsConstant == false) isConstant = false;
 
                 aggregateCount += value.AggregateCount;
+                fields.AddRange(value.Fields);
 
                 // add key and value to parameter list (as an expression)
                 keys.Add(Expression.Constant(new BsonValue(key)));
@@ -379,6 +387,7 @@ namespace LiteDB
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
                 AggregateCount = aggregateCount,
+                Fields = fields,
                 Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
                 Source = source.ToString()
             };
@@ -396,6 +405,7 @@ namespace LiteDB
             var isConstant = true;
             var isImmutable = true;
             var aggregateCount = 0;
+            var fields = new HashSet<string>();
 
             source.Append("[");
 
@@ -409,6 +419,7 @@ namespace LiteDB
                 if (value.IsConstant == false) isConstant = false;
 
                 aggregateCount += value.AggregateCount;
+                fields.AddRange(value.Fields);
 
                 values.Add(value.Expression);
 
@@ -431,6 +442,7 @@ namespace LiteDB
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
                 AggregateCount = aggregateCount,
+                Fields = fields,
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
                 Source = source.ToString()
             };
@@ -451,6 +463,7 @@ namespace LiteDB
                 IsConstant = true,
                 IsImmutable = false,
                 AggregateCount = 0,
+                Fields = new HashSet<string>(),
                 Expression = Expression.Call(_parameterPathMethod, parameters, name),
                 Source = "@" + parameterName
             };
@@ -474,6 +487,7 @@ namespace LiteDB
                 IsConstant = inner.IsConstant,
                 IsImmutable = inner.IsImmutable,
                 AggregateCount = inner.AggregateCount,
+                Fields = inner.Fields,
                 Expression = inner.Expression,
                 Source = "(" + inner.Source + ")"
             };
@@ -491,6 +505,7 @@ namespace LiteDB
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
+            var fields = new HashSet<string>();
 
             source.Append(methodName.ToUpper() + "(");
 
@@ -503,6 +518,9 @@ namespace LiteDB
                     // update isImmutable/isConstant only when came false
                     if (parameter.IsImmutable == false) isImmutable = false;
                     if (parameter.IsConstant == false) isConstant = false;
+
+                    // add fields from each parameters
+                    fields.AddRange(parameter.Fields);
 
                     pars.Add(parameter.Expression);
 
@@ -537,6 +555,7 @@ namespace LiteDB
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
                 AggregateCount = method.GetCustomAttribute<AggregateAttribute>() != null ? 1 : 0,
+                Fields = fields,
                 Expression = Expression.Call(method, pars.ToArray()),
                 Source = source.ToString()
             };
@@ -550,7 +569,7 @@ namespace LiteDB
             //TODO precisa arrumar aqui: não pode aceitar $teste ou @campo (sem ponto)
             var scope = s.Scan(@"([\$\@])\.?", 1);
 
-            // test if stats with $/@
+            // test if starts with $/@
             if (!s.Scan(@"(\[\s*['""]|[\$\w]+)", out var field) && scope.Length == 0) return null;
 
             var source = new StringBuilder();
@@ -581,6 +600,7 @@ namespace LiteDB
                 IsConstant = false,
                 IsImmutable = isImmutable,
                 AggregateCount = 0, //TODO: need check if any array-filter use aggregate fn?
+                Fields = new HashSet<string>(new string[] { field.Length == 0 ? "$" : field }),
                 Expression = expr,
                 Source = source.ToString()
             };
@@ -653,6 +673,7 @@ namespace LiteDB
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
                 AggregateCount = item0.AggregateCount + item1.AggregateCount,
+                Fields = new HashSet<string>(item0.Fields).AddRange(item1.Fields),
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
                 Source = item0.Source + " AND " + item1.Source
             };
@@ -670,6 +691,7 @@ namespace LiteDB
                 IsConstant = left.IsConstant && right.IsConstant,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
                 AggregateCount = left.AggregateCount + right.AggregateCount,
+                Fields = new HashSet<string>(left.Fields).AddRange(right.Fields),
                 Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),
                 Left = left,
                 Right = right,
@@ -738,6 +760,5 @@ namespace LiteDB
 
             return key;
         }
-
     }
 }

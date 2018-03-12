@@ -80,8 +80,22 @@
 
 # Document simplified notation with complex key
 { "a b": 1, c: 2 }
-> { 'a b' }
-~ {"a b":$.["a b"]}
-= { "a b": 1 }
+> { 'a b', z:  null }
+~ {"a b":$.["a b"],z:null}
+= { "a b": 1, z: null }
 > { 'c' }
 = { c: 2 }
+
+# Used fields (root level only)
+{ a: 1, b: 2, c: { x: 1, y: 2 } }
+> a
+- a
+> a+b
+- a, b
+> a + c.x
+- a, c
+> a + COUNT($)
+- a, $
+> { q: $.a + "str", w: UPPER($.b), z: c.x + c.y }
+= { q: "1str", w: null, z: 3 }
+- a, b, c

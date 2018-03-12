@@ -62,6 +62,11 @@ namespace LiteDB
         internal int AggregateCount { get; set; }
 
         /// <summary>
+        /// Fill this hashset with all fields used in root level of document (be used to partial deserialize) - "$" means all fields
+        /// </summary>
+        public HashSet<string> Fields { get; set; }
+
+        /// <summary>
         /// Indicate that expression are binary conditional expression (=, >, ...)
         /// </summary>
         internal bool IsConditional =>
@@ -174,6 +179,7 @@ namespace LiteDB
                 IsConstant = expr.IsConstant,
                 IsImmutable = expr.IsImmutable,
                 AggregateCount = expr.AggregateCount,
+                Fields = expr.Fields,
                 Left = expr.Left,
                 Right = expr.Right,
                 Source = expr.Source,
