@@ -526,7 +526,7 @@ namespace LiteDB
             if (method == null) throw LiteException.SyntaxError(s, "Method " + methodName + " not exist or invalid parameter count");
 
             // test if method are decorated with "Variable" (immutable = false)
-            if (method.GetCustomAttribute<VariableAttribute>() != null)
+            if (method.GetCustomAttribute<VolatileAttribute>() != null)
             {
                 isImmutable = false;
             }

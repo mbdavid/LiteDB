@@ -187,7 +187,7 @@ namespace LiteDB
         /// <summary>
         /// Create a new OBJECTID value
         /// </summary>
-        [Variable]
+        [Volatile]
         public static IEnumerable<BsonValue> OBJECTID()
         {
             yield return ObjectId.NewObjectId();
@@ -226,7 +226,7 @@ namespace LiteDB
         /// <summary>
         /// Create a new GUID value
         /// </summary>
-        [Variable]
+        [Volatile]
         public static IEnumerable<BsonValue> GUID()
         {
             yield return Guid.NewGuid();
@@ -265,7 +265,7 @@ namespace LiteDB
         /// <summary>
         /// Return a new DATETIME (Now)
         /// </summary>
-        [Variable]
+        [Volatile]
         public static IEnumerable<BsonValue> DATETIME()
         {
             yield return DateTime.Now;
@@ -513,7 +513,7 @@ namespace LiteDB
         /// <summary>
         /// Alias to DATETIME()
         /// </summary>
-        [Variable]
+        [Volatile]
         public static IEnumerable<BsonValue> DATE() => DATETIME();
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values) => DATETIME(values);
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME(year, month, day);
