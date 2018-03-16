@@ -23,7 +23,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Write a bson document
+        /// Write a bson document into ByteWriter
         /// </summary>
         public void WriteDocument(ByteWriter writer, BsonDocument doc)
         {
@@ -37,7 +37,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        private void WriteArray(ByteWriter writer, BsonArray array)
+        internal void WriteArray(ByteWriter writer, BsonArray array)
         {
             writer.Write(array.GetBytesCount(false));
 

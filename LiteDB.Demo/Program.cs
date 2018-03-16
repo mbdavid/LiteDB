@@ -16,6 +16,9 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
+            TestChunk.Run();
+
+            /*
             File.Delete(datafile);
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
@@ -72,6 +75,7 @@ namespace LiteDB.Demo
 
 
             }
+            */
 
             Console.WriteLine("End");
             Console.ReadKey();
