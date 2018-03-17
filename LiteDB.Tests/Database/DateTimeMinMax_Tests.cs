@@ -4,7 +4,7 @@ using System.Linq;
 using LiteDB;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDBDateTimeIndexMinMax
+namespace LiteDB.Tests.Database
 {
     #region Model
 
