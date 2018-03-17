@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 
@@ -13,14 +14,17 @@ namespace LiteDB.Tests.Document
             // create same object, but using BsonDocument
             var doc = new BsonDocument();
             doc["_id"] = 123;
+            doc["Address"] = new BsonDocument { ["city"] = "Atlanta", ["state"] = "XY" };
             doc["FirstString"] = "BEGIN this string \" has \" \t and this \f \n\r END";
             doc["CustomerId"] = Guid.NewGuid();
+            doc["Phone"] = new BsonDocument { ["Mobile"] = "999", ["LandLine"] = "777" };
             doc["Date"] = DateTime.Now;
             doc["MyNull"] = null;
             doc["EmptyObj"] = new BsonDocument();
             doc["EmptyString"] = "";
             doc["maxDate"] = DateTime.MaxValue;
             doc["minDate"] = DateTime.MinValue;
+
 
 
             doc["Items"] = new BsonArray();
@@ -34,6 +38,8 @@ namespace LiteDB.Tests.Document
             doc["Items"].AsArray.Add(null);
             doc["Items"].AsArray.Add(true);
             doc["Items"].AsArray.Add(DateTime.Now);
+
+            doc["Last"] = 999;
 
             return doc;
         }
@@ -83,6 +89,36 @@ namespace LiteDB.Tests.Document
             Assert.AreEqual(DateTime.MinValue, utc["min"].AsDateTime);
             Assert.AreEqual(DateTime.MaxValue, utc["max"].AsDateTime);
             Assert.AreEqual(DateTimeKind.Utc, utc["now"].AsDateTime.Kind);
+        }
+
+        [TestMethod]
+        public void Bson_Partial_Deserialize()
+        {
+            var src = this.CreateDoc();
+            var bson = BsonSerializer.Serialize(src);
+
+            // read only _id and string
+            var doc1 = BsonSerializer.Deserialize(bson, false, new HashSet<string>(new string[] { "_id", "FirstString" }));
+
+            Assert.AreEqual(src["_id"].AsInt32, doc1["_id"].AsInt32);
+            Assert.AreEqual(src["FirstString"].AsString, doc1["FirstString"].AsString);
+
+            // read only 2 sub documents
+            var doc2 = BsonSerializer.Deserialize(bson, false, new HashSet<string>(new string[] { "Address", "Date" }));
+
+            Assert.AreEqual(src["Address"].AsDocument.ToString(), doc2["Address"].AsDocument.ToString());
+            Assert.AreEqual(src["Date"].AsDateTime, doc2["Date"].AsDateTime);
+
+            // read only last field
+            var doc3 = BsonSerializer.Deserialize(bson, false, new HashSet<string>(new string[] { "Last" }));
+
+            Assert.AreEqual(src["Last"].AsInt32, doc3["Last"].AsInt32);
+
+            // read all document
+            var doc4 = BsonSerializer.Deserialize(bson, false, new HashSet<string>(new string[] { "$" }));
+
+            Assert.AreEqual(src.ToString(), doc4.ToString());
+
         }
     }
 }

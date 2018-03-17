@@ -55,7 +55,7 @@ namespace LiteDB
             block.Position = new PageAddress(this.PageID, index);
 
             this.ItemCount++;
-            this.FreeBytes -= block.Length;
+            this.FreeBytes -= block.BlockLength;
 
             _dataBlocks.Add(index, block);
         }
@@ -76,7 +76,7 @@ namespace LiteDB
         public void DeleteBlock(DataBlock block)
         {
             this.ItemCount--;
-            this.FreeBytes += block.Length;
+            this.FreeBytes += block.BlockLength;
 
             _dataBlocks.Remove(block.Position.Index);
         }
@@ -99,6 +99,7 @@ namespace LiteDB
                 block.Page = this;
                 block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
                 block.ExtendPageID = reader.ReadUInt32();
+                block.DocumentLength = reader.ReadInt32();
                 var size = reader.ReadUInt16();
                 block.Data = reader.ReadBytes(size);
 
@@ -112,6 +113,7 @@ namespace LiteDB
             {
                 writer.Write(block.Position.Index);
                 writer.Write(block.ExtendPageID);
+                writer.Write(block.DocumentLength);
                 writer.Write((ushort)block.Data.Length);
                 writer.Write(block.Data);
             }

@@ -6,7 +6,8 @@ namespace LiteDB
     {
         public const int DATA_BLOCK_FIXED_SIZE = 2 + // Position.Index (ushort)
                                                  4 + // ExtendedPageID (uint)
-                                                 2; // block.Data.Length (ushort)
+                                                 4 + // DocumentLength (int)
+                                                 2;  // block.Data.Length (ushort)
 
         /// <summary>
         /// Position of this dataBlock inside a page (store only Position.Index)
@@ -17,6 +18,11 @@ namespace LiteDB
         /// If object is bigger than this page - use a ExtendPage (and do not use Data array)
         /// </summary>
         public uint ExtendPageID { get; set; }
+
+        /// <summary>
+        /// Get document length (from Data array or from ExtendPages)
+        /// </summary>
+        public int DocumentLength { get; set; }
 
         /// <summary>
         /// Data of a record - could be empty if is used in ExtedPage
@@ -31,13 +37,13 @@ namespace LiteDB
         /// <summary>
         /// Get length of this dataBlock (persist as ushort 2 bytes)
         /// </summary>
-        public int Length
+        public int BlockLength
         {
             get { return DataBlock.DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
         }
 
         /// <summary>
-        /// Cached document - if null, use Data[]
+        /// Cached document - if null, need read document source (Data[] or ExtendPages)
         /// </summary>
         public BsonDocument CacheDocument { get; set; }
 
@@ -46,6 +52,7 @@ namespace LiteDB
             this.Position = PageAddress.Empty;
             this.ExtendPageID = uint.MaxValue;
             this.Data = new byte[0];
+            this.DocumentLength = 0;
         }
 
         public DataBlock Clone(DataPage page)
@@ -59,7 +66,8 @@ namespace LiteDB
                 Page = page,
                 Position = this.Position,
                 ExtendPageID = this.ExtendPageID,
-                Data = data
+                Data = data,
+                DocumentLength = this.DocumentLength
             };
         }
     }

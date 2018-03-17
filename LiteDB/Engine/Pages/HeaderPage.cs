@@ -203,7 +203,7 @@ namespace LiteDB
             this.CommitCount = reader.ReadUInt32();
             this.CheckpointCounter = reader.ReadUInt32();
 
-            var parameters = new BsonReader(false).ReadDocument(reader);
+            var parameters = BsonReader.ReadDocument(reader);
 
             this.Parameters = new ConcurrentDictionary<string, BsonValue>(parameters.RawValue as Dictionary<string, BsonValue>);
 

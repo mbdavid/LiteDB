@@ -1,4 +1,6 @@
-﻿namespace LiteDB
+﻿using System.Collections.Generic;
+
+namespace LiteDB
 {
     /// <summary>
     /// Implement basic document loader based on data service/bson reader
@@ -7,11 +9,13 @@
     {
         private readonly DataService _data;
         private readonly BsonReader _bsonReader;
+        private readonly HashSet<string> _fields;
 
-        public DocumentLoader(DataService data, BsonReader bsonReader)
+        public DocumentLoader(DataService data, BsonReader bsonReader, HashSet<string> fields)
         {
             _data = data;
             _bsonReader = bsonReader;
+            _fields = fields;
         }
 
         public BsonDocument Load(PageAddress rawId)
@@ -27,7 +31,7 @@
 
             // otherwise, load byte array and deserialize
             var buffer = _data.Read(block);
-            var doc = _bsonReader.Deserialize(buffer);
+            var doc = _bsonReader.Deserialize(buffer, _fields);
             doc.RawId = rawId;
 
             // add document to cache

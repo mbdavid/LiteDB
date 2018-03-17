@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace LiteDB
@@ -24,7 +25,7 @@ namespace LiteDB
             var dataPage = _snapshot.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
-            var block = new DataBlock { Page = dataPage };
+            var block = new DataBlock { Page = dataPage, DocumentLength = data.Length };
 
             // if extend, store all bytes on extended page.
             if (extend)
@@ -65,6 +66,9 @@ namespace LiteDB
             var dataPage = _snapshot.GetPage<DataPage>(blockAddress.PageID);
             var block = dataPage.GetBlock(blockAddress.Index);
             var extend = dataPage.FreeBytes + block.Data.Length - data.Length <= 0;
+
+            // update document length on data block
+            block.DocumentLength = data.Length;
 
             // check if need to extend
             if (extend)
@@ -110,17 +114,28 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read all data from datafile using a pageID as reference. If data is not in DataPage, read from ExtendPage.
+        /// Create Stream with chunck data (from ExtendPages) or from datablock Data
         /// </summary>
-        public byte[] Read(DataBlock block)
+        public ChunkStream Read(DataBlock block)
         {
-            // if there is a extend page, read bytes all bytes from extended pages
-            if (block.ExtendPageID != uint.MaxValue)
-            {
-                return this.ReadExtendData(block.ExtendPageID);
-            }
+            // return new chuckstream based on data source (Data[] or ExtendPage)
+            return new ChunkStream(source(), block.BlockLength);
 
-            return block.Data;
+            // create data source based on byte[] - single Data on DataBlock or multiple pages
+            IEnumerable<byte[]> source()
+            {
+                if (block.ExtendPageID == uint.MaxValue)
+                {
+                    yield return block.Data;
+                }
+                else
+                {
+                    foreach (var extendPage in _snapshot.GetSeqPages<ExtendPage>(block.ExtendPageID))
+                    {
+                        yield return extendPage.GetData();
+                    }
+                }
+            };
         }
 
         /// <summary>
@@ -130,23 +145,6 @@ namespace LiteDB
         {
             var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
             return page.GetBlock(blockAddress.Index);
-        }
-
-        /// <summary>
-        /// Read all data from a extended page with all subsequences pages if exits
-        /// </summary>
-        public byte[] ReadExtendData(uint extendPageID)
-        {
-            // read all extended pages and build byte array
-            using (var buffer = new MemoryStream())
-            {
-                foreach (var extendPage in _snapshot.GetSeqPages<ExtendPage>(extendPageID))
-                {
-                    buffer.Write(extendPage.GetData(), 0, extendPage.ItemCount);
-                }
-
-                return buffer.ToArray();
-            }
         }
 
         /// <summary>

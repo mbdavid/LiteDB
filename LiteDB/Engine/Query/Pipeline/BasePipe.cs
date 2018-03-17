@@ -45,7 +45,9 @@ namespace LiteDB
             string last = null;
             Snapshot snapshot = null;
             IndexService indexer = null;
+            DataService data = null;
             CollectionIndex index = null;
+            IDocumentLoader loader = null;
 
             foreach (var doc in source)
             {
@@ -69,6 +71,11 @@ namespace LiteDB
                         // initialize services
                         snapshot = _transaction.CreateSnapshot(SnapshotMode.Read, last, false);
                         indexer = new IndexService(snapshot);
+                        data = new DataService(snapshot);
+
+                        //TODO: oferecer suporte a include com campos selecionados!!
+                        loader = new DocumentLoader(data, _engine.BsonReader, null);
+
                         index = snapshot.CollectionPage?.PK;
                     }
 
@@ -89,7 +96,7 @@ namespace LiteDB
                         else
                         {
                             // load document based on dataBlock position
-                            var refDoc = _loader.Load(node.DataBlock);
+                            var refDoc = loader.Load(node.DataBlock);
 
                             value.Remove("$id");
                             value.Remove("$ref");

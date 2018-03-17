@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace LiteDB
 {
@@ -16,13 +18,16 @@ namespace LiteDB
             return writer.Serialize(doc);
         }
 
-        public static BsonDocument Deserialize(byte[] bson, bool utcDate = false)
+        /// <summary>
+        /// Deserialize binary data into BsonDocument - can use UtcDate and select custom fields only (null = read all fields)
+        /// </summary>
+        public static BsonDocument Deserialize(byte[] bson, bool utcDate = false, HashSet<string> fields = null)
         {
             if (bson == null || bson.Length == 0) throw new ArgumentNullException(nameof(bson));
 
             var reader = new BsonReader(utcDate);
 
-            return reader.Deserialize(bson);
+            return reader.Deserialize(new MemoryStream(bson), fields);
         }
     }
 }

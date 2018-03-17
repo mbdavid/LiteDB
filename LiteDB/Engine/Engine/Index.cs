@@ -50,9 +50,9 @@ namespace LiteDB
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
                 {
-                    // read binary and deserialize document
+                    // read binary and deserialize document (select only used field)
                     var buffer = data.Read(data.GetBlock(pkNode.DataBlock));
-                    var doc = _bsonReader.Deserialize(buffer).AsDocument;
+                    var doc = _bsonReader.Deserialize(buffer, expression.Fields).AsDocument;
 
                     // get values from expression in document
                     var keys = expression.Execute(doc, true);

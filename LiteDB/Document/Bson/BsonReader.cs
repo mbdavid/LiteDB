@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace LiteDB
 {
     /// <summary>
-    /// Internal class to deserialize a byte[] into a BsonDocument using BSON data format
+    /// Internal class to deserialize a ChunckStream into a BsonDocument using BSON data format
     /// </summary>
     internal class BsonReader
     {
@@ -15,46 +17,66 @@ namespace LiteDB
             _utcDate = utcDate;
         }
 
-        /// <summary>
-        /// Main method - deserialize using ByteReader helper
-        /// </summary>
-        public BsonDocument Deserialize(byte[] bson)
+        public static BsonDocument ReadDocument(ByteReader byteReader)
         {
-            return this.ReadDocument(new ByteReader(bson));
+            throw new NotImplementedException();
+        }
+
+        public static BsonArray ReadArray(ByteReader byteReader)
+        {
+            throw new NotImplementedException();
+        }
+
+        public BsonDocument Deserialize(Stream stream, HashSet<string> fields)
+        {
+            using(var reader = new BinaryReader(stream))
+            {
+                return this.ReadDocument(reader, fields == null ? null : new HashSet<string>(fields));
+            }
         }
 
         /// <summary>
-        /// Read a BsonDocument from reader
+        /// Read a BsonDocument from reader - support select fields ONLY in root level
         /// </summary>
-        public BsonDocument ReadDocument(ByteReader reader)
+        private BsonDocument ReadDocument(BinaryReader reader, HashSet<string> fields = null)
         {
             var length = reader.ReadInt32();
-            var end = reader.Position + length - 5;
-            var obj = new BsonDocument();
+            var end = reader.BaseStream.Position + length - 5;
+            var remaining = fields == null || fields.Contains("$") ? null : new HashSet<string>(fields);
 
-            while (reader.Position < end)
+            var doc = new BsonDocument();
+
+            while (reader.BaseStream.Position < end && (remaining == null || remaining?.Count > 0))
             {
-                var value = this.ReadElement(reader, out string name);
-                obj.RawValue[name] = value;
+                var value = this.ReadElement(reader, remaining, out string name);
+
+                // null value means are not selected field
+                if (value != null)
+                {
+                    doc.RawValue[name] = value;
+
+                    // remove from remaining fields
+                    remaining?.Remove(name);
+                }
             }
 
             reader.ReadByte(); // zero
 
-            return obj;
+            return doc;
         }
 
         /// <summary>
         /// Read an BsonArray from reader
         /// </summary>
-        public BsonArray ReadArray(ByteReader reader)
+        private BsonArray ReadArray(BinaryReader reader)
         {
             var length = reader.ReadInt32();
-            var end = reader.Position + length - 5;
+            var end = reader.BaseStream.Position + length - 5;
             var arr = new BsonArray();
 
-            while (reader.Position < end)
+            while (reader.BaseStream.Position < end)
             {
-                var value = this.ReadElement(reader, out string name);
+                var value = this.ReadElement(reader, null, out string name);
                 arr.Add(value);
             }
 
@@ -64,12 +86,35 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Reads an element (key-value) from an reader
+        /// Reads an element (key-value) from an reader. If remaining != null and name not are in 
         /// </summary>
-        private BsonValue ReadElement(ByteReader reader, out string name)
+        private BsonValue ReadElement(BinaryReader reader, HashSet<string> remaining, out string name)
         {
             var type = reader.ReadByte();
             name = this.ReadCString(reader);
+
+            // check if need skip this element
+            if (remaining != null && !remaining.Contains(name))
+            {
+                // define skip length according type
+                var length =
+                    (type == 0x0A || type == 0xFF || type == 0x7F) ? 0 : // Null, MinValue, MaxValue
+                    (type == 0x08) ? 1 : // Boolean
+                    (type == 0x10) ? 4 : // Int
+                    (type == 0x01 || type == 0x12 || type == 0x09) ? 8 : // Double, Int64, DateTime
+                    (type == 0x07) ? 12 : // ObjectId
+                    (type == 0x13) ? 16 : // Decimal
+                    (type == 0x02) ? reader.ReadInt32() : // String
+                    (type == 0x05) ? reader.ReadInt32() + 1 : // Binary (+1 for subtype)
+                    (type == 0x03 || type == 0x04) ? reader.ReadInt32() - 4 : 0; // Document, Array (-4 to Length + zero)
+
+                if (length > 0)
+                {
+                    reader.BaseStream.Seek(length, SeekOrigin.Current);
+                }
+
+                return null;
+            }
 
             if (type == 0x01) // Double
             {
@@ -147,7 +192,7 @@ namespace LiteDB
             throw new NotSupportedException("BSON type not supported");
         }
 
-        private string ReadString(ByteReader reader)
+        private string ReadString(BinaryReader reader)
         {
             var length = reader.ReadInt32();
             var bytes = reader.ReadBytes(length - 1);
@@ -155,7 +200,7 @@ namespace LiteDB
             return Encoding.UTF8.GetString(bytes, 0, length - 1);
         }
 
-        private string ReadCString(ByteReader reader)
+        private string ReadCString(BinaryReader reader)
         {
             var pos = 0;
             var buffer = new byte[200];
