@@ -244,6 +244,9 @@ namespace LiteDB
                     // encrypt if not header page (exclusive on position 0)
                     //var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
 
+                    //TODO for debug propose
+                    if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new Exception("Não pode ter pagina na WAL sem transação");
+
                     page.WritePage(_writer);
                 }
 

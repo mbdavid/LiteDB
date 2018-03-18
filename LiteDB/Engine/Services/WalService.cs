@@ -95,10 +95,10 @@ namespace LiteDB
         /// <summary>
         /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile
         /// </summary>
-        public void Checkpoint()
+        public bool Checkpoint()
         {
             // if has no confirmed transaction, exit
-            if (_confirmedTransactions.Count == 0) return;
+            if (_confirmedTransactions.Count == 0) return false;
 
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.InUse);
@@ -118,13 +118,16 @@ namespace LiteDB
                 var length = _datafile.Length;
 
                 // if my position are afer datafile, there is no wal
-                if (position >= length) return;
+                if (position >= length) return false;
 
                 while (position < length)
                 {
                     var page = _datafile.ReadPage(position, false);
 
                     position += BasePage.PAGE_SIZE;
+
+                    //TODO debug only - remove for release
+                    if (page.TransactionID == Guid.Empty) throw new Exception("Não pode exitir WAL page sem transaction ID");
 
                     // continue only if page are in confirm transaction list
                     if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
@@ -146,7 +149,7 @@ namespace LiteDB
                 }
 
                 // if has no confim header, no page was override (wal area contains only non confirmed pages)
-                if (lastHeader == null) return;
+                if (lastHeader == null) return false;
 
                 // position writer on end of file
                 _datafile.VirtualPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
@@ -158,6 +161,8 @@ namespace LiteDB
                 _index.Clear();
                 _confirmedTransactions.Clear();
                 _currentReadVersion = 0;
+
+                return true;
             }
             finally
             {

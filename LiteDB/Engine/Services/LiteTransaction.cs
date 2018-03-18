@@ -27,7 +27,7 @@ namespace LiteDB
         // transaction controls
         private Guid _transactionID = Guid.NewGuid();
         private TransactionState _state = TransactionState.New;
-        private ConcurrentDictionary<string, Snapshot> _snapshots = new ConcurrentDictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
 
         // transaction info
@@ -86,6 +86,9 @@ namespace LiteDB
 
             if (_transPages.PageCount > MAX_PAGES_TRANSACTION)
             {
+                // PersistDirtyPages are valid only during transaction execution
+                if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Safepoint", _state);
+
                 this.PersistDirtyPages();
             }
         }
@@ -95,20 +98,21 @@ namespace LiteDB
         /// </summary>
         public void PersistDirtyPages()
         {
-            // PersistDirtyPages are valid only during transaction execution
-            if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Safepoint", _state);
+            // get all pages, in PageID order to be saved on wal (must be in order to avoid checkpoint read wal as normal page)
+            var pages = _snapshots.Values
+                .SelectMany(x => x.LocalPages.Values)
+                .Where(x => x.IsDirty && x.PageID > 0)
+                .OrderBy(x => x.PageID)
+                .ForEach((i, p) => p.TransactionID = _transactionID)
+                //TODO for debug propose - remove on release
+                .ToArray();
 
+            // write all pages, in sequence on wal-file and store references into wal pages on transPages
+            _datafile.WritePages(pages, false, _transPages.DirtyPagesWal);
+
+            // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
-                // set all dirty pages with my transactionID (do not persist header here)
-                var dirty = snapshot.LocalPages.Values
-                    .Where(x => x.IsDirty && x.PageID > 0)
-                    .ForEach((i, p) => p.TransactionID = _transactionID);
-
-                // write all pages, in sequence on wal-file
-                _datafile.WritePages(dirty, false, snapshot.DirtyPagesWal);
-
-                // clear local pages
                 snapshot.LocalPages.Clear();
             }
 
@@ -155,16 +159,8 @@ namespace LiteDB
                 // update this confirm page with current transactionID
                 confirm.Update(_transactionID, newEmptyPageID, _transPages);
 
-                // create a single list of page position from wal file of this pages
-                var pagePositions = new List<PagePosition>();
-
-                foreach (var snapshot in _snapshots.Values)
-                {
-                    pagePositions.AddRange(snapshot.DirtyPagesWal.Values);
-                }
-
                 // now, write confirm transaction (with header page) and update wal-index
-                _wal.ConfirmTransaction(confirm, pagePositions);
+                _wal.ConfirmTransaction(confirm, _transPages.DirtyPagesWal.Values);
 
                 // update global header page to make equals to confirm page
                 _header.Update(Guid.Empty, newEmptyPageID, _transPages);

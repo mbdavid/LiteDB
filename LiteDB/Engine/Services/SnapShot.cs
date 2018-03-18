@@ -26,13 +26,11 @@ namespace LiteDB
         private CollectionPage _collectionPage;
         private int _readVersion;
 
-        private ConcurrentDictionary<uint, BasePage> _localPages = new ConcurrentDictionary<uint, BasePage>();
-        private ConcurrentDictionary<uint, PagePosition> _dirtyPagesWal = new ConcurrentDictionary<uint, PagePosition>();
+        private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
 
         // expose services
         public int ReadVersion => _readVersion;
-        public ConcurrentDictionary<uint, BasePage> LocalPages => _localPages;
-        public ConcurrentDictionary<uint, PagePosition> DirtyPagesWal => _dirtyPagesWal;
+        public Dictionary<uint, BasePage> LocalPages => _localPages;
         public SnapshotMode Mode => _mode;
 
         public Snapshot(SnapshotMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
@@ -136,10 +134,9 @@ namespace LiteDB
         /// </summary>
         private void Initialize()
         {
-#if DEBUG
-            // for debug propose
+            //TODO debug propose - remove on release
             if (_localPages.Where(x => x.Value.IsDirty).Count() > 0) throw new Exception("Snapshot initialize cann't contains dirty pages");
-#endif
+
             _localPages.Clear();
             _readVersion = _wal.CurrentReadVersion;
         }
@@ -159,7 +156,7 @@ namespace LiteDB
             }
 
             // if not inside local pages, can be a dirty page already saved in wal file
-            if (_dirtyPagesWal.TryGetValue(pageID, out var position))
+            if (_transPages.DirtyPagesWal.TryGetValue(pageID, out var position))
             {
                 var dirty = (T)_datafile.ReadPage(position.Position, _mode == SnapshotMode.Write);
 
@@ -509,5 +506,9 @@ namespace LiteDB
 
         #endregion
 
+        public override string ToString()
+        {
+            return _collectionName + " (pages: " + this.LocalPages.Count + ")";
+        }
     }
 }

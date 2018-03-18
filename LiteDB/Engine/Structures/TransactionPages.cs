@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -13,6 +14,11 @@ namespace LiteDB
         /// Get how many pages are involved in this current transaction across all snapshots
         /// </summary>
         public int PageCount = 0;
+
+        /// <summary>
+        /// Contains all dirty pages already persist in WAL (used in all snapshots)
+        /// </summary>
+        public Dictionary<uint, PagePosition> DirtyPagesWal { get; private set; } = new Dictionary<uint, PagePosition>();
 
         /// <summary>
         /// Handle created pages during transaction (for rollback) - Is a list because order is important

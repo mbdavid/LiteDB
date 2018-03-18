@@ -104,7 +104,6 @@ namespace LiteDB
             {
                 writer.Write(new byte[length]);
             }
-
         }
 
         private void ReadHeader(BinaryReader reader)
@@ -203,6 +202,7 @@ namespace LiteDB
         /// </summary>
         public static BasePage ReadPage(BinaryReader reader, bool utcDate)
         {
+            var start = reader.BaseStream.Position;
             var pageID = reader.ReadUInt32();
             var pageType = (PageType)reader.ReadByte();
 
@@ -215,6 +215,13 @@ namespace LiteDB
 
             page.ReadHeader(reader);
             page.ReadContent(reader, utcDate);
+
+            var length = BasePage.PAGE_SIZE - (reader.BaseStream.Position - start);
+
+            if (length > 0)
+            {
+                reader.ReadBytes((int)length);
+            }
 
             return page;
         }
