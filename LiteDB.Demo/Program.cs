@@ -16,9 +16,8 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            TestChunk.Run();
+            //TestChunk.Run();
 
-            /*
             File.Delete(datafile);
 
             using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
@@ -63,6 +62,11 @@ namespace LiteDB.Demo
 
                 //db.Checkpoint();
 
+                //var r = db.Query("cliente")
+                //    .ToArray();
+                //;
+
+
                 var r = db.Query("$dump")
                     //.Where("pageID = 0")
                     .GroupBy("pageType")
@@ -75,7 +79,6 @@ namespace LiteDB.Demo
 
 
             }
-            */
 
             Console.WriteLine("End");
             Console.ReadKey();

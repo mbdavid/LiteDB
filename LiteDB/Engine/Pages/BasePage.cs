@@ -93,8 +93,18 @@ namespace LiteDB
         /// </summary>
         public void WritePage(BinaryWriter writer)
         {
+            var start = writer.BaseStream.Position;
+
             this.WriteHeader(writer);
             this.WriteContent(writer);
+
+            var length = BasePage.PAGE_SIZE - (writer.BaseStream.Position - start);
+
+            if (length > 0)
+            {
+                writer.Write(new byte[length]);
+            }
+
         }
 
         private void ReadHeader(BinaryReader reader)

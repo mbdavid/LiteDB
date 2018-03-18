@@ -58,12 +58,6 @@ namespace LiteDB.Tests.Document
 
             var result = new KeyValuePair<string, BsonValue>[document.Count()];
             document.CopyTo(result, 0);
-
-            // ASSERT
-            // all BsonValue instances have been added to the array by reference
-
-            //TODO: implement get from another way
-            // Assert.IsTrue(result.All(kv => object.ReferenceEquals(document.Get(kv.Key), kv.Value)));
         }
 
         [TestMethod]

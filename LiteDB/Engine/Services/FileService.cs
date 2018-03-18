@@ -98,7 +98,7 @@ namespace LiteDB
         /// </summary>
         public void SetLength(long length)
         {
-            lock(_writer)
+            lock (_writer)
             {
                 // this queue item will be executed in queue async writer
                 // will be run as a SetLength method on stream
@@ -123,14 +123,12 @@ namespace LiteDB
 
             try
             {
-                // position cursor
-                stream.Position = position;
-
-                var buffer = new byte[BasePage.PAGE_SIZE];
-
                 // if datafile is encrypted and is not first header page
+                //TODO implementar novamente a encryption
                 // var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
                 var reader = new BinaryReader(stream);
+
+                reader.BaseStream.Position = position;
 
                 // read binary data and create page instance page
                 page = BasePage.ReadPage(reader, _utcDate);
