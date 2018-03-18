@@ -11,10 +11,10 @@ namespace LiteDB
         private readonly BsonReader _bsonReader;
         private readonly HashSet<string> _fields;
 
-        public DocumentLoader(DataService data, BsonReader bsonReader, HashSet<string> fields)
+        public DocumentLoader(DataService data, bool utcDate, HashSet<string> fields)
         {
             _data = data;
-            _bsonReader = bsonReader;
+            _bsonReader = new BsonReader(utcDate);
             _fields = fields;
         }
 

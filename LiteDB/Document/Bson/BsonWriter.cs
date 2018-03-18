@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace LiteDB
@@ -10,22 +11,26 @@ namespace LiteDB
     internal class BsonWriter
     {
         /// <summary>
-        /// Main method - serialize document. Uses ByteWriter
+        /// Main method - Serialize document into lazy ChunkStream
         /// </summary>
-        public byte[] Serialize(BsonDocument doc)
+        public ChunkStream Serialize(BsonDocument doc)
         {
-            var count = doc.GetBytesCount(true);
-            var writer = new ByteWriter(count);
+            var length = doc.GetBytesCount(true);
+
+            //TODO: implement lazy serialization - do not use MemoryStream();
+
+            var mem = new MemoryStream();
+            var writer = new BinaryWriter(mem);
 
             this.WriteDocument(writer, doc);
 
-            return writer.Buffer;
+            return new ChunkStream(new List<byte[]> { mem.ToArray() }, length);
         }
 
         /// <summary>
         /// Write a bson document into ByteWriter
         /// </summary>
-        public void WriteDocument(ByteWriter writer, BsonDocument doc)
+        public void WriteDocument(BinaryWriter writer, BsonDocument doc)
         {
             writer.Write(doc.GetBytesCount(false));
 
@@ -37,7 +42,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        internal void WriteArray(ByteWriter writer, BsonArray array)
+        internal void WriteArray(BinaryWriter writer, BsonArray array)
         {
             writer.Write(array.GetBytesCount(false));
 
@@ -49,7 +54,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        private void WriteElement(ByteWriter writer, string key, BsonValue value)
+        private void WriteElement(BinaryWriter writer, string key, BsonValue value)
         {
             // cast RawValue to avoid one if on As<Type>
             switch (value.Type)
@@ -153,7 +158,7 @@ namespace LiteDB
             }
         }
 
-        private void WriteString(ByteWriter writer, string s)
+        private void WriteString(BinaryWriter writer, string s)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
             writer.Write(bytes.Length + 1);
@@ -161,7 +166,7 @@ namespace LiteDB
             writer.Write((byte)0x00);
         }
 
-        private void WriteCString(ByteWriter writer, string s)
+        private void WriteCString(BinaryWriter writer, string s)
         {
             var bytes = Encoding.UTF8.GetBytes(s);
             writer.Write(bytes);

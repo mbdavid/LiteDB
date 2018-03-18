@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace LiteDB
@@ -72,7 +73,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
             _nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
@@ -88,8 +89,7 @@ namespace LiteDB
                 node.Slot = reader.ReadByte();
                 node.PrevNode = reader.ReadPageAddress();
                 node.NextNode = reader.ReadPageAddress();
-                node.KeyLength = reader.ReadUInt16();
-                node.Key = reader.ReadBsonValue(node.KeyLength);
+                node.Key = reader.ReadBsonValue(false);
                 node.DataBlock = reader.ReadPageAddress();
 
                 for (var j = 0; j < node.Prev.Length; j++)
@@ -102,7 +102,7 @@ namespace LiteDB
             }
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(BinaryWriter writer)
         {
             foreach (var node in _nodes.Values)
             {
@@ -111,8 +111,7 @@ namespace LiteDB
                 writer.Write(node.Slot); // index slot
                 writer.Write(node.PrevNode); // prev node list
                 writer.Write(node.NextNode); // next node list
-                writer.Write(node.KeyLength); // valueLength
-                writer.WriteBsonValue(node.Key, node.KeyLength); // value
+                writer.WriteBsonValue(node.Key); // value
                 writer.Write(node.DataBlock); // data block reference
 
                 for (var j = 0; j < node.Prev.Length; j++)

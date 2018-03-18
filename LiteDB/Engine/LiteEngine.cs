@@ -30,7 +30,9 @@ namespace LiteDB
 
         private BsonReader _bsonReader;
 
-        private BsonWriter _bsonWriter = new BsonWriter();
+        private BsonWriter _bsonWriter;
+
+        private bool _utcDate;
 
         #region TempDB
 
@@ -63,14 +65,14 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Expose internal current BsonReader instance
-        /// </summary>
-        internal BsonReader BsonReader => _bsonReader;
-
-        /// <summary>
         /// Get log instance for debug operations
         /// </summary>
-        public Logger Log { get { return _log; } }
+        public Logger Log => _log;
+
+        /// <summary>
+        /// Get if BSON must read date as UTC (if false, date will be used LOCAL date)
+        /// </summary>
+        public bool UtcDate => _utcDate;
 
         #endregion
 
@@ -102,14 +104,18 @@ namespace LiteDB
                 // create factory based on connection string if there is no factory
                 _log = options.Log ?? new Logger(options.LogLevel);
 
+                // get utc date handler
+                _utcDate = options.UtcDate;
+
                 _bsonReader = new BsonReader(options.UtcDate);
+                _bsonWriter = new BsonWriter();
 
                 _locker = new LockService(options.Timeout, _log);
 
                 // open datafile (crete new if stream are empty)
                 var factory = options.GetDiskFactory();
 
-                _datafile = new FileService(factory, options.Password, options.Timeout, options.InitialSize, options.LimitSize, _log);
+                _datafile = new FileService(factory, options.Password, options.Timeout, options.InitialSize, options.LimitSize, _utcDate, _log);
 
                 // initialize wal file
                 _wal = new WalService(_locker, _datafile, _log);

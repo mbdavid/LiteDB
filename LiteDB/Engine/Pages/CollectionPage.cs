@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -90,13 +91,13 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
             this.CollectionName = reader.ReadString();
             this.DocumentCount = reader.ReadInt64();
             this.FreeDataPageID = reader.ReadUInt32();
             this.Sequence = reader.ReadInt64();
-            this.CreationTime = reader.ReadDateTime();
+            this.CreationTime = reader.ReadDateTime(true);
 
             foreach (var index in _indexes)
             {
@@ -113,7 +114,7 @@ namespace LiteDB
             }
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(BinaryWriter writer)
         {
             writer.Write(this.CollectionName);
             writer.Write(this.DocumentCount);

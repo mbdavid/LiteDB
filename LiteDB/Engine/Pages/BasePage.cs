@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace LiteDB
 {
@@ -90,17 +91,13 @@ namespace LiteDB
         /// <summary>
         /// Write a page to byte array
         /// </summary>
-        public byte[] WritePage()
+        public void WritePage(BinaryWriter writer)
         {
-            var writer = new ByteWriter(BasePage.PAGE_SIZE);
-
             this.WriteHeader(writer);
             this.WriteContent(writer);
-
-            return writer.Buffer;
         }
 
-        private void ReadHeader(ByteReader reader)
+        private void ReadHeader(BinaryReader reader)
         {
             // first 5 bytes (pageID + pageType) was read before class create
             // this.PageID
@@ -112,10 +109,10 @@ namespace LiteDB
             this.FreeBytes = reader.ReadUInt16();
             this.TransactionID = reader.ReadGuid();
 
-            reader.Skip(59); // reserved 59 bytes
+            reader.BaseStream.Seek(59, SeekOrigin.Current); // reserved 59 bytes
         }
 
-        private void WriteHeader(ByteWriter writer)
+        private void WriteHeader(BinaryWriter writer)
         {
             writer.Write(this.PageID);
             writer.Write((byte)this.PageType);
@@ -126,12 +123,12 @@ namespace LiteDB
             writer.Write((UInt16)this.FreeBytes);
             writer.Write(this.TransactionID);
 
-            writer.Skip(59); // reserved 59 bytes
+            writer.BaseStream.Seek(59, SeekOrigin.Current); // reserved 59 bytes
         }
 
-        protected abstract void ReadContent(ByteReader reader);
+        protected abstract void ReadContent(BinaryReader reader, bool utcDate);
 
-        protected abstract void WriteContent(ByteWriter writer);
+        protected abstract void WriteContent(BinaryWriter writer);
 
         #endregion
 
@@ -194,10 +191,8 @@ namespace LiteDB
         /// <summary>
         /// Read a page with correct instance page object. Checks for pageType
         /// </summary>
-        public static BasePage ReadPage(byte[] buffer)
+        public static BasePage ReadPage(BinaryReader reader, bool utcDate)
         {
-            var reader = new ByteReader(buffer);
-
             var pageID = reader.ReadUInt32();
             var pageType = (PageType)reader.ReadByte();
 
@@ -209,7 +204,7 @@ namespace LiteDB
             var page = BasePage.CreateInstance(pageID, pageType);
 
             page.ReadHeader(reader);
-            page.ReadContent(reader);
+            page.ReadContent(reader, utcDate);
 
             return page;
         }

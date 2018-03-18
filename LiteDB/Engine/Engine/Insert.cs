@@ -71,10 +71,10 @@ namespace LiteDB
             }
 
             // serialize object
-            var bytes = _bsonWriter.Serialize(doc);
+            var stream = _bsonWriter.Serialize(doc);
 
             // storage in data pages - returns dataBlock address
-            var dataBlock = data.Insert(col, bytes);
+            var dataBlock = data.Insert(col, stream);
 
             // store id in a PK index [0 array]
             var pk = indexer.AddNode(col.PK, id, null);

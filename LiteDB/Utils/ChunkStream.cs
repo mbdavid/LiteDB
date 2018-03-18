@@ -13,7 +13,7 @@ namespace LiteDB
         private long _length;
         private IEnumerator<byte[]> _source;
 
-        private long _position;
+        private long _position = 0;
         private byte[] _current = new byte[0];
         private int _currentPosition = 0;
         
@@ -72,6 +72,7 @@ namespace LiteDB
 
                 bufferPosition += bytesToCopy;
                 _currentPosition += bytesToCopy;
+                _position += bytesToCopy;
 
                 // request new source array if _current all consumed
                 if (_currentPosition == _current.Length)
@@ -84,6 +85,21 @@ namespace LiteDB
             }
 
             return bufferPosition;
+        }
+
+        public byte[] ToArray()
+        {
+            var buffer = new byte[this.Length];
+
+            do
+            {
+                Buffer.BlockCopy(_source.Current, 0, buffer, (int)_position, _source.Current.Length);
+
+                _position += _source.Current.Length;
+            }
+            while (_source.MoveNext());
+
+            return buffer;
         }
 
         protected override void Dispose(bool disposing)

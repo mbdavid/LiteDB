@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace LiteDB
 {
@@ -50,12 +51,12 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
             _data = reader.ReadBytes(this.ItemCount);
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(BinaryWriter writer)
         {
             writer.Write(_data);
         }

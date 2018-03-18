@@ -25,8 +25,9 @@ namespace LiteDB
         private AesEncryption _crypto = null;
         private Logger _log;
         private CacheService _cache;
+        private bool _utcDate;
 
-        private Stream _writer;
+        private BinaryWriter _writer;
         private long _virtualPosition = 0;
         private long _virtualLength = 0;
 
@@ -34,31 +35,32 @@ namespace LiteDB
         private ConcurrentQueue<Tuple<long, BasePage>> _queue = new ConcurrentQueue<Tuple<long, BasePage>>();
         private Task _async;
 
-        public FileService(IDiskFactory factory, string password, TimeSpan timeout, long initialSize, long sizeLimit, Logger log)
+        public FileService(IDiskFactory factory, string password, TimeSpan timeout, long initialSize, long sizeLimit, bool utcDate, Logger log)
         {
             _factory = factory;
             _timeout = timeout;
             _sizeLimit = sizeLimit;
+            _utcDate = utcDate;
             _log = log;
 
             // initialize cache service
             _cache = new CacheService(_log);
 
             // create writer instance (single writer)
-            _writer = factory.GetStream();
+            _writer = new BinaryWriter(factory.GetStream());
 
             // if stream are empty, create inital database (sync)
-            if (_writer.Length == 0)
+            if (_writer.BaseStream.Length == 0)
             {
                 this.CreateDatabase(password, initialSize);
             }
 
             // update virtual file length with real file length
-            _virtualPosition = _writer.Length;
-            _virtualLength = _writer.Length;
+            _virtualPosition = _writer.BaseStream.Length;
+            _virtualLength = _writer.BaseStream.Length;
 
             // lock datafile if stream are FileStream (single process)
-            if (_writer.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
+            if (_writer.BaseStream.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
 
             // enable encryption
             if (password != null)
@@ -126,14 +128,12 @@ namespace LiteDB
 
                 var buffer = new byte[BasePage.PAGE_SIZE];
 
-                // read bytes from data file
-                stream.Read(buffer, 0, BasePage.PAGE_SIZE);
-
                 // if datafile is encrypted and is not first header page
-                var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
+                // var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
+                var reader = new BinaryReader(stream);
 
-                // convert bytes into page
-                page = BasePage.ReadPage(bytes);
+                // read binary data and create page instance page
+                page = BasePage.ReadPage(reader, _utcDate);
 
                 // add fresh disk page into cache
                 _cache.AddPage(position, page);
@@ -237,18 +237,16 @@ namespace LiteDB
                     if (page == null)
                     {
                         // use position as file length
-                        _writer.SetLength(position);
+                        _writer.BaseStream.SetLength(position);
                         continue;
                     }
 
-                    var buffer = page.WritePage();
+                    _writer.BaseStream.Position = position;
 
                     // encrypt if not header page (exclusive on position 0)
-                    var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
+                    //var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
 
-                    _writer.Position = position;
-
-                    _writer.Write(bytes, 0, BasePage.PAGE_SIZE);
+                    page.WritePage(_writer);
                 }
 
                 // lock writer to clear dirty cache
@@ -307,14 +305,14 @@ namespace LiteDB
             var locker = new EmptyPage(1);
 
             // write initial database pages (sync writes)
-            _writer.Write(header.WritePage(), 0, BasePage.PAGE_SIZE);
-            _writer.Write(locker.WritePage(), 0, BasePage.PAGE_SIZE);
+            header.WritePage(_writer);
+            locker.WritePage(_writer);
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
             {
                 //TODO must implement linked list - this initial will shrink in first checkpoint
-                _writer.SetLength(initialSize);
+                _writer.BaseStream.SetLength(initialSize);
             }
         }
 
@@ -335,7 +333,7 @@ namespace LiteDB
             if (_factory.CloseOnDispose)
             {
                 // first dispose writer
-                _writer.TryUnlock();
+                _writer.BaseStream.TryUnlock();
                 _writer.Dispose();
 
                 // after, dispose all readers

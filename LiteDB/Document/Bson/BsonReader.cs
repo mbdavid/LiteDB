@@ -10,21 +10,11 @@ namespace LiteDB
     /// </summary>
     internal class BsonReader
     {
-        private bool _utcDate = false;
+        private readonly bool _utcDate;
 
         public BsonReader(bool utcDate)
         {
             _utcDate = utcDate;
-        }
-
-        public static BsonDocument ReadDocument(ByteReader byteReader)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static BsonArray ReadArray(ByteReader byteReader)
-        {
-            throw new NotImplementedException();
         }
 
         public BsonDocument Deserialize(Stream stream, HashSet<string> fields)
@@ -38,7 +28,7 @@ namespace LiteDB
         /// <summary>
         /// Read a BsonDocument from reader - support select fields ONLY in root level
         /// </summary>
-        private BsonDocument ReadDocument(BinaryReader reader, HashSet<string> fields = null)
+        public BsonDocument ReadDocument(BinaryReader reader, HashSet<string> fields = null)
         {
             var length = reader.ReadInt32();
             var end = reader.BaseStream.Position + length - 5;
@@ -68,7 +58,7 @@ namespace LiteDB
         /// <summary>
         /// Read an BsonArray from reader
         /// </summary>
-        private BsonArray ReadArray(BinaryReader reader)
+        public BsonArray ReadArray(BinaryReader reader)
         {
             var length = reader.ReadInt32();
             var end = reader.BaseStream.Position + length - 5;
@@ -160,9 +150,9 @@ namespace LiteDB
                 if (ts == 253402300800000) return DateTime.MaxValue;
                 if (ts == -62135596800000) return DateTime.MinValue;
 
-                var date = BsonValue.UnixEpoch.AddMilliseconds(ts);
+                var utc = BsonValue.UnixEpoch.AddMilliseconds(ts);
 
-                return _utcDate ? date : date.ToLocalTime();
+                return _utcDate ? utc : utc.ToLocalTime();
             }
             else if (type == 0x0A) // Null
             {

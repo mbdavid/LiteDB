@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace LiteDB
@@ -88,7 +89,7 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
             _dataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
 
@@ -107,7 +108,7 @@ namespace LiteDB
             }
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(BinaryWriter writer)
         {
             foreach (var block in _dataBlocks.Values)
             {

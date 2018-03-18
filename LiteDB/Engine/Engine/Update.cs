@@ -57,12 +57,12 @@ namespace LiteDB
             
             // if not found document, no updates
             if (pkNode == null) return false;
-            
+
             // serialize document in bytes
-            var bytes = _bsonWriter.Serialize(doc);
+            var stream = _bsonWriter.Serialize(doc);
             
             // update data storage
-            var dataBlock = data.Update(col, pkNode.DataBlock, bytes);
+            var dataBlock = data.Update(col, pkNode.DataBlock, stream);
             
             // get all non-pk index nodes from this data block
             var allNodes = indexer.GetNodeList(pkNode, false).ToArray();

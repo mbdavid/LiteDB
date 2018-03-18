@@ -16,16 +16,16 @@ namespace LiteDB
         /// <summary>
         /// Insert data inside a datapage. Returns dataPageID that indicates the first page
         /// </summary>
-        public DataBlock Insert(CollectionPage col, byte[] data)
+        public DataBlock Insert(CollectionPage col, ChunkStream data)
         {
             // need to extend (data is bigger than 1 page)
             var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
 
             // if extend, just search for a page with BLOCK_SIZE available
-            var dataPage = _snapshot.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            var dataPage = _snapshot.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : (int)data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
-            var block = new DataBlock { Page = dataPage, DocumentLength = data.Length };
+            var block = new DataBlock { Page = dataPage, DocumentLength = (int)data.Length };
 
             // if extend, store all bytes on extended page.
             if (extend)
@@ -36,7 +36,7 @@ namespace LiteDB
             }
             else
             {
-                block.Data = data;
+                block.Data = data.ToArray();
             }
 
             // add dataBlock to this page
@@ -60,7 +60,7 @@ namespace LiteDB
         /// <summary>
         /// Update data inside a datapage. If new data can be used in same datapage, just update. Otherwise, copy content to a new ExtendedPage
         /// </summary>
-        public DataBlock Update(CollectionPage col, PageAddress blockAddress, byte[] data)
+        public DataBlock Update(CollectionPage col, PageAddress blockAddress, ChunkStream data)
         {
             // get datapage and mark as dirty
             var dataPage = _snapshot.GetPage<DataPage>(blockAddress.PageID);
@@ -68,7 +68,7 @@ namespace LiteDB
             var extend = dataPage.FreeBytes + block.Data.Length - data.Length <= 0;
 
             // update document length on data block
-            block.DocumentLength = data.Length;
+            block.DocumentLength = (int)data.Length;
 
             // check if need to extend
             if (extend)
@@ -94,7 +94,7 @@ namespace LiteDB
             else
             {
                 // if no extends, just update data block
-                dataPage.UpdateBlockData(block, data);
+                dataPage.UpdateBlockData(block, data.ToArray());
 
                 // if there was a extended bytes, delete
                 if (block.ExtendPageID != uint.MaxValue)
@@ -193,19 +193,20 @@ namespace LiteDB
         /// <summary>
         /// Store all bytes in one extended page. If data ir bigger than a page, store in more pages and make all in sequence
         /// </summary>
-        public void StoreExtendData(ExtendPage page, byte[] data)
+        public void StoreExtendData(ExtendPage page, ChunkStream data)
         {
-            var offset = 0;
-            var bytesLeft = data.Length;
+            var bytesLeft = (int)data.Length;
+            var buffer = new byte[BasePage.PAGE_AVAILABLE_BYTES];
 
             while (bytesLeft > 0)
             {
                 var bytesToCopy = Math.Min(bytesLeft, BasePage.PAGE_AVAILABLE_BYTES);
 
-                page.SetData(data, offset, bytesToCopy);
+                data.Read(buffer, 0, bytesToCopy);
+
+                page.SetData(buffer, 0, bytesToCopy);
 
                 bytesLeft -= bytesToCopy;
-                offset += bytesToCopy;
 
                 // set extend page as dirty
                 _snapshot.SetDirty(page);

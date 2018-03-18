@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace LiteDB
@@ -183,9 +184,9 @@ namespace LiteDB
 
         #region Read/Write pages
 
-        protected override void ReadContent(ByteReader reader)
+        protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
-            var info = reader.ReadString(HEADER_INFO.Length);
+            var info = reader.ReadString();
             var ver = reader.ReadByte();
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
@@ -194,16 +195,16 @@ namespace LiteDB
             this.Salt = reader.ReadBytes(this.Salt.Length);
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
-            this.CreationTime = reader.ReadDateTime();
-            this.LastCommit = reader.ReadDateTime();
-            this.LastCheckpoint = reader.ReadDateTime();
-            this.LastAnalyze = reader.ReadDateTime();
-            this.LastVaccum = reader.ReadDateTime();
-            this.LastShrink = reader.ReadDateTime();
+            this.CreationTime = reader.ReadDateTime(utcDate);
+            this.LastCommit = reader.ReadDateTime(utcDate);
+            this.LastCheckpoint = reader.ReadDateTime(utcDate);
+            this.LastAnalyze = reader.ReadDateTime(utcDate);
+            this.LastVaccum = reader.ReadDateTime(utcDate);
+            this.LastShrink = reader.ReadDateTime(utcDate);
             this.CommitCount = reader.ReadUInt32();
             this.CheckpointCounter = reader.ReadUInt32();
 
-            var parameters = BsonReader.ReadDocument(reader);
+            var parameters = reader.ReadDocument(utcDate);
 
             this.Parameters = new ConcurrentDictionary<string, BsonValue>(parameters.RawValue as Dictionary<string, BsonValue>);
 
@@ -213,9 +214,9 @@ namespace LiteDB
             }
         }
 
-        protected override void WriteContent(ByteWriter writer)
+        protected override void WriteContent(BinaryWriter writer)
         {
-            writer.Write(HEADER_INFO, HEADER_INFO.Length);
+            writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);
             writer.Write(this.Salt);
             writer.Write(this.FreeEmptyPageID);

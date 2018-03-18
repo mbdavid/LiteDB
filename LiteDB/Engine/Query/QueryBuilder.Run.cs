@@ -43,7 +43,7 @@ namespace LiteDB
                 var indexer = new IndexService(snapshot);
                 var loader = _query.IsVirtual ?
                     (IDocumentLoader)_query.Index :
-                    new DocumentLoader(data, _engine.BsonReader, _query.Select?.Fields);
+                    new DocumentLoader(data, _engine.UtcDate, _query.Select?.Fields);
 
                 // no collection, no documents
                 if (col == null) yield break;

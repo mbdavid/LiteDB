@@ -15,11 +15,11 @@ namespace LiteDB
 
             var writer = new BsonWriter();
 
-            return writer.Serialize(doc);
+            return writer.Serialize(doc).ToArray();
         }
 
         /// <summary>
-        /// Deserialize binary data into BsonDocument - can use UtcDate and select custom fields only (null = read all fields)
+        /// Deserialize binary data into BsonDocument
         /// </summary>
         public static BsonDocument Deserialize(byte[] bson, bool utcDate = false, HashSet<string> fields = null)
         {

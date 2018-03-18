@@ -74,7 +74,7 @@ namespace LiteDB
                         data = new DataService(snapshot);
 
                         //TODO: oferecer suporte a include com campos selecionados!!
-                        loader = new DocumentLoader(data, _engine.BsonReader, null);
+                        loader = new DocumentLoader(data, _engine.UtcDate, null);
 
                         index = snapshot.CollectionPage?.PK;
                     }
