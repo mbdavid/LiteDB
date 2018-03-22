@@ -8,61 +8,35 @@ namespace LiteDB
     /// <summary>
     /// Encryption AES wrapper to encrypt data pages
     /// </summary>
-    internal class AesEncryption
+    internal class AesEncryption : IDisposable
     {
         private Aes _aes;
+        private ICryptoTransform _encryptor;
+        private ICryptoTransform _decryptor;
 
         public AesEncryption(string password, byte[] salt)
         {
             _aes = Aes.Create();
             _aes.Padding = PaddingMode.Zeros;
 
+            using (var pdb = new Rfc2898DeriveBytes(password, salt))
             {
-                var pdb = new Rfc2898DeriveBytes(password, salt);
-                using (pdb as IDisposable)
-                {
-                    _aes.Key = pdb.GetBytes(32);
-                    _aes.IV = pdb.GetBytes(16);
-                }
+                _aes.Key = pdb.GetBytes(32);
+                _aes.IV = pdb.GetBytes(16);
             }
+
+            _encryptor = _aes.CreateEncryptor();
+            _decryptor = _aes.CreateDecryptor();
         }
 
-        /// <summary>
-        /// Encrypt byte array returning new encrypted byte array with same length of original array (PAGE_SIZE)
-        /// </summary>
-        public byte[] Encrypt(byte[] bytes)
+        public Stream CreateEncryptorStream(Stream stream)
         {
-            using (var encryptor = _aes.CreateEncryptor())
-            using (var stream = new MemoryStream())
-            using (var crypto = new CryptoStream(stream, encryptor, CryptoStreamMode.Write))
-            {
-                crypto.Write(bytes, 0, bytes.Length);
-                crypto.FlushFinalBlock();
-                stream.Position = 0;
-                var encrypted = new byte[stream.Length];
-                stream.Read(encrypted, 0, encrypted.Length);
-
-                return encrypted;
-            }
+            return new CryptoStream(stream, _encryptor, CryptoStreamMode.Write);
         }
 
-        /// <summary>
-        /// Decrypt and byte array returning a new byte array
-        /// </summary>
-        public byte[] Decrypt(byte[] encryptedValue)
+        public Stream CreateDecryptorStream(Stream stream)
         {
-            using (var decryptor = _aes.CreateDecryptor())
-            using (var stream = new MemoryStream())
-            using (var crypto = new CryptoStream(stream, decryptor, CryptoStreamMode.Write))
-            {
-                crypto.Write(encryptedValue, 0, encryptedValue.Length);
-                crypto.FlushFinalBlock();
-                stream.Position = 0;
-                var decryptedBytes = new Byte[stream.Length];
-                stream.Read(decryptedBytes, 0, decryptedBytes.Length);
-
-                return decryptedBytes;
-            }
+            return new CryptoStream(stream, _decryptor, CryptoStreamMode.Write);
         }
 
         /// <summary>
@@ -81,15 +55,15 @@ namespace LiteDB
         /// <summary>
         /// Generate a salt key that will be stored inside first page database
         /// </summary>
-        /// <returns></returns>
         public static byte[] Salt(int maxLength = 16)
         {
             var salt = new byte[maxLength];
-            {
-                var rng = RandomNumberGenerator.Create();
-                using (rng as IDisposable)
-                    rng.GetBytes(salt);
+
+            using (var rng = RandomNumberGenerator.Create())
+            { 
+                rng.GetBytes(salt);
             }
+
             return salt;
         }
 
@@ -97,7 +71,9 @@ namespace LiteDB
         {
             if (_aes != null)
             {
-                _aes = null;
+                _aes.Dispose();
+                _encryptor.Dispose();
+                _decryptor.Dispose();
             }
         }
     }

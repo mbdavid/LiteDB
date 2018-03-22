@@ -280,8 +280,7 @@ namespace LiteDB
             }
 
             // do a disk flush
-            //TODO: can I here do a full disk flush (true) ?
-            _writer.Flush();
+            _writer.BaseStream.Flush();
         }
 
         /// <summary>

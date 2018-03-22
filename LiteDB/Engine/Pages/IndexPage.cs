@@ -89,7 +89,7 @@ namespace LiteDB
                 node.Slot = reader.ReadByte();
                 node.PrevNode = reader.ReadPageAddress();
                 node.NextNode = reader.ReadPageAddress();
-                node.Key = reader.ReadBsonValue(false);
+                node.Key = reader.ReadBsonValue(utcDate);
                 node.DataBlock = reader.ReadPageAddress();
 
                 for (var j = 0; j < node.Prev.Length; j++)

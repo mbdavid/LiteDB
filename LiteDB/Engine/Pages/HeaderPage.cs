@@ -103,7 +103,7 @@ namespace LiteDB
         public ConcurrentDictionary<string, uint> Collections { get; set; }
 
         /// <summary>
-        /// Contains all database persisted parameters, like "userVersion", "autoIndex", "utcDate", "checkPoint", "maxMemoryCache"
+        /// Contains all database persisted parameters, like "userVersion", "autoIndex", "checkPoint", "maxMemoryCache"
         /// </summary>
         public ConcurrentDictionary<string, BsonValue> Parameters { get; set; }
 
@@ -192,6 +192,7 @@ namespace LiteDB
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
+            this.Password = reader.ReadBytes(this.Password.Length);
             this.Salt = reader.ReadBytes(this.Salt.Length);
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
@@ -218,6 +219,7 @@ namespace LiteDB
         {
             writer.Write(HEADER_INFO);
             writer.Write(FILE_VERSION);
+            writer.Write(this.Password);
             writer.Write(this.Salt);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);

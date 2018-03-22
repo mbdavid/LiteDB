@@ -66,9 +66,9 @@ namespace LiteDB
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// "async": Use "sync over async" to UWP apps access any directory
+        /// "syncOverAsync": Use "sync over async" to UWP apps access any directory
         /// </summary>
-        public bool Async { get; set; } = false;
+        public bool SyncOverAsync { get; set; } = false;
 
         /// <summary>
         /// "checkpoint": When wal file get this checkpoint limit, write over data disk
@@ -110,7 +110,7 @@ namespace LiteDB
             this.LimitSize = values.GetFileSize("limit size", this.LimitSize);
             this.LogLevel = values.GetValue("log", this.LogLevel);
             this.UtcDate = values.GetValue("utc", this.UtcDate);
-            this.Async = values.GetValue("async", this.Async);
+            this.SyncOverAsync = values.GetValue("syncOverAsync", this.SyncOverAsync);
             this.Checkpoint = values.GetValue("checkpoint", this.Checkpoint);
         }
 
@@ -133,7 +133,7 @@ namespace LiteDB
             }
             else
             {
-                return new FileStreamDiskFactory(this.Filename, this.ReadOnly, this.Async);
+                return new FileStreamDiskFactory(this.Filename, this.ReadOnly, this.SyncOverAsync);
             }
         }
     }
