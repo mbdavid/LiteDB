@@ -17,6 +17,104 @@ namespace LiteDB.Tests.Database
         }
 
         [TestMethod]
+        public void ConnectionString_Passwords()
+        {
+            var parsed = new ConnectionString(@"filename=demo;password=""ab\""|    c;785;""");
+            Assert.AreEqual("demo", parsed.Filename);
+            Assert.AreEqual(@"ab""|    c;785;", parsed.Password);
+
+            var nonParsed = new ConnectionString
+            {
+                Filename = "demo",
+                Password = @"ab""|    c;785;"
+            };
+
+            Assert.AreEqual(parsed.Filename, nonParsed.Filename);
+            Assert.AreEqual(parsed.Password, nonParsed.Password);
+
+            parsed = new ConnectionString(@"filename=demo;password=ab\""123");
+            Assert.AreEqual(@"ab""123", parsed.Password);
+
+
+            parsed = new ConnectionString(@"filename=demo;password=""ab;123"";");
+            Assert.AreEqual(@"ab;123", parsed.Password);
+
+            Assert.ThrowsException<FormatException>(() => new ConnectionString(@"filename=demo;password=ab;123"));
+        }
+
+        [TestMethod]
+        public void ConnectionString_Bools()
+        {
+            var parsed = new ConnectionString("filename=demo.db; jOuRnal  =  FALSE  ; upgrade=True;async =true;");
+            Assert.AreEqual(false, parsed.Journal);
+            Assert.AreEqual(true, parsed.Upgrade);
+            Assert.AreEqual(true, parsed.Async);
+
+            parsed = new ConnectionString("filename=demo.db; journal=true; upgrade=false;async =false");
+            Assert.AreEqual(true, parsed.Journal);
+            Assert.AreEqual(false, parsed.Upgrade);
+            Assert.AreEqual(false, parsed.Async);
+
+            Assert.ThrowsException<FormatException>(() => new ConnectionString("filename=demo.db; journal=string"));
+        }
+
+        [TestMethod]
+        public void ConnectionString_Ints()
+        {
+            var parsed = new ConnectionString("filename=one;cache size = 1234");
+            Assert.AreEqual(1234, parsed.CacheSize);
+            
+            parsed = new ConnectionString(@"filename=one;cache size = ""8"";");
+            Assert.AreEqual(8, parsed.CacheSize);
+            
+            Assert.ThrowsException<FormatException>(() => new ConnectionString("filename=one;cache size = 8s;"));
+        }
+
+        [TestMethod]
+        public void ConnectionString_TimeSpan()
+        {
+            var parsed = new ConnectionString("filename=one;Timeout = 12:34:56");
+            Assert.AreEqual(new TimeSpan(12, 34, 56), parsed.Timeout);
+
+            parsed = new ConnectionString(@"filename=one;Timeout =""12:34:56""");
+            Assert.AreEqual(new TimeSpan(12, 34, 56), parsed.Timeout);
+            
+            Assert.ThrowsException<FormatException>(() => new ConnectionString("filename=one;Timeout = 12:234:56"));
+        }
+
+        [TestMethod]
+        public void ConnectionString_Sizes()
+        {
+            var parsed = new ConnectionString(@"filename=one;initial   size=1234 ;LIMIT size = ""852""");
+            Assert.AreEqual(1234, parsed.InitialSize);
+            Assert.AreEqual(852, parsed.LimitSize);
+
+            parsed = new ConnectionString(@"filename=one;initial   size=1234  mb ;LIMIT size = ""852KB""");
+            Assert.AreEqual(1234 * 1024 * 1024, parsed.InitialSize);
+            Assert.AreEqual(852 * 1024, parsed.LimitSize);
+
+            parsed = new ConnectionString(@"filename=one;initial   size=  8  Gb ;LIMIT size =  ""28 KB""");
+            Assert.AreEqual(8L * 1024 * 1024 * 1024, parsed.InitialSize);
+            Assert.AreEqual(28 * 1024, parsed.LimitSize);
+
+            Assert.ThrowsException<FormatException>(() =>
+                new ConnectionString(@"filename=one;initial   size=1234p ;LIMIT size = ""852"""));
+
+            Assert.ThrowsException<FormatException>(() =>
+                new ConnectionString(@"filename=one;initial   size=1234 ;LIMIT size = ""852]"""));
+        }
+
+        [TestMethod]
+        public void ConnectionString_InvalidSettings()
+        {
+            Assert.ThrowsException<FormatException>(()=> new ConnectionString(@"NoSuchSetting=one"));
+            Assert.ThrowsException<FormatException>(() => new ConnectionString(@"filename=one;nosuchsetting=two"));
+            
+            // need filename
+            Assert.ThrowsException<FormatException>(() => new ConnectionString(@"password=one"));
+        }
+
+        [TestMethod]
         public void ConnectionString_Parser()
         {
             // only filename
