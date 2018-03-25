@@ -73,19 +73,21 @@ namespace LiteDB
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            var b = buffer.Clone() as byte[];
             var streamPos = this.Position;
-            var ret = _stream.Read(buffer, offset, count);
+            var ret = _stream.Read(b, offset, count);
 
-            this.Cipher(buffer, offset, count, streamPos);
+            this.Cipher(b, offset, count, streamPos);
 
             return ret;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            this.Cipher(buffer, offset, count, this.Position);
+            var b = buffer.Clone() as byte[];
+            this.Cipher(b, offset, count, this.Position);
 
-            _stream.Write(buffer, offset, count);
+            _stream.Write(b, offset, count);
         }
 
         protected override void Dispose(bool disposing)

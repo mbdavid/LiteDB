@@ -69,7 +69,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    // otherwise, read header page to 
+                    // otherwise, read header page 
                     this.InitializeDatafile(stream, password);
                 }
 
@@ -77,8 +77,8 @@ namespace LiteDB
                 _virtualPosition = stream.Length;
                 _virtualLength = stream.Length;
 
-                //TODO: lock datafile if stream are FileStream (single process)
-                // if (stream.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
+                // lock datafile to avoid multi-instance
+                if (stream.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
             }
             catch
             {

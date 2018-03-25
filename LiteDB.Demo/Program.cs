@@ -21,8 +21,8 @@ namespace LiteDB.Demo
             var cn = new ConnectionString
             {
                 Filename = datafile,
-                Timeout = TimeSpan.FromSeconds(2),
-                Password = "ops"
+                Timeout = TimeSpan.FromSeconds(2)
+                //,Password = "ops"
             };
 
             File.Delete(datafile);
