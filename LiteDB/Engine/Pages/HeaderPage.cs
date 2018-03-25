@@ -11,41 +11,21 @@ namespace LiteDB
         /// <summary>
         /// Represent maximum bytes that all parameters must store in header page
         /// </summary>
-        public const ushort MAX_PARAMETERS_SIZE = 1000;
+        public const ushort MAX_PARAMETERS_SIZE = 1024;
 
         /// <summary>
         /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
         /// </summary>
         public const ushort MAX_COLLECTIONS_NAME_SIZE = PAGE_SIZE -
             PAGE_HEADER_SIZE -
-            128 - // used in header page
-            172 - // reserved
+            64 - // used in page
+            192 - // reserved (total: 256)
             MAX_PARAMETERS_SIZE;
 
         /// <summary>
         /// Page type = Header
         /// </summary>
         public override PageType PageType { get { return PageType.Header; } }
-
-        /// <summary>
-        /// Header info the validate that datafile is a LiteDB file [27 bytes]
-        /// </summary>
-        private const string HEADER_INFO = "** This is a LiteDB file **";
-
-        /// <summary>
-        /// Datafile specification version [1 byte]
-        /// </summary>
-        private const byte FILE_VERSION = 8;
-
-        /// <summary>
-        /// Hash Password in PBKDF2 [20 bytes]
-        /// </summary>
-        public byte[] Password { get; set; }
-
-        /// <summary>
-        /// When using encryption, store salt for password [16 bytes]
-        /// </summary>
-        public byte[] Salt { get; set; }
 
         /// <summary>
         /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
@@ -116,10 +96,8 @@ namespace LiteDB
         {
             this.ItemCount = 0; // used to store collection names
             this.FreeBytes = 0; // no free bytes on header
-            this.Password = new byte[20];
-            this.Salt = new byte[16];
             this.FreeEmptyPageID = uint.MaxValue;
-            this.LastPageID = 2; // LockPage
+            this.LastPageID = 0;
             this.CreationTime = DateTime.Now;
             this.LastCommit = DateTime.MinValue;
             this.LastCheckpoint = DateTime.MinValue;
@@ -186,14 +164,6 @@ namespace LiteDB
 
         protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
-            var info = reader.ReadString();
-            var ver = reader.ReadByte();
-
-            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
-            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
-
-            this.Password = reader.ReadBytes(this.Password.Length);
-            this.Salt = reader.ReadBytes(this.Salt.Length);
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.CreationTime = reader.ReadDateTime(utcDate);
@@ -217,10 +187,6 @@ namespace LiteDB
 
         protected override void WriteContent(BinaryWriter writer)
         {
-            writer.Write(HEADER_INFO);
-            writer.Write(FILE_VERSION);
-            writer.Write(this.Password);
-            writer.Write(this.Salt);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.CreationTime);
@@ -255,8 +221,6 @@ namespace LiteDB
                 FreeBytes = this.FreeBytes,
                 TransactionID = this.TransactionID,
                 // header page
-                Password = this.Password,
-                Salt = this.Salt,
                 FreeEmptyPageID = this.FreeEmptyPageID,
                 LastPageID = this.LastPageID,
                 CreationTime = this.CreationTime,

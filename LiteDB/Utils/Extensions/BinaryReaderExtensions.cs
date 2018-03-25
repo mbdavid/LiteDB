@@ -6,6 +6,12 @@ namespace LiteDB
 {
     internal static class BinaryReaderExtensions
     {
+        public static string ReadFixedString(this BinaryReader reader, int size)
+        {
+            var bytes = reader.ReadBytes(size);
+            return Encoding.UTF8.GetString(bytes);
+        }
+
         public static Guid ReadGuid(this BinaryReader reader)
         {
             return new Guid(reader.ReadBytes(16));
@@ -26,6 +32,12 @@ namespace LiteDB
         public static PageAddress ReadPageAddress(this BinaryReader reader)
         {
             return new PageAddress(reader.ReadUInt32(), reader.ReadUInt16());
+        }
+
+        public static byte[] ReadBinary(this BinaryReader reader)
+        {
+            var length = reader.ReadUInt16();
+            return reader.ReadBytes(length);
         }
 
         public static BsonDocument ReadDocument(this BinaryReader reader, bool utcDate)
@@ -61,9 +73,7 @@ namespace LiteDB
                 case BsonType.Document: return reader.ReadDocument(utcDate);
                 case BsonType.Array: return reader.ReadArray(utcDate);
 
-                case BsonType.Binary:
-                    var length = reader.ReadUInt16();
-                    return reader.ReadBytes(length);
+                case BsonType.Binary: return reader.ReadBinary();
                 case BsonType.ObjectId: return reader.ReadObjectId();
                 case BsonType.Guid: return reader.ReadGuid();
 

@@ -6,7 +6,8 @@ using System.IO;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement and stream reader for chunk data (IEnumerable of byte array)
+    /// Implement stream reader for chunk data (IEnumerable of byte array as data source)
+    /// Support only Read and Seek (fordward direction)
     /// </summary>
     public class ChunkStream : Stream
     {

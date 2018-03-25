@@ -18,11 +18,22 @@ namespace LiteDB
     /// </summary>
     internal class FileService : IDisposable
     {
-        private ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
+        /// <summary>
+        /// Header info the validate that datafile is a LiteDB file [27 bytes]
+        /// </summary>
+        private const string HEADER_INFO = "** This is a LiteDB file **";
+
+        /// <summary>
+        /// Datafile specification version [1 byte]
+        /// </summary>
+        private const byte FILE_VERSION = 8;
+
+        private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
+        private Func<BinaryReader> _readerFactory;
         private IDiskFactory _factory;
+
         private TimeSpan _timeout;
         private long _sizeLimit;
-        private AesEncryption _crypto = null;
         private Logger _log;
         private CacheService _cache;
         private bool _utcDate;
@@ -46,46 +57,35 @@ namespace LiteDB
             // initialize cache service
             _cache = new CacheService(_log);
 
-            // create writer instance (single writer)
-            _writer = new BinaryWriter(factory.GetStream());
+            // get first stream (will be used as single writer)
+            var stream = factory.GetStream();
 
-            // if stream are empty, create inital database (sync)
-            if (_writer.BaseStream.Length == 0)
+            try
             {
-                this.CreateDatabase(password, initialSize);
+                // if empty datafile, create database here
+                if (stream.Length == 0)
+                {
+                    this.CreateDatafile(stream, password, initialSize);
+                }
+                else
+                {
+                    // otherwise, read header page to 
+                    this.InitializeDatafile(stream, password);
+                }
+
+                // update virtual file length with real file length
+                _virtualPosition = stream.Length;
+                _virtualLength = stream.Length;
+
+                //TODO: lock datafile if stream are FileStream (single process)
+                // if (stream.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
             }
-
-            // update virtual file length with real file length
-            _virtualPosition = _writer.BaseStream.Length;
-            _virtualLength = _writer.BaseStream.Length;
-
-            // lock datafile if stream are FileStream (single process)
-            if (_writer.BaseStream.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
-
-            // enable encryption
-            if (password != null)
+            catch
             {
-                this.EnableEncryption(password);
+                // close stream if any error occurs
+                stream.Dispose();
+                throw;
             }
-        }
-
-        /// <summary>
-        /// Load AES library and encrypt all pages before write on disk (except Header Page - 0). Must run before start using class
-        /// </summary>
-        public void EnableEncryption(string password)
-        {
-            // read header from disk in page 0
-            var header = this.ReadPage(0, false) as HeaderPage;
-
-            // test hash password
-            var hash = AesEncryption.HashPBKDF2(password, header.Salt);
-
-            if (hash.BinaryCompareTo(header.Password) != 0)
-            {
-                throw LiteException.DatabaseWrongPassword();
-            }
-
-            _crypto = new AesEncryption(password, header.Salt);
         }
 
         /// <summary>
@@ -119,15 +119,10 @@ namespace LiteDB
 
             if (page != null) return page;
 
-            var stream = _pool.TryTake(out var s) ? s : _factory.GetStream();
+            var reader = _readerFactory();
 
             try
             {
-                // if datafile is encrypted and is not first header page
-                //TODO implementar novamente a encryption
-                // var bytes = _crypto == null || stream.Position == 0 ? buffer : _crypto.Decrypt(buffer);
-                var reader = new BinaryReader(stream);
-
                 reader.BaseStream.Position = position;
 
                 // read binary data and create page instance page
@@ -141,7 +136,7 @@ namespace LiteDB
             finally
             {
                 // add stream back to pool
-                _pool.Add(stream);
+                _pool.Add(reader);
             }
         }
 
@@ -241,9 +236,6 @@ namespace LiteDB
 
                     _writer.BaseStream.Position = position;
 
-                    // encrypt if not header page (exclusive on position 0)
-                    //var bytes = _crypto == null || position == 0 ? buffer : _crypto.Encrypt(buffer);
-
                     //TODO for debug propose
                     if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new Exception("Não pode ter pagina na WAL sem transação");
 
@@ -284,29 +276,30 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create new database based if Stream are empty
+        /// Create new datafile based in empty Stream
         /// </summary>
-        public void CreateDatabase(string password, long initialSize)
+        private void CreateDatafile(Stream stream, string password, long initialSize)
         {
-            // create a new header page in bytes (fixed in 0)
-            var header = new HeaderPage(0)
-            {
-                Salt = AesEncryption.Salt(),
-                LastPageID = 1 // 0 - Header, 1 - Locker
-            };
+            // create 16 bytes salt to store on end of header page
+            var salt = password == null ? new byte[16] : AesStream.Salt();
+            var hash = password == null ? new byte[20] : AesStream.HashPBKDF2(password, salt);
 
-            // hashing password using PBKDF2
-            if (password != null)
-            {
-                header.Password = AesEncryption.HashPBKDF2(password, header.Salt);
-            }
+            var writer = new BinaryWriter(stream);
 
-            // create empty page just for lock control (fixed in 1)
-            var locker = new EmptyPage(1);
+            // start writing fixed 0 area - plain writer, no encription
+            // use fixed 64 bytes for this (same area size)
+            writer.WriteFixedString(HEADER_INFO);
+            writer.Write(FILE_VERSION);
+            writer.Write(hash);
+            writer.Write(salt);
 
-            // write initial database pages (sync writes)
+            // initialize _writer/reader
+            this.InitializeReaderWriter(stream, password, salt);
+
+            // create a new header page and write on disk (sync)
+            var header = new HeaderPage(0);
+
             header.WritePage(_writer);
-            locker.WritePage(_writer);
 
             // if has initial size (at least 10 pages), alocate disk space now
             if (initialSize > (BasePage.PAGE_SIZE * 10))
@@ -317,6 +310,58 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Read initial header data from header area in header page (info/version/password/salt)
+        /// </summary>
+        private void InitializeDatafile(Stream stream, string password)
+        {
+            var reader = new BinaryReader(stream);
+
+            var info = reader.ReadFixedString(HEADER_INFO.Length);
+            var version = reader.ReadByte();
+
+            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
+            if (version != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(version);
+
+            var hash = reader.ReadBytes(20);
+            var salt = reader.ReadBytes(16);
+
+            // if hash is not empty but password are empty, throw missing password exception
+            if (hash.Any(b => b != 0) && password == null) throw LiteException.DatabaseWrongPassword();
+
+            // checks if password match
+            if (password != null)
+            {
+                var pass = AesStream.HashPBKDF2(password, salt);
+
+                if (hash.BinaryCompareTo(pass) != 0) throw LiteException.DatabaseWrongPassword();
+            }
+
+            // initialize writer/readerFactory
+            this.InitializeReaderWriter(stream, password, salt);
+        }
+
+        /// <summary>
+        /// Initialize _writer and _readerFactory
+        /// </summary>
+        private void InitializeReaderWriter(Stream stream, string password, byte[] salt)
+        {
+            // clear stream position
+            stream.Position = 0;
+
+            _writer = new BinaryWriter(password == null ? stream : new AesStream(stream, password, salt));
+
+            // initialize reader factory
+            _readerFactory = () =>
+            {
+                if (_pool.TryTake(out var r)) return r;
+
+                var st = _factory.GetStream();
+
+                return new BinaryReader(password == null ? st : new AesStream(st, password, salt));
+            };
+        }
+
+        /// <summary>
         /// Dispose all stream in pool and async writer
         /// </summary>
         public void Dispose()
@@ -324,17 +369,10 @@ namespace LiteDB
             // wait async
             this.WaitAsyncWrite();
 
-            // dispose crypto
-            if (_crypto != null)
-            {
-                _crypto.Dispose();
-            }
-
             if (_factory.CloseOnDispose)
             {
                 // first dispose writer
-                _writer.BaseStream.TryUnlock();
-                _writer.Dispose();
+                _writer.BaseStream.Dispose();
 
                 // after, dispose all readers
                 while (_pool.TryTake(out var stream))

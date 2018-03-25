@@ -18,9 +18,16 @@ namespace LiteDB.Demo
         {
             //TestChunk.Run();
 
+            var cn = new ConnectionString
+            {
+                Filename = datafile,
+                Timeout = TimeSpan.FromSeconds(2),
+                Password = "ops"
+            };
+
             File.Delete(datafile);
 
-            using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
+            using (var db = new LiteEngine(cn))
             {
                 //db.Insert("col1", ReadDocuments(1, 10, false, false), BsonAutoId.Int32);
                 //db.EnsureIndex("col1", "age", BsonExpression.Create("age"), false);
@@ -67,9 +74,10 @@ namespace LiteDB.Demo
 
                     t.Commit();
                 }
-                }
-                using (var db = new LiteEngine(new ConnectionString { Filename = datafile, Timeout = TimeSpan.FromSeconds(2) }))
-                {
+            }
+
+            using (var db = new LiteEngine(cn))
+            {
 
                 //db.WaitAsyncWrite();
                 //db.Checkpoint();

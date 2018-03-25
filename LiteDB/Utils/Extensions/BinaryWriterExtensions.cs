@@ -9,10 +9,11 @@ namespace LiteDB
 {
     internal static class BinaryWriterExtensions
     {
-        public static void WriteBinary(this BinaryWriter writer, byte[] buffer)
+        public static void WriteFixedString(this BinaryWriter writer, string text)
         {
-            writer.Write((ushort)buffer.Length);
-            writer.Write(buffer);
+            var bytes = Encoding.UTF8.GetBytes(text);
+
+            writer.Write(bytes);
         }
 
         public static void Write(this BinaryWriter writer, ObjectId oid)
@@ -34,6 +35,12 @@ namespace LiteDB
         {
             writer.Write(address.PageID);
             writer.Write(address.Index);
+        }
+
+        public static void WriteBinary(this BinaryWriter writer, byte[] buffer)
+        {
+            writer.Write((ushort)buffer.Length);
+            writer.Write(buffer);
         }
 
         public static void WriteDocument(this BinaryWriter writer, BsonDocument doc)

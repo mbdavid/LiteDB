@@ -14,19 +14,14 @@ namespace LiteDB
         public const int PAGE_SIZE = 8192;
 
         /// <summary>
-        /// This size is used bytes in header pages 33 bytes (+59 reserved to future use) = 92 bytes
+        /// This size is used bytes in header pages 33 bytes (+31 reserved to future use) = 64 bytes
         /// </summary>
-        public const int PAGE_HEADER_SIZE = 92;
+        public const int PAGE_HEADER_SIZE = 64;
 
         /// <summary>
         /// Bytes available to store data removing page header size - 4071 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
-
-        /// <summary>
-        /// Lock page ID that used to lock file
-        /// </summary>
-        public const uint LOCK_PAGE_ID = 1;
 
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
@@ -95,9 +90,20 @@ namespace LiteDB
         {
             var start = writer.BaseStream.Position;
 
-            this.WriteHeader(writer);
+            // if need write on initial file (position = 0) must skip first header area
+            // becase are locked and contains no valid page data (password/salt info)
+            if (start == 0)
+            {
+                writer.Seek(PAGE_HEADER_SIZE, SeekOrigin.Current);
+            }
+            else
+            {
+                this.WriteHeader(writer);
+            }
+
             this.WriteContent(writer);
 
+            // padding end of page with 0 byte
             var length = BasePage.PAGE_SIZE - (writer.BaseStream.Position - start);
 
             if (length > 0)
@@ -108,17 +114,17 @@ namespace LiteDB
 
         private void ReadHeader(BinaryReader reader)
         {
-            // first 5 bytes (pageID + pageType) was read before class create
-            // this.PageID
-            // this.PageType
+            // first 5 bytes (pageID + pageType) was read before class create by [static ReadPage(long position)]
+            // this.PageID // 4 bytes
+            // this.PageType // 1 byte
 
-            this.PrevPageID = reader.ReadUInt32();
-            this.NextPageID = reader.ReadUInt32();
-            this.ItemCount = reader.ReadUInt16();
-            this.FreeBytes = reader.ReadUInt16();
-            this.TransactionID = reader.ReadGuid();
+            this.PrevPageID = reader.ReadUInt32(); // 4 bytes
+            this.NextPageID = reader.ReadUInt32(); // 4 bytes
+            this.ItemCount = reader.ReadUInt16(); // 2 bytes
+            this.FreeBytes = reader.ReadUInt16(); // 2 bytes
+            this.TransactionID = reader.ReadGuid(); // 16 bytes
 
-            reader.BaseStream.Seek(59, SeekOrigin.Current); // reserved 59 bytes
+            reader.ReadBytes(31); // reserved 31 bytes
         }
 
         private void WriteHeader(BinaryWriter writer)
@@ -132,7 +138,7 @@ namespace LiteDB
             writer.Write((UInt16)this.FreeBytes);
             writer.Write(this.TransactionID);
 
-            writer.BaseStream.Seek(59, SeekOrigin.Current); // reserved 59 bytes
+            writer.Write(new byte[31]);
         }
 
         protected abstract void ReadContent(BinaryReader reader, bool utcDate);
@@ -203,17 +209,27 @@ namespace LiteDB
         public static BasePage ReadPage(BinaryReader reader, bool utcDate)
         {
             var start = reader.BaseStream.Position;
-            var pageID = reader.ReadUInt32();
-            var pageType = (PageType)reader.ReadByte();
-
-            if (pageID == 0 && (byte)pageType > 5)
+            BasePage page;
+            
+            // if are reading from position 0 (initial file) skip header area from header page (first 64 bytes)
+            // this area are locked and have non-valid data (contains hash-password and salt - non encrypted data)
+            if (start == 0)
             {
-                throw LiteException.InvalidDatabase();
+                reader.BaseStream.Seek(PAGE_HEADER_SIZE, SeekOrigin.Current);
+
+                page = new HeaderPage(0);
+            }
+            else
+            {
+                var pageID = reader.ReadUInt32();
+                var pageType = (PageType)reader.ReadByte();
+
+                page = BasePage.CreateInstance(pageID, pageType);
+
+                page.ReadHeader(reader);
             }
 
-            var page = BasePage.CreateInstance(pageID, pageType);
-
-            page.ReadHeader(reader);
+            // read content
             page.ReadContent(reader, utcDate);
 
             var length = BasePage.PAGE_SIZE - (reader.BaseStream.Position - start);

@@ -14,20 +14,9 @@ namespace LiteDB
 
             while (position < length)
             {
-                // skip lock page
-                if (position == BasePage.GetPagePosition(BasePage.LOCK_PAGE_ID))
-                {
-                    // lock page - just print empty page (i cann't read from disk, this page are locked)
-                    yield return this.DumpPage(position, new EmptyPage(BasePage.LOCK_PAGE_ID))
-                        .Extend(new BsonDocument { ["pageType"] = "Locker" });
-                }
-                // all other pages, get from disk/cache
-                else
-                {
-                    var page = _datafile.ReadPage(position, false);
+                var page = _datafile.ReadPage(position, false);
 
-                    yield return this.DumpPage(position, page);
-                }
+                yield return this.DumpPage(position, page);
 
                 position += BasePage.PAGE_SIZE;
             }
