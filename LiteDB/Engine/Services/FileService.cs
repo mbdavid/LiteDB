@@ -286,14 +286,14 @@ namespace LiteDB
 
             var writer = new BinaryWriter(stream);
 
-            // start writing fixed 0 area - plain writer, no encription
-            // use fixed 64 bytes for this (same area size)
-            writer.WriteFixedString(HEADER_INFO);
-            writer.Write(FILE_VERSION);
-            writer.Write(hash);
-            writer.Write(salt);
+            // start writing fixed inital area - plain writer, no encription
+            // use 64 bytes for this (same header area size)
+            writer.WriteFixedString(HEADER_INFO); // 27 bytes
+            writer.Write(FILE_VERSION); // 1 byte
+            writer.Write(hash); // 20 bytes
+            writer.Write(salt); // 16 bytes
 
-            // initialize _writer/reader
+            // initialize reader(factory)/writer(single)
             this.InitializeReaderWriter(stream, password, salt);
 
             // create a new header page and write on disk (sync)
@@ -310,20 +310,20 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read initial header data from header area in header page (info/version/password/salt)
+        /// Read initial datafile area to load first header area (64 bytes) - Info/Version/Password/Salt
         /// </summary>
         private void InitializeDatafile(Stream stream, string password)
         {
             var reader = new BinaryReader(stream);
 
-            var info = reader.ReadFixedString(HEADER_INFO.Length);
-            var version = reader.ReadByte();
+            var info = reader.ReadFixedString(HEADER_INFO.Length); // 27 bytes
+            var version = reader.ReadByte(); // 1 byte
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (version != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(version);
 
-            var hash = reader.ReadBytes(20);
-            var salt = reader.ReadBytes(16);
+            var hash = reader.ReadBytes(20); // 20 bytes
+            var salt = reader.ReadBytes(16); // 16 bytes = Total: 64 bytes
 
             // if hash is not empty but password are empty, throw missing password exception
             if (hash.Any(b => b != 0) && password == null) throw LiteException.DatabaseWrongPassword();
@@ -336,12 +336,12 @@ namespace LiteDB
                 if (hash.BinaryCompareTo(pass) != 0) throw LiteException.DatabaseWrongPassword();
             }
 
-            // initialize writer/readerFactory
+            // initialize reader(factory)/writer(single)
             this.InitializeReaderWriter(stream, password, salt);
         }
 
         /// <summary>
-        /// Initialize _writer and _readerFactory
+        /// Initialize _writer instance and _readerFactory
         /// </summary>
         private void InitializeReaderWriter(Stream stream, string password, byte[] salt)
         {
@@ -353,10 +353,13 @@ namespace LiteDB
             // initialize reader factory
             _readerFactory = () =>
             {
+                // first, try get reader from pool (and remove from pool - will back after use)
                 if (_pool.TryTake(out var r)) return r;
 
+                // use factory to get new stream
                 var st = _factory.GetStream();
 
+                // add encryption layer if needed
                 return new BinaryReader(password == null ? st : new AesStream(st, password, salt));
             };
         }
@@ -368,6 +371,9 @@ namespace LiteDB
         {
             // wait async
             this.WaitAsyncWrite();
+
+            // unlock stream (lock are associate with writer)
+            _writer.BaseStream.TryUnlock();
 
             if (_factory.CloseOnDispose)
             {

@@ -4,7 +4,8 @@ using System.IO;
 namespace LiteDB
 {
     /// <summary>
-    /// Implement a tempoary stream that uses MemoryStream until get LIMIT bytes, then copy all to tempoary disk file and delete on dispose
+    /// Implement a temporary stream that uses MemoryStream until get LIMIT bytes, then copy all to tempoary disk file and delete on dispose
+    /// Can be pass 
     /// </summary>
     public class TempStream : Stream
     {
@@ -12,9 +13,10 @@ namespace LiteDB
         private string _filename = null;
         private long _maxMemoryUsage;
 
-        public TempStream(long maxMemoryUsage = 104857600 /* 100MB */)
+        public TempStream(long maxMemoryUsage = 10485760 /* 10MB */, string filename = null)
         {
             _maxMemoryUsage = maxMemoryUsage;
+            _filename = filename;
         }
 
         /// <summary>
@@ -28,7 +30,7 @@ namespace LiteDB
         public bool InDisk => _stream is FileStream;
 
         /// <summary>
-        /// Get temp disk filename (used only when IsFile is true)
+        /// Get temp disk filename (if null will be generate only when create file)
         /// </summary>
         public string Filename => _filename;
 
@@ -57,12 +59,15 @@ namespace LiteDB
                 origin == SeekOrigin.Current ? _stream.Position + offset :
                 _stream.Position - offset;
 
-            // if offset pass limit, change current _strem from MemoryStrem to FileStream with TempFileName()
-            if (position > _maxMemoryUsage)
+            // when offset pass limit first time, change current _stream from MemoryStrem to FileStream with TempFileName()
+            if (position > _maxMemoryUsage && this.InMemory)
             {
-                _filename = Path.GetTempFileName();
-                var file = new FileStream(_filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE, FileOptions.RandomAccess);
+                // create new filename if not passed on ctor (must be unique
+                _filename = _filename ?? Path.Combine(Path.GetTempPath(), "litedb_" + Guid.NewGuid() + ".db");
 
+                var file = new FileStream(_filename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, BasePage.PAGE_SIZE, FileOptions.RandomAccess);
+
+                // copy data from memory to disk
                 _stream.Position = 0;
                 _stream.CopyTo(file);
 
@@ -83,7 +88,7 @@ namespace LiteDB
             _stream.Dispose();
 
             // if any file was created, let's delete now
-            if (_filename != null)
+            if (this.InDisk)
             {
                 File.Delete(_filename);
             }
