@@ -34,21 +34,25 @@ namespace LiteDB
         /// </summary>
         public static bool SqlLike(this string str, string pattern)
         {
-            bool isMatch = true,
-                isWildCardOn = false,
-                isCharWildCardOn = false,
-                isCharSetOn = false,
-                isNotCharSetOn = false,
-                endOfPattern = false;
-            int lastWildCard = -1;
-            int patternIndex = 0;
-            List<char> set = new List<char>();
-            char p = '\0';
+            //TODO remove ToUpper in SqlLike (must be tested outside)
 
-            for (int i = 0; i < str.Length; i++)
+            var isMatch = true;
+            var isWildCardOn = false;
+            var isCharWildCardOn = false;
+            var isCharSetOn = false;
+            var isNotCharSetOn = false;
+            var endOfPattern = false;
+            var lastWildCard = -1;
+            var patternIndex = 0;
+            var set = new List<char>();
+            var p = '\0';
+
+            for (var i = 0; i < str.Length; i++)
             {
-                char c = str[i];
+                var c = str[i];
+
                 endOfPattern = (patternIndex >= pattern.Length);
+
                 if (!endOfPattern)
                 {
                     p = pattern[patternIndex];
@@ -57,13 +61,20 @@ namespace LiteDB
                     {
                         lastWildCard = patternIndex;
                         isWildCardOn = true;
-                        while (patternIndex < pattern.Length &&
-                            pattern[patternIndex] == '%')
+
+                        while (patternIndex < pattern.Length && pattern[patternIndex] == '%')
                         {
                             patternIndex++;
                         }
-                        if (patternIndex >= pattern.Length) p = '\0';
-                        else p = pattern[patternIndex];
+
+                        if (patternIndex >= pattern.Length)
+                        {
+                            p = '\0';
+                        }
+                        else
+                        {
+                            p = pattern[patternIndex];
+                        }
                     }
                     else if (p == '_')
                     {
@@ -77,30 +88,36 @@ namespace LiteDB
                             isNotCharSetOn = true;
                             patternIndex++;
                         }
-                        else isCharSetOn = true;
+                        else
+                        {
+                            isCharSetOn = true;
+                        }
 
                         set.Clear();
+
                         if (pattern[patternIndex + 1] == '-' && pattern[patternIndex + 3] == ']')
                         {
-                            char start = char.ToUpper(pattern[patternIndex]);
+                            var start = char.ToUpper(pattern[patternIndex]);
                             patternIndex += 2;
-                            char end = char.ToUpper(pattern[patternIndex]);
+                            var end = char.ToUpper(pattern[patternIndex]);
+
                             if (start <= end)
                             {
-                                for (char ci = start; ci <= end; ci++)
+                                for (var ci = start; ci <= end; ci++)
                                 {
                                     set.Add(ci);
                                 }
                             }
+
                             patternIndex++;
                         }
 
-                        while (patternIndex < pattern.Length &&
-                            pattern[patternIndex] != ']')
+                        while (patternIndex < pattern.Length && pattern[patternIndex] != ']')
                         {
                             set.Add(pattern[patternIndex]);
                             patternIndex++;
                         }
+
                         patternIndex++;
                     }
                 }
@@ -119,16 +136,21 @@ namespace LiteDB
                 }
                 else if (isCharSetOn || isNotCharSetOn)
                 {
-                    bool charMatch = (set.Contains(char.ToUpper(c)));
+                    var charMatch = (set.Contains(char.ToUpper(c)));
+
                     if ((isNotCharSetOn && charMatch) || (isCharSetOn && !charMatch))
                     {
-                        if (lastWildCard >= 0) patternIndex = lastWildCard;
+                        if (lastWildCard >= 0)
+                        {
+                            patternIndex = lastWildCard;
+                        }
                         else
                         {
                             isMatch = false;
                             break;
                         }
                     }
+
                     isNotCharSetOn = isCharSetOn = false;
                 }
                 else
@@ -139,7 +161,10 @@ namespace LiteDB
                     }
                     else
                     {
-                        if (lastWildCard >= 0) patternIndex = lastWildCard;
+                        if (lastWildCard >= 0)
+                        {
+                            patternIndex = lastWildCard;
+                        }
                         else
                         {
                             isMatch = false;
@@ -148,12 +173,14 @@ namespace LiteDB
                     }
                 }
             }
+
             endOfPattern = (patternIndex >= pattern.Length);
 
             if (isMatch && !endOfPattern)
             {
-                bool isOnlyWildCards = true;
-                for (int i = patternIndex; i < pattern.Length; i++)
+                var isOnlyWildCards = true;
+
+                for (var i = patternIndex; i < pattern.Length; i++)
                 {
                     if (pattern[i] != '%')
                     {
@@ -161,8 +188,10 @@ namespace LiteDB
                         break;
                     }
                 }
+
                 if (isOnlyWildCards) endOfPattern = true;
             }
+
             return isMatch && endOfPattern;
         }
 
