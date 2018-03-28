@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,8 +30,8 @@ namespace LiteDB
         private const byte FILE_VERSION = 8;
 
         private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
-        private Func<BinaryReader> _readerFactory;
         private IDiskFactory _factory;
+        private Aes _aes;
 
         private TimeSpan _timeout;
         private long _sizeLimit;
@@ -119,7 +120,8 @@ namespace LiteDB
 
             if (page != null) return page;
 
-            var reader = _readerFactory();
+            // try get reader from pool (if not exists, create new stream from factory)
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_aes == null ? _factory.GetStream() : new AesStream(_factory.GetStream(), _aes));
 
             try
             {
@@ -348,20 +350,20 @@ namespace LiteDB
             // clear stream position
             stream.Position = 0;
 
-            _writer = new BinaryWriter(password == null ? stream : new AesStream(stream, password, salt));
-
-            // initialize reader factory
-            _readerFactory = () =>
+            // intialize AES crypto
+            if (password != null)
             {
-                // first, try get reader from pool (and remove from pool - will back after use)
-                if (_pool.TryTake(out var r)) return r;
+                _aes = Aes.Create();
+                _aes.Padding = PaddingMode.Zeros;
 
-                // use factory to get new stream
-                var st = _factory.GetStream();
+                using (var pdb = new Rfc2898DeriveBytes(password, salt))
+                {
+                    _aes.Key = pdb.GetBytes(32);
+                    _aes.IV = pdb.GetBytes(16);
+                }
+            }
 
-                // add encryption layer if needed
-                return new BinaryReader(password == null ? st : new AesStream(st, password, salt));
-            };
+            _writer = new BinaryWriter(password == null ? stream : new AesStream(stream, _aes));
         }
 
         /// <summary>
@@ -381,9 +383,9 @@ namespace LiteDB
                 _writer.BaseStream.Dispose();
 
                 // after, dispose all readers
-                while (_pool.TryTake(out var stream))
+                while (_pool.TryTake(out var reader))
                 {
-                    stream.Dispose();
+                    reader.BaseStream.Dispose();
                 }
             }
         }
