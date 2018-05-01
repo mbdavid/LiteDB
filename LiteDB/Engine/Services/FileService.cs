@@ -19,19 +19,8 @@ namespace LiteDB
     /// </summary>
     internal class FileService : IDisposable
     {
-        /// <summary>
-        /// Header info the validate that datafile is a LiteDB file [27 bytes]
-        /// </summary>
-        private const string HEADER_INFO = "** This is a LiteDB file **";
-
-        /// <summary>
-        /// Datafile specification version [1 byte]
-        /// </summary>
-        private const byte FILE_VERSION = 8;
-
         private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
         private IDiskFactory _factory;
-        private Aes _aes;
 
         private TimeSpan _timeout;
         private long _sizeLimit;
@@ -47,7 +36,7 @@ namespace LiteDB
         private ConcurrentQueue<Tuple<long, BasePage>> _queue = new ConcurrentQueue<Tuple<long, BasePage>>();
         private Task _async;
 
-        public FileService(IDiskFactory factory, string password, TimeSpan timeout, long initialSize, long sizeLimit, bool utcDate, Logger log)
+        public FileService(IDiskFactory factory, TimeSpan timeout, long initialSize, long sizeLimit, bool utcDate, Logger log)
         {
             _factory = factory;
             _timeout = timeout;
@@ -63,23 +52,17 @@ namespace LiteDB
 
             try
             {
+                _writer = new BinaryWriter(stream);
+
                 // if empty datafile, create database here
                 if (stream.Length == 0)
                 {
-                    this.CreateDatafile(stream, password, initialSize);
-                }
-                else
-                {
-                    // otherwise, read header page 
-                    this.InitializeDatafile(stream, password);
+                    this.CreateDatafile(stream, initialSize);
                 }
 
                 // update virtual file length with real file length
                 _virtualPosition = stream.Length;
                 _virtualLength = stream.Length;
-
-                // lock datafile to avoid multi-instance
-                if (stream.TryLock(_timeout) == false) throw LiteException.AlreadyOpenDatafile(factory.Filename);
             }
             catch
             {
@@ -121,7 +104,7 @@ namespace LiteDB
             if (page != null) return page;
 
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_aes == null ? _factory.GetStream() : new AesStream(_factory.GetStream(), _aes));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetStream());
 
             try
             {
@@ -280,30 +263,11 @@ namespace LiteDB
         /// <summary>
         /// Create new datafile based in empty Stream
         /// </summary>
-        private void CreateDatafile(Stream stream, string password, long initialSize)
+        private void CreateDatafile(Stream stream, long initialSize)
         {
-            // create 16 bytes salt to store on end of header page
-            var salt = password == null ? new byte[16] : AesStream.Salt();
-            var hash = password == null ? new byte[20] : AesStream.HashPBKDF2(password, salt);
+            _writer = new BinaryWriter(stream);
 
-            var writer = new BinaryWriter(stream);
-
-            // start writing fixed inital area - plain writer, no encription
-            // use 64 bytes for this (same header area size)
-            writer.WriteFixedString(HEADER_INFO); // 27 bytes
-            writer.Write(FILE_VERSION); // 1 byte
-            writer.Write(hash); // 20 bytes
-            writer.Write(salt); // 16 bytes
-
-            stream.Flush();
-
-            // initialize reader(factory)/writer(single)
-            this.InitializeReaderWriter(stream, password, salt);
-
-            // create a new header page and write on disk (sync)
             var header = new HeaderPage(0);
-
-            header.Parameters["MAURICIO"] = "DAVID";
 
             header.WritePage(_writer);
 
@@ -313,61 +277,6 @@ namespace LiteDB
                 //TODO must implement linked list - this initial will shrink in first checkpoint
                 _writer.BaseStream.SetLength(initialSize);
             }
-        }
-
-        /// <summary>
-        /// Read initial datafile area to load first header area (64 bytes) - Info/Version/Password/Salt
-        /// </summary>
-        private void InitializeDatafile(Stream stream, string password)
-        {
-            var reader = new BinaryReader(stream);
-
-            var info = reader.ReadFixedString(HEADER_INFO.Length); // 27 bytes
-            var version = reader.ReadByte(); // 1 byte
-
-            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
-            if (version != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(version);
-
-            var hash = reader.ReadBytes(20); // 20 bytes
-            var salt = reader.ReadBytes(16); // 16 bytes = Total: 64 bytes
-
-            // if hash is not empty but password are empty, throw missing password exception
-            if (hash.Any(b => b != 0) && password == null) throw LiteException.DatabaseWrongPassword();
-
-            // checks if password match
-            if (password != null)
-            {
-                var pass = AesStream.HashPBKDF2(password, salt);
-
-                if (hash.BinaryCompareTo(pass) != 0) throw LiteException.DatabaseWrongPassword();
-            }
-
-            // initialize reader(factory)/writer(single)
-            this.InitializeReaderWriter(stream, password, salt);
-        }
-
-        /// <summary>
-        /// Initialize _writer instance and _readerFactory
-        /// </summary>
-        private void InitializeReaderWriter(Stream stream, string password, byte[] salt)
-        {
-            // clear stream position
-            stream.Position = 0;
-
-            // intialize AES crypto
-            if (password != null)
-            {
-                _aes = Aes.Create();
-                _aes.Padding = PaddingMode.Zeros;
-
-                using (var pdb = new Rfc2898DeriveBytes(password, salt))
-                {
-                    _aes.Key = pdb.GetBytes(32);
-                    _aes.IV = pdb.GetBytes(16);
-                }
-            }
-
-            _writer = new BinaryWriter(password == null ? stream : new AesStream(stream, _aes));
         }
 
         /// <summary>

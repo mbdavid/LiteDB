@@ -164,10 +164,9 @@ namespace LiteDB
             {
                 // test for array or dictionary (document)
                 var enumerable = value as System.Collections.IEnumerable;
-                var dictionary = value as System.Collections.IDictionary;
 
                 // test first for dictionary (because IDictionary implements IEnumerable)
-                if (dictionary != null)
+                if (value is System.Collections.IDictionary dictionary)
                 {
                     var dict = new Dictionary<string, BsonValue>();
 

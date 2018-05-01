@@ -12,7 +12,6 @@ namespace LiteDB
         /// <summary>
         /// Count all values. Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> COUNT(IEnumerable<BsonValue> values)
         {
             yield return values.Count();
@@ -21,7 +20,6 @@ namespace LiteDB
         /// <summary>
         /// Find minimal value from all values (number values only). Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> MIN(IEnumerable<BsonValue> values)
         {
             var min = BsonValue.MaxValue;
@@ -40,7 +38,6 @@ namespace LiteDB
         /// <summary>
         /// Find max value from all values (number values only). Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> MAX(IEnumerable<BsonValue> values)
         {
             var max = BsonValue.MinValue;
@@ -59,7 +56,6 @@ namespace LiteDB
         /// <summary>
         /// Returns first value from an list of values
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> FIRST(IEnumerable<BsonValue> values)
         {
             yield return values.FirstOrDefault();
@@ -68,7 +64,6 @@ namespace LiteDB
         /// <summary>
         /// Returns last value from an list of values
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> LAST(IEnumerable<BsonValue> values)
         {
             yield return values.LastOrDefault();
@@ -77,7 +72,6 @@ namespace LiteDB
         /// <summary>
         /// Find average value from all values (number values only). Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> AVG(IEnumerable<BsonValue> values)
         {
             var sum = new BsonValue(0);
@@ -98,7 +92,6 @@ namespace LiteDB
         /// <summary>
         /// Sum all values (number values only). Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> SUM(IEnumerable<BsonValue> values)
         {
             var sum = new BsonValue(0);
@@ -115,7 +108,6 @@ namespace LiteDB
         /// Return "true" only if all values are true
         /// ALL($.items[*] > 0)
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> ALL(IEnumerable<BsonValue> values)
         {
             yield return values
@@ -128,7 +120,6 @@ namespace LiteDB
         /// Return "true" if any values are true
         /// ANY($._id = ITEMS([1, 2, 3, 4]))
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> ANY(IEnumerable<BsonValue> values)
         {
             yield return values
@@ -140,7 +131,6 @@ namespace LiteDB
         /// <summary>
         /// Join all values into a single string with ',' separator. Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values)
         {
             return JOIN(values, null);
@@ -149,7 +139,6 @@ namespace LiteDB
         /// <summary>
         /// Join all values into a single string with a string separator. Return a single value
         /// </summary>
-        [Aggregate]
         public static IEnumerable<BsonValue> JOIN(IEnumerable<BsonValue> values, IEnumerable<BsonValue> separator = null)
         {
             yield return string.Join(

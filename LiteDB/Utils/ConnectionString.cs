@@ -31,11 +31,6 @@ namespace LiteDB
         public string Filename { get; set; } = ":memory:";
 
         /// <summary>
-        /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
-        /// </summary>
-        public string Password { get; set; } = null;
-
-        /// <summary>
         /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
@@ -103,7 +98,6 @@ namespace LiteDB
 
             // setting values to properties
             this.Filename = values.GetValue<string>("filename", null);
-            this.Password = values.GetValue<string>("password", this.Password);
             this.Timeout = values.GetValue("timeout", this.Timeout);
             this.ReadOnly = values.GetValue<bool>("read only", this.ReadOnly);
             this.InitialSize = values.GetFileSize("initial size", this.InitialSize);

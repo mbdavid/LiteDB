@@ -26,7 +26,7 @@ namespace LiteDB
 
         // transaction controls
         private Guid _transactionID = Guid.NewGuid();
-        private TransactionState _state = TransactionState.New;
+        internal TransactionState _state = TransactionState.New;
         private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
 
@@ -176,7 +176,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Rollback transaction operation - ignore all modified pages
+        /// Rollback transaction operation - ignore all modified pages and return new pages into disk
         /// </summary>
         public void Rollback()
         {

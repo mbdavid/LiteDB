@@ -41,9 +41,6 @@ namespace LiteDB
                 var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
-                var loader = _query.IsVirtual ?
-                    (IDocumentLoader)_query.Index :
-                    new DocumentLoader(data, _engine.UtcDate, _query.Select?.Fields);
 
                 // no collection, no documents
                 if (col == null) yield break;
@@ -51,8 +48,23 @@ namespace LiteDB
                 // execute optimization before run query (will fill missing _query properties instance)
                 this.OptimizeQuery(snapshot);
 
+                // load only query fields (null return all document)
+                var fields = _query.Select?.Fields;
+
+                if (fields != null)
+                {
+                    // if partial document load, add filter, groupby, orderby fields too
+                    fields.AddRange(_query.Filters.SelectMany(x => x.Fields));
+                    fields.AddRange(_query.GroupBy?.Fields);
+                    fields.AddRange(_query.OrderBy?.Fields);
+                }
+
+                var loader = _query.IsVirtual ?
+                    (IDocumentLoader)_query.Index :
+                    new DocumentLoader(data, _engine.UtcDate, fields);
+
                 //TODO: remove this execution plan
-                // Console.WriteLine(_query.GetExplainPlan());
+                Console.WriteLine(_query.GetExplainPlan());
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = _query.Index.Run(col, indexer)

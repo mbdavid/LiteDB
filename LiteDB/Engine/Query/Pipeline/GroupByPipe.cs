@@ -43,12 +43,8 @@ namespace LiteDB
                 source = this.Include(source, path);
             }
 
-            // if expression contains more than 1 aggregate function will run more than once only grup result
-            // this will mess with my group by operation - must use List<> with RawId cache
-            var useCache = query?.Select.AggregateCount > 1;
-
             // apply groupby
-            var groups = this.GroupBy(source, query.GroupBy, useCache);
+            var groups = this.GroupBy(source, query.GroupBy);
 
             // now, get only first document from each group
             source = this.SelectGroupBy(groups, query.Select);
@@ -75,7 +71,7 @@ namespace LiteDB
         /// <summary>
         /// Apply groupBy expression and transform results
         /// </summary>
-        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, BsonExpression expr, bool useCache)
+        private IEnumerable<IEnumerable<BsonDocument>> GroupBy(IEnumerable<BsonDocument> source, BsonExpression expr)
         {
             using (var enumerator = source.GetEnumerator())
             {
@@ -85,15 +81,15 @@ namespace LiteDB
                 {
                     var group = YieldDocuments(enumerator, expr, done);
 
-                    if (useCache)
-                    {
-                        //yield return  group.ToList();
-                        yield return new DocumentEnumerable(group, _loader);
-                    }
-                    else
-                    {
-                        yield return group;
-                    }
+                    //if (useCache)
+                    //{
+                    //    //yield return  group.ToList();
+                    //    yield return new DocumentEnumerable(group, _loader);
+                    //}
+                    //else
+                    //{
+                        yield return group.ToList();
+                    //}
                 }
             }
         }

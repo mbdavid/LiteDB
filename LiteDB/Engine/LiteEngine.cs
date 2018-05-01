@@ -115,7 +115,7 @@ namespace LiteDB
                 // open datafile (crete new if stream are empty)
                 var factory = options.GetDiskFactory();
 
-                _datafile = new FileService(factory, options.Password, options.Timeout, options.InitialSize, options.LimitSize, _utcDate, _log);
+                _datafile = new FileService(factory, options.Timeout, options.InitialSize, options.LimitSize, _utcDate, _log);
 
                 // initialize wal file
                 _wal = new WalService(_locker, _datafile, _log);

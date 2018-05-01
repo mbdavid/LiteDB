@@ -57,11 +57,6 @@ namespace LiteDB
         internal Expression Expression { get; set; }
 
         /// <summary>
-        /// Count how many aggregate methods this expression (and child expressions) contains
-        /// </summary>
-        internal int AggregateCount { get; set; }
-
-        /// <summary>
         /// Fill this hashset with all fields used in root level of document (be used to partial deserialize) - "$" means all fields
         /// </summary>
         public HashSet<string> Fields { get; set; }
@@ -178,7 +173,6 @@ namespace LiteDB
                 Expression = expr.Expression,
                 IsConstant = expr.IsConstant,
                 IsImmutable = expr.IsImmutable,
-                AggregateCount = expr.AggregateCount,
                 Fields = expr.Fields,
                 Left = expr.Left,
                 Right = expr.Right,

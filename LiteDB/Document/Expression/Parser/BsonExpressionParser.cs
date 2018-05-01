@@ -161,7 +161,6 @@ namespace LiteDB
                         Type = op.Value.Item2,
                         IsConstant = left.IsConstant && right.IsConstant,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
-                        AggregateCount = left.AggregateCount + right.AggregateCount,
                         Fields = new HashSet<string>(left.Fields).AddRange(right.Fields),
                         Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
@@ -216,7 +215,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Double,
                 IsConstant = true,
                 IsImmutable = true,
-                AggregateCount = 0,
                 Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
@@ -238,7 +236,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Int,
                 IsConstant = true,
                 IsImmutable = true,
-                AggregateCount = 0,
                 Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
@@ -260,7 +257,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Boolean,
                 IsConstant = true,
                 IsImmutable = true,
-                AggregateCount = 0,
                 Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = boolean.ToString().ToLower()
@@ -281,7 +277,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Null,
                 IsConstant = true,
                 IsImmutable = true,
-                AggregateCount = 0,
                 Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = "null"
@@ -304,7 +299,6 @@ namespace LiteDB
                 Type = BsonExpressionType.String,
                 IsConstant = true,
                 IsImmutable = true,
-                AggregateCount = 0,
                 Fields = new HashSet<string>(),
                 Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                 Source = JsonSerializer.Serialize(bstr)
@@ -324,7 +318,6 @@ namespace LiteDB
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
-            var aggregateCount = 0;
             var fields = new HashSet<string>();
 
             source.Append("{");
@@ -357,7 +350,6 @@ namespace LiteDB
                 if (value.IsImmutable == false) isImmutable = false;
                 if (value.IsConstant == false) isConstant = false;
 
-                aggregateCount += value.AggregateCount;
                 fields.AddRange(value.Fields);
 
                 // add key and value to parameter list (as an expression)
@@ -386,7 +378,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Document,
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
-                AggregateCount = aggregateCount,
                 Fields = fields,
                 Expression = Expression.Call(_documentInitMethod, new Expression[] { arrKeys, arrValues }),
                 Source = source.ToString()
@@ -404,7 +395,6 @@ namespace LiteDB
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
-            var aggregateCount = 0;
             var fields = new HashSet<string>();
 
             source.Append("[");
@@ -418,7 +408,6 @@ namespace LiteDB
                 if (value.IsImmutable == false) isImmutable = false;
                 if (value.IsConstant == false) isConstant = false;
 
-                aggregateCount += value.AggregateCount;
                 fields.AddRange(value.Fields);
 
                 values.Add(value.Expression);
@@ -441,7 +430,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Array,
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
-                AggregateCount = aggregateCount,
                 Fields = fields,
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
                 Source = source.ToString()
@@ -462,7 +450,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Parameter,
                 IsConstant = true,
                 IsImmutable = false,
-                AggregateCount = 0,
                 Fields = new HashSet<string>(),
                 Expression = Expression.Call(_parameterPathMethod, parameters, name),
                 Source = "@" + parameterName
@@ -486,7 +473,6 @@ namespace LiteDB
                 Type = inner.Type,
                 IsConstant = inner.IsConstant,
                 IsImmutable = inner.IsImmutable,
-                AggregateCount = inner.AggregateCount,
                 Fields = inner.Fields,
                 Expression = inner.Expression,
                 Source = "(" + inner.Source + ")"
@@ -554,7 +540,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Call,
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
-                AggregateCount = method.GetCustomAttribute<AggregateAttribute>() != null ? 1 : 0,
                 Fields = fields,
                 Expression = Expression.Call(method, pars.ToArray()),
                 Source = source.ToString()
@@ -599,7 +584,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Path,
                 IsConstant = false,
                 IsImmutable = isImmutable,
-                AggregateCount = 0, //TODO: need check if any array-filter use aggregate fn?
                 Fields = new HashSet<string>(new string[] { field.Length == 0 ? "$" : field }),
                 Expression = expr,
                 Source = source.ToString()
@@ -672,7 +656,6 @@ namespace LiteDB
                 Type = BsonExpressionType.Array,
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
-                AggregateCount = item0.AggregateCount + item1.AggregateCount,
                 Fields = new HashSet<string>(item0.Fields).AddRange(item1.Fields),
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
                 Source = item0.Source + " AND " + item1.Source
@@ -690,7 +673,6 @@ namespace LiteDB
                 Type = _operators[op].Item2,
                 IsConstant = left.IsConstant && right.IsConstant,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
-                AggregateCount = left.AggregateCount + right.AggregateCount,
                 Fields = new HashSet<string>(left.Fields).AddRange(right.Fields),
                 Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),
                 Left = left,

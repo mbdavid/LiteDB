@@ -28,6 +28,16 @@ namespace LiteDB
         public override PageType PageType { get { return PageType.Header; } }
 
         /// <summary>
+        /// Header info the validate that datafile is a LiteDB file (27 bytes)
+        /// </summary>
+        private const string HEADER_INFO = "** This is a LiteDB file **";
+
+        /// <summary>
+        /// Datafile specification version
+        /// </summary>
+        private const byte FILE_VERSION = 8;
+
+        /// <summary>
         /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
         /// </summary>
         public uint FreeEmptyPageID;
@@ -164,6 +174,12 @@ namespace LiteDB
 
         protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
+            var info = reader.ReadFixedString(HEADER_INFO.Length);
+            var ver = reader.ReadByte();
+
+            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
+            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
+
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.CreationTime = reader.ReadDateTime(utcDate);
@@ -187,6 +203,8 @@ namespace LiteDB
 
         protected override void WriteContent(BinaryWriter writer)
         {
+            writer.WriteFixedString(HEADER_INFO);
+            writer.Write(FILE_VERSION);
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.CreationTime);

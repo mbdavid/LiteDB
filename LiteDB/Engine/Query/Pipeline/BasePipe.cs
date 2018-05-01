@@ -241,6 +241,7 @@ namespace LiteDB
 
                 if (dispose)
                 {
+                    transaction._state = TransactionState.New;
                     transaction.Dispose();
                 }
             }

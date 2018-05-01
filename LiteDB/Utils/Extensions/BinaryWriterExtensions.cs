@@ -9,6 +9,9 @@ namespace LiteDB
 {
     internal static class BinaryWriterExtensions
     {
+        /// <summary>
+        /// Write string into writer without length information (must know when read)
+        /// </summary>
         public static void WriteFixedString(this BinaryWriter writer, string text)
         {
             var bytes = Encoding.UTF8.GetBytes(text);

@@ -90,17 +90,7 @@ namespace LiteDB
         {
             var start = writer.BaseStream.Position;
 
-            // if need write on initial file (position = 0) must skip first header area
-            // becase are locked and contains no valid page data (password/salt info)
-            if (start == 0)
-            {
-                writer.Seek(PAGE_HEADER_SIZE, SeekOrigin.Current);
-            }
-            else
-            {
-                this.WriteHeader(writer);
-            }
-
+            this.WriteHeader(writer);
             this.WriteContent(writer);
 
             // padding end of page with 0 byte
