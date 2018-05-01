@@ -82,11 +82,11 @@ namespace LiteDB.Demo
                 //db.Checkpoint();
 
                 var r0 = db.Query("cliente")
-                    //.Include("endereco")
+                    .Include("endereco")
                     //.Where("endereco.rua = 'Ipiranga'")
                     //.Select("{_id,nome}")
-                    .GroupBy("nome")
-                    .Select("{n:nome, tot:count(0)}")
+                    .GroupBy("endereco.rua")
+                    .Select("{n:endereco.rua, tot:count($), tot2: count($)}")
                     //.OrderBy("tot")
                     .ToArray();
                 ;

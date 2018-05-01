@@ -56,7 +56,7 @@ namespace LiteDB
             for (; index < _cache.Count; index++)
             {
                 var rawId = _cache[index];
-
+            
                 yield return _loader.Load(rawId);
             }
         }

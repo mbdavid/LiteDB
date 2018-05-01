@@ -81,12 +81,15 @@ namespace LiteDB
                 {
                     var group = YieldDocuments(enumerator, expr, done);
 
-                    yield return new DocumentEnumerable(group, _loader);
-                    //}
-                    //else
-                    //{
-                        //yield return group.ToList();
-                    //}
+                    //TODO: if I remove ".ToArray()" do not work when used with no aggregate expression on select
+                    // but works find when aggregate are present: 
+                    // work: { n: name, t: count($) } 
+                    // not work: { n: name }
+
+                    yield return group.ToArray();
+
+                    // don't work with no ToArray()
+                    //yield return new DocumentEnumerable(group.ToArray(), _loader);
                 }
             }
         }
