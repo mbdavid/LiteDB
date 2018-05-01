@@ -34,7 +34,7 @@ namespace LiteDB
             // pipe: orderby using groupy expression
             if (query.RunOrderByOverGroupBy)
             {
-                source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue, query.OrderBy == null);
+                source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue);
             }
 
             // do includes in result before filter
@@ -53,7 +53,7 @@ namespace LiteDB
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit, true);
+                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit);
             }
             else
             {
@@ -81,14 +81,11 @@ namespace LiteDB
                 {
                     var group = YieldDocuments(enumerator, expr, done);
 
-                    //if (useCache)
-                    //{
-                    //    //yield return  group.ToList();
-                    //    yield return new DocumentEnumerable(group, _loader);
+                    yield return new DocumentEnumerable(group, _loader);
                     //}
                     //else
                     //{
-                        yield return group.ToList();
+                        //yield return group.ToList();
                     //}
                 }
             }

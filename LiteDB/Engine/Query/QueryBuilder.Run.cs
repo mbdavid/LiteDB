@@ -71,16 +71,17 @@ namespace LiteDB
                         .DistinctBy(x => x.DataBlock, null);
 
                 // get current query pipe: normal or groupby pipe
-                var pipe = _query.GroupBy != null ?
+                using (var pipe = _query.GroupBy != null ?
                     new GroupByPipe(_engine, transaction, loader) :
-                    (BasePipe)new QueryPipe(_engine, transaction, loader);
-
-                // call safepoint just before return each document
-                foreach (var value in pipe.Pipe(nodes, _query))
+                    (BasePipe)new QueryPipe(_engine, transaction, loader))
                 {
-                    transaction.Safepoint();
+                    // call safepoint just before return each document
+                    foreach (var value in pipe.Pipe(nodes, _query))
+                    {
+                        transaction.Safepoint();
 
-                    yield return value;
+                        yield return value;
+                    }
                 }
 
                 // if is a new transaction, dipose now

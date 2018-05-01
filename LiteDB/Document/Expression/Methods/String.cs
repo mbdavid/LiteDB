@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using static LiteDB.ZipExtensions;
 
 namespace LiteDB
 {
@@ -75,7 +76,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> REPLACE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> oldValues, IEnumerable<BsonValue> newValues)
         {
-            foreach (var value in values.ZipValues(oldValues, newValues))
+            foreach (var value in ZipValues(values, oldValues, newValues))
             {
                 if (value.First.IsString && value.Second.IsString && value.Third.IsString)
                 {
@@ -118,8 +119,10 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> FORMAT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> format)
         {
-            foreach (var value in values.ZipValues(format).Where(x => x.Second.IsString))
+            foreach (var value in ZipValues(values, format))
             {
+                if (!value.Second.IsString) continue;
+
                 yield return string.Format("{0:" + value.Second.AsString + "}", value.First.RawValue);
             }
         }

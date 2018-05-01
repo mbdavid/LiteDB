@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using static LiteDB.ZipExtensions;
 
 namespace LiteDB
 {
@@ -16,7 +17,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ADD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 // if any side are string, concat
                 if (value.First.IsString || value.Second.IsString)
@@ -47,7 +48,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> MINUS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 if (value.First.IsDateTime && value.Second.IsNumber)
                 {
@@ -73,7 +74,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> MULTIPLY(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 if (!value.First.IsNumber || !value.Second.IsNumber) continue;
 
@@ -86,7 +87,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DIVIDE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 if (!value.First.IsNumber || !value.Second.IsNumber) continue;
 
@@ -99,7 +100,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> MOD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 if (!value.First.IsNumber || !value.Second.IsNumber) continue;
 
@@ -116,7 +117,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> EQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First == value.Second;
             }
@@ -127,7 +128,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> LIKE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 if (value.First.IsString && value.Second.IsString)
                 {
@@ -145,7 +146,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> BETWEEN(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 if (!value.Second.IsArray) throw new InvalidOperationException("BETWEEN expression need an array with 2 values");
 
@@ -165,7 +166,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> GT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First > value.Second;
             }
@@ -176,7 +177,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> GTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First >= value.Second;
             }
@@ -187,7 +188,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> LT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First < value.Second;
             }
@@ -198,7 +199,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> LTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First <= value.Second;
             }
@@ -209,7 +210,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> NEQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First != value.Second;
             }
@@ -224,7 +225,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> AND(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First && value.Second;
             }
@@ -235,7 +236,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> OR(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
-            foreach (var value in left.ZipValues(right))
+            foreach (var value in ZipValues(left, right))
             {
                 yield return value.First || value.Second;
             }
@@ -364,7 +365,7 @@ namespace LiteDB
         {
             var doc = new BsonDocument();
 
-            foreach (var pair in keys.ZipValues(values.Select(x => x.FirstOrDefault())))
+            foreach (var pair in ZipValues(keys, values.Select(x => x.FirstOrDefault())))
             {
                 var key = pair.First;
                 var value = pair.Second;

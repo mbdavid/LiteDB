@@ -34,7 +34,7 @@ namespace LiteDB
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit, true);
+                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit);
             }
             else
             {

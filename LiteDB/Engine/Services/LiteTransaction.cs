@@ -26,7 +26,7 @@ namespace LiteDB
 
         // transaction controls
         private Guid _transactionID = Guid.NewGuid();
-        internal TransactionState _state = TransactionState.New;
+        private TransactionState _state = TransactionState.New;
         private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
 
@@ -247,6 +247,17 @@ namespace LiteDB
                 // now can update global header version
                 _header.Update(Guid.Empty, confirm.FreeEmptyPageID, null);
             }
+        }
+
+        /// <summary>
+        /// Abandon transaction with no save an no page recovery - used on OrderBy TempDB
+        /// </summary>
+        internal void Abort()
+        {
+            this.DisposeTime = DateTime.Now;
+
+            _state = TransactionState.Aborted;
+            _locker.ExitTransaction();
         }
 
         public void Dispose()

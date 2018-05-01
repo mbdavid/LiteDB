@@ -7,11 +7,13 @@ namespace LiteDB
     /// <summary>
     /// Abstract class with workflow method to be used in pipeline implementation
     /// </summary>
-    internal abstract class BasePipe
+    internal abstract class BasePipe : IDisposable
     {
         protected readonly LiteEngine _engine;
         protected readonly LiteTransaction _transaction;
         protected readonly IDocumentLoader _loader;
+
+        private LiteTransaction _tempTransaction = null;
 
         public BasePipe(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
         {
@@ -152,22 +154,18 @@ namespace LiteDB
         /// <summary>
         /// Pipe: OrderBy documents according orderby expression/order
         /// </summary>
-        protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit, bool dispose)
+        protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
             // using tempdb for store sort data
-            var transaction = _engine.TempDB.GetTransaction(out var isNew);
-            var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false);
+            if (_tempTransaction == null)
+            {
+                _tempTransaction = _engine.TempDB.GetTransaction(out var isNew);
+            }
 
-            // keep transaction/snapshot outside from "using" because return IEnumerable and will run much later than using
-            try
-            {
-                return DoOrderBy();
-            }
-            catch
-            {
-                transaction.Dispose();
-                throw;
-            }
+            // create snapshot from temp transaction
+            var snapshot = _tempTransaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false);
+
+            return DoOrderBy();
 
             IEnumerable<BsonDocument> DoOrderBy()
             {
@@ -218,7 +216,7 @@ namespace LiteDB
                         }
 
                         // if memory pages excedded limit size, flush to temp disk
-                        transaction.Safepoint();
+                        _tempTransaction.Safepoint();
                     }
                 }
 
@@ -236,15 +234,15 @@ namespace LiteDB
 
                     yield return doc;
 
-                    transaction.Safepoint();
-                }
-
-                if (dispose)
-                {
-                    transaction._state = TransactionState.New;
-                    transaction.Dispose();
+                    _tempTransaction.Safepoint();
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            // if temp transaction was used, abort (no not save) here
+            _tempTransaction?.Abort();
         }
     }
 }

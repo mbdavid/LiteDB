@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using static LiteDB.ZipExtensions;
 
 namespace LiteDB
 {
@@ -39,7 +40,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> EXTEND(IEnumerable<BsonValue> source, IEnumerable<BsonValue> extend)
         {
-            foreach (var value in source.ZipValues(extend))
+            foreach (var value in ZipValues(source, extend))
             {
                 if (!value.First.IsDocument) continue;
                 if (!value.Second.IsDocument) continue;
@@ -297,7 +298,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
         {
-            foreach (var value in year.ZipValues(month, day))
+            foreach (var value in ZipValues(year, month, day))
             {
                 if (value.First.IsNumber && value.Second.IsNumber && value.Third.IsNumber)
                 {

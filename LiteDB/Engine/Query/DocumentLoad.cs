@@ -23,19 +23,10 @@ namespace LiteDB
             // first, get datablock
             var block = _data.GetBlock(rawId);
 
-            // if document already in dataBlock cache, just return
-            if (block.CacheDocument != null)
-            {
-                return block.CacheDocument;
-            }
-
             // otherwise, load byte array and deserialize
             var buffer = _data.Read(block);
             var doc = _bsonReader.Deserialize(buffer, _fields);
             doc.RawId = rawId;
-
-            // add document to cache
-            block.CacheDocument = doc;
 
             return doc;
         }

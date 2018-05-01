@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using static LiteDB.ZipExtensions;
 
 namespace LiteDB
 {
@@ -28,7 +29,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> IIF(IEnumerable<BsonValue> condition, IEnumerable<BsonValue> ifTrue, IEnumerable<BsonValue> ifFalse)
         {
-            foreach (var value in condition.ZipValues(ifTrue, ifFalse).Where(x => x.First.IsBoolean))
+            foreach (var value in ZipValues(condition, ifTrue, ifFalse).Where(x => x.First.IsBoolean))
             {
                 yield return value.First.AsBoolean ? value.Second : value.Third;
             }

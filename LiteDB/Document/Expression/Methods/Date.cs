@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using static LiteDB.ZipExtensions;
 
 namespace LiteDB
 {
@@ -84,7 +85,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DATEADD(IEnumerable<BsonValue> dateParts, IEnumerable<BsonValue> numbers, IEnumerable<BsonValue> values)
         {
-            foreach (var value in dateParts.ZipValues(numbers, values))
+            foreach (var value in ZipValues(dateParts, numbers, values))
             {
                 if (!value.First.IsString || !value.Second.IsNumber || !value.Third.IsDateTime) continue;
 
@@ -108,7 +109,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> DATEDIFF(IEnumerable<BsonValue> dateParts, IEnumerable<BsonValue> starts, IEnumerable<BsonValue> ends)
         {
-            foreach (var value in dateParts.ZipValues(starts, ends))
+            foreach (var value in ZipValues(dateParts, starts, ends))
             {
                 if (!value.First.IsString || !value.Second.IsDateTime || !value.Third.IsDateTime) continue;
 

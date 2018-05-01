@@ -9,7 +9,7 @@ namespace LiteDB
 {
     internal static class ZipExtensions
     {
-        public static IEnumerable<ZipValues> ZipValues(this IEnumerable<BsonValue> first, IEnumerable<BsonValue> second, IEnumerable<BsonValue> thrid = null)
+        public static IEnumerable<ZipValues> ZipValues(IEnumerable<BsonValue> first, IEnumerable<BsonValue> second, IEnumerable<BsonValue> thrid = null)
         {
             var firstEnumerator = first.GetEnumerator();
             var secondEnumerator = second.GetEnumerator();

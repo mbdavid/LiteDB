@@ -11,76 +11,59 @@ namespace LiteDB
     /// </summary>
     internal class DocumentEnumerable : IEnumerable<BsonDocument>
     {
-        private IEnumerable<BsonDocument> _source;
-        private List<PageAddress> _list = new List<PageAddress>();
+        private IEnumerator<BsonDocument> _enumerator;
+        private List<PageAddress> _cache = new List<PageAddress>();
         private IDocumentLoader _loader;
 
         public DocumentEnumerable(IEnumerable<BsonDocument> source, IDocumentLoader loader)
         {
-            _source = source;
+            _enumerator = source.GetEnumerator();
             _loader = loader;
         }
 
         public IEnumerator<BsonDocument> GetEnumerator()
         {
-            return new DocumentEnumerator(_list.Count == 0 ? _source.GetEnumerator() : null, _list, _loader);
+            // https://stackoverflow.com/a/34633464/3286260
+
+            // the index of the current item in the cache.
+            var index = 0;
+
+            // enumerate the _cache first
+            for (; index < _cache.Count; index++)
+            {
+                var rawId = _cache[index];
+
+                yield return _loader.Load(rawId);
+            }
+
+            // continue enumeration of the original _enumerator, until it is finished. 
+            // this adds items to the cache and increment 
+            for (; _enumerator != null && _enumerator.MoveNext(); index++)
+            {
+                var current = _enumerator.Current;
+                _cache.Add(current.RawId);
+                yield return current;
+            }
+
+            if (_enumerator != null)
+            {
+                _enumerator.Dispose();
+                _enumerator = null;
+            }
+
+            // some other users of the same instance of DocumentEnumerable
+            // can add more items to the cache, so we need to enumerate them as well
+            for (; index < _cache.Count; index++)
+            {
+                var rawId = _cache[index];
+
+                yield return _loader.Load(rawId);
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return new DocumentEnumerator(_list.Count == 0 ? _source.GetEnumerator() : null, _list, _loader);
-        }
-    }
-
-    internal class DocumentEnumerator : IEnumerator<BsonDocument>
-    {
-        private IEnumerator<BsonDocument> _source;
-        private BsonDocument _current;
-
-        private List<PageAddress> _list;
-        private IDocumentLoader _loader;
-
-        private int _index = 0;
-
-        public DocumentEnumerator(IEnumerator<BsonDocument> source, List<PageAddress> list, IDocumentLoader loader)
-        {
-            _source = source;
-            _list = list;
-            _loader = loader;
-        }
-
-        public BsonDocument Current => _current;
-        object IEnumerator.Current => _current;
-
-        public void Dispose()
-        {
-            _source?.Dispose();
-        }
-
-        public bool MoveNext()
-        {
-            // source != null is first run
-            if (_source != null)
-            {
-                var next = _source.MoveNext();
-                _current = _source.Current;
-                _list.Add(_current.RawId);
-                return next;
-            }
-            else
-            {
-                // load document from source
-                var rawId = _list[_index++];
-
-                _current = _loader.Load(rawId);
-
-                return _index < _list.Count;
-            }
-        }
-
-        public void Reset()
-        {
-            _index = 0;
+            return this.GetEnumerator();
         }
     }
 }
