@@ -22,7 +22,7 @@ namespace LiteDB.Demo
             {
                 Filename = datafile,
                 Timeout = TimeSpan.FromSeconds(2)
-                //,Password = "ops"
+                ,Password = "ops"
             };
 
             File.Delete(datafile);

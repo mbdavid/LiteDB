@@ -295,11 +295,15 @@ namespace LiteDB
             writer.Write(hash); // 20 bytes
             writer.Write(salt); // 16 bytes
 
+            stream.Flush();
+
             // initialize reader(factory)/writer(single)
             this.InitializeReaderWriter(stream, password, salt);
 
             // create a new header page and write on disk (sync)
             var header = new HeaderPage(0);
+
+            header.Parameters["MAURICIO"] = "DAVID";
 
             header.WritePage(_writer);
 

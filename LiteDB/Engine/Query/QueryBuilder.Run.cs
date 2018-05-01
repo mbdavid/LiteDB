@@ -52,7 +52,7 @@ namespace LiteDB
                 this.OptimizeQuery(snapshot);
 
                 //TODO: remove this execution plan
-                Console.WriteLine(_query.GetExplainPlan());
+                // Console.WriteLine(_query.GetExplainPlan());
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = _query.Index.Run(col, indexer)

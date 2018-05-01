@@ -19,7 +19,7 @@ namespace LiteDB
         public const int PAGE_HEADER_SIZE = 64;
 
         /// <summary>
-        /// Bytes available to store data removing page header size - 4071 bytes
+        /// Bytes available to store data removing page header size - 8128 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 

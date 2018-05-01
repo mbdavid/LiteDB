@@ -29,7 +29,7 @@ namespace LiteDB
 
             try
             {
-                filestream.Lock(0, BasePage.PAGE_HEADER_SIZE);
+                filestream.Unlock(0, BasePage.PAGE_HEADER_SIZE);
             }
             catch
             {
