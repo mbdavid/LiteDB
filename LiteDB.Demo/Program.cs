@@ -86,7 +86,8 @@ namespace LiteDB.Demo
                     //.Where("endereco.rua = 'Ipiranga'")
                     //.Select("{_id,nome}")
                     .GroupBy("endereco.rua")
-                    .Select("{n:endereco.rua, tot:count($), tot2: count($)}")
+                    .Select("{n:endereco.rua, zero:count(0), tot: count($)}")
+                    //.Select("{n:endereco.rua, tot:count($), tot2: count($)}")
                     //.OrderBy("tot")
                     .ToArray();
                 ;

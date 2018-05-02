@@ -86,10 +86,10 @@ namespace LiteDB
                     // work: { n: name, t: count($) } 
                     // not work: { n: name }
 
-                    yield return group.ToArray();
+                    //yield return group.ToArray();
 
                     // don't work with no ToArray()
-                    //yield return new DocumentEnumerable(group.ToArray(), _loader);
+                    yield return new DocumentEnumerable(group, _loader);
                 }
             }
         }
@@ -140,8 +140,10 @@ namespace LiteDB
                 }
                 else
                 {
-                    // if no select transform, return only first result
-                    yield return group.First();
+                    // get first document BUT with full source scan
+                    var doc = group.FirstOrDefault(true);
+
+                    yield return doc;
                 }
             }
         }
