@@ -225,6 +225,9 @@ namespace LiteDB
                     if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new Exception("Não pode ter pagina na WAL sem transação");
 
                     page.WritePage(_writer);
+
+                    // set page position, in cache, not as dirty
+                    _cache.ClearDirty(position);
                 }
 
                 // lock writer to clear dirty cache
@@ -286,9 +289,6 @@ namespace LiteDB
         {
             // wait async
             this.WaitAsyncWrite();
-
-            // unlock stream (lock are associate with writer)
-            _writer.BaseStream.TryUnlock();
 
             if (_factory.CloseOnDispose)
             {

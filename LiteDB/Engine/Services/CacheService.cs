@@ -70,13 +70,20 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Mark all cache as clean pages - no dirty page on cache anymore
+        /// Mark single/all cache as clean pages - (non-dirty pages can be removed from cache any time)
         /// </summary>
-        public void ClearDirty()
+        public void ClearDirty(long? position = null)
         {
             lock(_dirty)
             {
-                _dirty.Clear();
+                if (position.HasValue)
+                {
+                    _dirty.Remove(position.Value);
+                }
+                else
+                {
+                    _dirty.Clear();
+                }
             }
         }
 
