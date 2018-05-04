@@ -58,7 +58,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> FIRST(IEnumerable<BsonValue> values)
         {
-            yield return values.FirstOrDefault();
+            yield return values.FirstOrDefault(true);
         }
 
         /// <summary>

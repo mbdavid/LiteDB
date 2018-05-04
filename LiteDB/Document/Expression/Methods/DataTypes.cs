@@ -516,6 +516,8 @@ namespace LiteDB
         /// </summary>
         [Volatile]
         public static IEnumerable<BsonValue> DATE() => DATETIME();
+        public static IEnumerable<BsonValue> NOW() => DATETIME();
+
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values) => DATETIME(values);
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME(year, month, day);
 

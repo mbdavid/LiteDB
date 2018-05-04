@@ -15,12 +15,9 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> LOWER(IEnumerable<BsonValue> values)
         {
-            foreach (var value in values)
+            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
             {
-                if (value.IsString)
-                {
-                    yield return value.AsString.ToLower();
-                }
+                yield return value.ToLowerInvariant();
             }
         }
 
@@ -29,12 +26,9 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> UPPER(IEnumerable<BsonValue> values)
         {
-            foreach (var value in values)
+            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
             {
-                if (value.IsString)
-                {
-                    yield return value.AsString.ToUpper();
-                }
+                yield return value.ToUpperInvariant();
             }
         }
 
@@ -43,14 +37,12 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index)
         {
-            var idx = index?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
-
-            foreach (var value in values)
+            foreach (var value in ZipValues(values, index))
             {
-                if (value.IsString)
-                {
-                    yield return value.AsString.Substring(idx);
-                }
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsNumber) continue;
+
+                yield return value.First.AsString.Substring(value.Second.AsInt32);
             }
         }
 
@@ -59,15 +51,13 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index, IEnumerable<BsonValue> length)
         {
-            var idx = index?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
-            var len = length?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
-
-            foreach (var value in values)
+            foreach (var value in ZipValues(values, index))
             {
-                if (value.IsString)
-                {
-                    yield return value.AsString.Substring(idx, len);
-                }
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsNumber) continue;
+                if (!value.Third.IsNumber) continue;
+
+                yield return value.First.AsString.Substring(value.Second.AsInt32, value.Third.AsInt32);
             }
         }
 
@@ -78,10 +68,11 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(values, oldValues, newValues))
             {
-                if (value.First.IsString && value.Second.IsString && value.Third.IsString)
-                {
-                    yield return value.First.AsString.Replace(value.Second.AsString, value.Third.AsString);
-                }
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsString) continue;
+                if (!value.Third.IsString) continue;
+
+                yield return value.First.AsString.Replace(value.Second.AsString, value.Third.AsString);
             }
         }
 
@@ -90,12 +81,13 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> LPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
-            var width = totalWidth?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
-            var pchar = paddingChar?.Where(x => x.IsString).FirstOrDefault()?.AsString.ToCharArray()[0] ?? '0';
-
-            foreach (var value in values)
+            foreach (var value in ZipValues(values, totalWidth, paddingChar))
             {
-                yield return value.AsString.PadLeft(width, pchar);
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsNumber) continue;
+                if (!value.Third.IsString) continue;
+
+                yield return value.First.AsString.PadLeft(value.Second.AsInt32, value.Third.AsString.ToCharArray()[0]);
             }
         }
 
@@ -105,12 +97,13 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> RPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
-            var width = totalWidth?.Where(x => x.IsInt32).FirstOrDefault()?.AsInt32 ?? 0;
-            var pchar = paddingChar?.Where(x => x.IsString).FirstOrDefault()?.AsString.ToCharArray()[0] ?? '0';
-
-            foreach (var value in values)
+            foreach (var value in ZipValues(values, totalWidth, paddingChar))
             {
-                yield return value.AsString.PadRight(width, pchar);
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsNumber) continue;
+                if (!value.Third.IsString) continue;
+
+                yield return value.First.AsString.PadRight(value.Second.AsInt32, value.Third.AsString.ToCharArray()[0]);
             }
         }
 

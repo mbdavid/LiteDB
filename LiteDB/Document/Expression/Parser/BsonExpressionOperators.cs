@@ -32,11 +32,7 @@ namespace LiteDB
                 {
                     yield return value.Second.AsDateTime.AddDays(value.First.AsDouble);
                 }
-                else if (!value.First.IsNumber || !value.Second.IsNumber)
-                {
-                    continue;
-                }
-                else
+                else if (value.First.IsNumber || value.Second.IsNumber)
                 {
                     yield return value.First + value.Second;
                 }
@@ -58,11 +54,7 @@ namespace LiteDB
                 {
                     yield return value.Second.AsDateTime.AddDays(-value.First.AsDouble);
                 }
-                else if (!value.First.IsNumber || !value.Second.IsNumber)
-                {
-                    continue;
-                }
-                else
+                else if (value.First.IsNumber && value.Second.IsNumber)
                 {
                     yield return value.First - value.Second;
                 }
@@ -76,9 +68,10 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(left, right))
             {
-                if (!value.First.IsNumber || !value.Second.IsNumber) continue;
-
-                yield return value.First * value.Second;
+                if (value.First.IsNumber && value.Second.IsNumber)
+                {
+                    yield return value.First * value.Second;
+                }
             }
         }
 
@@ -89,9 +82,10 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(left, right))
             {
-                if (!value.First.IsNumber || !value.Second.IsNumber) continue;
-
-                yield return value.First / value.Second;
+                if (value.First.IsNumber && value.Second.IsNumber)
+                {
+                    yield return value.First / value.Second;
+                }
             }
         }
 
@@ -102,9 +96,10 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(left, right))
             {
-                if (!value.First.IsNumber || !value.Second.IsNumber) continue;
-
-                yield return value.First % value.Second;
+                if (value.First.IsNumber && value.Second.IsNumber)
+                {
+                    yield return value.First % value.Second;
+                }
             }
         }
 
