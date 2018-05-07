@@ -40,7 +40,7 @@ namespace LiteDB
         public FileDiskService(string filename, FileOptions options)
         {
             // simple validations
-            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException("filename");
+            if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
             if (options.InitialSize > options.LimitSize) throw new ArgumentException("limit size less than initial size");
 
             // setting class variables
@@ -69,11 +69,8 @@ namespace LiteDB
             {
                 _log.Write(Logger.DISK, "initialize new datafile");
 
-                // set datafile initial size
-                _stream.SetLength(_options.InitialSize);
-
                 // create datafile
-                LiteEngine.CreateDatabase(_stream, password);
+                LiteEngine.CreateDatabase(_stream, password, _options.InitialSize);
             }
         }
 
@@ -241,7 +238,7 @@ namespace LiteDB
             _log.Write(Logger.DISK, "flush data from memory to disk");
 
 #if HAVE_FLUSH_DISK
-            _stream.Flush(true);
+            _stream.Flush(_options.Flush);
 #else
             _stream.Flush();
 #endif

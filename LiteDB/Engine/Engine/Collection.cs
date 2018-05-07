@@ -24,7 +24,7 @@ namespace LiteDB
         /// </summary>
         public bool DropCollection(string collection)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
             return this.Transaction<bool>(collection, false, (col) =>
             {
@@ -43,8 +43,8 @@ namespace LiteDB
         /// </summary>
         public bool RenameCollection(string collection, string newName)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException("newName");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
 
             return this.Transaction<bool>(collection, false, (col) =>
             {

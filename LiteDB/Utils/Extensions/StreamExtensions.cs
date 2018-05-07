@@ -48,6 +48,10 @@ namespace LiteDB
             {
                 return false;
             }
+            catch (PlatformNotSupportedException pex)
+            {
+                throw CreateLockNotSupportedException(pex);
+            }
         }
 
         /// <summary>
@@ -59,8 +63,20 @@ namespace LiteDB
 
             FileHelper.TryExec(() =>
             {
-                stream.Lock(position, length);
+                try
+                {
+                    stream.Lock(position, length);
+                }
+                catch (PlatformNotSupportedException pex)
+                {
+                    throw CreateLockNotSupportedException(pex);
+                }
             }, timeout);
+        }
+
+        private static Exception CreateLockNotSupportedException(PlatformNotSupportedException innerEx)
+        {
+            throw new InvalidOperationException("Your platform does not support FileStream.Lock. Please set mode=Exclusive in your connnection string to avoid this error.", innerEx);
         }
 #endif
     }

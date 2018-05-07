@@ -183,5 +183,83 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(12, cint_12.Id);
             }
         }
+
+        [TestMethod]
+        public void AutoId_BsonDocument()
+        {
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var col = db.GetCollection("Writers");
+                col.Insert(new BsonDocument { ["Name"] = "Mark Twain" });
+                col.Insert(new BsonDocument { ["Name"] = "Jack London", ["_id"] = 1 });
+
+                // create an index in name field
+                col.EnsureIndex("LowerName", "LOWER($.Name)");
+
+                var mark = col.FindOne(Query.EQ("LowerName", "mark twain"));
+                var jack = col.FindOne(Query.EQ("LowerName", "jack london"));
+
+                // checks if auto-id is a ObjectId
+                Assert.IsTrue(mark["_id"].IsObjectId);
+                Assert.IsTrue(jack["_id"].IsInt32); // jack do not use AutoId (fixed in int32)
+            }
+        }
+
+        [TestMethod]
+        public void AutoId_No_Duplicate_After_Delete()
+        {
+            // using strong type
+            using (var db = new LiteDatabase(new MemoryStream()))
+            {
+                var col = db.GetCollection<EntityInt>("col1");
+
+                var one = new EntityInt { Name = "One" };
+                var two = new EntityInt { Name = "Two" };
+                var three = new EntityInt { Name = "Three" };
+                var four = new EntityInt { Name = "Four" };
+
+                // insert
+                col.Insert(one);
+                col.Insert(two);
+
+                Assert.AreEqual(1, one.Id);
+                Assert.AreEqual(2, two.Id);
+
+                // now delete first 2 rows
+                col.Delete(one.Id);
+                col.Delete(two.Id);
+
+                // and insert new documents
+                col.Insert(new EntityInt[] { three, four });
+
+                Assert.AreEqual(3, three.Id);
+                Assert.AreEqual(4, four.Id);
+            }
+
+            // using bsondocument/engine
+            using (var db = new LiteEngine(new MemoryStream()))
+            {
+                var one = new BsonDocument { ["Name"] = "One" };
+                var two = new BsonDocument { ["Name"] = "Two" };
+                var three = new BsonDocument { ["Name"] = "Three" };
+                var four = new BsonDocument { ["Name"] = "Four" };
+
+                db.Insert("col", one, BsonType.Int32);
+                db.Insert("col", two, BsonType.Int32);
+
+                Assert.AreEqual(1, one["_id"].AsInt32);
+                Assert.AreEqual(2, two["_id"].AsInt32);
+
+                // now delete first 2 rows
+                db.Delete("col", one["_id"].AsInt32);
+                db.Delete("col", two["_id"].AsInt32);
+
+                // and insert new documents
+                db.Insert("col", new BsonDocument[] { three, four }, BsonType.Int32);
+
+                Assert.AreEqual(3, three["_id"].AsInt32);
+                Assert.AreEqual(4, four["_id"].AsInt32);
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ namespace LiteDB
         public QueryIn(string field, IEnumerable<BsonValue> values)
             : base(field)
         {
-            _values = values;
+            _values = values ?? Enumerable.Empty<BsonValue>();
         }
 
         internal override IEnumerable<IndexNode> ExecuteIndex(IndexService indexer, CollectionIndex index)
@@ -45,7 +45,7 @@ namespace LiteDB
             return string.Format("{0}({1} in {2})",
                 this.UseFilter ? "Filter" : this.UseIndex ? "Seek" : "",
                 this.Expression?.ToString() ?? this.Field,
-                _values);
+                 string.Join(",", _values.Select(a => a != null ? a.ToString() : "Null" ).ToArray()));
         }
     }
 }

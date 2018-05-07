@@ -31,6 +31,17 @@ namespace LiteDB
                     var docs = this.Find(collectionName, Query.All());
 
                     engine.InsertBulk(collectionName, docs);
+
+                    // fix collection sequence number
+                    var seq = _collections.Get(collectionName).Sequence;
+
+                    engine.Transaction(collectionName, true, (col) =>
+                    {
+                        col.Sequence = seq;
+                        engine._pager.SetDirty(col);
+                        return true;
+                    });
+
                 }
 
                 // copy user version
@@ -45,12 +56,17 @@ namespace LiteDB
                 // copy (as is) all pages from temp disk to original disk
                 for (uint i = 0; i <= header.LastPageID; i++)
                 {
+                    // skip lock page
+                    if (i == 1) continue;
+
                     var page = temp.ReadPage(i);
 
                     _disk.WritePage(i, page);
                 }
 
                 // create/destroy crypto class
+                if (_crypto != null) _crypto.Dispose();
+
                 _crypto = password == null ? null : new AesEncryption(password, header.Salt);
 
                 // initialize all services again (crypto can be changed)

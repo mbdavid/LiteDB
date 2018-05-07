@@ -25,7 +25,7 @@ namespace LiteDB
         /// <param name="unique">If is a unique index</param>
         public bool EnsureIndex(string field, string expression, bool unique = false)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
             return _engine.Value.EnsureIndex(_name, field, expression, unique);
         }

@@ -3,6 +3,12 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
+    [Help(
+        Category = "Shell",
+        Name = "show collections",
+        Syntax = "show collections",
+        Description = "List all collections inside datafile."
+    )]
     internal class ShowCollections : IShellCommand
     {
         public bool IsCommand(StringScanner s)

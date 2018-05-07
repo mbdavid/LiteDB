@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public bool Upsert(T document)
         {
-            if (document == null) throw new ArgumentNullException("document");
+            if (document == null) throw new ArgumentNullException(nameof(document));
 
             return this.Upsert(new T[] { document }) == 1;
         }
@@ -21,7 +21,7 @@ namespace LiteDB
         /// </summary>
         public int Upsert(IEnumerable<T> documents)
         {
-            if (documents == null) throw new ArgumentNullException("document");
+            if (documents == null) throw new ArgumentNullException(nameof(documents));
 
             return _engine.Value.Upsert(_name, this.GetBsonDocs(documents), _autoId);
         }
@@ -31,8 +31,8 @@ namespace LiteDB
         /// </summary>
         public bool Upsert(BsonValue id, T document)
         {
-            if (document == null) throw new ArgumentNullException("document");
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
             // get BsonDocument from object
             var doc = _mapper.ToDocument(document);

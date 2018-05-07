@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "rename",
+        Syntax = "db.<collection>.rename <new_name>",
+        Description = "Rename a collection. New name can't exists",
+        Examples = new string[] {
+            "db.customers.rename new_cust"
+        }
+    )]
     internal class CollectionRename : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

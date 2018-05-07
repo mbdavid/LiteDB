@@ -75,15 +75,6 @@ namespace LiteDB
             this.CollectionPages = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
-        /// <summary>
-        /// Update freebytes + items count
-        /// </summary>
-        public override void UpdateItemCount()
-        {
-            this.ItemCount = 1; // fixed for header
-            this.FreeBytes = 0; // no free bytes on header
-        }
-
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)

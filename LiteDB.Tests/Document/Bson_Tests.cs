@@ -64,5 +64,25 @@ namespace LiteDB.Tests.Document
             Assert.AreEqual(o["Items"].AsArray[0].AsDocument["Unit"].AsDouble, doc["Items"].AsArray[0].AsDocument["Unit"].AsDouble);
             Assert.AreEqual(o["Items"].AsArray[4].AsDateTime.ToString(), doc["Items"].AsArray[4].AsDateTime.ToString());
         }
+
+        [TestMethod]
+        public void Bson_Using_UTC_Local_Dates()
+        {
+            var doc = new BsonDocument { ["now"] = DateTime.Now, ["min"] = DateTime.MinValue, ["max"] = DateTime.MaxValue };
+            var bytes = BsonSerializer.Serialize(doc);
+
+            var local = BsonSerializer.Deserialize(bytes, false);
+            var utc = BsonSerializer.Deserialize(bytes, true);
+
+            // local test
+            Assert.AreEqual(DateTime.MinValue, local["min"].AsDateTime);
+            Assert.AreEqual(DateTime.MaxValue, local["max"].AsDateTime);
+            Assert.AreEqual(DateTimeKind.Local, local["now"].AsDateTime.Kind);
+
+            // utc test
+            Assert.AreEqual(DateTime.MinValue, utc["min"].AsDateTime);
+            Assert.AreEqual(DateTime.MaxValue, utc["max"].AsDateTime);
+            Assert.AreEqual(DateTimeKind.Utc, utc["now"].AsDateTime.Kind);
+        }
     }
 }

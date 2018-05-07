@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<BsonDocument> Find(string collection, Query query, string[] includes, int skip = 0, int limit = int.MaxValue)
         {
-            if (includes == null) throw new ArgumentNullException("includes");
+            if (includes == null) throw new ArgumentNullException(nameof(includes));
 
             var docs = this.Find(collection, query, skip, limit);
 
@@ -25,7 +25,8 @@ namespace LiteDB
                     // get all values according JSON path
                     foreach(var value in expr.Execute(doc, false)
                         .Where(x => x.IsDocument)
-                        .Select(x => x.AsDocument))
+                        .Select(x => x.AsDocument)
+                        .ToList())
                     {
                         // works only if is a document
                         var refId = value["$id"];
@@ -44,6 +45,11 @@ namespace LiteDB
                             value.Remove("$ref");
 
                             refDoc.CopyTo(value);
+                        }
+                        else
+                        {
+                            // remove value from parent (document or array)
+                            value.Destroy();
                         }
                     }
                 }

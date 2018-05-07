@@ -22,28 +22,67 @@ namespace LiteDB
         /// <summary>
         /// Returns all data blocks - Each block has one object
         /// </summary>
-        public Dictionary<ushort, DataBlock> DataBlocks { get; set; }
+        private Dictionary<ushort, DataBlock> _dataBlocks = new Dictionary<ushort, DataBlock>();
 
         public DataPage(uint pageID)
             : base(pageID)
         {
-            this.DataBlocks = new Dictionary<ushort, DataBlock>();
         }
 
         /// <summary>
-        /// Update freebytes + items count
+        /// Get datablock from internal blocks collection
         /// </summary>
-        public override void UpdateItemCount()
+        public DataBlock GetBlock(ushort index)
         {
-            this.ItemCount = (ushort)this.DataBlocks.Count;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.DataBlocks.Sum(x => x.Value.Length);
+            return _dataBlocks[index];
         }
+
+        /// <summary>
+        /// Add new data block into this page, update counter + free space
+        /// </summary>
+        public void AddBlock(DataBlock block)
+        {
+            var index = _dataBlocks.NextIndex();
+
+            block.Position = new PageAddress(this.PageID, index);
+
+            this.ItemCount++;
+            this.FreeBytes -= block.Length;
+
+            _dataBlocks.Add(index, block);
+        }
+
+        /// <summary>
+        /// Update byte array from existing data block. Update free space too
+        /// </summary>
+        public void UpdateBlockData(DataBlock block, byte[] data)
+        {
+            this.FreeBytes = this.FreeBytes + block.Data.Length - data.Length;
+
+            block.Data = data;
+        }
+
+        /// <summary>
+        /// Remove data block from this page. Update counters and free space
+        /// </summary>
+        public void DeleteBlock(DataBlock block)
+        {
+            this.ItemCount--;
+            this.FreeBytes += block.Length;
+
+            _dataBlocks.Remove(block.Position.Index);
+        }
+
+        /// <summary>
+        /// Get block counter from this page
+        /// </summary>
+        public int BlocksCount => _dataBlocks.Count;
 
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)
         {
-            this.DataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
+            _dataBlocks = new Dictionary<ushort, DataBlock>(ItemCount);
 
             for (var i = 0; i < ItemCount; i++)
             {
@@ -55,13 +94,13 @@ namespace LiteDB
                 var size = reader.ReadUInt16();
                 block.Data = reader.ReadBytes(size);
 
-                this.DataBlocks.Add(block.Position.Index, block);
+                _dataBlocks.Add(block.Position.Index, block);
             }
         }
 
         protected override void WriteContent(ByteWriter writer)
         {
-            foreach (var block in this.DataBlocks.Values)
+            foreach (var block in _dataBlocks.Values)
             {
                 writer.Write(block.Position.Index);
                 writer.Write(block.ExtendPageID);

@@ -103,6 +103,20 @@ namespace LiteDB.Tests.Mapper
         // fields
         public string MyField;
 
+
+        // this is a indexer property - should not be serialized #795
+        public string this[string itemName]
+        {
+            get
+            {
+                return this.MyString;
+            }
+            set
+            {
+                this.MyString = value;
+            }
+        }
+
     }
 
     public interface IMyInterface

@@ -110,7 +110,7 @@ namespace LiteDB
             return buffer;
         }
 
-        #endregion Native data types
+        #endregion
 
         #region Extended types
 
@@ -129,7 +129,12 @@ namespace LiteDB
 
         public DateTime ReadDateTime()
         {
-            return new DateTime(this.ReadInt64(), DateTimeKind.Utc);
+            // fix #921 converting index key into LocalTime
+            // this is not best solution because uctDate must be a global parameter
+            // this will be review in v5
+            var date = new DateTime(this.ReadInt64(), DateTimeKind.Utc);
+
+            return date.ToLocalTime();
         }
 
         public Guid ReadGuid()
@@ -162,8 +167,8 @@ namespace LiteDB
 
                 case BsonType.String: return this.ReadString(length);
 
-                case BsonType.Document: return new BsonReader().ReadDocument(this);
-                case BsonType.Array: return new BsonReader().ReadArray(this);
+                case BsonType.Document: return new BsonReader(false).ReadDocument(this);
+                case BsonType.Array: return new BsonReader(false).ReadArray(this);
 
                 case BsonType.Binary: return this.ReadBytes(length);
                 case BsonType.ObjectId: return this.ReadObjectId();
@@ -179,6 +184,6 @@ namespace LiteDB
             throw new NotImplementedException();
         }
 
-        #endregion Extended types
+        #endregion
     }
 }

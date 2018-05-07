@@ -29,7 +29,7 @@ namespace LiteDB
         }
     }
 
-    #endregion JsonToken
+    #endregion
 
     /// <summary>
     /// Class that parse a json string and returns in json token

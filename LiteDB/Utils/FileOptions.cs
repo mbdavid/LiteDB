@@ -14,16 +14,22 @@ namespace LiteDB
 #if HAVE_SYNC_OVER_ASYNC
         public bool Async { get; set; }
 #endif
+#if HAVE_FLUSH_DISK
+        public bool Flush { get; set; } = false;
+#endif
 
         public FileOptions()
         {
             this.Journal = true;
-            this.InitialSize = BasePage.PAGE_SIZE;
+            this.InitialSize = 0;
             this.LimitSize = long.MaxValue;
 #if HAVE_LOCK
             this.FileMode = FileMode.Shared;
 #else
             this.FileMode = FileMode.Exclusive;
+#endif
+#if HAVE_FLUSH_DISK
+            this.Flush = false;
 #endif
         }
     }

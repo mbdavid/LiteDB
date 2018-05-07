@@ -4,7 +4,7 @@ using System.IO;
 
 namespace LiteDB.Shell
 {
-    public class Env
+    internal class Env
     {
         public Display Display { get; set; }
         public InputCommand Input { get; set; }

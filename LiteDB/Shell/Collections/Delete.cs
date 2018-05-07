@@ -3,6 +3,17 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "delete",
+        Syntax = "db.<collection>.delete [filter]",
+        Description = "Delete documents according filter clause (required). Retruns deleted document count.",
+        Examples = new string[] {
+            "db.orders.delete _id = 2",
+            "db.orders.delete customer = \"John Doe\"",
+            "db.orders.delete customer startsWith \"John\" and YEAR($.orderDate) >= 2015"
+        }
+    )]
     internal class CollectionDelete : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

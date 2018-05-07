@@ -575,12 +575,12 @@ namespace LiteDB
         {".xwd", "image/x-xwindowdump"},
         {".z", "application/x-compress"},
         {".zip", "application/x-zip-compressed"},
-        #endregion Big freaking list of mime types
+        #endregion
         };
 
         public static string GetMimeType(string filename)
         {
-            if (string.IsNullOrEmpty(filename)) throw new ArgumentNullException("filename");
+            if (string.IsNullOrEmpty(filename)) throw new ArgumentNullException(nameof(filename));
 
             var extension = Path.GetExtension(filename);
 

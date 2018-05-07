@@ -2,6 +2,16 @@
 
 namespace LiteDB.Shell.Commands
 {
+    [Help(
+        Category = "Database",
+        Name = "userversion",
+        Syntax = "db.userversion [<new_version>]",
+        Description = "Get/Set datafile user version.",
+        Examples = new string[] {
+            "db.userversion",
+            "db.userversion 5"
+        }
+    )]
     internal class UserVersion : IShellCommand
     {
         public bool IsCommand(StringScanner s)

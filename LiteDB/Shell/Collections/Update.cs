@@ -3,6 +3,18 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "update",
+        Syntax = "db.<collection>.update <jsonDoc> | <field|path> [+]= <value|expression> [where <filter>]",
+        Description = "Update a single document by _id value or a range of document using field=value pairs and where filter clause. If your field is an array, can be use += to add new value. Returns number of updated documents.",
+        Examples = new string[] {
+            "db.orders.update { _id: 1, customerName: \"John\" }",
+            "db.orders.update name = \"John\" where _id = 22",
+            "db.orders.update name = UPPER($.name), $.age = $.age + 1",
+            "db.orders.update $.tags += \"blue\" where _id in [1, 2, 44]"
+        }
+    )]
     internal class CollectionUpdate : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)
@@ -61,39 +73,41 @@ namespace LiteDB.Shell
                 
                 s.ThrowIfNotFinish();
 
-                // execute command
-                var count = 0;
-
-                foreach (var doc in engine.Find(col, query))
-                {
-                    var docChanged = false;
-
-                    foreach(var update in updates)
-                    {
-                        var itemChanged = false;
-
-                        if(update.Value == null)
-                        {
-                            itemChanged = doc.Set(update.Path, update.Expr, update.Add);
-                        }
-                        else
-                        {
-                            itemChanged = doc.Set(update.Path, update.Value, update.Add);
-                        }
-
-                        if (itemChanged) docChanged = true;
-                    }
-
-                    // execute update only if document was changed
-                    if (docChanged)
-                    {
-                        engine.Update(col, doc);
-
-                        count++;
-                    }
-                }
+                // fetch documents to update
+                var count = engine.Update(col, this.FetchDocuments(engine, col, query, updates));
 
                 yield return count;
+            }
+        }
+
+        private IEnumerable<BsonDocument> FetchDocuments(LiteEngine engine, string col, Query query, List<UpdateData> updates)
+        {
+            // query document accord query and return modified only documents
+            foreach (var doc in engine.Find(col, query))
+            {
+                var docChanged = false;
+
+                foreach (var update in updates)
+                {
+                    var itemChanged = false;
+
+                    if (update.Value == null)
+                    {
+                        itemChanged = doc.Set(update.Path, update.Expr, update.Add);
+                    }
+                    else
+                    {
+                        itemChanged = doc.Set(update.Path, update.Value, update.Add);
+                    }
+
+                    if (itemChanged) docChanged = true;
+                }
+
+                // execute update only if document was changed
+                if (docChanged)
+                {
+                    yield return doc;
+                }
             }
         }
 

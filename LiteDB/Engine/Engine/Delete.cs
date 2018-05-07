@@ -18,8 +18,8 @@ namespace LiteDB
         /// </summary>
         public int Delete(string collection, Query query)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (query == null) throw new ArgumentNullException("query");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return this.Transaction<int>(collection, false, (col) =>
             {
@@ -42,7 +42,7 @@ namespace LiteDB
                     if (query.UseFilter)
                     {
                         var buffer = _data.Read(node.DataBlock);
-                        var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                        var doc = _bsonReader.Deserialize(buffer).AsDocument;
 
                         if (query.FilterDocument(doc) == false) continue;
                     }

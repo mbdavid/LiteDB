@@ -1,142 +1,130 @@
-﻿using LiteDB;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using LiteDB;
 
-namespace LiteDB.Demo
+namespace litedb_test
 {
-    class Program
+    /// <summary>
+    /// Test record from desktop app
+    /// </summary>
+
+    public class UnreadNotificationRecord
     {
-        static string filename = Path.Combine(Path.GetTempPath(), "file_demo.db");
-        static Logger log = new Logger(Logger.NONE, (s) => Console.WriteLine("#" + Thread.CurrentThread.ManagedThreadId.ToString("00") + " " + s));
-        static int TASKS = 300;
-
-        static void Main(string[] args)
+        public enum NotificationTypeEnum
         {
-            // log.Level = Logger.DISK | Logger.LOCK;
-
-            ExecuteTest("Process", TestProcess);
-            ExecuteTest("Thread", TestThread);
-
-            Console.WriteLine("End");
-            Console.ReadKey();
+            Info,
+            Error
         }
 
-        static LiteEngine InitDB()
-        {
-            var disk = new FileDiskService(filename, true);
-            return new LiteEngine(disk, null, null, 5000, log);
-        }
+        [BsonId]
+        public int Id { get; set; }
 
-        static void ExecuteTest(string name, Action test)
-        {
-            Console.WriteLine("{0} (N = {1})", name, TASKS);
+        public Guid UserId { get; set; }
 
-            // delete datafile before starts
-            File.Delete(filename);
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public NotificationTypeEnum NotificationType { get; set; }
 
-            // create empty database and collection with index in name
-            using (var db = new LiteEngine(filename))
-            {
-                db.EnsureIndex("collection", "name");
-            }
-
-            var s = new Stopwatch();
-            s.Start();
-
-            // execute test
-            test();
-
-            s.Stop();
-
-            Console.WriteLine("Time Elapsed (ms): " + s.ElapsedMilliseconds);
-            Console.WriteLine();
-
-            // assert if database are ok
-            Assert();
-        }
-
-        /// <summary>
-        /// Simple test: insert new document and then update this document. Finish quering first 100 documents
-        /// </summary>
-        static void RunTask(LiteEngine db)
-        {
-            for(var i = 0; i < 10; i++)
-            {
-                var doc = new BsonDocument() { ["name"] = "testing - " + Guid.NewGuid() };
-
-                db.Insert("collection", doc, BsonType.Int32);
-
-                doc["name"] = "changed name - " + Guid.NewGuid();
-
-                db.Update("collection", doc);
-            }
-
-            db.Find("collection", Query.LTE("_id", 100)).ToArray();
-        }
-
-        static void Assert()
-        {
-            // checks if datafile are ok
-            using (var db = new LiteEngine(filename))
-            {
-                db.FindAll("collection").ToArray();
-            }
-        }
-
-        #region Process/Thread Testing
-
-        /// <summary>
-        /// In TestProcess, each task contains a new instance of LiteEngine
-        /// </summary>
-        static void TestProcess()
-        {
-            var tasks = new List<Task>();
-
-            for (var i = 0; i < TASKS; i++)
-            {
-                var t = Task.Factory.StartNew(() =>
-                {
-                    using (var db = InitDB())
-                    {
-                        RunTask(db);
-                    }
-                });
-
-                tasks.Add(t);
-            }
-
-            Task.WaitAll(tasks.ToArray());
-        }
-
-        /// <summary>
-        /// In TestThread, all tasks contains the same instance of LiteEngine
-        /// </summary>
-        static void TestThread()
-        {
-            var tasks = new List<Task>();
-
-            using (var db = InitDB())
-            {
-                for (var i = 0; i < TASKS; i++)
-                {
-                    var t = Task.Factory.StartNew(() =>
-                    {
-                        RunTask(db);
-                    });
-
-                    tasks.Add(t);
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-
-        }
-
-        #endregion  
+        public DateTime When { get; set; }
     }
+
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+
+    internal class Program1
+    {
+
+        /// <summary>
+        /// Defines the entry point of the application.
+        /// </summary>
+        /// <param name="args">The args.</param>
+        [STAThread]
+        static void Main0(string[] args)
+        {
+            /*
+             * Important!: 
+             * `connectionString`
+             * has to be path to **NON-SSD** drive
+             */
+
+            const string connectionString = "d://generated.litedb";
+
+            //Some GUID keys to share across all processes
+            Guid[] sharedGuids = {
+                Guid.Parse("B9321547-D4BE-461F-B7F9-2E2600839428"),
+                Guid.Parse("1F0689E8-121A-414D-80D1-2A54B516A6AC")
+            };
+
+            // main start point
+            if (args.Length == 0)
+            {
+                File.Delete(connectionString);
+
+                const int processCount = 15;
+
+                Console.WriteLine($"Spawning {processCount} child processes");
+
+                for (int i = 0; i < processCount; i++)
+                    Process.Start(Process.GetCurrentProcess().MainModule.FileName, $"child_{i}");
+
+                return;
+            }
+
+            var procId = args[0];
+
+            Console.WriteLine($"Running as `{procId}`");
+
+            try
+            {
+                using (var database = new LiteDatabase(connectionString))
+                {
+
+                    database.Shrink();
+
+                    var collection = database.GetCollection<UnreadNotificationRecord>();
+                    collection.EnsureIndex(x => x.UserId);
+
+                    for (int i = 0; i < 50; i++)
+                    {
+                        var random = new Random();
+
+                        var record = new UnreadNotificationRecord
+                        {
+                            UserId = sharedGuids[random.Next() % sharedGuids.Length],
+                        };
+
+                        Console.WriteLine($"Item[{i}]: {procId}");
+
+                        //Every 2nd iteration run some query that actually has to yield some results
+
+                        if (i % 2 == 0)
+                            collection.
+                                Find(Query.EQ(nameof(UnreadNotificationRecord.UserId), sharedGuids[random.Next() % sharedGuids.Length])).
+                                ToArray();
+
+                        //Every iteration insert new record
+
+                        collection.Insert(record);
+                    }
+
+                    Console.WriteLine($"{procId} process finished");
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Console.ReadKey();
+            }
+        }
+    }
+
+
 }

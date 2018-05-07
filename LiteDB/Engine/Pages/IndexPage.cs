@@ -15,28 +15,57 @@ namespace LiteDB
         /// </summary>
         public const int INDEX_RESERVED_BYTES = 100;
 
-        public Dictionary<ushort, IndexNode> Nodes { get; set; }
+        private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
 
         public IndexPage(uint pageID)
             : base(pageID)
         {
-            this.Nodes = new Dictionary<ushort, IndexNode>();
         }
 
         /// <summary>
-        /// Update freebytes + items count
+        /// Get an index node from this page
         /// </summary>
-        public override void UpdateItemCount()
+        public IndexNode GetNode(ushort index)
         {
-            this.ItemCount = this.Nodes.Count;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.Nodes.Sum(x => x.Value.Length);
+            return _nodes[index];
         }
+
+        /// <summary>
+        /// Add new index node into this page. Update counters and free space
+        /// </summary>
+        public void AddNode(IndexNode node)
+        {
+            var index = _nodes.NextIndex();
+
+            node.Position = new PageAddress(this.PageID, index);
+
+            this.ItemCount++;
+            this.FreeBytes -= node.Length;
+
+            _nodes.Add(index, node);
+        }
+
+        /// <summary>
+        /// Delete node from this page and update counter and free space
+        /// </summary>
+        public void DeleteNode(IndexNode node)
+        {
+            this.ItemCount--;
+            this.FreeBytes += node.Length;
+
+            _nodes.Remove(node.Position.Index);
+        }
+
+        /// <summary>
+        /// Get node counter
+        /// </summary>
+        public int NodesCount => _nodes.Count;
 
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)
         {
-            this.Nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
+            _nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
             for (var i = 0; i < this.ItemCount; i++)
             {
@@ -60,13 +89,13 @@ namespace LiteDB
                     node.Next[j] = reader.ReadPageAddress();
                 }
 
-                this.Nodes.Add(node.Position.Index, node);
+                _nodes.Add(node.Position.Index, node);
             }
         }
 
         protected override void WriteContent(ByteWriter writer)
         {
-            foreach (var node in this.Nodes.Values)
+            foreach (var node in _nodes.Values)
             {
                 writer.Write(node.Position.Index); // node Index on this page
                 writer.Write((byte)node.Prev.Length); // level length
@@ -85,6 +114,6 @@ namespace LiteDB
             }
         }
 
-        #endregion Read/Write pages
+        #endregion
     }
 }

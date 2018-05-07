@@ -15,13 +15,13 @@ namespace LiteDB
         public BsonArray(List<BsonValue> array)
             : base(array)
         {
-            if (array == null) throw new ArgumentNullException("array");
+            if (array == null) throw new ArgumentNullException(nameof(array));
         }
 
         public BsonArray(BsonValue[] array)
             : base(new List<BsonValue>(array))
         {
-            if (array == null) throw new ArgumentNullException("array");
+            if (array == null) throw new ArgumentNullException(nameof(array));
         }
 
         public BsonArray(IEnumerable<BsonValue> items)
@@ -86,7 +86,7 @@ namespace LiteDB
         public virtual void AddRange<T>(IEnumerable<T> array)
             where T : BsonValue
         {
-            if (array == null) throw new ArgumentNullException("array");
+            if (array == null) throw new ArgumentNullException(nameof(array));
 
             foreach (var item in array)
             {

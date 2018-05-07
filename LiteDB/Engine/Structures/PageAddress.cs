@@ -30,12 +30,20 @@ namespace LiteDB
         public override bool Equals(object obj)
         {
             var other = (PageAddress)obj;
+
             return this.PageID == other.PageID && this.Index == other.Index;
         }
 
         public override int GetHashCode()
         {
-            return (this.PageID + this.Index).GetHashCode();
+            unchecked
+            {
+                int hash = 17;
+                // Maybe nullity checks, if these are objects not primitives!
+                hash = hash * 23 + (int)this.PageID;
+                hash = hash * 23 + this.Index;
+                return hash;
+            }
         }
 
         public PageAddress(uint pageID, ushort index)

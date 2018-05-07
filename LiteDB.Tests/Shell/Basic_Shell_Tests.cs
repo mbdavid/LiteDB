@@ -2,13 +2,13 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDB.Tests.Engine
+namespace LiteDB.Tests.Shell
 {
     [TestClass]
-    public class Shell_Tests
+    public class Basic_Shell_Tests
     {
         [TestMethod]
-        public void Shell_Commands()
+        public void Basic_Shell_Commands()
         {
             using (var db = new LiteEngine(new MemoryStream()))
             {
@@ -24,6 +24,18 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual(11, db.Run("db.col1.find a = 11").First().AsDocument["a"].AsInt32);
 
                 Assert.AreEqual(3, db.Count("col1"));
+
+                // insert new data
+                db.Run("db.data.insert {Text: \"Anything\", Number: 10} id:int");
+
+                db.Run("db.data.ensureIndex Text");
+
+                var doc = db.Run("db.data.find Text like \"A\"").First() as BsonDocument;
+
+                Assert.AreEqual(1, doc["_id"].AsInt32);
+                Assert.AreEqual("Anything", doc["Text"].AsString);
+                Assert.AreEqual(10, doc["Number"].AsInt32);
+
             }
         }
     }

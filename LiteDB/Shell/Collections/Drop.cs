@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "drop",
+        Syntax = "db.<collection>.drop",
+        Description = "Delete all documents, indexes and collection name. Returns true if collection has been droped"
+    )]
     internal class CollectionDrop : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -71,7 +70,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Where(Query query)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             _query = _query == null ? query : Query.And(_query, query);
             return this;

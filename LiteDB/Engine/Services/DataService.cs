@@ -26,7 +26,7 @@ namespace LiteDB
             var dataPage = _pager.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
-            var block = new DataBlock { Position = new PageAddress(dataPage.PageID, dataPage.DataBlocks.NextIndex()), Page = dataPage };
+            var block = new DataBlock { Page = dataPage };
 
             // if extend, store all bytes on extended page.
             if (extend)
@@ -41,10 +41,7 @@ namespace LiteDB
             }
 
             // add dataBlock to this page
-            dataPage.DataBlocks.Add(block.Position.Index, block);
-
-            // update freebytes + items count
-            dataPage.UpdateItemCount();
+            dataPage.AddBlock(block);
 
             // set page as dirty
             _pager.SetDirty(dataPage);
@@ -68,14 +65,14 @@ namespace LiteDB
         {
             // get datapage and mark as dirty
             var dataPage = _pager.GetPage<DataPage>(blockAddress.PageID);
-            var block = dataPage.DataBlocks[blockAddress.Index];
+            var block = dataPage.GetBlock(blockAddress.Index);
             var extend = dataPage.FreeBytes + block.Data.Length - data.Length <= 0;
 
             // check if need to extend
             if (extend)
             {
                 // clear my block data
-                block.Data = new byte[0];
+                dataPage.UpdateBlockData(block, new byte[0]);
 
                 // create (or get a existed) extendpage and store data there
                 ExtendPage extendPage;
@@ -95,7 +92,7 @@ namespace LiteDB
             else
             {
                 // if no extends, just update data block
-                block.Data = data;
+                dataPage.UpdateBlockData(block, data);
 
                 // if there was a extended bytes, delete
                 if (block.ExtendPageID != uint.MaxValue)
@@ -104,9 +101,6 @@ namespace LiteDB
                     block.ExtendPageID = uint.MaxValue;
                 }
             }
-
-            // updates freebytes + items count
-            dataPage.UpdateItemCount();
 
             // set DataPage as dirty
             _pager.SetDirty(dataPage);
@@ -139,7 +133,7 @@ namespace LiteDB
         public DataBlock GetBlock(PageAddress blockAddress)
         {
             var page = _pager.GetPage<DataPage>(blockAddress.PageID);
-            return page.DataBlocks[blockAddress.Index];
+            return page.GetBlock(blockAddress.Index);
         }
 
         /// <summary>
@@ -152,7 +146,7 @@ namespace LiteDB
             {
                 foreach (var extendPage in _pager.GetSeqPages<ExtendPage>(extendPageID))
                 {
-                    buffer.Write(extendPage.Data, 0, extendPage.Data.Length);
+                    buffer.Write(extendPage.GetData(), 0, extendPage.ItemCount);
                 }
 
                 return buffer.ToArray();
@@ -166,7 +160,7 @@ namespace LiteDB
         {
             // get page and mark as dirty
             var page = _pager.GetPage<DataPage>(blockAddress.PageID);
-            var block = page.DataBlocks[blockAddress.Index];
+            var block = page.GetBlock(blockAddress.Index);
 
             // if there a extended page, delete all
             if (block.ExtendPageID != uint.MaxValue)
@@ -175,16 +169,13 @@ namespace LiteDB
             }
 
             // delete block inside page
-            page.DataBlocks.Remove(block.Position.Index);
-
-            // update freebytes + itemcount
-            page.UpdateItemCount();
+            page.DeleteBlock(block);
 
             // set page as dirty here
             _pager.SetDirty(page);
 
             // if there is no more datablocks, lets delete all page
-            if (page.DataBlocks.Count == 0)
+            if (page.BlocksCount == 0)
             {
                 // first, remove from free list
                 _pager.AddOrRemoveToFreeList(false, page, col, ref col.FreeDataPageID);
@@ -217,12 +208,7 @@ namespace LiteDB
             {
                 var bytesToCopy = Math.Min(bytesLeft, BasePage.PAGE_AVAILABLE_BYTES);
 
-                page.Data = new byte[bytesToCopy];
-
-                Buffer.BlockCopy(data, offset, page.Data, 0, bytesToCopy);
-
-                // updates free bytes + items count
-                page.UpdateItemCount();
+                page.SetData(data, offset, bytesToCopy);
 
                 bytesLeft -= bytesToCopy;
                 offset += bytesToCopy;

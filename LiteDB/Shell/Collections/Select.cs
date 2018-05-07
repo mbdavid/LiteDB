@@ -5,6 +5,20 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "select",
+        Syntax = "db.<collection>.select <expression|path> [into <new_collection> [id:<data-type>]] [where <filter>] [includes <path1>,<path2>,...<pathN>] [skip N] [limit <M>]",
+        Description = "Search for document using filter. Support document transforms using expression (see `help expression`). Can include DbRef documents in results. Can skip/limit results.",
+        Examples = new string[] {
+            "db.orders.select",
+            "db.orders.select $ where _id > 100",
+            "db.orders.select { name: $.name, age: $.age - 2017 } where age < 30 limit 100",
+            "db.orders.select { name: UPPER($.name), mobile: FIRST($.phones[@.type = 'Mobile'].Number) }",
+            "db.orders.select $ into new_orders where DATEDIFF('day', $.orderDate, DATE()) = 0",
+            "db.orders.select $ include $.customer, $.produts[*] where _id = 22"
+        }
+    )]
     internal class Select : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)
@@ -15,42 +29,32 @@ namespace LiteDB.Shell
         public IEnumerable<BsonValue> Execute(StringScanner s, LiteEngine engine)
         {
             var col = this.ReadCollection(engine, s);
-            var fields = new Dictionary<string, BsonExpression>();
-            var index = 0;
 
-            // read all fields definitions (support AS as keyword no name field)
-            while(!s.HasTerminated)
-            {
-                // try read any kind of expression
-                var expression = BsonExpression.ReadExpression(s, false, false);
+            // try read any kind of expression
+            var expression = BsonExpression.ReadExpression(s, false, false);
                 
-                // if not found a valid one, try read only as path (will add $. before)
-                if (expression == null)
-                {
-                    expression = BsonExpression.ReadExpression(s, true, true);
-                }
-                //var expression = BsonExpression.ReadExpression(s, true, false);
-
-                var key = s.Scan(@"\s*as\s+([\w-]+)", 1).TrimToNull()
-                    ?? this.NamedField(expression)
-                    ?? ("expr" + (++index));
-
-                // if key already exits, add with another name
-                while (fields.ContainsKey(key))
-                {
-                    key = "expr" + (++index);
-                }
-
-                fields.Add(key, expression);
-
-                if (s.Scan(@"\s*,\s*").Length > 0) continue;
-                break;
+            // if not found a valid one, try read only as path (will add $. before)
+            if (expression == null)
+            {
+                expression = BsonExpression.ReadExpression(s, true, true);
             }
 
-            // select command required output value, path or expression
-            if (fields.Count == 0) throw LiteException.SyntaxError(s, "Missing select path");
-
             var query = Query.All();
+
+            // support into new_collection
+            var into = s.Scan(@"\s*into\s+([\w-]+)", 1);
+            var autoId = BsonType.ObjectId;
+
+            // checks for autoId
+            if (into.Length > 0)
+            {
+                var sid = s.Scan(@"\s+_?id:(int32|int64|int|long|objectid|datetime|date|guid)", 1).Trim().ToLower();
+                autoId =
+                    sid == "int32" || sid == "int" ? BsonType.Int32 :
+                    sid == "int64" || sid == "long" ? BsonType.Int64 :
+                    sid == "date" || sid == "datetime" ? BsonType.DateTime :
+                    sid == "guid" ? BsonType.Guid : BsonType.ObjectId;
+            }
 
             if (s.Scan(@"\s*where\s*").Length > 0)
             {
@@ -64,35 +68,36 @@ namespace LiteDB.Shell
 
             var docs = engine.Find(col, query, includes, skipLimit.Key, skipLimit.Value);
 
-            foreach(var doc in docs)
+            if (into.Length > 0)
             {
-                // if is a single value, return as just field
-                if (fields.Count == 1)
-                {
-                    foreach (var value in fields.Values.First().Execute(doc, false))
-                    {
-                        yield return value;
-                    }
-                }
-                else
-                {
-                    var output = new BsonDocument();
+                // insert into results to other collection collection
+                var count = engine.InsertBulk(into, this.Execute(docs, expression), autoId: autoId);
 
-                    foreach (var field in fields)
-                    {
-                        output[field.Key] = field.Value.Execute(doc, true).First();
-                    }
-
-                    yield return output;
-                }
+                // return inserted documents
+                return new BsonValue[] { count };
+            }
+            else
+            {
+                return this.Execute(docs, expression).Select(x => x as BsonValue);
             }
         }
 
-        private string NamedField(BsonExpression expr)
+        private IEnumerable<BsonDocument> Execute(IEnumerable<BsonDocument> docs, BsonExpression expression)
         {
-            var segments = expr.Source.Split('.');
-
-            return Regex.Replace(segments[segments.Length - 1], @"(\w+).*", "$1").TrimToNull();
+            foreach (var doc in docs)
+            {
+                foreach (var value in expression.Execute(doc, false))
+                {
+                    if (value.IsDocument)
+                    {
+                        yield return value.AsDocument;
+                    }
+                    else
+                    {
+                        yield return new BsonDocument { ["expr"] = value };
+                    }
+                }
+            }
         }
     }
 }

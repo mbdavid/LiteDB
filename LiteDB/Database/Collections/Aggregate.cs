@@ -22,7 +22,7 @@ namespace LiteDB
         /// </summary>
         public int Count(Query query)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return (int)_engine.Value.Count(_name, query);
         }
@@ -32,7 +32,7 @@ namespace LiteDB
         /// </summary>
         public int Count(Expression<Func<T, bool>> predicate)
         {
-            if (predicate == null) throw new ArgumentNullException("predicate");
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return this.Count(_visitor.Visit(predicate));
         }
@@ -55,7 +55,7 @@ namespace LiteDB
         /// </summary>
         public long LongCount(Query query)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return _engine.Value.Count(_name, query);
         }
@@ -65,7 +65,7 @@ namespace LiteDB
         /// </summary>
         public long LongCount(Expression<Func<T, bool>> predicate)
         {
-            if (predicate == null) throw new ArgumentNullException("predicate");
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return this.LongCount(_visitor.Visit(predicate));
         }
@@ -79,7 +79,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(Query query)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return _engine.Value.Exists(_name, query);
         }
@@ -89,7 +89,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists(Expression<Func<T, bool>> predicate)
         {
-            if (predicate == null) throw new ArgumentNullException("predicate");
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return this.Exists(_visitor.Visit(predicate));
         }
@@ -103,7 +103,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min(string field)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
             return _engine.Value.Min(_name, field);
         }
@@ -121,7 +121,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min<K>(Expression<Func<T, K>> property)
         {
-            if (property == null) throw new ArgumentNullException("property");
+            if (property == null) throw new ArgumentNullException(nameof(property));
 
             var field = _visitor.GetField(property);
 
@@ -133,7 +133,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max(string field)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
             return _engine.Value.Max(_name, field);
         }
@@ -151,7 +151,7 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max<K>(Expression<Func<T, K>> property)
         {
-            if (property == null) throw new ArgumentNullException("property");
+            if (property == null) throw new ArgumentNullException(nameof(property));
 
             var field = _visitor.GetField(property);
 

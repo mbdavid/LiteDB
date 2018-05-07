@@ -96,6 +96,11 @@ namespace LiteDB.Tests.Database
                     ProductsNull = null
                 };
 
+                mapper.SerializeNullValues = true;
+
+                var dOrder = mapper.ToDocument<Order>(order);
+
+
                 orders.Insert(order);
 
                 //var r0 = orders
@@ -141,9 +146,30 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(null, result.ProductsNull);
                 Assert.AreEqual(0, result.ProductEmpty.Count);
 
-                // not support yet
-                //Assert.AreEqual(product1.SupplierAddress.StreetName, result.Products[0].SupplierAddress.StreetName);
-                //Assert.AreEqual(null, result.Products[1].SupplierAddress);
+                // now, delete reference 1x1 and 1xN
+                customers.Delete(customer.Id);
+
+                products.Delete(product1.ProductId);
+
+                var json = db.Engine.Find("orders", Query.All(), new string[] { "$.Customer", "$.Products[*]" })
+                    .FirstOrDefault()
+                    .ToString();
+
+                var result2 = orders
+                    .Include(x => x.Customer)
+                    .Include(x => x.Products)
+                    .FindAll()
+                    .FirstOrDefault();
+
+                // must missing customer and has only 1 product
+             
+                Assert.IsNull(result2.Customer);
+                Assert.AreEqual(1, result2.Products.Count);
+             
+                // property ProductArray contains only deleted "product1", but has no include on query, so must returns deleted
+             
+                Assert.AreEqual(1, result2.ProductArray.Length);
+
 
             }
         }

@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "FileStorage",
+        Name = "delete",
+        Syntax = "fs.delete <fileId>",
+        Description = "Delete a file using fileId key. Return true if file has been deleted.",
+        Examples = new string[] {
+            "fs.delete my_photo_001"
+        }
+    )]
     internal class FileDelete : BaseStorage, ICommand
     {
         public bool IsCommand(StringScanner s)

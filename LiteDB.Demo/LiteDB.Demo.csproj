@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40</TargetFrameworks>
+    <TargetFrameworks>net46</TargetFrameworks>
     <AssemblyName>LiteDB.Demo</AssemblyName>
     <OutputType>Exe</OutputType>
     <RootNamespace>LiteDB.Demo</RootNamespace>
@@ -15,6 +15,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite" Version="1.0.106" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj" />

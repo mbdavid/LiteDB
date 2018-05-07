@@ -20,5 +20,12 @@ namespace LiteDB.Shell
 
             return v.Length == 0 ? null : v;
         }
+
+        public static string MaxLength(this string str, int len)
+        {
+            return len == 0 || str.Length < len ?
+                str :
+                str.Substring(0, len - 3) + "...";
+        }
     }
 }

@@ -11,13 +11,20 @@ namespace LiteDB
         /// </summary>
         public BsonValue Insert(T document)
         {
-            if (document == null) throw new ArgumentNullException("document");
+            if (document == null) throw new ArgumentNullException(nameof(document));
 
-            var docs = this.GetBsonDocs(new[] { document });
+            var doc = _mapper.ToDocument(document);
+            var removed = this.RemoveDocId(doc);
 
-            _engine.Value.Insert(_name, docs, _autoId);
+            var id = _engine.Value.Insert(_name, doc, _autoId);
 
-            return docs.Single()["_id"];
+            // checks if must update _id value in entity
+            if (removed && _id != null)
+            {
+                _id.Setter(document, id.RawValue);
+            }
+
+            return id;
         }
 
         /// <summary>
@@ -25,8 +32,8 @@ namespace LiteDB
         /// </summary>
         public void Insert(BsonValue id, T document)
         {
-            if (document == null) throw new ArgumentNullException("document");
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+            if (document == null) throw new ArgumentNullException(nameof(document));
+            if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
             var doc = _mapper.ToDocument(document);
 
@@ -40,7 +47,7 @@ namespace LiteDB
         /// </summary>
         public int Insert(IEnumerable<T> docs)
         {
-            if (docs == null) throw new ArgumentNullException("docs");
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
 
             return _engine.Value.Insert(_name, this.GetBsonDocs(docs), _autoId);
         }
@@ -50,7 +57,7 @@ namespace LiteDB
         /// </summary>
         public int InsertBulk(IEnumerable<T> docs, int batchSize = 5000)
         {
-            if (docs == null) throw new ArgumentNullException("docs");
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
 
             return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize, _autoId);
         }
@@ -63,9 +70,24 @@ namespace LiteDB
             foreach (var document in documents)
             {
                 var doc = _mapper.ToDocument(document);
-                var setId = false;
-                var id = doc["_id"];
+                var removed = this.RemoveDocId(doc);
 
+                yield return doc;
+
+                if (removed && _id != null)
+                {
+                    _id.Setter(document, doc["_id"].RawValue);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove document _id if contains a "empty" value (checks for autoId bson type)
+        /// </summary>
+        private bool RemoveDocId(BsonDocument doc)
+        {
+            if (doc.TryGetValue("_id", out var id)) 
+            {
                 // check if exists _autoId and current id is "empty"
                 if ((_autoId == BsonType.ObjectId && (id.IsNull || id.AsObjectId == ObjectId.Empty)) ||
                     (_autoId == BsonType.Guid && id.AsGuid == Guid.Empty) ||
@@ -75,16 +97,11 @@ namespace LiteDB
                 {
                     // in this cases, remove _id and set new value after
                     doc.Remove("_id");
-                    setId = true;
-                }
-
-                yield return doc;
-
-                if (setId && _id != null)
-                {
-                    _id.Setter(document, doc["_id"].RawValue);
+                    return true;
                 }
             }
+
+            return false;   
         }
     }
 }

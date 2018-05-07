@@ -3,6 +3,15 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
+    [Help(
+        Category = "Shell",
+        Name = "run",
+        Syntax = "run <filename>",
+        Description = "Queue shell commands inside filename to be run in order.",
+        Examples = new string[] {
+            "run scripts.txt"
+        }
+    )]
     internal class Run : IShellCommand
     {
         public bool IsCommand(StringScanner s)

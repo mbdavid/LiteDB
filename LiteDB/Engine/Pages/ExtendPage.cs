@@ -16,33 +16,44 @@ namespace LiteDB
         /// <summary>
         /// Represent the part or full of the object - if this page has NextPageID the object is bigger than this page
         /// </summary>
-        public byte[] Data { get; set; }
+        private byte[] _data = new byte[0];
 
         public ExtendPage(uint pageID)
             : base(pageID)
         {
-            this.Data = new byte[0];
         }
 
         /// <summary>
-        /// Update freebytes + items count
+        /// Set slice of byte array source  into this page area
         /// </summary>
-        public override void UpdateItemCount()
+        public void SetData(byte[] data, int offset, int length)
         {
-            this.ItemCount = (ushort)Data.Length;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES - this.Data.Length; // not used on ExtendPage
+            this.ItemCount = length;
+            this.FreeBytes = PAGE_AVAILABLE_BYTES - length; // not used on ExtendPage
+
+            _data = new byte[length];
+
+            Buffer.BlockCopy(data, offset, _data, 0, length);
+        }
+
+        /// <summary>
+        /// Get internal page byte array data
+        /// </summary>
+        public byte[] GetData()
+        {
+            return _data;
         }
 
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)
         {
-            this.Data = reader.ReadBytes(this.ItemCount);
+            _data = reader.ReadBytes(this.ItemCount);
         }
 
         protected override void WriteContent(ByteWriter writer)
         {
-            writer.Write(this.Data);
+            writer.Write(_data);
         }
 
         #endregion

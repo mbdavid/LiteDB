@@ -19,7 +19,7 @@ namespace LiteDB
         /// </summary>
         public bool EnsureIndex(string collection, string field, string expression, bool unique = false)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (!CollectionIndex.IndexPattern.IsMatch(field)) throw new ArgumentException("Invalid field format pattern: " + CollectionIndex.IndexPattern.ToString(), "field");
             if (field == "_id") return false; // always exists
             if (expression != null && expression.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
@@ -50,7 +50,7 @@ namespace LiteDB
                 {
                     // read binary and deserialize document
                     var buffer = _data.Read(pkNode.DataBlock);
-                    var doc = BsonSerializer.Deserialize(buffer).AsDocument;
+                    var doc = _bsonReader.Deserialize(buffer).AsDocument;
                     var expr = new BsonExpression(index.Expression);
 
                     // get values from expression in document
@@ -79,8 +79,8 @@ namespace LiteDB
         /// </summary>
         public bool DropIndex(string collection, string field)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             if (field == "_id") throw LiteException.IndexDropId();
 
@@ -115,7 +115,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<IndexInfo> GetIndexes(string collection)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
             using (_locker.Read())
             {

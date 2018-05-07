@@ -21,6 +21,14 @@ namespace LiteDB
                 {
                     yield return value.First.RawValue?.ToString() + value.Second.RawValue?.ToString();
                 }
+                else if (value.First.IsDateTime && value.Second.IsNumber)
+                {
+                    yield return value.First.AsDateTime.AddDays(value.Second.AsDouble);
+                }
+                else if (value.First.IsNumber && value.Second.IsDateTime)
+                {
+                    yield return value.Second.AsDateTime.AddDays(value.First.AsDouble);
+                }
                 else if (!value.First.IsNumber || !value.Second.IsNumber)
                 {
                     continue;
@@ -39,9 +47,22 @@ namespace LiteDB
         {
             foreach (var value in left.ZipValues(right))
             {
-                if (!value.First.IsNumber || !value.Second.IsNumber) continue;
-
-                yield return value.First - value.Second;
+                if (value.First.IsDateTime && value.Second.IsNumber)
+                {
+                    yield return value.First.AsDateTime.AddDays(-value.Second.AsDouble);
+                }
+                else if (value.First.IsNumber && value.Second.IsDateTime)
+                {
+                    yield return value.Second.AsDateTime.AddDays(-value.First.AsDouble);
+                }
+                else if (!value.First.IsNumber || !value.Second.IsNumber)
+                {
+                    continue;
+                }
+                else
+                {
+                    yield return value.First - value.Second;
+                }
             }
         }
 
@@ -170,6 +191,35 @@ namespace LiteDB
             {
                 yield return value.First || value.Second;
             }
+        }
+
+        /// <summary>
+        /// Create a single document based on key-value pairs on parameters. DOCUMENT('_id', 1)
+        /// </summary>
+        public static IEnumerable<BsonValue> DOCUMENT(IEnumerable<BsonValue> keys, IEnumerable<IEnumerable<BsonValue>> values)
+        {
+            var doc = new BsonDocument();
+
+            foreach (var pair in keys.ZipValues(values.Select(x => x.FirstOrDefault())))
+            {
+                var key = pair.First;
+                var value = pair.Second;
+
+                if (value != null)
+                {
+                    doc[key] = value;
+                }
+            }
+
+            yield return doc;
+        }
+
+        /// <summary>
+        /// Return an array from list of values. Support multiple values but returns a single value
+        /// </summary>
+        public static IEnumerable<BsonValue> ARRAY(IEnumerable<IEnumerable<BsonValue>> values)
+        {
+            yield return new BsonArray(values.SelectMany(x => x));
         }
     }
 }

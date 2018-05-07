@@ -10,7 +10,7 @@ namespace LiteDB
         /// </summary>
         public int Delete(Query query)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return _engine.Value.Delete(_name, query);
         }
@@ -28,7 +28,7 @@ namespace LiteDB
         /// </summary>
         public bool Delete(BsonValue id)
         {
-            if (id == null || id.IsNull) throw new ArgumentNullException("id");
+            if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
             return this.Delete(Query.EQ("_id", id)) > 0;
         }

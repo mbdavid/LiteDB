@@ -46,7 +46,7 @@ namespace LiteDB
         /// </summary>
         public static Query All(string field, int order = Ascending)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryAll(field, order);
         }
@@ -56,7 +56,7 @@ namespace LiteDB
         /// </summary>
         public static Query EQ(string field, BsonValue value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryEquals(field, value ?? BsonValue.Null);
         }
@@ -66,7 +66,7 @@ namespace LiteDB
         /// </summary>
         public static Query LT(string field, BsonValue value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryLess(field, value ?? BsonValue.Null, false);
         }
@@ -76,7 +76,7 @@ namespace LiteDB
         /// </summary>
         public static Query LTE(string field, BsonValue value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryLess(field, value ?? BsonValue.Null, true);
         }
@@ -86,7 +86,7 @@ namespace LiteDB
         /// </summary>
         public static Query GT(string field, BsonValue value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryGreater(field, value ?? BsonValue.Null, false);
         }
@@ -96,7 +96,7 @@ namespace LiteDB
         /// </summary>
         public static Query GTE(string field, BsonValue value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryGreater(field, value ?? BsonValue.Null, true);
         }
@@ -106,7 +106,7 @@ namespace LiteDB
         /// </summary>
         public static Query Between(string field, BsonValue start, BsonValue end, bool startEquals = true, bool endEquals = true)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryBetween(field, start ?? BsonValue.Null, end ?? BsonValue.Null, startEquals, endEquals);
         }
@@ -116,8 +116,8 @@ namespace LiteDB
         /// </summary>
         public static Query StartsWith(string field, string value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException("value");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
             return new QueryStartsWith(field, value);
         }
@@ -127,8 +127,8 @@ namespace LiteDB
         /// </summary>
         public static Query Contains(string field, string value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException("value");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
             return new QueryContains(field, value);
         }
@@ -138,7 +138,7 @@ namespace LiteDB
         /// </summary>
         public static Query Not(string field, BsonValue value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             return new QueryNotEquals(field, value ?? BsonValue.Null);
         }
@@ -148,7 +148,7 @@ namespace LiteDB
         /// </summary>
         public static Query Not(Query query, int order = Query.Ascending)
         {
-            if (query == null) throw new ArgumentNullException("query");
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             return new QueryNot(query, order);
         }
@@ -158,8 +158,8 @@ namespace LiteDB
         /// </summary>
         public static Query In(string field, BsonArray value)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-            if (value == null) throw new ArgumentNullException("value");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             return new QueryIn(field, value.RawValue);
         }
@@ -169,8 +169,8 @@ namespace LiteDB
         /// </summary>
         public static Query In(string field, params BsonValue[] values)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-            if (values == null) throw new ArgumentNullException("values");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (values == null) throw new ArgumentNullException(nameof(values));
 
             return new QueryIn(field, values);
         }
@@ -180,8 +180,8 @@ namespace LiteDB
         /// </summary>
         public static Query In(string field, IEnumerable<BsonValue> values)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-            if (values == null) throw new ArgumentNullException("values");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (values == null) throw new ArgumentNullException(nameof(values));
 
             return new QueryIn(field, values);
         }
@@ -191,8 +191,8 @@ namespace LiteDB
         /// </summary>
         public static Query Where(string field, Func<BsonValue, bool> predicate, int order = Query.Ascending)
         {
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
-            if (predicate == null) throw new ArgumentNullException("predicate");
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return new QueryWhere(field, predicate, order);
         }
@@ -202,8 +202,8 @@ namespace LiteDB
         /// </summary>
         public static Query And(Query left, Query right)
         {
-            if (left == null) throw new ArgumentNullException("left");
-            if (right == null) throw new ArgumentNullException("right");
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
 
             // test if can use QueryBetween because it's more efficient
             if (left is QueryGreater && right is QueryLess && left.Field == right.Field)
@@ -222,7 +222,7 @@ namespace LiteDB
         /// </summary>
         public static Query And(params Query[] queries)
         {
-            if (queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+            if (queries == null || queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
 
             var left = queries[0];
 
@@ -238,8 +238,8 @@ namespace LiteDB
         /// </summary>
         public static Query Or(Query left, Query right)
         {
-            if (left == null) throw new ArgumentNullException("left");
-            if (right == null) throw new ArgumentNullException("right");
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
 
             return new QueryOr(left, right);
         }
@@ -249,7 +249,7 @@ namespace LiteDB
         /// </summary>
         public static Query Or(params Query[] queries)
         {
-            if (queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
+            if (queries == null || queries.Length < 2) throw new ArgumentException("At least two Query should be passed");
 
             var left = queries[0];
 

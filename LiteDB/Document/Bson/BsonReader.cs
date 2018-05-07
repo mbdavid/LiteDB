@@ -8,6 +8,13 @@ namespace LiteDB
     /// </summary>
     internal class BsonReader
     {
+        private bool _utcDate = false;
+
+        public BsonReader(bool utcDate)
+        {
+            _utcDate = utcDate;
+        }
+
         /// <summary>
         /// Main method - deserialize using ByteReader helper
         /// </summary>
@@ -27,8 +34,7 @@ namespace LiteDB
 
             while (reader.Position < end)
             {
-                string name;
-                var value = this.ReadElement(reader, out name);
+                var value = this.ReadElement(reader, out string name);
                 obj.RawValue[name] = value;
             }
 
@@ -48,8 +54,7 @@ namespace LiteDB
 
             while (reader.Position < end)
             {
-                string name;
-                var value = this.ReadElement(reader, out name);
+                var value = this.ReadElement(reader, out string name);
                 arr.Add(value);
             }
 
@@ -110,7 +115,9 @@ namespace LiteDB
                 if (ts == 253402300800000) return DateTime.MaxValue;
                 if (ts == -62135596800000) return DateTime.MinValue;
 
-                return BsonValue.UnixEpoch.AddMilliseconds(ts).ToLocalTime();
+                var date = BsonValue.UnixEpoch.AddMilliseconds(ts);
+
+                return _utcDate ? date : date.ToLocalTime();
             }
             else if (type == 0x0A) // Null
             {
@@ -148,21 +155,19 @@ namespace LiteDB
             return Encoding.UTF8.GetString(bytes, 0, length - 1);
         }
 
-        // use byte array buffer for CString (key-only)
-        private byte[] _strBuffer = new byte[1000];
-
         private string ReadCString(ByteReader reader)
         {
             var pos = 0;
+            var buffer = new byte[200];
 
             while (true)
             {
-                byte buf = reader.ReadByte();
-                if (buf == 0x00) break;
-                _strBuffer[pos++] = buf;
+                var data = reader.ReadByte();
+                if (data == 0x00 || pos == 200) break;
+                buffer[pos++] = data;
             }
 
-            return Encoding.UTF8.GetString(_strBuffer, 0, pos);
+            return Encoding.UTF8.GetString(buffer, 0, pos);
         }
     }
 }

@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "dropIndex",
+        Syntax = "db.<collection>.dropIndex [field|index]",
+        Description = "Drop an index and make index area free to use with another. Returns true if index has been deleted.",
+        Examples = new string[] {
+            "db.orders.dropIndex customerName",
+            "db.orders.dropIndex index_name",
+        }
+    )]
     internal class CollectionDropIndex : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)

@@ -10,8 +10,8 @@ namespace LiteDB
         /// </summary>
         public BsonValue Min(string collection, string field)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             using (_locker.Read())
             {
@@ -38,8 +38,8 @@ namespace LiteDB
         /// </summary>
         public BsonValue Max(string collection, string field)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException("field");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
             using (_locker.Read())
             {
@@ -66,7 +66,7 @@ namespace LiteDB
         /// </summary>
         public long Count(string collection, Query query = null)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
             using (_locker.Read())
             {
@@ -83,7 +83,7 @@ namespace LiteDB
                 {
                     // count distinct documents
                     return nodes
-                        .Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Select(x => _bsonReader.Deserialize(_data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
                         .Distinct()
                         .LongCount();
@@ -104,8 +104,8 @@ namespace LiteDB
         /// </summary>
         public bool Exists(string collection, Query query)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (query == null) throw new ArgumentNullException("query");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
             using (_locker.Read())
             {
@@ -120,7 +120,7 @@ namespace LiteDB
                 {
                     // check if has at least first document
                     return nodes
-                        .Select(x => BsonSerializer.Deserialize(_data.Read(x.DataBlock)).AsDocument)
+                        .Select(x => _bsonReader.Deserialize(_data.Read(x.DataBlock)).AsDocument)
                         .Where(x => query.FilterDocument(x))
                         .Any();
                 }

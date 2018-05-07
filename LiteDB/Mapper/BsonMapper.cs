@@ -115,7 +115,7 @@ namespace LiteDB
             );
 
 
-            #endregion Register CustomTypes
+            #endregion
 
         }
 
@@ -211,9 +211,8 @@ namespace LiteDB
         internal EntityMapper GetEntityMapper(Type type)
         {
             //TODO: needs check if Type if BsonDocument? Returns empty EntityMapper?
-            EntityMapper mapper;
 
-            if (!_entities.TryGetValue(type, out mapper))
+            if (!_entities.TryGetValue(type, out EntityMapper mapper))
             {
                 lock (_entities)
                 {
@@ -352,7 +351,9 @@ namespace LiteDB
                 (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) :
                 (BindingFlags.Public | BindingFlags.Instance);
 
-            members.AddRange(type.GetProperties(flags).Where(x => x.CanRead).Select(x => x as MemberInfo));
+            members.AddRange(type.GetProperties(flags)
+                .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
+                .Select(x => x as MemberInfo));
 
             if(this.IncludeFields)
             {
@@ -393,6 +394,9 @@ namespace LiteDB
 
             member.Serialize = (obj, m) =>
             {
+                // supports null values when "SerializeNullValues = true"
+                if (obj == null) return BsonValue.Null;
+
                 var idField = entity.Id;
 
                 // #768 if using DbRef with interface with no ID mapped
@@ -402,7 +406,7 @@ namespace LiteDB
 
                 return new BsonDocument
                 {
-                    { "$id", new BsonValue(id) },
+                    { "$id", m.Serialize(id.GetType(), id, 0) },
                     { "$ref", collection }
                 };
             };
@@ -428,6 +432,9 @@ namespace LiteDB
 
             member.Serialize = (list, m) =>
             {
+                // supports null values when "SerializeNullValues = true"
+                if (list == null) return BsonValue.Null;
+
                 var result = new BsonArray();
                 var idField = entity.Id;
 
@@ -435,9 +442,11 @@ namespace LiteDB
                 {
                     if (item == null) continue;
 
+                    var id = idField.Getter(item);
+
                     result.Add(new BsonDocument
                     {
-                        { "$id", new BsonValue(idField.Getter(item)) },
+                        { "$id", m.Serialize(id.GetType(), id, 0) },
                         { "$ref", collection }
                     });
                 }
@@ -451,25 +460,26 @@ namespace LiteDB
 
                 if (array.Count == 0) return m.Deserialize(member.DataType, array);
 
-                var hasIdRef = array[0].AsDocument == null || array[0].AsDocument["$id"].IsNull;
+                // copy array changing $id to _id
+                var result = new BsonArray();
 
-                if (hasIdRef)
+                foreach (var item in array)
                 {
-                    // if no $id, deserialize as full (was loaded via Include)
-                    return m.Deserialize(member.DataType, array);
-                }
-                else
-                {
-                    // copy array changing $id to _id
-                    var arr = new BsonArray();
+                    var refId = item.AsDocument["$id"];
 
-                    foreach (var item in array)
+                    // if refId is null was included by "include" query, so "item" is full filled document
+                    if (refId.IsNull)
                     {
-                        arr.Add(new BsonDocument { { "_id", item.AsDocument["$id"] } });
+                        result.Add(item);
+                    }
+                    else
+                    {
+                        result.Add(new BsonDocument { { "_id", refId } });
                     }
 
-                    return m.Deserialize(member.DataType, arr);
                 }
+
+                return m.Deserialize(member.DataType, result);
             };
         }
 

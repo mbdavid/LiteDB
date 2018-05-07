@@ -3,6 +3,15 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
+    [Help(
+        Category = "Database",
+        Name = "upgrade",
+        Syntax = "update <filename|connectionString>",
+        Description = "Update datafile from V6 to V7.",
+        Examples = new string[] {
+            "db.upgrade C:/Temp/old.db",
+        }
+    )]
     internal class Upgrade : IShellCommand
     {
         public bool IsCommand(StringScanner s)

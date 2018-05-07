@@ -12,7 +12,7 @@ namespace LiteDB
         /// </summary>
         public LiteCollection<T> Include<K>(Expression<Func<T, K>> path)
         {
-            if (path == null) throw new ArgumentNullException("path");
+            if (path == null) throw new ArgumentNullException(nameof(path));
 
             var value = _visitor.GetPath(path);
 
@@ -25,7 +25,7 @@ namespace LiteDB
         /// </summary>
         public LiteCollection<T> Include(string path)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException("path");
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
             // cloning this collection and adding this include
             var newcol = new LiteCollection<T>(_name, _engine, _mapper, _log);

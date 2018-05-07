@@ -4,6 +4,12 @@ using System.Linq;
 
 namespace LiteDB.Shell
 {
+    [Help(
+        Category = "Collection",
+        Name = "indexes",
+        Syntax = "db.<collection>.indexes",
+        Description = "Return all created indexes inside this collection"
+    )]
     internal class CollectionIndexes : BaseCollection, ICommand
     {
         public bool IsCommand(StringScanner s)
@@ -26,7 +32,8 @@ namespace LiteDB.Shell
                     { "slot", index.Slot },
                     { "field", index.Field },
                     { "expression", index.Expression },
-                    { "unique", index.Unique }
+                    { "unique", index.Unique },
+                    { "maxLevel", Convert.ToInt32(index.MaxLevel) }
                 };
             }
         }

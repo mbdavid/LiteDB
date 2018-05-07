@@ -48,6 +48,22 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns first value from an list of values
+        /// </summary>
+        public static IEnumerable<BsonValue> FIRST(IEnumerable<BsonValue> values)
+        {
+            yield return values.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Returns last value from an list of values
+        /// </summary>
+        public static IEnumerable<BsonValue> LAST(IEnumerable<BsonValue> values)
+        {
+            yield return values.LastOrDefault();
+        }
+
+        /// <summary>
         /// Find average value from all values (number values only). Return a single value
         /// </summary>
         public static IEnumerable<BsonValue> AVG(IEnumerable<BsonValue> values)
@@ -80,6 +96,24 @@ namespace LiteDB
             }
 
             yield return sum;
+        }
+
+        /// <summary>
+        /// Return "true" only if all values are true
+        /// ALL($.items[*] > 0)
+        /// </summary>
+        public static IEnumerable<BsonValue> ALL(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values.Where(x => x.IsBoolean).Select(x => x.AsBoolean))
+            {
+                if (value == false)
+                {
+                    yield return false;
+                    yield break;
+                }
+            }
+
+            yield return true;
         }
 
         /// <summary>

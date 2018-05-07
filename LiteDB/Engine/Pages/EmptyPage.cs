@@ -29,15 +29,6 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Update freebytes + items count
-        /// </summary>
-        public override void UpdateItemCount()
-        {
-            this.ItemCount = 0;
-            this.FreeBytes = PAGE_AVAILABLE_BYTES;
-        }
-
         #region Read/Write pages
 
         protected override void ReadContent(ByteReader reader)
@@ -48,6 +39,6 @@ namespace LiteDB
         {
         }
 
-        #endregion Read/Write pages
+        #endregion
     }
 }

@@ -35,6 +35,9 @@ namespace LiteDB
 
         private TimeSpan _timeout;
 
+        private BsonReader _bsonReader;
+        private BsonWriter _bsonWriter = new BsonWriter();
+
         /// <summary>
         /// Get log instance for debug operations
         /// </summary>
@@ -91,14 +94,15 @@ namespace LiteDB
         /// <summary>
         /// Initialize LiteEngine using custom disk service implementation and full engine options
         /// </summary>
-        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
+        public LiteEngine(IDiskService disk, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null, bool utcDate = false)
         {
-            if (disk == null) throw new ArgumentNullException("disk");
+            if (disk == null) throw new ArgumentNullException(nameof(disk));
 
             _timeout = timeout ?? TimeSpan.FromMinutes(1);
             _cacheSize = cacheSize;
             _disk = disk;
             _log = log ?? new Logger();
+            _bsonReader = new BsonReader(utcDate);
 
             try
             {
@@ -225,10 +229,20 @@ namespace LiteDB
         /// <summary>
         /// Initialize new datafile with header page + lock reserved area zone
         /// </summary>
-        public static void CreateDatabase(Stream stream, string password = null)
+        public static void CreateDatabase(Stream stream, string password = null, long initialSize = 0)
         {
+            // calculate how many empty pages will be added on disk
+            var emptyPages = initialSize == 0 ? 0 : (initialSize - (2 * BasePage.PAGE_SIZE)) / BasePage.PAGE_SIZE;
+
+            // if too small size (less than 2 pages), assume no initial size
+            if (emptyPages < 0) emptyPages = 0;
+
             // create a new header page in bytes (keep second page empty)
-            var header = new HeaderPage() { LastPageID = 1 };
+            var header = new HeaderPage
+            {
+                LastPageID = initialSize == 0 ? 1 : (uint)emptyPages + 1,
+                FreeEmptyPageID = initialSize == 0 ? uint.MaxValue : 2
+            };
 
             if (password != null)
             {
@@ -244,8 +258,39 @@ namespace LiteDB
 
             stream.Write(buffer, 0, BasePage.PAGE_SIZE);
 
-            // write second page empty just to use as lock control
+            // write second page as an empty AREA (it's not a page) just to use as lock control
             stream.Write(new byte[BasePage.PAGE_SIZE], 0, BasePage.PAGE_SIZE);
+
+            // create crypto class if has password
+            var crypto = password != null ? new AesEncryption(password, header.Salt) : null;
+
+            // if initial size is defined, lets create empty pages in a linked list
+            if (emptyPages > 0)
+            {
+                stream.SetLength(initialSize);
+
+                var pageID = 1u;
+
+                while(++pageID < (emptyPages + 2))
+                {
+                    var empty = new EmptyPage(pageID)
+                    {
+                        PrevPageID = pageID == 2 ? 0 : pageID - 1,
+                        NextPageID = pageID == emptyPages + 1 ? uint.MaxValue : pageID + 1
+                    };
+
+                    var bytes = empty.WritePage();
+
+                    if (password != null)
+                    {
+                        bytes = crypto.Encrypt(bytes);
+                    }
+
+                    stream.Write(bytes, 0, BasePage.PAGE_SIZE);
+                }
+            }
+
+            if (crypto != null) crypto.Dispose();
         }
     }
 }

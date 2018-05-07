@@ -16,7 +16,7 @@ namespace LiteDB
 
         public JsonReader(TextReader reader)
         {
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             _tokenizer = new JsonTokenizer(reader);
         }

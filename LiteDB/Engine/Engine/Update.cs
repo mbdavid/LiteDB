@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public bool Update(string collection, BsonDocument doc)
         {
-            if (doc == null) throw new ArgumentNullException("doc");
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
 
             return this.Update(collection, new BsonDocument[] { doc }) == 1;
         }
@@ -21,8 +21,8 @@ namespace LiteDB
         /// </summary>
         public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException("collection");
-            if (docs == null) throw new ArgumentNullException("docs");
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (docs == null) throw new ArgumentNullException(nameof(docs));
 
             return this.Transaction<int>(collection, false, (col) =>
             {
@@ -68,7 +68,7 @@ namespace LiteDB
             if (pkNode == null) return false;
 
             // serialize document in bytes
-            var bytes = BsonSerializer.Serialize(doc);
+            var bytes = _bsonWriter.Serialize(doc);
 
             // update data storage
             var dataBlock = _data.Update(col, pkNode.DataBlock, bytes);

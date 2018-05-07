@@ -1,8 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.IO;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB.Tests.Database
 {
@@ -10,12 +9,21 @@ namespace LiteDB.Tests.Database
     public class ConnectionString_Tests
     {
         [TestMethod]
+        public void ConnectionString_NoArguments()
+        {
+            // Verify that the default ConnectionString contains the appropriate defaults
+            var defaults = new ConnectionString();
+            AssertDefaults(defaults, false);
+        }
+
+        [TestMethod]
         public void ConnectionString_Parser()
         {
             // only filename
             var onlyfile = new ConnectionString(@"demo.db");
 
             Assert.AreEqual(@"demo.db", onlyfile.Filename);
+            AssertDefaults(onlyfile, true);
 
             // file with spaces without "
             var normal = new ConnectionString(@"filename=c:\only file\demo.db; journal=false");
@@ -30,8 +38,7 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(TimeSpan.FromHours(1), filenameTimeout.Timeout);
 
             // file with spaces with " and ;
-            var full = new ConnectionString(
-                @"filename=""c:\only;file\""d\""emo.db""; 
+            var fullConnectionString = @"filename=""c:\only;file\""d\""emo.db""; 
                   journal =false;
                   password =   ""john-doe "" ;
                   cache SIZE = 1000 ;
@@ -39,7 +46,11 @@ namespace LiteDB.Tests.Database
                   initial size = 10 MB ;
                   mode =  excluSIVE ;
                   limit SIZE = 20mb;
-                  log = 255");
+                  log = 255 ;
+                  utc=true ;
+                  upgrade=true;
+                  async=true";
+            var full = new ConnectionString(fullConnectionString);
 
             Assert.AreEqual(@"c:\only;file""d""emo.db", full.Filename);
             Assert.AreEqual(false, full.Journal);
@@ -50,7 +61,9 @@ namespace LiteDB.Tests.Database
             Assert.AreEqual(10 * 1024 * 1024, full.InitialSize);
             Assert.AreEqual(20 * 1024 * 1024, full.LimitSize);
             Assert.AreEqual(255, full.Log);
-
+            Assert.AreEqual(true, full.UtcDate);
+            Assert.AreEqual(true, full.Upgrade);
+            Assert.AreEqual(true, full.Async);
         }
 
         [TestMethod]
@@ -63,6 +76,53 @@ namespace LiteDB.Tests.Database
             connectionString = "filename=foo;log=" + Logger.FULL;
             db = new LiteDatabase(connectionString);
             Assert.AreEqual(Logger.FULL, db.Log.Level);
+        }
+
+        [TestMethod]
+        public void ConnectionString_MetaTest()
+        {
+            // This test is a meta test that verifies that all of the properties present in ConnectionString are also tested by this test.
+            // If this test fails, you should make sure that you don't need to update this test. (In particular, you almost certainly need to update AssertDefaults.)
+            var expectedProperties = new HashSet<string>()
+            {
+                "Filename",
+                "Journal",
+                "Password",
+                "CacheSize",
+                "Timeout",
+                "Mode",
+                "InitialSize",
+                "LimitSize",
+                "Log",
+                "UtcDate",
+                "Upgrade",
+                "Async",
+                "Flush"
+            };
+
+            var actualProperties = new HashSet<string>(typeof(ConnectionString).GetProperties().Select(p => p.Name));
+            actualProperties.ExceptWith(expectedProperties);
+            
+            // If the below assert fails, properties were added to ConnectionString without updating this test.
+            Assert.AreEqual(0, actualProperties.Count);
+        }
+
+        private void AssertDefaults(ConnectionString connectionString, bool skipFilename)
+        {
+            if (!skipFilename)
+            { Assert.AreEqual("", connectionString.Filename); }
+
+            Assert.AreEqual(true, connectionString.Journal);
+            Assert.AreEqual(null, connectionString.Password);
+            Assert.AreEqual(5000, connectionString.CacheSize);
+            Assert.AreEqual(new TimeSpan(0, 1, 0), connectionString.Timeout);
+            Assert.AreEqual(FileMode.Shared, connectionString.Mode);
+            Assert.AreEqual(0, connectionString.InitialSize);
+            Assert.AreEqual(long.MaxValue, connectionString.LimitSize);
+            Assert.AreEqual(Logger.NONE, connectionString.Log);
+            Assert.AreEqual(false, connectionString.UtcDate);
+            Assert.AreEqual(false, connectionString.Upgrade);
+            Assert.AreEqual(false, connectionString.Async);
         }
     }
 }

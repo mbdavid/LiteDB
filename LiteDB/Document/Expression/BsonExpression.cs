@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -250,14 +251,14 @@ namespace LiteDB
             }
             else if (s.Match(@"-?\d*\.\d+")) // read double
             {
-                var number = Convert.ToDouble(s.Scan(@"-?\d*\.\d+"));
+                var number = Convert.ToDouble(s.Scan(@"-?\d*\.\d+"), CultureInfo.InvariantCulture.NumberFormat);
                 var value = Expression.Constant(new BsonValue(number));
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
             }
             else if (s.Match(@"-?\d+")) // read int
             {
-                var number = Convert.ToInt32(s.Scan(@"-?\d+"));
+                var number = Convert.ToInt32(s.Scan(@"-?\d+"), CultureInfo.InvariantCulture.NumberFormat);
                 var value = Expression.Constant(new BsonValue(number));
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
@@ -282,6 +283,54 @@ namespace LiteDB
 
                 return Expression.NewArrayInit(typeof(BsonValue), value);
             }
+            else if (s.Scan(@"\{\s*").Length > 0) // read document {
+            {
+                // read key value
+                var method = typeof(ExpressionOperators).GetMethod("DOCUMENT");
+                var keys = new List<Expression>();
+                var values = new List<Expression>();
+
+                while (!s.HasTerminated)
+                {
+                    // read key + value
+                    var key = s.Scan(@"(.+?)\s*:\s*", 1).ThrowIfEmpty("Invalid token", s);
+                    var value = ParseExpression(s, root, current, false);
+
+                    // add key and value to parameter list (as an expression)
+                    keys.Add(Expression.Constant(new BsonValue(key)));
+                    values.Add(value);
+
+                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                    else if (s.Scan(@"\s*\}\s*").Length > 0) break;
+                    throw LiteException.SyntaxError(s);
+                }
+
+                var arrKeys = Expression.NewArrayInit(typeof(BsonValue), keys.ToArray());
+                var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+
+                return Expression.Call(method, new Expression[] { arrKeys, arrValues });
+            }
+            else if (s.Scan(@"\[\s*").Length > 0) // read array [
+            {
+                var method = typeof(ExpressionOperators).GetMethod("ARRAY");
+                var values = new List<Expression>();
+
+                while (!s.HasTerminated)
+                {
+                    // read value expression
+                    var value = ParseExpression(s, root, current, false);
+
+                    values.Add(value);
+
+                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                    else if (s.Scan(@"\s*\]\s*").Length > 0) break;
+                    throw LiteException.SyntaxError(s);
+                }
+
+                var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
+
+                return Expression.Call(method, new Expression[] { arrValues });
+            }
             else if (s.Scan(@"\(\s*").Length > 0) // read inner (
             {
                 // read a inner expression inside ( and )
@@ -297,15 +346,18 @@ namespace LiteDB
                 var name = s.Scan(@"(\w+)\s*\(", 1).ToUpper();
                 var parameters = new List<Expression>();
 
-                while (!s.HasTerminated)
+                if (s.Scan(@"\s*\)\s*").Length == 0)
                 {
-                    var parameter = ParseExpression(s, root, current, false);
+                    while (!s.HasTerminated)
+                    {
+                        var parameter = ParseExpression(s, root, current, false);
 
-                    parameters.Add(parameter);
+                        parameters.Add(parameter);
 
-                    if (s.Scan(@"\s*,\s*").Length > 0) continue;
-                    else if (s.Scan(@"\s*\)\s*").Length > 0) break;
-                    throw LiteException.SyntaxError(s);
+                        if (s.Scan(@"\s*,\s*").Length > 0) continue;
+                        else if (s.Scan(@"\s*\)\s*").Length > 0) break;
+                        throw LiteException.SyntaxError(s);
+                    }
                 }
 
                 var method = _methods.FirstOrDefault(x => x.Name == name && x.GetParameters().Count() == parameters.Count);
@@ -392,6 +444,9 @@ namespace LiteDB
             {
                 if (value.AsDocument.TryGetValue(name, out BsonValue item))
                 {
+                    // fill destroy action to remove value from root
+                    item.Destroy = () => value.AsDocument.Remove(name);
+
                     yield return item;
                 }
             }
@@ -406,6 +461,9 @@ namespace LiteDB
             {
                 if (doc.TryGetValue(name, out BsonValue item))
                 {
+                    // fill destroy action to remove value from parent document
+                    item.Destroy = () => doc.Remove(name);
+
                     yield return item;
                 }
             }
@@ -422,7 +480,7 @@ namespace LiteDB
                 {
                     var arr = value.AsArray;
 
-                    // [expression(Func<BsonValue, bool>)]
+                    // [<expr>] - index are an expression
                     if (expr.Source != null)
                     {
                         foreach (var item in arr)
@@ -432,26 +490,37 @@ namespace LiteDB
 
                             if (c.IsBoolean && c.AsBoolean == true)
                             {
+                                // fill destroy action to remove value from parent array
+                                item.Destroy = () => arr.Remove(item);
+
                                 yield return item;
                             }
                         }
                     }
-                    // [all]
+                    // [*] - index are all values
                     else if (index == int.MaxValue)
                     {
                         foreach (var item in arr)
                         {
+                            // fill destroy action to remove value from parent array
+                            item.Destroy = () => arr.Remove(item);
+
                             yield return item;
                         }
                     }
-                    // [fixed_index]
+                    // [n] - fixed index
                     else
                     {
                         var idx = index < 0 ? arr.Count + index : index;
 
                         if (arr.Count > idx)
                         {
-                            yield return arr[idx];
+                            var item = arr[idx];
+
+                            // fill destroy action to remove value from parent array
+                            item.Destroy = () => arr.Remove(item);
+
+                            yield return item;
                         }
                     }
                 }

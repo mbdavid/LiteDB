@@ -68,7 +68,10 @@ namespace LiteDB.Tests
             }
 
             // check file integrity
-            this.CheckIntegrity();
+            if (_checkIntegrity)
+            {
+                this.CheckIntegrity();
+            }
 
             File.Delete(this.Filename);
 
