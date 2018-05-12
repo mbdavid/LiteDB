@@ -54,7 +54,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns first value from an list of values
+        /// Returns first value from an list of values (scan all source)
         /// </summary>
         public static IEnumerable<BsonValue> FIRST(IEnumerable<BsonValue> values)
         {
@@ -117,15 +117,20 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return "true" if any values are true
+        /// Return "true" if any values are true. Run over all results
         /// ANY($._id = ITEMS([1, 2, 3, 4]))
         /// </summary>
         public static IEnumerable<BsonValue> ANY(IEnumerable<BsonValue> values)
         {
-            yield return values
-                .Where(x => x.IsBoolean)
-                .Select(x => x.AsBoolean)
-                .Any(x => x == true);
+            // implement full scan of ANY - this avoid not read all results and problems with groupby
+            var result = false;
+
+            foreach(var value in values.Where(x => x.IsBoolean).Select(x => x.AsBoolean))
+            {
+                if (value) result = true;
+            }
+
+            yield return result;
         }
 
         /// <summary>

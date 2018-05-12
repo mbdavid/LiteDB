@@ -189,57 +189,54 @@ namespace LiteDB
                 // if async writer are not running, start/re-start now
                 if (_async == null || _async.Status == TaskStatus.RanToCompletion)
                 {
-                    _async = this.CreateAsyncWriter();
+                    _async = new Task(this.RunWriterQueue);
                     _async.Start();
                 }
             }
         }
 
         /// <summary>
-        /// Implement async writer disk in a background task - will consume all items on queue
+        /// Consule all writer queue saving on disk all queued pages
         /// </summary>
-        private Task CreateAsyncWriter()
+        private void RunWriterQueue()
         {
-            return new Task(() =>
+            // write all pages that are in queue
+            while (!_queue.IsEmpty)
             {
-                // write all pages that are in queue
-                while (!_queue.IsEmpty)
+                // get page from queue
+                if (!_queue.TryDequeue(out var item)) break;
+
+                var position = item.Item1;
+                var page = item.Item2;
+
+                // if page is empty, this is special queue item: SetLength
+                if (page == null)
                 {
-                    // get page from queue
-                    if (!_queue.TryDequeue(out var item)) break;
-
-                    var position = item.Item1;
-                    var page = item.Item2;
-
-                    // if page is empty, this is special queue item: SetLength
-                    if (page == null)
-                    {
-                        // use position as file length
-                        _writer.BaseStream.SetLength(position);
-                        continue;
-                    }
-
-                    _writer.BaseStream.Position = position;
-
-                    //TODO for debug propose
-                    if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new Exception("Não pode ter pagina na WAL sem transação");
-
-                    page.WritePage(_writer);
-
-                    // set page position, in cache, not as dirty
-                    _cache.ClearDirty(position);
+                    // use position as file length
+                    _writer.BaseStream.SetLength(position);
+                    continue;
                 }
 
-                // lock writer to clear dirty cache
-                lock(_writer)
+                _writer.BaseStream.Position = position;
+
+                //TODO for debug propose
+                if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new Exception("Não pode ter pagina na WAL sem transação");
+
+                page.WritePage(_writer);
+
+                // set this page (in cache) as not dirty (will not remove from cache now)
+                _cache.ClearDirty(position);
+            }
+
+            // lock writer to clear dirty cache
+            lock(_writer)
+            {
+                // before clear cache, test if queue are empty, otherwise do not clear cache.
+                if (_queue.IsEmpty)
                 {
-                    // before clear cache, test if queue are empty, otherwise do not clear cache.
-                    if (_queue.IsEmpty)
-                    {
-                        _cache.ClearDirty();
-                    }
+                    _cache.ClearDirty();
                 }
-            });
+            }
         }
 
         /// <summary>
@@ -250,7 +247,7 @@ namespace LiteDB
             // if has pages on queue but async writer are not running, run sync
             if (_queue.IsEmpty == false && _async.Status == TaskStatus.RanToCompletion)
             {
-                this.CreateAsyncWriter().RunSynchronously();
+                this.RunWriterQueue();
             }
 
             // if async writer are running, wait to finish
