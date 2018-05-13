@@ -242,17 +242,17 @@ namespace LiteDB
             return new LiteException(INVALID_CTOR, inner, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters.", type.FullName, type.AssemblyQualifiedName);
         }
 
-        internal static LiteException UnexpectedToken(Token token, string message = "Unexpected token")
+        internal static LiteException UnexpectedToken(Token token)
         {
-            return new LiteException(SYNTAX_ERROR, message)
+            return new LiteException(UNEXPECTED_TOKEN, $"Unexpected token {token.Value} in position {token.Position}")
             {
-                Position = token.Position
+                Position = token.Position - (token.Value?.Length ?? 0)
             };
         }
 
-        internal static LiteException UnexpectedToken(long position, string message)
+        internal static LiteException SyntaxError(string message, long position)
         {
-            return new LiteException(UNEXPECTED_TOKEN, message)
+            return new LiteException(SYNTAX_ERROR, message)
             {
                 Position = position
             };

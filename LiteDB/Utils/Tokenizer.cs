@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -35,7 +36,8 @@ namespace LiteDB
         String,
         Number,
         Word,
-        EOF
+        EOF,
+        Unknown
     }
 
     #endregion
@@ -68,6 +70,16 @@ namespace LiteDB
             return this;
         }
 
+        public Token Expect(string token)
+        {
+            if (this.Value != token)
+            {
+                throw LiteException.UnexpectedToken(this);
+            }
+
+            return this;
+        }
+
         public Token Expect(TokenType type1, TokenType type2)
         {
             if (this.TokenType != type1 && this.TokenType != type2)
@@ -82,7 +94,7 @@ namespace LiteDB
     #endregion
 
     /// <summary>
-    /// Class to tokenize TextReader input used in JsonRead/BsonExpressions
+    /// Class to tokenize TextReader input used in JsonRead/BsonExpressions - ASCII char names: https://www.ascii.cl/htmlcodes.htm
     /// </summary>
     internal class Tokenizer
     {
@@ -92,12 +104,23 @@ namespace LiteDB
         public bool EOF { get; private set; }
         public long Position { get; private set; }
 
+        /// <summary>
+        /// Pre-loaded fixed string operators
+        /// </summary>
+        private static HashSet<string> _set = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
+
         public Tokenizer(TextReader reader)
         {
             _reader = reader;
+
             this.Position = 0;
             this.Read();
         }
+
+        /// <summary>
+        /// Checks if char is an valid part of a word
+        /// </summary>
+        private bool IsValidWord(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
 
         /// <summary>
         /// Read next char in stream and set in _current
@@ -115,8 +138,10 @@ namespace LiteDB
                 _current = '\0';
                 this.EOF = true;
             }
-
-            _current = (char)c;
+            else
+            {
+                _current = (char)c;
+            }
 
             return _current;
         }
@@ -216,8 +241,15 @@ namespace LiteDB
                     break;
 
                 default:
-                    token = new Token(TokenType.Word, this.ReadWord(), this.Position);
-                    break;
+                    if (this.IsValidWord(_current))
+                    {
+                        token = new Token(TokenType.Operator, this.ReadWord(), this.Position);
+                        break;
+                    }
+                    else
+                    {
+                        throw LiteException.UnexpectedToken(new Token(TokenType.Unknown, _current.ToString(), this.Position));
+                    }
             }
 
             return token;
@@ -250,6 +282,13 @@ namespace LiteDB
                     this.Read();
                     break;
 
+                case '!':
+                    this.Read();
+                    token = new Token(TokenType.Operator, "!=", this.Position);
+                    if (_current != '=') throw LiteException.UnexpectedToken(token);
+                    this.Read();
+                    break;
+
                 case '>':
                 case '<':
                     var op = _current.ToString();
@@ -263,16 +302,8 @@ namespace LiteDB
                     break;
 
                 default:
-                    var word = this.ReadWord();
-
-                    if (word.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
-                    {
-                        token = new Token(TokenType.Operator, "BETWEEN", this.Position);
-                    }
-                    else
-                    {
-                        throw LiteException.UnexpectedToken(this.Position, "Unexpected token: invalid operator");
-                    }
+                    token = new Token(TokenType.Operator, this.ReadWord(), this.Position);
+                    if (!_set.Contains(token.Value)) throw LiteException.UnexpectedToken(token);
                     break;
             }
 
@@ -300,8 +331,7 @@ namespace LiteDB
 
             this.Read();
 
-            while (!this.EOF &&
-                (char.IsLetterOrDigit(_current) || _current == '_' || _current == '$'))
+            while (!this.EOF && this.IsValidWord(_current))
             {
                 sb.Append(_current);
                 this.Read();
@@ -318,18 +348,39 @@ namespace LiteDB
             var sb = new StringBuilder();
             sb.Append(_current);
 
+            var canDot = true;
+            var canE = true;
+            var canSign = false;
+
             this.Read();
 
             while (!this.EOF &&
                 (char.IsDigit(_current) || _current == '+' || _current == '-' || _current == '.' || _current == 'e' || _current == 'E'))
             {
+                if (_current == '.')
+                {
+                    if (canDot == false) break;
+                    canDot = false;
+                }
+                else if (_current == 'e' || _current == 'E')
+                {
+                    if (canE == false) break;
+                    canE = false;
+                    canSign = true;
+                }
+                else if (_current == '-' || _current == '+')
+                {
+                    if (canSign == false) break;
+                    canSign = false;
+                }
+
                 sb.Append(_current);
                 this.Read();
             }
 
             return sb.ToString();
         }
-
+        
         /// <summary>
         /// Read a string removing open and close " or '
         /// </summary>
