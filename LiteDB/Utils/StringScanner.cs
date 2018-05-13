@@ -182,7 +182,7 @@ namespace LiteDB
                             case 'r': sb.Append('\r'); break;
                             case 't': sb.Append('\t'); break;
                             case 'u':
-                                var codePoint = JsonTokenizer.ParseUnicode(this.Current(), this.Current(), this.Current(), this.Current());
+                                var codePoint = Tokenizer.ParseUnicode(this.Current(), this.Current(), this.Current(), this.Current());
                                 sb.Append((char)codePoint);
                                 break;
                         }

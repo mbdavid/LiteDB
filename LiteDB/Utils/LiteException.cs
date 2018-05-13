@@ -54,8 +54,7 @@ namespace LiteDB
         #region Ctor
 
         public int ErrorCode { get; private set; }
-        public string Line { get; private set; }
-        public int Position { get; private set; }
+        public long Position { get; private set; }
 
         public LiteException(string message)
             : base(message)
@@ -243,9 +242,20 @@ namespace LiteDB
             return new LiteException(INVALID_CTOR, inner, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters.", type.FullName, type.AssemblyQualifiedName);
         }
 
-        internal static LiteException UnexpectedToken(string token)
+        internal static LiteException UnexpectedToken(Token token, string message = "Unexpected token")
         {
-            return new LiteException(UNEXPECTED_TOKEN, "Unexpected JSON token: {0}", token);
+            return new LiteException(SYNTAX_ERROR, message)
+            {
+                Position = token.Position
+            };
+        }
+
+        internal static LiteException UnexpectedToken(long position, string message)
+        {
+            return new LiteException(UNEXPECTED_TOKEN, message)
+            {
+                Position = position
+            };
         }
 
         internal static LiteException InvalidDataType(string field, BsonValue value)
@@ -266,15 +276,6 @@ namespace LiteDB
         internal static LiteException InvalidTypedName(string type)
         {
             return new LiteException(INVALID_TYPED_NAME, "Type '{0}' not found in current domain (_type format is 'Type.FullName, AssemblyName').", type);
-        }
-
-        internal static LiteException SyntaxError(StringScanner s, string message = "Unexpected token")
-        {
-            return new LiteException(SYNTAX_ERROR, message)
-            {
-                Line = s.Source,
-                Position = s.Index
-            };
         }
 
         #endregion

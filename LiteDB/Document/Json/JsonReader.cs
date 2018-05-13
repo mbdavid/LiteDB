@@ -10,7 +10,7 @@ namespace LiteDB
     /// </summary>
     internal class JsonReader
     {
-        private JsonTokenizer _tokenizer = null;
+        private Tokenizer _tokenizer = null;
 
         public long Position { get { return _tokenizer.Position; } }
 
@@ -18,14 +18,14 @@ namespace LiteDB
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-            _tokenizer = new JsonTokenizer(reader);
+            _tokenizer = new Tokenizer(reader);
         }
 
         public BsonValue Deserialize()
         {
             var token = _tokenizer.ReadToken();
 
-            if (token.TokenType == JsonTokenType.EOF) return BsonValue.Null;
+            if (token.TokenType == TokenType.EOF) return BsonValue.Null;
 
             var value = this.ReadValue(token);
 
@@ -36,51 +36,51 @@ namespace LiteDB
         {
             var token = _tokenizer.ReadToken();
 
-            if (token.TokenType == JsonTokenType.EOF) yield break;
+            if (token.TokenType == TokenType.EOF) yield break;
 
-            token.Expect(JsonTokenType.BeginArray);
+            token.Expect(TokenType.OpenBracket);
 
             token = _tokenizer.ReadToken();
 
-            while (token.TokenType != JsonTokenType.EndArray)
+            while (token.TokenType != TokenType.CloseBracket)
             {
                 yield return this.ReadValue(token);
 
                 token = _tokenizer.ReadToken();
 
-                if (token.TokenType == JsonTokenType.Comma)
+                if (token.TokenType == TokenType.Comma)
                 {
                     token = _tokenizer.ReadToken();
                 }
             }
 
-            token.Expect(JsonTokenType.EndArray);
+            token.Expect(TokenType.CloseBracket);
 
             yield break;
         }
 
-        internal BsonValue ReadValue(JsonToken token)
+        internal BsonValue ReadValue(Token token)
         {
             switch (token.TokenType)
             {
-                case JsonTokenType.String: return token.Token;
-                case JsonTokenType.BeginDoc: return this.ReadObject();
-                case JsonTokenType.BeginArray: return this.ReadArray();
-                case JsonTokenType.Number:
-                    return token.Token.Contains(".") ?
-                        new BsonValue(Convert.ToDouble(token.Token, CultureInfo.InvariantCulture.NumberFormat)) :
-                        new BsonValue(Convert.ToInt32(token.Token));
-                case JsonTokenType.Word:
-                    switch (token.Token)
+                case TokenType.String: return token.Value;
+                case TokenType.OpenBrace: return this.ReadObject();
+                case TokenType.OpenBracket: return this.ReadArray();
+                case TokenType.Number:
+                    return token.Value.Contains(".") ?
+                        new BsonValue(Convert.ToDouble(token.Value, CultureInfo.InvariantCulture.NumberFormat)) :
+                        new BsonValue(Convert.ToInt32(token.Value));
+                case TokenType.Word:
+                    switch (token.Value)
                     {
                         case "null": return BsonValue.Null;
                         case "true": return true;
                         case "false": return false;
-                        default: throw LiteException.UnexpectedToken(token.Token);
+                        default: throw LiteException.UnexpectedToken(token.Value);
                     }
             }
 
-            throw LiteException.UnexpectedToken(token.Token);
+            throw LiteException.UnexpectedToken(token.Value);
         }
 
         private BsonValue ReadObject()
@@ -89,22 +89,22 @@ namespace LiteDB
 
             var token = _tokenizer.ReadToken(); // read "<key>"
 
-            while (token.TokenType != JsonTokenType.EndDoc)
+            while (token.TokenType != TokenType.CloseBrace)
             {
-                token.Expect(JsonTokenType.String, JsonTokenType.Word);
+                token.Expect(TokenType.String, TokenType.Word);
 
-                var key = token.Token;
+                var key = token.Value;
 
                 token = _tokenizer.ReadToken(); // read ":"
 
-                token.Expect(JsonTokenType.Colon);
+                token.Expect(TokenType.Colon);
 
                 token = _tokenizer.ReadToken(); // read "<value>"
 
                 // check if not a special data type - only if is first attribute
                 if (key[0] == '$' && obj.Count == 0)
                 {
-                    var val = this.ReadExtendedDataType(key, token.Token);
+                    var val = this.ReadExtendedDataType(key, token.Value);
 
                     // if val is null then it's not a extended data type - it's just a object with $ attribute
                     if (!val.IsNull) return val;
@@ -114,7 +114,7 @@ namespace LiteDB
 
                 token = _tokenizer.ReadToken();
 
-                if (token.TokenType == JsonTokenType.Comma)
+                if (token.TokenType == TokenType.Comma)
                 {
                     token = _tokenizer.ReadToken(); // read "<key>"
                 }
@@ -129,7 +129,7 @@ namespace LiteDB
 
             var token = _tokenizer.ReadToken();
 
-            while (token.TokenType != JsonTokenType.EndArray)
+            while (token.TokenType != TokenType.CloseBracket)
             {
                 var value = this.ReadValue(token);
 
@@ -137,7 +137,7 @@ namespace LiteDB
 
                 token = _tokenizer.ReadToken();
 
-                if (token.TokenType == JsonTokenType.Comma)
+                if (token.TokenType == TokenType.Comma)
                 {
                     token = _tokenizer.ReadToken();
                 }
@@ -164,7 +164,7 @@ namespace LiteDB
                 default: return BsonValue.Null; // is not a special data type
             }
 
-            _tokenizer.ReadToken().Expect(JsonTokenType.EndDoc);
+            _tokenizer.ReadToken().Expect(TokenType.CloseBrace);
 
             return val;
         }
