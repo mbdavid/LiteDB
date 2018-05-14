@@ -25,7 +25,7 @@ namespace LiteDB
         {
             var token = _tokenizer.ReadToken();
 
-            if (token.TokenType == TokenType.EOF) return BsonValue.Null;
+            if (token.Type == TokenType.EOF) return BsonValue.Null;
 
             var value = this.ReadValue(token);
 
@@ -36,19 +36,19 @@ namespace LiteDB
         {
             var token = _tokenizer.ReadToken();
 
-            if (token.TokenType == TokenType.EOF) yield break;
+            if (token.Type == TokenType.EOF) yield break;
 
             token.Expect(TokenType.OpenBracket);
 
             token = _tokenizer.ReadToken();
 
-            while (token.TokenType != TokenType.CloseBracket)
+            while (token.Type != TokenType.CloseBracket)
             {
                 yield return this.ReadValue(token);
 
                 token = _tokenizer.ReadToken();
 
-                if (token.TokenType == TokenType.Comma)
+                if (token.Type == TokenType.Comma)
                 {
                     token = _tokenizer.ReadToken();
                 }
@@ -61,7 +61,7 @@ namespace LiteDB
 
         internal BsonValue ReadValue(Token token)
         {
-            switch (token.TokenType)
+            switch (token.Type)
             {
                 case TokenType.String: return token.Value;
                 case TokenType.OpenBrace: return this.ReadObject();
@@ -89,7 +89,7 @@ namespace LiteDB
 
             var token = _tokenizer.ReadToken(); // read "<key>"
 
-            while (token.TokenType != TokenType.CloseBrace)
+            while (token.Type != TokenType.CloseBrace)
             {
                 token.Expect(TokenType.String, TokenType.Word);
 
@@ -114,7 +114,7 @@ namespace LiteDB
 
                 token = _tokenizer.ReadToken();
 
-                if (token.TokenType == TokenType.Comma)
+                if (token.Type == TokenType.Comma)
                 {
                     token = _tokenizer.ReadToken(); // read "<key>"
                 }
@@ -129,7 +129,7 @@ namespace LiteDB
 
             var token = _tokenizer.ReadToken();
 
-            while (token.TokenType != TokenType.CloseBracket)
+            while (token.Type != TokenType.CloseBracket)
             {
                 var value = this.ReadValue(token);
 
@@ -137,7 +137,7 @@ namespace LiteDB
 
                 token = _tokenizer.ReadToken();
 
-                if (token.TokenType == TokenType.Comma)
+                if (token.Type == TokenType.Comma)
                 {
                     token = _tokenizer.ReadToken();
                 }

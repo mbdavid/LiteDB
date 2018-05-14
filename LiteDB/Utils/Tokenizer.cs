@@ -23,7 +23,7 @@ namespace LiteDB
         CloseParenthesis,
         /// <summary> , </summary>
         Comma,
-        /// <summary> ; </summary>
+        /// <summary> : </summary>
         Colon,
         /// <summary> @ </summary>
         At,
@@ -53,16 +53,16 @@ namespace LiteDB
         {
             this.Position = position;
             this.Value = value;
-            this.TokenType = tokenType;
+            this.Type = tokenType;
         }
 
-        public TokenType TokenType { get; private set; }
+        public TokenType Type { get; private set; }
         public string Value { get; private set; }
         public long Position { get; private set; }
 
         public Token Expect(TokenType type)
         {
-            if (this.TokenType != type)
+            if (this.Type != type)
             {
                 throw LiteException.UnexpectedToken(this);
             }
@@ -80,9 +80,12 @@ namespace LiteDB
             return this;
         }
 
+        /// <summary>
+        /// Expect for type1 OR type2
+        /// </summary>
         public Token Expect(TokenType type1, TokenType type2)
         {
-            if (this.TokenType != type1 && this.TokenType != type2)
+            if (this.Type != type1 && this.Type != type2)
             {
                 throw LiteException.UnexpectedToken(this);
             }
@@ -95,14 +98,17 @@ namespace LiteDB
 
     /// <summary>
     /// Class to tokenize TextReader input used in JsonRead/BsonExpressions - ASCII char names: https://www.ascii.cl/htmlcodes.htm
+    /// This class are not thread safe
     /// </summary>
     internal class Tokenizer
     {
-        private char _current = '\0';
         private TextReader _reader;
+        private char _char = '\0';
+        private Token _ahead = null;
 
         public bool EOF { get; private set; }
         public long Position { get; private set; }
+        public Token Current { get; private set; }
 
         /// <summary>
         /// Pre-loaded fixed string operators
@@ -114,18 +120,18 @@ namespace LiteDB
             _reader = reader;
 
             this.Position = 0;
-            this.Read();
+            this.ReadChar();
         }
 
         /// <summary>
         /// Checks if char is an valid part of a word
         /// </summary>
-        private bool IsValidWord(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
+        public static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
 
         /// <summary>
         /// Read next char in stream and set in _current
         /// </summary>
-        private char Read()
+        private char ReadChar()
         {
             if (this.EOF) return '\0';
 
@@ -135,21 +141,50 @@ namespace LiteDB
 
             if (c == -1)
             {
-                _current = '\0';
+                _char = '\0';
                 this.EOF = true;
             }
             else
             {
-                _current = (char)c;
+                _char = (char)c;
             }
 
-            return _current;
+            return _char;
+        }
+
+        /// <summary>
+        /// Look for next token but keeps in buffer when run "ReadToken()" again.
+        /// </summary>
+        public Token LookAhead(bool eatWhitespace = true)
+        {
+            if (_ahead != null) return _ahead;
+
+            _ahead = this.ReadNext(eatWhitespace);
+
+            return _ahead;
+        }
+
+        /// <summary>
+        /// Read next token (or from ahead buffer). If from buffer, ignores eatWhitespace
+        /// </summary>
+        public Token ReadToken(bool eatWhitespace = true)
+        {
+            if (_ahead != null)
+            {
+                this.Current = _ahead;
+                _ahead = null;
+                return this.Current;
+            }
+            else
+            {
+                return this.ReadNext(eatWhitespace);
+            }
         }
 
         /// <summary>
         /// Read next token (do not read operators tokens)
         /// </summary>
-        public Token ReadToken(bool eatWhitespace = true)
+        private Token ReadNext(bool eatWhitespace = true)
         {
             // remove whitespace before get next token
             if (eatWhitespace)
@@ -159,71 +194,69 @@ namespace LiteDB
 
             if (this.EOF)
             {
-                return new Token(TokenType.EOF, null, this.Position);
+                return this.Current = new Token(TokenType.EOF, null, this.Position);
             }
 
-            Token token = null;
-
-            switch (_current)
+            switch (_char)
             {
                 case '[':
-                    token = new Token(TokenType.OpenBracket, "[", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.OpenBracket, "[", this.Position);
+                    this.ReadChar();
                     break;
 
                 case ']':
-                    token = new Token(TokenType.CloseBracket, "]", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.CloseBracket, "]", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '{':
-                    token = new Token(TokenType.OpenBrace, "{", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.OpenBrace, "{", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '}':
-                    token = new Token(TokenType.CloseBrace, "}", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.CloseBrace, "}", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '(':
-                    token = new Token(TokenType.OpenParenthesis, "(", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.OpenParenthesis, "(", this.Position);
+                    this.ReadChar();
                     break;
 
                 case ')':
-                    token = new Token(TokenType.CloseParenthesis, ")", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.CloseParenthesis, ")", this.Position);
+                    this.ReadChar();
                     break;
 
                 case ',':
-                    token = new Token(TokenType.Comma, ",", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.Comma, ",", this.Position);
+                    this.ReadChar();
                     break;
 
                 case ':':
-                    token = new Token(TokenType.Colon, ":", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.Colon, ":", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '.':
-                    token = new Token(TokenType.Period, ".", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.Period, ".", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '@':
-                    token = new Token(TokenType.At, "@", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.At, "@", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '$':
-                    token = new Token(TokenType.Dollar, "$", this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.Dollar, "$", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '\"':
                 case '\'':
-                    token = new Token(TokenType.String, this.ReadString(_current), this.Position);
+                    this.Current = new Token(TokenType.String, this.ReadString(_char), this.Position);
                     break;
 
                 case '-':
@@ -237,22 +270,22 @@ namespace LiteDB
                 case '7':
                 case '8':
                 case '9':
-                    token = new Token(TokenType.Number, this.ReadNumber(), this.Position);
+                    this.Current = new Token(TokenType.Number, this.ReadNumber(), this.Position);
                     break;
 
                 default:
-                    if (this.IsValidWord(_current))
+                    if (IsWordChar(_char))
                     {
-                        token = new Token(TokenType.Operator, this.ReadWord(), this.Position);
+                        this.Current = new Token(TokenType.Operator, this.ReadWord(), this.Position);
                         break;
                     }
                     else
                     {
-                        throw LiteException.UnexpectedToken(new Token(TokenType.Unknown, _current.ToString(), this.Position));
+                        throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position));
                     }
             }
 
-            return token;
+            return this.Current;
         }
 
         /// <summary>
@@ -260,17 +293,15 @@ namespace LiteDB
         /// </summary>
         public Token ReadOperator()
         {
-            // remove whitespace before get next token
+            // always remove whitespace before get next token
             this.EatWhitespace();
 
             if (this.EOF)
             {
-                return new Token(TokenType.EOF, null, this.Position);
+                return this.Current = new Token(TokenType.EOF, null, this.Position);
             }
 
-            Token token = null;
-
-            switch (_current)
+            switch (_char)
             {
                 case '+':
                 case '-':
@@ -278,36 +309,46 @@ namespace LiteDB
                 case '\\':
                 case '/':
                 case '%':
-                    token = new Token(TokenType.Operator, _current.ToString(), this.Position);
-                    this.Read();
+                    this.Current = new Token(TokenType.Operator, _char.ToString(), this.Position);
+                    this.ReadChar();
                     break;
 
                 case '!':
-                    this.Read();
-                    token = new Token(TokenType.Operator, "!=", this.Position);
-                    if (_current != '=') throw LiteException.UnexpectedToken(token);
-                    this.Read();
+                    this.ReadChar();
+                    if (_char != '=') throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position));
+                    this.Current = new Token(TokenType.Operator, "!=", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '>':
                 case '<':
-                    var op = _current.ToString();
-                    this.Read();
-                    if (_current == '=')
+                    var op = _char.ToString();
+                    this.ReadChar();
+                    if (_char == '=')
                     {
                         op += "=";
-                        this.Read();
+                        this.ReadChar();
                     }
-                    token = new Token(TokenType.Operator, op, this.Position);
+                    this.Current = new Token(TokenType.Operator, op, this.Position);
                     break;
 
                 default:
-                    token = new Token(TokenType.Operator, this.ReadWord(), this.Position);
-                    if (!_set.Contains(token.Value)) throw LiteException.UnexpectedToken(token);
+                    // read string operators (BETWEEN, LIKE, ...)
+                    if (!IsWordChar(_char)) throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position));
+
+                    var word = this.ReadWord();
+
+                    // check if current operator are valid
+                    if (!_set.Contains(word))
+                    {
+                        throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, word, this.Position));
+                    }
+
+                    this.Current = new Token(TokenType.Operator, this.ReadWord(), this.Position);
                     break;
             }
 
-            return token;
+            return this.Current;
         }
 
         /// <summary>
@@ -315,26 +356,26 @@ namespace LiteDB
         /// </summary>
         private void EatWhitespace()
         {
-            while (char.IsWhiteSpace(_current) && !this.EOF)
+            while (char.IsWhiteSpace(_char) && !this.EOF)
             {
-                this.Read();
+                this.ReadChar();
             }
         }
 
         /// <summary>
-        /// Read a word without "
+        /// Read a word (word = [\w$]+)
         /// </summary>
         private string ReadWord()
         {
             var sb = new StringBuilder();
-            sb.Append(_current);
+            sb.Append(_char);
 
-            this.Read();
+            this.ReadChar();
 
-            while (!this.EOF && this.IsValidWord(_current))
+            while (!this.EOF && IsWordChar(_char))
             {
-                sb.Append(_current);
-                this.Read();
+                sb.Append(_char);
+                this.ReadChar();
             }
 
             return sb.ToString();
@@ -346,36 +387,36 @@ namespace LiteDB
         private string ReadNumber()
         {
             var sb = new StringBuilder();
-            sb.Append(_current);
+            sb.Append(_char);
 
             var canDot = true;
             var canE = true;
             var canSign = false;
 
-            this.Read();
+            this.ReadChar();
 
             while (!this.EOF &&
-                (char.IsDigit(_current) || _current == '+' || _current == '-' || _current == '.' || _current == 'e' || _current == 'E'))
+                (char.IsDigit(_char) || _char == '+' || _char == '-' || _char == '.' || _char == 'e' || _char == 'E'))
             {
-                if (_current == '.')
+                if (_char == '.')
                 {
                     if (canDot == false) break;
                     canDot = false;
                 }
-                else if (_current == 'e' || _current == 'E')
+                else if (_char == 'e' || _char == 'E')
                 {
                     if (canE == false) break;
                     canE = false;
                     canSign = true;
                 }
-                else if (_current == '-' || _current == '+')
+                else if (_char == '-' || _char == '+')
                 {
                     if (canSign == false) break;
                     canSign = false;
                 }
 
-                sb.Append(_current);
-                this.Read();
+                sb.Append(_char);
+                this.ReadChar();
             }
 
             return sb.ToString();
@@ -387,15 +428,15 @@ namespace LiteDB
         private string ReadString(char quote)
         {
             var sb = new StringBuilder();
-            this.Read(); // remove first " or '
+            this.ReadChar(); // remove first " or '
 
-            while (_current != quote && !this.EOF)
+            while (_char != quote && !this.EOF)
             {
-                if (_current == '\\')
+                if (_char == '\\')
                 {
-                    this.Read();
+                    this.ReadChar();
 
-                    switch (_current)
+                    switch (_char)
                     {
                         case '\\': sb.Append('\\'); break;
                         case '/': sb.Append('/'); break;
@@ -405,20 +446,20 @@ namespace LiteDB
                         case 'r': sb.Append('\r'); break;
                         case 't': sb.Append('\t'); break;
                         case 'u':
-                            var codePoint = ParseUnicode(this.Read(), this.Read(), this.Read(), this.Read());
+                            var codePoint = ParseUnicode(this.ReadChar(), this.ReadChar(), this.ReadChar(), this.ReadChar());
                             sb.Append((char)codePoint);
                             break;
                     }
                 }
                 else
                 {
-                    sb.Append(_current);
+                    sb.Append(_char);
                 }
 
-                this.Read();
+                this.ReadChar();
             }
 
-            this.Read(); // read last " or '
+            this.ReadChar(); // read last " or '
 
             return sb.ToString();
         }

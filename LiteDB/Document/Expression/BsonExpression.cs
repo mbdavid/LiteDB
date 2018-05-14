@@ -212,7 +212,7 @@ namespace LiteDB
         /// <summary>
         /// Parse and compile string expression and return a list of expression - if onlyTerm = true, return a list of all expressions without any AND operator.
         /// </summary>
-        public static List<BsonExpression> Parse(StringScanner s, bool onlyTerms)
+        public static List<BsonExpression> Parse(Tokenizer s, bool onlyTerms)
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
 

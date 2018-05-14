@@ -6,19 +6,19 @@ namespace LiteDB
 {
     internal static class StringExtensions
     {
-        public static bool IsNullOrWhiteSpace(this string str)
+        /// <summary>
+        /// Test if string is simple word pattern ([a-Z$_])
+        /// </summary>
+        public static bool IsWord(this string str)
         {
-            return str == null || str.Trim().Length == 0;
-        }
+            if (string.IsNullOrWhiteSpace(str)) return false;
 
-        public static string ThrowIfEmpty(this string str, string message, StringScanner s)
-        {
-            if (string.IsNullOrEmpty(str) || str.Trim().Length == 0)
+            for(var i = 0; i < str.Length; i++)
             {
-                throw LiteException.SyntaxError(s, message);
+                if (!Tokenizer.IsWordChar(str[i])) return false;
             }
 
-            return str;
+            return true;
         }
 
         public static string TrimToNull(this string str)
