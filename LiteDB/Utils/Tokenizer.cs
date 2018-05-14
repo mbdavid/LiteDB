@@ -334,17 +334,10 @@ namespace LiteDB
 
                 default:
                     // read string operators (BETWEEN, LIKE, ...)
-                    if (!IsWordChar(_char)) throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position));
-
                     var word = this.ReadWord();
 
-                    // check if current operator are valid
-                    if (!_set.Contains(word))
-                    {
-                        throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, word, this.Position));
-                    }
+                    this.Current = new Token(_set.Contains(word) ? TokenType.Operator : TokenType.Unknown, word, this.Position);
 
-                    this.Current = new Token(TokenType.Operator, this.ReadWord(), this.Position);
                     break;
             }
 
