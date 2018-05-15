@@ -200,16 +200,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Throw syntax exception if not terminate string
-        /// </summary>
-        public void ThrowIfNotFinish()
-        {
-            this.Scan(@"\s*");
-
-            if (!this.HasTerminated) throw LiteException.SyntaxError(this);
-        }
-
-        /// <summary>
         /// Create (or get from cache) regular expression from an string
         /// </summary>
         public static Regex Create(string pattern)

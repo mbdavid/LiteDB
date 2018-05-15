@@ -89,7 +89,7 @@ namespace LiteDB
         #region Compile and execute
 
         /// <summary>
-        /// Execute expression with an empty document (used only for resolve math/functions) (can returns NULL if no elements).
+        /// Execute expression with an empty document (used only for resolve math/functions).
         /// </summary>
         public IEnumerable<BsonValue> Execute(bool includeNullIfEmpty = true)
         {
@@ -165,7 +165,7 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
 
-            var expr = _cache.GetOrAdd(expression, (k) => Parse(new StringScanner(expression), false).Single());
+            var expr = _cache.GetOrAdd(expression, (k) => Parse(new Tokenizer(expression), false).Single());
 
             // return a copy from cache WITHOUT parameters
             return new BsonExpression
@@ -212,7 +212,7 @@ namespace LiteDB
         /// <summary>
         /// Parse and compile string expression and return a list of expression - if onlyTerm = true, return a list of all expressions without any AND operator.
         /// </summary>
-        public static List<BsonExpression> Parse(Tokenizer s, bool onlyTerms)
+        internal static List<BsonExpression> Parse(Tokenizer s, bool onlyTerms)
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
 

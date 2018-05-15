@@ -31,6 +31,8 @@ namespace LiteDB
         Period,
         /// <summary> $ </summary>
         Dollar,
+        /// <summary> * </summary>
+        Asterisk,
         /// <summary> `=` `&gt;` `&lt;` `!=` `&gt;=` `&lt;=` `+` `-` `*` `/` `\` `%` `BETWEEN` </summary>
         Operator,
         String,
@@ -45,7 +47,7 @@ namespace LiteDB
     #region Token definition
 
     /// <summary>
-    /// Represent a single token
+    /// Represent a single string token
     /// </summary>
     internal class Token
     {
@@ -70,9 +72,9 @@ namespace LiteDB
             return this;
         }
 
-        public Token Expect(string token)
+        public Token Expect(string token, bool ignoreCase)
         {
-            if (this.Value != token)
+            if (this.Value.Equals(token, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             {
                 throw LiteException.UnexpectedToken(this);
             }
@@ -111,9 +113,14 @@ namespace LiteDB
         public Token Current { get; private set; }
 
         /// <summary>
-        /// Pre-loaded fixed string operators
+        /// Pre-loaded known string operators
         /// </summary>
-        private static HashSet<string> _set = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
+        private static HashSet<string> _knownOperators = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
+
+        public Tokenizer(string source)
+            : this(new StringReader(source))
+        {
+        }
 
         public Tokenizer(TextReader reader)
         {
@@ -124,7 +131,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if char is an valid part of a word
+        /// Checks if char is an valid part of a word (a-Z  _ or $)
         /// </summary>
         public static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
 
@@ -187,10 +194,7 @@ namespace LiteDB
         private Token ReadNext(bool eatWhitespace = true)
         {
             // remove whitespace before get next token
-            if (eatWhitespace)
-            {
-                this.EatWhitespace();
-            }
+            if (eatWhitespace) this.EatWhitespace();
 
             if (this.EOF)
             {
@@ -254,6 +258,11 @@ namespace LiteDB
                     this.ReadChar();
                     break;
 
+                case '*':
+                    this.Current = new Token(TokenType.Asterisk, "*", this.Position);
+                    this.ReadChar();
+                    break;
+
                 case '\"':
                 case '\'':
                     this.Current = new Token(TokenType.String, this.ReadString(_char), this.Position);
@@ -277,24 +286,25 @@ namespace LiteDB
                     if (IsWordChar(_char))
                     {
                         this.Current = new Token(TokenType.Operator, this.ReadWord(), this.Position);
-                        break;
                     }
                     else
                     {
-                        throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position));
+                        this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position);
                     }
+
+                    break;
             }
 
             return this.Current;
         }
 
         /// <summary>
-        /// Read next operator (do not read any other token type)
+        /// Read next operator (do not read any other token type) - if in an unkonwn word token, store in ahead cache
         /// </summary>
-        public Token ReadOperator()
+        public Token ReadOperator(bool eatWhitespace)
         {
             // always remove whitespace before get next token
-            this.EatWhitespace();
+            if (eatWhitespace) this.EatWhitespace();
 
             if (this.EOF)
             {
@@ -315,9 +325,15 @@ namespace LiteDB
 
                 case '!':
                     this.ReadChar();
-                    if (_char != '=') throw LiteException.UnexpectedToken(this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position));
-                    this.Current = new Token(TokenType.Operator, "!=", this.Position);
-                    this.ReadChar();
+                    if (_char == '=')
+                    {
+                        this.Current = new Token(TokenType.Operator, "!=", this.Position);
+                        this.ReadChar();
+                    }
+                    else
+                    {
+                        this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position);
+                    }
                     break;
 
                 case '>':
@@ -333,10 +349,27 @@ namespace LiteDB
                     break;
 
                 default:
-                    // read string operators (BETWEEN, LIKE, ...)
-                    var word = this.ReadWord();
+                    // read operators (BETWEEN, LIKE, AND, OR...)
+                    if (IsWordChar(_char))
+                    {
+                        var word = this.ReadWord();
 
-                    this.Current = new Token(_set.Contains(word) ? TokenType.Operator : TokenType.Unknown, word, this.Position);
+                        if (_knownOperators.Contains(word))
+                        {
+                            this.Current = new Token(TokenType.Operator, word, this.Position);
+                        }
+                        else
+                        {
+                            this.Current = new Token(TokenType.Unknown, word, this.Position);
+
+                            // store this read token in buffer (ahead)
+                            _ahead = new Token(TokenType.Word, word, this.Position);
+                        }
+                    }
+                    else
+                    {
+                        this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position);
+                    }
 
                     break;
             }

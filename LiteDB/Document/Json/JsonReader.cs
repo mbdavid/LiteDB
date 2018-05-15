@@ -76,11 +76,11 @@ namespace LiteDB
                         case "null": return BsonValue.Null;
                         case "true": return true;
                         case "false": return false;
-                        default: throw LiteException.UnexpectedToken(token.Value);
+                        default: throw LiteException.UnexpectedToken(token);
                     }
             }
 
-            throw LiteException.UnexpectedToken(token.Value);
+            throw LiteException.UnexpectedToken(token);
         }
 
         private BsonValue ReadObject()

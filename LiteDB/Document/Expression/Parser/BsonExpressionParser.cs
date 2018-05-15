@@ -76,24 +76,6 @@ namespace LiteDB
         #endregion
 
         /// <summary>
-        /// Extract expression from Tokenizer. If required = true, throw error if is not a valid expression. If required = false, returns null for not valid expression and back Index in Tokenizer to original position
-        /// </summary>
-        public static BsonExpression ReadExpression(Tokenizer s, bool required)
-        {
-            var start = s.Position;
-
-            try
-            {
-                return BsonExpression.Parse(s, false).Single();
-            }
-            catch (LiteException ex) when (required == false && ex.ErrorCode == LiteException.SYNTAX_ERROR)
-            {
-                s.Position = start;
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
         public static List<BsonExpression> ParseFullExpression(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot, bool onlyTerms)
@@ -106,17 +88,17 @@ namespace LiteDB
             while (!s.EOF)
             {
                 // read operator between expressions
-                var op = s.ReadOperator();
+                var op = s.ReadOperator(true);
 
                 // if no valid operator, stop reading string
-                if (op.Type == TokenType.Unknown) break;
+                if (op.Type != TokenType.Operator) break;
 
                 var expr = ParseSingleExpression(s, root, current, parameters, isRoot);
 
                 // special BETWEEN "AND" read
                 if (op.Value == "BETWEEN")
                 {
-                    s.Scan(@"\s+AND\s+").ThrowIfEmpty("Missing AND statement on BETWEEN", s);
+                    var and = s.ReadToken().Expect("AND", true);
 
                     var expr2 = ParseSingleExpression(s, root, current, parameters, isRoot);
 
@@ -157,7 +139,7 @@ namespace LiteDB
                         Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
                         Right = right,
-                        Source = left.Source + op.Key + right.Source
+                        Source = left.Source + (op.Key.IsWord() ? (" " + op.Key + " ") : op.Key) + right.Source
                     };
 
                     // remove left+right and insert result
@@ -572,32 +554,35 @@ namespace LiteDB
             // test $ or @ or WORD
             if (s.Current.Type != TokenType.At && s.Current.Type == TokenType.Dollar && s.Current.Type != TokenType.Word) return null;
 
-            var scope = "$";
+            var scope = isRoot ? "$" : "@";
+            var prefix = "";
 
             if (s.Current.Type == TokenType.At || s.Current.Type == TokenType.Dollar)
             {
-                s.ReadToken(); // read .
+                scope = s.Current.Type == TokenType.At ? "$" : "@";
 
-                if (s.Current.Type == TokenType.Period)
+                var ahead = s.LookAhead(false);
+
+                if (ahead.Type == TokenType.Period)
                 {
-                    s.ReadToken().Expect(TokenType.Word, TokenType.OpenBrace); // read WORD or [
-
+                    s.ReadToken(); // read .
+                    s.ReadToken(); // read word or [
                 }
-
+                else if (s.Current.Type == TokenType.At && ahead.Type == TokenType.Word)
+                {
+                    // to support $id pattern
+                    prefix = "$";
+                    s.ReadToken(); // read word
+                }
             }
-
-            // test if starts with $/@
-            if (!s.Scan(@"(\[\s*['""]|[\$\w]+)", out var field) && scope.Length == 0) return null;
 
             var source = new StringBuilder();
             var isImmutable = true;
 
-            scope = scope.TrimToNull() ?? (isRoot ? "$" : "@");
-
             source.Append(scope);
 
-            field = ReadField(s, field, source);
-
+            // read field name (or "" if root)
+            var field = ReadField(s, source, prefix);
             var name = Expression.Constant(field);
             var expr = Expression.Call(_memberPathMethod, scope == "$" ? root : current, name) as Expression;
 
@@ -627,49 +612,58 @@ namespace LiteDB
         /// </summary>
         private static Expression ParsePath(Tokenizer s, Expression expr, ParameterExpression root, ParameterExpression parameters, StringBuilder source, ref bool isImmutable)
         {
-            if (s.Scan(@"\.(\[\s*['""]|[\$\w]+)", 1, out var field))
+            var ahead = s.LookAhead(false);
+
+            if (ahead.Type == TokenType.Period)
             {
-                field = ReadField(s, field, source);
+                s.ReadToken(); // read .
+                s.ReadToken(false); //
+
+                var field = ReadField(s, source);
 
                 var name = Expression.Constant(field);
 
                 return Expression.Call(_memberPathMethod, expr, name);
+
             }
-            else if (s.Scan(@"\[\s*").Length > 0)
+            else if (ahead.Type == TokenType.OpenBracket) // array 
             {
                 source.Append("[");
 
-                var i = s.Scan(@"\s*(-?\s*[\d+\*])\s*\]", 1);
-                var index = i != "*" && i != "" ? Convert.ToInt32(i) : int.MaxValue;
+                s.ReadToken(); // read [
+                s.ReadToken();
+
+                var index = int.MaxValue;
                 var inner = BsonExpression.Empty;
 
-                if (i == "") // if array operation are not index based, read expression 
+                if (s.Current.Type == TokenType.Number || s.Current.Type == TokenType.Asterisk)
                 {
-                    // read expression with full support to all operators/formulas
-                    inner = ReadExpression(s, true);
+                    // fixed index (or all items)
+                    source.Append(s.Current.Value);
+                    index = s.Current.Type == TokenType.Number ? Convert.ToInt32(s.Current.Value) : int.MaxValue;
+                }
+                else
+                {
+                    // inner expression
+                    inner = BsonExpression.Parse(s, false).FirstOrDefault();
 
-                    if (inner == null) throw LiteException.SyntaxError(s, "Invalid expression formula");
+                    if (inner == null) throw LiteException.SyntaxError("Invalid expression formula", s.Position);
 
                     // if array filter is not immutable, update ref (update only when false)
                     if (inner.IsImmutable == false) isImmutable = false;
 
                     source.Append(inner.Source);
+                }
 
-                    s.Scan(@"\s*\]");
-                }
-                else
-                {
-                    source.Append(i);
-                }
+                // read ]
+                s.ReadToken().Expect(TokenType.CloseBracket);
 
                 source.Append("]");
 
                 return Expression.Call(_arrayPathMethod, expr, Expression.Constant(index), Expression.Constant(inner), root, parameters);
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         /// <summary>
@@ -720,20 +714,27 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get field from simple \w regex or ['comp-lex'] - also, add into source
+        /// Get field from simple \w regex or ['comp-lex'] - also, add into source. Can read empty field (root)
         /// </summary>
-        private static string ReadField(Tokenizer s, string field, StringBuilder source)
+        private static string ReadField(Tokenizer s, StringBuilder source, string prefix = "")
         {
+            var field = "";
+
             // if field are complex
             if (s.Current.Type == TokenType.OpenBrace)
             {
                 field = s.ReadToken().Expect(TokenType.String).Value;
+            }
+            else if (s.Current.Type == TokenType.Word)
+            {
+                field = prefix + s.Current.Value;
             }
 
             if (field.Length > 0)
             {
                 source.Append(".");
 
+                // add bracket in result only if is complex type
                 if (field.IsWord())
                 {
                     source.Append(field);

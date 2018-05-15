@@ -44,6 +44,13 @@
 > a[99]
 = null
 
+# Root and Current in array
+{ a: [ { b: 1, c: 2 }, { b: 2, c: 3 } ], i: 0 }
+> a[@.b = 1].c
+= 2
+> a[b = 2].c
+= 3
+
 # Complex field name
 { "a b": 1, "c d": { "x y": 2 }, x: { "$y!z\"'": 3 } }
 > $.["a b"]
