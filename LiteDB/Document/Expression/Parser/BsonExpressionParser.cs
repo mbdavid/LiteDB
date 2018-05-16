@@ -96,7 +96,7 @@ namespace LiteDB
                 var expr = ParseSingleExpression(s, root, current, parameters, isRoot);
 
                 // special BETWEEN "AND" read
-                if (op.Value == "BETWEEN")
+                if (op.Value.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
                 {
                     var and = s.ReadToken().Expect("AND", true);
 
@@ -107,7 +107,7 @@ namespace LiteDB
                 }
 
                 values.Add(expr);
-                ops.Add(op.Value);
+                ops.Add(op.Value.ToUpper());
             }
 
             var order = 0;
@@ -440,7 +440,7 @@ namespace LiteDB
         {
             if (s.Current.Type != TokenType.At) return null;
 
-            var parameterName = s.ReadToken(false).Expect(TokenType.Word).Value;
+            var parameterName = s.ReadToken(false).Expect(TokenType.Word, TokenType.Number).Value;
             var name = Expression.Constant(parameterName);
 
             return new BsonExpression
@@ -552,14 +552,14 @@ namespace LiteDB
         private static BsonExpression TryParsePath(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             // test $ or @ or WORD
-            if (s.Current.Type != TokenType.At && s.Current.Type == TokenType.Dollar && s.Current.Type != TokenType.Word) return null;
+            if (s.Current.Type != TokenType.At && s.Current.Type != TokenType.Dollar && s.Current.Type != TokenType.Word) return null;
 
             var scope = isRoot ? "$" : "@";
             var prefix = "";
 
             if (s.Current.Type == TokenType.At || s.Current.Type == TokenType.Dollar)
             {
-                scope = s.Current.Type == TokenType.At ? "$" : "@";
+                scope = s.Current.Type == TokenType.Dollar ? "$" : "@";
 
                 var ahead = s.LookAhead(false);
 
@@ -568,7 +568,7 @@ namespace LiteDB
                     s.ReadToken(); // read .
                     s.ReadToken(); // read word or [
                 }
-                else if (s.Current.Type == TokenType.At && ahead.Type == TokenType.Word)
+                else if (s.Current.Type == TokenType.Dollar && ahead.Type == TokenType.Word)
                 {
                     // to support $id pattern
                     prefix = "$";
@@ -721,9 +721,10 @@ namespace LiteDB
             var field = "";
 
             // if field are complex
-            if (s.Current.Type == TokenType.OpenBrace)
+            if (s.Current.Type == TokenType.OpenBracket)
             {
                 field = s.ReadToken().Expect(TokenType.String).Value;
+                s.ReadToken().Expect(TokenType.CloseBracket);
             }
             else if (s.Current.Type == TokenType.Word)
             {

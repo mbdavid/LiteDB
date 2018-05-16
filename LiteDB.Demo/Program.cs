@@ -18,6 +18,14 @@ namespace LiteDB.Demo
         {
             //TestChunk.Run();
 
+            var e0 = BsonExpression.Create("upper(@0) + 'ricio'", "mau");
+
+            var r = e0.Execute().First();
+
+
+
+            return;
+
             var cn = new ConnectionString
             {
                 Filename = datafile,

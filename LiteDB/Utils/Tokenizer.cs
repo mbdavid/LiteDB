@@ -94,6 +94,11 @@ namespace LiteDB
 
             return this;
         }
+
+        public override string ToString()
+        {
+            return this.Value + " (" + this.Type + ")";
+        }
     }
 
     #endregion
@@ -184,7 +189,7 @@ namespace LiteDB
             }
             else
             {
-                return this.ReadNext(eatWhitespace);
+                return this.Current = this.ReadNext(eatWhitespace);
             }
         }
 
@@ -198,74 +203,76 @@ namespace LiteDB
 
             if (this.EOF)
             {
-                return this.Current = new Token(TokenType.EOF, null, this.Position);
+                return new Token(TokenType.EOF, null, this.Position);
             }
+
+            Token token;
 
             switch (_char)
             {
                 case '[':
-                    this.Current = new Token(TokenType.OpenBracket, "[", this.Position);
+                    token = new Token(TokenType.OpenBracket, "[", this.Position);
                     this.ReadChar();
                     break;
 
                 case ']':
-                    this.Current = new Token(TokenType.CloseBracket, "]", this.Position);
+                    token = new Token(TokenType.CloseBracket, "]", this.Position);
                     this.ReadChar();
                     break;
 
                 case '{':
-                    this.Current = new Token(TokenType.OpenBrace, "{", this.Position);
+                    token = new Token(TokenType.OpenBrace, "{", this.Position);
                     this.ReadChar();
                     break;
 
                 case '}':
-                    this.Current = new Token(TokenType.CloseBrace, "}", this.Position);
+                    token = new Token(TokenType.CloseBrace, "}", this.Position);
                     this.ReadChar();
                     break;
 
                 case '(':
-                    this.Current = new Token(TokenType.OpenParenthesis, "(", this.Position);
+                    token = new Token(TokenType.OpenParenthesis, "(", this.Position);
                     this.ReadChar();
                     break;
 
                 case ')':
-                    this.Current = new Token(TokenType.CloseParenthesis, ")", this.Position);
+                    token = new Token(TokenType.CloseParenthesis, ")", this.Position);
                     this.ReadChar();
                     break;
 
                 case ',':
-                    this.Current = new Token(TokenType.Comma, ",", this.Position);
+                    token = new Token(TokenType.Comma, ",", this.Position);
                     this.ReadChar();
                     break;
 
                 case ':':
-                    this.Current = new Token(TokenType.Colon, ":", this.Position);
+                    token = new Token(TokenType.Colon, ":", this.Position);
                     this.ReadChar();
                     break;
 
                 case '.':
-                    this.Current = new Token(TokenType.Period, ".", this.Position);
+                    token = new Token(TokenType.Period, ".", this.Position);
                     this.ReadChar();
                     break;
 
                 case '@':
-                    this.Current = new Token(TokenType.At, "@", this.Position);
+                    token = new Token(TokenType.At, "@", this.Position);
                     this.ReadChar();
                     break;
 
                 case '$':
-                    this.Current = new Token(TokenType.Dollar, "$", this.Position);
+                    token = new Token(TokenType.Dollar, "$", this.Position);
                     this.ReadChar();
                     break;
 
                 case '*':
-                    this.Current = new Token(TokenType.Asterisk, "*", this.Position);
+                    token = new Token(TokenType.Asterisk, "*", this.Position);
                     this.ReadChar();
                     break;
 
                 case '\"':
                 case '\'':
-                    this.Current = new Token(TokenType.String, this.ReadString(_char), this.Position);
+                    token = new Token(TokenType.String, this.ReadString(_char), this.Position);
                     break;
 
                 case '-':
@@ -279,23 +286,23 @@ namespace LiteDB
                 case '7':
                 case '8':
                 case '9':
-                    this.Current = new Token(TokenType.Number, this.ReadNumber(), this.Position);
+                    token = new Token(TokenType.Number, this.ReadNumber(), this.Position);
                     break;
 
                 default:
                     if (IsWordChar(_char))
                     {
-                        this.Current = new Token(TokenType.Operator, this.ReadWord(), this.Position);
+                        token = new Token(TokenType.Word, this.ReadWord(), this.Position);
                     }
                     else
                     {
-                        this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position);
+                        token = new Token(TokenType.Unknown, _char.ToString(), this.Position);
                     }
 
                     break;
             }
 
-            return this.Current;
+            return token;
         }
 
         /// <summary>
@@ -510,6 +517,11 @@ namespace LiteDB
             else if (c1 >= 'a' && c1 <= 'f')
                 p1 = (uint)((c1 - 'a') + 10) * multiplier;
             return p1;
+        }
+
+        public override string ToString()
+        {
+            return this.Current?.ToString() + " [ahred: " + _ahead?.ToString() + "] - position: " + this.Position;
         }
     }
 }
