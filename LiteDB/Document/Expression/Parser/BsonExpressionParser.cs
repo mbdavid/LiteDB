@@ -100,7 +100,9 @@ namespace LiteDB
                 // special BETWEEN "AND" read
                 if (op.Value.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    var and = s.ReadToken(true).Expect("AND", true);
+                    var and = s.ReadToken(true).Expect(TokenType.Operator);
+
+                    if (!and.Value.Equals("AND", StringComparison.OrdinalIgnoreCase)) throw LiteException.UnexpectedToken(s.Current);
 
                     var expr2 = ParseSingleExpression(s, root, current, parameters, isRoot);
 
@@ -675,14 +677,22 @@ namespace LiteDB
                 var index = int.MaxValue;
                 var inner = BsonExpression.Empty;
 
-                if (ahead.Type == TokenType.Number || ahead.Value == "*")
+                if (ahead.Type == TokenType.Number)
                 {
-                    // read index
+                    // fixed index
+                    source.Append(s.ReadToken().Value);
+                    index = Convert.ToInt32(s.Current.Value);
+                }
+                else if (ahead.Value == "-")
+                {
+                    // fixed negative index
+                    source.Append(s.ReadToken().Value + s.ReadToken().Expect(TokenType.Number).Value);
+                    index = -Convert.ToInt32(s.Current.Value);
+                }
+                else if (ahead.Value == "*")
+                {
+                    // read all items (index = int.MaxValue)
                     s.ReadToken();
-
-                    // fixed index (or all items)
-                    source.Append(s.Current.Value);
-                    index = s.Current.Type == TokenType.Number ? Convert.ToInt32(s.Current.Value) : int.MaxValue;
                 }
                 else
                 {

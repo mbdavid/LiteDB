@@ -71,16 +71,6 @@ namespace LiteDB
             return this;
         }
 
-        public Token Expect(string token, bool ignoreCase)
-        {
-            if (this.Value.Equals(token, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
-            {
-                throw LiteException.UnexpectedToken(this);
-            }
-
-            return this;
-        }
-
         /// <summary>
         /// Expect for type1 OR type2
         /// </summary>

@@ -29,5 +29,5 @@
 ~ (1+2)=3 AND $.X+$.y=9
 
 # Methods
-> UPPER( "lite" + "db" )
-~ UPPER("lite"+"db")
+> SUBSTRING( "lite" + "db", -4, 1 + 9 )
+~ SUBSTRING("lite"+"db",-4,1+9)

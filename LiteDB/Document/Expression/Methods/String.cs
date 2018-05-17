@@ -51,7 +51,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index, IEnumerable<BsonValue> length)
         {
-            foreach (var value in ZipValues(values, index))
+            foreach (var value in ZipValues(values, index, length))
             {
                 if (!value.First.IsString) continue;
                 if (!value.Second.IsNumber) continue;
@@ -83,7 +83,6 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(values, totalWidth, paddingChar))
             {
-                if (!value.First.IsString) continue;
                 if (!value.Second.IsNumber) continue;
                 if (!value.Third.IsString) continue;
 
@@ -99,7 +98,6 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(values, totalWidth, paddingChar))
             {
-                if (!value.First.IsString) continue;
                 if (!value.Second.IsNumber) continue;
                 if (!value.Third.IsString) continue;
 
