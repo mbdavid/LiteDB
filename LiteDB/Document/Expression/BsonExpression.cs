@@ -165,7 +165,7 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
 
-            var expr = _cache.GetOrAdd(expression, (k) => Parse(new Tokenizer(expression), false).Single());
+            var expr = _cache.GetOrAdd(expression, (k) => Parse(new Tokenizer(expression), true, false).Single());
 
             // return a copy from cache WITHOUT parameters
             return new BsonExpression
@@ -212,7 +212,7 @@ namespace LiteDB
         /// <summary>
         /// Parse and compile string expression and return a list of expression - if onlyTerm = true, return a list of all expressions without any AND operator.
         /// </summary>
-        internal static List<BsonExpression> Parse(Tokenizer s, bool onlyTerms)
+        internal static List<BsonExpression> Parse(Tokenizer s, bool isRoot, bool onlyTerms)
         {
             if (s == null) throw new ArgumentNullException(nameof(s));
 
@@ -220,7 +220,7 @@ namespace LiteDB
             var current = Expression.Parameter(typeof(IEnumerable<BsonValue>), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
-            var exprList = BsonExpressionParser.ParseFullExpression(s, root, current, parameters, true, onlyTerms);
+            var exprList = BsonExpressionParser.ParseFullExpression(s, root, current, parameters, isRoot, onlyTerms);
 
             foreach(var expr in exprList)
             {

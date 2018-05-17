@@ -18,9 +18,9 @@ namespace LiteDB.Demo
         {
             //TestChunk.Run();
 
-            var e0 = BsonExpression.Create("upper(@0) + 'ricio'", "mau");
+            var e0 = BsonExpression.Create("$.a[*].c + 5");
 
-            var r = e0.Execute().First();
+            //var r = e0.Execute().First();
 
 
 

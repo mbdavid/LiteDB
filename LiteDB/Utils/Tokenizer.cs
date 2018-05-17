@@ -31,13 +31,12 @@ namespace LiteDB
         Period,
         /// <summary> $ </summary>
         Dollar,
-        /// <summary> * </summary>
-        Asterisk,
         /// <summary> `=` `&gt;` `&lt;` `!=` `&gt;=` `&lt;=` `+` `-` `*` `/` `\` `%` `BETWEEN` </summary>
         Operator,
         String,
         Number,
         Word,
+        Whitespace,
         EOF,
         Unknown
     }
@@ -118,9 +117,9 @@ namespace LiteDB
         public Token Current { get; private set; }
 
         /// <summary>
-        /// Pre-loaded known string operators
+        /// Pre-loaded known keywords
         /// </summary>
-        private static HashSet<string> _knownOperators = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
+        private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
 
         public Tokenizer(string source)
             : this(new StringReader(source))
@@ -169,11 +168,17 @@ namespace LiteDB
         /// </summary>
         public Token LookAhead(bool eatWhitespace = true)
         {
-            if (_ahead != null) return _ahead;
+            if (_ahead != null)
+            {
+                if (eatWhitespace && _ahead.Type == TokenType.Whitespace)
+                {
+                    _ahead = this.ReadNext(eatWhitespace);
+                }
 
-            _ahead = this.ReadNext(eatWhitespace);
+                return _ahead;
+            }
 
-            return _ahead;
+            return _ahead = this.ReadNext(eatWhitespace);
         }
 
         /// <summary>
@@ -194,9 +199,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read next token (do not read operators tokens)
+        /// Read next token from reader
         /// </summary>
-        private Token ReadNext(bool eatWhitespace = true)
+        private Token ReadNext(bool eatWhitespace)
         {
             // remove whitespace before get next token
             if (eatWhitespace) this.EatWhitespace();
@@ -206,10 +211,41 @@ namespace LiteDB
                 return new Token(TokenType.EOF, null, this.Position);
             }
 
-            Token token;
+            Token token = null;
 
             switch (_char)
             {
+                case '%':
+                case '/':
+                case '*':
+                case '+':
+                case '-':
+                case '=':
+                    token = new Token(TokenType.Operator, _char.ToString(), this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '!':
+                    this.ReadChar();
+                    if (_char == '=')
+                    {
+                        token = new Token(TokenType.Operator, "!=", this.Position);
+                        this.ReadChar();
+                    }
+                    break;
+
+                case '>':
+                case '<':
+                    var op = _char.ToString();
+                    this.ReadChar();
+                    if (_char == '=')
+                    {
+                        op += "=";
+                        this.ReadChar();
+                    }
+                    token = new Token(TokenType.Operator, op, this.Position);
+                    break;
+
                 case '[':
                     token = new Token(TokenType.OpenBracket, "[", this.Position);
                     this.ReadChar();
@@ -265,17 +301,11 @@ namespace LiteDB
                     this.ReadChar();
                     break;
 
-                case '*':
-                    token = new Token(TokenType.Asterisk, "*", this.Position);
-                    this.ReadChar();
-                    break;
-
                 case '\"':
                 case '\'':
                     token = new Token(TokenType.String, this.ReadString(_char), this.Position);
                     break;
 
-                case '-':
                 case '0':
                 case '1':
                 case '2':
@@ -289,99 +319,38 @@ namespace LiteDB
                     token = new Token(TokenType.Number, this.ReadNumber(), this.Position);
                     break;
 
-                default:
-                    if (IsWordChar(_char))
+                case ' ':
+                case '\n':
+                case '\r':
+                case '\t':
+                    var length = 0;
+                    while(char.IsWhiteSpace(_char) && !this.EOF)
                     {
-                        token = new Token(TokenType.Word, this.ReadWord(), this.Position);
-                    }
-                    else
-                    {
-                        token = new Token(TokenType.Unknown, _char.ToString(), this.Position);
-                    }
-
-                    break;
-            }
-
-            return token;
-        }
-
-        /// <summary>
-        /// Read next operator (do not read any other token type) - if in an unkonwn word token, store in ahead cache
-        /// </summary>
-        public Token ReadOperator(bool eatWhitespace)
-        {
-            // always remove whitespace before get next token
-            if (eatWhitespace) this.EatWhitespace();
-
-            if (this.EOF)
-            {
-                return this.Current = new Token(TokenType.EOF, null, this.Position);
-            }
-
-            switch (_char)
-            {
-                case '+':
-                case '-':
-                case '*':
-                case '\\':
-                case '/':
-                case '%':
-                    this.Current = new Token(TokenType.Operator, _char.ToString(), this.Position);
-                    this.ReadChar();
-                    break;
-
-                case '!':
-                    this.ReadChar();
-                    if (_char == '=')
-                    {
-                        this.Current = new Token(TokenType.Operator, "!=", this.Position);
                         this.ReadChar();
+                        length++;
                     }
-                    else
-                    {
-                        this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position);
-                    }
-                    break;
-
-                case '>':
-                case '<':
-                    var op = _char.ToString();
-                    this.ReadChar();
-                    if (_char == '=')
-                    {
-                        op += "=";
-                        this.ReadChar();
-                    }
-                    this.Current = new Token(TokenType.Operator, op, this.Position);
+                    token = new Token(TokenType.Whitespace, "".PadLeft(length, ' '), this.Position);
                     break;
 
                 default:
-                    // read operators (BETWEEN, LIKE, AND, OR...)
+                    // read simple word or an operators (BETWEEN, LIKE, AND, OR...)
                     if (IsWordChar(_char))
                     {
                         var word = this.ReadWord();
 
-                        if (_knownOperators.Contains(word))
+                        if (_keywords.Contains(word))
                         {
-                            this.Current = new Token(TokenType.Operator, word, this.Position);
+                            token = new Token(TokenType.Operator, word, this.Position);
                         }
                         else
                         {
-                            this.Current = new Token(TokenType.Unknown, word, this.Position);
-
-                            // store this read token in buffer (ahead)
-                            _ahead = new Token(TokenType.Word, word, this.Position);
+                            token = new Token(TokenType.Word, word, this.Position);
                         }
                     }
-                    else
-                    {
-                        this.Current = new Token(TokenType.Unknown, _char.ToString(), this.Position);
-                    }
-
                     break;
             }
 
-            return this.Current;
+            return token ?? new Token(TokenType.Unknown, _char.ToString(), this.Position);
         }
 
         /// <summary>

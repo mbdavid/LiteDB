@@ -88,17 +88,19 @@ namespace LiteDB
             while (!s.EOF)
             {
                 // read operator between expressions
-                var op = s.ReadOperator(true);
+                var op = s.LookAhead(true);
 
                 // if no valid operator, stop reading string
                 if (op.Type != TokenType.Operator) break;
+
+                s.ReadToken(); // consume _ahead
 
                 var expr = ParseSingleExpression(s, root, current, parameters, isRoot);
 
                 // special BETWEEN "AND" read
                 if (op.Value.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    var and = s.ReadToken().Expect("AND", true);
+                    var and = s.ReadToken(true).Expect("AND", true);
 
                     var expr2 = ParseSingleExpression(s, root, current, parameters, isRoot);
 
@@ -182,10 +184,26 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseDouble(Tokenizer s)
         {
+            string value = null;
+
             if (s.Current.Type == TokenType.Number && s.Current.Value.Contains("."))
             {
-                var number = Convert.ToDouble(s.Current.Value, CultureInfo.InvariantCulture.NumberFormat);
-                var value = Expression.Constant(new BsonValue(number));
+                value = s.Current.Value;
+            }
+            else if (s.Current.Value == "-")
+            {
+                var ahead = s.LookAhead(false);
+
+                if (ahead.Type == TokenType.Number && ahead.Value.Contains("."))
+                {
+                    value = "-" + s.ReadToken().Value;
+                }
+            }
+
+            if (value != null)
+            {
+                var number = Convert.ToDouble(value, CultureInfo.InvariantCulture.NumberFormat);
+                var constant = Expression.Constant(new BsonValue(number));
 
                 return new BsonExpression
                 {
@@ -193,7 +211,7 @@ namespace LiteDB
                     IsConstant = true,
                     IsImmutable = true,
                     Fields = new HashSet<string>(),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), value),
+                    Expression = Expression.NewArrayInit(typeof(BsonValue), constant),
                     Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
             }
@@ -206,10 +224,26 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseInt(Tokenizer s)
         {
+            string value = null;
+
             if (s.Current.Type == TokenType.Number)
             {
-                var number = Convert.ToInt32(s.Current.Value, CultureInfo.InvariantCulture.NumberFormat);
-                var value = Expression.Constant(new BsonValue(number));
+                value = s.Current.Value;
+            }
+            else if (s.Current.Value == "-")
+            {
+                var ahead = s.LookAhead(false);
+
+                if (ahead.Type == TokenType.Number)
+                {
+                    value = "-" + s.ReadToken().Value;
+                }
+            }
+
+            if (value != null)
+            {
+                var number = Convert.ToInt32(value, CultureInfo.InvariantCulture.NumberFormat);
+                var constant = Expression.Constant(new BsonValue(number));
 
                 return new BsonExpression
                 {
@@ -217,7 +251,7 @@ namespace LiteDB
                     IsConstant = true,
                     IsImmutable = true,
                     Fields = new HashSet<string>(),
-                    Expression = Expression.NewArrayInit(typeof(BsonValue), value),
+                    Expression = Expression.NewArrayInit(typeof(BsonValue), constant),
                     Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
             }
@@ -486,7 +520,7 @@ namespace LiteDB
             var token = s.Current;
 
             if (s.Current.Type != TokenType.Word) return null;
-            if (s.LookAhead(true).Type != TokenType.OpenParenthesis) return null;
+            if (s.LookAhead().Type != TokenType.OpenParenthesis) return null;
 
             // read (
             s.ReadToken();
@@ -631,13 +665,17 @@ namespace LiteDB
                 source.Append("[");
 
                 s.ReadToken(); // read [
-                s.ReadToken();
+
+                ahead = s.LookAhead(); // look for "index" or "expression"
 
                 var index = int.MaxValue;
                 var inner = BsonExpression.Empty;
 
-                if (s.Current.Type == TokenType.Number || s.Current.Type == TokenType.Asterisk)
+                if (ahead.Type == TokenType.Number || ahead.Value == "*")
                 {
+                    // read index
+                    s.ReadToken();
+
                     // fixed index (or all items)
                     source.Append(s.Current.Value);
                     index = s.Current.Type == TokenType.Number ? Convert.ToInt32(s.Current.Value) : int.MaxValue;
@@ -645,7 +683,7 @@ namespace LiteDB
                 else
                 {
                     // inner expression
-                    inner = BsonExpression.Parse(s, false).FirstOrDefault();
+                    inner = BsonExpression.Parse(s, false, false).FirstOrDefault();
 
                     if (inner == null) throw LiteException.SyntaxError("Invalid expression formula", s.Position);
 
