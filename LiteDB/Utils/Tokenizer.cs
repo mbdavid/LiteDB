@@ -135,7 +135,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Checks if char is an valid part of a word (a-Z  _ or $)
+        /// Checks if char is an valid part of a word [a-Z_]+[a-Z0-9_$]*
         /// </summary>
         public static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
 
@@ -182,20 +182,23 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Read next token (or from ahead buffer). If from buffer, ignores eatWhitespace
+        /// Read next token (or from ahead buffer).
         /// </summary>
         public Token ReadToken(bool eatWhitespace = true)
         {
-            if (_ahead != null)
-            {
-                this.Current = _ahead;
-                _ahead = null;
-                return this.Current;
-            }
-            else
+            if (_ahead == null)
             {
                 return this.Current = this.ReadNext(eatWhitespace);
             }
+
+            if (eatWhitespace && _ahead.Type == TokenType.Whitespace)
+            {
+                _ahead = this.ReadNext(eatWhitespace);
+            }
+
+            this.Current = _ahead;
+            _ahead = null;
+            return this.Current;
         }
 
         /// <summary>
@@ -297,8 +300,15 @@ namespace LiteDB
                     break;
 
                 case '$':
-                    token = new Token(TokenType.Dollar, "$", this.Position);
                     this.ReadChar();
+                    if (IsWordChar(_char))
+                    {
+                        token = new Token(TokenType.Word, "$" + this.ReadWord(), this.Position);
+                    }
+                    else
+                    {
+                        token = new Token(TokenType.Dollar, "$", this.Position);
+                    }
                     break;
 
                 case '\"':
@@ -437,6 +447,8 @@ namespace LiteDB
                 if (_char == '\\')
                 {
                     this.ReadChar();
+
+                    if (_char == quote) sb.Append(quote);
 
                     switch (_char)
                     {

@@ -357,13 +357,13 @@ namespace LiteDB
 
                 s.ReadToken(); // update s.Current 
 
+                source.Append(":");
+
                 BsonExpression value;
 
                 // test normal notation { a: 1 }
                 if (s.Current.Type == TokenType.Colon)
                 {
-                    source.Append(":");
-
                     value = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
 
                     // read next token here (, or }) because simplified version already did
@@ -371,6 +371,8 @@ namespace LiteDB
                 }
                 else
                 {
+                    var fname = src.ToString();
+
                     // support for simplified notation { a, b, c } == { a: $.a, b: $.b, c: $.c }
                     value = new BsonExpression
                     {
@@ -379,7 +381,7 @@ namespace LiteDB
                         IsImmutable = isImmutable,
                         Fields = new HashSet<string>(new string[] { key }),
                         Expression = Expression.Call(_memberPathMethod, root, Expression.Constant(key)) as Expression,
-                        Source = "$." + src.ToString()
+                        Source = "$." + (fname.IsWord() ? fname : "[" + fname + "]")
                     };
                 }
 
@@ -474,18 +476,27 @@ namespace LiteDB
         {
             if (s.Current.Type != TokenType.At) return null;
 
-            var parameterName = s.ReadToken(false).Expect(TokenType.Word, TokenType.Number).Value;
-            var name = Expression.Constant(parameterName);
+            var ahead = s.LookAhead(false);
 
-            return new BsonExpression
+            if (ahead.Type == TokenType.Word || ahead.Type == TokenType.Number)
             {
-                Type = BsonExpressionType.Parameter,
-                IsConstant = true,
-                IsImmutable = false,
-                Fields = new HashSet<string>(),
-                Expression = Expression.Call(_parameterPathMethod, parameters, name),
-                Source = "@" + parameterName
-            };
+                var parameterName = s.ReadToken(false).Value;
+                var name = Expression.Constant(parameterName);
+
+                return new BsonExpression
+                {
+                    Type = BsonExpressionType.Parameter,
+                    IsConstant = true,
+                    IsImmutable = false,
+                    Fields = new HashSet<string>(),
+                    Expression = Expression.Call(_parameterPathMethod, parameters, name),
+                    Source = "@" + parameterName
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -589,7 +600,6 @@ namespace LiteDB
             if (s.Current.Type != TokenType.At && s.Current.Type != TokenType.Dollar && s.Current.Type != TokenType.Word) return null;
 
             var scope = isRoot ? "$" : "@";
-            var prefix = "";
 
             if (s.Current.Type == TokenType.At || s.Current.Type == TokenType.Dollar)
             {
@@ -597,16 +607,10 @@ namespace LiteDB
 
                 var ahead = s.LookAhead(false);
 
-                if (ahead.Type == TokenType.Period)
+                if(ahead.Type == TokenType.Period)
                 {
                     s.ReadToken(); // read .
                     s.ReadToken(); // read word or [
-                }
-                else if (s.Current.Type == TokenType.Dollar && ahead.Type == TokenType.Word)
-                {
-                    // to support $id pattern
-                    prefix = "$";
-                    s.ReadToken(); // read word
                 }
             }
 
@@ -616,7 +620,7 @@ namespace LiteDB
             source.Append(scope);
 
             // read field name (or "" if root)
-            var field = ReadField(s, source, prefix);
+            var field = ReadField(s, source);
             var name = Expression.Constant(field);
             var expr = Expression.Call(_memberPathMethod, scope == "$" ? root : current, name) as Expression;
 
@@ -754,7 +758,7 @@ namespace LiteDB
         /// <summary>
         /// Get field from simple \w regex or ['comp-lex'] - also, add into source. Can read empty field (root)
         /// </summary>
-        private static string ReadField(Tokenizer s, StringBuilder source, string prefix = "")
+        private static string ReadField(Tokenizer s, StringBuilder source)
         {
             var field = "";
 
@@ -766,7 +770,7 @@ namespace LiteDB
             }
             else if (s.Current.Type == TokenType.Word)
             {
-                field = prefix + s.Current.Value;
+                field = s.Current.Value;
             }
 
             if (field.Length > 0)
@@ -797,14 +801,13 @@ namespace LiteDB
             var token = s.ReadToken();
             var key = "";
 
-            if (token.Type == TokenType.OpenBracket)
+            if (token.Type == TokenType.String)
             {
-                key = s.ReadToken().Expect(TokenType.String).Value;
-                s.ReadToken().Expect(TokenType.CloseBracket);
+                key = token.Value;
             }
             else
             {
-                key = token.Expect(TokenType.Word).Value;
+                key = token.Expect(TokenType.Word, TokenType.Number).Value;
             }
 
             if (key.IsWord())

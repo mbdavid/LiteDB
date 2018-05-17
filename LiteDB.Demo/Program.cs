@@ -18,7 +18,9 @@ namespace LiteDB.Demo
         {
             //TestChunk.Run();
 
-            var e0 = BsonExpression.Create("$.a[*].c + 5");
+            var s = @"a[ @ + 1 = @ + 2].b  = 9";
+
+            var e0 = BsonExpression.Create(s);
 
             //var r = e0.Execute().First();
 
