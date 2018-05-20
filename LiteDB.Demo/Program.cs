@@ -18,7 +18,7 @@ namespace LiteDB.Demo
         {
             //TestChunk.Run();
 
-            var s = @"SUBSTRING(""LiteDB"", 0, 2)";
+            var s = @"{a:1} ";
 
             var e0 = BsonExpression.Create(s);
 

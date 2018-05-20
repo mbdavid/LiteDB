@@ -349,7 +349,7 @@ namespace LiteDB
 
             source.Append("{");
 
-            while (!s.EOF)
+            while (!s.CheckEOF())
             {
                 // read simple or complex document key name
                 var src = new StringBuilder(); // use another builder to re-use in simplified notation
@@ -437,7 +437,7 @@ namespace LiteDB
 
             source.Append("[");
 
-            while (!s.EOF)
+            while (!s.CheckEOF())
             {
                 // read value expression
                 var value = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
@@ -547,29 +547,37 @@ namespace LiteDB
 
             source.Append(token.Value.ToUpper() + "(");
 
-            while (!s.EOF)
+            // method call with no parameters
+            if (s.LookAhead().Type == TokenType.CloseBrace)
             {
-                var parameter = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
+                s.ReadToken(); // read )
+            }
+            else
+            {
+                while (!s.CheckEOF())
+                {
+                    var parameter = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
 
-                // update isImmutable/isConstant only when came false
-                if (parameter.IsImmutable == false) isImmutable = false;
-                if (parameter.IsConstant == false) isConstant = false;
+                    // update isImmutable/isConstant only when came false
+                    if (parameter.IsImmutable == false) isImmutable = false;
+                    if (parameter.IsConstant == false) isConstant = false;
 
-                // add fields from each parameters
-                fields.AddRange(parameter.Fields);
+                    // add fields from each parameters
+                    fields.AddRange(parameter.Fields);
 
-                pars.Add(parameter.Expression);
+                    pars.Add(parameter.Expression);
 
-                // append source string
-                source.Append(parameter.Source);
+                    // append source string
+                    source.Append(parameter.Source);
 
-                // read , or )
-                var next = s.ReadToken()
-                    .Expect(TokenType.Comma, TokenType.CloseParenthesis);
+                    // read , or )
+                    var next = s.ReadToken()
+                        .Expect(TokenType.Comma, TokenType.CloseParenthesis);
 
-                source.Append(next.Value);
+                    source.Append(next.Value);
 
-                if (next.Type == TokenType.Comma) continue; else break;
+                    if (next.Type == TokenType.Comma) continue; else break;
+                }
             }
 
             var method = GetMethod(token.Value, pars.Count);

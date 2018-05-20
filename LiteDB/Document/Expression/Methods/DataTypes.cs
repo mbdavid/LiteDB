@@ -273,6 +273,15 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return a new DATETIME (UtcNow)
+        /// </summary>
+        [Volatile]
+        public static IEnumerable<BsonValue> DATETIME_UTC()
+        {
+            yield return DateTime.UtcNow;
+        }
+
+        /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert. Support multiple values
         /// </summary>
         public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> values)
@@ -294,7 +303,27 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create a new instance of DATETIME based on year, month, day
+        /// Convert values into DATETIME. Returns empty if not possible to convert. Support multiple values
+        /// </summary>
+        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values)
+            {
+                if (value.IsDateTime)
+                {
+                    yield return value.AsDateTime;
+                }
+                else
+                {
+                    if (DateTime.TryParse(value.AsString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
+                    {
+                        yield return val;
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// Create a new instance of DATETIME based on year, month, day (local time)
         /// </summary>
         public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
         {
@@ -303,6 +332,20 @@ namespace LiteDB
                 if (value.First.IsNumber && value.Second.IsNumber && value.Third.IsNumber)
                 {
                     yield return new DateTime(value.First.AsInt32, value.Second.AsInt32, value.Third.AsInt32);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create a new instance of DATETIME based on year, month, day (UTC)
+        /// </summary>
+        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
+        {
+            foreach (var value in ZipValues(year, month, day))
+            {
+                if (value.First.IsNumber && value.Second.IsNumber && value.Third.IsNumber)
+                {
+                    yield return new DateTime(value.First.AsInt32, value.Second.AsInt32, value.Third.AsInt32, 0, 0, 0, DateTimeKind.Utc);
                 }
             }
         }
@@ -512,14 +555,23 @@ namespace LiteDB
 
 
         /// <summary>
-        /// Alias to DATETIME()
+        /// Alias to DATETIME() and DATETIME_UTC()
         /// </summary>
         [Volatile]
         public static IEnumerable<BsonValue> DATE() => DATETIME();
+        [Volatile]
+        public static IEnumerable<BsonValue> DATE_UTC() => DATETIME_UTC();
+
+        [Volatile]
         public static IEnumerable<BsonValue> NOW() => DATETIME();
+        [Volatile]
+        public static IEnumerable<BsonValue> NOW_UTC() => DATETIME_UTC();
 
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values) => DATETIME(values);
+        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> values) => DATETIME_UTC(values);
+
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME(year, month, day);
+        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME_UTC(year, month, day);
 
         /// <summary>
         /// Alias to IS_INT32(values)

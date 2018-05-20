@@ -54,3 +54,27 @@
 = {a: 2, b: {c: 2} }
 > EXTEND({a:true}, {a: false})
 = {a:false}
+
+# DATE functions
+{d:{$date: "2018-05-01T15:30:45Z"}}
+> YEAR(d)
+= 2018
+> MONTH(d)
+= 5
+> DAY(d)
+= 1
+
+# dateParts: "y|year", "M|month", "d|day", "h|hour", "m|minute", "s|second"
+
+> DATEADD('d', 1, d)
+= {$date: "2018-05-02T15:30:45Z"}
+> DATEADD('d', -1, d)
+= {$date: "2018-04-30T15:30:45Z"}
+> DATEADD('M', 12, d)
+= {$date: "2019-05-01T15:30:45Z"}
+
+> DATEDIFF('M', d, DATE_UTC(2018, 6, 1))
+= 1
+> DATEDIFF('M', d, DATE_UTC(2018, 4, 1))
+= -1
+

@@ -244,9 +244,9 @@ namespace LiteDB
 
         internal static LiteException UnexpectedToken(Token token)
         {
-            return new LiteException(UNEXPECTED_TOKEN, $"Unexpected token {token.Value} ({token.Type}) in position {token.Position}")
+            return new LiteException(UNEXPECTED_TOKEN, $"Unexpected token {token?.Value} ({token?.Type ?? TokenType.EOF}) in position {token?.Position ?? 0}")
             {
-                Position = token.Position - (token.Value?.Length ?? 0)
+                Position = (token?.Position - (token?.Value?.Length ?? 0)) ?? 0
             };
         }
 

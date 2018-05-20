@@ -111,6 +111,16 @@ namespace LiteDB
         /// </summary>
         private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
 
+        /// <summary>
+        /// If EOF throw an invalid token exception (used in while()) otherwise return "false" (not EOF)
+        /// </summary>
+        public bool CheckEOF()
+        {
+            if (this.EOF) throw LiteException.UnexpectedToken(this.Current);
+
+            return false;
+        }
+
         public Tokenizer(string source)
             : this(new StringReader(source))
         {
