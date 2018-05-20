@@ -34,7 +34,8 @@ namespace LiteDB
         /// <summary> `=` `&gt;` `&lt;` `!=` `&gt;=` `&lt;=` `+` `-` `*` `/` `\` `%` `BETWEEN` </summary>
         Operator,
         String,
-        Number,
+        Int,
+        Double,
         Word,
         Whitespace,
         EOF,
@@ -326,7 +327,8 @@ namespace LiteDB
                 case '7':
                 case '8':
                 case '9':
-                    token = new Token(TokenType.Number, this.ReadNumber(), this.Position);
+                    var number = this.ReadNumber();
+                    token = new Token(number.Contains(".") ? TokenType.Double : TokenType.Int, number, this.Position);
                     break;
 
                 case ' ':

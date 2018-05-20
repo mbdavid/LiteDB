@@ -188,7 +188,7 @@ namespace LiteDB
         {
             string value = null;
 
-            if (s.Current.Type == TokenType.Number && s.Current.Value.Contains("."))
+            if (s.Current.Type == TokenType.Double)
             {
                 value = s.Current.Value;
             }
@@ -196,7 +196,7 @@ namespace LiteDB
             {
                 var ahead = s.LookAhead(false);
 
-                if (ahead.Type == TokenType.Number && ahead.Value.Contains("."))
+                if (ahead.Type == TokenType.Double)
                 {
                     value = "-" + s.ReadToken().Value;
                 }
@@ -228,7 +228,7 @@ namespace LiteDB
         {
             string value = null;
 
-            if (s.Current.Type == TokenType.Number)
+            if (s.Current.Type == TokenType.Int)
             {
                 value = s.Current.Value;
             }
@@ -236,7 +236,7 @@ namespace LiteDB
             {
                 var ahead = s.LookAhead(false);
 
-                if (ahead.Type == TokenType.Number)
+                if (ahead.Type == TokenType.Int)
                 {
                     value = "-" + s.ReadToken().Value;
                 }
@@ -480,7 +480,7 @@ namespace LiteDB
 
             var ahead = s.LookAhead(false);
 
-            if (ahead.Type == TokenType.Word || ahead.Type == TokenType.Number)
+            if (ahead.Type == TokenType.Word || ahead.Type == TokenType.Int)
             {
                 var parameterName = s.ReadToken(false).Value;
                 var name = Expression.Constant(parameterName);
@@ -685,7 +685,7 @@ namespace LiteDB
                 var index = int.MaxValue;
                 var inner = BsonExpression.Empty;
 
-                if (ahead.Type == TokenType.Number)
+                if (ahead.Type == TokenType.Int)
                 {
                     // fixed index
                     source.Append(s.ReadToken().Value);
@@ -694,7 +694,7 @@ namespace LiteDB
                 else if (ahead.Value == "-")
                 {
                     // fixed negative index
-                    source.Append(s.ReadToken().Value + s.ReadToken().Expect(TokenType.Number).Value);
+                    source.Append(s.ReadToken().Value + s.ReadToken().Expect(TokenType.Int).Value);
                     index = -Convert.ToInt32(s.Current.Value);
                 }
                 else if (ahead.Value == "*")
@@ -825,7 +825,7 @@ namespace LiteDB
             }
             else
             {
-                key = token.Expect(TokenType.Word, TokenType.Number).Value;
+                key = token.Expect(TokenType.Word, TokenType.Int).Value;
             }
 
             if (key.IsWord())
