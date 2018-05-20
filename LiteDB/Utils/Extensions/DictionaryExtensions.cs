@@ -48,31 +48,14 @@ namespace LiteDB
 
         public static void ParseKeyValue(this IDictionary<string, string> dict, string connectionString)
         {
-            var s = new StringScanner(connectionString);
+            var s = new Tokenizer(connectionString);
 
-            while(!s.HasTerminated)
+            while(!s.EOF)
             {
-                var key = s.Scan(@"(.*?)=", 1).Trim();
-                var value = "";
-                s.Scan(@"\s*");
-
-                if (s.Match("\""))
-                {
-                    // read a value inside an string " (remove escapes)
-                    value = s.Scan(@"""((?:\\""|.)*?)""", 1).Replace("\\\"", "\"");
-                    s.Scan(@"\s*;?\s*");
-                }
-                else
-                {
-                    // read value
-                    value = s.Scan(@"(.*?);\s*", 1).Trim();
-
-                    // read last part
-                    if (value.Length == 0)
-                    {
-                        value = s.Scan(".*").Trim();
-                    }
-                }
+                //TODO: must fix this ParseKeyValue!
+                var key = s.ReadToken().Expect(TokenType.Word).Value;
+                s.ReadToken().Expect(TokenType.Operator);
+                var value = s.ReadToken().Value;
 
                 dict[key] = value;
             }

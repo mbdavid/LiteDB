@@ -84,27 +84,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Deserialize a json using a StringScanner and returns BsonValue
-        /// </summary>
-        public static BsonValue Deserialize(StringScanner s)
-        {
-            if (s == null) throw new ArgumentNullException(nameof(s));
-
-            if (s.HasTerminated) return BsonValue.Null;
-
-            using (var sr = new StringReader(s.ToString()))
-            {
-                var reader = new JsonReader(sr);
-
-                var value = reader.Deserialize();
-
-                s.Seek((int)(reader.Position - 1));
-
-                return value;
-            }
-        }
-
-        /// <summary>
         /// Deserialize a json array as an IEnumerable of BsonValue
         /// </summary>
         public static IEnumerable<BsonValue> DeserializeArray(string json)
