@@ -78,3 +78,19 @@
 > DATEDIFF('M', d, DATE_UTC(2018, 4, 1))
 = -1
 
+# Length Method
+{a:'my string', empty: '', rnull: null, b: {$binary:'MTIz'}, arr: [1, 2, null]}
+> LENGTH(a)
+= 9
+> LENGTH(empty)
+= 0
+> LENGTH(rnull)
+= null
+> LENGTH(miss)
+= null
+> LENGTH(b)
+= 3
+> LENGTH(arr)
+= 3
+> LENGTH($)
+= 5

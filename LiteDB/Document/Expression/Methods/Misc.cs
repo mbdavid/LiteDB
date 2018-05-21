@@ -34,5 +34,19 @@ namespace LiteDB
                 yield return value.First.AsBoolean ? value.Second : value.Third;
             }
         }
+
+        /// <summary>
+        /// Return length of variant value (valid only for String, Binary, Array or Document [keys])
+        /// </summary>
+        public static IEnumerable<BsonValue> LENGTH(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values)
+            {
+                if (value.IsString) yield return value.AsString.Length;
+                else if (value.IsBinary) yield return value.AsBinary.Length;
+                else if (value.IsArray) yield return value.AsArray.Count;
+                else if (value.IsDocument) yield return value.AsDocument.Keys.Count;
+            }
+        }
     }
 }

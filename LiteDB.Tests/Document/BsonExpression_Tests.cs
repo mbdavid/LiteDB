@@ -110,8 +110,8 @@ namespace LiteDB.Tests.Document
 
                 if (jsonResult != jsonExpect)
                 {
-                    Assert.AreEqual(string.Join("; ", test.Results.Select(x => x.ToString())),
-                        string.Join("; ", results.Select(x => x.ToString())),
+                    Assert.AreEqual(string.Join("; ", test.Results.Select(x => x?.ToString() ?? "<null>")),
+                        string.Join("; ", results.Select(x => x?.ToString() ?? "<null>")),
                         test.Comment + " : " + test.Expression + " (" + filename + ")");
                 }
             }

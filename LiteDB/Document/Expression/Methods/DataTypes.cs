@@ -186,6 +186,36 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return an binary from string (base64) values. Support multiple values
+        /// </summary>
+        public static IEnumerable<BsonValue> BINARY(IEnumerable<BsonValue> values)
+        {
+            foreach(var value in values)
+            {
+                if (value.IsBinary)
+                {
+                    yield return value;
+                }
+                else if (value.IsString)
+                {
+                    var data = new byte[0];
+                    var isBase64 = false;
+
+                    try
+                    {
+                        data = Convert.FromBase64String(value.AsString);
+                        isBase64 = true;
+                    }
+                    catch (FormatException)
+                    {
+                    }
+
+                    if (isBase64) yield return data;
+                }
+            }
+        }
+
+        /// <summary>
         /// Create a new OBJECTID value
         /// </summary>
         [Volatile]
@@ -208,18 +238,18 @@ namespace LiteDB
                 else
                 {
                     var val = ObjectId.Empty;
-                    var isobjectid = false;
+                    var isObjectId = false;
 
                     try
                     {
                         val = new ObjectId(value.AsString);
-                        isobjectid = true;
+                        isObjectId = true;
                     }
                     catch
                     {
                     }
 
-                    if (isobjectid) yield return val;
+                    if (isObjectId) yield return val;
                 }
             }
         }
@@ -247,18 +277,18 @@ namespace LiteDB
                 else
                 {
                     var val = Guid.Empty;
-                    var isguid = false;
+                    var isGuid = false;
 
                     try
                     {
                         val = new Guid(value.AsString);
-                        isguid = true;
+                        isGuid = true;
                     }
                     catch
                     {
                     }
 
-                    if (isguid) yield return val;
+                    if (isGuid) yield return val;
                 }
             }
         }
