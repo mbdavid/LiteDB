@@ -327,8 +327,9 @@ namespace LiteDB
                 case '7':
                 case '8':
                 case '9':
-                    var number = this.ReadNumber();
-                    token = new Token(number.Contains(".") ? TokenType.Double : TokenType.Int, number, this.Position);
+                    var dbl = false;
+                    var number = this.ReadNumber(ref dbl);
+                    token = new Token(dbl ? TokenType.Double : TokenType.Int, number, this.Position);
                     break;
 
                 case ' ':
@@ -398,7 +399,7 @@ namespace LiteDB
         /// <summary>
         /// Read a number - it's accepts all number char, but not validate. When run Convert, .NET will check if number is correct
         /// </summary>
-        private string ReadNumber()
+        private string ReadNumber(ref bool dbl)
         {
             var sb = new StringBuilder();
             sb.Append(_char);
@@ -415,6 +416,7 @@ namespace LiteDB
                 if (_char == '.')
                 {
                     if (canDot == false) break;
+                    dbl = true;
                     canDot = false;
                 }
                 else if (_char == 'e' || _char == 'E')

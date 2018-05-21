@@ -122,68 +122,65 @@ namespace LiteDB.Tests.Document
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
             var tests = new List<ExprTest>();
 
-            //TODO: must fix this parser expression for tests
-            /*
             using (var reader = new StreamReader(stream))
             {
-                var s = new StringScanner(reader.ReadToEnd().Trim() + "\n");
+                var lines = reader.ReadToEnd().Trim().Split('\n').Select(x => x.Trim()).ToArray();
 
                 var docs = new List<string>();
                 var clearDocs = true;
                 ExprTest test = null;
                 var comment = "";
 
-                while (!s.HasTerminated)
+                foreach(var line in lines)
                 {
-                    if (s.Match(@">")) // new test
+                    if (line.StartsWith(@">")) // new test
                     {
                         test = new ExprTest
                         {
-                            Aggregate = s.Scan(">>").Length > 0,
+                            Aggregate = line.StartsWith(">>"),
                             Documents = new List<string>(docs),
-                            Expression = s.Scan(@">?\s*([\s\S]*?)\n", 1).Trim(),
+                            Expression = line.Substring(line.IndexOf(' ')).Trim(),
                             Comment = comment
                         };
                         tests.Add(test);
                         clearDocs = true;
                     }
-                    else if (s.Match("=")) // new result
+                    else if (line.StartsWith("=")) // new result
                     {
-                        test.Results.Add(JsonSerializer.Deserialize(s.Scan(@"=\s*([\s\S]*?)\n", 1).Trim()));
+                        var res = line.Substring(1).Trim();
+                        test.Results.Add(JsonSerializer.Deserialize(res));
                     }
-                    else if (s.Match("~")) // expected format
+                    else if (line.StartsWith("~")) // expected format
                     {
-                        test.Formatted = s.Scan(@"~\s*([\s\S]*?)\n", 1).Trim();
+                        test.Formatted = line.Substring(1).Trim();
                     }
-                    else if (s.Match("-")) // expected fields
+                    else if (line.StartsWith("-")) // expected fields
                     {
-                        test.Fields = s.Scan(@"-\s*([\s\S]*?)\n", 1).Trim().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
+                        var f = line.Substring(1).Trim();
+
+                        test.Fields = f.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
                     }
-                    else if (s.Match(@"\@\w+")) // expected parameter
+                    else if (line.StartsWith("@")) // expected parameter
                     {
-                        test.Parameters[s.Scan(@"\@(\w+)\s+", 1)] = JsonSerializer.Deserialize(s.Scan(@"([\s\S]*?)\n", 1).Trim());
+                        var pname = line.Substring(1, line.IndexOf(' '));
+                        var pvalue = line.Substring(line.IndexOf(' ') + 1).Trim();
+
+                        test.Parameters[pname] = JsonSerializer.Deserialize(pvalue);
                     }
-                    else if (s.Match(@"\#")) // comment in test
+                    else if (line.StartsWith("#")) // comment in test
                     {
-                        comment = s.Scan(@"\#\s*([\s\S]*?)\n", 1).Trim();
+                        comment = line.Substring(1).Trim();
                     }
-                    else if (s.Match(@"\{")) // new doc
+                    else if (line.StartsWith(@"{")) // new doc
                     {
                         if (clearDocs) docs.Clear();
 
-                        var pos = s.Index;
-                        JsonSerializer.Deserialize(s);
-                        var d = s.Source.Substring(pos, s.Index - pos);
-                        docs.Add(d);
+                        docs.Add(line);
 
                         clearDocs = false;
                     }
-                    else
-                    {
-                        s.Scan(@"[\s\S]*?\n"); // read line
-                    }
                 }
-            }*/
+            }
 
             return tests;
         }

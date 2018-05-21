@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LiteDB
@@ -52,12 +53,24 @@ namespace LiteDB
 
             while(!s.EOF)
             {
-                //TODO: must fix this ParseKeyValue!
-                var key = s.ReadToken().Expect(TokenType.Word).Value;
-                s.ReadToken().Expect(TokenType.Operator);
-                var value = s.ReadToken().Value;
+                var key = Read("=");
+                var value = Read(";");
 
                 dict[key] = value;
+            }
+
+            string Read(string delim)
+            {
+                var sb = new StringBuilder();
+                s.ReadToken();
+
+                while (!s.EOF && s.Current.Value != delim)
+                {
+                    sb.Append(s.Current.Value);
+                    s.ReadToken(false);
+                }
+
+                return sb.ToString().Trim();
             }
         }
 
