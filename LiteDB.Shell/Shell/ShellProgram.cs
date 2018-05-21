@@ -28,7 +28,7 @@ namespace LiteDB.Shell
 
                 if (string.IsNullOrEmpty(cmd)) continue;
 
-                try
+                //try
                 {
                     var s = new StringScanner(cmd);
 
@@ -51,9 +51,9 @@ namespace LiteDB.Shell
                         display.WriteResult(env.Engine.Run(cmd));
                     }
                 }
-                catch (Exception ex)
+                //catch (Exception ex)
                 {
-                    display.WriteError(ex);
+                    //display.WriteError(ex);
                 }
             }
         }
