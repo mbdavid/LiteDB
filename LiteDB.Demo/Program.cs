@@ -18,11 +18,11 @@ namespace LiteDB.Demo
         {
             //TestChunk.Run();
 
-            var s = "@p1";
+            //var s = "@p1";
 
-            var e0 = BsonExpression.Create(s);
+            var e0 = BsonExpression.Create("@p1");
 
-            e0.Parameters["p1"] = 10;
+            //e0.Parameters["p1"] = 10;
 
 
             var r = e0.Execute(new BsonDocument(), true).First();

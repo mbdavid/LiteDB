@@ -162,7 +162,7 @@ namespace LiteDB.Tests.Document
                     }
                     else if (line.StartsWith("@")) // expected parameter
                     {
-                        var pname = line.Substring(1, line.IndexOf(' '));
+                        var pname = line.Substring(1, line.IndexOf(' ')).Trim();
                         var pvalue = line.Substring(line.IndexOf(' ') + 1).Trim();
 
                         test.Parameters[pname] = JsonSerializer.Deserialize(pvalue);
