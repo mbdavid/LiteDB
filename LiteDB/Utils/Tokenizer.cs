@@ -138,7 +138,17 @@ namespace LiteDB
         /// <summary>
         /// Checks if char is an valid part of a word [a-Z_]+[a-Z0-9_$]*
         /// </summary>
-        public static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_' || c == '$';
+        public static bool IsWordChar(char c, bool first)
+        {
+            if (first)
+            {
+                return char.IsLetter(c) || c == '_' || c == '$';
+            }
+            else
+            {
+                return char.IsLetterOrDigit(c) || c == '_' || c == '$';
+            }
+        }
 
         /// <summary>
         /// Read next char in stream and set in _current
@@ -302,7 +312,7 @@ namespace LiteDB
 
                 case '$':
                     this.ReadChar();
-                    if (IsWordChar(_char))
+                    if (IsWordChar(_char, true))
                     {
                         token = new Token(TokenType.Word, "$" + this.ReadWord(), this.Position);
                     }
@@ -347,7 +357,7 @@ namespace LiteDB
 
                 default:
                     // read simple word or an operators (BETWEEN, LIKE, AND, OR...)
-                    if (IsWordChar(_char))
+                    if (IsWordChar(_char, true))
                     {
                         var word = this.ReadWord();
 
@@ -387,7 +397,7 @@ namespace LiteDB
 
             this.ReadChar();
 
-            while (!this.EOF && IsWordChar(_char))
+            while (!this.EOF && IsWordChar(_char, false))
             {
                 sb.Append(_char);
                 this.ReadChar();

@@ -20,7 +20,7 @@ namespace LiteDB
 
             for(var i = 0; i < str.Length; i++)
             {
-                if (!Tokenizer.IsWordChar(str[i])) return false;
+                if (!Tokenizer.IsWordChar(str[i], i == 0)) return false;
             }
 
             return true;
