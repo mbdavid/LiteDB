@@ -173,5 +173,90 @@ namespace LiteDB.Tests.Database
 
             }
         }
+
+        [TestMethod]
+        public void DbRef_IncludeAll() {
+            var mapper = new BsonMapper();
+
+            using( var db = new LiteDatabase( new MemoryStream(), mapper ) ) {
+                var address = new Address { StreetName = "3600 S Las Vegas Blvd" };
+                var customer = new Customer { Name = "John Doe", MainAddress = address };
+
+                var product1 = new Product { Name = "TV", Price = 800, SupplierAddress = address };
+                var product2 = new Product { Name = "DVD", Price = 200 };
+
+                var customers = db.GetCollection<Customer>( "customers" ).IncludeAll();
+                var addresses = db.GetCollection<Address>( "addresses" ).IncludeAll();
+                var products = db.GetCollection<Product>( "products" ).IncludeAll();
+                var orders = db.GetCollection<Order>( "orders" ).IncludeAll();
+
+                // insert ref documents
+                addresses.Insert( address );
+                customers.Insert( customer );
+                products.Insert( new Product[] { product1, product2 } );
+
+                var order = new Order {
+                    Customer = customer,
+                    CustomerNull = null,
+                    Products = new List<Product>() { product1, product2 },
+                    ProductArray = new Product[] { product1 },
+                    ProductColl = new List<Product>() { product2 },
+                    ProductEmpty = new List<Product>(),
+                    ProductsNull = null
+                };
+
+                mapper.SerializeNullValues = true;
+
+                var dOrder = mapper.ToDocument<Order>( order );
+
+                orders.Insert( order );
+                
+                orders.EnsureIndex( x => x.Customer.Id );
+
+                // query orders using customer $id
+                // include customer data and customer address
+                var r1 = orders
+                    .Find( x => x.Customer.Id == 1 )
+                    .FirstOrDefault();
+
+                Assert.AreEqual( order.Id, r1.Id );
+                Assert.AreEqual( order.Customer.Name, r1.Customer.Name );
+                Assert.AreEqual( order.Customer.MainAddress.StreetName, r1.Customer.MainAddress.StreetName );
+
+                // include all 
+                var result = orders
+                    .FindAll()
+                    .FirstOrDefault();
+
+                Assert.AreEqual( customer.Name, result.Customer.Name );
+                Assert.AreEqual( customer.MainAddress.StreetName, result.Customer.MainAddress.StreetName );
+                Assert.AreEqual( product1.Price, result.Products[ 0 ].Price );
+                Assert.AreEqual( product2.Name, result.Products[ 1 ].Name );
+                Assert.AreEqual( product1.Name, result.ProductArray[ 0 ].Name );
+                Assert.AreEqual( product2.Price, result.ProductColl.ElementAt( 0 ).Price );
+                Assert.AreEqual( null, result.ProductsNull );
+                Assert.AreEqual( 0, result.ProductEmpty.Count );
+
+                // now, delete reference 1x1 and 1xN
+                customers.Delete( customer.Id );
+
+                products.Delete( product1.ProductId );
+
+                var json = db.Engine.Find( "orders", Query.All(), new string[] { "$.Customer", "$.Products[*]" } )
+                    .FirstOrDefault()
+                    .ToString();
+
+                var result2 = orders
+                    .FindAll()
+                    .FirstOrDefault();
+
+                // must missing customer and has only 1 product
+                Assert.IsNull( result2.Customer );
+                Assert.AreEqual( 1, result2.Products.Count );
+
+                // property ProductArray contains only deleted "product1", but has no include on query, so must returns deleted
+                Assert.AreEqual( 1, result2.ProductArray.Length );
+            }
+        }
     }
 }
