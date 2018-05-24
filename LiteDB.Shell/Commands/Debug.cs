@@ -26,9 +26,9 @@ namespace LiteDB.Shell.Commands
             var enabled = s.Scan(@"(on|off|\d+)*").ToLower();
 
             env.Log.Level = 
-                enabled == "" || enabled == "on" ? Logger.FULL :
-                enabled == "off" ? Logger.NONE :
-                Convert.ToByte(enabled);
+                enabled == "" || enabled == "on" ? LoggerLevel.FULL :
+                enabled == "off" ? LoggerLevel.NONE :
+                (LoggerLevel)Convert.ToByte(enabled);
         }
     }
 }

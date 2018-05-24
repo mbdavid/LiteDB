@@ -38,7 +38,7 @@ namespace LiteDB
         {
             if (_cache.CleanUsed > _cacheSize)
             {
-                _log.Write(Logger.CACHE, "cache size reached {0} pages, will clear now", _cache.CleanUsed);
+                _log.Write(LoggerLevel.CACHE, "cache size reached {0} pages, will clear now", _cache.CleanUsed);
 
                 _cache.ClearPages();
 
@@ -62,7 +62,7 @@ namespace LiteDB
             // mark header as dirty
             _pager.SetDirty(header);
 
-            _log.Write(Logger.DISK, "begin disk operations - changeID: {0}", header.ChangeID);
+            _log.Write(LoggerLevel.DISK, "begin disk operations - changeID: {0}", header.ChangeID);
 
             // write journal file in desc order to header be last page in disk
             if (_disk.IsJournalEnabled)
@@ -99,7 +99,7 @@ namespace LiteDB
                 // re-write header page but now with recovery=false
                 header.Recovery = false;
 
-                _log.Write(Logger.DISK, "re-write header page now with recovery = false");
+                _log.Write(LoggerLevel.DISK, "re-write header page now with recovery = false");
 
                 _disk.WritePage(0, header.WritePage());
             }
@@ -119,7 +119,7 @@ namespace LiteDB
         /// </summary>
         public void Recovery()
         {
-            _log.Write(Logger.RECOVERY, "initializing recovery mode");
+            _log.Write(LoggerLevel.RECOVERY, "initializing recovery mode");
 
             using (_locker.Write())
             {
@@ -134,7 +134,7 @@ namespace LiteDB
                     // read pageID (first 4 bytes)
                     var pageID = BitConverter.ToUInt32(buffer, 0);
 
-                    _log.Write(Logger.RECOVERY, "recover page #{0:0000}", pageID);
+                    _log.Write(LoggerLevel.RECOVERY, "recover page #{0:0000}", pageID);
 
                     // write in stream (encrypt if datafile is encrypted)
                     _disk.WritePage(pageID, _crypto == null || pageID == 0 ? buffer : _crypto.Encrypt(buffer));

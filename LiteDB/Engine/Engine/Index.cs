@@ -43,7 +43,7 @@ namespace LiteDB
                 index.Expression = expression ?? "$." + field;
                 index.Unique = unique;
 
-                _log.Write(Logger.COMMAND, "create index on '{0}' :: {1} unique: {2}", collection, index.Expression, unique);
+                _log.Write(LoggerLevel.COMMAND, "create index on '{0}' :: {1} unique: {2}", collection, index.Expression, unique);
 
                 // read all objects (read from PK index)
                 foreach (var pkNode in new QueryAll("_id", Query.Ascending).Run(col, _indexer))
@@ -95,7 +95,7 @@ namespace LiteDB
                 // no index, no drop
                 if (index == null) return false;
 
-                _log.Write(Logger.COMMAND, "drop index on '{0}' :: '{1}'", collection, field);
+                _log.Write(LoggerLevel.COMMAND, "drop index on '{0}' :: '{1}'", collection, field);
 
                 // delete all data pages + indexes pages
                 _indexer.DropIndex(index);

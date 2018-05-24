@@ -30,7 +30,7 @@ namespace LiteDB
             {
                 if (col == null) return false;
 
-                _log.Write(Logger.COMMAND, "drop collection {0}", collection);
+                _log.Write(LoggerLevel.COMMAND, "drop collection {0}", collection);
 
                 _collections.Drop(col);
 
@@ -50,7 +50,7 @@ namespace LiteDB
             {
                 if (col == null) return false;
 
-                _log.Write(Logger.COMMAND, "rename collection '{0}' -> '{1}'", collection, newName);
+                _log.Write(LoggerLevel.COMMAND, "rename collection '{0}' -> '{1}'", collection, newName);
 
                 // check if newName already exists
                 if (this.GetCollectionNames().Contains(newName, StringComparer.OrdinalIgnoreCase))

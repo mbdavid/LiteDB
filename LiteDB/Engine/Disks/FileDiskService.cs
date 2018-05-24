@@ -56,7 +56,7 @@ namespace LiteDB
             // if is read only, journal must be disabled
             if (_options.FileMode == FileMode.ReadOnly) _options.Journal = false;
 
-            _log.Write(Logger.DISK, "open datafile '{0}'", Path.GetFileName(_filename));
+            _log.Write(LoggerLevel.DISK, "open datafile '{0}'", Path.GetFileName(_filename));
 
             // open/create file using read only/exclusive options
             _stream = this.CreateFileStream(_filename,
@@ -67,7 +67,7 @@ namespace LiteDB
             // if file is new, initialize
             if (_stream.Length == 0)
             {
-                _log.Write(Logger.DISK, "initialize new datafile");
+                _log.Write(LoggerLevel.DISK, "initialize new datafile");
 
                 // create datafile
                 LiteEngine.CreateDatabase(_stream, password, _options.InitialSize);
@@ -78,7 +78,7 @@ namespace LiteDB
         {
             if (_stream != null)
             {
-                _log.Write(Logger.DISK, "close datafile '{0}'", Path.GetFileName(_filename));
+                _log.Write(LoggerLevel.DISK, "close datafile '{0}'", Path.GetFileName(_filename));
                 _stream.Dispose();
                 _stream = null;
             }
@@ -108,7 +108,7 @@ namespace LiteDB
                 _stream.Read(buffer, 0, BasePage.PAGE_SIZE);
             }
 
-            _log.Write(Logger.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
+            _log.Write(LoggerLevel.DISK, "read page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             return buffer;
         }
@@ -120,7 +120,7 @@ namespace LiteDB
         {
             var position = BasePage.GetSizeOfPages(pageID);
 
-            _log.Write(Logger.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
+            _log.Write(LoggerLevel.DISK, "write page #{0:0000} :: {1}", pageID, (PageType)buffer[PAGE_TYPE_POSITION]);
 
             // position cursor
             if (_stream.Position != position)
@@ -168,7 +168,7 @@ namespace LiteDB
             var size = BasePage.GetSizeOfPages(lastPageID + 1) +
                 BasePage.GetSizeOfPages(pages.Count);
 
-            _log.Write(Logger.JOURNAL, "extend datafile to journal - {0} pages", pages.Count);
+            _log.Write(LoggerLevel.JOURNAL, "extend datafile to journal - {0} pages", pages.Count);
 
             // set journal file length before write
             _stream.SetLength(size);
@@ -182,13 +182,13 @@ namespace LiteDB
                 var pageID = BitConverter.ToUInt32(buffer, 0);
                 var pageType = (PageType)buffer[PAGE_TYPE_POSITION];
 
-                _log.Write(Logger.JOURNAL, "write page #{0:0000} :: {1}", pageID, pageType);
+                _log.Write(LoggerLevel.JOURNAL, "write page #{0:0000} :: {1}", pageID, pageType);
 
                 // write page bytes
                 _stream.Write(buffer, 0, BasePage.PAGE_SIZE);
             }
 
-            _log.Write(Logger.JOURNAL, "flush journal to disk");
+            _log.Write(LoggerLevel.JOURNAL, "flush journal to disk");
 
             // ensure all data are persisted in disk
             this.Flush();
@@ -225,7 +225,7 @@ namespace LiteDB
         /// </summary>
         public void ClearJournal(uint lastPageID)
         {
-            _log.Write(Logger.JOURNAL, "shrink datafile to remove journal area");
+            _log.Write(LoggerLevel.JOURNAL, "shrink datafile to remove journal area");
 
             this.SetLength(BasePage.GetSizeOfPages(lastPageID + 1));
         }
@@ -235,7 +235,7 @@ namespace LiteDB
         /// </summary>
         public void Flush()
         {
-            _log.Write(Logger.DISK, "flush data from memory to disk");
+            _log.Write(LoggerLevel.DISK, "flush data from memory to disk");
 
 #if HAVE_FLUSH_DISK
             _stream.Flush(_options.Flush);
@@ -265,7 +265,7 @@ namespace LiteDB
             var position = state == LockState.Read ? _lockReadRand.Next(LOCK_INITIAL_POSITION, LOCK_INITIAL_POSITION + LOCK_WRITE_LENGTH) : LOCK_INITIAL_POSITION;
             var length = state == LockState.Read ? 1 : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "locking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
+            _log.Write(LoggerLevel.LOCK, "locking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
 
             _stream.TryLock(position, length, timeout);
 
@@ -286,7 +286,7 @@ namespace LiteDB
 
             var length = state == LockState.Read ? LOCK_READ_LENGTH : LOCK_WRITE_LENGTH;
 
-            _log.Write(Logger.LOCK, "unlocking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
+            _log.Write(LoggerLevel.LOCK, "unlocking file in {0} mode (position: {1})", state.ToString().ToLower(), position);
 
             _stream.TryUnlock(position, length);
 #endif

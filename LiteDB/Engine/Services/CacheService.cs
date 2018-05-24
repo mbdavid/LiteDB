@@ -88,7 +88,7 @@ namespace LiteDB
         /// </summary>
         public void DiscardDirtyPages()
         {
-            _log.Write(Logger.CACHE, "clearing dirty pages from cache");
+            _log.Write(LoggerLevel.CACHE, "clearing dirty pages from cache");
 
             _dirty.Clear();
         }
@@ -116,7 +116,7 @@ namespace LiteDB
         {
             lock(_clean)
             {
-                _log.Write(Logger.CACHE, "cleaning cache");
+                _log.Write(LoggerLevel.CACHE, "cleaning cache");
                 _clean.Clear();
             }
         }

@@ -20,7 +20,7 @@ namespace LiteDB
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            _log.Write(Logger.COMMAND, "query-sort documents in '{0}' => {1}", collection, query);
+            _log.Write(LoggerLevel.COMMAND, "query-sort documents in '{0}' => {1}", collection, query);
 
             // evaluate orderBy path/expression
             var expr = new BsonExpression(orderBy);

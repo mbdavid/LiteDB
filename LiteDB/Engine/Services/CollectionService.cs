@@ -48,7 +48,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
             if (!CollectionPage.NamePattern.IsMatch(name)) throw LiteException.InvalidFormat(name);
 
-            _log.Write(Logger.COMMAND, "creating new collection '{0}'", name);
+            _log.Write(LoggerLevel.COMMAND, "creating new collection '{0}'", name);
 
             // get header marked as dirty because I will use header after (and NewPage can get another header instance)
             var header = _pager.GetPage<HeaderPage>(0);

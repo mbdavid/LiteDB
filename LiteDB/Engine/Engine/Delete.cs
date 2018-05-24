@@ -25,11 +25,11 @@ namespace LiteDB
             {
                 if (col == null) return 0;
 
-                _log.Write(Logger.COMMAND, "delete documents in '{0}'", collection);
+                _log.Write(LoggerLevel.COMMAND, "delete documents in '{0}'", collection);
 
                 var nodes = query.Run(col, _indexer);
 
-                _log.Write(Logger.QUERY, "{0} :: {1}", collection, query);
+                _log.Write(LoggerLevel.QUERY, "{0} :: {1}", collection, query);
 
                 var count = 0;
 
@@ -47,7 +47,7 @@ namespace LiteDB
                         if (query.FilterDocument(doc) == false) continue;
                     }
 
-                    _log.Write(Logger.COMMAND, "delete document :: _id = {0}", node.Key.RawValue);
+                    _log.Write(LoggerLevel.COMMAND, "delete document :: _id = {0}", node.Key.RawValue);
 
                     // get all indexes nodes from this data block
                     var allNodes = _indexer.GetNodeList(node, true).ToArray();

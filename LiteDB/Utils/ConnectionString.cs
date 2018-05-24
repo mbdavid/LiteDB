@@ -55,7 +55,7 @@ namespace LiteDB
         /// <summary>
         /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
         /// </summary>
-        public byte Log { get; set; } = Logger.NONE;
+        public LoggerLevel Log { get; set; } = LoggerLevel.NONE;
 
         /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)

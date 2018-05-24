@@ -76,7 +76,7 @@ namespace LiteDB
                 throw LiteException.LockTimeout(_timeout);
             }
 
-            _log.Write(Logger.LOCK, "entered in read lock mode in thread #{0}", this.ThreadId);
+            _log.Write(LoggerLevel.LOCK, "entered in read lock mode in thread #{0}", this.ThreadId);
 
             // lock disk in shared mode
             var position = _disk.Lock(LockState.Read, _timeout);
@@ -91,7 +91,7 @@ namespace LiteDB
                 // exit thread lock mode
                 _thread.ExitReadLock();
 
-                _log.Write(Logger.LOCK, "exited read lock mode in thread #{0}", this.ThreadId);
+                _log.Write(LoggerLevel.LOCK, "exited read lock mode in thread #{0}", this.ThreadId);
             });
         }
 
@@ -115,7 +115,7 @@ namespace LiteDB
                 throw LiteException.LockTimeout(_timeout);
             }
 
-            _log.Write(Logger.LOCK, "entered in write lock mode in thread #{0}", this.ThreadId);
+            _log.Write(LoggerLevel.LOCK, "entered in write lock mode in thread #{0}", this.ThreadId);
 
             // try enter in exclusive mode in disk
             var position = _disk.Lock(LockState.Write, _timeout);
@@ -131,7 +131,7 @@ namespace LiteDB
                 // release thread write
                 _thread.ExitWriteLock();
 
-                _log.Write(Logger.LOCK, "exited write lock mode in thread #{0}", this.ThreadId);
+                _log.Write(LoggerLevel.LOCK, "exited write lock mode in thread #{0}", this.ThreadId);
             });
         }
 
@@ -150,7 +150,7 @@ namespace LiteDB
             // empty cache? just exit
             if (_cache.CleanUsed == 0) return false;
 
-            _log.Write(Logger.CACHE, "checking disk to detect database changes from another process");
+            _log.Write(LoggerLevel.CACHE, "checking disk to detect database changes from another process");
 
             // get ChangeID from cache
             var header = _cache.GetPage(0) as HeaderPage;
@@ -162,7 +162,7 @@ namespace LiteDB
             // if disk header are in recovery mode, throw exception to datafile re-open and recovery pages
             if (disk.Recovery)
             {
-                _log.Write(Logger.ERROR, "datafile in recovery mode, need re-open database");
+                _log.Write(LoggerLevel.ERROR, "datafile in recovery mode, need re-open database");
 
                 throw LiteException.NeedRecover();
             }
@@ -170,7 +170,7 @@ namespace LiteDB
             // if header change, clear cache and add new header to cache
             if (disk.ChangeID != changeID)
             {
-                _log.Write(Logger.CACHE, "file changed from another process, cleaning all cache pages");
+                _log.Write(LoggerLevel.CACHE, "file changed from another process, cleaning all cache pages");
 
                 _cache.ClearPages();
                 _cache.AddPage(disk);
