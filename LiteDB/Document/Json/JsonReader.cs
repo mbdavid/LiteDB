@@ -66,15 +66,12 @@ namespace LiteDB
                 case TokenType.String: return token.Value;
                 case TokenType.OpenBrace: return this.ReadObject();
                 case TokenType.OpenBracket: return this.ReadArray();
-                case TokenType.Operator:
-                    if (token.Value == "-")
-                    {
-                        // read next token (must be a number)
-                        var number = _tokenizer.ReadToken(false).Expect(TokenType.Int, TokenType.Double);
-                        return number.Type == TokenType.Double ?
-                            new BsonValue(-Convert.ToDouble(number.Value, CultureInfo.InvariantCulture.NumberFormat)) :
-                            new BsonValue(-Convert.ToInt32(number.Value));
-                    }
+                case TokenType.Minus:
+                    // read next token (must be a number)
+                    var number = _tokenizer.ReadToken(false).Expect(TokenType.Int, TokenType.Double);
+                    return number.Type == TokenType.Double ?
+                        new BsonValue(-Convert.ToDouble(number.Value, CultureInfo.InvariantCulture.NumberFormat)) :
+                        new BsonValue(-Convert.ToInt32(number.Value));
                     break;
                 case TokenType.Int: return new BsonValue(Convert.ToInt32(token.Value));
                 case TokenType.Double: return new BsonValue(Convert.ToDouble(token.Value, CultureInfo.InvariantCulture.NumberFormat));

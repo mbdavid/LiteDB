@@ -91,7 +91,7 @@ namespace LiteDB
                 var op = s.LookAhead(true);
 
                 // if no valid operator, stop reading string
-                if (op.Type != TokenType.Operator) break;
+                if (op.IsOperand) break;
 
                 s.ReadToken(); // consume _ahead
 
@@ -100,7 +100,7 @@ namespace LiteDB
                 // special BETWEEN "AND" read
                 if (op.Value.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    var and = s.ReadToken(true).Expect(TokenType.Operator);
+                    var and = s.ReadToken(true).Expect(TokenType.Word);
 
                     if (!and.Value.Equals("AND", StringComparison.OrdinalIgnoreCase)) throw LiteException.UnexpectedToken(s.Current);
 
@@ -192,7 +192,7 @@ namespace LiteDB
             {
                 value = s.Current.Value;
             }
-            else if (s.Current.Value == "-")
+            else if (s.Current.Type == TokenType.Minus)
             {
                 var ahead = s.LookAhead(false);
 
@@ -232,7 +232,7 @@ namespace LiteDB
             {
                 value = s.Current.Value;
             }
-            else if (s.Current.Value == "-")
+            else if (s.Current.Type == TokenType.Minus)
             {
                 var ahead = s.LookAhead(false);
 
@@ -691,13 +691,13 @@ namespace LiteDB
                     source.Append(s.ReadToken().Value);
                     index = Convert.ToInt32(s.Current.Value);
                 }
-                else if (ahead.Value == "-")
+                else if (ahead.Type == TokenType.Minus)
                 {
                     // fixed negative index
                     source.Append(s.ReadToken().Value + s.ReadToken().Expect(TokenType.Int).Value);
                     index = -Convert.ToInt32(s.Current.Value);
                 }
-                else if (ahead.Value == "*")
+                else if (ahead.Type == TokenType.Asterisk)
                 {
                     // read all items (index = int.MaxValue)
                     s.ReadToken();

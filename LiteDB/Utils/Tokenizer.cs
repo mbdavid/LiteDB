@@ -31,11 +31,39 @@ namespace LiteDB
         Period,
         /// <summary> $ </summary>
         Dollar,
-        /// <summary> `=` `&gt;` `&lt;` `!=` `&gt;=` `&lt;=` `+` `-` `*` `/` `\` `%` `BETWEEN` </summary>
-        Operator,
+        /// <summary> ! </summary>
+        Exclamation,
+        /// <summary> = </summary>
+        Equals,
+        /// <summary> != </summary>
+        NotEquals,
+        /// <summary> &gt; </summary>
+        Greater,
+        /// <summary> &gt;= </summary>
+        GreaterOrEquals,
+        /// <summary> &lt; </summary>
+        Less,
+        /// <summary> &lt;= </summary>
+        LessOrEquals,
+        /// <summary> - </summary>
+        Minus,
+        /// <summary> + </summary>
+        Plus,
+        /// <summary> * </summary>
+        Asterisk,
+        /// <summary> / </summary>
+        Slash,
+        /// <summary> \ </summary>
+        Backslash,
+        /// <summary> % </summary>
+        Percent,
+        /// <summary> "..." or '...' </summary>
         String,
+        /// <summary> [0-9]+ </summary>
         Int,
+        /// <summary> [0-9]+.[0-9] </summary>
         Double,
+        /// <summary> [a-Z_$]+[a-Z0-9_$] </summary>
         Word,
         Whitespace,
         EOF,
@@ -51,6 +79,8 @@ namespace LiteDB
     /// </summary>
     internal class Token
     {
+        private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
+
         public Token(TokenType tokenType, string value, long position)
         {
             this.Position = position;
@@ -62,9 +92,26 @@ namespace LiteDB
         public string Value { get; private set; }
         public long Position { get; private set; }
 
-        public Token Expect(TokenType type)
+        public bool IsOperand =>
+            this.Type == TokenType.Percent ||
+            this.Type == TokenType.Slash ||
+            this.Type == TokenType.Asterisk ||
+            this.Type == TokenType.Plus ||
+            this.Type == TokenType.Minus ||
+            this.Type == TokenType.Greater ||
+            this.Type == TokenType.GreaterOrEquals ||
+            this.Type == TokenType.Less ||
+            this.Type == TokenType.LessOrEquals ||
+            this.Type == TokenType.NotEquals ||
+            (this.Type == TokenType.Word && _keywords.Contains(this.Value));
+
+        public Token Expect(TokenType type, string value = null, bool ignoreCase = true)
         {
             if (this.Type != type)
+            {
+                throw LiteException.UnexpectedToken(this);
+            }
+            if (value != null && value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             {
                 throw LiteException.UnexpectedToken(this);
             }
@@ -106,11 +153,6 @@ namespace LiteDB
         public bool EOF { get; private set; }
         public long Position { get; private set; }
         public Token Current { get; private set; }
-
-        /// <summary>
-        /// Pre-loaded known keywords
-        /// </summary>
-        private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
 
         /// <summary>
         /// If EOF throw an invalid token exception (used in while()) otherwise return "false" (not EOF)
@@ -230,12 +272,31 @@ namespace LiteDB
             switch (_char)
             {
                 case '%':
+                    token = new Token(TokenType.Percent, "%", this.Position);
+                    this.ReadChar();
+                    break;
                 case '/':
+                    token = new Token(TokenType.Slash, "/", this.Position);
+                    this.ReadChar();
+                    break;
+                case '\\':
+                    token = new Token(TokenType.Backslash, @"\", this.Position);
+                    this.ReadChar();
+                    break;
                 case '*':
+                    token = new Token(TokenType.Asterisk, "*", this.Position);
+                    this.ReadChar();
+                    break;
                 case '+':
+                    token = new Token(TokenType.Plus, "+", this.Position);
+                    this.ReadChar();
+                    break;
                 case '-':
+                    token = new Token(TokenType.Equals, "-", this.Position);
+                    this.ReadChar();
+                    break;
                 case '=':
-                    token = new Token(TokenType.Operator, _char.ToString(), this.Position);
+                    token = new Token(TokenType.Equals, "=", this.Position);
                     this.ReadChar();
                     break;
 
@@ -243,21 +304,39 @@ namespace LiteDB
                     this.ReadChar();
                     if (_char == '=')
                     {
-                        token = new Token(TokenType.Operator, "!=", this.Position);
+                        token = new Token(TokenType.NotEquals, "!=", this.Position);
                         this.ReadChar();
+                    }
+                    else
+                    {
+                        token = new Token(TokenType.Exclamation, "!", this.Position);
                     }
                     break;
 
                 case '>':
-                case '<':
-                    var op = _char.ToString();
                     this.ReadChar();
                     if (_char == '=')
                     {
-                        op += "=";
+                        token = new Token(TokenType.GreaterOrEquals, ">=", this.Position);
                         this.ReadChar();
                     }
-                    token = new Token(TokenType.Operator, op, this.Position);
+                    else
+                    {
+                        token = new Token(TokenType.Greater, ">", this.Position);
+                    }
+                    break;
+
+                case '<':
+                    this.ReadChar();
+                    if (_char == '=')
+                    {
+                        token = new Token(TokenType.LessOrEquals, "<=", this.Position);
+                        this.ReadChar();
+                    }
+                    else
+                    {
+                        token = new Token(TokenType.Less, "<", this.Position);
+                    }
                     break;
 
                 case '[':
@@ -356,19 +435,10 @@ namespace LiteDB
                     break;
 
                 default:
-                    // read simple word or an operators (BETWEEN, LIKE, AND, OR...)
+                    // test if first char is an word 
                     if (IsWordChar(_char, true))
                     {
-                        var word = this.ReadWord();
-
-                        if (_keywords.Contains(word))
-                        {
-                            token = new Token(TokenType.Operator, word, this.Position);
-                        }
-                        else
-                        {
-                            token = new Token(TokenType.Word, word, this.Position);
-                        }
+                        token = new Token(TokenType.Word, this.ReadWord(), this.Position);
                     }
                     break;
             }
