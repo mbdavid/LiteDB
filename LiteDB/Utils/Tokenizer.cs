@@ -27,16 +27,20 @@ namespace LiteDB
         Colon,
         /// <summary> @ </summary>
         At,
+        /// <summary> # </summary>
+        Hashtag,
+        /// <summary> ~ </summary>
+        Til,
         /// <summary> . </summary>
         Period,
         /// <summary> $ </summary>
         Dollar,
         /// <summary> ! </summary>
         Exclamation,
-        /// <summary> = </summary>
-        Equals,
         /// <summary> != </summary>
         NotEquals,
+        /// <summary> = </summary>
+        Equals,
         /// <summary> &gt; </summary>
         Greater,
         /// <summary> &gt;= </summary>
@@ -63,9 +67,10 @@ namespace LiteDB
         Int,
         /// <summary> [0-9]+.[0-9] </summary>
         Double,
+        /// <summary> \n\r\t \u0032 </summary>
+        Whitespace,
         /// <summary> [a-Z_$]+[a-Z0-9_$] </summary>
         Word,
-        Whitespace,
         EOF,
         Unknown
     }
@@ -98,6 +103,7 @@ namespace LiteDB
             this.Type == TokenType.Asterisk ||
             this.Type == TokenType.Plus ||
             this.Type == TokenType.Minus ||
+            this.Type == TokenType.Equals ||
             this.Type == TokenType.Greater ||
             this.Type == TokenType.GreaterOrEquals ||
             this.Type == TokenType.Less ||
@@ -271,33 +277,76 @@ namespace LiteDB
 
             switch (_char)
             {
-                case '%':
-                    token = new Token(TokenType.Percent, "%", this.Position);
+                case '{':
+                    token = new Token(TokenType.OpenBrace, "{", this.Position);
                     this.ReadChar();
                     break;
-                case '/':
-                    token = new Token(TokenType.Slash, "/", this.Position);
+
+                case '}':
+                    token = new Token(TokenType.CloseBrace, "}", this.Position);
                     this.ReadChar();
                     break;
-                case '\\':
-                    token = new Token(TokenType.Backslash, @"\", this.Position);
+
+                case '[':
+                    token = new Token(TokenType.OpenBracket, "[", this.Position);
                     this.ReadChar();
                     break;
-                case '*':
-                    token = new Token(TokenType.Asterisk, "*", this.Position);
+
+                case ']':
+                    token = new Token(TokenType.CloseBracket, "]", this.Position);
                     this.ReadChar();
                     break;
-                case '+':
-                    token = new Token(TokenType.Plus, "+", this.Position);
+
+                case '(':
+                    token = new Token(TokenType.OpenParenthesis, "(", this.Position);
                     this.ReadChar();
                     break;
-                case '-':
-                    token = new Token(TokenType.Equals, "-", this.Position);
+
+                case ')':
+                    token = new Token(TokenType.CloseParenthesis, ")", this.Position);
                     this.ReadChar();
                     break;
-                case '=':
-                    token = new Token(TokenType.Equals, "=", this.Position);
+
+                case ',':
+                    token = new Token(TokenType.Comma, ",", this.Position);
                     this.ReadChar();
+                    break;
+
+                case ':':
+                    token = new Token(TokenType.Colon, ":", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '@':
+                    token = new Token(TokenType.At, "@", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '#':
+                    token = new Token(TokenType.Hashtag, "#", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '~':
+                    token = new Token(TokenType.Til, "~", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '.':
+                    token = new Token(TokenType.Period, ".", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case '$':
+                    this.ReadChar();
+                    if (IsWordChar(_char, true))
+                    {
+                        token = new Token(TokenType.Word, "$" + this.ReadWord(), this.Position);
+                    }
+                    else
+                    {
+                        token = new Token(TokenType.Dollar, "$", this.Position);
+                    }
                     break;
 
                 case '!':
@@ -311,6 +360,11 @@ namespace LiteDB
                     {
                         token = new Token(TokenType.Exclamation, "!", this.Position);
                     }
+                    break;
+
+                case '=':
+                    token = new Token(TokenType.Equals, "=", this.Position);
+                    this.ReadChar();
                     break;
 
                 case '>':
@@ -339,66 +393,33 @@ namespace LiteDB
                     }
                     break;
 
-                case '[':
-                    token = new Token(TokenType.OpenBracket, "[", this.Position);
+                case '-':
+                    token = new Token(TokenType.Minus, "-", this.Position);
                     this.ReadChar();
                     break;
 
-                case ']':
-                    token = new Token(TokenType.CloseBracket, "]", this.Position);
+                case '+':
+                    token = new Token(TokenType.Plus, "+", this.Position);
                     this.ReadChar();
                     break;
 
-                case '{':
-                    token = new Token(TokenType.OpenBrace, "{", this.Position);
+                case '*':
+                    token = new Token(TokenType.Asterisk, "*", this.Position);
                     this.ReadChar();
                     break;
 
-                case '}':
-                    token = new Token(TokenType.CloseBrace, "}", this.Position);
+                case '/':
+                    token = new Token(TokenType.Slash, "/", this.Position);
+                    this.ReadChar();
+                    break;
+                case '\\':
+                    token = new Token(TokenType.Backslash, @"\", this.Position);
                     this.ReadChar();
                     break;
 
-                case '(':
-                    token = new Token(TokenType.OpenParenthesis, "(", this.Position);
+                case '%':
+                    token = new Token(TokenType.Percent, "%", this.Position);
                     this.ReadChar();
-                    break;
-
-                case ')':
-                    token = new Token(TokenType.CloseParenthesis, ")", this.Position);
-                    this.ReadChar();
-                    break;
-
-                case ',':
-                    token = new Token(TokenType.Comma, ",", this.Position);
-                    this.ReadChar();
-                    break;
-
-                case ':':
-                    token = new Token(TokenType.Colon, ":", this.Position);
-                    this.ReadChar();
-                    break;
-
-                case '.':
-                    token = new Token(TokenType.Period, ".", this.Position);
-                    this.ReadChar();
-                    break;
-
-                case '@':
-                    token = new Token(TokenType.At, "@", this.Position);
-                    this.ReadChar();
-                    break;
-
-                case '$':
-                    this.ReadChar();
-                    if (IsWordChar(_char, true))
-                    {
-                        token = new Token(TokenType.Word, "$" + this.ReadWord(), this.Position);
-                    }
-                    else
-                    {
-                        token = new Token(TokenType.Dollar, "$", this.Position);
-                    }
                     break;
 
                 case '\"':
@@ -425,13 +446,13 @@ namespace LiteDB
                 case '\n':
                 case '\r':
                 case '\t':
-                    var length = 0;
+                    var sb = new StringBuilder();
                     while(char.IsWhiteSpace(_char) && !this.EOF)
                     {
+                        sb.Append(_char);
                         this.ReadChar();
-                        length++;
                     }
-                    token = new Token(TokenType.Whitespace, "".PadLeft(length, ' '), this.Position);
+                    token = new Token(TokenType.Whitespace, sb.ToString(), this.Position);
                     break;
 
                 default:

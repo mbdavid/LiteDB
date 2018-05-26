@@ -78,33 +78,33 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        public static List<BsonExpression> ParseFullExpression(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot, bool onlyTerms)
+        public static List<BsonExpression> ParseFullExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot, bool onlyTerms)
         {
-            var first = ParseSingleExpression(s, root, current, parameters, isRoot);
+            var first = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
             var values = new List<BsonExpression> { first };
             var ops = new List<string>();
 
             // read all blocks and operation first
-            while (!s.EOF)
+            while (!tokenizer.EOF)
             {
                 // read operator between expressions
-                var op = s.LookAhead(true);
+                var op = tokenizer.LookAhead(true);
 
                 // if no valid operator, stop reading string
-                if (op.IsOperand) break;
+                if (op.IsOperand == false) break;
 
-                s.ReadToken(); // consume _ahead
+                tokenizer.ReadToken(); // consume _ahead
 
-                var expr = ParseSingleExpression(s, root, current, parameters, isRoot);
+                var expr = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
 
                 // special BETWEEN "AND" read
                 if (op.Value.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
                 {
-                    var and = s.ReadToken(true).Expect(TokenType.Word);
+                    var and = tokenizer.ReadToken(true).Expect(TokenType.Word);
 
-                    if (!and.Value.Equals("AND", StringComparison.OrdinalIgnoreCase)) throw LiteException.UnexpectedToken(s.Current);
+                    if (!and.Value.Equals("AND", StringComparison.OrdinalIgnoreCase)) throw LiteException.UnexpectedToken(tokenizer.Current);
 
-                    var expr2 = ParseSingleExpression(s, root, current, parameters, isRoot);
+                    var expr2 = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
 
                     // convert expr and expr2 into an array with 2 values
                     expr = NewArray(expr, expr2);
@@ -161,44 +161,44 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        private static BsonExpression ParseSingleExpression(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression ParseSingleExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             // read next token and test with all expression parts
-            var token = s.ReadToken();
+            var token = tokenizer.ReadToken();
 
             return
-                TryParseDouble(s) ??
-                TryParseInt(s) ??
-                TryParseBool(s) ??
-                TryParseNull(s) ??
-                TryParseString(s) ??
-                TryParseDocument(s, root, current, parameters, isRoot) ??
-                TryParseArray(s, root, current, parameters, isRoot) ??
-                TryParseParameter(s, root, current, parameters, isRoot) ??
-                TryParseInnerExpression(s, root, current, parameters, isRoot) ??
-                TryParseMethodCall(s, root, current, parameters, isRoot) ??
-                TryParsePath(s, root, current, parameters, isRoot) ??
+                TryParseDouble(tokenizer) ??
+                TryParseInt(tokenizer) ??
+                TryParseBool(tokenizer) ??
+                TryParseNull(tokenizer) ??
+                TryParseString(tokenizer) ??
+                TryParseDocument(tokenizer, root, current, parameters, isRoot) ??
+                TryParseArray(tokenizer, root, current, parameters, isRoot) ??
+                TryParseParameter(tokenizer, root, current, parameters, isRoot) ??
+                TryParseInnerExpression(tokenizer, root, current, parameters, isRoot) ??
+                TryParseMethodCall(tokenizer, root, current, parameters, isRoot) ??
+                TryParsePath(tokenizer, root, current, parameters, isRoot) ??
                 throw LiteException.UnexpectedToken(token);
         }
 
         /// <summary>
         /// Try parse double number - return null if not double token
         /// </summary>
-        private static BsonExpression TryParseDouble(Tokenizer s)
+        private static BsonExpression TryParseDouble(Tokenizer tokenizer)
         {
             string value = null;
 
-            if (s.Current.Type == TokenType.Double)
+            if (tokenizer.Current.Type == TokenType.Double)
             {
-                value = s.Current.Value;
+                value = tokenizer.Current.Value;
             }
-            else if (s.Current.Type == TokenType.Minus)
+            else if (tokenizer.Current.Type == TokenType.Minus)
             {
-                var ahead = s.LookAhead(false);
+                var ahead = tokenizer.LookAhead(false);
 
                 if (ahead.Type == TokenType.Double)
                 {
-                    value = "-" + s.ReadToken().Value;
+                    value = "-" + tokenizer.ReadToken().Value;
                 }
             }
 
@@ -224,21 +224,21 @@ namespace LiteDB
         /// <summary>
         /// Try parse int number - return null if not int token
         /// </summary>
-        private static BsonExpression TryParseInt(Tokenizer s)
+        private static BsonExpression TryParseInt(Tokenizer tokenizer)
         {
             string value = null;
 
-            if (s.Current.Type == TokenType.Int)
+            if (tokenizer.Current.Type == TokenType.Int)
             {
-                value = s.Current.Value;
+                value = tokenizer.Current.Value;
             }
-            else if (s.Current.Type == TokenType.Minus)
+            else if (tokenizer.Current.Type == TokenType.Minus)
             {
-                var ahead = s.LookAhead(false);
+                var ahead = tokenizer.LookAhead(false);
 
                 if (ahead.Type == TokenType.Int)
                 {
-                    value = "-" + s.ReadToken().Value;
+                    value = "-" + tokenizer.ReadToken().Value;
                 }
             }
 
@@ -264,11 +264,11 @@ namespace LiteDB
         /// <summary>
         /// Try parse bool - return null if not bool token
         /// </summary>
-        private static BsonExpression TryParseBool(Tokenizer s)
+        private static BsonExpression TryParseBool(Tokenizer tokenizer)
         {
-            if (s.Current.Type == TokenType.Word && (s.Current.Value == "true" || s.Current.Value == "false"))
+            if (tokenizer.Current.Type == TokenType.Word && (tokenizer.Current.Value == "true" || tokenizer.Current.Value == "false"))
             {
-                var boolean = Convert.ToBoolean(s.Current.Value);
+                var boolean = Convert.ToBoolean(tokenizer.Current.Value);
                 var value = Expression.Constant(new BsonValue(boolean));
 
                 return new BsonExpression
@@ -288,9 +288,9 @@ namespace LiteDB
         /// <summary>
         /// Try parse null constant - return null if not null token
         /// </summary>
-        private static BsonExpression TryParseNull(Tokenizer s)
+        private static BsonExpression TryParseNull(Tokenizer tokenizer)
         {
-            if (s.Current.Type == TokenType.Word && s.Current.Value == "null")
+            if (tokenizer.Current.Type == TokenType.Word && tokenizer.Current.Value == "null")
             {
                 var value = Expression.Constant(BsonValue.Null);
 
@@ -311,11 +311,11 @@ namespace LiteDB
         /// <summary>
         /// Try parse string with both single/double quote - return null if not string
         /// </summary>
-        private static BsonExpression TryParseString(Tokenizer s)
+        private static BsonExpression TryParseString(Tokenizer tokenizer)
         {
-            if (s.Current.Type == TokenType.String)
+            if (tokenizer.Current.Type == TokenType.String)
             {
-                var bstr = new BsonValue(s.Current.Value);
+                var bstr = new BsonValue(tokenizer.Current.Value);
                 var value = Expression.Constant(bstr);
 
                 return new BsonExpression
@@ -335,9 +335,9 @@ namespace LiteDB
         /// <summary>
         /// Try parse json document - return null if not document token
         /// </summary>
-        private static BsonExpression TryParseDocument(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseDocument(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (s.Current.Type != TokenType.OpenBrace) return null;
+            if (tokenizer.Current.Type != TokenType.OpenBrace) return null;
 
             // read key value
             var keys = new List<Expression>();
@@ -349,27 +349,27 @@ namespace LiteDB
 
             source.Append("{");
 
-            while (!s.CheckEOF())
+            while (!tokenizer.CheckEOF())
             {
                 // read simple or complex document key name
                 var src = new StringBuilder(); // use another builder to re-use in simplified notation
-                var key = ReadKey(s, src);
+                var key = ReadKey(tokenizer, src);
 
                 source.Append(src);
 
-                s.ReadToken(); // update s.Current 
+                tokenizer.ReadToken(); // update s.Current 
 
                 source.Append(":");
 
                 BsonExpression value;
 
                 // test normal notation { a: 1 }
-                if (s.Current.Type == TokenType.Colon)
+                if (tokenizer.Current.Type == TokenType.Colon)
                 {
-                    value = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
+                    value = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
 
                     // read next token here (, or }) because simplified version already did
-                    s.ReadToken();
+                    tokenizer.ReadToken();
                 }
                 else
                 {
@@ -401,11 +401,11 @@ namespace LiteDB
                 source.Append(value.Source);
 
                 // test next token for , (continue) or } (break)
-                s.Current.Expect(TokenType.Comma, TokenType.CloseBrace);
+                tokenizer.Current.Expect(TokenType.Comma, TokenType.CloseBrace);
 
-                source.Append(s.Current.Value);
+                source.Append(tokenizer.Current.Value);
 
-                if (s.Current.Type == TokenType.Comma) continue; else break;
+                if (tokenizer.Current.Type == TokenType.Comma) continue; else break;
             }
 
             var arrKeys = Expression.NewArrayInit(typeof(BsonValue), keys.ToArray());
@@ -425,9 +425,9 @@ namespace LiteDB
         /// <summary>
         /// Try parse array - return null if not array token
         /// </summary>
-        private static BsonExpression TryParseArray(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseArray(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (s.Current.Type != TokenType.OpenBracket) return null;
+            if (tokenizer.Current.Type != TokenType.OpenBracket) return null;
 
             var values = new List<Expression>();
             var source = new StringBuilder();
@@ -437,10 +437,10 @@ namespace LiteDB
 
             source.Append("[");
 
-            while (!s.CheckEOF())
+            while (!tokenizer.CheckEOF())
             {
                 // read value expression
-                var value = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
+                var value = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
 
                 // update isImmutable/isConstant only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -450,7 +450,7 @@ namespace LiteDB
 
                 values.Add(value.Expression);
 
-                var next = s.ReadToken()
+                var next = tokenizer.ReadToken()
                     .Expect(TokenType.Comma, TokenType.CloseBracket);
 
                 source.Append(next.Value);
@@ -474,15 +474,15 @@ namespace LiteDB
         /// <summary>
         /// Try parse parameter - return null if not parameter token
         /// </summary>
-        private static BsonExpression TryParseParameter(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseParameter(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (s.Current.Type != TokenType.At) return null;
+            if (tokenizer.Current.Type != TokenType.At) return null;
 
-            var ahead = s.LookAhead(false);
+            var ahead = tokenizer.LookAhead(false);
 
             if (ahead.Type == TokenType.Word || ahead.Type == TokenType.Int)
             {
-                var parameterName = s.ReadToken(false).Value;
+                var parameterName = tokenizer.ReadToken(false).Value;
                 var name = Expression.Constant(parameterName);
 
                 return new BsonExpression
@@ -504,15 +504,15 @@ namespace LiteDB
         /// <summary>
         /// Try parse inner expression - return null if not bracket token
         /// </summary>
-        private static BsonExpression TryParseInnerExpression(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseInnerExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            if (s.Current.Type != TokenType.OpenParenthesis) return null;
+            if (tokenizer.Current.Type != TokenType.OpenParenthesis) return null;
 
             // read a inner expression inside ( and )
-            var inner = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
+            var inner = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
 
             // read close )
-            s.ReadToken().Expect(TokenType.CloseParenthesis);
+            tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
 
             return new BsonExpression
             {
@@ -528,15 +528,15 @@ namespace LiteDB
         /// <summary>
         /// Try parse method call - return null if not method call
         /// </summary>
-        private static BsonExpression TryParseMethodCall(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParseMethodCall(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
-            var token = s.Current;
+            var token = tokenizer.Current;
 
-            if (s.Current.Type != TokenType.Word) return null;
-            if (s.LookAhead().Type != TokenType.OpenParenthesis) return null;
+            if (tokenizer.Current.Type != TokenType.Word) return null;
+            if (tokenizer.LookAhead().Type != TokenType.OpenParenthesis) return null;
 
             // read (
-            s.ReadToken();
+            tokenizer.ReadToken();
 
             // get static method from this class
             var pars = new List<Expression>();
@@ -548,15 +548,15 @@ namespace LiteDB
             source.Append(token.Value.ToUpper() + "(");
 
             // method call with no parameters
-            if (s.LookAhead().Type == TokenType.CloseBrace)
+            if (tokenizer.LookAhead().Type == TokenType.CloseBrace)
             {
-                s.ReadToken(); // read )
+                tokenizer.ReadToken(); // read )
             }
             else
             {
-                while (!s.CheckEOF())
+                while (!tokenizer.CheckEOF())
                 {
-                    var parameter = ParseFullExpression(s, root, current, parameters, isRoot, false).Single();
+                    var parameter = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
 
                     // update isImmutable/isConstant only when came false
                     if (parameter.IsImmutable == false) isImmutable = false;
@@ -571,7 +571,7 @@ namespace LiteDB
                     source.Append(parameter.Source);
 
                     // read , or )
-                    var next = s.ReadToken()
+                    var next = tokenizer.ReadToken()
                         .Expect(TokenType.Comma, TokenType.CloseParenthesis);
 
                     source.Append(next.Value);
@@ -582,7 +582,7 @@ namespace LiteDB
 
             var method = GetMethod(token.Value, pars.Count);
 
-            if (method == null) throw LiteException.SyntaxError("Method " + token.Value + " not exist or invalid parameter count", s.Position);
+            if (method == null) throw LiteException.SyntaxError("Method " + token.Value + " not exist or invalid parameter count", tokenizer.Position);
 
             // test if method are decorated with "Variable" (immutable = false)
             if (method.GetCustomAttribute<VolatileAttribute>() != null)
@@ -604,23 +604,23 @@ namespace LiteDB
         /// <summary>
         /// Parse JSON-Path - return null if not method call
         /// </summary>
-        private static BsonExpression TryParsePath(Tokenizer s, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
+        private static BsonExpression TryParsePath(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             // test $ or @ or WORD
-            if (s.Current.Type != TokenType.At && s.Current.Type != TokenType.Dollar && s.Current.Type != TokenType.Word) return null;
+            if (tokenizer.Current.Type != TokenType.At && tokenizer.Current.Type != TokenType.Dollar && tokenizer.Current.Type != TokenType.Word) return null;
 
             var scope = isRoot ? "$" : "@";
 
-            if (s.Current.Type == TokenType.At || s.Current.Type == TokenType.Dollar)
+            if (tokenizer.Current.Type == TokenType.At || tokenizer.Current.Type == TokenType.Dollar)
             {
-                scope = s.Current.Type == TokenType.Dollar ? "$" : "@";
+                scope = tokenizer.Current.Type == TokenType.Dollar ? "$" : "@";
 
-                var ahead = s.LookAhead(false);
+                var ahead = tokenizer.LookAhead(false);
 
                 if(ahead.Type == TokenType.Period)
                 {
-                    s.ReadToken(); // read .
-                    s.ReadToken(); // read word or [
+                    tokenizer.ReadToken(); // read .
+                    tokenizer.ReadToken(); // read word or [
                 }
             }
 
@@ -630,14 +630,14 @@ namespace LiteDB
             source.Append(scope);
 
             // read field name (or "" if root)
-            var field = ReadField(s, source);
+            var field = ReadField(tokenizer, source);
             var name = Expression.Constant(field);
             var expr = Expression.Call(_memberPathMethod, scope == "$" ? root : current, name) as Expression;
 
             // parse the rest of path
-            while (!s.EOF)
+            while (!tokenizer.EOF)
             {
-                var result = ParsePath(s, expr, root, parameters, source, ref isImmutable);
+                var result = ParsePath(tokenizer, expr, root, parameters, source, ref isImmutable);
 
                 if (result == null) break;
 
@@ -658,16 +658,16 @@ namespace LiteDB
         /// <summary>
         /// Implement a JSON-Path like navigation on BsonDocument. Support a simple range of paths
         /// </summary>
-        private static Expression ParsePath(Tokenizer s, Expression expr, ParameterExpression root, ParameterExpression parameters, StringBuilder source, ref bool isImmutable)
+        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression root, ParameterExpression parameters, StringBuilder source, ref bool isImmutable)
         {
-            var ahead = s.LookAhead(false);
+            var ahead = tokenizer.LookAhead(false);
 
             if (ahead.Type == TokenType.Period)
             {
-                s.ReadToken(); // read .
-                s.ReadToken(false); //
+                tokenizer.ReadToken(); // read .
+                tokenizer.ReadToken(false); //
 
-                var field = ReadField(s, source);
+                var field = ReadField(tokenizer, source);
 
                 var name = Expression.Constant(field);
 
@@ -678,9 +678,9 @@ namespace LiteDB
             {
                 source.Append("[");
 
-                s.ReadToken(); // read [
+                tokenizer.ReadToken(); // read [
 
-                ahead = s.LookAhead(); // look for "index" or "expression"
+                ahead = tokenizer.LookAhead(); // look for "index" or "expression"
 
                 var index = int.MaxValue;
                 var inner = BsonExpression.Empty;
@@ -688,26 +688,26 @@ namespace LiteDB
                 if (ahead.Type == TokenType.Int)
                 {
                     // fixed index
-                    source.Append(s.ReadToken().Value);
-                    index = Convert.ToInt32(s.Current.Value);
+                    source.Append(tokenizer.ReadToken().Value);
+                    index = Convert.ToInt32(tokenizer.Current.Value);
                 }
                 else if (ahead.Type == TokenType.Minus)
                 {
                     // fixed negative index
-                    source.Append(s.ReadToken().Value + s.ReadToken().Expect(TokenType.Int).Value);
-                    index = -Convert.ToInt32(s.Current.Value);
+                    source.Append(tokenizer.ReadToken().Value + tokenizer.ReadToken().Expect(TokenType.Int).Value);
+                    index = -Convert.ToInt32(tokenizer.Current.Value);
                 }
                 else if (ahead.Type == TokenType.Asterisk)
                 {
                     // read all items (index = int.MaxValue)
-                    s.ReadToken();
+                    source.Append(tokenizer.ReadToken().Value);
                 }
                 else
                 {
                     // inner expression
-                    inner = BsonExpression.Parse(s, false, false).FirstOrDefault();
+                    inner = BsonExpression.Parse(tokenizer, false, false).FirstOrDefault();
 
-                    if (inner == null) throw LiteException.SyntaxError("Invalid expression formula", s.Position);
+                    if (inner == null) throw LiteException.SyntaxError("Invalid expression formula", tokenizer.Position);
 
                     // if array filter is not immutable, update ref (update only when false)
                     if (inner.IsImmutable == false) isImmutable = false;
@@ -716,7 +716,7 @@ namespace LiteDB
                 }
 
                 // read ]
-                s.ReadToken().Expect(TokenType.CloseBracket);
+                tokenizer.ReadToken().Expect(TokenType.CloseBracket);
 
                 source.Append("]");
 
@@ -776,19 +776,19 @@ namespace LiteDB
         /// <summary>
         /// Get field from simple \w regex or ['comp-lex'] - also, add into source. Can read empty field (root)
         /// </summary>
-        private static string ReadField(Tokenizer s, StringBuilder source)
+        private static string ReadField(Tokenizer tokenizer, StringBuilder source)
         {
             var field = "";
 
             // if field are complex
-            if (s.Current.Type == TokenType.OpenBracket)
+            if (tokenizer.Current.Type == TokenType.OpenBracket)
             {
-                field = s.ReadToken().Expect(TokenType.String).Value;
-                s.ReadToken().Expect(TokenType.CloseBracket);
+                field = tokenizer.ReadToken().Expect(TokenType.String).Value;
+                tokenizer.ReadToken().Expect(TokenType.CloseBracket);
             }
-            else if (s.Current.Type == TokenType.Word)
+            else if (tokenizer.Current.Type == TokenType.Word)
             {
-                field = s.Current.Value;
+                field = tokenizer.Current.Value;
             }
 
             if (field.Length > 0)
@@ -814,9 +814,9 @@ namespace LiteDB
         /// <summary>
         /// Read key in document definition with single word or "comp-lex"
         /// </summary>
-        private static string ReadKey(Tokenizer s, StringBuilder source)
+        private static string ReadKey(Tokenizer tokenizer, StringBuilder source)
         {
-            var token = s.ReadToken();
+            var token = tokenizer.ReadToken();
             var key = "";
 
             if (token.Type == TokenType.String)

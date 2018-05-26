@@ -212,15 +212,15 @@ namespace LiteDB
         /// <summary>
         /// Parse and compile string expression and return a list of expression - if onlyTerm = true, return a list of all expressions without any AND operator.
         /// </summary>
-        internal static List<BsonExpression> Parse(Tokenizer s, bool isRoot, bool onlyTerms)
+        internal static List<BsonExpression> Parse(Tokenizer tokenizer, bool isRoot, bool onlyTerms)
         {
-            if (s == null) throw new ArgumentNullException(nameof(s));
+            if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
             var root = Expression.Parameter(typeof(IEnumerable<BsonDocument>), "root");
             var current = Expression.Parameter(typeof(IEnumerable<BsonValue>), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
-            var exprList = BsonExpressionParser.ParseFullExpression(s, root, current, parameters, isRoot, onlyTerms);
+            var exprList = BsonExpressionParser.ParseFullExpression(tokenizer, root, current, parameters, isRoot, onlyTerms);
 
             foreach(var expr in exprList)
             {
