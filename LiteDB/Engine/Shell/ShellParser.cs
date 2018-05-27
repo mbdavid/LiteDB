@@ -1,5 +1,6 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -8,83 +9,172 @@ namespace LiteDB
     /// </summary>
     internal class ShellParser
     {
-        private readonly Tokenizer _tokenizer;
         private readonly LiteEngine _engine;
+        private readonly Tokenizer _tokenizer;
         private readonly BsonDocument _parameters;
+        private readonly IShellResult _result;
 
-        private string _collection;
+        private int _resultset = 0;
 
-        public ShellParser(Tokenizer tokenizer, LiteEngine engine, BsonDocument parameters)
+        public ShellParser(LiteEngine engine, Tokenizer tokenizer, BsonDocument parameters, IShellResult result)
         {
-            _tokenizer = tokenizer;
             _engine = engine;
-            _parameters = parameters;
+            _tokenizer = tokenizer;
+            _parameters = parameters ?? new BsonDocument();
+            _result = result;
         }
 
-        public IEnumerable<BsonDocument> RunQuery(BsonDocument parameters)
+        public void Execute()
+        {
+            try
+            {
+                while(!_tokenizer.EOF)
+                {
+                    this.ParseSingleCommand();
+
+                    _resultset++;
+                }
+            }
+            catch(Exception ex)
+            {
+                _result.Write(ex);
+            }
+        }
+
+        private void ParseSingleCommand()
         {
             var first = _tokenizer.ReadToken();
 
-            switch(first.Value)
+            // db.??? comands
+            if (first.Is("db"))
             {
-                case "db":
-                    break;
-                case "fs":
-                    break;
+                _tokenizer.ReadToken(false).Expect(TokenType.Period);
+                var name = _tokenizer.ReadToken(false).Expect(TokenType.Word).Value;
+
+                // db.<col>.<command>
+                if (_tokenizer.LookAhead(false).Type == TokenType.Period)
+                {
+                    _tokenizer.ReadToken(); // read .
+                    var cmd = _tokenizer.ReadToken().Expect(TokenType.Word).Value.ToLower(); // read command name
+
+                    switch (cmd)
+                    {
+                        case "insert":
+                            this.DbInsert(name);
+                            break;
+                        case "query":
+                            this.DbQuery(name, cmd);
+                            break;
+
+                        default:
+                            throw LiteException.UnexpectedToken(_tokenizer.Current);
+                    }
+                }
+                // db.<command>
+                else
+                {
+                    switch (name.ToLower())
+                    {
+                        case "param":
+                            this.DbParam();
+                            break;
+
+                        default:
+                            throw LiteException.UnexpectedToken(_tokenizer.Current);
+                    }
+
+                }
+
+
+            }
+            else if (first.Is("fs"))
+            {
+
+            }
+            else
+            {
+                throw LiteException.UnexpectedToken(first);
             }
 
-            throw LiteException.UnexpectedToken(first);
         }
 
         /// <summary>
-        /// Read "." and next word
+        /// db.[colname].insert [expr] id=int
         /// </summary>
-        private string ReadDotWord()
+        private void DbInsert(string name)
         {
-            _tokenizer.ReadToken(false).Expect(TokenType.Period);
-            return _tokenizer.ReadToken(false).Expect(TokenType.Word).Value;
-        }
+            var expr = BsonExpression.Create(_tokenizer, _parameters);
+            var with = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
-        private void ReadCollectionCommand()
-        {
-            var name = this.ReadDotWord();
-            var command = this.ReadDotWord();
+            var autoId = BsonAutoId.ObjectId;
 
-
-            switch(command)
+            if (with.Is("WITH"))
             {
-                case "insert":
-                    DoInsert(name);
-                    break;
+                _tokenizer.ReadToken().Expect("ID");
+                _tokenizer.ReadToken().Expect(TokenType.Equals);
+                var dataType = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+
+                autoId = (BsonAutoId)Enum.Parse(typeof(BsonAutoId), dataType, true);
             }
-        }
 
-        private void DoInsert(string name)
-        {
-
-        }
-
-        private void DoDrop(string name)
-        {
             _tokenizer.ReadToken().Expect(TokenType.EOF);
 
+            var docs = expr.Execute()
+                .Where(x => x.IsDocument)
+                .Select(x => x.AsDocument);
 
+            var result = _engine.Insert(name, docs, autoId);
+
+            _result.Write(_resultset, true, result);
         }
 
-        private void DoParam(string name)
+        /// <summary>
+        /// db.[colname].drop
+        /// </summary>
+        private void DbDrop(string name)
         {
-            var paramName = _tokenizer.ReadToken().Expect(TokenType.Word);
-            var equals = _tokenizer.ReadToken().Expect(TokenType.Equals, TokenType.EOF);
+            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+
+            var result = _engine.DropCollection(name);
+
+            _result.Write(_resultset, true, result);
+        }
+
+        /// <summary>
+        /// db.param userVersion
+        /// db.param userVersion = [value]
+        /// </summary>
+        private void DbParam()
+        {
+            var paramName = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+            var equals = _tokenizer.ReadToken().Expect(TokenType.Equals, TokenType.EOF, TokenType.SemiColon);
 
             if (equals.Type == TokenType.Equals)
             {
-                var valueExpr = BsonExpression.Create(_tokenizer);
+                var expr = BsonExpression.Create(_tokenizer, _parameters);
 
-                _engine.SetParameter()
+                // after read expression must EOF
+                _tokenizer.ReadToken().Expect(TokenType.EOF);
+
+                var value = expr.Execute().FirstOrDefault();
+
+                _engine.SetParameter(paramName, value);
+
             }
+            else
+            {
+                var value = _engine.GetParameter(paramName, BsonValue.Null);
+            }
+        }
 
+        /// <summary>
+        /// db.[col].[query|count|aggregate|exists] ...
+        /// </summary>
+        private IEnumerable<BsonDocument> DbQuery(string name, string command)
+        {
+            var query = _engine.Query(name);
 
-
+            return query.ToList();
         }
     }
-}*/
+}

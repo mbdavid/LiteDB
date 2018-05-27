@@ -7,6 +7,9 @@ namespace LiteDB
 {
     #region TokenType definition
 
+    /// <summary>
+    /// ASCII char names: https://www.ascii.cl/htmlcodes.htm
+    /// </summary>
     internal enum TokenType
     {
         /// <summary> { </summary>
@@ -25,6 +28,8 @@ namespace LiteDB
         Comma,
         /// <summary> : </summary>
         Colon,
+        /// <summary> ; </summary>
+        SemiColon,
         /// <summary> @ </summary>
         At,
         /// <summary> # </summary>
@@ -111,13 +116,12 @@ namespace LiteDB
             this.Type == TokenType.NotEquals ||
             (this.Type == TokenType.Word && _keywords.Contains(this.Value));
 
-        public Token Expect(TokenType type, string value = null, bool ignoreCase = true)
+        /// <summary>
+        /// Expect if token is type (if not, throw UnexpectedToken)
+        /// </summary>
+        public Token Expect(TokenType type)
         {
             if (this.Type != type)
-            {
-                throw LiteException.UnexpectedToken(this);
-            }
-            if (value != null && value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             {
                 throw LiteException.UnexpectedToken(this);
             }
@@ -126,7 +130,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Expect for type1 OR type2
+        /// Expect for type1 OR type2 (if not, throw UnexpectedToken)
         /// </summary>
         public Token Expect(TokenType type1, TokenType type2)
         {
@@ -138,6 +142,36 @@ namespace LiteDB
             return this;
         }
 
+        /// <summary>
+        /// Expect for type1 OR type2 OR type3 (if not, throw UnexpectedToken)
+        /// </summary>
+        public Token Expect(TokenType type1, TokenType type2, TokenType type3)
+        {
+            if (this.Type != type1 && this.Type != type2 && this.Type != type3)
+            {
+                throw LiteException.UnexpectedToken(this);
+            }
+
+            return this;
+        }
+
+        public Token Expect(string value, bool ignoreCase = true)
+        {
+            if (this.Is(value, ignoreCase))
+            {
+                throw LiteException.UnexpectedToken(this, value);
+            }
+
+            return this;
+        }
+
+        public bool Is(string value, bool ignoreCase = true)
+        {
+            return 
+                this.Type == TokenType.Word &&
+                value.Equals(this.Value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+        }
+
         public override string ToString()
         {
             return this.Value + " (" + this.Type + ")";
@@ -147,7 +181,7 @@ namespace LiteDB
     #endregion
 
     /// <summary>
-    /// Class to tokenize TextReader input used in JsonRead/BsonExpressions - ASCII char names: https://www.ascii.cl/htmlcodes.htm
+    /// Class to tokenize TextReader input used in JsonRead/BsonExpressions
     /// This class are not thread safe
     /// </summary>
     internal class Tokenizer
@@ -314,6 +348,11 @@ namespace LiteDB
 
                 case ':':
                     token = new Token(TokenType.Colon, ":", this.Position);
+                    this.ReadChar();
+                    break;
+
+                case ';':
+                    token = new Token(TokenType.SemiColon, ";", this.Position);
                     this.ReadChar();
                     break;
 

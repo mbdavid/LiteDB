@@ -165,7 +165,16 @@ namespace LiteDB
         {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentNullException(nameof(expression));
 
-            var expr = _cache.GetOrAdd(expression, (k) => Parse(new Tokenizer(expression), true, false).Single());
+            if (!_cache.TryGetValue(expression, out var expr))
+            {
+                expr = Parse(new Tokenizer(expression), true);
+
+                // if passed string expression are different from formatted expression, try add in cache "unformatted" expression too
+                if (expression != expr.Source)
+                {
+                    _cache.TryAdd(expression, expr);
+                }
+            }
 
             // return a copy from cache WITHOUT parameters
             return new BsonExpression
@@ -210,9 +219,34 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Parse and compile string expression and return a list of expression - if onlyTerm = true, return a list of all expressions without any AND operator.
+        /// Parse tokenizer and create new instance of BsonExpression - for now, do not use cache
         /// </summary>
-        internal static List<BsonExpression> Parse(Tokenizer tokenizer, bool isRoot, bool onlyTerms)
+        internal static BsonExpression Create(Tokenizer tokenizer, BsonDocument parameters)
+        {
+            if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
+
+            var expr = Parse(tokenizer, true);
+
+            // return a copy from cache using new Parameters
+            return new BsonExpression
+            {
+                Expression = expr.Expression,
+                IsConstant = expr.IsConstant,
+                IsImmutable = expr.IsImmutable,
+                Parameters = parameters ?? new BsonDocument(),
+                Fields = expr.Fields,
+                Left = expr.Left,
+                Right = expr.Right,
+                Source = expr.Source,
+                Type = expr.Type,
+                _func = expr._func
+            };
+        }
+
+        /// <summary>
+        /// Parse and compile string expression and return BsonExpression
+        /// </summary>
+        internal static BsonExpression Parse(Tokenizer tokenizer, bool isRoot)
         {
             if (tokenizer == null) throw new ArgumentNullException(nameof(tokenizer));
 
@@ -220,15 +254,17 @@ namespace LiteDB
             var current = Expression.Parameter(typeof(IEnumerable<BsonValue>), "current");
             var parameters = Expression.Parameter(typeof(BsonDocument), "parameters");
 
-            var exprList = BsonExpressionParser.ParseFullExpression(tokenizer, root, current, parameters, isRoot, onlyTerms);
+            var expr = BsonExpressionParser.ParseFullExpression(tokenizer, root, current, parameters, isRoot);
 
-            foreach(var expr in exprList)
+            // before compile try find in cache if this source already has in cache (already compiled)
+            var cached = _cache.GetOrAdd(expr.Source, (s) =>
             {
-                // compile expression
+                // compile linq expression (with left+right expressions)
                 Compile(expr, root, current, parameters);
-            }
+                return expr;
+            });
 
-            return exprList;
+            return cached;
         }
 
         private static void Compile(BsonExpression expr, ParameterExpression root, ParameterExpression current, ParameterExpression parameters)

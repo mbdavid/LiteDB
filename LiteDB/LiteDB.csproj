@@ -79,8 +79,4 @@
     <None Remove="Storage\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Engine\Engine\Shell.cs" />
-  </ItemGroup>
-
 </Project>

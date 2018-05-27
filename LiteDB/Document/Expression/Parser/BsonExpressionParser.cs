@@ -78,7 +78,7 @@ namespace LiteDB
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
-        public static List<BsonExpression> ParseFullExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot, bool onlyTerms)
+        public static BsonExpression ParseFullExpression(Tokenizer tokenizer, ParameterExpression root, ParameterExpression current, ParameterExpression parameters, bool isRoot)
         {
             var first = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
             var values = new List<BsonExpression> { first };
@@ -98,11 +98,11 @@ namespace LiteDB
                 var expr = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
 
                 // special BETWEEN "AND" read
-                if (op.Value.Equals("BETWEEN", StringComparison.OrdinalIgnoreCase))
+                if (op.Is("BETWEEN"))
                 {
                     var and = tokenizer.ReadToken(true).Expect(TokenType.Word);
 
-                    if (!and.Value.Equals("AND", StringComparison.OrdinalIgnoreCase)) throw LiteException.UnexpectedToken(tokenizer.Current);
+                    if (and.Is("AND") == false) throw LiteException.UnexpectedToken(tokenizer.Current);
 
                     var expr2 = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
 
@@ -118,7 +118,7 @@ namespace LiteDB
             var andOperator = _operators.Count - 1; // last operator are AND
 
             // now, process operator in correct order
-            while (values.Count >= 2 && (onlyTerms == false || order < andOperator))
+            while (values.Count >= 2)
             {
                 var op = _operators.ElementAt(order);
                 var n = ops.IndexOf(op.Key);
@@ -155,7 +155,7 @@ namespace LiteDB
                 }
             }
 
-            return values;
+            return values.Single();
         }
 
         /// <summary>
@@ -366,7 +366,7 @@ namespace LiteDB
                 // test normal notation { a: 1 }
                 if (tokenizer.Current.Type == TokenType.Colon)
                 {
-                    value = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
+                    value = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
 
                     // read next token here (, or }) because simplified version already did
                     tokenizer.ReadToken();
@@ -440,7 +440,7 @@ namespace LiteDB
             while (!tokenizer.CheckEOF())
             {
                 // read value expression
-                var value = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
+                var value = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
 
                 // update isImmutable/isConstant only when came false
                 if (value.IsImmutable == false) isImmutable = false;
@@ -509,7 +509,7 @@ namespace LiteDB
             if (tokenizer.Current.Type != TokenType.OpenParenthesis) return null;
 
             // read a inner expression inside ( and )
-            var inner = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
+            var inner = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
 
             // read close )
             tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
@@ -556,7 +556,7 @@ namespace LiteDB
             {
                 while (!tokenizer.CheckEOF())
                 {
-                    var parameter = ParseFullExpression(tokenizer, root, current, parameters, isRoot, false).Single();
+                    var parameter = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
 
                     // update isImmutable/isConstant only when came false
                     if (parameter.IsImmutable == false) isImmutable = false;
@@ -705,9 +705,9 @@ namespace LiteDB
                 else
                 {
                     // inner expression
-                    inner = BsonExpression.Parse(tokenizer, false, false).FirstOrDefault();
+                    inner = BsonExpression.Parse(tokenizer, false);
 
-                    if (inner == null) throw LiteException.SyntaxError("Invalid expression formula", tokenizer.Position);
+                    if (inner == null) throw LiteException.UnexpectedToken(tokenizer.Current);
 
                     // if array filter is not immutable, update ref (update only when false)
                     if (inner.IsImmutable == false) isImmutable = false;

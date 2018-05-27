@@ -242,7 +242,7 @@ namespace LiteDB
             return new LiteException(INVALID_CTOR, inner, "Failed to create instance for type '{0}' from assembly '{1}'. Checks if the class has a public constructor with no parameters.", type.FullName, type.AssemblyQualifiedName);
         }
 
-        internal static LiteException UnexpectedToken(Token token)
+        internal static LiteException UnexpectedToken(Token token, string expected = null)
         {
             return new LiteException(UNEXPECTED_TOKEN, $"Unexpected token {token?.Value} ({token?.Type ?? TokenType.EOF}) in position {token?.Position ?? 0}")
             {
