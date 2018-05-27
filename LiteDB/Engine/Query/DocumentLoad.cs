@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement basic document loader based on data service/bson reader

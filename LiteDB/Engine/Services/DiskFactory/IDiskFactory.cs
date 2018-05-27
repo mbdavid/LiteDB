@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Interface factory to provider new Stream instances for datafile/walfile resources. It's useful to multiple threads can read same datafile

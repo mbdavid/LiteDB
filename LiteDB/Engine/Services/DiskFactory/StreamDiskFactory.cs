@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Simple stream disk implementation of disk factory - no concurrency - used for Memory/Temp database

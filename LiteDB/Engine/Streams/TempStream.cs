@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement a temporary stream that uses MemoryStream until get LIMIT bytes, then copy all to tempoary disk file and delete on dispose

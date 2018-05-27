@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// All engine settings used to starts new engine

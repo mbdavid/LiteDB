@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement virtual index for virtual collections

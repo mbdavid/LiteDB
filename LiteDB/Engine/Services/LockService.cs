@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Lock service are collection-based locks. Lock will support any threads reading at same time. Writing operations will be locked

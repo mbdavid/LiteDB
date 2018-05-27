@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Interface to be implemented when execute shell commands

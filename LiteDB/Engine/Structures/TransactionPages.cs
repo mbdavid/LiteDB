@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent a simple structure to store added/removed pages in a transaction. One instance per transaction

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Class that implement higher level of index search operations (equals, greater, less, ...)

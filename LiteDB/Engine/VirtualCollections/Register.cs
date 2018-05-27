@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {

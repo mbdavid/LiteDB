@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {

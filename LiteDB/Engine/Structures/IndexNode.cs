@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent a index node inside a Index Page

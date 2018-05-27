@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// A logger class to log all information about database. Used with levels. Level = 0 - 255

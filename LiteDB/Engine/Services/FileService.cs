@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement thread safe stream data access

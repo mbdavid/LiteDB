@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Class to provider a fluent query API to complex queries. This class will be optimied to convert into Query class before run

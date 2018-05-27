@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Represents a page address inside a page structure - index could be byte offset position OR index in a list (6 bytes)

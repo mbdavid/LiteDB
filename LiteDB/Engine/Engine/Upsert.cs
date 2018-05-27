@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// A public class that take care of all engine data structure access - it´s basic implementation of a NoSql database

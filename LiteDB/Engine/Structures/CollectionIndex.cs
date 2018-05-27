@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     internal class CollectionIndex
     {

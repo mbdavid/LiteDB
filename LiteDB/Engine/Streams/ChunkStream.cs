@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement stream reader for chunk data (IEnumerable of byte array as data source)

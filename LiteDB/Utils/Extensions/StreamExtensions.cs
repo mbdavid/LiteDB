@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.IO;
 
 namespace LiteDB

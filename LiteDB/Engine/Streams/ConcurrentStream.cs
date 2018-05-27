@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement internal thread-safe Stream using lock control

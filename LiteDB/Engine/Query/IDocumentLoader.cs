@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Interface for abstract document loader that can be direct from datafile or by virtual collections

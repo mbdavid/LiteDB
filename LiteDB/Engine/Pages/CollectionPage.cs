@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Represents the collection page AND a collection item, because CollectionPage represent a Collection (1 page = 1 collection). All collections pages are linked with Prev/Next links

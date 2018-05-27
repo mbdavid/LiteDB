@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     public enum PageType { Empty = 0, Header = 1, CollectionList = 6, Collection = 2, Index = 3, Data = 4, Extend = 5 }
 

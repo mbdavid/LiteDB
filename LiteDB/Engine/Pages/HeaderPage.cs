@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     internal class HeaderPage : BasePage
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent a single snapshot

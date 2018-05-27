@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 
 namespace LiteDB.Shell.Commands
 {

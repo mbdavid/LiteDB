@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     internal class WalService
     {

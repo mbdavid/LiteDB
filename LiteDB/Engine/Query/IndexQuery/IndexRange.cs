@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement range operation - in asc or desc way - can be used as LT, LTE, GT, GTE too because support MinValue/MaxValue

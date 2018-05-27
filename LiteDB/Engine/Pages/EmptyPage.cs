@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent a empty page (reused)

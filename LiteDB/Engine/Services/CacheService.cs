@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement thread-safe cache for pages that read/write from disk

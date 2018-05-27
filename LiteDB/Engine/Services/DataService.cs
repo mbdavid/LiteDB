@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace LiteDB
+namespace LiteDB.Engine
 {
     internal class DataService
     {
