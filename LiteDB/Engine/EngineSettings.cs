@@ -11,9 +11,9 @@ using System.Text.RegularExpressions;
 namespace LiteDB
 {
     /// <summary>
-    /// Manage ConnectionString to connect and create databases. Connection string are NameValue using Name1=Value1; Name2=Value2
+    /// All engine settings used to starts new engine
     /// </summary>
-    public class ConnectionString
+    public class EngineSettings
     {
         /// <summary>
         /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). To use physical file, use "filename" attribute
@@ -69,44 +69,6 @@ namespace LiteDB
         /// "checkpoint": When wal file get this checkpoint limit, write over data disk
         /// </summary>
         public int Checkpoint { get; set; } = 1000;
-
-        /// <summary>
-        /// Initialize empty connection string
-        /// </summary>
-        public ConnectionString()
-        {
-        }
-
-        /// <summary>
-        /// Initialize connection string parsing string in "key1=value1;key2=value2;...." format or only "filename" as default (when no ; char found)
-        /// </summary>
-        public ConnectionString(string connectionString)
-        {
-            if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException(nameof(connectionString));
-
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            // create a dictionary from string name=value collection
-            if (connectionString.Contains("="))
-            {
-                values.ParseKeyValue(connectionString);
-            }
-            else
-            {
-                values["filename"] = connectionString;
-            }
-
-            // setting values to properties
-            this.Filename = values.GetValue<string>("filename", null);
-            this.Timeout = values.GetValue("timeout", this.Timeout);
-            this.ReadOnly = values.GetValue<bool>("read only", this.ReadOnly);
-            this.InitialSize = values.GetFileSize("initial size", this.InitialSize);
-            this.LimitSize = values.GetFileSize("limit size", this.LimitSize);
-            this.LogLevel = values.GetValue("log", this.LogLevel);
-            this.UtcDate = values.GetValue("utc", this.UtcDate);
-            this.SyncOverAsync = values.GetValue("syncOverAsync", this.SyncOverAsync);
-            this.Checkpoint = values.GetValue("checkpoint", this.Checkpoint);
-        }
 
         /// <summary>
         /// Get datafile factory

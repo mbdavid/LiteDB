@@ -31,7 +31,7 @@ namespace LiteDB.Demo
 
             return;
 
-            var cn = new ConnectionString
+            var settings = new EngineSettings
             {
                 Filename = datafile,
                 Timeout = TimeSpan.FromSeconds(2)
@@ -39,7 +39,7 @@ namespace LiteDB.Demo
 
             File.Delete(datafile);
 
-            using (var db = new LiteEngine(cn))
+            using (var db = new LiteEngine(settings))
             {
                 //db.Insert("col1", ReadDocuments(1, 10, false, false), BsonAutoId.Int32);
                 //db.EnsureIndex("col1", "age", BsonExpression.Create("age"), false);
@@ -88,7 +88,7 @@ namespace LiteDB.Demo
                 }
             }
 
-            using (var db = new LiteEngine(cn))
+            using (var db = new LiteEngine(settings))
             {
 
                 //db.WaitAsyncWrite();

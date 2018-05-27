@@ -48,7 +48,7 @@ namespace LiteDB
             {
                 if (_tempdb == null)
                 {
-                    _tempdb = new LiteEngine(new ConnectionString { Filename = ":temp:" });
+                    _tempdb = new LiteEngine(new EngineSettings { Filename = ":temp:" });
                 }
 
                 return _tempdb;
@@ -82,40 +82,40 @@ namespace LiteDB
         /// Initialize LiteEngine using connection memory database
         /// </summary>
         public LiteEngine()
-            : this(new ConnectionString())
+            : this(new EngineSettings())
         {
         }
 
         /// <summary>
         /// Initialize LiteEngine using connection string using key=value; parser
         /// </summary>
-        public LiteEngine(string connectionString)
-            : this (new ConnectionString(connectionString))
+        public LiteEngine(string filename)
+            : this (new EngineSettings { Filename = filename })
         {
         }
 
         /// <summary>
-        /// Initialize LiteEngine using connection string options
+        /// Initialize LiteEngine using initial engine settings
         /// </summary>
-        public LiteEngine(ConnectionString options)
+        public LiteEngine(EngineSettings settings)
         {
             try
             {
                 // create factory based on connection string if there is no factory
-                _log = options.Log ?? new Logger(options.LogLevel);
+                _log = settings.Log ?? new Logger(settings.LogLevel);
 
                 // get utc date handler
-                _utcDate = options.UtcDate;
+                _utcDate = settings.UtcDate;
 
-                _bsonReader = new BsonReader(options.UtcDate);
+                _bsonReader = new BsonReader(settings.UtcDate);
                 _bsonWriter = new BsonWriter();
 
-                _locker = new LockService(options.Timeout, _log);
+                _locker = new LockService(settings.Timeout, _log);
 
                 // open datafile (crete new if stream are empty)
-                var factory = options.GetDiskFactory();
+                var factory = settings.GetDiskFactory();
 
-                _datafile = new FileService(factory, options.Timeout, options.InitialSize, options.LimitSize, _utcDate, _log);
+                _datafile = new FileService(factory, settings.Timeout, settings.InitialSize, settings.LimitSize, _utcDate, _log);
 
                 // initialize wal file
                 _wal = new WalService(_locker, _datafile, _log);
