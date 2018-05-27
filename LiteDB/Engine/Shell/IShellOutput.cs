@@ -7,10 +7,10 @@ namespace LiteDB
     /// <summary>
     /// Interface to be implemented when execute shell commands
     /// </summary>
-    public interface IShellResult
+    public interface IShellOutput
     {
         int Limit { get; }
-        void Write(int resultset, bool single, BsonValue value);
+        void Write(BsonValue value, int index, int resultset);
         void Write(Exception ex);
     }
 }

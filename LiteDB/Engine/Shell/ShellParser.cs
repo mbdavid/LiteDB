@@ -7,21 +7,21 @@ namespace LiteDB
     /// <summary>
     /// Internal class to parse and execute shell commands
     /// </summary>
-    internal class ShellParser
+    internal partial class ShellParser
     {
         private readonly LiteEngine _engine;
         private readonly Tokenizer _tokenizer;
         private readonly BsonDocument _parameters;
-        private readonly IShellResult _result;
+        private readonly IShellOutput _output;
 
         private int _resultset = 0;
 
-        public ShellParser(LiteEngine engine, Tokenizer tokenizer, BsonDocument parameters, IShellResult result)
+        public ShellParser(LiteEngine engine, Tokenizer tokenizer, BsonDocument parameters, IShellOutput output)
         {
             _engine = engine;
             _tokenizer = tokenizer;
             _parameters = parameters ?? new BsonDocument();
-            _result = result;
+            _output = output;
         }
 
         public void Execute()
@@ -37,7 +37,7 @@ namespace LiteDB
             }
             catch(Exception ex)
             {
-                _result.Write(ex);
+                _output.Write(ex);
             }
         }
 
@@ -102,89 +102,23 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// db.[colname].insert [expr] id=int
+        /// Write single result into shell output class
         /// </summary>
-        private void DbInsert(string name)
+        private void WriteSingle(BsonValue value)
         {
-            var expr = BsonExpression.Create(_tokenizer, _parameters);
-            var with = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
-
-            var autoId = BsonAutoId.ObjectId;
-
-            if (with.Is("WITH"))
-            {
-                _tokenizer.ReadToken().Expect("ID");
-                _tokenizer.ReadToken().Expect(TokenType.Equals);
-                var dataType = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
-
-                autoId = (BsonAutoId)Enum.Parse(typeof(BsonAutoId), dataType, true);
-            }
-
-            _tokenizer.ReadToken().Expect(TokenType.EOF);
-
-            var docs = expr.Execute()
-                .Where(x => x.IsDocument)
-                .Select(x => x.AsDocument);
-
-            var result = _engine.Insert(name, docs, autoId);
-
-            _result.Write(_resultset, true, result);
+            _output.Write(value, -1, _resultset);
         }
 
         /// <summary>
-        /// db.[colname].drop
+        /// Write all output recorset into shell output class (use Limit write output)
         /// </summary>
-        private void DbDrop(string name)
+        private void WriteResult(IEnumerable<BsonDocument> docs)
         {
-            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+            var index = 0;
 
-            var result = _engine.DropCollection(name);
-
-            _result.Write(_resultset, true, result);
-        }
-
-        /// <summary>
-        /// db.param userVersion
-        /// db.param userVersion = [value]
-        /// </summary>
-        private void DbParam()
-        {
-            var paramName = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
-            var equals = _tokenizer.ReadToken().Expect(TokenType.Equals, TokenType.EOF, TokenType.SemiColon);
-
-            if (equals.Type == TokenType.Equals)
+            foreach(var doc in docs.Take(_output.Limit))
             {
-                var expr = BsonExpression.Create(_tokenizer, _parameters);
-
-                // after read expression must EOF or ;
-                _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
-
-                var value = expr.Execute().FirstOrDefault();
-
-                _engine.SetParameter(paramName, value);
-
-                _result.Write(_resultset, true, value);
-            }
-            else
-            {
-                var value = _engine.GetParameter(paramName, BsonValue.Null);
-
-                _result.Write(_resultset, true, value);
-            }
-        }
-
-        /// <summary>
-        /// db.[col].[query|count|aggregate|exists] ...
-        /// </summary>
-        private void DbQuery(string name, string command)
-        {
-            var query = _engine.Query(name);
-
-
-            foreach(var doc in query.ToEnumerable())
-            {
-                _result.Write(_resultset, false, doc);
-
+                _output.Write(doc, index++, _resultset);
             }
         }
     }

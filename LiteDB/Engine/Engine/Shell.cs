@@ -11,7 +11,7 @@ namespace LiteDB
         /// <summary>
         /// Run shell command returing a single value result
         /// </summary>
-        public void Run(string command, BsonDocument parameters, IShellResult result)
+        public void Run(string command, BsonDocument parameters, IShellOutput result)
         {
             var s = new ShellParser(this, new Tokenizer(command), parameters, result);
 

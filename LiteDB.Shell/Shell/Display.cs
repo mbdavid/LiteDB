@@ -5,21 +5,27 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
-    public class Display : IShellResult
+    public class Display : IShellOutput
     {
         public List<TextWriter> TextWriters { get; set; }
         public bool Pretty { get; set; }
 
-        public int Limit => 1000;
+        public int Limit { get; set; }
 
         public Display()
         {
             this.TextWriters = new List<TextWriter>();
             this.Pretty = false;
+            this.Limit = 1000;
         }
 
-        public void Write(int resultset, bool single, BsonValue value)
+        public void Write(BsonValue value, int index, int resultset)
         {
+            if (index >= 0)
+            {
+                this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", index));
+            }
+
             if (value.IsNumber || value.IsString)
             {
                 this.WriteLine(ConsoleColor.DarkCyan, value.RawValue.ToString());
