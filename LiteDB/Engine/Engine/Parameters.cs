@@ -23,14 +23,29 @@ namespace LiteDB
         /// <summary>
         /// Set database parameter value (this operation occurs without transaction)
         /// </summary>
-        public void SetParameter(string name, BsonValue value)
+        public bool SetParameter(string name, BsonValue value)
         {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
             lock (_header)
             {
                 // clone header to use in writer
                 var confirm = _header.Clone() as HeaderPage;
 
-                confirm.Parameters[name] = value;
+                // if value == null, remove parameter
+                if (value.IsNull)
+                {
+                    if (confirm.Parameters.TryRemove(name, out var dummy) == false)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    confirm.Parameters[name] = value;
+                }
+
                 confirm.TransactionID = Guid.NewGuid();
 
                 // convert parameter into BsonDocument to calculate length
@@ -41,8 +56,10 @@ namespace LiteDB
                 // create fake transaction with no pages to update (only header)
                 _wal.ConfirmTransaction(confirm, new PagePosition[0]);
 
-                // update header instance
-                _header.Parameters[name] = value;
+                // copy parameters from confirm page to header instance
+                _header.Parameters = confirm.Parameters;
+
+                return true;
             }
         }
     }

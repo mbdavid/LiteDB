@@ -13,6 +13,7 @@ namespace LiteDB
         private void InitializeVirtualCollections()
         {
             this.RegisterVirtualCollection("$cols", () => this.GetCollectionNames().Select(x => new BsonDocument { ["name"] = x }));
+            this.RegisterVirtualCollection("$params", () => _header.Parameters.Keys.Select(x => new BsonDocument { ["name"] = x, ["value"] = _header.Parameters[x] }));
             this.RegisterVirtualCollection("$dump", () => this.DumpDatafile());
         }
     }

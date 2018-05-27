@@ -3,12 +3,6 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
-    [Help(
-        Category = "Shell",
-        Name = "spool",
-        Syntax = "spool [off]",
-        Description = "Starts spool all output to a disk file. Use off keyword to stop."
-    )]
     internal class Spool : IShellCommand
     {
         private TextWriter _writer;

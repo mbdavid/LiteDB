@@ -3,15 +3,6 @@ using System.IO;
 
 namespace LiteDB.Shell.Commands
 {
-    [Help(
-        Category = "Shell",
-        Name = "run",
-        Syntax = "run <filename>",
-        Description = "Queue shell commands inside filename to be run in order.",
-        Examples = new string[] {
-            "run scripts.txt"
-        }
-    )]
     internal class Run : IShellCommand
     {
         public bool IsCommand(StringScanner s)
@@ -25,10 +16,7 @@ namespace LiteDB.Shell.Commands
 
             var filename = s.Scan(@".+").Trim();
 
-            foreach (var line in File.ReadAllLines(filename))
-            {
-                env.Input.Queue.Enqueue(line);
-            }
+            env.Input.Queue.Enqueue(File.ReadAllText(filename));
         }
     }
 }

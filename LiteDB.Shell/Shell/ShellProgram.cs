@@ -10,11 +10,8 @@ namespace LiteDB.Shell
     {
         public static void Start(InputCommand input, Display display)
         {
-            var commands = new List<IShellCommand>();
-            var env = new Env { Input = input, Display = display };
-
-            // register commands
-            RegisterCommands(commands);
+            var env = new Env(display, input);
+            var commands = GetShellCommands().ToList();
 
             display.TextWriters.Add(Console.Out);
 
@@ -45,22 +42,22 @@ namespace LiteDB.Shell
                         break;
                     }
 
-                    // if not found, try database command
+                    // if not found, try "real" shell database command
                     if (!found)
                     {
-                        display.WriteResult(env.Engine.Run(cmd));
+                        env.Engine.Run(cmd, null, env.Display);
                     }
                 }
                 catch (Exception ex)
                 {
-                    display.WriteError(ex);
+                    display.Write(ex);
                 }
             }
         }
 
         #region Register all commands
 
-        public static void RegisterCommands(List<IShellCommand> commands)
+        public static IEnumerable<IShellCommand> GetShellCommands()
         {
             var type = typeof(IShellCommand);
             var types = typeof(ShellProgram).Assembly
@@ -69,7 +66,7 @@ namespace LiteDB.Shell
 
             foreach(var cmd in types)
             {
-                commands.Add(Activator.CreateInstance(cmd) as IShellCommand);
+                yield return Activator.CreateInstance(cmd) as IShellCommand;
             }
         }
 

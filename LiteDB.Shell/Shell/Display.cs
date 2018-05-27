@@ -5,10 +5,12 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
-    public class Display
+    public class Display : IShellResult
     {
         public List<TextWriter> TextWriters { get; set; }
         public bool Pretty { get; set; }
+
+        public int Limit => 1000;
 
         public Display()
         {
@@ -16,58 +18,34 @@ namespace LiteDB.Shell
             this.Pretty = false;
         }
 
+        public void Write(int resultset, bool single, BsonValue value)
+        {
+            if (value.IsNumber || value.IsString)
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, value.RawValue.ToString());
+            }
+            else
+            {
+                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(value, this.Pretty, false));
+            }
+        }
+
+        public void Write(Exception ex)
+        {
+            this.WriteLine(ConsoleColor.Red, ex.Message);
+        }
+
         public void WriteWelcome()
         {
-            this.WriteInfo("Welcome to LiteDB Shell");
-            this.WriteInfo("");
-            this.WriteInfo("Getting started with `help`, `help full` or `help <command>`");
-            this.WriteInfo("");
+            this.WriteLine("Welcome to LiteDB Shell");
+            this.WriteLine("");
+            this.WriteLine("Getting started with `help`, `help full` or `help <command>`");
+            this.WriteLine("");
         }
 
         public void WritePrompt(string text)
         {
             this.Write(ConsoleColor.White, text);
-        }
-
-        public void WriteInfo(string text)
-        {
-            this.WriteLine(ConsoleColor.Gray, text);
-        }
-
-        public void WriteError(Exception ex)
-        {
-            this.WriteLine(ConsoleColor.Red, ex.Message);
-
-            if (ex is LiteException && (ex as LiteException).ErrorCode == LiteException.SYNTAX_ERROR)
-            {
-                var err = ex as LiteException;
-
-                this.WriteLine(ConsoleColor.DarkYellow, "> " + err.Line);
-                this.WriteLine(ConsoleColor.DarkYellow, "> " + "^".PadLeft(err.Position + 1, ' '));
-            }
-        }
-
-        public void WriteResult(IEnumerable<BsonValue> results)
-        {
-            var index = 0;
-
-            foreach(var result in results)
-            {
-                this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", ++index));
-
-                if (result.IsString)
-                {
-                    this.WriteLine(ConsoleColor.DarkCyan, result.AsString);
-                }
-                else if (result.IsNumber)
-                {
-                    this.WriteLine(ConsoleColor.DarkCyan, result.RawValue.ToString());
-                }
-                else
-                {
-                    this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result, this.Pretty, false));
-                }
-            }
         }
 
         #region Print public methods

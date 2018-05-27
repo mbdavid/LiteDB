@@ -5,12 +5,6 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    [Help(
-        Category = "Database",
-        Name = "close",
-        Syntax = "close",
-        Description = "Close current datafile"
-    )]
     internal class Close : IShellCommand
     {
         public bool IsCommand(StringScanner s)

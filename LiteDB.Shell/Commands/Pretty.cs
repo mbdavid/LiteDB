@@ -2,15 +2,6 @@
 
 namespace LiteDB.Shell.Commands
 {
-    [Help(
-        Category = "Shell",
-        Name = "pretty",
-        Syntax = "pretty [on|off]",
-        Description = "Print all json results with identation/break lines",
-        Examples = new string[] {
-            "pretty"
-        }
-    )]
     internal class Pretty : IShellCommand
     {
         public bool IsCommand(StringScanner s)

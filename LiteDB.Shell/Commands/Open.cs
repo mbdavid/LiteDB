@@ -5,16 +5,6 @@ using System.Linq;
 
 namespace LiteDB.Shell.Commands
 {
-    [Help(
-        Category = "Database",
-        Name = "open",
-        Syntax = "open <filename|connectionString>",
-        Description = "Open (or create) a new datafile. Can be used a single filename or a connection string with all supported parameters.",
-        Examples = new string[] {
-            "open mydb.db",
-            "open filename=mydb.db; password=johndoe; initial=100Mb"
-        }
-    )]
     internal class Open : IShellCommand
     {
         public bool IsCommand(StringScanner s)
@@ -24,7 +14,7 @@ namespace LiteDB.Shell.Commands
 
         public void Execute(StringScanner s, Env env)
         {
-            var connectionString = new ConnectionString(s.Scan(@".+").TrimToNull());
+            var connectionString = s.Scan(@".+").TrimToNull();
 
             env.Open(connectionString);
         }

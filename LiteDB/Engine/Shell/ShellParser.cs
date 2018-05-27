@@ -62,6 +62,9 @@ namespace LiteDB
                         case "insert":
                             this.DbInsert(name);
                             break;
+                        case "drop":
+                            this.DbDrop(name);
+                            break;
                         case "query":
                             this.DbQuery(name, cmd);
                             break;
@@ -153,28 +156,36 @@ namespace LiteDB
             {
                 var expr = BsonExpression.Create(_tokenizer, _parameters);
 
-                // after read expression must EOF
-                _tokenizer.ReadToken().Expect(TokenType.EOF);
+                // after read expression must EOF or ;
+                _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
                 var value = expr.Execute().FirstOrDefault();
 
                 _engine.SetParameter(paramName, value);
 
+                _result.Write(_resultset, true, value);
             }
             else
             {
                 var value = _engine.GetParameter(paramName, BsonValue.Null);
+
+                _result.Write(_resultset, true, value);
             }
         }
 
         /// <summary>
         /// db.[col].[query|count|aggregate|exists] ...
         /// </summary>
-        private IEnumerable<BsonDocument> DbQuery(string name, string command)
+        private void DbQuery(string name, string command)
         {
             var query = _engine.Query(name);
 
-            return query.ToList();
+
+            foreach(var doc in query.ToEnumerable())
+            {
+                _result.Write(_resultset, false, doc);
+
+            }
         }
     }
 }
