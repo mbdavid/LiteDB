@@ -43,7 +43,14 @@ namespace LiteDB.Engine
                 var indexer = new IndexService(snapshot);
 
                 // no collection, no documents
-                if (col == null) yield break;
+                if (col == null)
+                {
+                    if (isNew)
+                    {
+                        transaction.Dispose();
+                    }
+                    yield break;
+                }
 
                 // execute optimization before run query (will fill missing _query properties instance)
                 this.OptimizeQuery(snapshot);

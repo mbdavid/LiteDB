@@ -42,7 +42,9 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionPage Add(string name)
         {
-            if (!CollectionPage.CollectionNamePattern.IsMatch(name)) throw LiteException.InvalidCollectionName(name);
+            if (name.Length > CollectionPage.MAX_COLLECTION_NAME_LENGTH) throw LiteException.InvalidCollectionName(name, "MaxLength = " + CollectionPage.MAX_COLLECTION_NAME_LENGTH);
+            if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
+            if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for virtual collections)");
 
             // test if not exists (global or local)
             if (_header.Collections.ContainsKey(name)) throw LiteException.AlreadyExistsCollectionName(name);

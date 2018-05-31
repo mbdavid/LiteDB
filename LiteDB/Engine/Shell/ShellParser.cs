@@ -100,6 +100,18 @@ namespace LiteDB.Engine
             {
 
             }
+            else if (first.Is("begin"))
+            {
+                _engine.BeginTrans();
+            }
+            else if (first.Is("commit"))
+            {
+                _engine.GetTransaction(out var isNew).Commit();
+            }
+            else if (first.Is("rollback"))
+            {
+                _engine.GetTransaction(out var isNew).Rollback();
+            }
             else
             {
                 throw LiteException.UnexpectedToken(first);

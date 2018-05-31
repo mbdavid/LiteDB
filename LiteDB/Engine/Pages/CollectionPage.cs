@@ -11,7 +11,10 @@ namespace LiteDB.Engine
     /// </summary>
     internal class CollectionPage : BasePage
     {
-        public static Regex CollectionNamePattern = new Regex(@"^[\w]{1,60}$", RegexOptions.Compiled);
+        /// <summary>
+        /// Define max length to be used in a collection name
+        /// </summary>
+        public const int MAX_COLLECTION_NAME_LENGTH = 60;
 
         /// <summary>
         /// Max length of all indexes names+expressions

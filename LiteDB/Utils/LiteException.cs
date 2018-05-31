@@ -113,9 +113,9 @@ namespace LiteDB
             return new LiteException(INVALID_INDEX_NAME, "Invalid index name '{0}' on collection '{1}'", name, collection);
         }
 
-        internal static LiteException InvalidCollectionName(string name)
+        internal static LiteException InvalidCollectionName(string name, string reason)
         {
-            return new LiteException(INVALID_COLLECTION_NAME, "Invalid collection name '{0}'", name);
+            return new LiteException(INVALID_COLLECTION_NAME, "Invalid collection name '{0}': {1}", name, reason);
         }
 
         internal static LiteException IndexDropId()
