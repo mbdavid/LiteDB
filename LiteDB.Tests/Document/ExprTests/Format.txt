@@ -31,3 +31,11 @@
 # Methods
 > SUBSTRING( "lite" + "db", -4, 1 + 9 )
 ~ SUBSTRING("lite"+"db",-4,1+9)
+
+# Array
+> [a,b, 1, true , [ null, { "x" : 99 }] ]
+~ [$.a,$.b,1,true,[null,{x:99}]]
+
+# Inner
+> (10 * (1 + 2) - 5)
+~ (10*(1+2)-5)

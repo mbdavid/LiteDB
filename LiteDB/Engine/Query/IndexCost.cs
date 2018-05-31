@@ -43,7 +43,9 @@ namespace LiteDB.Engine
                 type == BsonExpressionType.GreaterThanOrEqual ? LiteDB.Engine.Index.GTE(name, value) :
                 type == BsonExpressionType.LessThan ? LiteDB.Engine.Index.LT(name, value) :
                 type == BsonExpressionType.LessThanOrEqual ? LiteDB.Engine.Index.LTE(name, value) :
-                type == BsonExpressionType.NotEqual ? LiteDB.Engine.Index.Not(name, value) : null;
+                type == BsonExpressionType.NotEqual ? LiteDB.Engine.Index.Not(name, value) :
+                type == BsonExpressionType.In ? (value.IsArray ? LiteDB.Engine.Index.In(name, value.AsArray) : LiteDB.Engine.Index.EQ(name, value)) : 
+                null;
         }
     }
 }

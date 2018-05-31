@@ -89,7 +89,7 @@ namespace LiteDB
     /// </summary>
     internal class Token
     {
-        private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "AND", "OR" };
+        private static HashSet<string> _keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BETWEEN", "LIKE", "IN", "AND", "OR" };
 
         public Token(TokenType tokenType, string value, long position)
         {

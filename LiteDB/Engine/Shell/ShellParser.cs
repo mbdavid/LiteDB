@@ -62,6 +62,9 @@ namespace LiteDB.Engine
                         case "insert":
                             this.DbInsert(name);
                             break;
+                        case "ensureindex":
+                            this.DbEnsureIndex(name);
+                            break;
                         case "drop":
                             this.DbDrop(name);
                             break;
@@ -80,6 +83,9 @@ namespace LiteDB.Engine
                     {
                         case "param":
                             this.DbParam();
+                            break;
+                        case "checkpoint":
+                            this.DbCheckpoint();
                             break;
 
                         default:

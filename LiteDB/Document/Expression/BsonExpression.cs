@@ -72,7 +72,8 @@ namespace LiteDB
             this.Type == BsonExpressionType.GreaterThanOrEqual ||
             this.Type == BsonExpressionType.LessThan ||
             this.Type == BsonExpressionType.LessThanOrEqual ||
-            this.Type == BsonExpressionType.NotEqual;
+            this.Type == BsonExpressionType.NotEqual ||
+            this.Type == BsonExpressionType.In;
 
         /// <summary>
         /// Compiled Expression into a function to be executed

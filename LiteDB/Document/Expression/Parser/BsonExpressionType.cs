@@ -37,6 +37,7 @@ namespace LiteDB
         LessThan,
         LessThanOrEqual,
         NotEqual,
+        In,
 
         Or,
         And

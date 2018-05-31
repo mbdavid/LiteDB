@@ -211,6 +211,24 @@ namespace LiteDB
             }
         }
 
+        /// <summary>
+        /// Test if left are in any value in right side (when right side is an array). If right side is not an array, just implement a simple Equals (=). Returns true or false. Support multiples values
+        /// </summary>
+        public static IEnumerable<BsonValue> IN(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in ZipValues(left, right))
+            {
+                if (value.Second.IsArray)
+                {
+                    yield return value.Second.AsArray.Contains(value.First);
+                }
+                else
+                {
+                    yield return value.First == value.Second;
+                }
+            }
+        }
+
         #endregion
 
         #region Logic

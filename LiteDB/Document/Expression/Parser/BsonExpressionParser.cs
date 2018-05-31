@@ -39,6 +39,7 @@ namespace LiteDB
             ["<"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT"), BsonExpressionType.LessThan),
             ["<="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE"), BsonExpressionType.LessThanOrEqual),
             ["!="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ"), BsonExpressionType.NotEqual),
+            ["IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN"), BsonExpressionType.In),
 
             // logic
             ["OR"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or),
@@ -442,12 +443,15 @@ namespace LiteDB
                 // read value expression
                 var value = ParseFullExpression(tokenizer, root, current, parameters, isRoot);
 
+                source.Append(value.Source);
+
                 // update isImmutable/isConstant only when came false
                 if (value.IsImmutable == false) isImmutable = false;
                 if (value.IsConstant == false) isConstant = false;
 
                 fields.AddRange(value.Fields);
 
+                // include value source in current source
                 values.Add(value.Expression);
 
                 var next = tokenizer.ReadToken()
