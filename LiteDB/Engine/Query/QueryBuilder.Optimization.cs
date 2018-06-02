@@ -30,7 +30,7 @@ namespace LiteDB.Engine
             // if this query already optimazed, do not optmize again
             if (_optimized) return;
 
-            // try merge multiples OR into same conditional
+            // try merge multiples OR into same IN conditional
             this.TryMergeOrExpression();
 
             // define index (can create if needed)
@@ -45,7 +45,7 @@ namespace LiteDB.Engine
         #region Merge OR clausule
 
         /// <summary>
-        /// Find OR expression with same left side + operator
+        /// Find OR expression with same left side + operator to use IN operator
         /// </summary>
         private void TryMergeOrExpression()
         {

@@ -43,7 +43,6 @@ namespace LiteDB
 
         public static void WriteBinary(this BinaryWriter writer, byte[] buffer)
         {
-            writer.Write((ushort)buffer.Length);
             writer.Write(buffer);
         }
 
@@ -75,7 +74,7 @@ namespace LiteDB
                 case BsonType.Double: writer.Write((Double)value.RawValue); break;
                 case BsonType.Decimal: writer.Write((Decimal)value.RawValue); break;
 
-                case BsonType.String: writer.Write((String)value.RawValue); break;
+                case BsonType.String: writer.WriteFixedString((String)value.RawValue); break;
 
                 case BsonType.Document: writer.WriteDocument(value.AsDocument); break;
                 case BsonType.Array: writer.WriteArray(value.AsArray); break;

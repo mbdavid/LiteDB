@@ -17,21 +17,6 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
-            //TestChunk.Run();
-
-            //var s = "@p1";
-
-            var e0 = BsonExpression.Create("@p1");
-
-            //e0.Parameters["p1"] = 10;
-
-
-            var r = e0.Execute(new BsonDocument(), true).First();
-
-
-
-            return;
-
             var settings = new EngineSettings
             {
                 Filename = datafile,
@@ -42,6 +27,25 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(settings))
             {
+
+                db.Insert("col1", ReadDocuments(1, 50000), BsonAutoId.Int32);
+
+                db.WaitAsyncWrite();
+            }
+            using (var db = new LiteEngine(settings))
+            {
+
+                Console.WriteLine("Nome: " + 
+                    db.Query("col1").SingleById(1)["name"].AsString);
+
+
+                //db.WaitAsyncWrite();
+
+
+
+
+
+
                 //db.Insert("col1", ReadDocuments(1, 10, false, false), BsonAutoId.Int32);
                 //db.EnsureIndex("col1", "age", BsonExpression.Create("age"), false);
                 //
@@ -72,6 +76,7 @@ namespace LiteDB.Demo
                 //
                 //var r0 = db.Query("col1").ToList();
                 //Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r0), true));
+                /*
                 using (var t = db.BeginTrans())
                 {
 
@@ -87,7 +92,9 @@ namespace LiteDB.Demo
 
                     t.Commit();
                 }
+                */
             }
+            /*
 
             using (var db = new LiteEngine(settings))
             {
@@ -119,7 +126,7 @@ namespace LiteDB.Demo
 
 
 
-            }
+            }*/
 
             Console.WriteLine("End");
             Console.ReadKey();

@@ -104,8 +104,11 @@ namespace LiteDB.Engine
                 .Where(x => x.IsDirty && x.PageID > 0)
                 .OrderBy(x => x.PageID)
                 .ForEach((i, p) => p.TransactionID = _transactionID)
-                //TODO for debug propose - remove on release
-                .ToArray();
+#if DEBUG
+                .ToArray(); // for better debug propose
+#else
+                ;
+#endif
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
             _datafile.WritePages(pages, false, _transPages.DirtyPagesWal);

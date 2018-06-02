@@ -27,7 +27,7 @@ namespace LiteDB.Engine
             {
                 expr = BsonExpression.Create(_tokenizer, null);
             }
-            else if(token.Type != TokenType.EOF)
+            else if(token.Type != TokenType.EOF && token.Type != TokenType.SemiColon)
             {
                 throw LiteException.UnexpectedToken(token);
             }

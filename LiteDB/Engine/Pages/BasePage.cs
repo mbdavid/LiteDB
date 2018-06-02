@@ -100,6 +100,9 @@ namespace LiteDB.Engine
             {
                 writer.Write(new byte[length]);
             }
+#if DEBUG
+            else if (length < 0) throw new SystemException("Page overflow. Current page exceeded 8192 bytes.");
+#endif
         }
 
         private void ReadHeader(BinaryReader reader)

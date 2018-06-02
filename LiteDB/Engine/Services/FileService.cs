@@ -32,9 +32,9 @@ namespace LiteDB.Engine
         private long _virtualPosition = 0;
         private long _virtualLength = 0;
 
-        // async writer control
-        private ConcurrentQueue<Tuple<long, BasePage>> _queue = new ConcurrentQueue<Tuple<long, BasePage>>();
-        private Task _async;
+        // async writer control - dirty pages queue
+        private ConcurrentQueue<long> _dirtyQueue = new ConcurrentQueue<long>();
+        private Task _asyncWriter;
 
         public FileService(IDiskFactory factory, TimeSpan timeout, long initialSize, long sizeLimit, bool utcDate, Logger log)
         {
@@ -84,9 +84,8 @@ namespace LiteDB.Engine
         {
             lock (_writer)
             {
-                // this queue item will be executed in queue async writer
-                // will be run as a SetLength method on stream
-                _queue.Enqueue(new Tuple<long, BasePage>(length, null));
+                // enqueue length to be reduce disk (use negative number to be easy detect when is a page or an shrink) - good workaround
+                _dirtyQueue.Enqueue(-length);
 
                 // update virtual file length
                 _virtualLength = length;
@@ -156,8 +155,9 @@ namespace LiteDB.Engine
             {
                 foreach (var page in pages)
                 {
-                    // mark sure that page are marked as dirty (will be clean on async write)
-                    page.IsDirty = true;
+#if DEBUG
+                    if (page.IsDirty == false) throw new SystemException("Page must be dirty when write on disk");
+#endif
 
                     // if absolute position, set cursor position to pageID (otherwise use current position increment)
                     if (absolute)
@@ -172,7 +172,7 @@ namespace LiteDB.Engine
                     _cache.AddPage(_virtualPosition, page);
 
                     // add to writer queue
-                    _queue.Enqueue(new Tuple<long, BasePage>(_virtualPosition, page));
+                    _dirtyQueue.Enqueue(_virtualPosition);
 
                     // return page position on disk (where will be write on disk)
                     if (pagePositions != null)
@@ -187,10 +187,10 @@ namespace LiteDB.Engine
                 }
 
                 // if async writer are not running, start/re-start now
-                if (_async == null || _async.Status == TaskStatus.RanToCompletion)
+                if (_asyncWriter == null || _asyncWriter.Status == TaskStatus.RanToCompletion)
                 {
-                    _async = new Task(this.RunWriterQueue);
-                    _async.Start();
+                    _asyncWriter = new Task(this.RunWriterQueue);
+                    _asyncWriter.Start();
                 }
             }
         }
@@ -201,41 +201,32 @@ namespace LiteDB.Engine
         private void RunWriterQueue()
         {
             // write all pages that are in queue
-            while (!_queue.IsEmpty)
+            while (!_dirtyQueue.IsEmpty)
             {
                 // get page from queue
-                if (!_queue.TryDequeue(out var item)) break;
+                if (!_dirtyQueue.TryDequeue(out var position)) break;
 
-                var position = item.Item1;
-                var page = item.Item2;
-
-                // if page is empty, this is special queue item: SetLength
-                if (page == null)
+                if (position < 0)
                 {
-                    // use position as file length
-                    _writer.BaseStream.SetLength(position);
+                    // use negative position as file length
+                    _writer.BaseStream.SetLength(-position);
                     continue;
                 }
 
-                _writer.BaseStream.Position = position;
+                // get dirty page from cache
+                var page = _cache.GetDirtyPage(position);
 
-                //TODO for debug propose
-                if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new Exception("Não pode ter pagina na WAL sem transação");
+#if DEBUG
+                if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new SystemException("Não pode ter pagina na WAL sem transação");
+#endif
+
+                // position cursor and write page on disk
+                _writer.BaseStream.Position = position;
 
                 page.WritePage(_writer);
 
-                // set this page (in cache) as not dirty (will not remove from cache now)
-                _cache.ClearDirty(position);
-            }
-
-            // lock writer to clear dirty cache
-            lock(_writer)
-            {
-                // before clear cache, test if queue are empty, otherwise do not clear cache.
-                if (_queue.IsEmpty)
-                {
-                    _cache.ClearDirty();
-                }
+                // mark page as clean on cache
+                page.IsDirty = false;
             }
         }
 
@@ -245,15 +236,15 @@ namespace LiteDB.Engine
         public void WaitAsyncWrite()
         {
             // if has pages on queue but async writer are not running, run sync
-            if (_queue.IsEmpty == false && _async.Status == TaskStatus.RanToCompletion)
+            if (_dirtyQueue.IsEmpty == false && _asyncWriter.Status == TaskStatus.RanToCompletion)
             {
                 this.RunWriterQueue();
             }
 
             // if async writer are running, wait to finish
-            if (_async != null && _async.Status != TaskStatus.RanToCompletion)
+            if (_asyncWriter != null && _asyncWriter.Status != TaskStatus.RanToCompletion)
             {
-                _async.Wait();
+                _asyncWriter.Wait();
             }
 
             // do a disk flush

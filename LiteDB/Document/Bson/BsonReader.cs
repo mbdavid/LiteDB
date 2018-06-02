@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// Internal class to deserialize a ChunckStream into a BsonDocument using BSON data format
     /// </summary>
-    internal class BsonReader
+    public class BsonReader
     {
         private readonly bool _utcDate;
 

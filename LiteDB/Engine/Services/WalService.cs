@@ -68,6 +68,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void ConfirmTransaction(HeaderPage confirm, IEnumerable<PagePosition> pagePositions)
         {
+            // mark confirm page as dirty
+            confirm.IsDirty = true;
+
             // write header-confirm transaction page in wal file
             _datafile.WritePages(new HeaderPage[] { confirm }, false, null);
 
@@ -107,6 +110,9 @@ namespace LiteDB.Engine
             // only new readers are allowed and no writers
             _locker.EnterReserved();
 
+            // before start checkpoint, be sure all data already in disk
+            _datafile.WaitAsyncWrite();
+
             try
             {
                 // get header from disk (not current header)
@@ -126,14 +132,16 @@ namespace LiteDB.Engine
 
                     position += BasePage.PAGE_SIZE;
 
-                    //TODO debug only - remove for release
-                    if (page.TransactionID == Guid.Empty) throw new Exception("Não pode exitir WAL page sem transaction ID");
+#if DEBUG
+                    if (page.TransactionID == Guid.Empty) throw new SystemException("There is no page on WAL with empty TransactionID");
+#endif
 
                     // continue only if page are in confirm transaction list
                     if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
 
                     // clear transactionID before write on disk 
                     page.TransactionID = Guid.Empty;
+                    page.IsDirty = true;
 
                     // if page is a confirm header, let's update checkpoint time/counter
                     if (page.PageType == PageType.Header)

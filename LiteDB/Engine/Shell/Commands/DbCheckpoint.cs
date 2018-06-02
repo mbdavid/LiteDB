@@ -11,7 +11,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void DbCheckpoint()
         {
-            _tokenizer.ReadToken().Expect(TokenType.EOF);
+            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
             _engine.Checkpoint();
         }

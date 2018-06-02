@@ -89,7 +89,8 @@ namespace LiteDB.Engine
                 node.Slot = reader.ReadByte();
                 node.PrevNode = reader.ReadPageAddress();
                 node.NextNode = reader.ReadPageAddress();
-                node.Key = reader.ReadBsonValue(utcDate);
+                node.KeyLength = reader.ReadUInt16();
+                node.Key = reader.ReadBsonValue(node.KeyLength, utcDate);
                 node.DataBlock = reader.ReadPageAddress();
 
                 for (var j = 0; j < node.Prev.Length; j++)
@@ -111,6 +112,7 @@ namespace LiteDB.Engine
                 writer.Write(node.Slot); // index slot
                 writer.Write(node.PrevNode); // prev node list
                 writer.Write(node.NextNode); // next node list
+                writer.Write(node.KeyLength);
                 writer.WriteBsonValue(node.Key); // value
                 writer.Write(node.DataBlock); // data block reference
 

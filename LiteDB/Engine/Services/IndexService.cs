@@ -36,6 +36,7 @@ namespace LiteDB.Engine
             // create a empty node with full max level
             var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH)
             {
+                KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
                 Key = BsonValue.MinValue,
                 Slot = (byte)index.Slot,
                 Page = page
@@ -99,6 +100,7 @@ namespace LiteDB.Engine
             // creating a new index node
             var node = new IndexNode(level)
             {
+                KeyLength = (ushort)keyLength,
                 Key = key,
                 Slot = (byte)index.Slot
             };

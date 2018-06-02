@@ -9,7 +9,7 @@ namespace LiteDB
     /// <summary>
     /// Internal class to serialize a BsonDocument to BSON data format (byte[])
     /// </summary>
-    internal class BsonWriter
+    public class BsonWriter
     {
         /// <summary>
         /// Main method - Serialize document into lazy ChunkStream
@@ -19,6 +19,7 @@ namespace LiteDB
             var length = doc.GetBytesCount(true);
 
             //TODO: implement lazy serialization - do not use MemoryStream();
+            // WriteDocument must return an IEnumerable
 
             var mem = new MemoryStream();
             var writer = new BinaryWriter(mem);

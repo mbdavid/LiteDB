@@ -15,12 +15,13 @@ namespace LiteDB.Engine
     internal class CacheService
     {
         /// <summary>
-        /// Max page count in clean list - dirty list is never deleted be cache reset
+        /// When add item cache counter get this size, try clean 
         /// </summary>
-        private const int MAX_CACHE_SIZE = 1000;
+        private const int MAX_CACHE_ADD = 1000;
+
+        private int _cacheCounter = 0;
 
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
-        private HashSet<long> _dirty = new HashSet<long>();
 
         private Logger _log;
 
@@ -30,29 +31,31 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get how many clean pages are in cache
+        /// Get how many pages are in cache
         /// </summary>
-        public int Length => _cache.Count - _dirty.Count;
+        public int Length => _cache.Count;
 
         /// <summary>
-        /// Add page in cache. If page are marked as dirty, add position in a list of dirty pages
+        /// Add page in cache and if exceed add counter, try clear cache
         /// </summary>
         public void AddPage(long position, BasePage page)
         {
-            if (page.IsDirty)
+            if (_cache.TryAdd(position, page))
             {
-                lock (_dirty)
+                Interlocked.Increment(ref _cacheCounter);
+
+                if (_cacheCounter > MAX_CACHE_ADD)
                 {
-                    _dirty.Add(position);
+                    _cacheCounter = 0;
                 }
             }
-
-            if (this.Length > MAX_CACHE_SIZE)
+            else
             {
-                this.Clear();
+                //if (page.IsDirty )
+#if DEBUG
+#endif
+                // if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
             }
-
-            _cache[position] = page;
         }
 
         /// <summary>
@@ -62,52 +65,32 @@ namespace LiteDB.Engine
         {
             if (_cache.TryGetValue(position, out var page))
             {
-                // if page are dirty, return a clone version marked as clean
-                return clone || page.IsDirty ? page.Clone() : page;
+#if DEBUG
+                if (clone == false && page.IsDirty) throw new SystemException("Page dirty in cache and are requesting original version (no clone)");
+#endif
+
+                return clone ? page.Clone() : page;
             }
 
             return null;
         }
 
         /// <summary>
-        /// Mark single/all cache as clean pages - (non-dirty pages can be removed from cache any time)
+        /// Get dirty page from cache to be saved in disk
         /// </summary>
-        public void ClearDirty(long? position = null)
+        public BasePage GetDirtyPage(long position)
         {
-            lock(_dirty)
+            if (_cache.TryGetValue(position, out var page))
             {
-                if (position.HasValue)
-                {
-                    _dirty.Remove(position.Value);
-                }
-                else
-                {
-                    _dirty.Clear();
-                }
+#if DEBUG
+                if (!page.IsDirty) throw new SystemException("Page request must be dirty but are clean");
+#endif
+
+                return page;
             }
-        }
-
-        /// <summary>
-        /// Clear all clean pages in cache. Do not remove dirty pages. Return how many pages was deleted from cache;
-        /// </summary>
-        public int Clear()
-        {
-            lock(_dirty)
+            else
             {
-                if (_dirty.Count == 0)
-                {
-                    _cache.Clear();
-                    return 0;
-                }
-
-                var keys = _cache.Keys.Except(_dirty).ToArray();
-
-                foreach(var key in keys)
-                {
-                    _cache.TryRemove(key, out var page);
-                }
-
-                return keys.Length;
+                throw new SystemException($"Page ${position} not found in cache");
             }
         }
     }

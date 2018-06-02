@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     /// This class are result from optimization from QueryBuild in QueryAnalyzer. Indicate how engine must run query - there is no more decisions to engine made, must only execute as query was defined
     /// Contains used index and estimate cost to run
     /// </summary>
-    public class QueryPlan
+    internal class QueryPlan
     {
         /// <summary>
         /// Index used on query (required)

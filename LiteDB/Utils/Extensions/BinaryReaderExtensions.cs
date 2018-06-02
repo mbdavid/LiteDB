@@ -7,9 +7,10 @@ namespace LiteDB
 {
     internal static class BinaryReaderExtensions
     {
-        public static string ReadFixedString(this BinaryReader reader, int size)
+        public static string ReadFixedString(this BinaryReader reader, int length)
         {
-            var bytes = reader.ReadBytes(size);
+            var bytes = reader.ReadBytes(length);
+
             return Encoding.UTF8.GetString(bytes);
         }
 
@@ -35,9 +36,8 @@ namespace LiteDB
             return new PageAddress(reader.ReadUInt32(), reader.ReadUInt16());
         }
 
-        public static byte[] ReadBinary(this BinaryReader reader)
+        public static byte[] ReadBinary(this BinaryReader reader, ushort length)
         {
-            var length = reader.ReadUInt16();
             return reader.ReadBytes(length);
         }
 
@@ -56,7 +56,7 @@ namespace LiteDB
         /// <summary>
         /// Read BSON value from reader
         /// </summary>
-        public static BsonValue ReadBsonValue(this BinaryReader reader, bool utcDate)
+        public static BsonValue ReadBsonValue(this BinaryReader reader, ushort length, bool utcDate)
         {
             var type = (BsonType)reader.ReadByte();
 
@@ -69,12 +69,12 @@ namespace LiteDB
                 case BsonType.Double: return reader.ReadDouble();
                 case BsonType.Decimal: return reader.ReadDecimal();
 
-                case BsonType.String: return reader.ReadString();
+                case BsonType.String: return reader.ReadFixedString(length);
 
                 case BsonType.Document: return reader.ReadDocument(utcDate);
                 case BsonType.Array: return reader.ReadArray(utcDate);
 
-                case BsonType.Binary: return reader.ReadBinary();
+                case BsonType.Binary: return reader.ReadBinary(length);
                 case BsonType.ObjectId: return reader.ReadObjectId();
                 case BsonType.Guid: return reader.ReadGuid();
 
