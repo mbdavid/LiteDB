@@ -202,27 +202,13 @@ namespace LiteDB.Engine
         public static BasePage ReadPage(BinaryReader reader, bool utcDate)
         {
             var start = reader.BaseStream.Position;
-            BasePage page;
             
-            // if are reading from position 0 (initial file) skip header area from header page (first 64 bytes)
-            // this area are locked and have non-valid data (contains hash-password and salt - non encrypted data)
-            if (start == 0)
-            {
-                reader.BaseStream.Seek(PAGE_HEADER_SIZE, SeekOrigin.Current);
+            var pageID = reader.ReadUInt32();
+            var pageType = (PageType)reader.ReadByte();
 
-                page = new HeaderPage(0);
-            }
-            else
-            {
-                var pageID = reader.ReadUInt32();
-                var pageType = (PageType)reader.ReadByte();
+            var page = BasePage.CreateInstance(pageID, pageType);
 
-                page = BasePage.CreateInstance(pageID, pageType);
-
-                page.ReadHeader(reader);
-            }
-
-            // read content
+            page.ReadHeader(reader);
             page.ReadContent(reader, utcDate);
 
             var length = BasePage.PAGE_SIZE - (reader.BaseStream.Position - start);

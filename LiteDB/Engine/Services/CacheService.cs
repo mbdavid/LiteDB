@@ -53,6 +53,8 @@ namespace LiteDB.Engine
             // WARNING: why this page are already in cache? must be checked (only few concurrent race conditional must occurs this)
             else
             {
+                _cache[position] = page;
+
                 System.Diagnostics.Debugger.Break();
             }
 #endif

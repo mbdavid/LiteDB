@@ -78,28 +78,9 @@ namespace LiteDB.Engine
         public long Length { get => _virtualLength; }
 
         /// <summary>
-        /// Set new length for datafile in async mode - will be executed in queue order
-        /// THIS method runs in sync mode - can't be used during async queue writer
-        /// </summary>
-        public void SetLength(long length)
-        {
-            lock (_writer)
-            {
-#if DEBUG
-                // WARNING: this method must run in sync only (no pages on queue)
-                if (_dirtyQueue.Count > 0) System.Diagnostics.Debugger.Break();
-#endif
-                _writer.BaseStream.SetLength(length);
-
-                // update virtual file length
-                _virtualLength = length;
-            }
-        }
-
-        /// <summary>
         /// Flush data on disk - avoid OS cache when using FileStream
         /// </summary>
-        public void Flush()
+        private void Flush()
         {
             if (_writer.BaseStream is FileStream stream)
             {
@@ -144,30 +125,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get/Set position of virtual writer stream (lock with _writer)
-        /// </summary>
-        public long VirtualPosition
-        {
-            get
-            {
-                lock (_writer)
-                {
-                    return _virtualPosition;
-                }
-            }
-            set
-            {
-                lock(_writer)
-                {
-                    _virtualPosition = value;
-                }
-            }
-        }
-
-        /// <summary>
         /// Add all pages to queue using virtual position. Pages in this queue will be write on disk in async task
         /// </summary>
-        public void WritePages(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions)
+        public void WriteAsyncPages(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions)
         {
             // lock writer but don't use writer here (will be used only in async writer task)
             lock (_writer)
@@ -262,16 +222,53 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write WAL page in disk area - this is a sync write operation
+        /// Write all WAL page in disk area - this is a sync write operation
         /// </summary>
-        public void WriteWalPage(BasePage page)
+        public int WriteWalPages(HeaderPage header, IEnumerable<BasePage> pages)
         {
-            // WAL pages are write on absolute position
-            _writer.BaseStream.Position = BasePage.GetPagePosition(page.PageID);
+            var count = 0;
+            var lastPageID = header.LastPageID;
 
-            page.WritePage(_writer);
+            foreach (var page in pages)
+            {
+                // WAL pages are write on absolute position
+                var position = BasePage.GetPagePosition(page.PageID);
+
+                _writer.BaseStream.Position = position;
+
+                if (page.PageType == PageType.Header)
+                {
+                    lastPageID = (page as HeaderPage).LastPageID;
+                }
+
+                page.WritePage(_writer);
+
+                _cache.AddPage(position, page);
+
+                count++;
+            }
+
+            // get last page position
+            var pos = BasePage.GetPagePosition(lastPageID + 1);
+
+            // if virtual position changed than has pages on wal and need shrink datafile
+            if (_virtualPosition != pos)
+            {
+                // flush all data into disk
+                this.Flush();
+
+                // position writer on end of file
+                _virtualPosition = pos;
+
+                // update virtual length (now virtual length = real length)
+                _virtualLength = _virtualPosition;
+
+                // and shrink rest of file (wal area)
+                _writer.BaseStream.SetLength(_virtualPosition);
+            }
+
+            return count;
         }
-
 
         /// <summary>
         /// Create new datafile based in empty Stream

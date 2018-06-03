@@ -121,11 +121,7 @@ namespace LiteDB.Engine
                 _wal = new WalService(_locker, _datafile, _log);
 
                 // if WAL file have content, must run a checkpoint
-                if(_wal.Checkpoint())
-                {
-                    // sync checkpoint write operations
-                    this.WaitAsyncWrite();
-                }
+                _wal.Checkpoint();
 
                 // load header page
                 _header = _datafile.ReadPage(0, true) as HeaderPage;
