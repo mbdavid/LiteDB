@@ -104,23 +104,19 @@ namespace LiteDB.Engine
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.InUse);
 
+            if (_datafile.HasWalPages(out var walPosition) == false) return 0;
+
             // enter in special database reserved lock
             // only new readers are allowed and no writers
             _locker.EnterReserved();
 
-            // before checkpoint, write all async pages in disk
-            _datafile.WaitAsyncWrite();
-
             try
             {
-                // get header from disk (not current header)
-                var header = _datafile.ReadPage(0, true) as HeaderPage;
-
-                // get all valid wal pages
-                var walPages = this.GetWalPages(header);
+                // before checkpoint, write all async pages in disk
+                _datafile.WaitAsyncWrite();
 
                 // and write on disk in sync mode
-                var count = _datafile.WritePages(header, walPages);
+                var count = _datafile.WriteWalPages(walPosition, _confirmedTransactions);
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
@@ -132,59 +128,6 @@ namespace LiteDB.Engine
             finally
             {
                 _locker.ExitReserved();
-            }
-        }
-
-        /// <summary>
-        /// Read WAL file and get all valid pages (with confirmed header pages)
-        /// </summary>
-        private IEnumerable<BasePage> GetWalPages(HeaderPage header)
-        {
-            // wal file are located physically after data file (lastPage + 1)
-            var position = BasePage.GetPagePosition(header.LastPageID + 1);
-            var length = _datafile.Length;
-            HeaderPage lastHeader = null;
-
-            while (position < length)
-            {
-                var page = _datafile.ReadPage(position, false);
-
-                position += PAGE_SIZE;
-
-                //TODO: remove this debug later
-                DEBUG(page.TransactionID == Guid.Empty, "there is no page on WAL with empty TransactionID");
-
-                // transactionID can be empty only when occurs a failure during a checkpoint and, when need run again, some pages
-                // with header confirmation already in right position. In this case, just ignore
-                // this case will be remove if I change to 2 files (1 to datafile + 1 to WAL)
-                if (page.TransactionID == Guid.Empty) continue;
-
-                // continue only if page are in confirm transaction list
-                if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
-
-                // clear transactionID before write on disk 
-                page.TransactionID = Guid.Empty;
-
-                // if page is a confirm header, let's update checkpoint time/counter
-                if (page.PageType == PageType.Header)
-                {
-                    lastHeader = page as HeaderPage;
-
-                    // do not return header pages
-                    continue;
-                }
-
-                yield return page;
-            }
-
-            // return only last header page
-            if (lastHeader != null)
-            {
-                yield return lastHeader;
-            }
-            else
-            {
-                DEBUG(_confirmedTransactions.Count > 0 && lastHeader == null, "ned last confirm header page with has confirmed transactions");
             }
         }
 

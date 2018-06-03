@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -14,11 +15,6 @@ namespace LiteDB.Engine
     /// </summary>
     internal class CacheService
     {
-        /// <summary>
-        /// When add item cache counter get this size, try clean 
-        /// </summary>
-        private const int MAX_CACHE_ADD = 1000;
-
         private int _cacheCounter = 0;
 
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
@@ -46,16 +42,38 @@ namespace LiteDB.Engine
 
                 if (_cacheCounter > MAX_CACHE_ADD)
                 {
-                    _cacheCounter = 0;
+                    lock(_cache)
+                    {
+                        if (_cacheCounter > MAX_CACHE_ADD)
+                        {
+                            _cacheCounter = 0;
+
+                            // clear all clean pages
+                            var keys = _cache
+                                .Where(x => x.Value.IsDirty == false)
+                                .Select(x => x.Key)
+                                .ToArray();
+
+                            foreach(var p in keys)
+                            {
+                                _cache.TryRemove(p, out var dummy);
+                            }
+                        }
+                    }
                 }
             }
             else
             {
-                var r = _cache.TryUpdate(position, page, page);
-
-
-                //_cache[position] = page;
+                DEBUG(true, "check why page are already in cache - is same instance?");
             }
+        }
+
+        /// <summary>
+        /// Update cache page after write wal pages in final destination
+        /// </summary>
+        public void Update(long position, BasePage page)
+        {
+            _cache.TryUpdate(position, page, page);
         }
 
         /// <summary>
@@ -69,6 +87,23 @@ namespace LiteDB.Engine
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Get page from cache and removed it. Must be dirty because it's used only from write on disk
+        /// </summary>
+        public BasePage RemovePage(long position)
+        {
+            if (_cache.TryRemove(position, out var page))
+            {
+                DEBUG(page.IsDirty == false, "page must be dirty here");
+
+                return page;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

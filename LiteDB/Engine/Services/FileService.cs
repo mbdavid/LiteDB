@@ -79,18 +79,15 @@ namespace LiteDB.Engine
         public long Length { get => _virtualLength; }
 
         /// <summary>
-        /// Flush data on disk - avoid OS cache when using FileStream
+        /// Indicate if this datafile contains WAL pages
         /// </summary>
-        private void Flush()
+        public bool HasWalPages(out long walPosition)
         {
-            if (_writer.BaseStream is FileStream stream)
-            {
-                stream.Flush(true);
-            }
-            else
-            {
-                _writer.BaseStream.Flush();
-            }
+            var header = this.ReadPage(0, false) as HeaderPage;
+
+            walPosition = BasePage.GetPagePosition(header.LastPageID + 1);
+
+            return this.Length > walPosition;
         }
 
         /// <summary>
@@ -103,6 +100,20 @@ namespace LiteDB.Engine
 
             if (page != null) return page;
 
+            // if not found, get from disk
+            page = this.ReadPageDisk(position);
+
+            // and them add to cache
+            _cache.AddPage(position, page);
+
+            return page;
+        }
+
+        /// <summary>
+        /// Read page direct from disk, ignoring cache
+        /// </summary>
+        public BasePage ReadPageDisk(long position)
+        {
             // try get reader from pool (if not exists, create new stream from factory)
             if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetStream());
 
@@ -111,10 +122,7 @@ namespace LiteDB.Engine
                 reader.BaseStream.Position = position;
 
                 // read binary data and create page instance page
-                page = BasePage.ReadPage(reader, _utcDate);
-
-                // add fresh disk page into cache
-                _cache.AddPage(position, page);
+                var page = BasePage.ReadPage(reader, _utcDate);
 
                 return page;
             }
@@ -190,7 +198,6 @@ namespace LiteDB.Engine
 
                 page.WritePage(_writer);
 
-                // mark page as clean on cache
                 page.IsDirty = false;
             }
         }
@@ -213,56 +220,87 @@ namespace LiteDB.Engine
             }
 
             // do a disk flush
-            this.Flush();
+            _writer.BaseStream.FlushToDisk();
         }
 
         /// <summary>
-        /// Write all WAL page in data file disk - this is sync write operation with absolute pages position
+        /// Read all WAL file and write over data file using only confirmed transactions.
+        /// Run in sync mode with lock over _writer (also are in Reserved lock mode)
         /// </summary>
-        public int WritePages(HeaderPage header, IEnumerable<BasePage> pages)
+        public int WriteWalPages(long walPosition, Dictionary<Guid, HeaderPage> confirmedTransactions)
         {
-            var count = 0;
-            var lastPageID = header.LastPageID;
-
-            foreach (var page in pages)
+            lock(_writer)
             {
-                // WAL pages are write on absolute position
-                var position = BasePage.GetPagePosition(page.PageID);
+                // get header from disk (not current header)
+                var count = 0;
 
-                _writer.BaseStream.Position = position;
+                var initialPosition = walPosition;
+                var walLength = this.Length;
+                HeaderPage lastHeader = null;
 
-                if (page.PageType == PageType.Header)
+                while (walPosition < walLength)
                 {
-                    lastPageID = (page as HeaderPage).LastPageID;
+                    var page = this.ReadPage(walPosition, false);
+                    var dataPosition = BasePage.GetPagePosition(page.PageID);
+
+                    walPosition += PAGE_SIZE;
+
+                    //TODO: remove this debug later
+                    DEBUG(page.TransactionID == Guid.Empty, "there is no page on WAL with empty TransactionID");
+
+                    // transactionID can be empty only when occurs a failure during a checkpoint and, when need run again, some pages
+                    // with header confirmation already in right position. In this case, just ignore
+                    // this case will be remove if I change to 2 files (1 to datafile + 1 to WAL)
+                    if (page.TransactionID == Guid.Empty) continue;
+
+                    // continue only if page are in confirm transaction list
+                    if (!confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
+
+                    // clear transactionID before write on disk 
+                    page.TransactionID = Guid.Empty;
+
+                    // if page is a confirm header, let's update checkpoint time/counter
+                    if (page.PageType == PageType.Header)
+                    {
+                        lastHeader = page as HeaderPage;
+                        continue;
+                    }
+
+                    // position writer cursor on data position
+                    _writer.BaseStream.Position = dataPosition;
+
+                    // update page on cache
+                    _cache.Update(dataPosition, page);
+
+                    page.WritePage(_writer);
+
+                    count++;
                 }
 
-                page.WritePage(_writer);
+                // only last confirmed must be override over position 0
+                if (lastHeader != null)
+                {
+                    // update final file position
+                    initialPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
 
-                _cache.AddPage(position, page);
+                    _writer.BaseStream.Position = 0;
+                    lastHeader.WritePage(_writer);
+                }
 
-                count++;
-            }
-
-            // get last page position
-            var pos = BasePage.GetPagePosition(lastPageID + 1);
-
-            // if virtual position changed than has pages on wal and need shrink datafile
-            if (_virtualPosition != pos)
-            {
                 // flush all data into disk
-                this.Flush();
+                _writer.BaseStream.FlushToDisk();
 
                 // position writer on end of file
-                _virtualPosition = pos;
+                _virtualPosition = initialPosition;
 
                 // update virtual length (now virtual length = real length)
                 _virtualLength = _virtualPosition;
 
                 // and shrink rest of file (wal area)
                 _writer.BaseStream.SetLength(_virtualPosition);
-            }
 
-            return count;
+                return count;
+            }
         }
 
         /// <summary>

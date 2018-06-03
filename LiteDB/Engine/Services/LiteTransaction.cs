@@ -87,7 +87,7 @@ namespace LiteDB.Engine
                 // PersistDirtyPages are valid only during transaction execution
                 DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
 
-                this.PersistDirtyPages(true);
+                // this.PersistDirtyPages(true);
             }
         }
 

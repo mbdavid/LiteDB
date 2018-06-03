@@ -203,6 +203,8 @@ namespace LiteDB.Engine
                 reader.ReadBytes((int)length);
             }
 
+            DEBUG(length < 0, "page read overflow");
+
             return page;
         }
 
