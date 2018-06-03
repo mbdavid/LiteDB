@@ -110,7 +110,7 @@ namespace LiteDB.Engine
             // only new readers are allowed and no writers
             _locker.EnterReserved();
 
-            // before start checkpoint, be sure all data already in disk
+            // before checkpoint, write all async pages in disk
             _datafile.WaitAsyncWrite();
 
             try
@@ -133,7 +133,8 @@ namespace LiteDB.Engine
                     position += BasePage.PAGE_SIZE;
 
 #if DEBUG
-                    if (page.TransactionID == Guid.Empty) throw new SystemException("There is no page on WAL with empty TransactionID");
+                    // WARNING: there is no page on WAL with empty TransactionID
+                    if (page.TransactionID == Guid.Empty) System.Diagnostics.Debugger.Break();
 #endif
 
                     // continue only if page are in confirm transaction list
@@ -141,7 +142,6 @@ namespace LiteDB.Engine
 
                     // clear transactionID before write on disk 
                     page.TransactionID = Guid.Empty;
-                    page.IsDirty = true;
 
                     // if page is a confirm header, let's update checkpoint time/counter
                     if (page.PageType == PageType.Header)
@@ -152,23 +152,28 @@ namespace LiteDB.Engine
                         lastHeader.LastCheckpoint = DateTime.Now;
                     }
 
-                    // write page on disk
-                    _datafile.WritePages(new BasePage[] { page }, true, null);
+                    // write wal page on data area (sync mode)
+                    _datafile.WriteWalPage(page);
                 }
 
-                // if has no confim header, no page was override (wal area contains only non confirmed pages)
-                if (lastHeader == null) return false;
+#if DEBUG
+                // WARNING: if has no confim header, no page was override (wal area contains only non confirmed pages)
+                if (lastHeader == null) System.Diagnostics.Debugger.Break();
+#endif
+
+                // flush all data to disk
+                _datafile.Flush();
+
+                // clear indexes/confirmed transactions
+                _index.Clear();
+                _confirmedTransactions.Clear();
+                _currentReadVersion = 0;
 
                 // position writer on end of file
                 _datafile.VirtualPosition = BasePage.GetPagePosition(lastHeader.LastPageID + 1);
 
                 // must write sync all data to shrink after
                 _datafile.SetLength(BasePage.GetPagePosition(lastHeader.LastPageID + 1));
-
-                // clear indexes/confirmed transactions
-                _index.Clear();
-                _confirmedTransactions.Clear();
-                _currentReadVersion = 0;
 
                 return true;
             }

@@ -49,13 +49,13 @@ namespace LiteDB.Engine
                     _cacheCounter = 0;
                 }
             }
+#if DEBUG
+            // WARNING: why this page are already in cache? must be checked (only few concurrent race conditional must occurs this)
             else
             {
-                //if (page.IsDirty )
-#if DEBUG
-#endif
-                // if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
+                System.Diagnostics.Debugger.Break();
             }
+#endif
         }
 
         /// <summary>
@@ -65,33 +65,10 @@ namespace LiteDB.Engine
         {
             if (_cache.TryGetValue(position, out var page))
             {
-#if DEBUG
-                if (clone == false && page.IsDirty) throw new SystemException("Page dirty in cache and are requesting original version (no clone)");
-#endif
-
                 return clone ? page.Clone() : page;
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Get dirty page from cache to be saved in disk
-        /// </summary>
-        public BasePage GetDirtyPage(long position)
-        {
-            if (_cache.TryGetValue(position, out var page))
-            {
-#if DEBUG
-                if (!page.IsDirty) throw new SystemException("Page request must be dirty but are clean");
-#endif
-
-                return page;
-            }
-            else
-            {
-                throw new SystemException($"Page ${position} not found in cache");
-            }
         }
     }
 }

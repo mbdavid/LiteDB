@@ -79,16 +79,35 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Set new length for datafile in async mode - will be executed in queue order
+        /// THIS method runs in sync mode - can't be used during async queue writer
         /// </summary>
         public void SetLength(long length)
         {
             lock (_writer)
             {
-                // enqueue length to be reduce disk (use negative number to be easy detect when is a page or an shrink) - good workaround
-                _dirtyQueue.Enqueue(-length);
+#if DEBUG
+                // WARNING: this method must run in sync only (no pages on queue)
+                if (_dirtyQueue.Count > 0) System.Diagnostics.Debugger.Break();
+#endif
+                _writer.BaseStream.SetLength(length);
 
                 // update virtual file length
                 _virtualLength = length;
+            }
+        }
+
+        /// <summary>
+        /// Flush data on disk - avoid OS cache when using FileStream
+        /// </summary>
+        public void Flush()
+        {
+            if (_writer.BaseStream is FileStream stream)
+            {
+                stream.Flush(true);
+            }
+            else
+            {
+                _writer.BaseStream.Flush();
             }
         }
 
@@ -148,7 +167,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Add all pages to queue using virtual position. Pages in this queue will be write on disk in async task
         /// </summary>
-        public void WritePages(IEnumerable<BasePage> pages, bool absolute, IDictionary<uint, PagePosition> pagePositions)
+        public void WritePages(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions)
         {
             // lock writer but don't use writer here (will be used only in async writer task)
             lock (_writer)
@@ -156,15 +175,9 @@ namespace LiteDB.Engine
                 foreach (var page in pages)
                 {
 #if DEBUG
-                    if (page.IsDirty == false) throw new SystemException("Page must be dirty when write on disk");
+                    // WARNING: page always must be dirty when be write on disk (async mode)
+                    if (page.IsDirty == false) System.Diagnostics.Debugger.Break();
 #endif
-
-                    // if absolute position, set cursor position to pageID (otherwise use current position increment)
-                    if (absolute)
-                    {
-                        _virtualPosition = BasePage.GetPagePosition(page.PageID);
-                    }
-
                     // test max file size (includes wal operations)
                     if (_virtualPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
@@ -206,18 +219,15 @@ namespace LiteDB.Engine
                 // get page from queue
                 if (!_dirtyQueue.TryDequeue(out var position)) break;
 
-                if (position < 0)
-                {
-                    // use negative position as file length
-                    _writer.BaseStream.SetLength(-position);
-                    continue;
-                }
-
                 // get dirty page from cache
-                var page = _cache.GetDirtyPage(position);
+                var page = _cache.GetPage(position, false);
 
 #if DEBUG
-                if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) throw new SystemException("Não pode ter pagina na WAL sem transação");
+                // WARNING: page must always exists on cache
+                if (page == null) System.Diagnostics.Debugger.Break();
+
+                // WARNING: não pode ter pagina na WAL sem transação
+                if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) System.Diagnostics.Debugger.Break();
 #endif
 
                 // position cursor and write page on disk
@@ -248,8 +258,20 @@ namespace LiteDB.Engine
             }
 
             // do a disk flush
-            _writer.BaseStream.Flush();
+            this.Flush();
         }
+
+        /// <summary>
+        /// Write WAL page in disk area - this is a sync write operation
+        /// </summary>
+        public void WriteWalPage(BasePage page)
+        {
+            // WAL pages are write on absolute position
+            _writer.BaseStream.Position = BasePage.GetPagePosition(page.PageID);
+
+            page.WritePage(_writer);
+        }
+
 
         /// <summary>
         /// Create new datafile based in empty Stream
