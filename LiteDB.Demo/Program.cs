@@ -28,12 +28,12 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(settings))
             {
 
-                db.Insert("col1", ReadDocuments(1, 140), BsonAutoId.Int32);
+                db.Insert("col1", ReadDocuments(1, 5000), BsonAutoId.Int32);
 
                 db.WaitAsyncWrite();
 
-                var s =
-                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
+                //var s =
+                //    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
 
                 db.Checkpoint();
 

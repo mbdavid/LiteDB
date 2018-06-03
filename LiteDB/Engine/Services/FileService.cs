@@ -217,7 +217,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write all WAL page in disk area (before wal) - this is a sync write operation with absolute pages position
+        /// Write all WAL page in data file disk - this is sync write operation with absolute pages position
         /// </summary>
         public int WritePages(HeaderPage header, IEnumerable<BasePage> pages)
         {

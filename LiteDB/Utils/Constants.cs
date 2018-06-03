@@ -78,7 +78,7 @@ namespace LiteDB
         /// <summary>
         /// Define how many pages must be in-memory during a transaction. After this number, flush all dirty pages into disk
         /// </summary>
-        public const int MAX_PAGES_TRANSACTION = 5;
+        public const int MAX_PAGES_TRANSACTION = 1000;
 
         /// <summary>
         /// Stop VisualStudio if condition are true and we are running over #DEBUG - great for testing unexpected flow

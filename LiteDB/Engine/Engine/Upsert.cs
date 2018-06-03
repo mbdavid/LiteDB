@@ -20,11 +20,12 @@ namespace LiteDB.Engine
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
-                var col = snapshot.CollectionPage;
                 var count = 0;
                 
                 foreach (var doc in docs)
                 {
+                    var col = snapshot.CollectionPage;
+
                     // first try update document (if exists _id), if not found, do insert
                     if (doc["_id"] == BsonValue.Null || this.UpdateDocument(snapshot, col, doc, indexer, data) == false)
                     {

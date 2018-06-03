@@ -87,19 +87,21 @@ namespace LiteDB.Engine
                 // PersistDirtyPages are valid only during transaction execution
                 DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
 
-                this.PersistDirtyPages();
+                this.PersistDirtyPages(true);
             }
         }
 
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
-        public void PersistDirtyPages()
+        public void PersistDirtyPages(bool safepoint)
         {
             // get all pages, in PageID order to be saved on wal (must be in order to avoid checkpoint read wal as normal page)
+            // this orderBy can be avoid if I add 2 files (1 to datafile and 1 to wal file)
             var pages = _snapshots.Values
                 .SelectMany(x => x.LocalPages.Values)
-                .Where(x => x.IsDirty && x.PageID > 0)
+                .Where(x => x.IsDirty && x.PageType != PageType.Header)
+                .Where(x => safepoint == false || x.PageType != PageType.Collection) // if safepoint, do not write collection pages
                 .OrderBy(x => x.PageID)
                 .ForEach((i, p) => p.TransactionID = _transactionID)
 #if DEBUG
@@ -114,7 +116,22 @@ namespace LiteDB.Engine
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
-                snapshot.LocalPages.Clear();
+                if (safepoint)
+                {
+                    // if safepoint, do not remove collection page (only in safepoint!)
+                    foreach(var pageID in snapshot.LocalPages
+                        .Where(x => x.Value.PageType != PageType.Collection)
+                        .Select(x => x.Key)
+                        .ToArray())
+                    {
+                        snapshot.LocalPages.Remove(pageID);
+                    }
+                }
+                else
+                {
+                    // clear because I will not use anymore in this transaction
+                    snapshot.LocalPages.Clear();
+                }
             }
 
             // there is no local pages in cache and all dirty pages are in wal area, clear page count
@@ -130,7 +147,7 @@ namespace LiteDB.Engine
             if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Commit", _state);
 
             // persist all pages into wal file
-            this.PersistDirtyPages();
+            this.PersistDirtyPages(false);
 
             // lock header page to avoid concurrency when writing on header
             lock (_header)

@@ -97,7 +97,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile. Return how many pages was copied from WAL area to data area
+        /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile. Return how many pages was copied from WAL file to data file
         /// </summary>
         public int Checkpoint()
         {
@@ -136,16 +136,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read datafile and get all valid pages on wal area
+        /// Read WAL file and get all valid pages (with confirmed header pages)
         /// </summary>
         private IEnumerable<BasePage> GetWalPages(HeaderPage header)
         {
-            // get first page position in wal and datafile length
+            // wal file are located physically after data file (lastPage + 1)
             var position = BasePage.GetPagePosition(header.LastPageID + 1);
             var length = _datafile.Length;
-
-            // if my position are afer datafile, there is no wal
-            if (position >= length) yield break;
+            HeaderPage lastHeader = null;
 
             while (position < length)
             {
@@ -153,7 +151,13 @@ namespace LiteDB.Engine
 
                 position += PAGE_SIZE;
 
+                //TODO: remove this debug later
                 DEBUG(page.TransactionID == Guid.Empty, "there is no page on WAL with empty TransactionID");
+
+                // transactionID can be empty only when occurs a failure during a checkpoint and, when need run again, some pages
+                // with header confirmation already in right position. In this case, just ignore
+                // this case will be remove if I change to 2 files (1 to datafile + 1 to WAL)
+                if (page.TransactionID == Guid.Empty) continue;
 
                 // continue only if page are in confirm transaction list
                 if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
@@ -164,36 +168,46 @@ namespace LiteDB.Engine
                 // if page is a confirm header, let's update checkpoint time/counter
                 if (page.PageType == PageType.Header)
                 {
-                    var lastHeader = page as HeaderPage;
+                    lastHeader = page as HeaderPage;
 
-                    lastHeader.CheckpointCounter = header.CheckpointCounter + 1;
-                    lastHeader.LastCheckpoint = DateTime.Now;
+                    // do not return header pages
+                    continue;
                 }
 
                 yield return page;
             }
+
+            // return only last header page
+            if (lastHeader != null)
+            {
+                yield return lastHeader;
+            }
+            else
+            {
+                DEBUG(_confirmedTransactions.Count > 0 && lastHeader == null, "ned last confirm header page with has confirmed transactions");
+            }
         }
 
         /// <summary>
-        /// Load all confirmed transactions from datafile (used only when open datafile)
+        /// Load all confirmed transactions from WAL file (used only when open datafile)
         /// </summary>
         private void LoadConfirmedTransactions()
         {
             // get header from disk
             var header = _datafile.ReadPage(0, false) as HeaderPage;
 
-            // get first page position in wal and datafile length
+            // get wal file position (physically after data file)
             var position = BasePage.GetPagePosition(header.LastPageID + 1);
             var length = _datafile.Length;
 
-            // read all wal area to look for confirm HeaderPages
+            // read all wal file to look for confirm HeaderPages
             while(position < length)
             {
                 var page = _datafile.ReadPage(position, false);
 
                 position += PAGE_SIZE;
 
-                if (page.PageID == 0)
+                if (page.PageType == PageType.Header)
                 {
                     _confirmedTransactions.Add(page.TransactionID, page as HeaderPage);
                 }

@@ -17,13 +17,15 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
-                var col = snapshot.CollectionPage;
                 var count = 0;
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
 
                 foreach (var doc in docs)
                 {
+                    // always get new collection page (ensure get instance from localpages)
+                    var col = snapshot.CollectionPage;
+
                     this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
 
                     transaction.Safepoint();
