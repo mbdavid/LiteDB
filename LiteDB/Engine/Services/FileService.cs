@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -134,10 +135,9 @@ namespace LiteDB.Engine
             {
                 foreach (var page in pages)
                 {
-#if DEBUG
-                    // WARNING: page always must be dirty when be write on disk (async mode)
-                    if (page.IsDirty == false) System.Diagnostics.Debugger.Break();
-#endif
+                    DEBUG(page.IsDirty == false, "page always must be dirty when be write on disk (async mode)");
+                    DEBUG(page.TransactionID == Guid.Empty, "to write on wal, page must have a transactionID");
+
                     // test max file size (includes wal operations)
                     if (_virtualPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
 
@@ -153,7 +153,7 @@ namespace LiteDB.Engine
                         pagePositions[page.PageID] = new PagePosition(page.PageID, _virtualPosition);
                     }
 
-                    _virtualPosition += BasePage.PAGE_SIZE;
+                    _virtualPosition += PAGE_SIZE;
 
                     // update "virtual" file size
                     if (_virtualPosition > _virtualLength) _virtualLength = _virtualPosition;
@@ -182,13 +182,8 @@ namespace LiteDB.Engine
                 // get dirty page from cache
                 var page = _cache.GetPage(position, false);
 
-#if DEBUG
-                // WARNING: page must always exists on cache
-                if (page == null) System.Diagnostics.Debugger.Break();
-
-                // WARNING: não pode ter pagina na WAL sem transação
-                if (page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position) System.Diagnostics.Debugger.Break();
-#endif
+                DEBUG(page == null, "page must always exists on cache");
+                DEBUG(page.TransactionID == Guid.Empty && BasePage.GetPagePosition(page.PageID) != position, "não pode ter pagina na WAL sem transação");
 
                 // position cursor and write page on disk
                 _writer.BaseStream.Position = position;
@@ -222,9 +217,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write all WAL page in disk area - this is a sync write operation
+        /// Write all WAL page in disk area (before wal) - this is a sync write operation with absolute pages position
         /// </summary>
-        public int WriteWalPages(HeaderPage header, IEnumerable<BasePage> pages)
+        public int WritePages(HeaderPage header, IEnumerable<BasePage> pages)
         {
             var count = 0;
             var lastPageID = header.LastPageID;
@@ -282,7 +277,7 @@ namespace LiteDB.Engine
             header.WritePage(_writer);
 
             // if has initial size (at least 10 pages), alocate disk space now
-            if (initialSize > (BasePage.PAGE_SIZE * 10))
+            if (initialSize > (PAGE_SIZE * 10))
             {
                 //TODO must implement linked list - this initial will shrink in first checkpoint
                 _writer.BaseStream.SetLength(initialSize);

@@ -1,6 +1,7 @@
 ﻿using LiteDB.Engine;
 using System;
 using System.IO;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -11,15 +12,18 @@ namespace LiteDB
         /// </summary>
         public static bool TryLock(this Stream stream, TimeSpan timeout)
         {
+            // not working
+            throw new NotImplementedException();
+            /*
             var filestream = stream as FileStream;
 
             if (filestream == null) return true;
 
             return FileHelper.TryExec(() =>
             {
-                filestream.Lock(0, BasePage.PAGE_HEADER_SIZE);
+                filestream.Lock(0, PAGE_HEADER_SIZE);
             },
-            timeout);
+            timeout);*/
         }
 
         public static void TryUnlock(this Stream stream)
@@ -30,7 +34,7 @@ namespace LiteDB
 
             try
             {
-                filestream.Unlock(0, BasePage.PAGE_HEADER_SIZE);
+                filestream.Unlock(0, PAGE_HEADER_SIZE);
             }
             catch
             {

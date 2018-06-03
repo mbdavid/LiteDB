@@ -3,25 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
     internal class HeaderPage : BasePage
     {
-        /// <summary>
-        /// Represent maximum bytes that all parameters must store in header page
-        /// </summary>
-        public const ushort MAX_PARAMETERS_SIZE = 1024;
-
-        /// <summary>
-        /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
-        /// </summary>
-        public const ushort MAX_COLLECTIONS_NAME_SIZE = PAGE_SIZE -
-            PAGE_HEADER_SIZE -
-            64 - // used in page
-            192 - // reserved (total: 256)
-            MAX_PARAMETERS_SIZE;
-
         /// <summary>
         /// Page type = Header
         /// </summary>
@@ -166,7 +153,7 @@ namespace LiteDB.Engine
 
             if (sum >= MAX_COLLECTIONS_NAME_SIZE)
             {
-                throw LiteException.CollectionLimitExceeded(HeaderPage.MAX_COLLECTIONS_NAME_SIZE);
+                throw LiteException.CollectionLimitExceeded(MAX_COLLECTIONS_NAME_SIZE);
             }
         }
 

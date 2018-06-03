@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -18,7 +19,7 @@ namespace LiteDB.Engine
 
                 yield return this.DumpPage(position, page);
 
-                position += BasePage.PAGE_SIZE;
+                position += PAGE_SIZE;
             }
         }
 

@@ -15,11 +15,6 @@ namespace LiteDB.Engine
         public override PageType PageType { get { return PageType.Data; } }
 
         /// <summary>
-        /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage)
-        /// </summary>
-        public const int DATA_RESERVED_BYTES = 1000;
-
-        /// <summary>
         /// Returns all data blocks - Each block has one object
         /// </summary>
         private Dictionary<ushort, DataBlock> _dataBlocks = new Dictionary<ushort, DataBlock>();

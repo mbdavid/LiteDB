@@ -49,15 +49,13 @@ namespace LiteDB.Engine
                     _cacheCounter = 0;
                 }
             }
-#if DEBUG
-            // WARNING: why this page are already in cache? must be checked (only few concurrent race conditional must occurs this)
             else
             {
-                _cache[position] = page;
+                var r = _cache.TryUpdate(position, page, page);
 
-                System.Diagnostics.Debugger.Break();
+
+                //_cache[position] = page;
             }
-#endif
         }
 
         /// <summary>

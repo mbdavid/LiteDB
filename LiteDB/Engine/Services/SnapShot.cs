@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -134,8 +135,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void Initialize()
         {
-            //TODO debug propose - remove on release
-            if (_localPages.Where(x => x.Value.IsDirty).Count() > 0) throw new Exception("Snapshot initialize cann't contains dirty pages");
+            DEBUG(_localPages.Where(x => x.Value.IsDirty).Count() > 0, "Snapshot initialize cann't contains dirty pages");
 
             _localPages.Clear();
             _readVersion = _wal.CurrentReadVersion;

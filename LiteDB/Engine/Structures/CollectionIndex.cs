@@ -5,13 +5,6 @@ namespace LiteDB.Engine
 {
     internal class CollectionIndex
     {
-        public static Regex IndexNamePattern = new Regex(@"^\w{1,32}$", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Total indexes per collection - it's fixed because I will used fixed arrays allocations
-        /// </summary>
-        public const int INDEX_PER_COLLECTION = 32;
-
         /// <summary>
         /// Represent slot position on index array on dataBlock/collection indexes - non-persistable
         /// </summary>

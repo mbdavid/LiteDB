@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -11,9 +12,6 @@ namespace LiteDB.Engine
     /// </summary>
     public class LiteTransaction : IDisposable
     {
-        // if local pages recah this limit, flush to wal disk transaction
-        private const int MAX_PAGES_TRANSACTION = 1000;
-
         // instances from Engine
         private HeaderPage _header;
         private WalService _wal;
@@ -82,12 +80,12 @@ namespace LiteDB.Engine
         internal void Safepoint()
         {
             // Safepoint are valid only during transaction execution
-            if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Safepoint", _state);
+            DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
 
-            if (_transPages.PageCount > MAX_PAGES_TRANSACTION)
+            if (_transPages.PageCount >= MAX_PAGES_TRANSACTION)
             {
                 // PersistDirtyPages are valid only during transaction execution
-                if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Safepoint", _state);
+                DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
 
                 this.PersistDirtyPages();
             }

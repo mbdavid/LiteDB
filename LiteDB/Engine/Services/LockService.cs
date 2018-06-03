@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -59,10 +60,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterRead(string collectionName)
         {
-#if DEBUG
-            // read-mode are possible only if enter in transaction before
-            if (_transaction.IsReadLockHeld == false) throw new SystemException("Use EnterTransaction() before EnterRead(name)");
-#endif
+            DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterRead(name)");
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -86,10 +84,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterReserved(string collectionName)
         {
-#if DEBUG
-            // reserved-mode are possible only if enter in transaction before
-            if (_transaction.IsReadLockHeld == false) throw new SystemException("Use EnterTransaction() before EnterReserved(name)");
-#endif
+            DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterReserved(name)");
 
             // reserved locker in read lock (if not already reserved in this thread be another snapshot)
             if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _timeout);

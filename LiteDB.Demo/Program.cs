@@ -28,7 +28,7 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(settings))
             {
 
-                db.Insert("col1", ReadDocuments(1, 100), BsonAutoId.Int32);
+                db.Insert("col1", ReadDocuments(1, 140), BsonAutoId.Int32);
 
                 db.WaitAsyncWrite();
 
@@ -37,13 +37,13 @@ namespace LiteDB.Demo
 
                 db.Checkpoint();
 
-                var s2 =
-                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
+                //var s2 =
+                //    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
             }
             using (var db = new LiteEngine(settings))
             {
-                var s =
-                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
+                //var s =
+                //    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
 
 
                 Console.WriteLine("Nome: " + 

@@ -9,18 +9,13 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexNode
     {
-        public const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
-                                                 1 + // Levels (byte)
-                                                 2 + // ValueLength (ushort)
-                                                 1 + // BsonType (byte)
-                                                 1 + // Slot (1 byte)
-                                                 (PageAddress.SIZE * 2) + // Prev/Next Node (6 bytes)
-                                                 PageAddress.SIZE; // DataBlock
-
-        /// <summary>
-        /// Max level used on skip list
-        /// </summary>
-        public const int MAX_LEVEL_LENGTH = 32;
+        private const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
+                                                  1 + // Levels (byte)
+                                                  2 + // ValueLength (ushort)
+                                                  1 + // BsonType (byte)
+                                                  1 + // Slot (1 byte)
+                                                  (PageAddress.SIZE * 2) + // Prev/Next Node (6 bytes)
+                                                  PageAddress.SIZE; // DataBlock
 
         /// <summary>
         /// Position of this node inside a IndexPage - Store only Position.Index

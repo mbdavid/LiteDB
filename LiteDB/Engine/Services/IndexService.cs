@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -34,7 +35,7 @@ namespace LiteDB.Engine
             var page = _snapshot.NewPage<IndexPage>();
 
             // create a empty node with full max level
-            var head = new IndexNode(IndexNode.MAX_LEVEL_LENGTH)
+            var head = new IndexNode(MAX_LEVEL_LENGTH)
             {
                 KeyLength = (ushort)BsonValue.MinValue.GetBytesCount(false),
                 Key = BsonValue.MinValue,
@@ -55,7 +56,7 @@ namespace LiteDB.Engine
             index.HeadNode = head.Position;
 
             // insert tail node
-            var tail = this.AddNode(index, BsonValue.MaxValue, IndexNode.MAX_LEVEL_LENGTH, null);
+            var tail = this.AddNode(index, BsonValue.MaxValue, MAX_LEVEL_LENGTH, null);
 
             index.TailNode = tail.Position;
             index.KeyCount = index.UniqueKeyCount = 0; // reset counter
@@ -71,7 +72,7 @@ namespace LiteDB.Engine
             // when min/max values, use max level
             var level = 
                 key.Type == BsonType.MinValue || key.Type == BsonType.MaxValue ?
-                (byte)IndexNode.MAX_LEVEL_LENGTH : this.FlipCoin();
+                (byte)MAX_LEVEL_LENGTH : this.FlipCoin();
 
             // set index collection with max-index level
             if (level > index.MaxLevel)
@@ -173,7 +174,7 @@ namespace LiteDB.Engine
             }
 
             // add/remove indexPage on freelist if has space
-            _snapshot.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
+            _snapshot.AddOrRemoveToFreeList(page.FreeBytes > INDEX_RESERVED_BYTES, page, index.Page, ref index.FreeIndexPageID);
 
             // if last node exists, create a double link list
             if (last != null)
@@ -285,7 +286,7 @@ namespace LiteDB.Engine
             else
             {
                 // add or remove page from free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > IndexPage.INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
+                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
             }
 
             // now remove node from nodelist 
@@ -364,7 +365,7 @@ namespace LiteDB.Engine
             for (int R = _rand.Next(); (R & 1) == 1; R >>= 1)
             {
                 level++;
-                if (level == IndexNode.MAX_LEVEL_LENGTH) break;
+                if (level == MAX_LEVEL_LENGTH) break;
             }
             return level;
         }

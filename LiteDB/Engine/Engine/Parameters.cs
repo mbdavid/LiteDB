@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -51,7 +52,7 @@ namespace LiteDB.Engine
                 // convert parameter into BsonDocument to calculate length
                 var len = new BsonDocument(confirm.Parameters).GetBytesCount(false);
 
-                if (len > HeaderPage.MAX_PARAMETERS_SIZE) throw LiteException.ParameterLimitExceeded(name);
+                if (len > MAX_PARAMETERS_SIZE) throw LiteException.ParameterLimitExceeded(name);
 
                 // create fake transaction with no pages to update (only header)
                 _wal.ConfirmTransaction(confirm, new PagePosition[0]);

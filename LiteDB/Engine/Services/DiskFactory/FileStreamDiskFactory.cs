@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -50,7 +51,7 @@ namespace LiteDB.Engine
                 _readOnly ? FileMode.Open : FileMode.OpenOrCreate,
                 _readOnly ? FileAccess.Read : FileAccess.ReadWrite,
                 FileShare.ReadWrite,
-                BasePage.PAGE_SIZE,
+                PAGE_SIZE,
                 FileOptions.RandomAccess);
         }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -119,7 +120,7 @@ namespace LiteDB.Engine
                 var walPages = this.GetWalPages(header);
 
                 // and write on disk in sync mode
-                var count = _datafile.WriteWalPages(header, walPages);
+                var count = _datafile.WritePages(header, walPages);
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
@@ -150,12 +151,9 @@ namespace LiteDB.Engine
             {
                 var page = _datafile.ReadPage(position, false);
 
-                position += BasePage.PAGE_SIZE;
+                position += PAGE_SIZE;
 
-#if DEBUG
-                // WARNING: there is no page on WAL with empty TransactionID
-                if (page.TransactionID == Guid.Empty) System.Diagnostics.Debugger.Break();
-#endif
+                DEBUG(page.TransactionID == Guid.Empty, "there is no page on WAL with empty TransactionID");
 
                 // continue only if page are in confirm transaction list
                 if (!_confirmedTransactions.TryGetValue(page.TransactionID, out var confirm)) continue;
@@ -193,7 +191,7 @@ namespace LiteDB.Engine
             {
                 var page = _datafile.ReadPage(position, false);
 
-                position += BasePage.PAGE_SIZE;
+                position += PAGE_SIZE;
 
                 if (page.PageID == 0)
                 {

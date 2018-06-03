@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -12,27 +13,22 @@ namespace LiteDB.Engine
     internal class CollectionPage : BasePage
     {
         /// <summary>
-        /// Define max length to be used in a collection name
+        /// Max length of all indexes names (including string expressions)
         /// </summary>
-        public const int MAX_COLLECTION_NAME_LENGTH = 60;
-
-        /// <summary>
-        /// Max length of all indexes names+expressions
-        /// </summary>
-        public const int MAX_INDEX_NAME_SIZE = BasePage.PAGE_AVAILABLE_BYTES - 100;
+        private const int MAX_INDEX_NAME_SIZE = PAGE_AVAILABLE_BYTES - 200;
 
         /// <summary>
         /// Each index fixed size
         /// </summary>
-        public const int FIXED_INDEX_SIZE = 4 + // Name (length)
-                                            4 + // Expression (length)
-                                            1 + // Unique
-                                            6 + // HeadNode
-                                            6 + // TailNode
-                                            4 + // FreeIndexPageID
-                                            1 + // MaxLevel
-                                            4 + // KeyCount
-                                            4;  // UniqueKeyCount
+        private const int FIXED_INDEX_SIZE = 4 + // Name (length)
+                                             4 + // Expression (length)
+                                             1 + // Unique
+                                             6 + // HeadNode
+                                             6 + // TailNode
+                                             4 + // FreeIndexPageID
+                                             1 + // MaxLevel
+                                             4 + // KeyCount
+                                             4;  // UniqueKeyCount
 
         /// <summary>
         /// Page type = Collection
@@ -84,7 +80,7 @@ namespace LiteDB.Engine
             this.Sequence = 0;
             this.CreationTime = DateTime.Now;
 
-            _indexes = new CollectionIndex[CollectionIndex.INDEX_PER_COLLECTION];
+            _indexes = new CollectionIndex[INDEX_PER_COLLECTION];
 
             for (var i = 0; i < _indexes.Length; i++)
             {

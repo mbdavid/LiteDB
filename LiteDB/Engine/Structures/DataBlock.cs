@@ -5,9 +5,9 @@ namespace LiteDB.Engine
     internal class DataBlock
     {
         public const int DATA_BLOCK_FIXED_SIZE = 2 + // Position.Index (ushort)
-                                                 4 + // ExtendedPageID (uint)
-                                                 4 + // DocumentLength (int)
-                                                 2;  // block.Data.Length (ushort)
+                                                  4 + // ExtendedPageID (uint)
+                                                  4 + // DocumentLength (int)
+                                                  2;  // block.Data.Length (ushort)
 
         /// <summary>
         /// Position of this dataBlock inside a page (store only Position.Index)
@@ -39,7 +39,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int BlockLength
         {
-            get { return DataBlock.DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
+            get { return DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
         }
 
         public DataBlock()

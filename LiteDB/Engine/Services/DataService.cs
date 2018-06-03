@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -19,7 +20,7 @@ namespace LiteDB.Engine
         public DataBlock Insert(CollectionPage col, ChunkStream data)
         {
             // need to extend (data is bigger than 1 page)
-            var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > BasePage.PAGE_AVAILABLE_BYTES;
+            var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > PAGE_AVAILABLE_BYTES;
 
             // if extend, just search for a page with BLOCK_SIZE available
             var dataPage = _snapshot.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : (int)data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
@@ -46,7 +47,7 @@ namespace LiteDB.Engine
             _snapshot.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space
-            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             // increase document count in collection
             col.DocumentCount++;
@@ -108,7 +109,7 @@ namespace LiteDB.Engine
             _snapshot.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space AND its on/off free list
-            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DataPage.DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
             return block;
         }
@@ -179,7 +180,7 @@ namespace LiteDB.Engine
             else
             {
                 // add or remove to free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DataPage.DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
+                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
             }
 
             col.DocumentCount--;
@@ -196,11 +197,11 @@ namespace LiteDB.Engine
         public void StoreExtendData(ExtendPage page, ChunkStream data)
         {
             var bytesLeft = (int)data.Length;
-            var buffer = new byte[BasePage.PAGE_AVAILABLE_BYTES];
+            var buffer = new byte[PAGE_AVAILABLE_BYTES];
 
             while (bytesLeft > 0)
             {
-                var bytesToCopy = Math.Min(bytesLeft, BasePage.PAGE_AVAILABLE_BYTES);
+                var bytesToCopy = Math.Min(bytesLeft, PAGE_AVAILABLE_BYTES);
 
                 data.Read(buffer, 0, bytesToCopy);
 

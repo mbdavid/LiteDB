@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -42,7 +43,7 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionPage Add(string name)
         {
-            if (name.Length > CollectionPage.MAX_COLLECTION_NAME_LENGTH) throw LiteException.InvalidCollectionName(name, "MaxLength = " + CollectionPage.MAX_COLLECTION_NAME_LENGTH);
+            if (name.Length > COLLECTION_NAME_MAX_LENGTH) throw LiteException.InvalidCollectionName(name, "MaxLength = " + COLLECTION_NAME_MAX_LENGTH);
             if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
             if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for virtual collections)");
 

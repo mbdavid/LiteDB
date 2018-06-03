@@ -11,11 +11,6 @@ namespace LiteDB.Engine
     /// </summary>
     public partial class LiteEngine : IDisposable
     {
-        /// <summary>
-        /// Max transactions must be keeped in queue
-        /// </summary>
-        private const int MAX_TRANSACTION_BUFFER = 100;
-
         #region Services instances
 
         private Logger _log;

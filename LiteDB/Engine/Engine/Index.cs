@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -15,7 +16,10 @@ namespace LiteDB.Engine
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            if (!CollectionIndex.IndexNamePattern.IsMatch(name)) throw LiteException.InvalidIndexName(name, collection);
+            if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_PER_COLLECTION);
+            if (!name.IsWord()) throw LiteException.InvalidIndexName(name, collection, "Use only [a-Z$_]");
+            if (name.StartsWith("$")) throw LiteException.InvalidIndexName(name, collection, "Index name can't starts with `$`");
+
             if (name == "_id") return false; // always exists
 
             return this.AutoTransaction(transaction =>

@@ -2,6 +2,7 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -108,9 +109,9 @@ namespace LiteDB
             return new LiteException(INDEX_NAME_LIMIT_EXCEEDED, "This collection exceeded the maximum limit of indexes names/expression size: {0} bytes", limit);
         }
 
-        internal static LiteException InvalidIndexName(string name, string collection)
+        internal static LiteException InvalidIndexName(string name, string collection, string reason)
         {
-            return new LiteException(INVALID_INDEX_NAME, "Invalid index name '{0}' on collection '{1}'", name, collection);
+            return new LiteException(INVALID_INDEX_NAME, "Invalid index name '{0}' on collection '{1}': {2}", name, collection, reason);
         }
 
         internal static LiteException InvalidCollectionName(string name, string reason)
@@ -155,12 +156,12 @@ namespace LiteDB
 
         internal static LiteException IndexLimitExceeded(string collection)
         {
-            return new LiteException(INDEX_LIMIT_EXCEEDED, "Collection '{0}' exceeded the maximum limit of indices: {1}", collection, CollectionIndex.INDEX_PER_COLLECTION);
+            return new LiteException(INDEX_LIMIT_EXCEEDED, "Collection '{0}' exceeded the maximum limit of indices: {1}", collection, INDEX_PER_COLLECTION);
         }
 
         internal static LiteException ParameterLimitExceeded(string name)
         {
-            return new LiteException(PARAMETER_LIMIT_EXCEEDED, "Parameter '{0}' exceeded the maximum parameter limit {1} bytes", name, HeaderPage.MAX_PARAMETERS_SIZE);
+            return new LiteException(PARAMETER_LIMIT_EXCEEDED, "Parameter '{0}' exceeded the maximum parameter limit {1} bytes", name, MAX_PARAMETERS_SIZE);
         }
 
         internal static LiteException IndexDuplicateKey(string field, BsonValue key)

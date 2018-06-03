@@ -11,11 +11,6 @@ namespace LiteDB.Engine
         /// </summary>
         public override PageType PageType { get { return PageType.Index; } }
 
-        /// <summary>
-        /// If a Index Page has less that this free space, it's considered full page for new items.
-        /// </summary>
-        public const int INDEX_RESERVED_BYTES = 500;
-
         private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
 
         /// <summary>

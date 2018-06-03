@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -8,21 +9,6 @@ namespace LiteDB.Engine
 
     internal abstract class BasePage
     {
-        /// <summary>
-        /// The size of each page in disk
-        /// </summary>
-        public const int PAGE_SIZE = 8192;
-
-        /// <summary>
-        /// This size is used bytes in header pages 33 bytes (+31 reserved to future use) = 64 bytes
-        /// </summary>
-        public const int PAGE_HEADER_SIZE = 64;
-
-        /// <summary>
-        /// Bytes available to store data removing page header size - 8128 bytes
-        /// </summary>
-        public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
-
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
         /// </summary>
@@ -94,15 +80,14 @@ namespace LiteDB.Engine
             this.WriteContent(writer);
 
             // padding end of page with 0 byte
-            var length = BasePage.PAGE_SIZE - (writer.BaseStream.Position - start);
+            var length = PAGE_SIZE - (writer.BaseStream.Position - start);
 
             if (length > 0)
             {
                 writer.Write(new byte[length]);
             }
-#if DEBUG
-            else if (length < 0) throw new SystemException("Page overflow. Current page exceeded 8192 bytes.");
-#endif
+
+            DEBUG(length < 0, "Page overflow. Current page exceeded 8192 bytes.");
         }
 
         private void ReadHeader(BinaryReader reader)
@@ -147,7 +132,7 @@ namespace LiteDB.Engine
         /// </summary>
         public static long GetPagePosition(uint pageID)
         {
-            return checked((long)pageID * BasePage.PAGE_SIZE);
+            return checked((long)pageID * PAGE_SIZE);
         }
 
         /// <summary>
@@ -211,7 +196,7 @@ namespace LiteDB.Engine
             page.ReadHeader(reader);
             page.ReadContent(reader, utcDate);
 
-            var length = BasePage.PAGE_SIZE - (reader.BaseStream.Position - start);
+            var length = PAGE_SIZE - (reader.BaseStream.Position - start);
 
             if (length > 0)
             {
