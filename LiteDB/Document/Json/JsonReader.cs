@@ -72,7 +72,6 @@ namespace LiteDB
                     return number.Type == TokenType.Double ?
                         new BsonValue(-Convert.ToDouble(number.Value, CultureInfo.InvariantCulture.NumberFormat)) :
                         new BsonValue(-Convert.ToInt32(number.Value));
-                    break;
                 case TokenType.Int: return new BsonValue(Convert.ToInt32(token.Value));
                 case TokenType.Double: return new BsonValue(Convert.ToDouble(token.Value, CultureInfo.InvariantCulture.NumberFormat));
                 case TokenType.Word:

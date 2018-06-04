@@ -18,7 +18,7 @@ namespace LiteDB.Engine
             {
                 isNew = true;
 
-                transaction = new LiteTransaction(_header, _locker, _wal, _datafile, _log);
+                transaction = new LiteTransaction(_header, _locker, _dataFile, _wal, _log);
 
                 // add transaction to execution transaction dict
                 _transactions[transaction.TransactionID] = transaction;

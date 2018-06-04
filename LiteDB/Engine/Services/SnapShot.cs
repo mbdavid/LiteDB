@@ -15,8 +15,8 @@ namespace LiteDB.Engine
         // instances from Engine
         private readonly HeaderPage _header;
         private readonly LockService _locker;
+        private readonly DataFileService _dataFile;
         private readonly WalService _wal;
-        private readonly FileService _datafile;
 
         // instances from transaction
         private readonly TransactionPages _transPages;
@@ -34,13 +34,13 @@ namespace LiteDB.Engine
         public Dictionary<uint, BasePage> LocalPages => _localPages;
         public SnapshotMode Mode => _mode;
 
-        public Snapshot(SnapshotMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalService wal, FileService datafile)
+        public Snapshot(SnapshotMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, DataFileService dataFile, WalService wal)
         {
             _header = header;
             _transPages = transPages;
             _locker = locker;
+            _dataFile = dataFile;
             _wal = wal;
-            _datafile = datafile;
 
             _collectionName = collectionName;
             _mode = mode;
@@ -158,13 +158,13 @@ namespace LiteDB.Engine
             // if not inside local pages, can be a dirty page already saved in wal file
             if (_transPages.DirtyPagesWal.TryGetValue(pageID, out var position))
             {
-                var dirty = (T)_datafile.ReadPage(position.Position, _mode == SnapshotMode.Write);
+                var dirty = (T)_wal.WalFile.ReadPage(position.Position, _mode == SnapshotMode.Write);
 
                 // add into local pages
                 _localPages[pageID] = dirty;
 
-                // increment transaction page counter
-                Interlocked.Increment(ref _transPages.PageCount);
+                // increment transaction size counter
+                _transPages.TransactionSize++;
 
                 return dirty;
             }
@@ -174,13 +174,13 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var walpage = (T)_datafile.ReadPage(pos, _mode == SnapshotMode.Write);
+                var walpage = (T)_wal.WalFile.ReadPage(pos, _mode == SnapshotMode.Write);
 
                 // copy to my local pages
                 _localPages[pageID] = walpage;
 
                 // increment transaction page counter
-                Interlocked.Increment(ref _transPages.PageCount);
+                _transPages.TransactionSize++;
 
                 return walpage;
             }
@@ -194,13 +194,13 @@ namespace LiteDB.Engine
             // for last chance, look inside original disk data file
             var pagePosition = BasePage.GetPagePosition(pageID);
 
-            var diskpage = (T)_datafile.ReadPage(pagePosition, _mode == SnapshotMode.Write);
+            var diskpage = (T)_dataFile.ReadPage(pagePosition, _mode == SnapshotMode.Write);
 
             // add this page into local pages
             _localPages[pageID] = diskpage;
 
-            // increment transaction page counter
-            Interlocked.Increment(ref _transPages.PageCount);
+            // increment transaction size counter
+            _transPages.TransactionSize++;
 
             return diskpage;
         }
@@ -216,8 +216,8 @@ namespace LiteDB.Engine
                 page.IsDirty = true;
                 _localPages[page.PageID] = page;
 
-                // increment transaction page counter
-                Interlocked.Increment(ref _transPages.PageCount);
+                // increment transaction size counter
+                _transPages.TransactionSize++;
             }
         }
 

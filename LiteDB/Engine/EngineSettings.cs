@@ -77,15 +77,15 @@ namespace LiteDB.Engine
         {
             if (this.DataStream != null)
             {
-                return new StreamDiskFactory(this.DataStream);
+                return new StreamDiskFactory(this.DataStream, new TempStream());
             }
             if (this.Filename == ":memory:")
             {
-                return new StreamDiskFactory(new MemoryStream());
+                return new StreamDiskFactory(new MemoryStream(), new MemoryStream());
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamDiskFactory(new TempStream());
+                return new StreamDiskFactory(new TempStream(), new TempStream());
             }
             else
             {

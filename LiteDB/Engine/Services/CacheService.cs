@@ -64,17 +64,10 @@ namespace LiteDB.Engine
             }
             else
             {
-                DEBUG(true, "check why page are already in cache - is same instance?");
+                DEBUG(!Object.ReferenceEquals(_cache[position], page), "check why page are already in cache - is same instance?");
             }
         }
 
-        /// <summary>
-        /// Update cache page after write wal pages in final destination
-        /// </summary>
-        public void Update(long position, BasePage page)
-        {
-            _cache.TryUpdate(position, page, page);
-        }
 
         /// <summary>
         /// Get page from cache. Use clone = true if you need change this page. Return null if not found
@@ -87,23 +80,6 @@ namespace LiteDB.Engine
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Get page from cache and removed it. Must be dirty because it's used only from write on disk
-        /// </summary>
-        public BasePage RemovePage(long position)
-        {
-            if (_cache.TryRemove(position, out var page))
-            {
-                DEBUG(page.IsDirty == false, "page must be dirty here");
-
-                return page;
-            }
-            else
-            {
-                return null;
-            }
         }
     }
 }

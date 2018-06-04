@@ -17,7 +17,7 @@ namespace LiteDB.Engine
 
         private LockService _locker;
 
-        private FileService _datafile;
+        private DataFileService _dataFile;
 
         private WalService _wal;
 
@@ -107,19 +107,19 @@ namespace LiteDB.Engine
 
                 _locker = new LockService(settings.Timeout, _log);
 
-                // open datafile (crete new if stream are empty)
+                // get disk factory from engine settings and open/create datafile/walfile
                 var factory = settings.GetDiskFactory();
 
-                _datafile = new FileService(factory, settings.Timeout, settings.InitialSize, settings.LimitSize, _utcDate, _log);
+                _dataFile = new DataFileService(factory, settings.Timeout, settings.InitialSize, _utcDate, _log);
 
-                // initialize wal file
-                _wal = new WalService(_locker, _datafile, _log);
+                // initialize wal service
+                _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, _utcDate, _log);
 
                 // if WAL file have content, must run a checkpoint
                 _wal.Checkpoint();
 
                 // load header page
-                _header = _datafile.ReadPage(0, true) as HeaderPage;
+                _header = _dataFile.ReadPageDisk(0) as HeaderPage;
 
                 // register virtual collections
                 this.InitializeVirtualCollections();
@@ -142,14 +142,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
         /// </summary>
-        public void WaitAsyncWrite() => _datafile.WaitAsyncWrite();
+        public void WaitAsyncWrite() => _wal.WalFile.WaitAsyncWrite();
 
         public void Dispose()
         {
             // close all Dispose services
-            if (_datafile != null)
+            if (_dataFile != null)
             {
-                _datafile.Dispose();
+                _dataFile.Dispose();
             }
 
             if (_disposeTempdb)

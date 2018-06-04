@@ -12,47 +12,88 @@ namespace LiteDB.Engine
     /// </summary>
     public class FileStreamDiskFactory : IDiskFactory
     {
-        private string _filename;
+        private string _dataFileName;
+        private string _walFileName;
         private bool _readOnly;
         private bool _syncOverAsync;
 
         public FileStreamDiskFactory(string filename, bool readOnly, bool syncOverAsync)
         {
-            _filename = filename;
+            _dataFileName = filename;
+            _walFileName = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + "-wal" + Path.GetExtension(filename));
             _readOnly = readOnly;
             _syncOverAsync = syncOverAsync;
         }
 
         /// <summary>
-        /// Get filename
+        /// Get data filename
         /// </summary>
-        public string Filename => _filename;
+        public string FileName => _dataFileName;
 
         /// <summary>
-        /// Create new FileStream instance based on dataFilename
+        /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetStream()
+        public Stream GetDataFileStream(bool write)
         {
 #if HAVE_SYNC_OVER_ASYNC
             if (_syncOverAsync)
             {
-                return System.Threading.Tasks.Task.Run(() => GetStreamInternal())
+                return System.Threading.Tasks.Task.Run(() => GetStreamInternal(_dataFileName, write, FileOptions.RandomAccess))
                     .ConfigureAwait(false)
                     .GetAwaiter()
                     .GetResult();
             }
 #endif
-            return GetStreamInternal();
+            return GetStreamInternal(_dataFileName, write, FileOptions.RandomAccess);
         }
 
-        private Stream GetStreamInternal()
+        /// <summary>
+        /// Create new data file FileStream instance based on filename
+        /// </summary>
+        public Stream GetWalFileStream(bool write)
         {
-            return new FileStream(_filename,
-                _readOnly ? FileMode.Open : FileMode.OpenOrCreate,
-                _readOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                FileShare.ReadWrite,
+            var options = write ? FileOptions.SequentialScan : FileOptions.RandomAccess;
+
+#if HAVE_SYNC_OVER_ASYNC
+            if (_syncOverAsync)
+            {
+                return System.Threading.Tasks.Task.Run(() => GetStreamInternal(_dataFileName, write, options))
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+            }
+#endif
+            return GetStreamInternal(_walFileName, write, options);
+        }
+
+        /// <summary>
+        /// Open (or create) new FileStream based on filename. Can be sequencial (for WAL writer)
+        /// Will be only 1 single writer, so I will open write mode with no more support for writer (will do file lock)
+        /// </summary>
+        private Stream GetStreamInternal(string filename, bool write, FileOptions options)
+        {
+            return new FileStream(filename,
+                _readOnly || !write ? FileMode.Open : FileMode.OpenOrCreate,
+                _readOnly || !write ? FileAccess.Read : FileAccess.ReadWrite,
+                write ? FileShare.Read : FileShare.ReadWrite, // TODO: tenho duvia se nao precisa ser somente Write 
                 PAGE_SIZE,
-                FileOptions.RandomAccess);
+                options);
+        }
+
+        /// <summary>
+        /// Check if wal file exists
+        /// </summary>
+        public bool IsWalFileExists()
+        {
+            return File.Exists(_walFileName);
+        }
+
+        /// <summary>
+        /// Delete wal file
+        /// </summary>
+        public void DeleteWalFile()
+        {
+            File.Delete(_walFileName);
         }
 
         /// <summary>

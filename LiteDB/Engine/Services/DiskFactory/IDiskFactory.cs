@@ -14,12 +14,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get filename
         /// </summary>
-        string Filename { get; }
+        string FileName { get; }
 
         /// <summary>
-        /// Get new Stream instance of data stream
+        /// Get new datafile stream instance
         /// </summary>
-        Stream GetStream();
+        Stream GetDataFileStream(bool write);
+
+        /// <summary>
+        /// Get new WAL file stream instance
+        /// </summary>
+        Stream GetWalFileStream(bool write);
+
+        /// <summary>
+        /// Return if wal file exist
+        /// </summary>
+        bool IsWalFileExists();
+
+        /// <summary>
+        /// Delete physical wal file
+        /// </summary>
+        void DeleteWalFile();
 
         /// <summary>
         /// Indicate that factory must be dispose on finish

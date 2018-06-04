@@ -7,26 +7,36 @@ using System.IO;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Simple stream disk implementation of disk factory - no concurrency - used for Memory/Temp database
+    /// Simple stream disk implementation of disk factory - used for Memory/Temp database
     /// </summary>
     public class StreamDiskFactory : IDiskFactory
     {
-        private Stream _stream;
+        private Stream _data;
+        private Stream _wal;
 
-        public StreamDiskFactory(Stream stream)
+        public StreamDiskFactory(Stream data, Stream wal)
         {
-            _stream = stream;
+            _data = data;
+            _wal = wal;
         }
 
         /// <summary>
         /// Stream has no name (use stream type)
         /// </summary>
-        public string Filename => _stream is MemoryStream ? ":memory:" : _stream is TempStream ? ":temp:" : ":stream:";
+        public string FileName => _data is MemoryStream ? ":memory:" : _data is TempStream ? ":temp:" : ":stream:";
 
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetStream() => new ConcurrentStream(_stream);
+        public Stream GetDataFileStream(bool write) => new ConcurrentStream(_data);
+
+        public Stream GetWalFileStream(bool write) => new ConcurrentStream(_wal);
+
+        public bool IsWalFileExists() => _wal.Length > 0;
+
+        public void DeleteWalFile()
+        {
+        }
 
         /// <summary>
         /// Do no dispose on finish

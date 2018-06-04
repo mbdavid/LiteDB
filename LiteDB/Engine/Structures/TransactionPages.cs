@@ -11,12 +11,12 @@ namespace LiteDB.Engine
     internal class TransactionPages
     {
         /// <summary>
-        /// Get how many pages are involved in this current transaction across all snapshots
+        /// Get how many pages are involved in this transaction across all snapshots
         /// </summary>
-        public int PageCount = 0;
+        public int TransactionSize { get; set; } = 0;
 
         /// <summary>
-        /// Contains all dirty pages already persist in WAL (used in all snapshots)
+        /// Contains all dirty pages already persist in WAL (used in all snapshots). Store in [uint, PagePosition] to reuse same method in save pages into wal and get saved page positions on wal
         /// </summary>
         public Dictionary<uint, PagePosition> DirtyPagesWal { get; private set; } = new Dictionary<uint, PagePosition>();
 

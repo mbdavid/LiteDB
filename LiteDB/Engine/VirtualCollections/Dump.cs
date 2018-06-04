@@ -10,12 +10,12 @@ namespace LiteDB.Engine
     {
         public IEnumerable<BsonDocument> DumpDatafile()
         {
-            var length = _datafile.Length;
+            var length = _dataFile.Length;
             var position = 0;
 
             while (position < length)
             {
-                var page = _datafile.ReadPage(position, false);
+                var page = _dataFile.ReadPage(position, false);
 
                 yield return this.DumpPage(position, page);
 

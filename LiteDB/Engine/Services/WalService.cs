@@ -11,19 +11,24 @@ namespace LiteDB.Engine
     internal class WalService
     {
         private LockService _locker;
-        private FileService _datafile;
+        private DataFileService _dataFile;
+        private WalFileService _walFile;
         private Logger _log;
 
-        private Dictionary<Guid, HeaderPage> _confirmedTransactions = new Dictionary<Guid, HeaderPage>();
+        private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
-        public WalService(LockService locker, FileService datafile, Logger log)
+        public WalFileService WalFile => _walFile;
+
+        public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
         {
             _locker = locker;
-            _datafile = datafile;
+            _dataFile = dataFile;
             _log = log;
+
+            _walFile = new WalFileService(factory, timeout, sizeLimit, utcDate, log);
 
             this.LoadConfirmedTransactions();
         }
@@ -34,7 +39,7 @@ namespace LiteDB.Engine
         public int CurrentReadVersion => _currentReadVersion;
 
         /// <summary>
-        /// Checks if an Page/Version are in WAL-index memory. Consider version that are below parameter. Returns PagePosition of this page inside WAL-file or Empty if page doesn't found.
+        /// Checks if a Page/Version are in WAL-index memory. Consider version that are below parameter. Returns PagePosition of this page inside WAL-file or Empty if page doesn't found.
         /// </summary>
         public long GetPageIndex(uint pageID, int version)
         {
@@ -73,10 +78,10 @@ namespace LiteDB.Engine
             confirm.IsDirty = true;
 
             // write header-confirm transaction page in wal file
-            _datafile.WriteAsyncPages(new HeaderPage[] { confirm }, null);
+            _walFile.WriteAsyncPages(new HeaderPage[] { confirm }, null);
 
             // add confirm page into confirmed-queue to be used in checkpoint
-            _confirmedTransactions.Add(confirm.TransactionID, confirm);
+            _confirmedTransactions.Add(confirm.TransactionID);
 
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_index)
@@ -104,7 +109,9 @@ namespace LiteDB.Engine
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.InUse);
 
-            if (_datafile.HasWalPages(out var walPosition) == false) return 0;
+            if (_walFile.HasPages() == false) return 0;
+
+            var count = 0;
 
             // enter in special database reserved lock
             // only new readers are allowed and no writers
@@ -112,11 +119,19 @@ namespace LiteDB.Engine
 
             try
             {
-                // before checkpoint, write all async pages in disk
-                _datafile.WaitAsyncWrite();
+                // get all pages inside WAL file and contains valid confirmed pages
+                var pages = _walFile.ReadPages()
+                    .Where(x => _confirmedTransactions.Contains(x.TransactionID))
+#if DEBUG
+                    .ForEach((i, x) => DEBUG(x.TransactionID == Guid.Empty, "pages in wal must have transaction id"))
+#endif
+                    .ForEach((i, x) => x.TransactionID = Guid.Empty).ToArray();
 
-                // and write on disk in sync mode
-                var count = _datafile.WriteWalPages(walPosition, _confirmedTransactions);
+                // write page on data disk
+                _dataFile.WritePages(pages);
+
+                // now, all wal pages are saved in data disk - can clear walfile
+                _walFile.Clear();
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
@@ -136,25 +151,14 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadConfirmedTransactions()
         {
-            // get header from disk
-            var header = _datafile.ReadPage(0, false) as HeaderPage;
+            if (_walFile.HasPages() == false) return;
 
-            // get wal file position (physically after data file)
-            var position = BasePage.GetPagePosition(header.LastPageID + 1);
-            var length = _datafile.Length;
+            // read all pages to get confirmed transactions
+            var items = _walFile.ReadPages()
+                .Where(x => x.PageType == PageType.Header)
+                .Select(x => x.TransactionID);
 
-            // read all wal file to look for confirm HeaderPages
-            while(position < length)
-            {
-                var page = _datafile.ReadPage(position, false);
-
-                position += PAGE_SIZE;
-
-                if (page.PageType == PageType.Header)
-                {
-                    _confirmedTransactions.Add(page.TransactionID, page as HeaderPage);
-                }
-            }
+            _confirmedTransactions.AddRange(items);
         }
     }
 }

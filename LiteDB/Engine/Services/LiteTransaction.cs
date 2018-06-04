@@ -14,9 +14,9 @@ namespace LiteDB.Engine
     {
         // instances from Engine
         private HeaderPage _header;
-        private WalService _wal;
         private LockService _locker;
-        private FileService _datafile;
+        private DataFileService _dataFile;
+        private WalService _wal;
         private Logger _log;
 
         // event to capture when transaction finish
@@ -34,7 +34,7 @@ namespace LiteDB.Engine
         public DateTime StartTime { get; private set; } = DateTime.Now;
         public DateTime DisposeTime { get; private set; } = DateTime.MinValue;
 
-        internal LiteTransaction(HeaderPage header, LockService locker, WalService wal, FileService datafile, Logger log)
+        internal LiteTransaction(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log)
         {
             _wal = wal;
             _log = log;
@@ -42,8 +42,8 @@ namespace LiteDB.Engine
             // retain instances
             _header = header;
             _locker = locker;
+            _dataFile = datafile;
             _wal = wal;
-            _datafile = datafile;
 
             // enter transaction locker to avoid 2 transactions in same thread
             _locker.EnterTransaction();
@@ -60,7 +60,7 @@ namespace LiteDB.Engine
                 // if transaction are commited/aborted do not accept new snapshots
                 if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
 
-                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _wal, _datafile));
+                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _dataFile, _wal));
 
                 if (mode == SnapshotMode.Write)
                 {
@@ -75,33 +75,29 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Implement a safe point to clear all read-only pages or persist dirty pages (into wal) in all snaps
+        /// If current transaction contains too much pages, now is safe to remove clean pages from memory and flush to wal disk dirty pages
         /// </summary>
         internal void Safepoint()
         {
             // Safepoint are valid only during transaction execution
             DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
 
-            if (_transPages.PageCount >= MAX_PAGES_TRANSACTION)
+            if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
-                // PersistDirtyPages are valid only during transaction execution
-                DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
-
-                // this.PersistDirtyPages(true);
+                this.PersistDirtyPages();
             }
         }
 
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
-        public void PersistDirtyPages(bool safepoint)
+        public void PersistDirtyPages()
         {
             // get all pages, in PageID order to be saved on wal (must be in order to avoid checkpoint read wal as normal page)
             // this orderBy can be avoid if I add 2 files (1 to datafile and 1 to wal file)
             var pages = _snapshots.Values
                 .SelectMany(x => x.LocalPages.Values)
                 .Where(x => x.IsDirty && x.PageType != PageType.Header)
-                .Where(x => safepoint == false || x.PageType != PageType.Collection) // if safepoint, do not write collection pages
                 .OrderBy(x => x.PageID)
                 .ForEach((i, p) => p.TransactionID = _transactionID)
 #if DEBUG
@@ -111,31 +107,17 @@ namespace LiteDB.Engine
 #endif
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
-            _datafile.WriteAsyncPages(pages, _transPages.DirtyPagesWal);
+            _wal.WalFile.WriteAsyncPages(pages, _transPages.DirtyPagesWal);
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
-                if (safepoint)
-                {
-                    // if safepoint, do not remove collection page (only in safepoint!)
-                    foreach(var pageID in snapshot.LocalPages
-                        .Where(x => x.Value.PageType != PageType.Collection)
-                        .Select(x => x.Key)
-                        .ToArray())
-                    {
-                        snapshot.LocalPages.Remove(pageID);
-                    }
-                }
-                else
-                {
-                    // clear because I will not use anymore in this transaction
-                    snapshot.LocalPages.Clear();
-                }
+                // clear because I will not use anymore in this transaction
+                snapshot.LocalPages.Clear();
             }
 
             // there is no local pages in cache and all dirty pages are in wal area, clear page count
-            _transPages.PageCount = 0;
+            _transPages.TransactionSize = 0;
         }
 
         /// <summary>
@@ -147,7 +129,7 @@ namespace LiteDB.Engine
             if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Commit", _state);
 
             // persist all pages into wal file
-            this.PersistDirtyPages(false);
+            this.PersistDirtyPages();
 
             // lock header page to avoid concurrency when writing on header
             lock (_header)
@@ -167,7 +149,7 @@ namespace LiteDB.Engine
                         _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
 
                         // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                        _datafile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
+                        _wal.WalFile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
                     }
                 }
 
@@ -257,7 +239,7 @@ namespace LiteDB.Engine
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();
 
-                _datafile.WriteAsyncPages(pages, pagePositions);
+                _wal.WalFile.WriteAsyncPages(pages, pagePositions);
 
                 // now commit last confirm page to wal file
                 _wal.ConfirmTransaction(confirm, pagePositions.Values);

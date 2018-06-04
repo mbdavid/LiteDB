@@ -14,6 +14,7 @@ namespace LiteDB.Demo
     class Program
     {
         private static string datafile = @"c:\git\temp\app-5.db";
+        private static string walfile = @"c:\git\temp\app-5-wal.db";
 
         static void Main(string[] args)
         {
@@ -24,11 +25,12 @@ namespace LiteDB.Demo
             };
 
             File.Delete(datafile);
+            File.Delete(walfile);
 
             using (var db = new LiteEngine(settings))
             {
 
-                db.Insert("col1", ReadDocuments(1, 50000), BsonAutoId.Int32);
+                db.Insert("col1", ReadDocuments(1, 100), BsonAutoId.Int32);
 
                 db.WaitAsyncWrite();
 
@@ -37,13 +39,13 @@ namespace LiteDB.Demo
 
                 db.Checkpoint();
 
-                //var s2 =
-                //    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
+                var s2 =
+                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
             }
             using (var db = new LiteEngine(settings))
             {
-                //var s =
-                //    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
+                var s =
+                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
 
 
                 Console.WriteLine("Nome: " + 

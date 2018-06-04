@@ -81,9 +81,9 @@ namespace LiteDB
         public const int MAX_CACHE_ADD = 1000;
 
         /// <summary>
-        /// Define how many pages must be in-memory during a transaction. After this number, flush all dirty pages into disk
+        /// Define how many pages transaction will keep in-memory before do a complete flush (persisting dirty pages in wal)
         /// </summary>
-        public const int MAX_PAGES_TRANSACTION = 1000;
+        public const int MAX_TRANSACTION_SIZE = 1000;
 
         /// <summary>
         /// Stop VisualStudio if condition are true and we are running over #DEBUG - great for testing unexpected flow
