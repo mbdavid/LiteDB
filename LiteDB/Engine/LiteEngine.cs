@@ -157,7 +157,7 @@ namespace LiteDB.Engine
             // mark all transaction as shotdown status
             foreach(var trans in _transactions.Values)
             {
-                trans.State = TransactionState.Aborted;
+                trans.Abort();
             }
 
             // wait for all async task write on disk

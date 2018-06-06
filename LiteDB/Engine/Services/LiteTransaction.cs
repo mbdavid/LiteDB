@@ -30,11 +30,8 @@ namespace LiteDB.Engine
 
         // transaction info
         public Guid TransactionID => _transactionID;
-        public TransactionState State => _state;
+        public TransactionState State { get => _state; set => _state = value; }
         public DateTime StartTime { get; private set; } = DateTime.Now;
-
-        // throw shutdown exception in safepoint if true
-        public bool Shutdown { get; set; } = false;
 
         internal LiteTransaction(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log)
         {
@@ -82,7 +79,7 @@ namespace LiteDB.Engine
         internal void Safepoint()
         {
             // transaction
-            if (_state == TransactionState.Disposed) throw LiteException.InvalidTransactionState();
+            if (_state == TransactionState.Aborted) throw LiteException.InvalidTransactionState();
 
             // Safepoint are valid only during transaction execution
             DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
@@ -266,7 +263,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            if (_state == TransactionState.Disposed) return;
+            if (_state == TransactionState.Disposed || _state == TransactionState.Aborted) return;
 
             // if no commit/rollback are invoke before dipose, let's rollback by default
             if (_state == TransactionState.InUse)
