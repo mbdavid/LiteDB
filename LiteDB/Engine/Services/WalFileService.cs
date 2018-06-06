@@ -31,6 +31,8 @@ namespace LiteDB.Engine
         private ConcurrentQueue<long> _dirtyQueue = new ConcurrentQueue<long>();
         private Task _asyncWriter;
 
+        private bool _disposing = false;
+
         public WalFileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
         {
             _factory = factory;
@@ -42,6 +44,11 @@ namespace LiteDB.Engine
             // initialize cache service
             _cache = new CacheService(_log);
 
+            this.InitializeWriter();
+        }
+
+        private void InitializeWriter()
+        {
             // initialize lazy writer
             _writer = new Lazy<BinaryWriter>(() =>
             {
@@ -111,8 +118,8 @@ namespace LiteDB.Engine
         {
             lock (_writer)
             {
-                // be sure all page are saved on disk
-                this.WaitAsyncWrite();
+                // before read pages from disk, wait any async write
+                this.WaitAsyncWrite(false);
 
                 var stream = _writer.Value.BaseStream;
 
@@ -122,6 +129,8 @@ namespace LiteDB.Engine
 
                 while (stream.Position < stream.Length)
                 {
+                    if (_disposing) yield break;
+
                     var page = BasePage.ReadPage(reader, _utcDate);
 
                     yield return page;
@@ -141,6 +150,8 @@ namespace LiteDB.Engine
                 {
                     DEBUG(page.IsDirty == false, "page always must be dirty when be write on disk (async mode)");
                     DEBUG(page.TransactionID == Guid.Empty, "to write on wal, page must have a transactionID");
+
+                    if (_disposing) return;
 
                     // test max file size (includes wal operations)
                     if (_virtualPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
@@ -177,6 +188,8 @@ namespace LiteDB.Engine
             // write all pages that are in queue
             while (!_dirtyQueue.IsEmpty)
             {
+                if (_disposing) return;
+
                 // get page from queue
                 if (!_dirtyQueue.TryDequeue(out var position)) break;
 
@@ -198,7 +211,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Lock writer and wait all queue be write on disk
         /// </summary>
-        public void WaitAsyncWrite()
+        public void WaitAsyncWrite(bool flush)
         {
             // if has pages on queue but async writer are not running, run sync
             if (_dirtyQueue.IsEmpty == false && _asyncWriter.Status == TaskStatus.RanToCompletion)
@@ -213,7 +226,10 @@ namespace LiteDB.Engine
             }
 
             // do a disk flush
-            _writer.Value.BaseStream.FlushToDisk();
+            if (_writer.IsValueCreated && flush)
+            {
+                _writer.Value.BaseStream.FlushToDisk();
+            }
         }
 
         /// <summary>
@@ -223,12 +239,36 @@ namespace LiteDB.Engine
         {
             lock(_writer)
             {
+                // just shrink wal to 0 bytes (is faster than delete and can be re-used)
                 var stream = _writer.Value.BaseStream;
 
                 stream.SetLength(0);
 
                 _virtualPosition = 0;
+
+                _cache.Clear();
             }
+        }
+
+        /// <summary>
+        /// Delete WAL file (check before if is empty
+        /// </summary>
+        public bool Delete()
+        {
+            if (_factory.IsWalFileExists() == false) return true;
+
+            if (_writer.IsValueCreated && _writer.Value.BaseStream.Length == 0)
+            {
+                this.Dispose();
+
+                _factory.DeleteWalFile();
+
+                this.InitializeWriter();
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -236,8 +276,10 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            _disposing = true;
+
             // wait async
-            this.WaitAsyncWrite();
+            this.WaitAsyncWrite(true);
 
             // first dispose writer
             if (_writer.IsValueCreated)

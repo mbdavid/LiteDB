@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace LiteDB.Engine
@@ -28,6 +29,8 @@ namespace LiteDB.Engine
         private BsonWriter _bsonWriter;
 
         private bool _utcDate;
+
+        private bool _disposing = false;
 
         #region TempDB
 
@@ -116,7 +119,7 @@ namespace LiteDB.Engine
                 _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, _utcDate, _log);
 
                 // if WAL file have content, must run a checkpoint
-                _wal.Checkpoint();
+                _wal.Checkpoint(false);
 
                 // load header page
                 _header = _dataFile.ReadPageDisk(0) as HeaderPage;
@@ -137,20 +140,37 @@ namespace LiteDB.Engine
         /// <summary>
         /// Request a wal checkpoint
         /// </summary>
-        public void Checkpoint() => _wal.Checkpoint();
+        public void Checkpoint(bool delete) => _wal?.Checkpoint(delete);
 
         /// <summary>
         /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
         /// </summary>
-        public void WaitAsyncWrite() => _wal.WalFile.WaitAsyncWrite();
+        public void WaitAsyncWrite() => _wal?.WalFile?.WaitAsyncWrite(true);
 
         public void Dispose()
         {
-            // close all Dispose services
-            if (_dataFile != null)
+            if (_disposing) return;
+
+            // start shutdown operation
+            _disposing = true;
+
+            // mark all transaction as shotdown status
+            foreach(var trans in _transactions.Values)
             {
-                _dataFile.Dispose();
+                trans.State = TransactionState.Aborted;
             }
+
+            // wait for all async task write on disk
+            _wal?.WalFile?.WaitAsyncWrite(true);
+
+            // do checkpoint and delete wal file
+            _wal.Checkpoint(true);
+
+            // close all Dispose services
+            _dataFile?.Dispose();
+
+            // dispose wal file
+            _wal?.WalFile?.Dispose();
 
             if (_disposeTempdb)
             {

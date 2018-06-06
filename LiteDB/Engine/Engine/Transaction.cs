@@ -12,6 +12,9 @@ namespace LiteDB.Engine
 
         internal LiteTransaction GetTransaction(out bool isNew)
         {
+            // if engine are disposing, do not accept any transaction/operation
+            if (_disposing) throw LiteException.DatabaseShutdown();
+
             var transaction = Thread.GetData(_slot) as LiteTransaction;
 
             if (transaction == null)

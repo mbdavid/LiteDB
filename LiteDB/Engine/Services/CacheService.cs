@@ -31,6 +31,8 @@ namespace LiteDB.Engine
         /// </summary>
         public int Length => _cache.Count;
 
+        public void Clear() => _cache.Clear();
+
         /// <summary>
         /// Add page in cache and if exceed add counter, try clear cache
         /// </summary>

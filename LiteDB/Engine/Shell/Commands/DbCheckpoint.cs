@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         {
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            _engine.Checkpoint();
+            _engine.Checkpoint(false);
         }
     }
 }

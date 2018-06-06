@@ -29,119 +29,25 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(settings))
             {
+                Task.Factory.StartNew(() => db.Insert("col1", ReadDocuments(1, 100), BsonAutoId.Int32));
 
-                db.Insert("col1", ReadDocuments(1, 100), BsonAutoId.Int32);
+                Task.Factory.StartNew(() => db.Insert("col2", ReadDocuments(1, 5000), BsonAutoId.Int32));
 
-                db.WaitAsyncWrite();
-
-                var s =
-                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").Where("_position < 500000").ToList()), true);
-
-                db.Checkpoint();
-
-                var s2 =
-                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
+                Task.Delay(150).Wait();
             }
-            using (var db = new LiteEngine(settings))
-            {
-                var s =
-                    JsonSerializer.Serialize(new BsonArray(db.Query("$dump").ToList()), true);
 
+            Console.WriteLine("Engine Disposed()");
 
-                Console.WriteLine("Nome: " + 
-                    db.Query("col1").SingleById(1)["name"].AsString);
-
-
-                //db.WaitAsyncWrite();
-
-
-
-
-
-
-                //db.Insert("col1", ReadDocuments(1, 10, false, false), BsonAutoId.Int32);
-                //db.EnsureIndex("col1", "age", BsonExpression.Create("age"), false);
-                //
-                //using (var t = db.BeginTrans())
-                //{
-                //    var r = db.Query("col1")
-                //        //.Where("age between 14 and 20")
-                //        //.GroupBy("_id > 0")
-                //        //.Select("{ s: count($), total: count($) }")
-                //        //.Select("{_id,data:DATE(), name,age}")
-                //        .ToEnumerable();
-                //
-                //    foreach(var x in r)
-                //    {
-                //        x["data"] = DateTime.Now;
-                //    
-                //        db.Update("col1", new BsonDocument[] { x });
-                //    }
-                //    
-                //    Console.WriteLine("LENGTH: {0}", r.Count());
-                //
-                //    db.Analyze(new string[] { "col1" });
-                //
-                //    t.Commit();
-                //}
-                //
-                //db.Checkpoint();
-                //
-                //var r0 = db.Query("col1").ToList();
-                //Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r0), true));
-                /*
-                using (var t = db.BeginTrans())
-                {
-
-                    db.Insert("endereco", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["rua"] = "Ipiranga" } }, BsonAutoId.ObjectId);
-                    db.Insert("endereco", new BsonDocument[] { new BsonDocument { ["_id"] = 2, ["rua"] = "Protasio" } }, BsonAutoId.ObjectId);
-
-                    db.Insert("cliente", new BsonDocument[] { new BsonDocument { ["_id"] = 1, ["nome"] = "John", ["endereco"] = BsonValue.DbRef(1, "endereco") } }, BsonAutoId.ObjectId);
-                    db.Insert("cliente", new BsonDocument[] { new BsonDocument { ["_id"] = 2, ["nome"] = "Carlos", ["endereco"] = BsonValue.DbRef(1, "endereco") } }, BsonAutoId.ObjectId);
-                    db.Insert("cliente", new BsonDocument[] { new BsonDocument { ["_id"] = 3, ["nome"] = "Maria", ["endereco"] = BsonValue.DbRef(2, "endereco") } }, BsonAutoId.ObjectId);
-
-                    db.EnsureIndex("endereco", "idx_rua", BsonExpression.Create("rua"), false);
-                    db.EnsureIndex("cliente", "idx_nome", BsonExpression.Create("nome"), false);
-
-                    t.Commit();
-                }
-                */
-            }
-            /*
 
             using (var db = new LiteEngine(settings))
             {
+                var c1 = db.Query("col1").ToEnumerable().Count();
+                var c2 = db.Query("col2").ToEnumerable().Count();
 
-                //db.WaitAsyncWrite();
-                //db.Checkpoint();
+                Console.WriteLine("Count col1: " + c1);
+                Console.WriteLine("Count col2: " + c2);
+            }
 
-                var r0 = db.Query("cliente")
-                    .Include("endereco")
-                    //.Where("endereco.rua = 'Ipiranga'")
-                    //.Select("{_id,nome}")
-                    .GroupBy("endereco.rua")
-                    .Select("{n:endereco.rua, zero:count(0), tot: count($)}")
-                    //.Select("{n:endereco.rua, tot:count($), tot2: count($)}")
-                    //.OrderBy("tot")
-                    .ToArray();
-                ;
-
-                Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r0.Select(x => x.AsDocument)), true));
-
-                //var r = db.Query("$dump")
-                //    //.Where("pageID = 0")
-                //    .GroupBy("pageType")
-                //    .Select("{pageType,tot: COUNT($)}")
-                //    .OrderBy("tot", Query.Ascending)
-                //    .ToList();
-                //
-                //Console.WriteLine(JsonSerializer.Serialize(new BsonArray(r), true));
-
-
-
-            }*/
-
-            Console.WriteLine("End");
             Console.ReadKey();
         }
 

@@ -14,6 +14,7 @@ namespace LiteDB
         #region Errors code
 
         public const int FILE_NOT_FOUND = 101;
+        public const int DATABASE_SHUTDOWN = 102;
         public const int INVALID_DATABASE = 103;
         public const int INVALID_DATABASE_VERSION = 104;
         public const int FILE_SIZE_EXCEEDED = 105;
@@ -82,6 +83,11 @@ namespace LiteDB
         internal static LiteException FileNotFound(string fileId)
         {
             return new LiteException(FILE_NOT_FOUND, "File '{0}' not found.", fileId);
+        }
+
+        internal static LiteException DatabaseShutdown()
+        {
+            return new LiteException(DATABASE_SHUTDOWN, "Database is in shutdown process.");
         }
 
         internal static LiteException InvalidDatabase()

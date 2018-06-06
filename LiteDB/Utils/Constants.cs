@@ -71,11 +71,6 @@ namespace LiteDB
         public const int MAX_LEVEL_LENGTH = 32;
 
         /// <summary>
-        /// Max transactions (inactive) must be keeped in queue (can be visible during $transactions virtual collection)
-        /// </summary>
-        public const int MAX_TRANSACTION_BUFFER = 100;
-
-        /// <summary>
         /// When add item cache counter get this size, try clean 
         /// </summary>
         public const int MAX_CACHE_ADD = 1000;

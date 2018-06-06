@@ -26,6 +26,8 @@ namespace LiteDB.Engine
 
         private BinaryWriter _writer;
 
+        private bool _disposing = false;
+
         public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Logger log)
         {
             _factory = factory;
@@ -119,6 +121,8 @@ namespace LiteDB.Engine
             {
                 foreach(var page in pages)
                 {
+                    if (_disposing) return;
+
                     _writer.BaseStream.Position = BasePage.GetPagePosition(page.PageID);
 
                     page.WritePage(_writer);
@@ -144,6 +148,8 @@ namespace LiteDB.Engine
             {
                 _writer.BaseStream.SetLength(initialSize);
             }
+
+            _writer.BaseStream.FlushToDisk();
         }
 
         /// <summary>
@@ -151,9 +157,12 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            _disposing = true;
+
             if (_factory.CloseOnDispose)
             {
-                // first dispose writer
+                // first flush and dispose writer
+                _writer.BaseStream.FlushToDisk();
                 _writer.BaseStream.Dispose();
 
                 // after, dispose all readers
