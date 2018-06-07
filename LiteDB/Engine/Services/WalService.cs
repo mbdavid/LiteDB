@@ -107,11 +107,7 @@ namespace LiteDB.Engine
         public int Checkpoint(bool delete)
         {
             // checkpoint can run only without any open transaction in current thread
-            if (_locker.IsInTransaction)
-            {
-                //throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.InUse);
-            }
-            
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.InUse);
 
             if (_walFile.HasPages() == false)
             {

@@ -157,20 +157,20 @@ namespace LiteDB.Engine
             // mark all transaction as shotdown status
             foreach(var trans in _transactions.Values)
             {
-                trans.Abort();
+                trans.Shutdown();
             }
 
             // wait for all async task write on disk
-            _wal?.WalFile?.WaitAsyncWrite(true);
+            _wal.WalFile.WaitAsyncWrite(true);
 
             // do checkpoint and delete wal file
             _wal.Checkpoint(true);
 
             // close all Dispose services
-            _dataFile?.Dispose();
+            _dataFile.Dispose();
 
             // dispose wal file
-            _wal?.WalFile?.Dispose();
+            _wal.WalFile.Dispose();
 
             if (_disposeTempdb)
             {

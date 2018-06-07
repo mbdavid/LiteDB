@@ -119,12 +119,12 @@ namespace LiteDB.Engine
         public void EnterReserved()
         {
             // wait finish all transactions before enter in reserved mode
-            if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+            if (_transaction.TryEnterWriteLock(-1) == false) throw LiteException.LockTimeout("reserved", TimeSpan.MaxValue);
 
             try
             {
                 // reserved locker in write lock
-                if (_reserved.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+                if (_reserved.TryEnterWriteLock(-1) == false) throw LiteException.LockTimeout("reserved", TimeSpan.MaxValue);
             }
             finally
             {

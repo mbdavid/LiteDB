@@ -33,6 +33,8 @@ namespace LiteDB.Demo
 
                 Task.Factory.StartNew(() => db.Insert("col2", ReadDocuments(1, 5000), BsonAutoId.Int32));
 
+                var t = db.BeginTrans();
+
                 Task.Delay(150).Wait();
             }
 
@@ -48,6 +50,7 @@ namespace LiteDB.Demo
                 Console.WriteLine("Count col2: " + c2);
             }
 
+            Console.WriteLine("FIM");
             Console.ReadKey();
         }
 

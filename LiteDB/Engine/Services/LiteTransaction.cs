@@ -23,18 +23,21 @@ namespace LiteDB.Engine
         internal event EventHandler Done;
 
         // transaction controls
-        private Guid _transactionID = Guid.NewGuid();
-        private TransactionState _state = TransactionState.New;
         private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
+        private bool _shutdown = false;
 
         // transaction info
-        public Guid TransactionID => _transactionID;
-        public TransactionState State { get => _state; set => _state = value; }
+        public int ThreadID { get; private set; }
+        public Guid TransactionID { get; private set; }
+        public TransactionState State { get; private set; }
         public DateTime StartTime { get; private set; } = DateTime.Now;
 
         internal LiteTransaction(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log)
         {
+            this.ThreadID = Thread.CurrentThread.ManagedThreadId;
+            this.TransactionID = Guid.NewGuid();
+
             _wal = wal;
             _log = log;
 
@@ -57,7 +60,7 @@ namespace LiteDB.Engine
             lock (_snapshots)
             {
                 // if transaction are commited/aborted do not accept new snapshots
-                if (_state == TransactionState.Aborted || _state == TransactionState.Commited || _state == TransactionState.Disposed) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
+                if (!(this.State == TransactionState.New || this.State == TransactionState.InUse)) throw LiteException.InvalidTransactionState("CreateSnapshot", this.State);
 
                 var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _dataFile, _wal));
 
@@ -67,7 +70,7 @@ namespace LiteDB.Engine
                     snapshot.WriteMode(addIfNotExists);
                 }
 
-                _state = TransactionState.InUse;
+                this.State = TransactionState.InUse;
 
                 return snapshot;
             }
@@ -78,11 +81,11 @@ namespace LiteDB.Engine
         /// </summary>
         internal void Safepoint()
         {
-            // transaction
-            if (_state == TransactionState.Aborted) throw LiteException.InvalidTransactionState();
+            // transaction is in shutdown (do rollback)
+            if (_shutdown) throw LiteException.DatabaseShutdown();
 
             // Safepoint are valid only during transaction execution
-            DEBUG(_state != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
+            DEBUG(this.State != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
 
             if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
@@ -93,7 +96,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
-        public void PersistDirtyPages()
+        internal void PersistDirtyPages()
         {
             // get all pages, in PageID order to be saved on wal (must be in order to avoid checkpoint read wal as normal page)
             // this orderBy can be avoid if I add 2 files (1 to datafile and 1 to wal file)
@@ -101,7 +104,7 @@ namespace LiteDB.Engine
                 .SelectMany(x => x.LocalPages.Values)
                 .Where(x => x.IsDirty && x.PageType != PageType.Header)
                 .OrderBy(x => x.PageID)
-                .ForEach((i, p) => p.TransactionID = _transactionID)
+                .ForEach((i, p) => p.TransactionID = this.TransactionID)
 #if DEBUG
                 .ToArray(); // for better debug propose
 #else
@@ -127,54 +130,58 @@ namespace LiteDB.Engine
         /// </summary>
         public void Commit()
         {
-            if (_state == TransactionState.New || _state == TransactionState.Commited) return;
-            if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Commit", _state);
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted || this.State == TransactionState.Disposed) throw LiteException.InvalidTransactionState("Commit", this.State);
 
-            // persist all pages into wal file
-            this.PersistDirtyPages();
-
-            // lock header page to avoid concurrency when writing on header
-            lock (_header)
+            if (this.State == TransactionState.InUse)
             {
-                var newEmptyPageID = _header.FreeEmptyPageID;
+                // persist all pages into wal file
+                this.PersistDirtyPages();
 
-                // if has deleted pages in this transaction, fix FreeEmptyPageID
-                if (_transPages.DeletedPages > 0)
+                // lock header page to avoid concurrency when writing on header
+                lock (_header)
                 {
-                    // now, my free list will starts with first page ID
-                    newEmptyPageID = _transPages.FirstDeletedPage.PageID;
+                    var newEmptyPageID = _header.FreeEmptyPageID;
 
-                    // if free empty list was not empty, let's fix my last page
-                    if (_header.FreeEmptyPageID != uint.MaxValue)
+                    // if has deleted pages in this transaction, fix FreeEmptyPageID
+                    if (_transPages.DeletedPages > 0)
                     {
-                        // update nextPageID of last deleted page to old first page ID
-                        _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
+                        // now, my free list will starts with first page ID
+                        newEmptyPageID = _transPages.FirstDeletedPage.PageID;
 
-                        // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                        _wal.WalFile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
+                        // if free empty list was not empty, let's fix my last page
+                        if (_header.FreeEmptyPageID != uint.MaxValue)
+                        {
+                            // update nextPageID of last deleted page to old first page ID
+                            _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
+
+                            // this page will write twice on wal, but no problem, only this last version will be saved on data file
+                            _wal.WalFile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
+                        }
                     }
+
+                    // create a header-confirm page based on current header page state (global header are in lock)
+                    var confirm = _header.Clone() as HeaderPage;
+
+                    // update this confirm page with current transactionID
+                    confirm.Update(this.TransactionID, newEmptyPageID, _transPages);
+
+                    // now, write confirm transaction (with header page) and update wal-index
+                    _wal.ConfirmTransaction(confirm, _transPages.DirtyPagesWal.Values);
+
+                    // update global header page to make equals to confirm page
+                    _header.Update(Guid.Empty, newEmptyPageID, _transPages);
                 }
 
-                // create a header-confirm page based on current header page state (global header are in lock)
-                var confirm = _header.Clone() as HeaderPage;
-
-                // update this confirm page with current transactionID
-                confirm.Update(_transactionID, newEmptyPageID, _transPages);
-
-                // now, write confirm transaction (with header page) and update wal-index
-                _wal.ConfirmTransaction(confirm, _transPages.DirtyPagesWal.Values);
-
-                // update global header page to make equals to confirm page
-                _header.Update(Guid.Empty, newEmptyPageID, _transPages);
+                // dispose all snaps and release locks only after wal index are updated
+                foreach (var snapshot in _snapshots.Values)
+                {
+                    snapshot.Dispose();
+                }
             }
 
-            // dispose all snaps and release locks only after wal index are updated
-            foreach (var snapshot in _snapshots.Values)
-            {
-                snapshot.Dispose();
-            }
+            this.State = TransactionState.Commited;
 
-            _state = TransactionState.Commited;
+            this.Dispose();
         }
 
         /// <summary>
@@ -182,8 +189,8 @@ namespace LiteDB.Engine
         /// </summary>
         public void Rollback()
         {
-            if (_state == TransactionState.New || _state == TransactionState.Aborted) return;
-            if (_state != TransactionState.InUse) throw LiteException.InvalidTransactionState("Rollback", _state);
+            if (this.State == TransactionState.New || this.State == TransactionState.Aborted) return;
+            if (this.State != TransactionState.InUse) throw LiteException.InvalidTransactionState("Rollback", this.State);
 
             // if this aborted transaction request new pages, create new transaction do return this pages
             if (_transPages.NewPages.Count > 0)
@@ -197,7 +204,9 @@ namespace LiteDB.Engine
                 snaphost.Dispose();
             }
 
-            _state = TransactionState.Aborted;
+            this.State = TransactionState.Aborted;
+
+            this.Dispose();
         }
 
         /// <summary>
@@ -236,6 +245,9 @@ namespace LiteDB.Engine
                 // create copy of header page to send to wal file
                 var confirm = _header.Clone() as HeaderPage;
 
+                // update confirm page with my new transaction ID
+                confirm.TransactionID = transactionID;
+
                 _header.Update(transactionID, pages.First().PageID, null);
 
                 // persist all pages into wal-file (new run ToList now)
@@ -256,31 +268,49 @@ namespace LiteDB.Engine
         /// </summary>
         internal void Abort()
         {
-            _state = TransactionState.Aborted;
+            if (this.State == TransactionState.Disposed || this.State == TransactionState.Aborted) return;
+
+            this.State = TransactionState.Aborted;
 
             _locker.ExitTransaction();
+
+            // call dispose event
+            this.Done?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Define this transaction must stop working and release resources becase main thread are shutdowing.
+        /// If was called by same thread, call rollback now
+        /// </summary>
+        internal void Shutdown()
+        {
+            if (Thread.CurrentThread.ManagedThreadId == this.ThreadID)
+            {
+                this.Rollback();
+            }
+            else
+            {
+                _shutdown = true;
+            }
         }
 
         public void Dispose()
         {
-            if (_state == TransactionState.Disposed || _state == TransactionState.Aborted) return;
+            if (this.State == TransactionState.Disposed) return;
 
             // if no commit/rollback are invoke before dipose, let's rollback by default
-            if (_state == TransactionState.InUse)
+            if (this.State == TransactionState.InUse)
             {
                 this.Rollback();
             }
 
             // dispose transactio state and date time
-            _state = TransactionState.Disposed;
+            this.State = TransactionState.Disposed;
 
             _locker.ExitTransaction();
 
             // call dispose event
-            if (this.Done != null)
-            {
-                this.Done(this, EventArgs.Empty);
-            }
+            this.Done?.Invoke(this, EventArgs.Empty);
         }
     }
 }
