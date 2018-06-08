@@ -31,8 +31,6 @@ namespace LiteDB.Engine
         private ConcurrentQueue<long> _dirtyQueue = new ConcurrentQueue<long>();
         private Task _asyncWriter;
 
-        private bool _disposing = false;
-
         public WalFileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
         {
             _factory = factory;
@@ -108,7 +106,14 @@ namespace LiteDB.Engine
         {
             if (_factory.IsWalFileExists() == false) return false;
 
-            return _virtualPosition > 0;
+            if (_virtualPosition > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return _writer.Value.BaseStream.Length > 0;
+            }
         }
 
         /// <summary>
@@ -129,12 +134,12 @@ namespace LiteDB.Engine
 
                 while (stream.Position < stream.Length)
                 {
-                    if (_disposing) yield break;
-
                     var page = BasePage.ReadPage(reader, _utcDate);
 
                     yield return page;
                 }
+
+                DEBUG(stream.Position != _virtualPosition, "After read all pages, virtual position must be same as current stream position");
             }
         }
 
@@ -150,8 +155,6 @@ namespace LiteDB.Engine
                 {
                     DEBUG(page.IsDirty == false, "page always must be dirty when be write on disk (async mode)");
                     DEBUG(page.TransactionID == Guid.Empty, "to write on wal, page must have a transactionID");
-
-                    if (_disposing) return;
 
                     // test max file size (includes wal operations)
                     if (_virtualPosition > _sizeLimit) throw LiteException.FileSizeExceeded(_sizeLimit);
@@ -188,8 +191,6 @@ namespace LiteDB.Engine
             // write all pages that are in queue
             while (!_dirtyQueue.IsEmpty)
             {
-                if (_disposing) return;
-
                 // get page from queue
                 if (!_dirtyQueue.TryDequeue(out var position)) break;
 
@@ -251,7 +252,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Delete WAL file (check before if is empty
+        /// Delete WAL file (check before if is empty) and re-initialize writer for new file
         /// </summary>
         public bool Delete()
         {
@@ -259,7 +260,7 @@ namespace LiteDB.Engine
 
             if (_writer.IsValueCreated && _writer.Value.BaseStream.Length == 0)
             {
-                this.Dispose();
+                _writer.Value.BaseStream.Dispose();
 
                 _factory.DeleteWalFile();
 
@@ -276,11 +277,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            _disposing = true;
-
-            // wait async
-            this.WaitAsyncWrite(true);
-
             // first dispose writer
             if (_writer.IsValueCreated)
             {

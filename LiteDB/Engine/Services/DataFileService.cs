@@ -26,8 +26,6 @@ namespace LiteDB.Engine
 
         private BinaryWriter _writer;
 
-        private bool _disposing = false;
-
         public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Logger log)
         {
             _factory = factory;
@@ -65,11 +63,6 @@ namespace LiteDB.Engine
         public long Length { get => _writer.BaseStream.Length; }
 
         /// <summary>
-        /// Flush data to disk
-        /// </summary>
-        public void Flush() => _writer.BaseStream.FlushToDisk();
-
-        /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
         /// </summary>
         public BasePage ReadPage(long position, bool clone)
@@ -91,7 +84,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read page direct from disk, ignoring cache
         /// </summary>
-        public BasePage ReadPageDisk(long position)
+        private BasePage ReadPageDisk(long position)
         {
             // try get reader from pool (if not exists, create new stream from factory)
             if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetDataFileStream(false));
@@ -113,7 +106,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write all pages to disk on absolute position
+        /// Write all pages to disk on absolute position (flush after write)
         /// </summary>
         public void WritePages(IEnumerable<BasePage> pages)
         {
@@ -121,8 +114,6 @@ namespace LiteDB.Engine
             {
                 foreach(var page in pages)
                 {
-                    if (_disposing) return;
-
                     _writer.BaseStream.Position = BasePage.GetPagePosition(page.PageID);
 
                     page.WritePage(_writer);
@@ -143,8 +134,8 @@ namespace LiteDB.Engine
 
             header.WritePage(_writer);
 
-            // if has initial size (at least 10 pages), alocate disk space now
-            if (initialSize > (PAGE_SIZE * 10))
+            // if has initial size alocate disk space now
+            if (initialSize > PAGE_SIZE)
             {
                 _writer.BaseStream.SetLength(initialSize);
             }
@@ -157,12 +148,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            _disposing = true;
-
             if (_factory.CloseOnDispose)
             {
-                // first flush and dispose writer
-                _writer.BaseStream.FlushToDisk();
+                // dispose writer
                 _writer.BaseStream.Dispose();
 
                 // after, dispose all readers

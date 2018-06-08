@@ -122,7 +122,7 @@ namespace LiteDB.Engine
                 _wal.Checkpoint(false);
 
                 // load header page
-                _header = _dataFile.ReadPageDisk(0) as HeaderPage;
+                _header = _dataFile.ReadPage(0, true) as HeaderPage;
 
                 // register virtual collections
                 this.InitializeVirtualCollections();

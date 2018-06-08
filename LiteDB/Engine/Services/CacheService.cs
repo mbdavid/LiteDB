@@ -66,7 +66,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                DEBUG(!Object.ReferenceEquals(_cache[position], page), "check why page are already in cache - is same instance?");
+                DEBUG(!Object.ReferenceEquals(_cache[position], page), "check why page are already in cache and are not same instance");
             }
         }
 
