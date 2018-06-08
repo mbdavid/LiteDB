@@ -17,7 +17,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Transaction are in use with one or more snaps in memory with page in use
         /// </summary>
-        InUse,
+        Active,
 
         /// <summary>
         /// Transaction was fully commited into wal disk and confirmed and all snaps are unlocked
@@ -29,11 +29,6 @@ namespace LiteDB.Engine
         /// Used NewPages are reverted in header page
         /// All snaps are clear and unlocked
         /// </summary>
-        Aborted,
-
-        /// <summary>
-        /// Transaction was completed disposed and current thread now can open new transaction
-        /// </summary>
-        Disposed
+        Aborted
     }
 }

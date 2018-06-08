@@ -214,7 +214,7 @@ namespace LiteDB.Engine
         public void WaitAsyncWrite(bool flush)
         {
             // if has pages on queue but async writer are not running, run sync
-            if (_dirtyQueue.IsEmpty == false && _asyncWriter.Status == TaskStatus.RanToCompletion)
+            if (_dirtyQueue.IsEmpty == false && _asyncWriter?.Status == TaskStatus.RanToCompletion)
             {
                 this.RunWriterQueue();
             }

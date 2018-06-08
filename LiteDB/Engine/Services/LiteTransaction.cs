@@ -8,7 +8,8 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Represent a single transaction service. Need a new instance for each transaction
+    /// Represent a single transaction service. Need a new instance for each transaction.
+    /// You must run each transaction in a different thread - no 2 transaction in same thread (locks as per-thread)
     /// </summary>
     public class LiteTransaction : IDisposable
     {
@@ -28,16 +29,13 @@ namespace LiteDB.Engine
         private bool _shutdown = false;
 
         // transaction info
-        public int ThreadID { get; private set; }
-        public Guid TransactionID { get; private set; }
-        public TransactionState State { get; private set; }
+        public int ThreadID { get; private set; } = Thread.CurrentThread.ManagedThreadId;
+        public Guid TransactionID { get; private set; } = Guid.NewGuid();
+        public TransactionState State { get; private set; } = TransactionState.New;
         public DateTime StartTime { get; private set; } = DateTime.Now;
 
         internal LiteTransaction(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log)
         {
-            this.ThreadID = Thread.CurrentThread.ManagedThreadId;
-            this.TransactionID = Guid.NewGuid();
-
             _wal = wal;
             _log = log;
 
@@ -56,24 +54,20 @@ namespace LiteDB.Engine
         /// </summary>
         internal Snapshot CreateSnapshot(SnapshotMode mode, string collectionName, bool addIfNotExists)
         {
-            // lock here only to get ensure that will be 1 request per time
-            lock (_snapshots)
+            // if transaction are commited/aborted do not accept new snapshots
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("CreateSnapshot", this.State);
+
+            this.State = TransactionState.Active;
+
+            var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _dataFile, _wal));
+
+            if (mode == SnapshotMode.Write)
             {
-                // if transaction are commited/aborted do not accept new snapshots
-                if (!(this.State == TransactionState.New || this.State == TransactionState.InUse)) throw LiteException.InvalidTransactionState("CreateSnapshot", this.State);
-
-                var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _dataFile, _wal));
-
-                if (mode == SnapshotMode.Write)
-                {
-                    // will create collection if needed only here
-                    snapshot.WriteMode(addIfNotExists);
-                }
-
-                this.State = TransactionState.InUse;
-
-                return snapshot;
+                // will create collection if needed only here
+                snapshot.WriteMode(addIfNotExists);
             }
+
+            return snapshot;
         }
 
         /// <summary>
@@ -85,7 +79,7 @@ namespace LiteDB.Engine
             if (_shutdown) throw LiteException.DatabaseShutdown();
 
             // Safepoint are valid only during transaction execution
-            DEBUG(this.State != TransactionState.InUse, "Safepoint() are called during an invalid transaction state");
+            DEBUG(this.State != TransactionState.Active, "Safepoint() are called during an invalid transaction state");
 
             if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
@@ -130,9 +124,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Commit()
         {
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted || this.State == TransactionState.Disposed) throw LiteException.InvalidTransactionState("Commit", this.State);
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("Commit", this.State);
 
-            if (this.State == TransactionState.InUse)
+            if (this.State == TransactionState.Active)
             {
                 // persist all pages into wal file
                 this.PersistDirtyPages();
@@ -179,34 +173,33 @@ namespace LiteDB.Engine
                 }
             }
 
-            this.State = TransactionState.Commited;
-
-            this.Dispose();
+            this.Release(TransactionState.Commited);
         }
 
         /// <summary>
         /// Rollback transaction operation - ignore all modified pages and return new pages into disk
         /// </summary>
-        public void Rollback()
+        public void Rollback(bool returnPages)
         {
-            if (this.State == TransactionState.New || this.State == TransactionState.Aborted) return;
-            if (this.State != TransactionState.InUse) throw LiteException.InvalidTransactionState("Rollback", this.State);
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("Commit", this.State);
 
-            // if this aborted transaction request new pages, create new transaction do return this pages
-            if (_transPages.NewPages.Count > 0)
+            if (this.State == TransactionState.Active)
             {
-                this.ReturnNewPages();
+                // if this aborted transaction requested for new pages, create new transaction do return this pages do database (as EmptyList pages)
+                // this returnPages are optional because TempDB can "loose" this pages
+                if (returnPages && _transPages.NewPages.Count > 0)
+                {
+                    this.ReturnNewPages();
+                }
+
+                // dispose all snaps an release locks
+                foreach (var snaphost in _snapshots.Values)
+                {
+                    snaphost.Dispose();
+                }
             }
 
-            // dispose all snaps an release locks
-            foreach (var snaphost in _snapshots.Values)
-            {
-                snaphost.Dispose();
-            }
-
-            this.State = TransactionState.Aborted;
-
-            this.Dispose();
+            this.Release(TransactionState.Aborted);
         }
 
         /// <summary>
@@ -264,21 +257,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Abandon transaction with no save an no page recovery - used on OrderBy TempDB
-        /// </summary>
-        internal void Abort()
-        {
-            if (this.State == TransactionState.Disposed || this.State == TransactionState.Aborted) return;
-
-            this.State = TransactionState.Aborted;
-
-            _locker.ExitTransaction();
-
-            // call dispose event
-            this.Done?.Invoke(this, EventArgs.Empty);
-        }
-
-        /// <summary>
         /// Define this transaction must stop working and release resources becase main thread are shutdowing.
         /// If was called by same thread, call rollback now
         /// </summary>
@@ -286,7 +264,7 @@ namespace LiteDB.Engine
         {
             if (Thread.CurrentThread.ManagedThreadId == this.ThreadID)
             {
-                this.Rollback();
+                this.Rollback(true);
             }
             else
             {
@@ -294,23 +272,26 @@ namespace LiteDB.Engine
             }
         }
 
-        public void Dispose()
+        /// <summary>
+        /// Dispose transaction and release lock
+        /// </summary>
+        private void Release(TransactionState state)
         {
-            if (this.State == TransactionState.Disposed) return;
+            this.State = state;
 
-            // if no commit/rollback are invoke before dipose, let's rollback by default
-            if (this.State == TransactionState.InUse)
-            {
-                this.Rollback();
-            }
-
-            // dispose transactio state and date time
-            this.State = TransactionState.Disposed;
-
+            // release thread transaction lock
             _locker.ExitTransaction();
 
-            // call dispose event
+            // call done event
             this.Done?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void Dispose()
+        {
+            if (this.State == TransactionState.New || this.State == TransactionState.Active)
+            {
+                this.Rollback(true);
+            }
         }
     }
 }

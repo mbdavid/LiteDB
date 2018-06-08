@@ -40,7 +40,6 @@ namespace LiteDB.Demo
 
             Console.WriteLine("Engine Disposed()");
 
-
             using (var db = new LiteEngine(settings))
             {
                 var c1 = db.Query("col1").ToEnumerable().Count();
@@ -48,6 +47,8 @@ namespace LiteDB.Demo
 
                 Console.WriteLine("Count col1: " + c1);
                 Console.WriteLine("Count col2: " + c2);
+
+                var dump = JsonSerializer.Serialize(new BsonArray(db.DumpDatafile()), true);
             }
 
             Console.WriteLine("FIM");
