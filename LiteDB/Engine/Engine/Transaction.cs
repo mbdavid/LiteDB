@@ -7,34 +7,29 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        private ConcurrentDictionary<Guid, LiteTransaction> _transactions = new ConcurrentDictionary<Guid, LiteTransaction>();
+        private ConcurrentDictionary<Guid, TransactionService> _transactions = new ConcurrentDictionary<Guid, TransactionService>();
         private LocalDataStoreSlot _slot = Thread.GetNamedDataSlot(Guid.NewGuid().ToString("n"));
 
-        internal LiteTransaction GetTransaction(out bool isNew)
+        internal TransactionService GetTransaction(bool create, out bool isNew)
         {
             // if engine are disposing, do not accept any transaction/operation
             if (_disposing) throw LiteException.DatabaseShutdown();
 
-            var transaction = Thread.GetData(_slot) as LiteTransaction;
+            var transaction = Thread.GetData(_slot) as TransactionService;
 
-            if (transaction == null)
+            if (create && transaction == null)
             {
                 isNew = true;
 
-                transaction = new LiteTransaction(_header, _locker, _dataFile, _wal, _log);
+                transaction = new TransactionService(_header, _locker, _dataFile, _wal, _log, (id) =>
+                {
+                    Thread.SetData(_slot, null);
+
+                    _transactions.TryRemove(id, out var t);
+                });
 
                 // add transaction to execution transaction dict
                 _transactions[transaction.TransactionID] = transaction;
-
-                // remove from transaction list & thread slot when dispose
-                transaction.Done += (o, s) =>
-                {
-                    var trans = o as LiteTransaction;
-
-                    Thread.SetData(_slot, null);
-
-                    _transactions.TryRemove(trans.TransactionID, out var t);
-                };
 
                 Thread.SetData(_slot, transaction);
             }
@@ -49,21 +44,55 @@ namespace LiteDB.Engine
         /// <summary>
         /// Initialize a new transaction
         /// </summary>
-        public LiteTransaction BeginTrans()
+        public Guid BeginTrans()
         {
-            var transaction = this.GetTransaction(out var isNew);
+            var transacion =this.GetTransaction(true, out var isNew);
 
             if (isNew == false) throw LiteException.InvalidTransactionState();
 
-            return transaction;
+            return transacion.TransactionID;
+        }
+
+        /// <summary>
+        /// Persist all dirty pages into WAL file using async task. 
+        /// </summary>
+        public void Commit()
+        {
+            var transaction = this.GetTransaction(false, out var isNew);
+
+            if (isNew)
+            {
+                transaction.Commit();
+            }
+            else
+            {
+                throw LiteException.InvalidTransactionState();
+            }
+        }
+
+        /// <summary>
+        /// Do rollback to current transaction. Clear dirty pages in memory and return new pages to main empty linked-list
+        /// </summary>
+        public void Rollback()
+        {
+            var transaction = this.GetTransaction(false, out var isNew);
+
+            if (isNew)
+            {
+                transaction.Rollback(true);
+            }
+            else
+            {
+                throw LiteException.InvalidTransactionState();
+            }
         }
 
         /// <summary>
         /// Create (or reuse) a transaction an add try/catch block. Commit transaction if is new transaction
         /// </summary>
-        private T AutoTransaction<T>(Func<LiteTransaction, T> fn)
+        private T AutoTransaction<T>(Func<TransactionService, T> fn)
         {
-            var transaction = this.GetTransaction(out var isNew);
+            var transaction = this.GetTransaction(true, out var isNew);
 
             try
             {

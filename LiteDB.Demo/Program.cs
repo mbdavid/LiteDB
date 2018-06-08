@@ -33,7 +33,7 @@ namespace LiteDB.Demo
 
                 Task.Factory.StartNew(() => db.Insert("col2", ReadDocuments(1, 5000), BsonAutoId.Int32));
 
-                var t = db.BeginTrans();
+                db.BeginTrans();
 
                 Task.Delay(150).Wait();
             }

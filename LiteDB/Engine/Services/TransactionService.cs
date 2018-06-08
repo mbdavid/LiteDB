@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     /// Represent a single transaction service. Need a new instance for each transaction.
     /// You must run each transaction in a different thread - no 2 transaction in same thread (locks as per-thread)
     /// </summary>
-    public class LiteTransaction : IDisposable
+    internal class TransactionService : IDisposable
     {
         // instances from Engine
         private HeaderPage _header;
@@ -20,12 +20,10 @@ namespace LiteDB.Engine
         private WalService _wal;
         private Logger _log;
 
-        // event to capture when transaction finish
-        internal event EventHandler Done;
-
         // transaction controls
         private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private TransactionPages _transPages = new TransactionPages();
+        private Action<Guid> _done;
         private bool _shutdown = false;
 
         // transaction info
@@ -34,10 +32,11 @@ namespace LiteDB.Engine
         public TransactionState State { get; private set; } = TransactionState.New;
         public DateTime StartTime { get; private set; } = DateTime.Now;
 
-        internal LiteTransaction(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log)
+        internal TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log, Action<Guid> done)
         {
             _wal = wal;
             _log = log;
+            _done = done;
 
             // retain instances
             _header = header;
@@ -173,7 +172,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            this.Release(TransactionState.Commited);
+            this.Done(TransactionState.Commited);
         }
 
         /// <summary>
@@ -199,7 +198,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            this.Release(TransactionState.Aborted);
+            this.Done(TransactionState.Aborted);
         }
 
         /// <summary>
@@ -273,17 +272,17 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Dispose transaction and release lock
+        /// Finish transaction, release lock and call done action
         /// </summary>
-        private void Release(TransactionState state)
+        private void Done(TransactionState state)
         {
             this.State = state;
 
             // release thread transaction lock
             _locker.ExitTransaction();
 
-            // call done event
-            this.Done?.Invoke(this, EventArgs.Empty);
+            // call done
+            _done(this.TransactionID);
         }
 
         public void Dispose()

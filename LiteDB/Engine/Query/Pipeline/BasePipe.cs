@@ -10,12 +10,12 @@ namespace LiteDB.Engine
     internal abstract class BasePipe : IDisposable
     {
         protected readonly LiteEngine _engine;
-        protected readonly LiteTransaction _transaction;
+        protected readonly TransactionService _transaction;
         protected readonly IDocumentLoader _loader;
 
-        private LiteTransaction _tempTransaction = null;
+        private TransactionService _tempTransaction = null;
 
-        public BasePipe(LiteEngine engine, LiteTransaction transaction, IDocumentLoader loader)
+        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
         {
             _engine = engine;
             _transaction = transaction;
@@ -159,7 +159,7 @@ namespace LiteDB.Engine
             // using tempdb for store sort data
             if (_tempTransaction == null)
             {
-                _tempTransaction = _engine.TempDB.GetTransaction(out var isNew);
+                _tempTransaction = _engine.TempDB.GetTransaction(true, out var isNew);
             }
 
             // create snapshot from temp transaction

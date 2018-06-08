@@ -130,7 +130,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Drop a collection - remove all data pages + indexes pages
         /// </summary>
-        public void Drop(CollectionPage col, LiteTransaction transaction)
+        public void Drop(CollectionPage col, TransactionService transaction)
         {
             // add all pages to delete
             var pages = new HashSet<uint>();

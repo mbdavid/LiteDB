@@ -145,8 +145,16 @@ namespace LiteDB.Engine
         /// <summary>
         /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
         /// </summary>
-        public void WaitAsyncWrite() => _wal?.WalFile?.WaitAsyncWrite(true);
+        public void WaitAsyncWrite() => _wal.WalFile.WaitAsyncWrite(true);
 
+        /// <summary>
+        /// Shutdown database
+        /// - After dispose engine, no more new transaction
+        /// - All transation will throw shutdown exception - rollback
+        /// - Wait for async write with full flush to disk
+        /// - Do checkpoint (sync)
+        /// - Dispose disks
+        /// </summary>
         public void Dispose()
         {
             if (_disposing) return;

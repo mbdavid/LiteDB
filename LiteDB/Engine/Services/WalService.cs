@@ -104,14 +104,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile. Return how many pages was copied from WAL file to data file
         /// </summary>
-        public int Checkpoint(bool delete)
+        public int Checkpoint(bool deleteWalFile)
         {
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.Active);
 
             if (_walFile.HasPages() == false)
             {
-                if (delete) _walFile.Delete();
+                if (deleteWalFile) _walFile.Delete();
                 return 0;
             }
 
@@ -138,7 +138,7 @@ namespace LiteDB.Engine
                 _walFile.Clear();
 
                 // delete wal file
-                if (delete) _walFile.Delete();
+                if (deleteWalFile) _walFile.Delete();
 
                 // clear indexes/confirmed transactions
                 _index.Clear();

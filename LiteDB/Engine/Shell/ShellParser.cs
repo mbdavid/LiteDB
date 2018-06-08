@@ -106,11 +106,11 @@ namespace LiteDB.Engine
             }
             else if (first.Is("commit"))
             {
-                _engine.GetTransaction(out var isNew).Commit();
+                _engine.Commit();
             }
             else if (first.Is("rollback"))
             {
-                _engine.GetTransaction(out var isNew).Rollback(true);
+                _engine.Rollback();
             }
             else
             {

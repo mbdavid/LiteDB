@@ -14,7 +14,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal IEnumerable<BsonValue> Run()
         {
-            var transaction = _engine.GetTransaction(out var isNew);
+            var transaction = _engine.GetTransaction(true, out var isNew);
 
             try
             {
