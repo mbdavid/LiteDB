@@ -8,5 +8,31 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
+        /// <summary>
+        /// Get/Set database user version
+        /// </summary>
+        public int UserVersion
+        {
+            get
+            {
+                return _header.UserVersion;
+            }
+            set
+            {
+                if (value == _header.UserVersion || _disposing) return;
+
+                // clone header to use in writer
+                var confirm = _header.Clone() as HeaderPage;
+
+                confirm.UserVersion = value;
+                confirm.TransactionID = Guid.NewGuid();
+
+                // create fake transaction with no pages to update (only confirm page)
+                _wal.ConfirmTransaction(confirm, new PagePosition[0]);
+
+                // update header instance
+                _header.UserVersion = value;
+            }
+        }
     }
 }

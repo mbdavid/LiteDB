@@ -35,6 +35,8 @@ namespace LiteDB.Demo
 
                 db.BeginTrans();
 
+                db.UserVersion = 99;
+
                 Task.Delay(150).Wait();
             }
 
