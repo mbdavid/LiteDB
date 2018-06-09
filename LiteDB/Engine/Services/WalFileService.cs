@@ -144,7 +144,7 @@ namespace LiteDB.Engine
                     yield return page;
                 }
 
-                DEBUG(stream.Position != _virtualPosition, "After read all pages, virtual position must be same as current stream position");
+                DEBUG(_virtualPosition > 0 && stream.Position != _virtualPosition, "After read all pages, virtual position must be same as current stream position");
             }
         }
 

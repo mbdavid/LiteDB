@@ -47,6 +47,10 @@ namespace LiteDB.Demo
                 var c1 = db.Query("col1").ToEnumerable().Count();
                 var c2 = db.Query("col2").ToEnumerable().Count();
 
+                var rr = db.Execute("select $ from $cols").First();
+
+                
+
                 Console.WriteLine("Count col1: " + c1);
                 Console.WriteLine("Count col2: " + c2);
 

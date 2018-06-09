@@ -61,7 +61,7 @@ namespace LiteDB.Engine
                 }
                 
                 // otherwise, run select transform in each document result
-                source = this.Select(source, query.Select);
+                return this.Select(source, query.Select);
             }
 
             // return document pipe

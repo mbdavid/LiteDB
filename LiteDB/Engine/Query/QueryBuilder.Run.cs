@@ -102,11 +102,19 @@ namespace LiteDB.Engine
         #region Execute Shortcut (First/Single/ToList/...)
 
         /// <summary>
+        /// Execute query and return values as IEnumerable
+        /// </summary>
+        public IEnumerable<BsonValue> ToValues()
+        {
+            return this.Run();
+        }
+
+        /// <summary>
         /// Execute query and return documents as IEnumerable
         /// </summary>
         public IEnumerable<BsonDocument> ToEnumerable()
         {
-            return this.Run().Select(x => x as BsonDocument);
+            return this.Run().Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { ["expr"] = x });
         }
 
         /// <summary>

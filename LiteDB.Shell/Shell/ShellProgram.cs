@@ -45,7 +45,9 @@ namespace LiteDB.Shell
                     // if not found, try "real" shell database command
                     if (!found)
                     {
-                        env.Engine.Run(cmd, null, env.Display);
+                        var result = env.Engine.Execute(cmd, null);
+
+                        env.Display.WriteResult(result);
                     }
                 }
                 catch (Exception ex)

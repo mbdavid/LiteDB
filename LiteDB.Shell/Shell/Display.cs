@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB.Shell
 {
-    public class Display : IShellOutput
+    public class Display
     {
         public List<TextWriter> TextWriters { get; set; }
         public bool Pretty { get; set; }
@@ -20,20 +20,29 @@ namespace LiteDB.Shell
             this.Limit = 1000;
         }
 
-        public void Write(BsonValue value, int index, int resultset)
+        public void WriteResult(BsonDataReader result)
         {
-            if (index >= 0)
+            if (result.Value != null)
             {
-                this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", index));
-            }
-
-            if (value.IsNumber || value.IsString)
-            {
-                this.WriteLine(ConsoleColor.DarkCyan, value.RawValue.ToString());
+                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(result.Value, this.Pretty, false));
             }
             else
             {
-                this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(value, this.Pretty, false));
+                var index = 0;
+
+                foreach (var value in result)
+                {
+                    this.Write(ConsoleColor.Cyan, string.Format("[{0}]: ", index++));
+
+                    if (value.IsNumber || value.IsString)
+                    {
+                        this.WriteLine(ConsoleColor.DarkCyan, value.RawValue.ToString());
+                    }
+                    else
+                    {
+                        this.WriteLine(ConsoleColor.DarkCyan, JsonSerializer.Serialize(value, this.Pretty, false));
+                    }
+                }
             }
         }
 

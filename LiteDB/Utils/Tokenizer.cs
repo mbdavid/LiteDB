@@ -157,7 +157,7 @@ namespace LiteDB
 
         public Token Expect(string value, bool ignoreCase = true)
         {
-            if (this.Is(value, ignoreCase))
+            if (!this.Is(value, ignoreCase))
             {
                 throw LiteException.UnexpectedToken(this, value);
             }
