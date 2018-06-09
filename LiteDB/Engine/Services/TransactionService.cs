@@ -14,16 +14,17 @@ namespace LiteDB.Engine
     internal class TransactionService : IDisposable
     {
         // instances from Engine
-        private HeaderPage _header;
-        private LockService _locker;
-        private DataFileService _dataFile;
-        private WalService _wal;
-        private Logger _log;
+        private readonly HeaderPage _header;
+        private readonly LockService _locker;
+        private readonly DataFileService _dataFile;
+        private readonly WalService _wal;
+        private readonly Logger _log;
 
         // transaction controls
-        private Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
-        private TransactionPages _transPages = new TransactionPages();
-        private Action<Guid> _done;
+        private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
+        private readonly TransactionPages _transPages = new TransactionPages();
+        private readonly Action<Guid> _done;
+        private readonly int _maxTransactionSize;
         private bool _shutdown = false;
 
         // transaction info
@@ -32,11 +33,12 @@ namespace LiteDB.Engine
         public TransactionState State { get; private set; } = TransactionState.New;
         public DateTime StartTime { get; private set; } = DateTime.Now;
 
-        internal TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log, Action<Guid> done)
+        internal TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<Guid> done)
         {
             _wal = wal;
             _log = log;
             _done = done;
+            _maxTransactionSize = maxTransactionSize;
 
             // retain instances
             _header = header;
@@ -80,7 +82,7 @@ namespace LiteDB.Engine
             // Safepoint are valid only during transaction execution
             DEBUG(this.State != TransactionState.Active, "Safepoint() are called during an invalid transaction state");
 
-            if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
+            if (_transPages.TransactionSize >= _maxTransactionSize)
             {
                 this.PersistDirtyPages();
             }

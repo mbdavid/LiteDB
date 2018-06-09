@@ -41,11 +41,6 @@ namespace LiteDB
             writer.Write(address.Index);
         }
 
-        public static void WriteBinary(this BinaryWriter writer, byte[] buffer)
-        {
-            writer.Write(buffer);
-        }
-
         public static void WriteDocument(this BinaryWriter writer, BsonDocument doc)
         {
             var bson = new BsonWriter();
@@ -79,7 +74,7 @@ namespace LiteDB
                 case BsonType.Document: writer.WriteDocument(value.AsDocument); break;
                 case BsonType.Array: writer.WriteArray(value.AsArray); break;
 
-                case BsonType.Binary: writer.WriteBinary((Byte[])value.RawValue); break;
+                case BsonType.Binary: writer.Write((Byte[])value.RawValue); break;
                 case BsonType.ObjectId: writer.Write((ObjectId)value.RawValue); break;
                 case BsonType.Guid: writer.Write((Guid)value.RawValue); break;
 

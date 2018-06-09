@@ -41,7 +41,6 @@ namespace LiteDB
         public const int COLLECTION_NOT_FOUND = 133;
         public const int COLLECTION_ALREADY_EXIST = 134;
         public const int INDEX_ALREADY_EXIST = 135;
-        public const int PARAMETER_LIMIT_EXCEEDED = 136;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -163,11 +162,6 @@ namespace LiteDB
         internal static LiteException IndexLimitExceeded(string collection)
         {
             return new LiteException(INDEX_LIMIT_EXCEEDED, "Collection '{0}' exceeded the maximum limit of indices: {1}", collection, INDEX_PER_COLLECTION);
-        }
-
-        internal static LiteException ParameterLimitExceeded(string name)
-        {
-            return new LiteException(PARAMETER_LIMIT_EXCEEDED, "Parameter '{0}' exceeded the maximum parameter limit {1} bytes", name, MAX_PARAMETERS_SIZE);
         }
 
         internal static LiteException IndexDuplicateKey(string field, BsonValue key)

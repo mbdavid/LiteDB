@@ -34,26 +34,23 @@ namespace LiteDB
         public const int INDEX_RESERVED_BYTES = 500;
 
         /// <summary>
-        /// Represent maximum bytes that all parameters must store in header page.
-        /// It's includes all key+values (Parameters are BsonDocument)
-        /// </summary>
-        public const ushort MAX_PARAMETERS_SIZE = 1024;
-
-        /// <summary>
         /// Define max length to be used in a single collection name
         /// </summary>
         public const int COLLECTION_NAME_MAX_LENGTH = 60;
 
         /// <summary>
-        /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
-        /// Do not change - it's calc
+        /// Define (and reserve) bytes do be fixed in header page (are not considering collection name/id list)
         /// </summary>
-        public const ushort MAX_COLLECTIONS_NAME_SIZE = 
+        public const int HEADER_PAGE_FIXED_DATA_SIZE = 256;
+
+        /// <summary>
+        /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
+        /// Do not change - it's calculated 
+        /// </summary>
+        public const ushort MAX_COLLECTIONS_NAME_SIZE =
             PAGE_SIZE -
             PAGE_HEADER_SIZE -
-            64 - // used in page
-            192 - // reserved (total: 256)
-            MAX_PARAMETERS_SIZE;
+            HEADER_PAGE_FIXED_DATA_SIZE;
 
         /// <summary>
         /// Define index name max length
@@ -74,11 +71,6 @@ namespace LiteDB
         /// When add item cache counter get this size, try clean 
         /// </summary>
         public const int MAX_CACHE_ADD = 1000;
-
-        /// <summary>
-        /// Define how many pages transaction will keep in-memory before do a complete flush (persisting dirty pages in wal)
-        /// </summary>
-        public const int MAX_TRANSACTION_SIZE = 1000;
 
         /// <summary>
         /// Stop VisualStudio if condition are true and we are running over #DEBUG - great for testing unexpected flow

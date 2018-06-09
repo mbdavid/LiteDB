@@ -75,14 +75,14 @@ namespace LiteDB.Engine
         public uint CheckpointCounter { get; set; }
 
         /// <summary>
+        /// UserVersion int - for user get/set database version changes
+        /// </summary>
+        public int UserVersion { get; set; }
+
+        /// <summary>
         /// Contains all collection in database using PageID to direct access
         /// </summary>
         public ConcurrentDictionary<string, uint> Collections { get; set; }
-
-        /// <summary>
-        /// Contains all database persisted parameters, like "userVersion", "autoIndex", "checkPoint", "maxMemoryCache"
-        /// </summary>
-        public ConcurrentDictionary<string, BsonValue> Parameters { get; set; }
 
         private HeaderPage()
         {
@@ -103,8 +103,8 @@ namespace LiteDB.Engine
             this.LastShrink = DateTime.MinValue;
             this.CommitCount = 0;
             this.CheckpointCounter = 0;
+            this.UserVersion = 0;
             this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
-            this.Parameters = new ConcurrentDictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -161,6 +161,8 @@ namespace LiteDB.Engine
 
         protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
+            var start = reader.BaseStream.Position;
+
             var info = reader.ReadFixedString(HEADER_INFO.Length);
             var ver = reader.ReadByte();
 
@@ -177,10 +179,15 @@ namespace LiteDB.Engine
             this.LastShrink = reader.ReadDateTime(utcDate);
             this.CommitCount = reader.ReadUInt32();
             this.CheckpointCounter = reader.ReadUInt32();
+            this.UserVersion = reader.ReadInt32();
 
-            var parameters = reader.ReadDocument(utcDate);
+            // read resered bytes
+            var used = reader.BaseStream.Position - start;
+            var reserved = (int)(HEADER_PAGE_FIXED_DATA_SIZE - used);
 
-            this.Parameters = new ConcurrentDictionary<string, BsonValue>(parameters.RawValue as Dictionary<string, BsonValue>);
+            reader.ReadBytes(reserved);
+
+            DEBUG(reserved != 160, "For current version, reserved space must return 160 bytes");
 
             for (var i = 0; i < this.ItemCount; i++)
             {
@@ -190,6 +197,8 @@ namespace LiteDB.Engine
 
         protected override void WriteContent(BinaryWriter writer)
         {
+            var start = writer.BaseStream.Position;
+
             writer.WriteFixedString(HEADER_INFO);
             writer.Write(FILE_VERSION);
             writer.Write(this.FreeEmptyPageID);
@@ -202,10 +211,15 @@ namespace LiteDB.Engine
             writer.Write(this.LastShrink);
             writer.Write(this.CommitCount);
             writer.Write(this.CheckpointCounter);
+            writer.Write(this.UserVersion);
 
-            var parameters = new BsonDocument(this.Parameters);
+            // write resered bytes
+            var used = writer.BaseStream.Position - start;
+            var reserved = HEADER_PAGE_FIXED_DATA_SIZE - used;
 
-            new BsonWriter().WriteDocument(writer, parameters);
+            DEBUG(reserved != 160, "For current version, reserved space must return 160 bytes");
+
+            writer.Write(new byte[reserved]);
 
             foreach (var col in this.Collections)
             {
@@ -236,7 +250,7 @@ namespace LiteDB.Engine
                 LastShrink = this.LastShrink,
                 CommitCount = this.CommitCount,
                 CheckpointCounter = this.CheckpointCounter,
-                Parameters = new ConcurrentDictionary<string, BsonValue>(this.Parameters),
+                UserVersion = this.UserVersion,
                 Collections = new ConcurrentDictionary<string, uint>(this.Collections)
             };
         }

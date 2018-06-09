@@ -10,11 +10,6 @@ namespace LiteDB.Engine
     public partial class QueryBuilder
     {
         /// <summary>
-        /// Minimum number of document in collection to try to create index - below this, use full scan because it's fast than index
-        /// </summary>
-        private const int DOCUMENT_COUNT_TO_CREATE_INDEX = 100;
-
-        /// <summary>
         /// Indicate this query already optimized
         /// </summary>
         private bool _optimized = false;
@@ -151,7 +146,8 @@ namespace LiteDB.Engine
         private IndexCost TryCreateIndex(Snapshot snapshot)
         {
             // at least a minimum document count
-            if (snapshot.CollectionPage.DocumentCount < DOCUMENT_COUNT_TO_CREATE_INDEX) return null;
+            if (_engine.Settings.AutoIndex == 0 || 
+                snapshot.CollectionPage.DocumentCount < _engine.Settings.AutoIndex) return null;
 
             // get a valid expression in where
             // must be condition, left side must be a path and immutable and right side must be a constant

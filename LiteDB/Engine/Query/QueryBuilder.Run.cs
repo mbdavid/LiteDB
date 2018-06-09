@@ -68,7 +68,7 @@ namespace LiteDB.Engine
 
                 var loader = _query.IsVirtual ?
                     (IDocumentLoader)_query.Index :
-                    new DocumentLoader(data, _engine.UtcDate, fields);
+                    new DocumentLoader(data, _engine.Settings.UtcDate, fields);
 
                 //TODO: remove this execution plan
                 Console.WriteLine(_query.GetExplainPlan());

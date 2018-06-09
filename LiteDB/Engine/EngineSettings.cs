@@ -16,9 +16,14 @@ namespace LiteDB.Engine
     public class EngineSettings
     {
         /// <summary>
-        /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). To use physical file, use "filename" attribute
+        /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStrem/WalStream null)
         /// </summary>
         public Stream DataStream { get; set; } = null;
+
+        /// <summary>
+        /// Get/Set custom stream to be used as walfile. If is null, use a new TempStream (for TempStrem datafile) or MemoryStrema (for MemoryStream datafile)
+        /// </summary>
+        public Stream WalStream { get; set; } = null;
 
         /// <summary>
         /// Get/Set custom instance for Logger
@@ -26,22 +31,22 @@ namespace LiteDB.Engine
         public Logger Log { get; set; } = null;
 
         /// <summary>
-        /// "filename": Full path or relative path from DLL directory (default: ':memory:')
+        /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: ':memory:')
         /// </summary>
         public string Filename { get; set; } = ":memory:";
 
         /// <summary>
-        /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
+        /// Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
-        /// "read only": Define if datafile will be read only, with no insert/update/delete data (default: false)
+        /// Define if datafile will be read only, with no write operations. Datafile must already created with no WAL file (default: false)
         /// </summary>
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
-        /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: null)
+        /// If database is new, initialize with allocated space - support KB, MB, GB (default: 0)
         /// </summary>
         public long InitialSize { get; set; } = 0;
 
@@ -51,24 +56,34 @@ namespace LiteDB.Engine
         public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
-        /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
+        /// Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
         /// </summary>
         public byte LogLevel { get; set; } = Logger.NONE;
 
         /// <summary>
-        /// "utc": Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)
+        /// Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)
         /// </summary>
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// "syncOverAsync": Use "sync over async" to UWP apps access any directory
+        /// Use "sync over async" to UWP apps access any directory (default: false)
         /// </summary>
         public bool SyncOverAsync { get; set; } = false;
 
         /// <summary>
-        /// "checkpoint": When wal file get this checkpoint limit, write over data disk
+        /// When wal file get this checkpoint limit, write over data disk
         /// </summary>
         public int Checkpoint { get; set; } = 1000;
+
+        /// <summary>
+        /// Define minimum document count to auto index creation when quering. Use 0 to disable auto index creation (default: 1000).
+        /// </summary>
+        public int AutoIndex { get; set; } = 1000;
+
+        /// <summary>
+        /// Define max pages a trasaction must keep in-memory before flush to WAL file. Must be larger than 100 (default 1000)
+        /// </summary>
+        public int MaxMemoryTransactionSize { get; set; } = 1000;
 
         /// <summary>
         /// Get datafile factory

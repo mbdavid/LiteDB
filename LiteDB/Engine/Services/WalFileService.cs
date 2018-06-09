@@ -57,6 +57,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get virtual file length
+        /// </summary>
+        public long Length => _virtualPosition;
+
+        /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
         /// </summary>
         public BasePage ReadPage(long position, bool clone)

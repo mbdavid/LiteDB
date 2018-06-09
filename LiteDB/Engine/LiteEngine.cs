@@ -14,21 +14,21 @@ namespace LiteDB.Engine
     {
         #region Services instances
 
-        private Logger _log;
+        private readonly Logger _log;
 
-        private LockService _locker;
+        private readonly LockService _locker;
 
-        private DataFileService _dataFile;
+        private readonly DataFileService _dataFile;
 
-        private WalService _wal;
+        private readonly WalService _wal;
 
-        private HeaderPage _header;
+        private readonly HeaderPage _header;
 
-        private BsonReader _bsonReader;
+        private readonly BsonReader _bsonReader;
 
-        private BsonWriter _bsonWriter;
+        private readonly BsonWriter _bsonWriter;
 
-        private bool _utcDate;
+        private readonly EngineSettings _settings;
 
         private bool _disposing = false;
 
@@ -68,9 +68,9 @@ namespace LiteDB.Engine
         public Logger Log => _log;
 
         /// <summary>
-        /// Get if BSON must read date as UTC (if false, date will be used LOCAL date)
+        /// Get database settings - settings 
         /// </summary>
-        public bool UtcDate => _utcDate;
+        public EngineSettings Settings => _settings;
 
         #endregion
 
@@ -102,8 +102,8 @@ namespace LiteDB.Engine
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
 
-                // get utc date handler
-                _utcDate = settings.UtcDate;
+                // get engine setting
+                _settings = settings;
 
                 _bsonReader = new BsonReader(settings.UtcDate);
                 _bsonWriter = new BsonWriter();
@@ -113,10 +113,10 @@ namespace LiteDB.Engine
                 // get disk factory from engine settings and open/create datafile/walfile
                 var factory = settings.GetDiskFactory();
 
-                _dataFile = new DataFileService(factory, settings.Timeout, settings.InitialSize, _utcDate, _log);
+                _dataFile = new DataFileService(factory, settings.Timeout, settings.InitialSize, settings.UtcDate, _log);
 
                 // initialize wal service
-                _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, _utcDate, _log);
+                _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, settings.UtcDate, _log);
 
                 // if WAL file have content, must run a checkpoint
                 _wal.Checkpoint(false);
@@ -150,7 +150,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Shutdown database
         /// - After dispose engine, no more new transaction
-        /// - All transation will throw shutdown exception - rollback
+        /// - All transation will throw shutdown exception and do rollback
         /// - Wait for async write with full flush to disk
         /// - Do checkpoint (sync)
         /// - Dispose disks

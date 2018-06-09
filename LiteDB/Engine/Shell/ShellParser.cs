@@ -81,9 +81,6 @@ namespace LiteDB.Engine
                 {
                     switch (name.ToLower())
                     {
-                        case "param":
-                            this.DbParam();
-                            break;
                         case "checkpoint":
                             this.DbCheckpoint();
                             break;

@@ -23,6 +23,21 @@ namespace LiteDB.Engine
             }
         }
 
+        public IEnumerable<BsonDocument> DumpWalfile()
+        {
+            var length = _wal.WalFile.Length;
+            var position = 0;
+
+            while (position < length)
+            {
+                var page = _wal.WalFile.ReadPage(position, false);
+
+                yield return this.DumpPage(position, page);
+
+                position += PAGE_SIZE;
+            }
+        }
+
         /// <summary>
         /// Dump page information into a BsonDocument
         /// </summary>
@@ -54,7 +69,7 @@ namespace LiteDB.Engine
                 doc["lastShrink"] = header.LastShrink;
                 doc["commitCounter"] = (int)header.CommitCount;
                 doc["checkpointCounter"] = (int)header.CheckpointCounter;
-                doc["parameters"] = new BsonDocument(header.Parameters);
+                doc["userVersion"] = header.UserVersion;
 
                 doc["colections"] = new BsonArray(header.Collections.Select(x => new BsonDocument
                 {
