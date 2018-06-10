@@ -552,7 +552,7 @@ namespace LiteDB
             source.Append(token.Value.ToUpper() + "(");
 
             // method call with no parameters
-            if (tokenizer.LookAhead().Type == TokenType.CloseBrace)
+            if (tokenizer.LookAhead().Type == TokenType.CloseParenthesis)
             {
                 tokenizer.ReadToken(); // read )
             }

@@ -14,6 +14,10 @@ namespace LiteDB.Engine
         {
             this.RegisterVirtualCollection("$cols", () => this.GetCollectionNames().Select(x => new BsonDocument { ["name"] = x }));
             this.RegisterVirtualCollection("$dump", () => this.DumpDatafile());
+
+            this.RegisterVirtualCollection("$snapshots", () => this.ShowSnapshots());
+            this.RegisterVirtualCollection("$transactions", () => this.ShowTransactions());
+
         }
     }
 }

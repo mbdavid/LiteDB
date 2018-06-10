@@ -60,7 +60,7 @@ namespace LiteDB.Engine
         {
             var transaction = this.GetTransaction(false, out var isNew);
 
-            if (isNew)
+            if (transaction != null)
             {
                 transaction.Commit();
             }
@@ -77,7 +77,7 @@ namespace LiteDB.Engine
         {
             var transaction = this.GetTransaction(false, out var isNew);
 
-            if (isNew)
+            if (transaction != null)
             {
                 transaction.Rollback(true);
             }
