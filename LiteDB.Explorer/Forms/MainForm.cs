@@ -35,19 +35,13 @@ namespace LiteDB.Explorer
 
             if (txtFileName.Text.Length > 0)
             {
-                BtnConnect_Click(null, EventArgs.Empty);
+                this.Connect();
             }
 
+            // stop all threads
             this.FormClosing += (s, e) =>
             {
-                // stop all threads
-                _running = false;
-
-                foreach(var task in pnlButtons.Controls.Cast<Control>().Select(x => x as Button).Select(x => x.Tag as TaskData))
-                {
-                    task.Sql = "";
-                    task.Thread.Interrupt();
-                }
+                this.Disconnect();
             };
         }
 
@@ -57,24 +51,49 @@ namespace LiteDB.Explorer
             {
                 if (txtFileName.Enabled)
                 {
-                    _db = new LiteEngine(txtFileName.Text);
-                    btnConnect.Text = "Disconnect";
-                    txtFileName.Enabled = false;
-
-                    this.LoadDatabase();
-                    BtnAdd_Click(null, null);
+                    this.Connect();
                 }
                 else
                 {
-                    _db?.Dispose();
-                    btnConnect.Text = "Connect";
-                    txtFileName.Enabled = true;
+                    this.Disconnect();
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void Connect()
+        {
+            _db = new LiteEngine(txtFileName.Text);
+            _running = true;
+            btnConnect.Text = "@ Disconnect";
+            txtFileName.Enabled = false;
+            splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = true;
+
+            this.LoadTreeView();
+
+            BtnAdd_Click(null, null);
+        }
+
+        private void Disconnect()
+        {
+            _db?.Dispose();
+            _running = false;
+            btnConnect.Text = "@ Connect";
+            txtFileName.Enabled = true;
+
+            splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = false;
+
+            foreach (var task in pnlButtons.Controls.Cast<Control>().Select(x => x as Button).Select(x => x.Tag as TaskData))
+            {
+                task.Sql = "";
+                task.Thread.Interrupt();
+            }
+
+            pnlButtons.Controls.Clear();
+            tvwCols.Nodes.Clear();
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
@@ -88,6 +107,9 @@ namespace LiteDB.Explorer
 
             var btn = new Button() { Text = task.Id.ToString(), Height = 30, Margin = new Padding(0), Tag = task };
             btn.Click += BtnSelect_Click;
+            //btn.ImageList = imgList;
+            //btn.ImageKey = "script";
+            //btn.ImageAlign = ContentAlignment.MiddleLeft;
 
             pnlButtons.Controls.Add(btn);
 
@@ -105,7 +127,9 @@ namespace LiteDB.Explorer
             foreach(var item in pnlButtons.Controls.Cast<Control>().Select(x => x as Button))
             {
                 var data = item.Tag as TaskData;
+                item.Font = new Font(btn.Font, FontStyle.Regular);
                 item.Text = data.Id.ToString();
+                //item.BackColor = SystemColors.Control;
             }
 
             if (_active != null)
@@ -115,7 +139,10 @@ namespace LiteDB.Explorer
 
             _active = btn.Tag as TaskData;
 
-            btn.Text = "[" + _active.Id + "]";
+            btn.Text = "[" + _active.Id.ToString() + "]";
+            btn.Font = new Font(btn.Font, FontStyle.Bold);
+            //btn.BackColor = Color.Silver;
+
             txtSql.Text = _active.Sql;
             btnRun.Enabled = !_active.Running;
 
@@ -128,14 +155,14 @@ namespace LiteDB.Explorer
             _active.Thread.Interrupt();
         }
 
-        private void LoadDatabase()
+        private void LoadTreeView()
         {
             tvwCols.Nodes.Clear();
 
             var root = tvwCols.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Settings.Filename));
             var system = root.Nodes.Add("System");
 
-            foreach (var key in _db.GetVirtualCollections())
+            foreach (var key in _db.GetVirtualCollections().OrderBy(x => x))
             {
                 var col = system.Nodes.Add(key);
                 col.Tag = $"SELECT $ FROM {key}";
@@ -144,7 +171,7 @@ namespace LiteDB.Explorer
             root.ExpandAll();
             system.Toggle();
 
-            foreach (var key in _db.GetCollectionNames())
+            foreach (var key in _db.GetCollectionNames().OrderBy(x => x))
             {
                 var col = root.Nodes.Add(key);
                 col.Tag = $"SELECT $ FROM {key}";
@@ -304,6 +331,11 @@ namespace LiteDB.Explorer
 
             var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
             e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
+        }
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            this.LoadTreeView();
         }
     }
 }

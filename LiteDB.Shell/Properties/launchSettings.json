@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "LiteDB.Shell": {
-      "commandName": "Project",
-      "commandLineArgs": "C:\\Temp\\app.db"
-    }
-  }
-}
