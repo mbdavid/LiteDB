@@ -3,9 +3,10 @@
   <PropertyGroup>
     <TargetFrameworks>net35;net40;netstandard1.3;netstandard2.0</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
-    <AssemblyVersion>4.1.3.0</AssemblyVersion>
-    <FileVersion>4.1.3</FileVersion>
-    <VersionPrefix>4.1.2</VersionPrefix>
+    <Version>4.1.4</Version>
+    <AssemblyVersion>4.1.4.0</AssemblyVersion>
+    <FileVersion>4.1.4</FileVersion>
+    <VersionPrefix>4.1.4</VersionPrefix>
     <Authors>Maurício David</Authors>
     <Product>LiteDB</Product>
     <Description>LiteDB - A lightweight embedded .NET NoSQL document store in a single datafile</Description>
@@ -27,7 +28,6 @@
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LiteDB.xml</DocumentationFile>
     <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
-    <Version>4.1.3</Version>
   </PropertyGroup>
   
   <!--
@@ -72,6 +72,10 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
