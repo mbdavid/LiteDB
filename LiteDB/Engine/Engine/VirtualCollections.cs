@@ -8,6 +8,11 @@ namespace LiteDB.Engine
         private Dictionary<string, Func<IEnumerable<BsonDocument>>> _virtualCollections = new Dictionary<string, Func<IEnumerable<BsonDocument>>>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
+        /// Get name of all virtual collections
+        /// </summary>
+        public IEnumerable<string> GetVirtualCollections() => _virtualCollections.Keys;
+
+        /// <summary>
         /// Register a new virtual collection that can be used in query (used for system information)
         /// Collection name must stasts with $
         /// </summary>

@@ -12,18 +12,19 @@ namespace LiteDB
     {
         private BsonValue _single;
         private IEnumerator<BsonValue> _source;
+        private string _collection = null;
 
         /// <summary>
         /// Initialize with no value
         /// </summary>
-        public BsonDataReader()
+        internal BsonDataReader()
         {
         }
 
         /// <summary>
         /// Initialize with a single value
         /// </summary>
-        public BsonDataReader(BsonValue value)
+        internal BsonDataReader(BsonValue value)
         {
             _single = value;
         }
@@ -31,15 +32,21 @@ namespace LiteDB
         /// <summary>
         /// Initialize with an IEnumerable data source
         /// </summary>
-        public BsonDataReader(IEnumerable<BsonValue> values)
+        internal BsonDataReader(IEnumerable<BsonValue> values, string collection)
         {
             _source = values.GetEnumerator();
+            _collection = collection;
         }
 
         /// <summary>
         /// Return current value
         /// </summary>
         public BsonValue Value => _single ?? _source.Current;
+
+        /// <summary>
+        /// Return collection name
+        /// </summary>
+        public string Collection => _collection;
 
         /// <summary>
         /// Move cursor to next result. Returns true if read was possible
