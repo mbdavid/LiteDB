@@ -238,7 +238,7 @@
             // lblCursor
             // 
             this.lblCursor.Name = "lblCursor";
-            this.lblCursor.Size = new System.Drawing.Size(681, 17);
+            this.lblCursor.Size = new System.Drawing.Size(666, 17);
             this.lblCursor.Spring = true;
             this.lblCursor.Text = "Position: 0 - Length: 0";
             this.lblCursor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -280,10 +280,11 @@
             // 
             // btnConnect
             // 
+            this.btnConnect.Image = ((System.Drawing.Image)(resources.GetObject("btnConnect.Image")));
             this.btnConnect.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(70, 22);
-            this.btnConnect.Text = "@ Connect";
+            this.btnConnect.Size = new System.Drawing.Size(72, 22);
+            this.btnConnect.Text = "Connect";
             this.btnConnect.Click += new System.EventHandler(this.BtnConnect_Click);
             // 
             // toolStripSeparator1
@@ -293,12 +294,11 @@
             // 
             // btnRefresh
             // 
-            this.btnRefresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
             this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(66, 22);
-            this.btnRefresh.Text = "{*} Refresh";
+            this.btnRefresh.Text = "Refresh";
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // toolStripSeparator2
@@ -308,18 +308,20 @@
             // 
             // btnAdd
             // 
+            this.btnAdd.Image = ((System.Drawing.Image)(resources.GetObject("btnAdd.Image")));
             this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(52, 22);
-            this.btnAdd.Text = "[+] Add";
+            this.btnAdd.Size = new System.Drawing.Size(49, 22);
+            this.btnAdd.Text = "Add";
             this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
             // 
             // btnRun
             // 
+            this.btnRun.Image = ((System.Drawing.Image)(resources.GetObject("btnRun.Image")));
             this.btnRun.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRun.Name = "btnRun";
-            this.btnRun.Size = new System.Drawing.Size(43, 22);
-            this.btnRun.Text = "> Run";
+            this.btnRun.Size = new System.Drawing.Size(48, 22);
+            this.btnRun.Text = "Run";
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
             // MainForm
