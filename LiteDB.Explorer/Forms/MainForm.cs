@@ -201,11 +201,7 @@ namespace LiteDB.Explorer
 
                     _synchronizationContext.Post(new SendOrPostCallback(o =>
                     {
-                        btnRun.Enabled = false;
-                        grdResult.Clear();
-                        txtResult.Clear();
-                        lblResultCount.Visible = false;
-                        lblElapsed.Text = "Running...";
+                        this.LoadResult(task);
                     }), task);
 
                     var reader = _db.Execute(task.Sql);
@@ -245,35 +241,44 @@ namespace LiteDB.Explorer
 
         private void LoadResult(TaskData data)
         {
-            if (data.Exception != null)
+            if (data.Running)
             {
-                txtResult.BindErrorMessage(data.Exception);
                 grdResult.Clear();
+                txtResult.Clear();
+                lblResultCount.Visible = false;
+                lblElapsed.Text = "Running";
+                prgRunning.Style = ProgressBarStyle.Marquee;
             }
             else
             {
-                if (tabResult.SelectedTab.Text == "Grid")
+                lblResultCount.Visible = true;
+                lblElapsed.Text = data.Elapsed.ToString();
+                prgRunning.Style = ProgressBarStyle.Blocks;
+                lblResultCount.Text = 
+                    data.Result == null ? "" :
+                    data.Result.Count == 0 ? "no documents" :
+                    data.Result.Count  == 1 ? "1 document" : 
+                    data.Result.Count > UIExtensions.LIMIT ? UIExtensions.LIMIT + "+ documents" :
+                    data.Result.Count + " documents";
+
+                if (data.Exception != null)
                 {
-                    grdResult.BindBsonData(data.Result);
-                    txtResult.Text = "";
+                    txtResult.BindErrorMessage(data.Exception);
+                    grdResult.Clear();
                 }
                 else
                 {
-                    txtResult.BindBsonData(data.Result);
-                    grdResult.Clear();
+                    if (tabResult.SelectedTab.Text == "Grid")
+                    {
+                        grdResult.BindBsonData(data.Result);
+                        txtResult.Text = "";
+                    }
+                    else
+                    {
+                        txtResult.BindBsonData(data.Result);
+                        grdResult.Clear();
+                    }
                 }
-            }
-
-            if (data.Running)
-            {
-                lblResultCount.Visible = false;
-                lblElapsed.Text = "Running";
-            }
-            else
-            {
-                lblResultCount.Text = data.Result?.Count > 0 ? data.Result?.Count + " document(s)" : "no result";
-                lblResultCount.Visible = true;
-                lblElapsed.Text = data.Elapsed.ToString();
             }
 
             btnRun.Enabled = !data.Running;
@@ -336,6 +341,13 @@ namespace LiteDB.Explorer
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             this.LoadTreeView();
+        }
+
+        private void txtSql_SelectionChanged(object sender, EventArgs e)
+        {
+            lblCursor.Text = string.Format("Position: {0} (Selection: {1})",
+                txtSql.SelectionStart + 1,
+                txtSql.SelectionLength);
         }
     }
 }

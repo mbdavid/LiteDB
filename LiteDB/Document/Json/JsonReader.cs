@@ -21,6 +21,11 @@ namespace LiteDB
             _tokenizer = new Tokenizer(reader);
         }
 
+        internal JsonReader(Tokenizer tokenizer)
+        {
+            _tokenizer = tokenizer ?? throw new ArgumentNullException(nameof(tokenizer));
+        }
+
         public BsonValue Deserialize()
         {
             var token = _tokenizer.ReadToken();

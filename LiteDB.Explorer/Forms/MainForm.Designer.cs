@@ -41,15 +41,17 @@
             this.tabText = new System.Windows.Forms.TabPage();
             this.txtResult = new System.Windows.Forms.RichTextBox();
             this.stbStatus = new System.Windows.Forms.StatusStrip();
+            this.lblCursor = new System.Windows.Forms.ToolStripStatusLabel();
+            this.prgRunning = new System.Windows.Forms.ToolStripProgressBar();
             this.lblResultCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblElapsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.tlbMain = new System.Windows.Forms.ToolStrip();
             this.btnConnect = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.btnAdd = new System.Windows.Forms.ToolStripButton();
-            this.btnRun = new System.Windows.Forms.ToolStripButton();
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnAdd = new System.Windows.Forms.ToolStripButton();
+            this.btnRun = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -152,6 +154,7 @@
             this.txtSql.Size = new System.Drawing.Size(746, 147);
             this.txtSql.TabIndex = 0;
             this.txtSql.Text = "";
+            this.txtSql.SelectionChanged += new System.EventHandler(this.txtSql_SelectionChanged);
             // 
             // tabResult
             // 
@@ -197,10 +200,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 26);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(712, 279);
+            this.tabText.Size = new System.Drawing.Size(738, 368);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -215,14 +218,16 @@
             this.txtResult.Location = new System.Drawing.Point(6, 5);
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
-            this.txtResult.Size = new System.Drawing.Size(700, 283);
+            this.txtResult.Size = new System.Drawing.Size(726, 355);
             this.txtResult.TabIndex = 0;
             this.txtResult.Text = "";
             // 
             // stbStatus
             // 
             this.stbStatus.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblCursor,
             this.lblResultCount,
+            this.prgRunning,
             this.lblElapsed});
             this.stbStatus.Location = new System.Drawing.Point(0, 638);
             this.stbStatus.Name = "stbStatus";
@@ -230,17 +235,33 @@
             this.stbStatus.TabIndex = 11;
             this.stbStatus.Text = "statusStrip1";
             // 
+            // lblCursor
+            // 
+            this.lblCursor.Name = "lblCursor";
+            this.lblCursor.Size = new System.Drawing.Size(681, 17);
+            this.lblCursor.Spring = true;
+            this.lblCursor.Text = "Position: 0 - Length: 0";
+            this.lblCursor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // prgRunning
+            // 
+            this.prgRunning.Name = "prgRunning";
+            this.prgRunning.Size = new System.Drawing.Size(100, 16);
+            // 
             // lblResultCount
             // 
+            this.lblResultCount.AutoSize = false;
             this.lblResultCount.Name = "lblResultCount";
-            this.lblResultCount.Size = new System.Drawing.Size(76, 17);
+            this.lblResultCount.Size = new System.Drawing.Size(150, 17);
             this.lblResultCount.Text = "0 documents";
             // 
             // lblElapsed
             // 
+            this.lblElapsed.AutoSize = false;
             this.lblElapsed.Name = "lblElapsed";
-            this.lblElapsed.Size = new System.Drawing.Size(70, 17);
-            this.lblElapsed.Text = "00:00:00.000";
+            this.lblElapsed.Size = new System.Drawing.Size(110, 17);
+            this.lblElapsed.Text = "00:00:00.0000";
+            this.lblElapsed.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // tlbMain
             // 
@@ -270,6 +291,21 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
+            // btnRefresh
+            // 
+            this.btnRefresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
+            this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(66, 22);
+            this.btnRefresh.Text = "{*} Refresh";
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
             // btnAdd
             // 
             this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -285,21 +321,6 @@
             this.btnRun.Size = new System.Drawing.Size(43, 22);
             this.btnRun.Text = "> Run";
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
-            // 
-            // btnRefresh
-            // 
-            this.btnRefresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
-            this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(66, 22);
-            this.btnRefresh.Text = "{*} Refresh";
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
             // MainForm
             // 
@@ -361,6 +382,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton btnRefresh;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripStatusLabel lblCursor;
+        private System.Windows.Forms.ToolStripProgressBar prgRunning;
     }
 }
 

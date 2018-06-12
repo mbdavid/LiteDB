@@ -58,9 +58,10 @@ namespace LiteDB
         public int ErrorCode { get; private set; }
         public long Position { get; private set; }
 
-        public LiteException(string message)
+        public LiteException(int code, string message)
             : base(message)
         {
+            this.ErrorCode = code;
         }
 
         internal LiteException(int code, string message, params object[] args)
@@ -249,7 +250,7 @@ namespace LiteDB
             var position = (token?.Position - (token?.Value?.Length ?? 0)) ?? 0;
             var str = token?.Type == TokenType.EOF ? "[EOF]" : token?.Value ?? "";
 
-            return new LiteException(UNEXPECTED_TOKEN, $"Unexpected token `{str}` in position {position}")
+            return new LiteException(UNEXPECTED_TOKEN, "Unexpected token `" + str + "` in position " + position)
             {
                 Position = position
             };

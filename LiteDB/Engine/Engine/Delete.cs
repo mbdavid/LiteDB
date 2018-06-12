@@ -26,7 +26,7 @@ namespace LiteDB.Engine
                 var count = 0;
                 var pk = col.PK;
 
-                foreach(var id in ids)
+                foreach (var id in ids)
                 {
                     var pkNode = indexer.Find(pk, id, false, LiteDB.Query.Ascending);
 
@@ -53,6 +53,39 @@ namespace LiteDB.Engine
                 }
 
                 return count;
+            });
+        }
+
+        /// <summary>
+        /// Implements delete based on filter expression
+        /// </summary>
+        public int Delete(string collection, BsonExpression where)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (where == null) throw new ArgumentNullException(nameof(where));
+
+            return this.AutoTransaction(transaction =>
+            {
+                // do optimization for when using "_id = constant" key
+                if (where.Type == BsonExpressionType.Equal && 
+                    where.Left.Type == BsonExpressionType.Path && 
+                    where.Left.Source == "$._id" && 
+                    where.Right.IsConstant)
+                {
+                    var id = where.Right.Execute().First();
+
+                    return this.Delete(collection, new BsonValue[] { id });
+                }
+                else
+                {
+                    var q = this.Query(collection)
+                        .Where(where)
+                        .Select("_id")
+                        .ForUpdate()
+                        .ToValues();
+
+                    return this.Delete(collection, q);
+                }
             });
         }
     }

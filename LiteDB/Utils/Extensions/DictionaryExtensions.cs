@@ -100,7 +100,8 @@ namespace LiteDB
             }
             catch (Exception)
             {
-                throw new LiteException("Invalid connection string value type for [" + key + "]");
+                //TODO: fix string connection parser
+                throw new LiteException(0, "Invalid connection string value type for [" + key + "]");
             }
         }
 
