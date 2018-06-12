@@ -47,9 +47,9 @@
             this.lblElapsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.tlbMain = new System.Windows.Forms.ToolStrip();
             this.btnConnect = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.tlbSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.tlbSep2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnRun = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -72,7 +72,7 @@
             // 
             this.txtFileName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtFileName.Location = new System.Drawing.Point(5, 26);
+            this.txtFileName.Location = new System.Drawing.Point(5, 37);
             this.txtFileName.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtFileName.Name = "txtFileName";
             this.txtFileName.Size = new System.Drawing.Size(1033, 23);
@@ -84,7 +84,7 @@
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(5, 54);
+            this.splitContainer1.Location = new System.Drawing.Point(5, 69);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -95,7 +95,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.pnlButtons);
             this.splitContainer1.Panel2.Controls.Add(this.splitRight);
-            this.splitContainer1.Size = new System.Drawing.Size(1033, 582);
+            this.splitContainer1.Size = new System.Drawing.Size(1033, 567);
             this.splitContainer1.SplitterDistance = 280;
             this.splitContainer1.TabIndex = 10;
             // 
@@ -107,7 +107,7 @@
             this.tvwCols.Location = new System.Drawing.Point(0, 0);
             this.tvwCols.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tvwCols.Name = "tvwCols";
-            this.tvwCols.Size = new System.Drawing.Size(277, 580);
+            this.tvwCols.Size = new System.Drawing.Size(277, 565);
             this.tvwCols.TabIndex = 9;
             this.tvwCols.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TvwCols_NodeMouseDoubleClick);
             // 
@@ -138,8 +138,8 @@
             // splitRight.Panel2
             // 
             this.splitRight.Panel2.Controls.Add(this.tabResult);
-            this.splitRight.Size = new System.Drawing.Size(750, 582);
-            this.splitRight.SplitterDistance = 179;
+            this.splitRight.Size = new System.Drawing.Size(750, 567);
+            this.splitRight.SplitterDistance = 174;
             this.splitRight.TabIndex = 8;
             // 
             // txtSql
@@ -151,7 +151,7 @@
             this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtSql.Location = new System.Drawing.Point(0, 30);
             this.txtSql.Name = "txtSql";
-            this.txtSql.Size = new System.Drawing.Size(746, 147);
+            this.txtSql.Size = new System.Drawing.Size(746, 142);
             this.txtSql.TabIndex = 0;
             this.txtSql.Text = "";
             this.txtSql.SelectionChanged += new System.EventHandler(this.txtSql_SelectionChanged);
@@ -166,7 +166,7 @@
             this.tabResult.Location = new System.Drawing.Point(0, 0);
             this.tabResult.Name = "tabResult";
             this.tabResult.SelectedIndex = 0;
-            this.tabResult.Size = new System.Drawing.Size(746, 394);
+            this.tabResult.Size = new System.Drawing.Size(746, 384);
             this.tabResult.TabIndex = 0;
             this.tabResult.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabResult_Selected);
             // 
@@ -176,7 +176,7 @@
             this.tabGrid.Location = new System.Drawing.Point(4, 24);
             this.tabGrid.Name = "tabGrid";
             this.tabGrid.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGrid.Size = new System.Drawing.Size(738, 366);
+            this.tabGrid.Size = new System.Drawing.Size(738, 356);
             this.tabGrid.TabIndex = 0;
             this.tabGrid.Text = "Grid";
             this.tabGrid.UseVisualStyleBackColor = true;
@@ -191,7 +191,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(726, 359);
+            this.grdResult.Size = new System.Drawing.Size(726, 349);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -238,9 +238,8 @@
             // lblCursor
             // 
             this.lblCursor.Name = "lblCursor";
-            this.lblCursor.Size = new System.Drawing.Size(666, 17);
+            this.lblCursor.Size = new System.Drawing.Size(635, 17);
             this.lblCursor.Spring = true;
-            this.lblCursor.Text = "Position: 0 - Length: 0";
             this.lblCursor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // prgRunning
@@ -265,16 +264,18 @@
             // 
             // tlbMain
             // 
+            this.tlbMain.GripMargin = new System.Windows.Forms.Padding(3);
             this.tlbMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnConnect,
-            this.toolStripSeparator1,
+            this.tlbSep1,
             this.btnRefresh,
-            this.toolStripSeparator2,
+            this.tlbSep2,
             this.btnAdd,
             this.btnRun});
             this.tlbMain.Location = new System.Drawing.Point(0, 0);
             this.tlbMain.Name = "tlbMain";
-            this.tlbMain.Size = new System.Drawing.Size(1043, 25);
+            this.tlbMain.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
+            this.tlbMain.Size = new System.Drawing.Size(1043, 33);
             this.tlbMain.TabIndex = 12;
             this.tlbMain.Text = "toolStrip";
             // 
@@ -283,35 +284,38 @@
             this.btnConnect.Image = ((System.Drawing.Image)(resources.GetObject("btnConnect.Image")));
             this.btnConnect.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(72, 22);
+            this.btnConnect.Padding = new System.Windows.Forms.Padding(3);
+            this.btnConnect.Size = new System.Drawing.Size(78, 26);
             this.btnConnect.Text = "Connect";
             this.btnConnect.Click += new System.EventHandler(this.BtnConnect_Click);
             // 
-            // toolStripSeparator1
+            // tlbSep1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            this.tlbSep1.Name = "tlbSep1";
+            this.tlbSep1.Size = new System.Drawing.Size(6, 29);
             // 
             // btnRefresh
             // 
             this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
             this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(66, 22);
+            this.btnRefresh.Padding = new System.Windows.Forms.Padding(3);
+            this.btnRefresh.Size = new System.Drawing.Size(72, 26);
             this.btnRefresh.Text = "Refresh";
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
-            // toolStripSeparator2
+            // tlbSep2
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            this.tlbSep2.Name = "tlbSep2";
+            this.tlbSep2.Size = new System.Drawing.Size(6, 29);
             // 
             // btnAdd
             // 
             this.btnAdd.Image = ((System.Drawing.Image)(resources.GetObject("btnAdd.Image")));
             this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(49, 22);
+            this.btnAdd.Padding = new System.Windows.Forms.Padding(3);
+            this.btnAdd.Size = new System.Drawing.Size(55, 26);
             this.btnAdd.Text = "Add";
             this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
             // 
@@ -320,7 +324,8 @@
             this.btnRun.Image = ((System.Drawing.Image)(resources.GetObject("btnRun.Image")));
             this.btnRun.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRun.Name = "btnRun";
-            this.btnRun.Size = new System.Drawing.Size(48, 22);
+            this.btnRun.Padding = new System.Windows.Forms.Padding(3);
+            this.btnRun.Size = new System.Drawing.Size(54, 26);
             this.btnRun.Text = "Run";
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
@@ -381,9 +386,9 @@
         private System.Windows.Forms.ToolStripButton btnConnect;
         private System.Windows.Forms.ToolStripButton btnAdd;
         private System.Windows.Forms.ToolStripButton btnRun;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator tlbSep1;
         private System.Windows.Forms.ToolStripButton btnRefresh;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripSeparator tlbSep2;
         private System.Windows.Forms.ToolStripStatusLabel lblCursor;
         private System.Windows.Forms.ToolStripProgressBar prgRunning;
     }

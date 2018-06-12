@@ -68,7 +68,7 @@ namespace LiteDB.Explorer
         {
             _db = new LiteEngine(txtFileName.Text);
             _running = true;
-            btnConnect.Text = "@ Disconnect";
+            btnConnect.Text = "Disconnect";
             txtFileName.Enabled = false;
             splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = true;
 
@@ -81,7 +81,7 @@ namespace LiteDB.Explorer
         {
             _db?.Dispose();
             _running = false;
-            btnConnect.Text = "@ Connect";
+            btnConnect.Text = "Connect";
             txtFileName.Enabled = true;
 
             splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = false;
@@ -345,9 +345,8 @@ namespace LiteDB.Explorer
 
         private void txtSql_SelectionChanged(object sender, EventArgs e)
         {
-            lblCursor.Text = string.Format("Position: {0} (Selection: {1})",
-                txtSql.SelectionStart + 1,
-                txtSql.SelectionLength);
+            lblCursor.Text = "Position: " + (txtSql.SelectionStart + 1) +
+                (txtSql.SelectionLength > 0 ? $" (Selection: {txtSql.SelectionLength})" : "");
         }
     }
 }
