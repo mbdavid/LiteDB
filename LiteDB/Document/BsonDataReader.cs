@@ -10,9 +10,12 @@ namespace LiteDB
     /// </summary>
     public class BsonDataReader : IDisposable
     {
-        private BsonValue _single;
-        private IEnumerator<BsonValue> _source;
+        private BsonValue _single = null;
+        private IEnumerator<BsonValue> _source = null;
         private string _collection = null;
+        private bool _hasValues = false;
+        private BsonValue _first = null;
+        private bool _isFirst = false;
 
         /// <summary>
         /// Initialize with no value
@@ -36,12 +39,23 @@ namespace LiteDB
         {
             _source = values.GetEnumerator();
             _collection = collection;
+
+            if (_source.MoveNext())
+            {
+                _hasValues = _isFirst = true;
+                _first = _source.Current;
+            }
         }
+
+        /// <summary>
+        /// Return if has any value in result
+        /// </summary>
+        public bool HasValues => (_single != null) || _hasValues;
 
         /// <summary>
         /// Return current value
         /// </summary>
-        public BsonValue Value => _single ?? _source.Current;
+        public BsonValue Current => _single ?? _first ?? _source.Current;
 
         /// <summary>
         /// Return collection name
@@ -53,14 +67,26 @@ namespace LiteDB
         /// </summary>
         public bool Read()
         {
-            return _source?.MoveNext() ?? false;
+            if (_single != null) return false;
+            if (_source == null) return false;
+
+            if (_isFirst)
+            {
+                _isFirst = false;
+                return true;
+            }
+            else
+            {
+                _first = null;
+                return _source.MoveNext();
+            }
         }
         
         public BsonValue this[string field]
         {
             get
             {
-                return _single?.AsDocument[field] ?? _source?.Current.AsDocument[field] ?? BsonValue.Null;
+                return this.Current?.AsDocument[field] ?? BsonValue.Null;
             }
         }
 

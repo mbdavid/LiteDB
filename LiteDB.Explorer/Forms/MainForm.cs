@@ -93,7 +93,7 @@ namespace LiteDB.Explorer
             }
 
             pnlButtons.Controls.Clear();
-            tvwCols.Nodes.Clear();
+            tvwDatabase.Nodes.Clear();
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
@@ -157,15 +157,19 @@ namespace LiteDB.Explorer
 
         private void LoadTreeView()
         {
-            tvwCols.Nodes.Clear();
+            tvwDatabase.Nodes.Clear();
 
-            var root = tvwCols.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Settings.Filename));
+            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Settings.Filename));
             var system = root.Nodes.Add("System");
+
+            root.ImageKey = "database";
+            system.ImageKey = system.SelectedImageKey = "folder";
 
             foreach (var key in _db.GetVirtualCollections().OrderBy(x => x))
             {
                 var col = system.Nodes.Add(key);
                 col.Tag = $"SELECT $ FROM {key}";
+                col.ImageKey = col.SelectedImageKey = "table_gear";
             }
 
             root.ExpandAll();
@@ -175,6 +179,8 @@ namespace LiteDB.Explorer
             {
                 var col = root.Nodes.Add(key);
                 col.Tag = $"SELECT $ FROM {key}";
+                col.ImageKey = col.SelectedImageKey = "table";
+                col.ContextMenuStrip = ctxMenu;
             }
         }
 
@@ -297,7 +303,7 @@ namespace LiteDB.Explorer
         {
             if (e.Node.Tag is string cmd)
             {
-                txtSql.Text = cmd;
+                this.AddSqlSnippet(cmd);
             }
         }
 
@@ -348,6 +354,31 @@ namespace LiteDB.Explorer
         {
             lblCursor.Text = "Position: " + (txtSql.SelectionStart + 1) +
                 (txtSql.SelectionLength > 0 ? $" (Selection: {txtSql.SelectionLength})" : "");
+        }
+
+        private void ctxMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            var colname = tvwDatabase.SelectedNode.Text;
+            var sql = string.Format(e.ClickedItem.Tag.ToString(), colname);
+            this.AddSqlSnippet(sql);
+        }
+
+        private void tvwCols_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                tvwDatabase.SelectedNode = tvwDatabase.GetNodeAt(e.X, e.Y);
+            }
+        }
+
+        private void AddSqlSnippet(string sql)
+        {
+            if (txtSql.Text.Trim().Length > 0)
+            {
+                BtnAdd_Click(null, null);
+            }
+
+            txtSql.Text = sql;
         }
     }
 }

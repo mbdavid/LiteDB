@@ -32,7 +32,7 @@ namespace LiteDB.Explorer
 
             while (reader.Read())
             {
-                this.Result.Add(reader.Value);
+                this.Result.Add(reader.Current);
 
                 if (++index >= RESULT_LIMIT)
                 {

@@ -28,10 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.txtFileName = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.tvwCols = new System.Windows.Forms.TreeView();
+            this.tvwDatabase = new System.Windows.Forms.TreeView();
+            this.imgList = new System.Windows.Forms.ImageList(this.components);
             this.pnlButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.splitRight = new System.Windows.Forms.SplitContainer();
             this.txtSql = new System.Windows.Forms.RichTextBox();
@@ -42,8 +44,8 @@
             this.txtResult = new System.Windows.Forms.RichTextBox();
             this.stbStatus = new System.Windows.Forms.StatusStrip();
             this.lblCursor = new System.Windows.Forms.ToolStripStatusLabel();
-            this.prgRunning = new System.Windows.Forms.ToolStripProgressBar();
             this.lblResultCount = new System.Windows.Forms.ToolStripStatusLabel();
+            this.prgRunning = new System.Windows.Forms.ToolStripProgressBar();
             this.lblElapsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.tlbMain = new System.Windows.Forms.ToolStrip();
             this.btnConnect = new System.Windows.Forms.ToolStripButton();
@@ -52,6 +54,9 @@
             this.tlbSep2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnRun = new System.Windows.Forms.ToolStripButton();
+            this.button1 = new System.Windows.Forms.Button();
+            this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -66,6 +71,7 @@
             this.tabText.SuspendLayout();
             this.stbStatus.SuspendLayout();
             this.tlbMain.SuspendLayout();
+            this.ctxMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtFileName
@@ -89,7 +95,7 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.tvwCols);
+            this.splitContainer1.Panel1.Controls.Add(this.tvwDatabase);
             // 
             // splitContainer1.Panel2
             // 
@@ -99,17 +105,30 @@
             this.splitContainer1.SplitterDistance = 280;
             this.splitContainer1.TabIndex = 10;
             // 
-            // tvwCols
+            // tvwDatabase
             // 
-            this.tvwCols.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.tvwDatabase.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tvwCols.Location = new System.Drawing.Point(0, 0);
-            this.tvwCols.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.tvwCols.Name = "tvwCols";
-            this.tvwCols.Size = new System.Drawing.Size(277, 565);
-            this.tvwCols.TabIndex = 9;
-            this.tvwCols.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TvwCols_NodeMouseDoubleClick);
+            this.tvwDatabase.ImageIndex = 0;
+            this.tvwDatabase.ImageList = this.imgList;
+            this.tvwDatabase.Location = new System.Drawing.Point(0, 0);
+            this.tvwDatabase.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.tvwDatabase.Name = "tvwDatabase";
+            this.tvwDatabase.SelectedImageIndex = 0;
+            this.tvwDatabase.Size = new System.Drawing.Size(277, 565);
+            this.tvwDatabase.TabIndex = 9;
+            this.tvwDatabase.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TvwCols_NodeMouseDoubleClick);
+            this.tvwDatabase.MouseUp += new System.Windows.Forms.MouseEventHandler(this.tvwCols_MouseUp);
+            // 
+            // imgList
+            // 
+            this.imgList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgList.ImageStream")));
+            this.imgList.TransparentColor = System.Drawing.Color.Transparent;
+            this.imgList.Images.SetKeyName(0, "database");
+            this.imgList.Images.SetKeyName(1, "folder");
+            this.imgList.Images.SetKeyName(2, "table");
+            this.imgList.Images.SetKeyName(3, "table_gear");
             // 
             // pnlButtons
             // 
@@ -203,7 +222,7 @@
             this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(738, 368);
+            this.tabText.Size = new System.Drawing.Size(738, 358);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -238,14 +257,9 @@
             // lblCursor
             // 
             this.lblCursor.Name = "lblCursor";
-            this.lblCursor.Size = new System.Drawing.Size(635, 17);
+            this.lblCursor.Size = new System.Drawing.Size(666, 17);
             this.lblCursor.Spring = true;
             this.lblCursor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // prgRunning
-            // 
-            this.prgRunning.Name = "prgRunning";
-            this.prgRunning.Size = new System.Drawing.Size(100, 16);
             // 
             // lblResultCount
             // 
@@ -253,6 +267,11 @@
             this.lblResultCount.Name = "lblResultCount";
             this.lblResultCount.Size = new System.Drawing.Size(150, 17);
             this.lblResultCount.Text = "0 documents";
+            // 
+            // prgRunning
+            // 
+            this.prgRunning.Name = "prgRunning";
+            this.prgRunning.Size = new System.Drawing.Size(100, 16);
             // 
             // lblElapsed
             // 
@@ -315,8 +334,8 @@
             this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Padding = new System.Windows.Forms.Padding(3);
-            this.btnAdd.Size = new System.Drawing.Size(55, 26);
-            this.btnAdd.Text = "Add";
+            this.btnAdd.Size = new System.Drawing.Size(57, 26);
+            this.btnAdd.Text = "New";
             this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
             // 
             // btnRun
@@ -329,11 +348,37 @@
             this.btnRun.Text = "Run";
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(963, 36);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // ctxMenu
+            // 
+            this.ctxMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuIndexes});
+            this.ctxMenu.Name = "ctxMenu";
+            this.ctxMenu.Size = new System.Drawing.Size(114, 26);
+            this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.ctxMenu_ItemClicked);
+            // 
+            // mnuIndexes
+            // 
+            this.mnuIndexes.Image = ((System.Drawing.Image)(resources.GetObject("mnuIndexes.Image")));
+            this.mnuIndexes.Name = "mnuIndexes";
+            this.mnuIndexes.Size = new System.Drawing.Size(113, 22);
+            this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\"";
+            this.mnuIndexes.Text = "Indexes";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1043, 660);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.tlbMain);
             this.Controls.Add(this.stbStatus);
             this.Controls.Add(this.splitContainer1);
@@ -361,6 +406,7 @@
             this.stbStatus.PerformLayout();
             this.tlbMain.ResumeLayout(false);
             this.tlbMain.PerformLayout();
+            this.ctxMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -370,7 +416,7 @@
 
         private System.Windows.Forms.TextBox txtFileName;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.TreeView tvwCols;
+        private System.Windows.Forms.TreeView tvwDatabase;
         private System.Windows.Forms.StatusStrip stbStatus;
         private System.Windows.Forms.SplitContainer splitRight;
         private System.Windows.Forms.RichTextBox txtSql;
@@ -391,6 +437,10 @@
         private System.Windows.Forms.ToolStripSeparator tlbSep2;
         private System.Windows.Forms.ToolStripStatusLabel lblCursor;
         private System.Windows.Forms.ToolStripProgressBar prgRunning;
+        private System.Windows.Forms.ImageList imgList;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.ContextMenuStrip ctxMenu;
+        private System.Windows.Forms.ToolStripMenuItem mnuIndexes;
     }
 }
 
