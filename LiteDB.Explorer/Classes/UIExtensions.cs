@@ -178,6 +178,7 @@ namespace LiteDB.Explorer
 
         public static void BindErrorMessage(this RichTextBox txt, Exception ex)
         {
+            txt.Text = "";
             txt.ForeColor = Color.Red;
             txt.Text = ex.Message;
         }

@@ -157,22 +157,25 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            // this method can be called from Ctor, so many 
+            // of this members can be null yet. 
+
             if (_disposing) return;
 
             // start shutdown operation
             _disposing = true;
 
             // mark all transaction as shotdown status
-            foreach(var trans in _transactions.Values)
+            foreach(var trans in _transactions?.Values)
             {
                 trans.Shutdown();
             }
 
             // wait for all async task write on disk
-            _wal.WalFile.WaitAsyncWrite(true);
+            _wal?.WalFile.WaitAsyncWrite(true);
 
             // now, check if exisit any write transaction open
-            var hasWriteTransaction = _transactions.Values
+            var hasWriteTransaction = _transactions?.Values
                 .SelectMany(x => x.Snapshots.Values)
                 .Where(x => x.Mode == SnapshotMode.Write)
                 .Any();
@@ -184,15 +187,18 @@ namespace LiteDB.Engine
                 _wal.Checkpoint(true);
             }
 
+            // dispose lockers
+            _locker?.Dispose();
+
             // close all Dispose services
-            _dataFile.Dispose();
+            _dataFile?.Dispose();
 
             // dispose wal file
-            _wal.WalFile.Dispose();
+            _wal?.WalFile.Dispose();
 
             if (_disposeTempdb)
             {
-                _tempdb.Dispose();
+                _tempdb?.Dispose();
             }
         }
     }

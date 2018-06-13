@@ -265,7 +265,7 @@ namespace LiteDB.Engine
 
             if (_writer.IsValueCreated && _writer.Value.BaseStream.Length == 0)
             {
-                _writer.Value.BaseStream.Dispose();
+                this.Dispose();
 
                 _factory.DeleteWalFile();
 

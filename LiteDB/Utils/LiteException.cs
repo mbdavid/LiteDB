@@ -182,12 +182,12 @@ namespace LiteDB
 
         internal static LiteException LockTimeout(string mode, TimeSpan ts)
         {
-            return new LiteException(LOCK_TIMEOUT, "Database lock timeout when entering in {0} mode after {1} (thread: {2})", mode, ts.ToString(), Task.CurrentId);
+            return new LiteException(LOCK_TIMEOUT, "Database lock timeout when entering in {0} mode after {1}", mode, ts.ToString());
         }
 
         internal static LiteException LockTimeout(string mode, string collection, TimeSpan ts)
         {
-            return new LiteException(LOCK_TIMEOUT, "Collection '{0}' lock timeout when entering in {1} mode after {2} (thread: {3})", collection, mode, ts.ToString(), Task.CurrentId);
+            return new LiteException(LOCK_TIMEOUT, "Collection '{0}' lock timeout when entering in {1} mode after {2}", collection, mode, ts.ToString());
         }
 
         internal static LiteException InvalidCommand(string command)

@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     /// Lock service are collection-based locks. Lock will support any threads reading at same time. Writing operations will be locked
     /// based on collection. Eventualy, write operation can change header page that has an exclusive locker for.
     /// </summary>
-    public class LockService
+    public class LockService : IDisposable
     {
         private TimeSpan _timeout;
         private Logger _log;
@@ -133,6 +133,13 @@ namespace LiteDB.Engine
             {
                 _reserved.ExitWriteLock();
             }
+        }
+
+        public void Dispose()
+        {
+            _transaction.Dispose();
+            _reserved.Dispose();
+            _collections.ForEach((i, x) => x.Value.Dispose());
         }
     }
 }
