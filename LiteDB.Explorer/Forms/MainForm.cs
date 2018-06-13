@@ -86,66 +86,56 @@ namespace LiteDB.Explorer
 
             splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = false;
 
-            foreach (var task in pnlButtons.Controls.Cast<Control>().Select(x => x as Button).Select(x => x.Tag as TaskData))
+            foreach (var task in tabSql.TabPages.Cast<TabPage>().Select(x => x.Tag as TaskData))
             {
                 task.Sql = "";
                 task.Thread.Interrupt();
             }
 
-            pnlButtons.Controls.Clear();
+            tabSql.TabPages.Clear();
             tvwDatabase.Nodes.Clear();
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
-            var last = pnlButtons.Controls.Cast<Button>().LastOrDefault()?.Tag as TaskData;
+            var last = tabSql.TabPages.Cast<TabPage>().Select(x => x.Tag as TaskData).LastOrDefault();
 
             var task = new TaskData()
             {
                 Id = ((last?.Id) ?? 0) + 1,
             };
 
-            var btn = new Button() { Text = task.Id.ToString(), Height = 30, Margin = new Padding(0), Tag = task };
-            btn.Click += BtnSelect_Click;
-            btn.FlatStyle = FlatStyle.Flat;
-            btn.TabStop = false;
-            btn.TabIndex = 0;
-
-            //btn.ImageList = imgList;
-            //btn.ImageKey = "script";
-            //btn.ImageAlign = ContentAlignment.MiddleLeft;
-
-            pnlButtons.Controls.Add(btn);
-
             task.Thread = new Thread(new ThreadStart(() => CreateThread(task)));
 
             task.Thread.Start();
 
-            BtnSelect_Click(btn, EventArgs.Empty);
+            var page = new TabPage(task.Id.ToString());
+
+            page.Tag = task;
+            page.BackColor = SystemColors.Window;
+
+            tabSql.TabPages.Add(page);
+
+            if (tabSql.TabPages.Count == 1)
+            {
+                TabSql_Selected(tabSql, new TabControlEventArgs(page, 0, TabControlAction.Selected));
+            }
+            else
+            {
+                tabSql.SelectedTab = page;
+            }
         }
 
-        private void BtnSelect_Click(object sender, EventArgs e)
+        private void TabSql_Selected(object sender, TabControlEventArgs e)
         {
-            var btn = sender as Button;
-
-            foreach(var item in pnlButtons.Controls.Cast<Control>().Select(x => x as Button))
-            {
-                var data = item.Tag as TaskData;
-                item.Font = new Font(btn.Font, FontStyle.Regular);
-                item.Text = data.Id.ToString();
-                item.BackColor = SystemColors.Control;
-            }
+            if (e.TabPage == null) return;
 
             if (_active != null)
             {
                 _active.Sql = txtSql.Text;
             }
 
-            _active = btn.Tag as TaskData;
-
-            btn.Text = "[" + _active.Id.ToString() + "]";
-            btn.Font = new Font(btn.Font, FontStyle.Bold);
-            btn.BackColor = SystemColors.Window;
+            _active = e.TabPage.Tag as TaskData;
 
             txtSql.Text = _active.Sql;
             btnRun.Enabled = !_active.Running;

@@ -34,9 +34,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tvwDatabase = new System.Windows.Forms.TreeView();
             this.imgList = new System.Windows.Forms.ImageList(this.components);
-            this.pnlButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.splitRight = new System.Windows.Forms.SplitContainer();
-            this.txtSql = new System.Windows.Forms.RichTextBox();
             this.tabResult = new System.Windows.Forms.TabControl();
             this.tabGrid = new System.Windows.Forms.TabPage();
             this.grdResult = new System.Windows.Forms.DataGridView();
@@ -56,6 +54,8 @@
             this.btnRun = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
+            this.txtSql = new System.Windows.Forms.RichTextBox();
+            this.tabSql = new System.Windows.Forms.TabControl();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -98,11 +98,12 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.pnlButtons);
             this.splitContainer1.Panel2.Controls.Add(this.splitRight);
+            this.splitContainer1.Panel2.Controls.Add(this.tabSql);
             this.splitContainer1.Size = new System.Drawing.Size(1033, 567);
             this.splitContainer1.SplitterDistance = 280;
             this.splitContainer1.TabIndex = 10;
+            this.splitContainer1.TabStop = false;
             // 
             // tvwDatabase
             // 
@@ -129,50 +130,26 @@
             this.imgList.Images.SetKeyName(2, "table");
             this.imgList.Images.SetKeyName(3, "table_gear");
             // 
-            // pnlButtons
-            // 
-            this.pnlButtons.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pnlButtons.Location = new System.Drawing.Point(0, 0);
-            this.pnlButtons.Margin = new System.Windows.Forms.Padding(0);
-            this.pnlButtons.Name = "pnlButtons";
-            this.pnlButtons.Padding = new System.Windows.Forms.Padding(3, 0, 3, 0);
-            this.pnlButtons.Size = new System.Drawing.Size(745, 30);
-            this.pnlButtons.TabIndex = 6;
-            // 
             // splitRight
             // 
             this.splitRight.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitRight.Location = new System.Drawing.Point(3, 3);
+            this.splitRight.Location = new System.Drawing.Point(7, 26);
             this.splitRight.Name = "splitRight";
             this.splitRight.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitRight.Panel1
             // 
+            this.splitRight.Panel1.BackColor = System.Drawing.SystemColors.Control;
             this.splitRight.Panel1.Controls.Add(this.txtSql);
             // 
             // splitRight.Panel2
             // 
             this.splitRight.Panel2.Controls.Add(this.tabResult);
-            this.splitRight.Size = new System.Drawing.Size(750, 567);
-            this.splitRight.SplitterDistance = 174;
+            this.splitRight.Size = new System.Drawing.Size(735, 534);
+            this.splitRight.SplitterDistance = 163;
             this.splitRight.TabIndex = 8;
-            // 
-            // txtSql
-            // 
-            this.txtSql.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtSql.Location = new System.Drawing.Point(0, 30);
-            this.txtSql.Name = "txtSql";
-            this.txtSql.Size = new System.Drawing.Size(746, 142);
-            this.txtSql.TabIndex = 0;
-            this.txtSql.Text = "";
-            this.txtSql.SelectionChanged += new System.EventHandler(this.txtSql_SelectionChanged);
             // 
             // tabResult
             // 
@@ -181,10 +158,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabResult.Controls.Add(this.tabGrid);
             this.tabResult.Controls.Add(this.tabText);
-            this.tabResult.Location = new System.Drawing.Point(0, 0);
+            this.tabResult.Location = new System.Drawing.Point(3, 3);
             this.tabResult.Name = "tabResult";
             this.tabResult.SelectedIndex = 0;
-            this.tabResult.Size = new System.Drawing.Size(746, 384);
+            this.tabResult.Size = new System.Drawing.Size(728, 359);
             this.tabResult.TabIndex = 0;
             this.tabResult.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabResult_Selected);
             // 
@@ -194,7 +171,7 @@
             this.tabGrid.Location = new System.Drawing.Point(4, 24);
             this.tabGrid.Name = "tabGrid";
             this.tabGrid.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGrid.Size = new System.Drawing.Size(738, 356);
+            this.tabGrid.Size = new System.Drawing.Size(720, 331);
             this.tabGrid.TabIndex = 0;
             this.tabGrid.Text = "Grid";
             this.tabGrid.UseVisualStyleBackColor = true;
@@ -209,7 +186,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(726, 349);
+            this.grdResult.Size = new System.Drawing.Size(708, 324);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -218,10 +195,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 24);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(738, 356);
+            this.tabText.Size = new System.Drawing.Size(738, 358);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -363,6 +340,28 @@
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\"";
             this.mnuIndexes.Text = "Indexes";
             // 
+            // txtSql
+            // 
+            this.txtSql.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtSql.Location = new System.Drawing.Point(3, 3);
+            this.txtSql.Name = "txtSql";
+            this.txtSql.Size = new System.Drawing.Size(728, 157);
+            this.txtSql.TabIndex = 2;
+            this.txtSql.Text = "";
+            // 
+            // tabSql
+            // 
+            this.tabSql.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabSql.Location = new System.Drawing.Point(0, 0);
+            this.tabSql.Name = "tabSql";
+            this.tabSql.SelectedIndex = 0;
+            this.tabSql.Size = new System.Drawing.Size(749, 567);
+            this.tabSql.TabIndex = 9;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -408,8 +407,6 @@
         private System.Windows.Forms.TreeView tvwDatabase;
         private System.Windows.Forms.StatusStrip stbStatus;
         private System.Windows.Forms.SplitContainer splitRight;
-        private System.Windows.Forms.RichTextBox txtSql;
-        private System.Windows.Forms.FlowLayoutPanel pnlButtons;
         private System.Windows.Forms.ToolStripStatusLabel lblElapsed;
         private System.Windows.Forms.TabControl tabResult;
         private System.Windows.Forms.TabPage tabGrid;
@@ -429,6 +426,8 @@
         private System.Windows.Forms.ImageList imgList;
         private System.Windows.Forms.ContextMenuStrip ctxMenu;
         private System.Windows.Forms.ToolStripMenuItem mnuIndexes;
+        private System.Windows.Forms.RichTextBox txtSql;
+        private System.Windows.Forms.TabControl tabSql;
     }
 }
 
