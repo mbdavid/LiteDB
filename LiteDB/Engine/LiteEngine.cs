@@ -171,8 +171,18 @@ namespace LiteDB.Engine
             // wait for all async task write on disk
             _wal.WalFile.WaitAsyncWrite(true);
 
-            // do checkpoint and delete wal file
-            _wal.Checkpoint(true);
+            // now, check if exisit any write transaction open
+            var hasWriteTransaction = _transactions.Values
+                .SelectMany(x => x.Snapshots.Values)
+                .Where(x => x.Mode == SnapshotMode.Write)
+                .Any();
+
+            // checkpoint will be made only if no write transaction still open
+            if (hasWriteTransaction == false)
+            {
+                // do checkpoint and delete wal file
+                _wal.Checkpoint(true);
+            }
 
             // close all Dispose services
             _dataFile.Dispose();

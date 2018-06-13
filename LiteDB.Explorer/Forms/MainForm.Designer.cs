@@ -54,7 +54,6 @@
             this.tlbSep2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnRun = new System.Windows.Forms.ToolStripButton();
-            this.button1 = new System.Windows.Forms.Button();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -219,10 +218,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 22);
+            this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(738, 358);
+            this.tabText.Size = new System.Drawing.Size(738, 356);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -237,7 +236,7 @@
             this.txtResult.Location = new System.Drawing.Point(6, 5);
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
-            this.txtResult.Size = new System.Drawing.Size(726, 355);
+            this.txtResult.Size = new System.Drawing.Size(726, 353);
             this.txtResult.TabIndex = 0;
             this.txtResult.Text = "";
             // 
@@ -348,15 +347,6 @@
             this.btnRun.Text = "Run";
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(963, 36);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
             // ctxMenu
             // 
             this.ctxMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -378,7 +368,6 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1043, 660);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.tlbMain);
             this.Controls.Add(this.stbStatus);
             this.Controls.Add(this.splitContainer1);
@@ -438,7 +427,6 @@
         private System.Windows.Forms.ToolStripStatusLabel lblCursor;
         private System.Windows.Forms.ToolStripProgressBar prgRunning;
         private System.Windows.Forms.ImageList imgList;
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ContextMenuStrip ctxMenu;
         private System.Windows.Forms.ToolStripMenuItem mnuIndexes;
     }

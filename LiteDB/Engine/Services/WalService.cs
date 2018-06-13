@@ -118,7 +118,7 @@ namespace LiteDB.Engine
             var count = 0;
 
             // enter in special database reserved lock
-            // only new readers are allowed and no writers
+            // no others can write
             _locker.EnterReserved();
 
             try

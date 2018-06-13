@@ -107,6 +107,10 @@ namespace LiteDB.Explorer
 
             var btn = new Button() { Text = task.Id.ToString(), Height = 30, Margin = new Padding(0), Tag = task };
             btn.Click += BtnSelect_Click;
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.TabStop = false;
+            btn.TabIndex = 0;
+
             //btn.ImageList = imgList;
             //btn.ImageKey = "script";
             //btn.ImageAlign = ContentAlignment.MiddleLeft;
@@ -129,7 +133,7 @@ namespace LiteDB.Explorer
                 var data = item.Tag as TaskData;
                 item.Font = new Font(btn.Font, FontStyle.Regular);
                 item.Text = data.Id.ToString();
-                //item.BackColor = SystemColors.Control;
+                item.BackColor = SystemColors.Control;
             }
 
             if (_active != null)
@@ -141,7 +145,7 @@ namespace LiteDB.Explorer
 
             btn.Text = "[" + _active.Id.ToString() + "]";
             btn.Font = new Font(btn.Font, FontStyle.Bold);
-            //btn.BackColor = Color.Silver;
+            btn.BackColor = SystemColors.Window;
 
             txtSql.Text = _active.Sql;
             btnRun.Enabled = !_active.Running;

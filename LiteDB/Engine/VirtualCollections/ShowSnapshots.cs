@@ -23,7 +23,7 @@ namespace LiteDB.Engine
                         ["collection"] = snapshot.CollectionPage?.CollectionName,
                         ["mode"] = snapshot.Mode.ToString(),
                         ["readVersion"] = snapshot.ReadVersion,
-                        ["cacheSize"] = snapshot.LocalPages.Count,
+                        ["localPages"] = snapshot.LocalPages.Count,
                     };
                 }
             }

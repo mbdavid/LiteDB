@@ -33,6 +33,7 @@ namespace LiteDB.Engine
         public TransactionState State { get; private set; } = TransactionState.New;
         public DateTime StartTime { get; private set; } = DateTime.Now;
         public Dictionary<string, Snapshot> Snapshots => _snapshots;
+        public TransactionPages Pages => _transPages;
 
         internal TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<Guid> done)
         {

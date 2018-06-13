@@ -114,22 +114,13 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Enter all database in reserved lock - all others can read but not write
-        /// But first, enter in exclusive lock to finish all reading threads
         /// </summary>
         public void EnterReserved()
         {
-            // wait finish all transactions before enter in reserved mode
-            if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
-
-            try
+            // reserved locker in write lock
+            if (_reserved.TryEnterWriteLock(_timeout) == false)
             {
-                // reserved locker in write lock
-                if (_reserved.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
-            }
-            finally
-            {
-                // exit exclusive and allow new readers
-                _transaction.ExitWriteLock();
+                throw LiteException.LockTimeout("reserved", _timeout);
             }
         }
 
@@ -138,7 +129,10 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitReserved()
         {
-            _reserved.ExitWriteLock();
+            if (_reserved.IsWriteLockHeld)
+            {
+                _reserved.ExitWriteLock();
+            }
         }
     }
 }
