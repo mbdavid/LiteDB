@@ -124,8 +124,8 @@ namespace LiteDB.Engine
                 // load header page
                 _header = _dataFile.ReadPage(0, true) as HeaderPage;
 
-                // register virtual collections
-                this.InitializeVirtualCollections();
+                // register system collections
+                this.InitializeSystemCollections();
             }
             catch (Exception)
             {

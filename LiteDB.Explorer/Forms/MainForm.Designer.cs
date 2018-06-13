@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.txtFileName = new System.Windows.Forms.TextBox();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitMain = new System.Windows.Forms.SplitContainer();
             this.tvwDatabase = new System.Windows.Forms.TreeView();
             this.imgList = new System.Windows.Forms.ImageList(this.components);
             this.splitRight = new System.Windows.Forms.SplitContainer();
@@ -56,10 +56,10 @@
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             this.txtSql = new System.Windows.Forms.RichTextBox();
             this.tabSql = new System.Windows.Forms.TabControl();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
+            this.splitMain.Panel1.SuspendLayout();
+            this.splitMain.Panel2.SuspendLayout();
+            this.splitMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitRight)).BeginInit();
             this.splitRight.Panel1.SuspendLayout();
             this.splitRight.Panel2.SuspendLayout();
@@ -84,39 +84,34 @@
             this.txtFileName.TabIndex = 0;
             this.txtFileName.Text = ":memory:";
             // 
-            // splitContainer1
+            // splitMain
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(5, 69);
-            this.splitContainer1.Name = "splitContainer1";
+            this.splitMain.Location = new System.Drawing.Point(5, 69);
+            this.splitMain.Name = "splitMain";
             // 
-            // splitContainer1.Panel1
+            // splitMain.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.tvwDatabase);
+            this.splitMain.Panel1.Controls.Add(this.tvwDatabase);
             // 
-            // splitContainer1.Panel2
+            // splitMain.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.splitRight);
-            this.splitContainer1.Panel2.Controls.Add(this.tabSql);
-            this.splitContainer1.Size = new System.Drawing.Size(1033, 567);
-            this.splitContainer1.SplitterDistance = 280;
-            this.splitContainer1.TabIndex = 10;
-            this.splitContainer1.TabStop = false;
+            this.splitMain.Panel2.Controls.Add(this.splitRight);
+            this.splitMain.Panel2.Controls.Add(this.tabSql);
+            this.splitMain.Size = new System.Drawing.Size(1033, 566);
+            this.splitMain.SplitterDistance = 280;
+            this.splitMain.TabIndex = 10;
+            this.splitMain.TabStop = false;
             // 
             // tvwDatabase
             // 
-            this.tvwDatabase.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tvwDatabase.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvwDatabase.ImageIndex = 0;
             this.tvwDatabase.ImageList = this.imgList;
             this.tvwDatabase.Location = new System.Drawing.Point(0, 0);
-            this.tvwDatabase.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.tvwDatabase.Margin = new System.Windows.Forms.Padding(0);
             this.tvwDatabase.Name = "tvwDatabase";
             this.tvwDatabase.SelectedImageIndex = 0;
-            this.tvwDatabase.Size = new System.Drawing.Size(277, 565);
+            this.tvwDatabase.Size = new System.Drawing.Size(280, 566);
             this.tvwDatabase.TabIndex = 9;
             this.tvwDatabase.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TvwCols_NodeMouseDoubleClick);
             this.tvwDatabase.MouseUp += new System.Windows.Forms.MouseEventHandler(this.tvwCols_MouseUp);
@@ -147,7 +142,7 @@
             // splitRight.Panel2
             // 
             this.splitRight.Panel2.Controls.Add(this.tabResult);
-            this.splitRight.Size = new System.Drawing.Size(735, 534);
+            this.splitRight.Size = new System.Drawing.Size(735, 533);
             this.splitRight.SplitterDistance = 163;
             this.splitRight.TabIndex = 8;
             // 
@@ -161,7 +156,7 @@
             this.tabResult.Location = new System.Drawing.Point(3, 3);
             this.tabResult.Name = "tabResult";
             this.tabResult.SelectedIndex = 0;
-            this.tabResult.Size = new System.Drawing.Size(728, 359);
+            this.tabResult.Size = new System.Drawing.Size(728, 358);
             this.tabResult.TabIndex = 0;
             this.tabResult.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabResult_Selected);
             // 
@@ -171,7 +166,7 @@
             this.tabGrid.Location = new System.Drawing.Point(4, 24);
             this.tabGrid.Name = "tabGrid";
             this.tabGrid.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGrid.Size = new System.Drawing.Size(720, 331);
+            this.tabGrid.Size = new System.Drawing.Size(720, 330);
             this.tabGrid.TabIndex = 0;
             this.tabGrid.Text = "Grid";
             this.tabGrid.UseVisualStyleBackColor = true;
@@ -186,7 +181,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(708, 324);
+            this.grdResult.Size = new System.Drawing.Size(708, 323);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -352,15 +347,18 @@
             this.txtSql.Size = new System.Drawing.Size(728, 157);
             this.txtSql.TabIndex = 2;
             this.txtSql.Text = "";
+            this.txtSql.SelectionChanged += new System.EventHandler(this.txtSql_SelectionChanged);
             // 
             // tabSql
             // 
             this.tabSql.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabSql.Location = new System.Drawing.Point(0, 0);
+            this.tabSql.Margin = new System.Windows.Forms.Padding(0);
             this.tabSql.Name = "tabSql";
             this.tabSql.SelectedIndex = 0;
-            this.tabSql.Size = new System.Drawing.Size(749, 567);
+            this.tabSql.Size = new System.Drawing.Size(749, 566);
             this.tabSql.TabIndex = 9;
+            this.tabSql.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabSql_Selected);
             // 
             // MainForm
             // 
@@ -369,7 +367,7 @@
             this.ClientSize = new System.Drawing.Size(1043, 660);
             this.Controls.Add(this.tlbMain);
             this.Controls.Add(this.stbStatus);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.splitMain);
             this.Controls.Add(this.txtFileName);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.KeyPreview = true;
@@ -378,10 +376,10 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "LiteDB.Explorer";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.splitMain.Panel1.ResumeLayout(false);
+            this.splitMain.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitMain)).EndInit();
+            this.splitMain.ResumeLayout(false);
             this.splitRight.Panel1.ResumeLayout(false);
             this.splitRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitRight)).EndInit();
@@ -403,7 +401,7 @@
         #endregion
 
         private System.Windows.Forms.TextBox txtFileName;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.TreeView tvwDatabase;
         private System.Windows.Forms.StatusStrip stbStatus;
         private System.Windows.Forms.SplitContainer splitRight;

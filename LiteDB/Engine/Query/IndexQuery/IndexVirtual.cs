@@ -5,7 +5,7 @@ using System.Linq;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Implement virtual index for virtual collections
+    /// Implement virtual index for system collections
     /// </summary>
     internal class IndexVirtual : Index, IDocumentLoader
     {

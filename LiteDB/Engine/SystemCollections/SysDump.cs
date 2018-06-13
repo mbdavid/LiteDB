@@ -8,7 +8,7 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        public IEnumerable<BsonDocument> DumpDatafile()
+        private IEnumerable<BsonDocument> SysDumpData()
         {
             var length = _dataFile.Length;
             var position = 0;
@@ -23,7 +23,7 @@ namespace LiteDB.Engine
             }
         }
 
-        public IEnumerable<BsonDocument> DumpWalfile()
+        private IEnumerable<BsonDocument> SysDumpWal()
         {
             var length = _wal.WalFile.Length;
             var position = 0;

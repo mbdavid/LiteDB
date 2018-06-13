@@ -9,7 +9,7 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        private IEnumerable<BsonDocument> ShowTransactions()
+        private IEnumerable<BsonDocument> SysTransactions()
         {
             foreach (var transaction in _transactions.Values)
             {

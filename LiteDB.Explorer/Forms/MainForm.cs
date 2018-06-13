@@ -159,7 +159,7 @@ namespace LiteDB.Explorer
             root.ImageKey = "database";
             system.ImageKey = system.SelectedImageKey = "folder";
 
-            foreach (var key in _db.GetVirtualCollections().OrderBy(x => x))
+            foreach (var key in _db.GetSystemCollections().OrderBy(x => x))
             {
                 var col = system.Nodes.Add(key);
                 col.Tag = $"SELECT $ FROM {key}";

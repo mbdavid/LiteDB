@@ -92,7 +92,7 @@ namespace LiteDB.Engine
         public long IndexCost { get; internal set; } = 0; // not calculated
 
         /// <summary>
-        /// Get this this plan run over an virtual collection
+        /// Get this this plan run over system collection
         /// </summary>
         public bool IsVirtual { get; set; } = false;
 

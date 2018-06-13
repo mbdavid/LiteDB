@@ -8,7 +8,7 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        private IEnumerable<BsonDocument> ShowSnapshots()
+        private IEnumerable<BsonDocument> SysSnapshots()
         {
             foreach (var transaction in _transactions.Values)
             {
