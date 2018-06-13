@@ -79,8 +79,8 @@ namespace LiteDB.Engine
 
                 // get current query pipe: normal or groupby pipe
                 using (var pipe = _query.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, loader) :
-                    (BasePipe)new QueryPipe(_engine, transaction, loader))
+                    new GroupByPipe(_engine, transaction, isNew, loader) :
+                    (BasePipe)new QueryPipe(_engine, transaction, isNew, loader))
                 {
                     // call safepoint just before return each document
                     foreach (var value in pipe.Pipe(nodes, _query))
@@ -89,12 +89,6 @@ namespace LiteDB.Engine
 
                         yield return value;
                     }
-                }
-
-                // if is a new transaction, dipose now
-                if (isNew)
-                {
-                    transaction.Dispose();
                 }
             };
         }

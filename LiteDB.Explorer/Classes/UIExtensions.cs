@@ -14,17 +14,13 @@ namespace LiteDB.Explorer
 {
     static class UIExtensions
     {
-        public const int LIMIT = 1000;
-
-        public static void BindBsonData(this DataGridView grd, List<BsonValue> values)
+        public static void BindBsonData(this DataGridView grd, TaskData data)
         {
             grd.Clear();
 
-            if (values == null) return;
+            if (data.Result == null) return;
 
-            var index = 0;
-
-            foreach (var value in values)
+            foreach (var value in data.Result)
             {
                 var row = new DataGridViewRow();
 
@@ -60,18 +56,17 @@ namespace LiteDB.Explorer
                 }
 
                 grd.Rows.Add(row);
+            }
 
-                if (++index >= LIMIT)
-                {
-                    var limitRow = new DataGridViewRow();
-                    limitRow.CreateCells(grd);
-                    limitRow.DefaultCellStyle.ForeColor = Color.OrangeRed;
-                    var cell = limitRow.Cells[0];
-                    cell.Value = "Exceeded " + LIMIT + " results";
-                    cell.ReadOnly = true;
-                    grd.Rows.Add(limitRow);
-                    break;
-                }
+            if (data.LimitExceeded)
+            {
+                var limitRow = new DataGridViewRow();
+                limitRow.CreateCells(grd);
+                limitRow.DefaultCellStyle.ForeColor = Color.OrangeRed;
+                var cell = limitRow.Cells[0];
+                cell.Value = "Limit exceeded";
+                cell.ReadOnly = true;
+                grd.Rows.Add(limitRow);
             }
 
             for (int i = 0; i <= grd.Columns.Count - 1; i++)
@@ -84,7 +79,6 @@ namespace LiteDB.Explorer
             if (grd.Rows.Count == 0)
             {
                 grd.Columns.Add("no-data", "[no result]");
-
             }
 
             grd.ReadOnly = grd.Columns["_id"] == null;
@@ -131,24 +125,24 @@ namespace LiteDB.Explorer
             cell.Tag = value;
         }
 
-        public static void BindBsonData(this RichTextBox txt, List<BsonValue> values)
+        public static void BindBsonData(this RichTextBox txt, TaskData data)
         {
             var index = 0;
 
             txt.Text = "";
 
-            if (values?.Count > 0)
+            if (data.Result?.Count > 0)
             {
-                foreach (var value in values)
+                foreach (var value in data.Result)
                 {
                     txt.AppendText($"[{index++ + 1}]:" + Environment.NewLine, Color.DarkGreen);
                     txt.AppendText(JsonSerializer.Serialize(value, true, true) + Environment.NewLine, Color.Black);
 
-                    if (index >= LIMIT)
-                    {
-                        txt.AppendText("Exceeded " + LIMIT + " results", Color.OrangeRed);
-                        break;
-                    }
+                }
+
+                if (data.LimitExceeded)
+                {
+                    txt.AppendText("Limit exceeded", Color.OrangeRed);
                 }
             }
             else

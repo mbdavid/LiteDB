@@ -204,9 +204,11 @@ namespace LiteDB.Explorer
                         this.LoadResult(task);
                     }), task);
 
-                    var reader = _db.Execute(task.Sql);
+                    using (var reader = _db.Execute(task.Sql))
+                    {
+                        task.ReadResult(reader);
+                    }
 
-                    task.Result = reader.Take(UIExtensions.LIMIT + 1).ToList();
                     task.Elapsed = sw.Elapsed;
                     task.Exception = null;
                     task.Running = false;
@@ -258,8 +260,7 @@ namespace LiteDB.Explorer
                     data.Result == null ? "" :
                     data.Result.Count == 0 ? "no documents" :
                     data.Result.Count  == 1 ? "1 document" : 
-                    data.Result.Count > UIExtensions.LIMIT ? UIExtensions.LIMIT + "+ documents" :
-                    data.Result.Count + " documents";
+                    data.Result.Count + (data.LimitExceeded ? "+" : "") + " documents";
 
                 if (data.Exception != null)
                 {
@@ -270,12 +271,12 @@ namespace LiteDB.Explorer
                 {
                     if (tabResult.SelectedTab.Text == "Grid")
                     {
-                        grdResult.BindBsonData(data.Result);
+                        grdResult.BindBsonData(data);
                         txtResult.Text = "";
                     }
                     else
                     {
-                        txtResult.BindBsonData(data.Result);
+                        txtResult.BindBsonData(data);
                         grdResult.Clear();
                     }
                 }

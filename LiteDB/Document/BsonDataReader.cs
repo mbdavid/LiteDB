@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// Class to read void, one or a collection of BsonValues. Used in SQL execution commands
     /// </summary>
-    public class BsonDataReader : IEnumerable<BsonValue>, IDisposable
+    public class BsonDataReader : IDisposable
     {
         private BsonValue _single;
         private IEnumerator<BsonValue> _source;
@@ -55,27 +55,13 @@ namespace LiteDB
         {
             return _source?.MoveNext() ?? false;
         }
-
+        
         public BsonValue this[string field]
         {
             get
             {
                 return _single?.AsDocument[field] ?? _source?.Current.AsDocument[field] ?? BsonValue.Null;
             }
-        }
-
-        public IEnumerator<BsonValue> GetEnumerator()
-        {
-            return _source ?? (_single != null ? 
-                new List<BsonValue> { _single }.GetEnumerator() :
-                new List<BsonValue>().GetEnumerator());
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _source ?? (_single != null ?
-                new List<BsonValue> { _single }.GetEnumerator() :
-                new List<BsonValue>().GetEnumerator());
         }
 
         public void Dispose()

@@ -12,13 +12,15 @@ namespace LiteDB.Engine
         protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLoader _loader;
+        private readonly bool _disposeTransaction;
 
         private TransactionService _tempTransaction = null;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
+        public BasePipe(LiteEngine engine, TransactionService transaction, bool disposeTransaction, IDocumentLoader loader)
         {
             _engine = engine;
             _transaction = transaction;
+            _disposeTransaction = disposeTransaction;
             _loader = loader;
         }
 
@@ -237,6 +239,11 @@ namespace LiteDB.Engine
         {
             // if temp transaction was used, rollback (no not save) here
             _tempTransaction?.Rollback(false);
+
+            if (_disposeTransaction)
+            {
+                _transaction.Dispose();
+            }
         }
     }
 }
