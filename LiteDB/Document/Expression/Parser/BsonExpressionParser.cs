@@ -586,7 +586,7 @@ namespace LiteDB
 
             var method = GetMethod(token.Value, pars.Count);
 
-            if (method == null) throw LiteException.SyntaxError("Method " + token.Value + " not exist or invalid parameter count", tokenizer.Position);
+            if (method == null) throw LiteException.SyntaxError("Method '" + token.Value.ToUpper() + "' not exist or invalid parameter count", tokenizer.Position);
 
             // test if method are decorated with "Variable" (immutable = false)
             if (method.GetCustomAttribute<VolatileAttribute>() != null)

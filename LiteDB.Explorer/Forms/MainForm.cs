@@ -264,7 +264,7 @@ namespace LiteDB.Explorer
 
                 if (data.Exception != null)
                 {
-                    txtResult.BindErrorMessage(data.Exception);
+                    txtResult.BindErrorMessage(data.Sql, data.Exception);
                     grdResult.Clear();
                 }
                 else

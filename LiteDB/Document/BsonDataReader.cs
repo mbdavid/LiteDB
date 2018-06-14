@@ -10,18 +10,18 @@ namespace LiteDB
     /// </summary>
     public class BsonDataReader : IDisposable
     {
-        private BsonValue _single = null;
+        private BsonValue _current = null;
         private IEnumerator<BsonValue> _source = null;
         private string _collection = null;
-        private bool _hasValues = false;
-        private BsonValue _first = null;
-        private bool _isFirst = false;
+        private bool _isFirst;
+        private readonly bool _hasValues;
 
         /// <summary>
         /// Initialize with no value
         /// </summary>
         internal BsonDataReader()
         {
+            _hasValues = false;
         }
 
         /// <summary>
@@ -29,7 +29,8 @@ namespace LiteDB
         /// </summary>
         internal BsonDataReader(BsonValue value)
         {
-            _single = value;
+            _current = value;
+            _isFirst = _hasValues = true;
         }
 
         /// <summary>
@@ -43,19 +44,19 @@ namespace LiteDB
             if (_source.MoveNext())
             {
                 _hasValues = _isFirst = true;
-                _first = _source.Current;
+                _current = _source.Current;
             }
         }
 
         /// <summary>
         /// Return if has any value in result
         /// </summary>
-        public bool HasValues => (_single != null) || _hasValues;
+        public bool HasValues => _hasValues;
 
         /// <summary>
         /// Return current value
         /// </summary>
-        public BsonValue Current => _single ?? _first ?? _source.Current;
+        public BsonValue Current => _current;
 
         /// <summary>
         /// Return collection name
@@ -67,9 +68,6 @@ namespace LiteDB
         /// </summary>
         public bool Read()
         {
-            if (_single != null) return false;
-            if (_source == null) return false;
-
             if (_isFirst)
             {
                 _isFirst = false;
@@ -77,8 +75,16 @@ namespace LiteDB
             }
             else
             {
-                _first = null;
-                return _source.MoveNext();
+                if (_source != null)
+                {
+                    var read = _source.MoveNext();
+                    _current = _source.Current;
+                    return read;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
         
@@ -86,7 +92,7 @@ namespace LiteDB
         {
             get
             {
-                return this.Current?.AsDocument[field] ?? BsonValue.Null;
+                return _current.AsDocument[field] ?? BsonValue.Null;
             }
         }
 

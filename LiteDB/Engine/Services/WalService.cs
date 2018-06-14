@@ -21,6 +21,8 @@ namespace LiteDB.Engine
         private int _currentReadVersion = 0;
 
         public WalFileService WalFile => _walFile;
+        public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
+        public HashSet<Guid> ConfirmedTransactions => _confirmedTransactions;
 
         public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
         {

@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Define minimum document count to auto index creation when quering. Use 0 to disable auto index creation (default: 1000).
         /// </summary>
-        public int AutoIndex { get; set; } = 1000;
+        public int AutoIndex { get; set; } = 3;
 
         /// <summary>
         /// Define max pages a trasaction must keep in-memory before flush to WAL file. Must be larger than 100 (default 1000)

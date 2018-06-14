@@ -74,8 +74,8 @@ namespace LiteDB.Engine
             // if not found, get from disk
             page = this.ReadPageDisk(position);
 
-            // and them add to cache
-            _cache.AddPage(position, page);
+            // and them add to cache (if page will be used to write, insert in cache clone copy)
+            _cache.AddPage(position, clone ? page.Clone() : page);
 
             return page;
         }

@@ -184,7 +184,7 @@ namespace LiteDB.Engine
             if (hasWriteTransaction == false)
             {
                 // do checkpoint and delete wal file
-                _wal.Checkpoint(true);
+                _wal?.Checkpoint(true);
             }
 
             // dispose lockers

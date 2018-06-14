@@ -139,6 +139,7 @@ namespace LiteDB.Engine
 
             _localPages.Clear();
             _readVersion = _wal.CurrentReadVersion;
+            _collectionPage = null;
         }
 
         #region Page Version functions

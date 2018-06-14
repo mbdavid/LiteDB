@@ -138,7 +138,7 @@ namespace LiteDB.Engine
                     this.Collections.TryAdd(p.Key, p.Value.PageID);
                 }
 
-                this.ItemCount = this.ItemCount - transPages.DeletedPages + transPages.NewCollections.Count;
+                this.ItemCount = this.ItemCount - transPages.DeletedCollections.Count + transPages.NewCollections.Count;
             }
         }
 

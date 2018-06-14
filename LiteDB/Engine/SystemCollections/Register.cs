@@ -13,6 +13,7 @@ namespace LiteDB.Engine
         private void InitializeSystemCollections()
         {
             this.RegisterSystemCollection("$cols", () => this.SysCols());
+            this.RegisterSystemCollection("$database", () => this.SysDatabase());
             this.RegisterSystemCollection("$indexes", () => this.SysIndexes());
             this.RegisterSystemCollection("$dump", () => this.SysDumpData());
             this.RegisterSystemCollection("$dump_wal", () => this.SysDumpWal());

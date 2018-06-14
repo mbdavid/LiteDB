@@ -222,7 +222,7 @@ namespace LiteDB
 
         internal static LiteException InvalidTransactionState(string method, TransactionState state)
         {
-            return new LiteException(INVALID_TRANSACTION_STATE, "{0} are not supported because transaction are in {1} state", method, state);
+            return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because transaction are in {1} state", method, state);
         }
 
         internal static LiteException InvalidTransactionState()

@@ -31,8 +31,17 @@ namespace LiteDB.Engine
             while (position < length)
             {
                 var page = _wal.WalFile.ReadPage(position, false);
+                var doc = this.DumpPage(position, page);
 
-                yield return this.DumpPage(position, page);
+                // now, add page version from WAL index
+                if(_wal.Index.TryGetValue(page.PageID, out var slot))
+                {
+                    var version = slot.Where(x => x.Value == position).Select(x => x.Key).FirstOrDefault();
+
+                    doc["version"] = version;
+                }
+
+                yield return doc;
 
                 position += PAGE_SIZE;
             }

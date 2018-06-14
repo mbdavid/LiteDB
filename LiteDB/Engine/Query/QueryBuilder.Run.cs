@@ -38,12 +38,11 @@ namespace LiteDB.Engine
                     snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
                 }
 
-                var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
 
                 // no collection, no documents
-                if (col == null)
+                if (snapshot.CollectionPage == null)
                 {
                     if (isNew)
                     {
@@ -71,10 +70,11 @@ namespace LiteDB.Engine
                     new DocumentLoader(data, _engine.Settings.UtcDate, fields);
 
                 //TODO: remove this execution plan
-                Console.WriteLine(_query.GetExplainPlan());
+                System.Diagnostics.Debug.WriteLine(" === EXPLAIN PLAIN ===");
+                System.Diagnostics.Debug.WriteLine(_query.GetExplainPlan());
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = _query.Index.Run(col, indexer)
+                var nodes = _query.Index.Run(snapshot.CollectionPage, indexer)
                         .DistinctBy(x => x.DataBlock, null);
 
                 // get current query pipe: normal or groupby pipe

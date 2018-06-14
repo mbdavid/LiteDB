@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace LiteDB.Engine
 {
@@ -162,8 +163,21 @@ namespace LiteDB.Engine
             // create random/unique name 
             var name = "idx_auto_" + Guid.NewGuid().ToString("n").Substring(0, 5).ToLower();
 
-            // create index
-            _engine.EnsureIndex(_collection, name, expr.Left, false);
+            return null;
+            //TODO: for now, remove autoIndex creation: will check better later
+            /*
+
+            // create index in a different thread
+            //_engine.EnsureIndex(_collection, name, expr.Left, false);
+            var t = new Thread(() => 
+            {
+                _engine.EnsureIndex(_collection, name, expr.Left, false);
+            });
+            t.Start();
+            t.Join();
+
+
+            snapshot.CollectionPage = null;
 
             var index = snapshot.CollectionPage.GetIndex(name);
 
@@ -171,6 +185,7 @@ namespace LiteDB.Engine
             var cost = new IndexCost(index, expr, expr.Right);
 
             return cost;
+            */
         }
 
         #endregion

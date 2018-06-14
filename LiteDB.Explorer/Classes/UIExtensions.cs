@@ -176,11 +176,40 @@ namespace LiteDB.Explorer
             grd.DataSource = null;
         }
 
-        public static void BindErrorMessage(this RichTextBox txt, Exception ex)
+        public static void BindErrorMessage(this RichTextBox txt, string sql, Exception ex)
         {
+            var sb = new StringBuilder();
+
+            if (!(ex is LiteException))
+            {
+                sb.AppendLine(ex.Message);
+                sb.AppendLine();
+                sb.AppendLine("===================================================");
+                sb.AppendLine(ex.StackTrace);
+            }
+            else if (ex is LiteException lex)
+            {
+                sb.AppendLine(ex.Message);
+
+                if (lex.ErrorCode == LiteException.UNEXPECTED_TOKEN && sql != null)
+                {
+                    var p = (int)lex.Position;
+                    var start = (int)Math.Max(p - 30, 1) - 1;
+                    var end = Math.Min(p + 15, sql.Length);
+                    var length = end - start;
+
+                    var str = sql.Substring(start, length);
+                    var t = length - (end - p);
+
+                    sb.AppendLine();
+                    sb.AppendLine(str);
+                    sb.AppendLine("".PadLeft(t, '-') + "^");
+                }
+            }
+
             txt.Text = "";
             txt.ForeColor = Color.Red;
-            txt.Text = ex.Message;
+            txt.Text = sb.ToString();
         }
     }
 }
