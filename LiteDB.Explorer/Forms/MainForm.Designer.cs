@@ -56,6 +56,7 @@
             this.btnRun = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -207,10 +208,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 24);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(752, 330);
+            this.tabText.Size = new System.Drawing.Size(752, 332);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -350,18 +351,27 @@
             // ctxMenu
             // 
             this.ctxMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.mnuIndexes});
+            this.mnuIndexes,
+            this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(114, 26);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 70);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.ctxMenu_ItemClicked);
             // 
             // mnuIndexes
             // 
             this.mnuIndexes.Image = ((System.Drawing.Image)(resources.GetObject("mnuIndexes.Image")));
             this.mnuIndexes.Name = "mnuIndexes";
-            this.mnuIndexes.Size = new System.Drawing.Size(113, 22);
+            this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\"";
             this.mnuIndexes.Text = "Indexes";
+            // 
+            // mnuDropCollection
+            // 
+            this.mnuDropCollection.Image = ((System.Drawing.Image)(resources.GetObject("mnuDropCollection.Image")));
+            this.mnuDropCollection.Name = "mnuDropCollection";
+            this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
+            this.mnuDropCollection.Tag = "DROP COLLECTION {0}";
+            this.mnuDropCollection.Text = "Drop collection";
             // 
             // MainForm
             // 
@@ -429,6 +439,7 @@
         private System.Windows.Forms.ToolStripMenuItem mnuIndexes;
         private System.Windows.Forms.RichTextBox txtSql;
         private System.Windows.Forms.TabControl tabSql;
+        private System.Windows.Forms.ToolStripMenuItem mnuDropCollection;
     }
 }
 

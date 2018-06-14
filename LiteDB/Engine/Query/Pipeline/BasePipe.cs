@@ -242,7 +242,7 @@ namespace LiteDB.Engine
 
             if (_disposeTransaction)
             {
-                _transaction.Dispose();
+                _transaction.Commit();
             }
         }
     }

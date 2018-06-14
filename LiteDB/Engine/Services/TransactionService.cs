@@ -132,48 +132,56 @@ namespace LiteDB.Engine
 
             if (this.State == TransactionState.Active)
             {
-                // persist all pages into wal file
-                this.PersistDirtyPages();
+                // first, check if has any write snap
+                var writeSnaps = _snapshots.Values
+                    .Where(x => x.Mode == SnapshotMode.Write)
+                    .Any();
 
-                // if no dirty page, just skip
-                if (_transPages.DirtyPagesWal.Count > 0)
+                if (writeSnaps)
                 {
-                    // lock header page to avoid concurrency when writing on header
-                    lock (_header)
+                    // persist all pages into wal file
+                    this.PersistDirtyPages();
+
+                    // if no dirty page, just skip
+                    if (_transPages.DirtyPagesWal.Count > 0)
                     {
-                        var newEmptyPageID = _header.FreeEmptyPageID;
-
-                        // if has deleted pages in this transaction, fix FreeEmptyPageID
-                        if (_transPages.DeletedPages > 0)
+                        // lock header page to avoid concurrency when writing on header
+                        lock (_header)
                         {
-                            // now, my free list will starts with first page ID
-                            newEmptyPageID = _transPages.FirstDeletedPage.PageID;
+                            var newEmptyPageID = _header.FreeEmptyPageID;
 
-                            // if free empty list was not empty, let's fix my last page
-                            if (_header.FreeEmptyPageID != uint.MaxValue)
+                            // if has deleted pages in this transaction, fix FreeEmptyPageID
+                            if (_transPages.DeletedPages > 0)
                             {
-                                // update nextPageID of last deleted page to old first page ID
-                                _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
+                                // now, my free list will starts with first page ID
+                                newEmptyPageID = _transPages.FirstDeletedPage.PageID;
 
-                                // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                _wal.WalFile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
+                                // if free empty list was not empty, let's fix my last page
+                                if (_header.FreeEmptyPageID != uint.MaxValue)
+                                {
+                                    // update nextPageID of last deleted page to old first page ID
+                                    _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
+
+                                    // this page will write twice on wal, but no problem, only this last version will be saved on data file
+                                    _wal.WalFile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
+                                }
                             }
+
+                            // create a header-confirm page based on current header page state (global header are in lock)
+                            var confirm = _header.Clone() as HeaderPage;
+
+                            // update this confirm page with current transactionID
+                            confirm.Update(this.TransactionID, newEmptyPageID, _transPages);
+
+                            // now, write confirm transaction (with header page) and update wal-index
+                            _wal.ConfirmTransaction(confirm, _transPages.DirtyPagesWal.Values);
+
+                            // update global header page to make equals to confirm page
+                            _header.Update(Guid.Empty, newEmptyPageID, _transPages);
                         }
-
-                        // create a header-confirm page based on current header page state (global header are in lock)
-                        var confirm = _header.Clone() as HeaderPage;
-
-                        // update this confirm page with current transactionID
-                        confirm.Update(this.TransactionID, newEmptyPageID, _transPages);
-
-                        // now, write confirm transaction (with header page) and update wal-index
-                        _wal.ConfirmTransaction(confirm, _transPages.DirtyPagesWal.Values);
-
-                        // update global header page to make equals to confirm page
-                        _header.Update(Guid.Empty, newEmptyPageID, _transPages);
                     }
                 }
-                
+
                 // dispose all snaps and release locks only after wal index are updated
                 foreach (var snapshot in _snapshots.Values)
                 {
