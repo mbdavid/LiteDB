@@ -70,11 +70,12 @@ namespace LiteDB.Explorer
             _running = true;
             btnConnect.Text = "Disconnect";
             txtFileName.Enabled = false;
-            splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = true;
+            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = true;
+
+            tabSql.TabPages.Add("+", "+");
 
             this.LoadTreeView();
-
-            BtnAdd_Click(null, null);
+            this.AddNewTab();
         }
 
         private void Disconnect()
@@ -84,20 +85,23 @@ namespace LiteDB.Explorer
             btnConnect.Text = "Connect";
             txtFileName.Enabled = true;
 
-            splitRight.Visible = btnRefresh.Enabled = btnAdd.Enabled = btnRun.Enabled = false;
+            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = false;
 
-            foreach (var task in tabSql.TabPages.Cast<TabPage>().Select(x => x.Tag as TaskData))
+            foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name    != "+").ToArray())
             {
+                var task = tab.Tag as TaskData;
                 task.Thread.Abort();
             }
 
             tabSql.TabPages.Clear();
+
             tvwDatabase.Nodes.Clear();
         }
 
-        private void BtnAdd_Click(object sender, EventArgs e)
+        private void AddNewTab()
         {
-            var last = tabSql.TabPages.Cast<TabPage>().Select(x => x.Tag as TaskData).LastOrDefault();
+            var tab = tabSql.TabPages.Cast<TabPage>().Where(x => x.Text == "+").Single();
+            var last = tabSql.TabPages.Cast<TabPage>().Where(x => x.Text != "+").Select(x => x.Tag as TaskData).LastOrDefault();
 
             var task = new TaskData()
             {
@@ -105,41 +109,36 @@ namespace LiteDB.Explorer
             };
 
             task.Thread = new Thread(new ThreadStart(() => CreateThread(task)));
-
             task.Thread.Start();
 
-            var page = new TabPage(task.Id.ToString());
+            tab.Text = tab.Name = task.Id.ToString();
+            tab.Tag = task;
 
-            page.Tag = task;
-            page.BackColor = SystemColors.Window;
+            txtSql.Text = "";
 
-            tabSql.TabPages.Add(page);
+            // adding new + tab at end
+            tabSql.TabPages.Add("+", "+");
 
-            if (tabSql.TabPages.Count == 1)
-            {
-                TabSql_Selected(tabSql, new TabControlEventArgs(page, 0, TabControlAction.Selected));
-            }
-            else
-            {
-                tabSql.SelectedTab = page;
-            }
+            _active = task;
+
+            this.LoadResult(task);
         }
 
         private void TabSql_Selected(object sender, TabControlEventArgs e)
         {
             if (e.TabPage == null) return;
 
-            if (_active != null)
+            if (e.TabPage.Name == "+")
+            {
+                this.AddNewTab();
+            }
+            else
             {
                 _active.Sql = txtSql.Text;
+                _active = e.TabPage.Tag as TaskData;
+                txtSql.Text = _active.Sql;
+                this.LoadResult(_active);
             }
-
-            _active = e.TabPage.Tag as TaskData;
-
-            txtSql.Text = _active.Sql;
-            btnRun.Enabled = !_active.Running;
-
-            this.LoadResult(_active);
         }
 
         private void BtnRun_Click(object sender, EventArgs e)
@@ -242,6 +241,8 @@ namespace LiteDB.Explorer
 
         private void LoadResult(TaskData data)
         {
+            btnRun.Enabled = !data.Running;
+
             if (data.Running)
             {
                 grdResult.Clear();
@@ -280,18 +281,18 @@ namespace LiteDB.Explorer
                     }
                 }
             }
-
-            btnRun.Enabled = !data.Running;
         }
 
         private void AddSqlSnippet(string sql)
         {
-            if (txtSql.Text.Trim().Length > 0)
+            if (txtSql.Text.Trim().Length == 0)
             {
-                BtnAdd_Click(null, null);
+                txtSql.Text = sql;
             }
-
-            txtSql.Text = sql;
+            else
+            {
+                txtSql.Text += "\n\n" + sql;
+            }
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)

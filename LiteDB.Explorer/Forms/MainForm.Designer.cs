@@ -52,7 +52,6 @@
             this.tlbSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
             this.tlbSep2 = new System.Windows.Forms.ToolStripSeparator();
-            this.btnAdd = new System.Windows.Forms.ToolStripButton();
             this.btnRun = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
@@ -157,6 +156,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtSql.HideSelection = false;
             this.txtSql.Location = new System.Drawing.Point(3, 3);
             this.txtSql.Name = "txtSql";
             this.txtSql.Size = new System.Drawing.Size(760, 157);
@@ -290,7 +290,6 @@
             this.tlbSep1,
             this.btnRefresh,
             this.tlbSep2,
-            this.btnAdd,
             this.btnRun});
             this.tlbMain.Location = new System.Drawing.Point(0, 0);
             this.tlbMain.Name = "tlbMain";
@@ -328,16 +327,6 @@
             // 
             this.tlbSep2.Name = "tlbSep2";
             this.tlbSep2.Size = new System.Drawing.Size(6, 29);
-            // 
-            // btnAdd
-            // 
-            this.btnAdd.Image = ((System.Drawing.Image)(resources.GetObject("btnAdd.Image")));
-            this.btnAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Padding = new System.Windows.Forms.Padding(3);
-            this.btnAdd.Size = new System.Drawing.Size(57, 26);
-            this.btnAdd.Text = "New";
-            this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
             // 
             // btnRun
             // 
@@ -428,7 +417,6 @@
         private System.Windows.Forms.ToolStripStatusLabel lblResultCount;
         private System.Windows.Forms.ToolStrip tlbMain;
         private System.Windows.Forms.ToolStripButton btnConnect;
-        private System.Windows.Forms.ToolStripButton btnAdd;
         private System.Windows.Forms.ToolStripButton btnRun;
         private System.Windows.Forms.ToolStripSeparator tlbSep1;
         private System.Windows.Forms.ToolStripButton btnRefresh;
