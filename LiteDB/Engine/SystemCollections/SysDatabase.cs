@@ -14,7 +14,7 @@ namespace LiteDB.Engine
             yield return new BsonDocument
             {
                 //["settings"] = _settings.
-                ["header"] = this.DumpPage(0, _header),
+                ["header"] = this.DumpPage(_header, null, null, false),
                 ["currentReadVersion"] = _wal.CurrentReadVersion
             };
         }

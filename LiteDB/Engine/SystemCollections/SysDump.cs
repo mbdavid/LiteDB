@@ -17,7 +17,7 @@ namespace LiteDB.Engine
             {
                 var page = _dataFile.ReadPage(position, false);
 
-                yield return this.DumpPage(position, page);
+                yield return this.DumpPage(page, null, null, false);
 
                 position += PAGE_SIZE;
             }
@@ -27,19 +27,24 @@ namespace LiteDB.Engine
         {
             var length = _wal.WalFile.Length;
             var position = 0;
+            var versions = new Dictionary<Guid, int>();
 
             while (position < length)
             {
                 var page = _wal.WalFile.ReadPage(position, false);
-                var doc = this.DumpPage(position, page);
 
-                // now, add page version from WAL index
-                if(_wal.Index.TryGetValue(page.PageID, out var slot))
+                // add versions into an dict grouping al by transactionID
+                if (!versions.TryGetValue(page.TransactionID, out var version))
                 {
-                    var version = slot.Where(x => x.Value == position).Select(x => x.Key).FirstOrDefault();
+                    if (_wal.Index.TryGetValue(page.PageID, out var slot))
+                    {
+                        version = slot.Where(x => x.Value == position).Select(x => x.Key).FirstOrDefault();
 
-                    doc["version"] = version;
+                        versions.Add(page.TransactionID, version);
+                    }
                 }
+
+                var doc = this.DumpPage(page, position, version, true);
 
                 yield return doc;
 
@@ -50,19 +55,22 @@ namespace LiteDB.Engine
         /// <summary>
         /// Dump page information into a BsonDocument
         /// </summary>
-        private BsonDocument DumpPage(long position, BasePage page)
+        private BsonDocument DumpPage(BasePage page, long? position, int? version, bool transactionID)
         {
-            var doc = new BsonDocument
-            {
-                ["_position"] = (int)position,
-                ["pageID"] = (int)page.PageID,
-                ["pageType"] = page.PageType.ToString(),
-                ["prevPageID"] = (int)page.PrevPageID,
-                ["nextPageID"] = (int)page.NextPageID,
-                ["itemCount"] = (int)page.ItemCount,
-                ["freeBytes"] = (int)page.FreeBytes,
-                ["transactionID"] = page.TransactionID.ToString()
-            };
+            var doc = new BsonDocument();
+
+            if (position.HasValue) doc["_position"] = position.Value;
+            if (version.HasValue) doc["_version"] = version.Value;
+
+            doc["pageID"] = (int)page.PageID;
+            doc["pageType"] = page.PageType.ToString();
+
+            if (transactionID) doc["transactionID"] = page.TransactionID;
+
+            doc["prevPageID"] = (int)page.PrevPageID;
+            doc["nextPageID"] = (int)page.NextPageID;
+            doc["itemCount"] = (int)page.ItemCount;
+            doc["freeBytes"] = (int)page.FreeBytes;
 
             if (page.PageType == PageType.Header)
             {

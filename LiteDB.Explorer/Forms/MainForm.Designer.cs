@@ -118,7 +118,7 @@
             this.tvwDatabase.Size = new System.Drawing.Size(248, 566);
             this.tvwDatabase.TabIndex = 9;
             this.tvwDatabase.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TvwCols_NodeMouseDoubleClick);
-            this.tvwDatabase.MouseUp += new System.Windows.Forms.MouseEventHandler(this.tvwCols_MouseUp);
+            this.tvwDatabase.MouseUp += new System.Windows.Forms.MouseEventHandler(this.TvwCols_MouseUp);
             // 
             // imgList
             // 
@@ -162,7 +162,7 @@
             this.txtSql.Size = new System.Drawing.Size(760, 157);
             this.txtSql.TabIndex = 2;
             this.txtSql.Text = "";
-            this.txtSql.SelectionChanged += new System.EventHandler(this.txtSql_SelectionChanged);
+            this.txtSql.SelectionChanged += new System.EventHandler(this.TxtSql_SelectionChanged);
             // 
             // tabResult
             // 
@@ -240,6 +240,7 @@
             this.tabSql.Size = new System.Drawing.Size(781, 566);
             this.tabSql.TabIndex = 9;
             this.tabSql.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabSql_Selected);
+            this.tabSql.MouseClick += new System.Windows.Forms.MouseEventHandler(this.TabSql_MouseClick);
             // 
             // stbStatus
             // 
@@ -321,7 +322,7 @@
             this.btnRefresh.Padding = new System.Windows.Forms.Padding(3);
             this.btnRefresh.Size = new System.Drawing.Size(72, 26);
             this.btnRefresh.Text = "Refresh";
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            this.btnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
             // 
             // tlbSep2
             // 
@@ -354,8 +355,8 @@
             this.mnuIndexes,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 70);
-            this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.ctxMenu_ItemClicked);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 48);
+            this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuIndexes
             // 

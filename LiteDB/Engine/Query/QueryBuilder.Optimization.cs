@@ -146,6 +146,15 @@ namespace LiteDB.Engine
         /// </summary>
         private IndexCost TryCreateIndex(Snapshot snapshot)
         {
+            return null;
+
+            // - AutoIndex must be more complex than just create an index using first conditional
+            // - must do better analyze before create an index (do not create just because I wrote a wrong SELECT $ FROM zip WHERE a = 1) [there is no "a" field]
+            // - do async in a queue list
+            // - do not block query result
+            // - maybe keep queries in a special (real) collection "_indexAnalyze"
+
+            /*
             // at least a minimum document count
             if (_engine.Settings.AutoIndex == 0 || 
                 snapshot.CollectionPage.DocumentCount < _engine.Settings.AutoIndex) return null;
@@ -163,21 +172,7 @@ namespace LiteDB.Engine
             // create random/unique name 
             var name = "idx_auto_" + Guid.NewGuid().ToString("n").Substring(0, 5).ToLower();
 
-            return null;
-            //TODO: for now, remove autoIndex creation: will check better later
-            /*
-
-            // create index in a different thread
-            //_engine.EnsureIndex(_collection, name, expr.Left, false);
-            var t = new Thread(() => 
-            {
-                _engine.EnsureIndex(_collection, name, expr.Left, false);
-            });
-            t.Start();
-            t.Join();
-
-
-            snapshot.CollectionPage = null;
+            _engine.EnsureIndex(_collection, name, expr.Left, false);
 
             var index = snapshot.CollectionPage.GetIndex(name);
 

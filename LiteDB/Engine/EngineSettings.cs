@@ -76,9 +76,9 @@ namespace LiteDB.Engine
         public int Checkpoint { get; set; } = 1000;
 
         /// <summary>
-        /// Define minimum document count to auto index creation when quering. Use 0 to disable auto index creation (default: 1000).
+        /// Define if engine can auto create index for run queries
         /// </summary>
-        public int AutoIndex { get; set; } = 3;
+        public bool AutoIndex { get; set; } = false;
 
         /// <summary>
         /// Define max pages a trasaction must keep in-memory before flush to WAL file. Must be larger than 100 (default 1000)

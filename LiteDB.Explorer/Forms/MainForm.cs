@@ -88,8 +88,7 @@ namespace LiteDB.Explorer
 
             foreach (var task in tabSql.TabPages.Cast<TabPage>().Select(x => x.Tag as TaskData))
             {
-                task.Sql = "";
-                task.Thread.Interrupt();
+                task.Thread.Abort();
             }
 
             tabSql.TabPages.Clear();
@@ -285,6 +284,16 @@ namespace LiteDB.Explorer
             btnRun.Enabled = !data.Running;
         }
 
+        private void AddSqlSnippet(string sql)
+        {
+            if (txtSql.Text.Trim().Length > 0)
+            {
+                BtnAdd_Click(null, null);
+            }
+
+            txtSql.Text = sql;
+        }
+
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.F5 && btnRun.Enabled)
@@ -339,25 +348,25 @@ namespace LiteDB.Explorer
             e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e)
+        private void BtnRefresh_Click(object sender, EventArgs e)
         {
             this.LoadTreeView();
         }
 
-        private void txtSql_SelectionChanged(object sender, EventArgs e)
+        private void TxtSql_SelectionChanged(object sender, EventArgs e)
         {
             lblCursor.Text = "Position: " + (txtSql.SelectionStart + 1) +
                 (txtSql.SelectionLength > 0 ? $" (Selection: {txtSql.SelectionLength})" : "");
         }
 
-        private void ctxMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void CtxMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             var colname = tvwDatabase.SelectedNode.Text;
             var sql = string.Format(e.ClickedItem.Tag.ToString(), colname);
             this.AddSqlSnippet(sql);
         }
 
-        private void tvwCols_MouseUp(object sender, MouseEventArgs e)
+        private void TvwCols_MouseUp(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
@@ -365,14 +374,24 @@ namespace LiteDB.Explorer
             }
         }
 
-        private void AddSqlSnippet(string sql)
+        private void TabSql_MouseClick(object sender, MouseEventArgs e)
         {
-            if (txtSql.Text.Trim().Length > 0)
-            {
-                BtnAdd_Click(null, null);
-            }
+            var tabControl = sender as TabControl;
+            var tabs = tabControl.TabPages;
 
-            txtSql.Text = sql;
+            if (tabs.Count <= 1) return;
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                var tab = tabs.Cast<TabPage>()
+                        .Where((t, i) => tabControl.GetTabRect(i).Contains(e.Location))
+                        .First();
+
+                var task = tab.Tag as TaskData;
+                task.Thread.Abort();
+
+                tabs.Remove(tab);
+            }
         }
     }
 }
