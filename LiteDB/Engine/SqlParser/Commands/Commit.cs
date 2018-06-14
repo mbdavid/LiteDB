@@ -20,7 +20,7 @@ namespace LiteDB.Engine
 
             _engine.Commit();
 
-            return new BsonDataReader(null);
+            return new BsonDataReader();
         }
     }
 }

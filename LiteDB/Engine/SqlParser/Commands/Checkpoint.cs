@@ -15,7 +15,7 @@ namespace LiteDB.Engine
 
             _engine.Checkpoint(false);
 
-            return new BsonDataReader(null);
+            return new BsonDataReader();
         }
     }
 }

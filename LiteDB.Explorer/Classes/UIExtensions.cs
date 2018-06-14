@@ -198,7 +198,7 @@ namespace LiteDB.Explorer
                     var end = Math.Min(p + 15, sql.Length);
                     var length = end - start;
 
-                    var str = sql.Substring(start, length);
+                    var str = sql.Substring(start, length).Replace('\n', ' ').Replace('\r', ' ');
                     var t = length - (end - p);
 
                     sb.AppendLine();

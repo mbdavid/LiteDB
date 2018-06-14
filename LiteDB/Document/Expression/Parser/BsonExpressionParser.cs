@@ -101,9 +101,7 @@ namespace LiteDB
                 // special BETWEEN "AND" read
                 if (op.Is("BETWEEN"))
                 {
-                    var and = tokenizer.ReadToken(true).Expect(TokenType.Word);
-
-                    if (and.Is("AND") == false) throw LiteException.UnexpectedToken(tokenizer.Current);
+                    var and = tokenizer.ReadToken(true).Expect("AND");
 
                     var expr2 = ParseSingleExpression(tokenizer, root, current, parameters, isRoot);
 
@@ -586,7 +584,7 @@ namespace LiteDB
 
             var method = GetMethod(token.Value, pars.Count);
 
-            if (method == null) throw LiteException.SyntaxError("Method '" + token.Value.ToUpper() + "' not exist or invalid parameter count", tokenizer.Position);
+            if (method == null) throw LiteException.UnexpectedToken("Method '" + token.Value.ToUpper() + "' not exist or invalid parameter count", token);
 
             // test if method are decorated with "Variable" (immutable = false)
             if (method.GetCustomAttribute<VolatileAttribute>() != null)

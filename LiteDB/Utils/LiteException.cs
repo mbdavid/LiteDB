@@ -32,7 +32,6 @@ namespace LiteDB
         public const int ALREADY_OPEN_DATAFILE = 124;
         public const int READ_ONLY_DATABASE = 125;
         public const int INVALID_TRANSACTION_STATE = 126;
-        public const int SYNTAX_ERROR = 127;
         public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
         public const int INVALID_INDEX_NAME = 129;
         public const int INVALID_COLLECTION_NAME = 130;
@@ -249,16 +248,19 @@ namespace LiteDB
         {
             var position = (token?.Position - (token?.Value?.Length ?? 0)) ?? 0;
             var str = token?.Type == TokenType.EOF ? "[EOF]" : token?.Value ?? "";
+            var exp = expected == null ? "" : $" Expected `{expected}`.";
 
-            return new LiteException(UNEXPECTED_TOKEN, "Unexpected token `" + str + "` in position " + position)
+            return new LiteException(UNEXPECTED_TOKEN, $"Unexpected token `{str}` in position {position}.{exp}")
             {
                 Position = position
             };
         }
 
-        internal static LiteException SyntaxError(string message, long position)
+        internal static LiteException UnexpectedToken(string message, Token token)
         {
-            return new LiteException(SYNTAX_ERROR, message)
+            var position = (token?.Position - (token?.Value?.Length ?? 0)) ?? 0;
+
+            return new LiteException(UNEXPECTED_TOKEN, message)
             {
                 Position = position
             };

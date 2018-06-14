@@ -68,6 +68,8 @@ namespace LiteDB
         /// </summary>
         public bool Read()
         {
+            if (!_hasValues) return false;
+
             if (_isFirst)
             {
                 _isFirst = false;
