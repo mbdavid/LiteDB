@@ -17,5 +17,20 @@ namespace LiteDB.Engine
 
             return s.Execute();
         }
+
+        /// <summary>
+        /// Execute single SQL-Like command and return data reader (can contains single or multiple values)
+        /// </summary>
+        public BsonDataReader Execute(string command, params BsonValue[] args)
+        {
+            var parameters = new BsonDocument();
+
+            for(var i = 0; i < args.Length; i++)
+            {
+                parameters[i.ToString()] = args[i];
+            }
+
+            return this.Execute(command, parameters);
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace LiteDB.Engine
         {
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
             _tokenizer.ReadToken().Expect("SET");
-            var modify = BsonExpression.Create(_tokenizer, null);
+            var modify = BsonExpression.Create(_tokenizer, _parameters);
 
             // optional where
             BsonExpression where = null;
@@ -27,7 +27,7 @@ namespace LiteDB.Engine
             if (token.Is("WHERE"))
             {
                 _tokenizer.ReadToken();
-                where = BsonExpression.Create(_tokenizer, null);
+                where = BsonExpression.Create(_tokenizer, _parameters);
             }
             else
             {

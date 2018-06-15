@@ -54,8 +54,14 @@ namespace LiteDB.Engine
             }
             else if(predicate.Type == BsonExpressionType.And)
             {
-                this.Where(predicate.Left);
-                this.Where(predicate.Right);
+                var left = predicate.Left;
+                var right = predicate.Right;
+
+                left.Parameters.Extend(predicate.Parameters);
+                right.Parameters.Extend(predicate.Parameters);
+
+                this.Where(left);
+                this.Where(right);
             }
             else
             {

@@ -297,6 +297,30 @@ namespace LiteDB.Explorer
             }
         }
 
+        public BsonValue UpdateCellGrid(BsonValue id, string field, BsonValue current, string json)
+        {
+            try
+            {
+                var value = JsonSerializer.Deserialize(json);
+
+                if (current == value) return current;
+
+                var r = _db.Execute($"UPDATE {_active.Collection} SET {{ {field}: @0 }} WHERE _id = @1 AND {field} = @2",
+                    value,
+                    id,
+                    current);
+
+                if (r.Current == 1) return value;
+
+                throw new Exception("Current document was not found. Try run your query again");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Update error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return current;
+            }
+        }
+
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.F5 && btnRun.Enabled)
@@ -330,9 +354,21 @@ namespace LiteDB.Explorer
 
         private void GrdResult_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
+            var field = grdResult.Columns[e.ColumnIndex].HeaderText;
+            var id = grdResult.Rows[e.RowIndex].Cells["_id"].Tag as BsonValue;
             var cell = grdResult.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            var current = cell.Tag as BsonValue;
+            var text = cell.Value.ToString();
 
-            cell.SetBsonValue(cell.Tag as BsonValue);
+            // try run update collection using current/new value
+            var value = this.UpdateCellGrid(id, field, current, text);
+
+            if (value != current)
+            {
+                cell.Style.ForeColor = Color.DarkGreen;
+            }
+
+            cell.SetBsonValue(value);
         }
 
         private void GrdResult_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
