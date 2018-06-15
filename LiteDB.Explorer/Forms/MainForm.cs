@@ -128,15 +128,17 @@ namespace LiteDB.Explorer
         {
             if (e.TabPage == null) return;
 
+            if (_active != null) _active.Sql = txtSql.Text;
+
             if (e.TabPage.Name == "+")
             {
                 this.AddNewTab();
             }
             else
             {
-                _active.Sql = txtSql.Text;
                 _active = e.TabPage.Tag as TaskData;
                 txtSql.Text = _active.Sql;
+                Application.DoEvents();
                 this.LoadResult(_active);
             }
         }

@@ -30,11 +30,45 @@ namespace LiteDB.Engine
                     }
 
                     transaction.Safepoint();
-
-                    count++;
                 }
 
                 return count;
+            });
+        }
+
+        /// <summary>
+        /// Update documents using expression to find (where) and modify (modify expression must retun a document)
+        /// </summary>
+        public int Update(string collection, BsonExpression modify, BsonExpression where)
+        {
+            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (modify == null) throw new ArgumentNullException(nameof(modify));
+
+            return this.AutoTransaction(transaction =>
+            {
+                return this.Update(collection, ExtendDocs());
+
+                IEnumerable<BsonDocument> ExtendDocs()
+                {
+                    var query = this.Query(collection);
+
+                    if (where != null) query = query.Where(where);
+
+                    var docs = query
+                        .ForUpdate()
+                        .ToEnumerable();
+
+                    foreach (var doc in docs)
+                    {
+                        var result = modify.Execute(doc, true).First();
+
+                        if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(modify));
+
+                        result["_id"] = doc["_id"];
+
+                        yield return result.AsDocument;
+                    }
+                }
             });
         }
 
