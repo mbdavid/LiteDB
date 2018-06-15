@@ -53,6 +53,8 @@ namespace LiteDB.Explorer
 
                     cell.Style.BackColor = Color.White;
                     cell.SetBsonValue(doc[key]);
+
+                    row.ReadOnly = key == "_id";
                 }
 
                 grd.Rows.Add(row);

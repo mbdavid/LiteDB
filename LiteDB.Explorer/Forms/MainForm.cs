@@ -365,7 +365,7 @@ namespace LiteDB.Explorer
 
             if (value != current)
             {
-                cell.Style.ForeColor = Color.DarkGreen;
+                cell.Style.BackColor = Color.LightGreen;
             }
 
             cell.SetBsonValue(value);
