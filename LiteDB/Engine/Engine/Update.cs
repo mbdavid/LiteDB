@@ -39,7 +39,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Update documents using expression to find (where) and modify (modify expression must retun a document)
         /// </summary>
-        public int Update(string collection, BsonExpression modify, BsonExpression where)
+        public int Update(string collection, BsonExpression modify, UpdateMode mode, BsonExpression where)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (modify == null) throw new ArgumentNullException(nameof(modify));
@@ -60,13 +60,26 @@ namespace LiteDB.Engine
 
                     foreach (var doc in docs)
                     {
+                        var id = doc["_id"];
                         var result = modify.Execute(doc, true).First();
 
                         if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(modify));
 
-                        result["_id"] = doc["_id"];
+                        var output = mode == UpdateMode.Merge ?
+                            doc.Extend(result.AsDocument) :
+                            result.AsDocument;
 
-                        yield return result.AsDocument;
+                        // be sure result document will contain same _id as current doc
+                        if(output.TryGetValue("_id", out var newId))
+                        {
+                            if (newId != id) throw LiteException.InvalidUpdateField("_id");
+                        }
+                        else
+                        {
+                            output["_id"] = id;
+                        }
+
+                        yield return output;
                     }
                 }
             });

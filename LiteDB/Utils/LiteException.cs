@@ -40,6 +40,7 @@ namespace LiteDB
         public const int COLLECTION_NOT_FOUND = 133;
         public const int COLLECTION_ALREADY_EXIST = 134;
         public const int INDEX_ALREADY_EXIST = 135;
+        public const int INVALID_UPDATE_FIELD = 136;
 
         public const int INVALID_FORMAT = 200;
         public const int DOCUMENT_MAX_DEPTH = 201;
@@ -157,6 +158,11 @@ namespace LiteDB
         internal static LiteException IndexAlreadyExist(string name)
         {
             return new LiteException(INDEX_ALREADY_EXIST, "Index name '{0}' already exist with a differnt expression. Try drop index first.", name);
+        }
+
+        internal static LiteException InvalidUpdateField(string field)
+        {
+            return new LiteException(INVALID_UPDATE_FIELD, "'{0}' can't be modified in UPDATE command.", field);
         }
 
         internal static LiteException IndexLimitExceeded(string collection)

@@ -7,11 +7,14 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        ///  UPDATE [collection]
-        ///     SET [modifyExpr]
-        ///   WHERE [whereExpr]
+        /// UPDATE - will merge current document with modify expression
+        /// REPLACE - will replace document for modify expression
+        /// 
+        ///  UPDATE|REPLACE [collection]
+        ///             SET [modifyExpr]
+        ///           WHERE [whereExpr]
         /// </summary>
-        private BsonDataReader ParseUpadate()
+        private BsonDataReader ParseUpadateReplace(UpdateMode mode)
         {
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
             _tokenizer.ReadToken().Expect("SET");
@@ -31,7 +34,7 @@ namespace LiteDB.Engine
                 token.Expect(TokenType.EOF, TokenType.SemiColon);
             }
 
-            var result = _engine.Update(collection, modify, where);
+            var result = _engine.Update(collection, modify, mode, where);
 
             return new BsonDataReader(result);
         }
