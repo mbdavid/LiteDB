@@ -30,13 +30,10 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
 
                 where = BsonExpression.Create(_tokenizer, _parameters);
+            }
 
-                _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
-            }
-            else
-            {
-                token.Expect(TokenType.EOF, TokenType.SemiColon);
-            }
+            // read eof
+            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
             var result = _engine.Update(collection, modify, mode, where);
 

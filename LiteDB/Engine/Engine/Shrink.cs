@@ -11,6 +11,8 @@ namespace LiteDB.Engine
         /// </summary>
         public long Shrink(string password = null)
         {
+            _log.Command("shrink");
+
             return 0;
             // var originalSize = _datafile.FileLength;
             // 

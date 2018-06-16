@@ -50,6 +50,8 @@ namespace LiteDB.Engine
 
             if (isNew == false) throw LiteException.InvalidTransactionState();
 
+            _log.Command("begin");
+
             return transacion.TransactionID;
         }
 
@@ -62,6 +64,8 @@ namespace LiteDB.Engine
 
             if (transaction != null)
             {
+                _log.Command("commit");
+
                 transaction.Commit();
             }
             else
@@ -79,6 +83,8 @@ namespace LiteDB.Engine
 
             if (transaction != null)
             {
+                _log.Command("rollback");
+
                 transaction.Rollback(true);
             }
             else
@@ -107,8 +113,10 @@ namespace LiteDB.Engine
 
                 return result;
             }
-            catch
+            catch(Exception ex)
             {
+                _log.Error(ex);
+
                 // do rollback and release transaction
                 transaction.Dispose();
                 throw;

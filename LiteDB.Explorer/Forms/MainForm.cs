@@ -66,7 +66,13 @@ namespace LiteDB.Explorer
 
         private void Connect()
         {
-            _db = new LiteEngine(txtFileName.Text);
+            var settings = new EngineSettings
+            {
+                Filename = txtFileName.Text,
+                Log = new Logger(Logger.FULL, this.DoLog)
+            };
+
+            _db = new LiteEngine(settings);
             _running = true;
             btnConnect.Text = "Disconnect";
             txtFileName.Enabled = false;
@@ -98,18 +104,35 @@ namespace LiteDB.Explorer
             tvwDatabase.Nodes.Clear();
         }
 
+        private void DoLog(LogEntry log)
+        {
+            _synchronizationContext.Post(new SendOrPostCallback(o =>
+            {
+                var l = (LogEntry)o;
+
+                txtLog.AppendText(
+                    string.Format("{0}: {1:HH:mm:ss} [{2}] - {3}\n",
+                    l.Thread,
+                    l.Time,
+                    l.Level,
+                    l.Message.Replace('\r', ';').Replace('\n', ' ')));
+
+                txtLog.ScrollToCaret();
+
+            }), log);
+
+        }
+
         private void AddNewTab()
         {
             var tab = tabSql.TabPages.Cast<TabPage>().Where(x => x.Text == "+").Single();
-            var last = tabSql.TabPages.Cast<TabPage>().Where(x => x.Text != "+").Select(x => x.Tag as TaskData).LastOrDefault();
 
-            var task = new TaskData()
-            {
-                Id = ((last?.Id) ?? 0) + 1,
-            };
+            var task = new TaskData();
 
             task.Thread = new Thread(new ThreadStart(() => CreateThread(task)));
             task.Thread.Start();
+
+            task.Id = task.Thread.ManagedThreadId;
 
             tab.Text = tab.Name = task.Id.ToString();
             tab.Tag = task;

@@ -18,6 +18,8 @@ namespace LiteDB.Engine
 
             try
             {
+                _engine.Log.Command("query", _collection);
+
                 // encapsulate all execution to catch any error
                 return RunQuery();
             }
@@ -54,6 +56,8 @@ namespace LiteDB.Engine
                 // execute optimization before run query (will fill missing _query properties instance)
                 this.OptimizeQuery(snapshot);
 
+                _engine.Log.Query(_collection, _query);
+
                 // load only query fields (null return all document)
                 var fields = _query.Select?.Fields;
 
@@ -68,10 +72,6 @@ namespace LiteDB.Engine
                 var loader = _query.IsVirtual ?
                     (IDocumentLoader)_query.Index :
                     new DocumentLoader(data, _engine.Settings.UtcDate, fields);
-
-                //TODO: remove this execution plan
-                System.Diagnostics.Debug.WriteLine(" === EXPLAIN PLAIN ===");
-                System.Diagnostics.Debug.WriteLine(_query.GetExplainPlan());
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = _query.Index.Run(snapshot.CollectionPage, indexer)

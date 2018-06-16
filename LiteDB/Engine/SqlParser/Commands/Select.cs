@@ -162,6 +162,7 @@ namespace LiteDB.Engine
                 query.ForUpdate();
             }
 
+            // read eof/;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
             // execute query as insert or return values

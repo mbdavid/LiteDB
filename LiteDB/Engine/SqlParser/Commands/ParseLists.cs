@@ -55,5 +55,38 @@ namespace LiteDB.Engine
                 }
             }
         }
+
+        /// <summary>
+        /// [word1], [word2], ..., [wordN]
+        /// </summary>
+        private IEnumerable<string> ParseListOfWords()
+        {
+            while (true)
+            {
+                var token = _tokenizer.LookAhead();
+
+                if (token.Type == TokenType.Word)
+                {
+                    _tokenizer.ReadToken();
+
+                    yield return token.Value;
+
+                    var next = _tokenizer.LookAhead();
+
+                    if (next.Type == TokenType.Comma)
+                    {
+                        _tokenizer.ReadToken();
+                    }
+                    else
+                    {
+                        yield break;
+                    }
+                }
+                else
+                {
+                    yield break;
+                }
+            }
+        }
     }
 }

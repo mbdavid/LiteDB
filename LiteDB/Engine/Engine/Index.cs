@@ -22,6 +22,8 @@ namespace LiteDB.Engine
 
             if (name == "_id") return false; // always exists
 
+            _log.Command($"ensureIndex", collection + "." + name);
+
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
@@ -87,6 +89,8 @@ namespace LiteDB.Engine
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
             if (name == "_id") throw LiteException.IndexDropId();
+
+            _log.Command("dropIndex", collection + "." + name);
 
             return this.AutoTransaction(transaction =>
             {

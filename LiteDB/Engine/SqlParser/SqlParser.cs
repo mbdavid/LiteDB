@@ -34,12 +34,15 @@ namespace LiteDB.Engine
                 case "DROP": return this.ParseDrop();
                 case "CREATE": return this.ParseCreate();
 
+                case "ANALYZE": return this.ParseAnalyze();
                 case "CHECKPOINT": return this.ParseCheckpoint();
                 case "SHRINK": return this.ParseShrink();
 
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();
                 case "COMMIT": return this.ParseCommit();
+
+                case "SET": return this.ParseSet();
 
                 default:  throw LiteException.UnexpectedToken(first);
             }

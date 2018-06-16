@@ -101,54 +101,55 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get detail plan engine will execute
         /// </summary>
-        public string GetExplainPlan()
+        public string GetExplainPlan(string collection)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("Cost: " + this.IndexCost);
-            sb.AppendLine("Index: " + this.Index.ToString() + " " + (this.Index.Order == Query.Ascending ? "ASC" : "DESC"));
+            sb.AppendLine("collection: " + collection);
+            sb.AppendLine("cost: " + this.IndexCost);
+            sb.AppendLine("index: " + this.Index.ToString() + " " + (this.Index.Order == Query.Ascending ? "ASC" : "DESC"));
 
             if (this.Filters.Count > 0)
             {
-                sb.AppendLine("Filters: " + string.Join(" AND ", this.Filters.Select(x => $"({x.Source})")));
+                sb.AppendLine("filters: " + string.Join(" AND ", this.Filters.Select(x => $"({x.Source})")));
             }
 
             if (this.Select != null)
             {
-                sb.AppendLine("Select: " + this.Select.Source);
+                sb.AppendLine("select: " + this.Select.Source);
             }
 
             if (this.OrderBy != null)
             {
-                sb.AppendLine("OrderBy: " + this.OrderBy.Source + (this.Order == Query.Ascending ? " ASC" : " DESC"));
+                sb.AppendLine("orderBy: " + this.OrderBy.Source + (this.Order == Query.Ascending ? " ASC" : " DESC"));
             }
 
             if (this.Limit != int.MaxValue)
             {
-                sb.AppendLine("Limit: " + this.Limit);
+                sb.AppendLine("limit: " + this.Limit);
             }
 
             if (this.Offset > 0)
             {
-                sb.AppendLine("Offset: " + this.Offset);
+                sb.AppendLine("offset: " + this.Offset);
             }
 
             if (this.GroupBy != null)
             {
-                sb.AppendLine("GroupBy: " + this.GroupBy.Source);
+                sb.AppendLine("groupBy: " + this.GroupBy.Source);
             }
 
             if (this.KeyOnly)
             {
-                sb.AppendLine("KeyOnly: true");
+                sb.AppendLine("keyOnly: true");
             }
 
             if (this.Aggregate)
             {
-                sb.AppendLine("Aggregate: true");
+                sb.AppendLine("aggregate: true");
             }
 
-            return sb.ToString();
+            return sb.ToString().Trim();
         }
 
         #endregion

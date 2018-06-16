@@ -14,6 +14,8 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
+            _log.Command($"update", collection);
+
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);

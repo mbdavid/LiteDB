@@ -7,6 +7,25 @@ using System.Threading.Tasks;
 namespace LiteDB.Engine
 {
     /// <summary>
+    /// Represent a single log entry
+    /// </summary>
+    public class LogEntry
+    {
+        public LogEntry(string level, int thread, string message)
+        {
+            this.Time = DateTime.Now;
+            this.Level = level;
+            this.Thread = thread;
+            this.Message = message;
+        }
+
+        public DateTime Time { get; private set; }
+        public string Level { get; private set; }
+        public int Thread { get; private set; }
+        public string Message { get; private set; }
+    }
+
+    /// <summary>
     /// A logger class to log all information about database. Used with levels. Level = 0 - 255
     /// All log will be trigger before operation execute (better for debug)
     /// </summary>
@@ -23,7 +42,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Initialize logger class using a custom logging level (see Logger.NONE to Logger.FULL)
         /// </summary>
-        public Logger(byte level = NONE, Action<string> logging = null)
+        public Logger(byte level = NONE, Action<LogEntry> logging = null)
         {
             this.Level = level;
 
@@ -36,7 +55,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Event when log writes a message. Fire on each log message
         /// </summary>
-        public event Action<string> Logging = null;
+        public event Action<LogEntry> Logging = null;
 
         /// <summary>
         /// To full logger use Logger.FULL or any combination of Logger constants like Level = Logger.ERROR | Logger.COMMAND | Logger.DISK
@@ -48,9 +67,48 @@ namespace LiteDB.Engine
             this.Level = NONE;
         }
 
-        internal void Error(string message)
+        internal void Error(Exception ex)
         {
-            this.Write(ERROR, message);
+            this.Write(ERROR, ex.Message);
+        }
+
+        internal void Command(string command)
+        {
+            this.Write(COMMAND, command);
+        }
+
+        internal void Command(string command, string name)
+        {
+            this.Write(COMMAND, command + $" '{name}'");
+        }
+
+        internal void Query(string collection, QueryPlan plan)
+        {
+            this.Write(QUERY, plan.GetExplainPlan(collection));
+        }
+
+        internal void Wal(BasePage page)
+        {
+        }
+
+        internal void LockEnter(string name)
+        {
+            this.Write(LOCK, $"entering {name}");
+        }
+
+        internal void LockEnter(string mode, string collection)
+        {
+            this.Write(LOCK, $"entering {mode} lock collection '{collection}'");
+        }
+
+        internal void LockExit(string name)
+        {
+            this.Write(LOCK, $"exiting {name}");
+        }
+
+        internal void LockExit(string mode, string collection)
+        {
+            this.Write(LOCK, $"exiting {mode} lock collection '{collection}'");
         }
 
         /// <summary>
@@ -68,12 +126,18 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(byte level, string message, params object[] args)
         {
+            this.Write(level, string.Format(message, args));
+        }
+
+        /// <summary>
+        /// Write log text to output using inside a component (statics const of Logger)
+        /// </summary>
+        public void Write(byte level, string message)
+        {
             if ((level & this.Level) == 0 || string.IsNullOrEmpty(message)) return;
 
             if (this.Logging != null)
             {
-                var text = string.Format(message, args);
-
                 var str =
                     level == ERROR ? "ERROR" :
                     level == COMMAND ? "COMMAND" :
@@ -81,11 +145,11 @@ namespace LiteDB.Engine
                     level == LOCK ? "LOCK" :
                     level == WAL ? "WAL" : "";
 
-                var msg = Task.CurrentId.ToString().PadLeft(1, '0') + " [" + str + "] " + text;
+                var log = new LogEntry(str, Thread.CurrentThread.ManagedThreadId, message);
 
                 try
                 {
-                    this.Logging(msg);
+                    this.Logging(log);
                 }
                 catch
                 {

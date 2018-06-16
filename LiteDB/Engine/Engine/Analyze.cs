@@ -11,12 +11,14 @@ namespace LiteDB.Engine
         /// </summary>
         public int Analyze(string[] collections)
         {
-            var cols = collections ?? _header.Collections.Keys.ToArray();
+            var cols = collections == null || collections.Length == 0 ? _header.Collections.Keys.ToArray() : collections;
             var count = 0;
 
             foreach (var collection in cols)
             {
                 var dict = new Dictionary<string, uint>();
+
+                _log.Command($"analyze", collection);
 
                 // create one transaction per colection to avoid lock all database
                 this.AutoTransaction(transaction =>
