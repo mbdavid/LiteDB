@@ -17,8 +17,10 @@ namespace LiteDB.Engine
 
             _tokenizer.ReadToken().Expect("VALUES");
 
+            // get list of documents (must read all now)
             var docs = this.ParseListOfValues()
-                .Select(x => x as BsonDocument);
+                .Select(x => x as BsonDocument)
+                .ToList();
 
             var autoId = this.ParseWithAutoId();
 

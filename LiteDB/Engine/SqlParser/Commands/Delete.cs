@@ -17,6 +17,8 @@ namespace LiteDB.Engine
 
             var where = BsonExpression.Create(_tokenizer, _parameters);
 
+            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+
             var result = _engine.Delete(collection, where);
 
             return new BsonDataReader(result);

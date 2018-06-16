@@ -344,7 +344,7 @@
             this.mnuIndexes,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 48);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 70);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuIndexes
@@ -352,7 +352,7 @@
             this.mnuIndexes.Image = ((System.Drawing.Image)(resources.GetObject("mnuIndexes.Image")));
             this.mnuIndexes.Name = "mnuIndexes";
             this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
-            this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\"";
+            this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
             // mnuDropCollection
@@ -360,7 +360,7 @@
             this.mnuDropCollection.Image = ((System.Drawing.Image)(resources.GetObject("mnuDropCollection.Image")));
             this.mnuDropCollection.Name = "mnuDropCollection";
             this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
-            this.mnuDropCollection.Tag = "DROP COLLECTION {0}";
+            this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
             // 
             // MainForm

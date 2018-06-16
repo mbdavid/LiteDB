@@ -26,22 +26,27 @@ namespace LiteDB.Explorer
 
         public void ReadResult(BsonDataReader reader)
         {
-            this.Result = new List<BsonValue>();
-            this.LimitExceeded = false;
-            this.Collection = reader.Collection;
-
-            var index = 0;
-
-            while (reader.Read())
+            do
             {
-                this.Result.Add(reader.Current);
+                this.Result = new List<BsonValue>();
+                this.LimitExceeded = false;
+                this.Collection = reader.Collection;
 
-                if (++index >= RESULT_LIMIT)
+                var index = 0;
+
+                while (reader.Read())
                 {
-                    this.LimitExceeded = true;
-                    break;
+                    this.Result.Add(reader.Current);
+
+                    if (++index >= RESULT_LIMIT)
+                    {
+                        this.LimitExceeded = true;
+                        break;
+                    }
                 }
             }
+            while (reader.NextResult());
+
         }
     }
 }

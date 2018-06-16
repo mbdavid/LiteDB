@@ -172,7 +172,7 @@ namespace LiteDB.Explorer
             foreach (var key in _db.GetCollectionNames().OrderBy(x => x))
             {
                 var col = root.Nodes.Add(key);
-                col.Tag = $"SELECT $ FROM {key}";
+                col.Tag = $"SELECT $ FROM {key};";
                 col.ImageKey = col.SelectedImageKey = "table";
                 col.ContextMenuStrip = ctxMenu;
             }
@@ -293,7 +293,10 @@ namespace LiteDB.Explorer
             }
             else
             {
-                txtSql.Text += "\n\n" + sql;
+                txtSql.Text += "\n\n";
+                var start = txtSql.TextLength;
+                txtSql.Text += sql;
+                txtSql.Select(start, sql.Length);
             }
         }
 

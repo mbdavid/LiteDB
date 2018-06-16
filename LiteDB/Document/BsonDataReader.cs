@@ -14,7 +14,9 @@ namespace LiteDB
         private IEnumerator<BsonValue> _source = null;
         private string _collection = null;
         private bool _isFirst;
-        private readonly bool _hasValues;
+        private bool _hasValues;
+
+        internal Func<BsonDataReader> NextResultFunc = () => null;
 
         /// <summary>
         /// Initialize with no value
@@ -46,6 +48,25 @@ namespace LiteDB
                 _hasValues = _isFirst = true;
                 _current = _source.Current;
             }
+        }
+
+        /// <summary>
+        /// Advances the data reader to the next result
+        /// </summary>
+        public bool NextResult()
+        {
+            // execute func to request next data reader
+            var next = this.NextResultFunc();
+
+            if (next == null) return false;
+
+            _current = next._current;
+            _source = next._source;
+            _collection = next._collection;
+            _isFirst = next._isFirst;
+            _hasValues = next._hasValues;
+
+            return true;
         }
 
         /// <summary>

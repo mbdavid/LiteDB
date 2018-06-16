@@ -26,8 +26,12 @@ namespace LiteDB.Engine
 
             if (token.Is("WHERE"))
             {
+                // read WHERE
                 _tokenizer.ReadToken();
+
                 where = BsonExpression.Create(_tokenizer, _parameters);
+
+                _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
             }
             else
             {

@@ -9,15 +9,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// [expr1], [expr2], ..., [exprN]
         /// </summary>
-        private List<BsonExpression> ParseListOfExpressions()
+        private IEnumerable<BsonExpression> ParseListOfExpressions()
         {
-            var result = new List<BsonExpression>();
-
             while(true)
             {
                 var expr = BsonExpression.Create(_tokenizer, _parameters);
 
-                result.Add(expr);
+                yield return expr;
 
                 var next = _tokenizer.LookAhead();
                 
@@ -27,26 +25,23 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    break;
+                    yield break;
                 }
             }
-
-            return result;
         }
 
         /// <summary>
         /// [value1], [value2], ..., [valueN]
         /// </summary>
-        private List<BsonValue> ParseListOfValues()
+        private IEnumerable<BsonValue> ParseListOfValues()
         {
-            var result = new List<BsonValue>();
             var reader = new JsonReader(_tokenizer);
 
             while (true)
             {
                 var value = reader.Deserialize();
 
-                result.Add(value);
+                yield return value;
 
                 var next = _tokenizer.LookAhead();
 
@@ -56,11 +51,9 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    break;
+                    yield break;
                 }
             }
-
-            return result;
         }
     }
 }

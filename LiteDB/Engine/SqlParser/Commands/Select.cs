@@ -49,7 +49,20 @@ namespace LiteDB.Engine
             var query = _engine.Query(collection)
                 .Select(selectExpr);
 
-            var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF);
+            var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
+
+            if (ahead.Is("INCLUDE"))
+            {
+                // read first INCLUDE (before)
+                _tokenizer.ReadToken();
+
+                foreach(var path in this.ParseListOfExpressions())
+                {
+                    query.Include(path);
+                }
+            }
+
+            ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
             if (ahead.Is("WHERE"))
             {
@@ -80,6 +93,19 @@ namespace LiteDB.Engine
                 }
 
                 query.GroupBy(groupBy, groupByOrder);
+            }
+
+            ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
+
+            if (ahead.Is("INCLUDE"))
+            {
+                // read second INCLUDE (after)
+                _tokenizer.ReadToken();
+
+                foreach (var path in this.ParseListOfExpressions())
+                {
+                    query.Include(path);
+                }
             }
 
             ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
