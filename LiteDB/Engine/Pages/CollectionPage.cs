@@ -96,7 +96,7 @@ namespace LiteDB.Engine
             this.DocumentCount = reader.ReadInt64();
             this.FreeDataPageID = reader.ReadUInt32();
             this.Sequence = reader.ReadInt64();
-            this.CreationTime = reader.ReadDateTime(true);
+            this.CreationTime = reader.ReadDateTime(utcDate);
 
             foreach (var index in _indexes)
             {

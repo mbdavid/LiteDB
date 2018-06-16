@@ -108,16 +108,22 @@ namespace LiteDB.Explorer
         {
             _synchronizationContext.Post(new SendOrPostCallback(o =>
             {
-                var l = (LogEntry)o;
+                try
+                {
+                    var l = (LogEntry)o;
 
-                txtLog.AppendText(
-                    string.Format("{0}: {1:HH:mm:ss} [{2}] - {3}\n",
-                    l.Thread,
-                    l.Time,
-                    l.Level,
-                    l.Message.Replace('\r', ';').Replace('\n', ' ')));
+                    txtLog.AppendText(
+                        string.Format("{0}: {1:HH:mm:ss} [{2}] - {3}\n",
+                        l.Thread,
+                        l.Time,
+                        l.Level,
+                        l.Message.Replace('\r', ';').Replace('\n', ' ')));
 
-                txtLog.ScrollToCaret();
+                    txtLog.ScrollToCaret();
+                }
+                catch
+                {
+                }
 
             }), log);
 

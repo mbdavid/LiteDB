@@ -32,7 +32,7 @@ namespace LiteDB
 
         public static void Write(this BinaryWriter writer, DateTime dateTime)
         {
-            writer.Write(dateTime.Ticks);
+            writer.Write(dateTime.ToUniversalTime().Ticks);
         }
 
         public static void Write(this BinaryWriter writer, PageAddress address)

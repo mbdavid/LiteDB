@@ -119,7 +119,7 @@ namespace LiteDB.Engine
                 _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, settings.UtcDate, _log);
 
                 // if WAL file have content, must run a checkpoint
-                _wal.Checkpoint(false);
+                _wal.Checkpoint(false, null);
 
                 // load header page
                 _header = _dataFile.ReadPage(0, true) as HeaderPage;
@@ -140,7 +140,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Request a wal checkpoint
         /// </summary>
-        public void Checkpoint(bool delete) => _wal?.Checkpoint(delete);
+        public void Checkpoint(bool delete) => _wal?.Checkpoint(delete, _header);
 
         /// <summary>
         /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
@@ -184,7 +184,7 @@ namespace LiteDB.Engine
             if (hasWriteTransaction == false)
             {
                 // do checkpoint and delete wal file
-                _wal?.Checkpoint(true);
+                _wal?.Checkpoint(true, null);
             }
 
             // dispose lockers

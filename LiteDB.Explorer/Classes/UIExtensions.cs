@@ -88,6 +88,13 @@ namespace LiteDB.Explorer
 
         public static void SetBsonValue(this DataGridViewCell cell, BsonValue value)
         {
+            if (value == null)
+            {
+                cell.Value = "";
+                cell.Tag = null;
+                return;
+            }
+
             switch (value.Type)
             {
                 case BsonType.MinValue:

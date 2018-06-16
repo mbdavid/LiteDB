@@ -106,7 +106,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile. Return how many pages was copied from WAL file to data file
         /// </summary>
-        public int Checkpoint(bool deleteWalFile)
+        public int Checkpoint(bool deleteWalFile, HeaderPage header)
         {
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.Active);
@@ -125,16 +125,35 @@ namespace LiteDB.Engine
 
             try
             {
+                HeaderPage last = null;
+
                 // get all pages inside WAL file and contains valid confirmed pages
                 var pages = _walFile.ReadPages()
                     .Where(x => _confirmedTransactions.Contains(x.TransactionID))
 #if DEBUG
                     .ForEach((i, x) => DEBUG(x.TransactionID == Guid.Empty, "pages in wal must have transaction id"))
 #endif
-                    .ForEach((i, x) => x.TransactionID = Guid.Empty);
+                    .ForEach((i, x) =>
+                    {
+                        x.TransactionID = Guid.Empty;
+
+                        if (x.PageType == PageType.Header)
+                        {
+                            last = x as HeaderPage;
+                            last.LastCheckpoint = DateTime.Now;
+                            last.CheckpointCounter++;
+                        }
+                    });
 
                 // write page on data disk
                 _dataFile.WritePages(pages);
+                
+                // update single header instance with last confirmed header
+                if (header != null && last != null)
+                {
+                    header.LastCheckpoint = last.LastCheckpoint;
+                    header.CheckpointCounter = last.CheckpointCounter;
+                }
 
                 // now, all wal pages are saved in data disk - can clear walfile
                 _walFile.Clear();
