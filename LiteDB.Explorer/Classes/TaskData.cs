@@ -18,6 +18,7 @@ namespace LiteDB.Explorer
         public string Sql { get; set; } = "";
         public string Collection { get; set; } = "";
         public List<BsonValue> Result { get; set; } = null;
+        public string ExplainPlan { get; set; } = null;
         public bool LimitExceeded { get; set; }
         public Exception Exception { get; set; } = null;
         public TimeSpan Elapsed { get; set; } = TimeSpan.Zero;
@@ -31,6 +32,7 @@ namespace LiteDB.Explorer
                 this.Result = new List<BsonValue>();
                 this.LimitExceeded = false;
                 this.Collection = reader.Collection;
+                this.ExplainPlan = reader.ExplainPlain;
 
                 var index = 0;
 

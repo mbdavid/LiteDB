@@ -140,6 +140,12 @@ namespace LiteDB.Explorer
 
             txt.Text = "";
 
+            if (data.ExplainPlan != null)
+            {
+                txt.AppendText(data.ExplainPlan);
+                txt.AppendText("\n================================\n");
+            }
+
             if (data.Result?.Count > 0)
             {
                 foreach (var value in data.Result)

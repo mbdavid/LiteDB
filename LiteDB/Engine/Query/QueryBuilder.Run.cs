@@ -12,16 +12,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        internal IEnumerable<BsonValue> Run()
+        public BsonDataReader ExecuteReader()
         {
             var transaction = _engine.GetTransaction(true, out var isNew);
 
             try
             {
-                _engine.Log.Command("query", _collection);
-
                 // encapsulate all execution to catch any error
-                return RunQuery();
+                return new BsonDataReader(RunQuery(), _query);
             }
             catch
             {
@@ -32,12 +30,12 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonValue> RunQuery()
             {
-                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _collection, false);
+                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _query.Collection, false);
 
                 // if virtual collection, create a virtual collection page
                 if (_query.IsVirtual)
                 {
-                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
+                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_query.Collection);
                 }
 
                 var data = new DataService(snapshot);
@@ -55,8 +53,6 @@ namespace LiteDB.Engine
 
                 // execute optimization before run query (will fill missing _query properties instance)
                 this.OptimizeQuery(snapshot);
-
-                _engine.Log.Query(_collection, _query);
 
                 // load only query fields (null return all document)
                 var fields = _query.Select?.Fields;
@@ -96,11 +92,17 @@ namespace LiteDB.Engine
         #region Execute Shortcut (First/Single/ToList/...)
 
         /// <summary>
-        /// Execute query and return values as IEnumerable
+        /// Execute query and return all documents as values
         /// </summary>
         public IEnumerable<BsonValue> ToValues()
         {
-            return this.Run();
+            using (var reader = this.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    yield return reader.Current;
+                }
+            }
         }
 
         /// <summary>
@@ -108,7 +110,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> ToEnumerable()
         {
-            return this.Run().Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { ["expr"] = x });
+            return this.ToValues().Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { ["expr"] = x });
         }
 
         /// <summary>
@@ -176,7 +178,7 @@ namespace LiteDB.Engine
         {
             _query.Aggregate = true;
 
-            return this.Run().FirstOrDefault();
+            return this.ExecuteReader().Current;
         }
 
         /// <summary>
@@ -184,7 +186,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int Count()
         {
-            return this.Run().Count();
+            return this.ToEnumerable().Count();
         }
 
         /// <summary>
@@ -192,7 +194,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Exists()
         {
-            return this.Run().Any();
+            return this.ExecuteReader().HasValues;
         }
 
         /// <summary>

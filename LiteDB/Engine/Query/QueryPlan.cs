@@ -11,6 +11,16 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPlan
     {
+        public QueryPlan(string collection)
+        {
+            this.Collection = collection;
+        }
+
+        /// <summary>
+        /// Get collection name (required)
+        /// </summary>
+        public string Collection { get; set; } = null;
+
         /// <summary>
         /// Index used on query (required)
         /// </summary>
@@ -101,11 +111,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get detail plan engine will execute
         /// </summary>
-        public string GetExplainPlan(string collection)
+        public string GetExplainPlan()
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("collection: " + collection);
+            sb.AppendLine("collection: " + this.Collection);
             sb.AppendLine("cost: " + this.IndexCost);
             sb.AppendLine("index: " + this.Index.ToString() + " " + (this.Index.Order == Query.Ascending ? "ASC" : "DESC"));
 

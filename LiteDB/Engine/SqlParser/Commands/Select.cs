@@ -174,7 +174,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                return new BsonDataReader(query.ToValues(), collection);
+                return query.ExecuteReader();
             }
         }
     }

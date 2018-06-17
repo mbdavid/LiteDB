@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace LiteDB
     {
         private BsonValue _current = null;
         private IEnumerator<BsonValue> _source = null;
-        private string _collection = null;
+        private QueryPlan _query = null;
         private bool _isFirst;
         private bool _hasValues;
 
@@ -38,10 +39,10 @@ namespace LiteDB
         /// <summary>
         /// Initialize with an IEnumerable data source
         /// </summary>
-        internal BsonDataReader(IEnumerable<BsonValue> values, string collection)
+        internal BsonDataReader(IEnumerable<BsonValue> values, QueryPlan query)
         {
             _source = values.GetEnumerator();
-            _collection = collection;
+            _query = query;
 
             if (_source.MoveNext())
             {
@@ -62,7 +63,7 @@ namespace LiteDB
 
             _current = next._current;
             _source = next._source;
-            _collection = next._collection;
+            _query = next._query;
             _isFirst = next._isFirst;
             _hasValues = next._hasValues;
 
@@ -82,7 +83,12 @@ namespace LiteDB
         /// <summary>
         /// Return collection name
         /// </summary>
-        public string Collection => _collection;
+        public string Collection => _query?.Collection;
+
+        /// <summary>
+        /// Return collection name
+        /// </summary>
+        public string ExplainPlain => _query?.GetExplainPlan();
 
         /// <summary>
         /// Move cursor to next result. Returns true if read was possible

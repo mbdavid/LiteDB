@@ -34,9 +34,8 @@ namespace LiteDB.Engine
         public const byte NONE = 0;
         public const byte ERROR = 1;
         public const byte COMMAND = 2;
-        public const byte QUERY = 4;
-        public const byte WAL = 8;
-        public const byte LOCK = 16;
+        public const byte WAL = 4;
+        public const byte LOCK = 8;
         public const byte FULL = 255;
 
         /// <summary>
@@ -80,11 +79,6 @@ namespace LiteDB.Engine
         internal void Command(string command, string name)
         {
             this.Write(COMMAND, command + $" '{name}'");
-        }
-
-        internal void Query(string collection, QueryPlan plan)
-        {
-            this.Write(QUERY, plan.GetExplainPlan(collection));
         }
 
         internal void Wal(BasePage page)
@@ -141,7 +135,6 @@ namespace LiteDB.Engine
                 var str =
                     level == ERROR ? "ERROR" :
                     level == COMMAND ? "COMMAND" :
-                    level == QUERY ? "QUERY" :
                     level == LOCK ? "LOCK" :
                     level == WAL ? "WAL" : "";
 

@@ -9,24 +9,19 @@ namespace LiteDB.Engine
     /// </summary>
     public partial class QueryBuilder
     {
-        private string _collection;
         private LiteEngine _engine;
+        private QueryPlan _query;
 
-        private QueryPlan _query = new QueryPlan();
         private List<BsonExpression> _where = new List<BsonExpression>();
         private BsonExpression _orderBy = null;
         private int _order = Query.Ascending;
-
-        public QueryBuilder()
-        {
-        }
 
         /// <summary>
         /// Initalize QueryBuilder with a database collection
         /// </summary>
         public QueryBuilder(string collection, LiteEngine engine)
         {
-            _collection = collection;
+            _query = new QueryPlan(collection);
             _engine = engine;
         }
 
