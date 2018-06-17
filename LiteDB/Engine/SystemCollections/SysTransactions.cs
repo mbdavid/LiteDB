@@ -17,9 +17,8 @@ namespace LiteDB.Engine
 
                 yield return new BsonDocument
                 {
-                    ["transactionID"] = transaction.TransactionID,
                     ["threadID"] = transaction.ThreadID,
-                    ["current"] = transaction.ThreadID == Thread.CurrentThread.ManagedThreadId,
+                    ["transactionID"] = transaction.TransactionID,
                     ["transactionState"] = transaction.State.ToString(),
                     ["startTime"] = transaction.StartTime,
                     ["mode"] = write ? "Write" : "Read",

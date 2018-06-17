@@ -134,13 +134,13 @@ namespace LiteDB.Explorer
             cell.Tag = value;
         }
 
-        public static void BindBsonData(this RichTextBox txt, TaskData data, bool showExplanPlan)
+        public static void BindBsonData(this RichTextBox txt, TaskData data, bool showExplainPlan)
         {
             var index = 0;
 
             txt.Text = "";
 
-            if (showExplanPlan && data.ExplainPlan != null)
+            if (showExplainPlan && data.ExplainPlan != null)
             {
                 txt.AppendText(data.ExplainPlan + Environment.NewLine, Color.Blue);
                 txt.AppendText("================================" + Environment.NewLine, Color.Blue);
