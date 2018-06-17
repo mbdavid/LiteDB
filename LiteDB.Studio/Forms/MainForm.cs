@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace LiteDB.Explorer
+namespace LiteDB.Studio
 {
     public partial class MainForm : Form
     {
@@ -76,7 +76,7 @@ namespace LiteDB.Explorer
             _running = true;
             btnConnect.Text = "Disconnect";
             txtFileName.Enabled = false;
-            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = true;
+            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = true;
 
             tabSql.TabPages.Add("+", "+");
 
@@ -91,7 +91,7 @@ namespace LiteDB.Explorer
             btnConnect.Text = "Connect";
             txtFileName.Enabled = true;
 
-            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = false;
+            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = false;
 
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name    != "+").ToArray())
             {
@@ -174,8 +174,16 @@ namespace LiteDB.Explorer
 
         private void BtnRun_Click(object sender, EventArgs e)
         {
-            _active.Sql = txtSql.SelectedText.Length > 0 ? txtSql.SelectedText : txtSql.Text;
-            _active.Thread.Interrupt();
+            this.ExecuteSql(txtSql.SelectedText.Length > 0 ? txtSql.SelectedText : txtSql.Text);
+        }
+
+        private void ExecuteSql(string sql)
+        {
+            if (_active.Running == false)
+            {
+                _active.Sql = sql;
+                _active.Thread.Interrupt();
+            }
         }
 
         private void LoadTreeView()
@@ -463,6 +471,21 @@ namespace LiteDB.Explorer
 
                 tabs.Remove(tab);
             }
+        }
+
+        private void BtnBegin_Click(object sender, EventArgs e)
+        {
+            this.ExecuteSql("BEGIN");
+        }
+
+        private void BtnCommit_Click(object sender, EventArgs e)
+        {
+            this.ExecuteSql("COMMIT");
+        }
+
+        private void BtnRollback_Click(object sender, EventArgs e)
+        {
+            this.ExecuteSql("ROLLBACK");
         }
     }
 }

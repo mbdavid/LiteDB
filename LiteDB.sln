@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Demo", "LiteDB.Demo\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDB.Tests", "LiteDB.Tests\LiteDB.Tests.csproj", "{74E32E43-2A57-4A38-BD8C-9108B0DCAEAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Explorer", "LiteDB.Explorer\LiteDB.Explorer.csproj", "{0002E0FF-C91F-4B8B-B29B-2A477E184408}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDB.Studio", "LiteDB.Studio\LiteDB.Studio.csproj", "{0002E0FF-C91F-4B8B-B29B-2A477E184408}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

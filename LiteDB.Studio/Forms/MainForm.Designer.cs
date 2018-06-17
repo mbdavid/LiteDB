@@ -1,4 +1,4 @@
-﻿namespace LiteDB.Explorer
+﻿namespace LiteDB.Studio
 {
     partial class MainForm
     {
@@ -56,8 +56,14 @@
             this.btnRefresh = new System.Windows.Forms.ToolStripButton();
             this.tlbSep2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnRun = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.btnBegin = new System.Windows.Forms.ToolStripButton();
+            this.btnCommit = new System.Windows.Forms.ToolStripButton();
+            this.btnRollback = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.mnuAnalyze = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
@@ -214,10 +220,10 @@
             // 
             this.tabText.Controls.Add(this.chkExplainPlan);
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 24);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 333);
+            this.tabText.Size = new System.Drawing.Size(808, 335);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -334,7 +340,11 @@
             this.tlbSep1,
             this.btnRefresh,
             this.tlbSep2,
-            this.btnRun});
+            this.btnRun,
+            this.toolStripSeparator1,
+            this.btnBegin,
+            this.btnCommit,
+            this.btnRollback});
             this.tlbMain.Location = new System.Drawing.Point(0, 0);
             this.tlbMain.Name = "tlbMain";
             this.tlbMain.Padding = new System.Windows.Forms.Padding(0, 2, 0, 2);
@@ -382,14 +392,57 @@
             this.btnRun.Text = "Run";
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 29);
+            // 
+            // btnBegin
+            // 
+            this.btnBegin.Image = ((System.Drawing.Image)(resources.GetObject("btnBegin.Image")));
+            this.btnBegin.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnBegin.Name = "btnBegin";
+            this.btnBegin.Size = new System.Drawing.Size(57, 26);
+            this.btnBegin.Text = "Begin";
+            this.btnBegin.ToolTipText = "Begin Transaction";
+            this.btnBegin.Click += new System.EventHandler(this.BtnBegin_Click);
+            // 
+            // btnCommit
+            // 
+            this.btnCommit.Image = ((System.Drawing.Image)(resources.GetObject("btnCommit.Image")));
+            this.btnCommit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnCommit.Name = "btnCommit";
+            this.btnCommit.Size = new System.Drawing.Size(71, 26);
+            this.btnCommit.Text = "Commit";
+            this.btnCommit.Click += new System.EventHandler(this.BtnCommit_Click);
+            // 
+            // btnRollback
+            // 
+            this.btnRollback.Image = ((System.Drawing.Image)(resources.GetObject("btnRollback.Image")));
+            this.btnRollback.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRollback.Name = "btnRollback";
+            this.btnRollback.Size = new System.Drawing.Size(72, 26);
+            this.btnRollback.Text = "Rollback";
+            this.btnRollback.Click += new System.EventHandler(this.BtnRollback_Click);
+            // 
             // ctxMenu
             // 
             this.ctxMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuAnalyze,
             this.mnuIndexes,
+            this.mnuSep1,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 48);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 76);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
+            // 
+            // mnuAnalyze
+            // 
+            this.mnuAnalyze.Image = ((System.Drawing.Image)(resources.GetObject("mnuAnalyze.Image")));
+            this.mnuAnalyze.Name = "mnuAnalyze";
+            this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
+            this.mnuAnalyze.Tag = "ANALYZE {0};";
+            this.mnuAnalyze.Text = "Analyze";
             // 
             // mnuIndexes
             // 
@@ -398,6 +451,11 @@
             this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
+            // 
+            // mnuSep1
+            // 
+            this.mnuSep1.Name = "mnuSep1";
+            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuDropCollection
             // 
@@ -421,7 +479,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "LiteDB.Explorer";
+            this.Text = "LiteDB Studio";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
             this.splitMain.Panel1.ResumeLayout(false);
             this.splitMain.Panel2.ResumeLayout(false);
@@ -478,6 +536,12 @@
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.RichTextBox txtLog;
         private System.Windows.Forms.CheckBox chkExplainPlan;
+        private System.Windows.Forms.ToolStripMenuItem mnuAnalyze;
+        private System.Windows.Forms.ToolStripSeparator mnuSep1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton btnBegin;
+        private System.Windows.Forms.ToolStripButton btnCommit;
+        private System.Windows.Forms.ToolStripButton btnRollback;
     }
 }
 

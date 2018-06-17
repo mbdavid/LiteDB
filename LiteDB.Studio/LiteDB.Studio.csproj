@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0002E0FF-C91F-4B8B-B29B-2A477E184408}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>LiteDB.Explorer</RootNamespace>
-    <AssemblyName>LiteDB.Explorer</AssemblyName>
+    <RootNamespace>LiteDB.Studio</RootNamespace>
+    <AssemblyName>LiteDB.Studio</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
