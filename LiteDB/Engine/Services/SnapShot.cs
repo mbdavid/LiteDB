@@ -284,6 +284,17 @@ namespace LiteDB.Engine
                 this.SetDirty(prevPage);
             }
 
+            // define collection pageID for all datafile pages
+            if (_collectionPage != null)
+            {
+                page.ColID = _collectionPage.PageID;
+            }
+            else if (page.PageType == PageType.Collection)
+            {
+                page.ColID = page.PageID;
+                _collectionPage = page as CollectionPage;
+            }
+
             // retain a list of created pages to, in a rollback situation, back pages to empty list
             _transPages.NewPages.Add(page.PageID);
 

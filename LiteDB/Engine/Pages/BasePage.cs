@@ -48,6 +48,11 @@ namespace LiteDB.Engine
         public Guid TransactionID { get; set; }
 
         /// <summary>
+        /// Set in all datafile pages the page id about data/index collection. Useful if want re-build database without any index
+        /// </summary>
+        public uint ColID { get; set; }
+
+        /// <summary>
         /// Set this pages that was changed and must be persist in disk [not peristable]
         /// </summary>
         public bool IsDirty { get; set; }
@@ -64,6 +69,7 @@ namespace LiteDB.Engine
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.TransactionID = Guid.Empty;
+            this.ColID = uint.MaxValue;
             this.IsDirty = false;
         }
 
@@ -101,8 +107,9 @@ namespace LiteDB.Engine
             this.ItemCount = reader.ReadUInt16(); // 2 bytes
             this.FreeBytes = reader.ReadUInt16(); // 2 bytes
             this.TransactionID = reader.ReadGuid(); // 16 bytes
+            this.ColID = reader.ReadUInt32(); // 4 bytes
 
-            reader.ReadBytes(31); // reserved 31 bytes
+            reader.ReadBytes(27); // reserved 27 bytes
         }
 
         private void WriteHeader(BinaryWriter writer)
@@ -115,8 +122,9 @@ namespace LiteDB.Engine
             writer.Write((UInt16)this.ItemCount);
             writer.Write((UInt16)this.FreeBytes);
             writer.Write(this.TransactionID);
+            writer.Write(this.ColID);
 
-            writer.Write(new byte[31]);
+            writer.Write(new byte[27]);
         }
 
         protected abstract void ReadContent(BinaryReader reader, bool utcDate);

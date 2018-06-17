@@ -239,6 +239,7 @@ namespace LiteDB.Engine
                 ItemCount = this.ItemCount,
                 FreeBytes = this.FreeBytes,
                 TransactionID = this.TransactionID,
+                ColID = this.ColID,
                 // header page
                 FreeEmptyPageID = this.FreeEmptyPageID,
                 LastPageID = this.LastPageID,

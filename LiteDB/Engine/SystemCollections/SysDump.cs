@@ -71,6 +71,7 @@ namespace LiteDB.Engine
             doc["nextPageID"] = (int)page.NextPageID;
             doc["itemCount"] = (int)page.ItemCount;
             doc["freeBytes"] = (int)page.FreeBytes;
+            doc["colID"] = (int)page.ColID;
 
             if (page.PageType == PageType.Header)
             {

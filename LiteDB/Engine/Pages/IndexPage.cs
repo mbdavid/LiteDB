@@ -130,6 +130,7 @@ namespace LiteDB.Engine
                 ItemCount = this.ItemCount,
                 FreeBytes = this.FreeBytes,
                 TransactionID = this.TransactionID,
+                ColID = this.ColID,
                 // index page
                 _nodes = new Dictionary<ushort, IndexNode>()
             };

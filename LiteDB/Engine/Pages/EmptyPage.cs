@@ -50,7 +50,8 @@ namespace LiteDB.Engine
                 NextPageID = this.NextPageID,
                 ItemCount = this.ItemCount,
                 FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID
+                TransactionID = this.TransactionID,
+                ColID = this.ColID
             };
         }
 
