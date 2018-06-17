@@ -75,9 +75,10 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("{0}({1})",
+            return string.Format("{0}({1} LIKE \"{2}\")",
                 _startsWith.Length > 0 ? "INDEX RANGE SCAN" : "FULL INDEX SCAN",
-                this.Name);
+                this.Name,
+                _pattern);
         }
     }
 }

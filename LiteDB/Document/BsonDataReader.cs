@@ -86,9 +86,9 @@ namespace LiteDB
         public string Collection => _query?.Collection;
 
         /// <summary>
-        /// Return collection name
+        /// Get query explain plan
         /// </summary>
-        public string ExplainPlain => _query?.GetExplainPlan();
+        public string ExplainPlan => _query?.GetExplainPlan();
 
         /// <summary>
         /// Move cursor to next result. Returns true if read was possible

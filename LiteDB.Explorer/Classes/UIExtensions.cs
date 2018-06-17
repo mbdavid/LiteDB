@@ -142,8 +142,8 @@ namespace LiteDB.Explorer
 
             if (data.ExplainPlan != null)
             {
-                txt.AppendText(data.ExplainPlan);
-                txt.AppendText("\n================================\n");
+                txt.AppendText(data.ExplainPlan + Environment.NewLine, Color.Blue);
+                txt.AppendText("================================" + Environment.NewLine, Color.Blue);
             }
 
             if (data.Result?.Count > 0)
@@ -152,7 +152,6 @@ namespace LiteDB.Explorer
                 {
                     txt.AppendText($"[{index++ + 1}]:" + Environment.NewLine, Color.DarkGreen);
                     txt.AppendText(JsonSerializer.Serialize(value, true, true) + Environment.NewLine, Color.Black);
-
                 }
 
                 if (data.LimitExceeded)
@@ -223,8 +222,7 @@ namespace LiteDB.Explorer
             }
 
             txt.Text = "";
-            txt.ForeColor = Color.Red;
-            txt.Text = sb.ToString();
+            txt.AppendText(sb.ToString(), Color.Red);
         }
     }
 }

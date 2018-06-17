@@ -116,22 +116,30 @@ namespace LiteDB.Engine
             var sb = new StringBuilder();
 
             sb.AppendLine("collection: " + this.Collection);
-            sb.AppendLine("cost: " + this.IndexCost);
             sb.AppendLine("index: " + this.Index.ToString() + " " + (this.Index.Order == Query.Ascending ? "ASC" : "DESC"));
+            sb.AppendLine("cost: " + this.IndexCost);
 
             if (this.Filters.Count > 0)
             {
-                sb.AppendLine("filters: " + string.Join(" AND ", this.Filters.Select(x => $"({x.Source})")));
+                foreach(var filter in this.Filters)
+                {
+                    sb.AppendLine("filter: " + this.GetExpression(filter));
+                }
             }
 
             if (this.Select != null)
             {
-                sb.AppendLine("select: " + this.Select.Source);
+                sb.AppendLine("select: " + this.GetExpression(this.Select));
+            }
+
+            if (this.GroupBy != null)
+            {
+                sb.AppendLine("groupBy: " + this.GetExpression(this.GroupBy) + (this.GroupByOrder == Query.Ascending ? " ASC" : " DESC"));
             }
 
             if (this.OrderBy != null)
             {
-                sb.AppendLine("orderBy: " + this.OrderBy.Source + (this.Order == Query.Ascending ? " ASC" : " DESC"));
+                sb.AppendLine("orderBy: " + this.GetExpression(this.OrderBy) + (this.Order == Query.Ascending ? " ASC" : " DESC"));
             }
 
             if (this.Limit != int.MaxValue)
@@ -142,11 +150,6 @@ namespace LiteDB.Engine
             if (this.Offset > 0)
             {
                 sb.AppendLine("offset: " + this.Offset);
-            }
-
-            if (this.GroupBy != null)
-            {
-                sb.AppendLine("groupBy: " + this.GroupBy.Source);
             }
 
             if (this.KeyOnly)
@@ -160,6 +163,17 @@ namespace LiteDB.Engine
             }
 
             return sb.ToString().Trim();
+        }
+
+        /// <summary>
+        /// Render an expression as string - add parameter if have any
+        /// </summary>
+        private string GetExpression(BsonExpression expr)
+        {
+            return expr.Source +
+                (expr.Parameters.Count > 0 ?
+                " >> @" + JsonSerializer.Serialize(expr.Parameters) :
+                "");
         }
 
         #endregion

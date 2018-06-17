@@ -32,7 +32,7 @@ namespace LiteDB.Explorer
                 this.Result = new List<BsonValue>();
                 this.LimitExceeded = false;
                 this.Collection = reader.Collection;
-                this.ExplainPlan = reader.ExplainPlain;
+                this.ExplainPlan = reader.ExplainPlan;
 
                 var index = 0;
 

@@ -80,7 +80,26 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("INDEX RANGE SCAN({0})", this.Name);
+            if (_start.IsMinValue && _endEquals == false)
+            {
+                return string.Format("INDEX SCAN({0} < {1})", this.Name, _end);
+            }
+            else if (_start.IsMinValue && _endEquals == true)
+            {
+                return string.Format("INDEX SCAN({0} <= {1})", this.Name, _end);
+            }
+            else if (_end.IsMaxValue && _startEquals == false)
+            {
+                return string.Format("INDEX SCAN({0} > {1})", this.Name, _start);
+            }
+            else if (_end.IsMaxValue && _startEquals == true)
+            {
+                return string.Format("INDEX SCAN({0} >= {1})", this.Name, _start);
+            }
+            else
+            {
+                return string.Format("INDEX RANGE SCAN({0} BETWEEN {1} AND {2})", this.Name, _start, _end);
+            }
         }
     }
 }

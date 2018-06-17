@@ -45,7 +45,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("INDEX SCAN({0})", this.Name);
+            return string.Format("INDEX SCAN({0} IN {1})", this.Name, JsonSerializer.Serialize(_values));
         }
     }
 }
