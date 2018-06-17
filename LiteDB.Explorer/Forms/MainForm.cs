@@ -307,7 +307,7 @@ namespace LiteDB.Explorer
                     }
                     else
                     {
-                        txtResult.BindBsonData(data);
+                        txtResult.BindBsonData(data, chkExplainPlan.Checked);
                         grdResult.Clear();
                     }
                 }

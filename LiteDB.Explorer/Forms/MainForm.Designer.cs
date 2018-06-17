@@ -40,6 +40,7 @@
             this.tabGrid = new System.Windows.Forms.TabPage();
             this.grdResult = new System.Windows.Forms.DataGridView();
             this.tabText = new System.Windows.Forms.TabPage();
+            this.chkExplainPlan = new System.Windows.Forms.CheckBox();
             this.txtResult = new System.Windows.Forms.RichTextBox();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.txtLog = new System.Windows.Forms.RichTextBox();
@@ -211,14 +212,28 @@
             // 
             // tabText
             // 
+            this.tabText.Controls.Add(this.chkExplainPlan);
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 22);
+            this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 335);
+            this.tabText.Size = new System.Drawing.Size(808, 333);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
+            // 
+            // chkExplainPlan
+            // 
+            this.chkExplainPlan.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkExplainPlan.AutoSize = true;
+            this.chkExplainPlan.Checked = true;
+            this.chkExplainPlan.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkExplainPlan.Location = new System.Drawing.Point(7, 308);
+            this.chkExplainPlan.Name = "chkExplainPlan";
+            this.chkExplainPlan.Size = new System.Drawing.Size(121, 19);
+            this.chkExplainPlan.TabIndex = 1;
+            this.chkExplainPlan.Text = "Show explain plan";
+            this.chkExplainPlan.UseVisualStyleBackColor = true;
             // 
             // txtResult
             // 
@@ -230,17 +245,17 @@
             this.txtResult.Location = new System.Drawing.Point(6, 5);
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
-            this.txtResult.Size = new System.Drawing.Size(796, 322);
+            this.txtResult.Size = new System.Drawing.Size(796, 296);
             this.txtResult.TabIndex = 0;
             this.txtResult.Text = "";
             // 
             // tabLog
             // 
             this.tabLog.Controls.Add(this.txtLog);
-            this.tabLog.Location = new System.Drawing.Point(4, 24);
+            this.tabLog.Location = new System.Drawing.Point(4, 22);
             this.tabLog.Name = "tabLog";
             this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(808, 333);
+            this.tabLog.Size = new System.Drawing.Size(808, 335);
             this.tabLog.TabIndex = 4;
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
@@ -420,6 +435,7 @@
             this.tabGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).EndInit();
             this.tabText.ResumeLayout(false);
+            this.tabText.PerformLayout();
             this.tabLog.ResumeLayout(false);
             this.stbStatus.ResumeLayout(false);
             this.stbStatus.PerformLayout();
@@ -461,6 +477,7 @@
         private System.Windows.Forms.ToolStripMenuItem mnuDropCollection;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.RichTextBox txtLog;
+        private System.Windows.Forms.CheckBox chkExplainPlan;
     }
 }
 

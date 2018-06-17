@@ -35,6 +35,9 @@ namespace LiteDB.Engine
             // try re-use same index order or define a new one
             this.DefineOrderByGroupBy(snapshot);
 
+            // load all fields to be deserialize in document
+            this.LoadQueryFields();
+
             _optimized = true;
         }
 
@@ -68,6 +71,7 @@ namespace LiteDB.Engine
                 {
                     _query.Index = indexCost.Index;
                     _query.IndexCost = indexCost.Cost;
+                    _query.IndexExpression = indexCost.Expression.Source;
                 }
                 else
                 {
@@ -78,6 +82,7 @@ namespace LiteDB.Engine
                     {
                         _query.Index = indexCost.Index;
                         _query.IndexCost = indexCost.Cost;
+                        _query.IndexExpression = indexCost.Expression.Source;
                     }
                     else
                     {
@@ -86,6 +91,7 @@ namespace LiteDB.Engine
 
                         _query.Index = new IndexAll("_id", _order);
                         _query.IndexCost = _query.Index.GetCost(pk);
+                        _query.IndexExpression = "$._id";
                     }
                 }
 
@@ -100,6 +106,7 @@ namespace LiteDB.Engine
                 if (idx == null) throw LiteException.IndexNotFound(_query.Index.Name, snapshot.CollectionPage.CollectionName);
 
                 _query.IndexCost = _query.Index.GetCost(idx);
+                _query.IndexExpression = idx.Expression;
             }
 
             // fill filter using all expressions
@@ -223,5 +230,35 @@ namespace LiteDB.Engine
         }
 
         #endregion
+
+        /// <summary>
+        /// Load all fields that must be deserialize from document. If is possible use only key (without no document deserialization) set KeyOnly = true
+        /// </summary>
+        private void LoadQueryFields()
+        {
+            // if select was not defined, define as full document read
+            if (_query.Select == null)
+            {
+                _query.Select = BsonExpression.Create("$");
+            }
+
+            // load only query fields (null return all document)
+            _query.Fields = _query.Select.Fields;
+
+            // if partial document load, add filter, groupby, orderby fields too
+            _query.Fields.AddRange(_query.Filters.SelectMany(x => x.Fields));
+            _query.Fields.AddRange(_query.GroupBy?.Fields);
+            _query.Fields.AddRange(_query.OrderBy?.Fields);
+
+            if (_query.Fields.Contains("$"))
+            {
+                _query.Fields = new HashSet<string> { "$" };
+            }
+            else if(_query.Fields.Count == 1 && _query.IndexExpression == "$." + _query.Fields.First())
+            {
+                // if need only 1 key and is same as used in index, do not deserialize document
+                _query.KeyOnly = true;
+            }
+        }
     }
 }

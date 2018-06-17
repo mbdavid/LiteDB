@@ -27,6 +27,11 @@ namespace LiteDB.Engine
         public Index Index { get; set; } = null;
 
         /// <summary>
+        /// Index expression that will be used in index (source only)
+        /// </summary>
+        public string IndexExpression { get; set; } = null;
+
+        /// <summary>
         /// If true, select expressoin must run over all resultset. Otherwise, each document result will be transformed by select expression
         /// </summary>
         public bool Aggregate { get; set; } = false;
@@ -97,6 +102,11 @@ namespace LiteDB.Engine
         public BsonExpression Select { get; set; } = null;
 
         /// <summary>
+        /// Get fields name that will be deserialize from disk
+        /// </summary>
+        public HashSet<string> Fields { get; set; }
+
+        /// <summary>
         /// Get index cost (lower is best)
         /// </summary>
         public long IndexCost { get; internal set; } = 0; // not calculated
@@ -130,6 +140,11 @@ namespace LiteDB.Engine
             if (this.Select != null)
             {
                 sb.AppendLine("select: " + this.GetExpression(this.Select));
+            }
+
+            if (this.Fields != null)
+            {
+                sb.AppendLine("fields: " + string.Join(", ", this.Fields));
             }
 
             if (this.GroupBy != null)
