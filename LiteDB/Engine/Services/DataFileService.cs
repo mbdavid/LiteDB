@@ -112,9 +112,15 @@ namespace LiteDB.Engine
         {
             lock(_writer)
             {
+                // must clear cache before start writing from WAL file
+                // because wal pages are different from current wal (and must be update in cache)
+                _cache.Clear();
+
                 foreach(var page in pages)
                 {
-                    _writer.BaseStream.Position = BasePage.GetPagePosition(page.PageID);
+                    var position = BasePage.GetPagePosition(page.PageID);
+
+                    _writer.BaseStream.Position = position;
 
                     page.WritePage(_writer);
                 }
