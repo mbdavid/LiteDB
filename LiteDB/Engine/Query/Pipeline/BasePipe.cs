@@ -9,18 +9,18 @@ namespace LiteDB.Engine
     /// </summary>
     internal abstract class BasePipe : IDisposable
     {
+        public event EventHandler Disposing = null;
+
         protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLoader _loader;
-        private readonly bool _disposeTransaction;
 
         private TransactionService _tempTransaction = null;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, bool disposeTransaction, IDocumentLoader loader)
+        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
         {
             _engine = engine;
             _transaction = transaction;
-            _disposeTransaction = disposeTransaction;
             _loader = loader;
         }
 
@@ -240,10 +240,8 @@ namespace LiteDB.Engine
             // if temp transaction was used, rollback (no not save) here
             _tempTransaction?.Rollback(false);
 
-            if (_disposeTransaction)
-            {
-                _transaction.Commit();
-            }
+            // call disposing event
+            this.Disposing?.Invoke(this, EventArgs.Empty);
         }
     }
 }

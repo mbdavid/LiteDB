@@ -21,8 +21,9 @@ namespace LiteDB.Engine
                             ["transactionID"] = transaction.TransactionID,
                             ["threadID"] = transaction.ThreadID,
                             ["collection"] = snapshot.CollectionPage?.CollectionName,
+                            ["readVersion"] = snapshot.ReadVersion,
                             ["mode"] = snapshot.Mode.ToString(),
-                            ["elapsed"] = cursor.Timer.Elapsed.ToString(),
+                            ["elapsed"] = cursor.Timer.Elapsed.TotalMilliseconds,
                             ["fetch"] = cursor.FetchCount,
                             ["done"] = cursor.Done
                         };

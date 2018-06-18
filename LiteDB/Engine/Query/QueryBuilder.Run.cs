@@ -67,9 +67,22 @@ namespace LiteDB.Engine
 
                 // get current query pipe: normal or groupby pipe
                 using (var pipe = _query.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, isNew, loader) :
-                    (BasePipe)new QueryPipe(_engine, transaction, isNew, loader))
+                    new GroupByPipe(_engine, transaction, loader) :
+                    (BasePipe)new QueryPipe(_engine, transaction, loader))
                 {
+                    // commit transaction before close pipe
+                    pipe.Disposing += (s, e) =>
+                    {
+                        if (isNew)
+                        {
+                            transaction.Commit();
+                        }
+
+                        // finish timer and mark cursor as done
+                        cursor.Done = true;
+                        cursor.Timer.Stop();
+                    };
+
                     // call safepoint just before return each document
                     foreach (var value in pipe.Pipe(nodes, _query))
                     {
@@ -84,10 +97,6 @@ namespace LiteDB.Engine
                         // start timer again
                         cursor.Timer.Start();
                     }
-
-                    // finish timer and mark cursor as done
-                    cursor.Done = true;
-                    cursor.Timer.Stop();
                 }
             };
         }

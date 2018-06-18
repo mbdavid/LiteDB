@@ -9,8 +9,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class QueryPipe : BasePipe
     {
-        public QueryPipe(LiteEngine engine, TransactionService transaction, bool disposeTransaction, IDocumentLoader loader)
-            : base(engine, transaction, disposeTransaction, loader)
+        public QueryPipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
+            : base(engine, transaction, loader)
         {
         }
 

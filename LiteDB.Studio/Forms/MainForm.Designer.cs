@@ -65,6 +65,8 @@
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuQuery = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -428,19 +430,21 @@
             // ctxMenu
             // 
             this.ctxMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuQuery,
+            this.toolStripSeparator2,
             this.mnuAnalyze,
             this.mnuIndexes,
             this.mnuSep1,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 76);
+            this.ctxMenu.Size = new System.Drawing.Size(181, 126);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuAnalyze
             // 
             this.mnuAnalyze.Image = ((System.Drawing.Image)(resources.GetObject("mnuAnalyze.Image")));
             this.mnuAnalyze.Name = "mnuAnalyze";
-            this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
+            this.mnuAnalyze.Size = new System.Drawing.Size(180, 22);
             this.mnuAnalyze.Tag = "ANALYZE {0};";
             this.mnuAnalyze.Text = "Analyze";
             // 
@@ -448,22 +452,35 @@
             // 
             this.mnuIndexes.Image = ((System.Drawing.Image)(resources.GetObject("mnuIndexes.Image")));
             this.mnuIndexes.Name = "mnuIndexes";
-            this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
+            this.mnuIndexes.Size = new System.Drawing.Size(180, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
             // mnuSep1
             // 
             this.mnuSep1.Name = "mnuSep1";
-            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
+            this.mnuSep1.Size = new System.Drawing.Size(177, 6);
             // 
             // mnuDropCollection
             // 
             this.mnuDropCollection.Image = ((System.Drawing.Image)(resources.GetObject("mnuDropCollection.Image")));
             this.mnuDropCollection.Name = "mnuDropCollection";
-            this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
+            this.mnuDropCollection.Size = new System.Drawing.Size(180, 22);
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
+            // 
+            // mnuQuery
+            // 
+            this.mnuQuery.Image = ((System.Drawing.Image)(resources.GetObject("mnuQuery.Image")));
+            this.mnuQuery.Name = "mnuQuery";
+            this.mnuQuery.Size = new System.Drawing.Size(180, 22);
+            this.mnuQuery.Tag = "SELECT $ FROM {0};";
+            this.mnuQuery.Text = "Query";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // MainForm
             // 
@@ -542,6 +559,8 @@
         private System.Windows.Forms.ToolStripButton btnBegin;
         private System.Windows.Forms.ToolStripButton btnCommit;
         private System.Windows.Forms.ToolStripButton btnRollback;
+        private System.Windows.Forms.ToolStripMenuItem mnuQuery;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
 

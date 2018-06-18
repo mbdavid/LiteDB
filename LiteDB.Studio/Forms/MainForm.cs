@@ -37,6 +37,10 @@ namespace LiteDB.Studio
             {
                 this.Connect();
             }
+            else
+            {
+                this.Disconnect();
+            }
 
             // stop all threads
             this.FormClosing += (s, e) =>
