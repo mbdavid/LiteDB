@@ -12,13 +12,21 @@ namespace LiteDB.Engine
         /// </summary>
         private void InitializeSystemCollections()
         {
-            this.RegisterSystemCollection("$cols", () => this.SysCols());
             this.RegisterSystemCollection("$database", () => this.SysDatabase());
+
+            this.RegisterSystemCollection("$cols", () => this.SysCols());
             this.RegisterSystemCollection("$indexes", () => this.SysIndexes());
+
             this.RegisterSystemCollection("$dump", () => this.SysDumpData());
             this.RegisterSystemCollection("$dump_wal", () => this.SysDumpWal());
-            this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
+
             this.RegisterSystemCollection("$transactions", () => this.SysTransactions());
+            this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
+            this.RegisterSystemCollection("$open_cursors", () => this.SysOpenCursors());
+
+            //this.RegisterSystemCollection("$wal", () => this.SysWal());
+            //this.RegisterSystemCollection("$cache", () => this.SysCache());
+
         }
     }
 }

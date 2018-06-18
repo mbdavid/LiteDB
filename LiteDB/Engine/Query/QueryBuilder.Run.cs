@@ -31,6 +31,7 @@ namespace LiteDB.Engine
             IEnumerable<BsonValue> RunQuery()
             {
                 var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _query.Collection, false);
+                var cursor = snapshot.NewCursor();
 
                 // if virtual collection, create a virtual collection page
                 if (_query.IsVirtual)
@@ -44,6 +45,8 @@ namespace LiteDB.Engine
                 // no collection, no documents
                 if (snapshot.CollectionPage == null)
                 {
+                    cursor.Timer.Stop();
+
                     if (isNew)
                     {
                         transaction.Dispose();
@@ -72,8 +75,19 @@ namespace LiteDB.Engine
                     {
                         transaction.Safepoint();
 
+                        // stop timer and increase counter
+                        cursor.Timer.Stop();
+                        cursor.FetchCount++;
+
                         yield return value;
+
+                        // start timer again
+                        cursor.Timer.Start();
                     }
+
+                    // finish timer and mark cursor as done
+                    cursor.Done = true;
+                    cursor.Timer.Stop();
                 }
             };
         }

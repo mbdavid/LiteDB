@@ -26,6 +26,7 @@ namespace LiteDB.Engine
         private SnapshotMode _mode;
         private CollectionPage _collectionPage;
         private int _readVersion;
+        private List<CursorInfo> _cursors = new List<CursorInfo>();
 
         private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
 
@@ -33,6 +34,7 @@ namespace LiteDB.Engine
         public int ReadVersion => _readVersion;
         public Dictionary<uint, BasePage> LocalPages => _localPages;
         public SnapshotMode Mode => _mode;
+        public List<CursorInfo> Cursors => _cursors;
 
         public Snapshot(SnapshotMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, DataFileService dataFile, WalService wal)
         {
@@ -113,6 +115,17 @@ namespace LiteDB.Engine
         public CollectionService GetCollectionService()
         {
             return new CollectionService(this, _header, _transPages);
+        }
+
+        /// <summary>
+        /// Create new cursor instance and add to cursor list
+        /// </summary>
+        public CursorInfo NewCursor()
+        {
+            var cursor = new CursorInfo();
+            cursor.Timer.Start();
+            _cursors.Add(cursor);
+            return cursor;
         }
 
         /// <summary>
