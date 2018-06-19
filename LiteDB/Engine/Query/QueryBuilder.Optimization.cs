@@ -75,24 +75,12 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    // try create an index
-                    indexCost = this.TryCreateIndex(snapshot);
+                    // if has no index to use, use full scan over _id
+                    var pk = snapshot.CollectionPage.GetIndex(0);
 
-                    if (indexCost != null)
-                    {
-                        _query.Index = indexCost.Index;
-                        _query.IndexCost = indexCost.Cost;
-                        _query.IndexExpression = indexCost.Expression.Source;
-                    }
-                    else
-                    {
-                        // if no index was created, use full scan over _id
-                        var pk = snapshot.CollectionPage.GetIndex(0);
-
-                        _query.Index = new IndexAll("_id", _order);
-                        _query.IndexCost = _query.Index.GetCost(pk);
-                        _query.IndexExpression = "$._id";
-                    }
+                    _query.Index = new IndexAll("_id", _order);
+                    _query.IndexCost = _query.Index.GetCost(pk);
+                    _query.IndexExpression = "$._id";
                 }
 
                 // get selected expression used as index
@@ -145,49 +133,20 @@ namespace LiteDB.Engine
                 }
             }
 
+            // if no index found, try use same index in orderby/groupby
+            if (lowest == null && (_orderBy != null || _query.GroupBy != null))
+            {
+                var index = 
+                    indexes.FirstOrDefault(x => x.Expression == _orderBy?.Source) ??
+                    indexes.FirstOrDefault(x => x.Expression == _query.GroupBy?.Source);
+
+                if (index != null)
+                {
+                    lowest = new IndexCost(index);
+                }
+            }
+
             return lowest;
-        }
-
-        /// <summary>
-        /// Try create an index over collection using _where conditionals.
-        /// </summary>
-        private IndexCost TryCreateIndex(Snapshot snapshot)
-        {
-            return null;
-
-            // - AutoIndex must be more complex than just create an index using first conditional
-            // - must do better analyze before create an index (do not create just because I wrote a wrong SELECT $ FROM zip WHERE a = 1) [there is no "a" field]
-            // - do async in a queue list
-            // - do not block query result
-            // - maybe keep queries in a special (real) collection "_indexAnalyze"
-
-            /*
-            // at least a minimum document count
-            if (_engine.Settings.AutoIndex == 0 || 
-                snapshot.CollectionPage.DocumentCount < _engine.Settings.AutoIndex) return null;
-
-            // get a valid expression in where
-            // must be condition, left side must be a path and immutable and right side must be a constant
-            var expr = _where
-                .Where(x => x.IsConditional && x.Left.Type == BsonExpressionType.Path && x.Left.IsImmutable && x.Right.IsConstant)
-                .OrderBy(x => x.Type)
-                .FirstOrDefault();
-
-            // not a good condition? do not create index
-            if (expr == null) return null;
-
-            // create random/unique name 
-            var name = "idx_auto_" + Guid.NewGuid().ToString("n").Substring(0, 5).ToLower();
-
-            _engine.EnsureIndex(_collection, name, expr.Left, false);
-
-            var index = snapshot.CollectionPage.GetIndex(name);
-
-            // get index cost
-            var cost = new IndexCost(index, expr, expr.Right);
-
-            return cost;
-            */
         }
 
         #endregion

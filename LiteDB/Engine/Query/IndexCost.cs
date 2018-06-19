@@ -30,6 +30,14 @@ namespace LiteDB.Engine
             this.Cost = this.Index.GetCost(index);
         }
 
+        // used when full index search
+        public IndexCost(CollectionIndex index)
+        {
+            this.Expression = BsonExpression.Create(index.Expression);
+            this.Index = Index.All(index.Name);
+            this.Cost = this.Index.GetCost(index);
+        }
+
         /// <summary>
         /// Create index based on expression conditional
         /// </summary>
