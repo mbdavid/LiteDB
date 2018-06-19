@@ -131,10 +131,18 @@ namespace LiteDB.Engine
         {
             _log.LockEnter("reserved");
 
-            // reserved locker in write lock
-            if (_reserved.TryEnterWriteLock(_timeout) == false)
+            // wait finish all transactions before enter in reserved mode
+            if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+
+            try
             {
-                throw LiteException.LockTimeout("reserved", _timeout);
+                // reserved locker in write lock
+                if (_reserved.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+            }
+            finally
+            {
+                // exit exclusive and allow new readers
+                _transaction.ExitWriteLock();
             }
         }
 

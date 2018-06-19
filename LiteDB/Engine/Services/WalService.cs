@@ -111,20 +111,20 @@ namespace LiteDB.Engine
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.Active);
 
-            if (_walFile.HasPages() == false)
-            {
-                if (deleteWalFile) _walFile.Delete();
-                return 0;
-            }
-
-            var count = 0;
-
-            // enter in special database reserved lock
-            // no others can write
+            // enter in special database reserved lock (wait all readers/writers)
+            // after this, everyone can read but no others can write
             _locker.EnterReserved();
 
             try
             {
+                if (_walFile.HasPages() == false)
+                {
+                    if (deleteWalFile) _walFile.Delete();
+                    return 0;
+                }
+
+                var count = 0;
+
                 HeaderPage last = null;
 
                 // get all pages inside WAL file and contains valid confirmed pages

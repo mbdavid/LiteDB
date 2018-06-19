@@ -159,7 +159,6 @@ namespace LiteDB.Engine
         {
             // this method can be called from Ctor, so many 
             // of this members can be null yet. 
-
             if (_disposing) return;
 
             // start shutdown operation
@@ -174,17 +173,20 @@ namespace LiteDB.Engine
             // wait for all async task write on disk
             _wal?.WalFile.WaitAsyncWrite(true);
 
-            // now, check if exisit any write transaction open
-            var hasWriteTransaction = _transactions?.Values
-                .SelectMany(x => x.Snapshots.Values)
-                .Where(x => x.Mode == SnapshotMode.Write)
-                .Any();
+            // now, check if there is any open transaction
+            var hasTransaction = _transactions?.Values.Count > 0;
 
             // checkpoint will be made only if no write transaction still open
-            if (hasWriteTransaction == false)
+            if (hasTransaction == false)
             {
-                // do checkpoint and delete wal file
-                _wal?.Checkpoint(true, null);
+                try
+                {
+                    // do checkpoint and delete wal file
+                    _wal?.Checkpoint(true, null);
+                }
+                catch (LiteException e) when (e.ErrorCode == LiteException.LOCK_TIMEOUT)
+                {
+                }
             }
 
             // dispose lockers
