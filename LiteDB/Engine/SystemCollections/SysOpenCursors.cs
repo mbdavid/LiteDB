@@ -18,12 +18,13 @@ namespace LiteDB.Engine
                     {
                         yield return new BsonDocument
                         {
-                            ["transactionID"] = transaction.TransactionID,
                             ["threadID"] = transaction.ThreadID,
+                            ["transactionID"] = transaction.TransactionID,
                             ["collection"] = snapshot.CollectionPage?.CollectionName,
                             ["readVersion"] = snapshot.ReadVersion,
                             ["mode"] = snapshot.Mode.ToString(),
-                            ["elapsed"] = cursor.Timer.Elapsed.TotalMilliseconds,
+                            ["elapsedMS"] = cursor.Timer.Elapsed.TotalMilliseconds,
+                            ["elapsed"] = cursor.Timer.Elapsed.ToString(),
                             ["fetch"] = cursor.FetchCount,
                             ["done"] = cursor.Done
                         };

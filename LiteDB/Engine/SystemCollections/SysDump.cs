@@ -17,7 +17,7 @@ namespace LiteDB.Engine
             {
                 var page = _dataFile.ReadPage(position, false);
 
-                yield return this.DumpPage(page, null, null, false);
+                yield return this.DumpPage(page, null, null, false, false);
 
                 position += PAGE_SIZE;
             }
@@ -44,7 +44,7 @@ namespace LiteDB.Engine
                     }
                 }
 
-                var doc = this.DumpPage(page, position, version, true);
+                var doc = this.DumpPage(page, position, version, true, false);
 
                 yield return doc;
 
@@ -55,12 +55,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Dump page information into a BsonDocument
         /// </summary>
-        private BsonDocument DumpPage(BasePage page, long? position, int? version, bool transactionID)
+        private BsonDocument DumpPage(BasePage page, long? position, int? version, bool transactionID, bool dirty)
         {
             var doc = new BsonDocument();
 
             if (position.HasValue) doc["_position"] = position.Value;
             if (version.HasValue) doc["_version"] = version.Value;
+            if (dirty) doc["_dirty"] = page.IsDirty;
 
             doc["pageID"] = (int)page.PageID;
             doc["pageType"] = page.PageType.ToString();

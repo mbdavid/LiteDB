@@ -31,6 +31,8 @@ namespace LiteDB.Engine
         private ConcurrentQueue<long> _dirtyQueue = new ConcurrentQueue<long>();
         private Task _asyncWriter;
 
+        public CacheService Cache => _cache;
+
         public WalFileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
         {
             _factory = factory;

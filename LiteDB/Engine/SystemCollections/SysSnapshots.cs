@@ -16,8 +16,8 @@ namespace LiteDB.Engine
                 {
                     yield return new BsonDocument
                     {
-                        ["transactionID"] = transaction.TransactionID,
                         ["threadID"] = transaction.ThreadID,
+                        ["transactionID"] = transaction.TransactionID,
                         ["transactionState"] = transaction.State.ToString(),
                         ["startTime"] = transaction.StartTime,
                         ["collection"] = snapshot.CollectionPage?.CollectionName,

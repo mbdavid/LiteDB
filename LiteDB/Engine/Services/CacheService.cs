@@ -31,6 +31,14 @@ namespace LiteDB.Engine
         /// </summary>
         public int Length => _cache.Count;
 
+        /// <summary>
+        /// Get cache data
+        /// </summary>
+        public ConcurrentDictionary<long, BasePage> Data => _cache;
+
+        /// <summary>
+        /// Clear cache
+        /// </summary>
         public void Clear() => _cache.Clear();
 
         /// <summary>

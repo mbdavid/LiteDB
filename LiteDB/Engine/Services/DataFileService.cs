@@ -26,6 +26,8 @@ namespace LiteDB.Engine
 
         private BinaryWriter _writer;
 
+        public CacheService Cache => _cache;
+
         public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Logger log)
         {
             _factory = factory;
