@@ -181,7 +181,7 @@ namespace LiteDB.Engine
             // wait for all async task write on disk
             _wal?.WalFile.WaitAsyncWrite(true);
 
-            // do checkpoint (with no-lock check) and delete wal file
+            // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)
             _wal?.Checkpoint(true, null, false);
 
             // dispose lockers
@@ -189,9 +189,6 @@ namespace LiteDB.Engine
 
             // close all Dispose services
             _dataFile?.Dispose();
-
-            // dispose wal file
-            _wal?.WalFile.Dispose();
 
             if (_disposeTempdb)
             {

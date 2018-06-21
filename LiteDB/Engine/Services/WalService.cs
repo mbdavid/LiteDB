@@ -124,7 +124,11 @@ namespace LiteDB.Engine
             {
                 if (_walFile.HasPages() == false)
                 {
-                    if (deleteWalFile) _walFile.Delete();
+                    if (deleteWalFile && _walFile.Delete() == false)
+                    {
+                        DEBUG(true, "WAL file was not deleted because are not empty");
+                    }
+
                     return 0;
                 }
 
@@ -166,7 +170,10 @@ namespace LiteDB.Engine
                 _walFile.Clear();
 
                 // delete wal file
-                if (deleteWalFile) _walFile.Delete();
+                if (deleteWalFile && _walFile.Delete() == false)
+                {
+                    DEBUG(true, "WAL file was not deleted because are not empty");
+                }
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
