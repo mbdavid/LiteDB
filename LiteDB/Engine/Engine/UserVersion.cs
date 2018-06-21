@@ -19,7 +19,7 @@ namespace LiteDB.Engine
             }
             set
             {
-                if (value == _header.UserVersion || _disposing) return;
+                if (value == _header.UserVersion || _shutdown) return;
 
                 // clone header to use in writer
                 var confirm = _header.Clone() as HeaderPage;

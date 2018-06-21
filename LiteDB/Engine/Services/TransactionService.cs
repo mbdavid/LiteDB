@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal void Safepoint()
         {
-            // transaction is in shutdown (do rollback)
+            // if transaction is in shutting down, stop transaction and do not commit
             if (_shutdown) throw LiteException.DatabaseShutdown();
 
             // Safepoint are valid only during transaction execution
@@ -273,14 +273,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Define this transaction must stop working and release resources becase main thread are shutdowing.
-        /// If was called by same thread, call rollback now
+        /// Define this transaction must stop working and release resources because main thread are shutting down.
+        /// If was called by same thread, call rollback now (with no ReturnNewPages)
         /// </summary>
         internal void Shutdown()
         {
             if (Thread.CurrentThread.ManagedThreadId == this.ThreadID)
             {
-                this.Rollback(true);
+                this.Rollback(false);
             }
             else
             {

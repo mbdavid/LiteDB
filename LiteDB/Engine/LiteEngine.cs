@@ -30,7 +30,7 @@ namespace LiteDB.Engine
 
         private readonly EngineSettings _settings;
 
-        private bool _disposing = false;
+        private bool _shutdown = false;
 
         #region TempDB
 
@@ -122,8 +122,8 @@ namespace LiteDB.Engine
                 // initialize wal service
                 _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, settings.UtcDate, _log);
 
-                // if WAL file have content, must run a checkpoint
-                _wal.Checkpoint(false, null);
+                // if WAL file have content, must run checkpoint
+                _wal.Checkpoint(false, null, false);
 
                 // load header page
                 _header = _dataFile.ReadPage(0, true) as HeaderPage;
@@ -144,9 +144,9 @@ namespace LiteDB.Engine
         #endregion
 
         /// <summary>
-        /// Request a wal checkpoint
+        /// Request a WAL checkpoint
         /// </summary>
-        public void Checkpoint(bool delete) => _wal?.Checkpoint(delete, _header);
+        public void Checkpoint(bool delete) => _wal.Checkpoint(delete, _header, true);
 
         /// <summary>
         /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
@@ -165,12 +165,12 @@ namespace LiteDB.Engine
         {
             // this method can be called from Ctor, so many 
             // of this members can be null yet. 
-            if (_disposing) return;
+            if (_shutdown) return;
 
             _log.Info("shutting down the database");
 
             // start shutdown operation
-            _disposing = true;
+            _shutdown = true;
 
             // mark all transaction as shotdown status
             foreach(var trans in _transactions?.Values)
@@ -181,21 +181,8 @@ namespace LiteDB.Engine
             // wait for all async task write on disk
             _wal?.WalFile.WaitAsyncWrite(true);
 
-            // now, check if there is any open transaction
-            var hasTransaction = _transactions?.Values.Count > 0;
-
-            // checkpoint will be made only if no write transaction still open
-            if (hasTransaction == false)
-            {
-                try
-                {
-                    // do checkpoint and delete wal file
-                    _wal?.Checkpoint(true, null);
-                }
-                catch (LiteException e) when (e.ErrorCode == LiteException.LOCK_TIMEOUT)
-                {
-                }
-            }
+            // do checkpoint (with no-lock check) and delete wal file
+            _wal?.Checkpoint(true, null, false);
 
             // dispose lockers
             _locker?.Dispose();

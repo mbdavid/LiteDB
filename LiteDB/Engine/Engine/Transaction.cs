@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         internal TransactionService GetTransaction(bool create, out bool isNew)
         {
             // if engine are disposing, do not accept any transaction/operation
-            if (_disposing) throw LiteException.DatabaseShutdown();
+            if (_shutdown) throw LiteException.DatabaseShutdown();
 
             var transaction = Thread.GetData(_slot) as TransactionService;
 
@@ -111,8 +111,10 @@ namespace LiteDB.Engine
             {
                 _log.Error(ex);
 
-                // do rollback and release transaction
-                transaction.Dispose();
+                // if database are is in shutdown process, just abort transaction and do not return new pages (will need VACCUM later)
+                // otherwise, do rollabck with "ReturnNewPages" function
+                transaction.Rollback(_shutdown == false);
+
                 throw;
             }
         }

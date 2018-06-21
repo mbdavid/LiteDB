@@ -105,15 +105,20 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile. Return how many pages was copied from WAL file to data file
+        /// This process are SYNC and disk was FLUSHED
+        /// If header was passed, update with last checkpoint date/counter
         /// </summary>
-        public int Checkpoint(bool deleteWalFile, HeaderPage header)
+        public int Checkpoint(bool deleteWalFile, HeaderPage header, bool lockReserved)
         {
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.Active);
 
-            // enter in special database reserved lock (wait all readers/writers)
-            // after this, everyone can read but no others can write
-            _locker.EnterReserved();
+            if (lockReserved)
+            {
+                // enter in special database reserved lock (wait all readers/writers)
+                // after this, everyone can read but no others can write
+                _locker.EnterReserved();
+            }
 
             try
             {
@@ -172,7 +177,10 @@ namespace LiteDB.Engine
             }
             finally
             {
-                _locker.ExitReserved();
+                if (lockReserved)
+                {
+                    _locker.ExitReserved();
+                }
             }
         }
 
