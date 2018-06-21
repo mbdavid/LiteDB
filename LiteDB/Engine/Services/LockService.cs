@@ -39,8 +39,6 @@ namespace LiteDB.Engine
         {
             try
             {
-                _log.LockEnter("transaction");
-
                 if (_transaction.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("transaction", _timeout);
             }
             catch (LockRecursionException)
@@ -54,8 +52,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitTransaction()
         {
-            _log.LockExit("transaction");
-
             _transaction.ExitReadLock();
         }
 
@@ -65,8 +61,6 @@ namespace LiteDB.Engine
         public void EnterRead(string collectionName)
         {
             DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterRead(name)");
-
-            _log.LockEnter("read", collectionName);
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -80,8 +74,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitRead(string collectionName)
         {
-            _log.LockExit("read", collectionName);
-
             if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.InvalidTransactionState();
 
             collection.ExitReadLock();
@@ -93,8 +85,6 @@ namespace LiteDB.Engine
         public void EnterReserved(string collectionName)
         {
             DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterReserved(name)");
-
-            _log.LockEnter("reserved", collectionName);
 
             // reserved locker in read lock (if not already reserved in this thread be another snapshot)
             if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _timeout);
@@ -111,8 +101,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitReserved(string collectionName)
         {
-            _log.LockExit("reserved", collectionName);
-
             if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.InvalidTransactionState();
 
             collection.ExitUpgradeableReadLock();
@@ -129,8 +117,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterReserved()
         {
-            _log.LockEnter("reserved");
-
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
 
@@ -151,8 +137,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitReserved()
         {
-            _log.LockExit("reserved");
-
             if (_reserved.IsWriteLockHeld)
             {
                 _reserved.ExitWriteLock();

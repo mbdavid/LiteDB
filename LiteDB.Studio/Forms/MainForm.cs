@@ -118,7 +118,7 @@ namespace LiteDB.Studio
 
                     txtLog.AppendText(
                         string.Format("{0}: {1:HH:mm:ss} [{2}] - {3}\n",
-                        l.Thread,
+                        l.ThreadID,
                         l.Time,
                         l.Level,
                         l.Message.Replace('\r', ';').Replace('\n', ' ')));

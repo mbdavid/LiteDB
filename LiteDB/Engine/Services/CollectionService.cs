@@ -105,6 +105,7 @@ namespace LiteDB.Engine
         {
             throw new NotImplementedException();
 
+
             //// check if newName already exists
             //if (this.GetAll().Select(x => x.CollectionName).Contains(newName, StringComparer.OrdinalIgnoreCase))
             //{

@@ -284,6 +284,8 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            _log.Info($"dispose wal file ({(_writer.IsValueCreated ? 0 : 1)} writer + {_pool.Count} readers)");
+
             // first dispose writer
             if (_writer.IsValueCreated)
             {

@@ -158,6 +158,8 @@ namespace LiteDB.Engine
         {
             if (_factory.CloseOnDispose)
             {
+                _log.Info($"dispose data file (1 writer + {_pool.Count} readers)");
+
                 // dispose writer
                 _writer.BaseStream.Dispose();
 

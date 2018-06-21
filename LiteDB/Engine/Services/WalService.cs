@@ -123,6 +123,8 @@ namespace LiteDB.Engine
                     return 0;
                 }
 
+                _log.Info("checkpoint" + (deleteWalFile ? " with delete WAL file" : ""));
+
                 var count = 0;
 
                 HeaderPage last = null;

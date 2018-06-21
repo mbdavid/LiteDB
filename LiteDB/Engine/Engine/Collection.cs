@@ -21,8 +21,6 @@ namespace LiteDB.Engine
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
 
-            _log.Command($"drop collection", collection);
-
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
@@ -46,8 +44,6 @@ namespace LiteDB.Engine
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
-
-            _log.Command($"rename collection `{collection}` to `{newName}`");
 
             throw new NotImplementedException();
 

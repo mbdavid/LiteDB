@@ -130,12 +130,10 @@ namespace LiteDB.Engine
 
                 foreach (var p in transPages.NewCollections)
                 {
-                    if (this.Collections.ContainsKey(p.Key))
+                    if (this.Collections.TryAdd(p.Key, p.Value.PageID) == false)
                     {
                         throw LiteException.CollectionAlreadyExist(p.Key);
                     }
-                    
-                    this.Collections.TryAdd(p.Key, p.Value.PageID);
                 }
 
                 this.ItemCount = this.ItemCount - transPages.DeletedCollections.Count + transPages.NewCollections.Count;

@@ -97,10 +97,14 @@ namespace LiteDB.Engine
         /// </summary>
         public LiteEngine(EngineSettings settings)
         {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+
             try
             {
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
+
+                _log.Info($"initializing database '{settings.Filename}'");
 
                 // get engine setting
                 _settings = settings;
@@ -127,8 +131,10 @@ namespace LiteDB.Engine
                 // register system collections
                 this.InitializeSystemCollections();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _log.Error(ex);
+
                 // explicit dispose
                 this.Dispose();
                 throw;
@@ -160,6 +166,8 @@ namespace LiteDB.Engine
             // this method can be called from Ctor, so many 
             // of this members can be null yet. 
             if (_disposing) return;
+
+            _log.Info("shutting down the database");
 
             // start shutdown operation
             _disposing = true;

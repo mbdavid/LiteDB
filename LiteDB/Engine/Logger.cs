@@ -11,32 +11,49 @@ namespace LiteDB.Engine
     /// </summary>
     public class LogEntry
     {
-        public LogEntry(string level, int thread, string message)
+        public LogEntry(string message)
         {
             this.Time = DateTime.Now;
-            this.Level = level;
-            this.Thread = thread;
+            this.ThreadID = Thread.CurrentThread.ManagedThreadId;
+
+            this.Level = "INFO";
             this.Message = message;
+        }
+
+        public LogEntry(Exception ex)
+        {
+            this.Time = DateTime.Now;
+            this.ThreadID = Thread.CurrentThread.ManagedThreadId;
+            this.Level = "ERROR";
+
+            this.Message = ex.Message;
+            this.StackTrace = ex.StackTrace;
         }
 
         public DateTime Time { get; private set; }
         public string Level { get; private set; }
-        public int Thread { get; private set; }
+        public int ThreadID { get; private set; }
         public string Message { get; private set; }
+        public string StackTrace { get; set; }
     }
 
     /// <summary>
-    /// A logger class to log all information about database. Used with levels. Level = 0 - 255
-    /// All log will be trigger before operation execute (better for debug)
+    /// Logger class to store important information about database running. Log errors and some important
+    /// information only. Can
     /// </summary>
     public class Logger
     {
         public const byte NONE = 0;
         public const byte ERROR = 1;
-        public const byte COMMAND = 2;
-        public const byte WAL = 4;
-        public const byte LOCK = 8;
+        public const byte INFO = 2;
         public const byte FULL = 255;
+
+        public event Action<LogEntry> Logging;
+
+        public Logger()
+        {
+            this.Level = NONE;
+        }
 
         /// <summary>
         /// Initialize logger class using a custom logging level (see Logger.NONE to Logger.FULL)
@@ -52,101 +69,37 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Event when log writes a message. Fire on each log message
-        /// </summary>
-        public event Action<LogEntry> Logging = null;
-
-        /// <summary>
         /// To full logger use Logger.FULL or any combination of Logger constants like Level = Logger.ERROR | Logger.COMMAND | Logger.DISK
         /// </summary>
         public byte Level { get; set; }
 
-        public Logger()
+        /// <summary>
+        /// Log any database error excption before send error to user
+        /// </summary>
+        public void Error(Exception ex)
         {
-            this.Level = NONE;
-        }
-
-        internal void Error(Exception ex)
-        {
-            this.Write(ERROR, ex.Message);
-        }
-
-        internal void Command(string command)
-        {
-            this.Write(COMMAND, command);
-        }
-
-        internal void Command(string command, string name)
-        {
-            this.Write(COMMAND, command + $" '{name}'");
-        }
-
-        internal void Wal(BasePage page)
-        {
-        }
-
-        internal void LockEnter(string name)
-        {
-            this.Write(LOCK, $"entering {name}");
-        }
-
-        internal void LockEnter(string mode, string collection)
-        {
-            this.Write(LOCK, $"entering {mode} lock collection '{collection}'");
-        }
-
-        internal void LockExit(string name)
-        {
-            this.Write(LOCK, $"exiting {name}");
-        }
-
-        internal void LockExit(string mode, string collection)
-        {
-            this.Write(LOCK, $"exiting {mode} lock collection '{collection}'");
+            this.DoLog(ERROR, new LogEntry(ex));
         }
 
         /// <summary>
-        /// Execute msg function only if level are enabled
+        /// Log database information about important facts
         /// </summary>
-        public void Write(byte level, Func<string> fn)
+        public void Info(string message)
+        {
+            this.DoLog(INFO, new LogEntry(message));
+        }
+
+        private void DoLog(byte level, LogEntry log)
         {
             if ((level & this.Level) == 0) return;
 
-            this.Write(level, fn());
-        }
-
-        /// <summary>
-        /// Write log text to output using inside a component (statics const of Logger)
-        /// </summary>
-        public void Write(byte level, string message, params object[] args)
-        {
-            this.Write(level, string.Format(message, args));
-        }
-
-        /// <summary>
-        /// Write log text to output using inside a component (statics const of Logger)
-        /// </summary>
-        public void Write(byte level, string message)
-        {
-            if ((level & this.Level) == 0 || string.IsNullOrEmpty(message)) return;
-
-            if (this.Logging != null)
+            try
             {
-                var str =
-                    level == ERROR ? "ERROR" :
-                    level == COMMAND ? "COMMAND" :
-                    level == LOCK ? "LOCK" :
-                    level == WAL ? "WAL" : "";
-
-                var log = new LogEntry(str, Thread.CurrentThread.ManagedThreadId, message);
-
-                try
-                {
-                    this.Logging(log);
-                }
-                catch
-                {
-                }
+                //TODO: call logging event using async Task
+                this.Logging?.Invoke(log);
+            }
+            catch
+            {
             }
         }
     }
