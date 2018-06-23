@@ -83,11 +83,7 @@ namespace LiteDB.Engine
                 doc["creationTime"] = header.CreationTime;
                 doc["lastCommit"] = header.LastCommit;
                 doc["lastCheckpoint"] = header.LastCheckpoint;
-                doc["lastAnalyze"] = header.LastAnalyze;
-                doc["lastVaccum"] = header.LastVaccum;
-                doc["lastShrink"] = header.LastShrink;
-                doc["commitCounter"] = (int)header.CommitCount;
-                doc["checkpointCounter"] = (int)header.CheckpointCounter;
+                doc["commitCounter"] = (int)header.CommitCounter;
                 doc["userVersion"] = header.UserVersion;
 
                 doc["colections"] = new BsonArray(header.Collections.Select(x => new BsonDocument

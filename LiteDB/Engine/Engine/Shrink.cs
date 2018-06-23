@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -13,56 +14,79 @@ namespace LiteDB.Engine
         {
             _log.Info("shrink datafile" + (password != null ? " with password" : ""));
 
-            return 0;
-            // var originalSize = _datafile.FileLength;
-            // 
-            // // if temp disk are not passed, use memory stream disk
-            // using (_locker.Write())
-            // using (var engine = new LiteEngine(new ConnectionString { Filename = ":temp:", Password = password }))
-            // {
-            //     var temp = engine._disk;
-            // 
-            //     // read all collection
-            //     foreach (var collectionName in this.GetCollectionNames())
-            //     {
-            //         // first create all user indexes (exclude _id index)
-            //         foreach (var index in this.GetIndexes(collectionName).Where(x => x.Name != "_id"))
-            //         {
-            //             engine.EnsureIndex(collectionName, index.Name, index.Unique);
-            //         }
-            // 
-            //         // now copy documents 
-            //         var docs = this.Find(collectionName, Query.All());
-            // 
-            //         engine.InsertBulk(collectionName, docs);
-            //     }
-            // 
-            //     // copy user version
-            //     engine.UserVersion = this.UserVersion;
-            // 
-            //     // set current disk size to exact new disk usage
-            //     _disk.SetLength(temp.FileLength);
-            // 
-            //     // read new header page to start copy
-            //     var header = BasePage.ReadPage(temp.ReadPage(0)) as HeaderPage;
-            // 
-            //     // copy (as is) all pages from temp disk to original disk
-            //     for (uint i = 0; i <= header.LastPageID; i++)
-            //     {
-            //         var page = temp.ReadPage(i);
-            // 
-            //         _disk.WritePage(i, page);
-            //     }
-            // 
-            //     // create/destroy crypto class
-            //     _crypto = password == null ? null : new AesEncryption(password, header.Salt);
-            // 
-            //     // initialize all services again (crypto can be changed)
-            //     this.InitializeServices();
-            //     
-            //     // return how many bytes are reduced
-            //     return originalSize - temp.FileLength;
-            // }
+            var originalSize = _dataFile.Length;
+
+            // shrink works with a temp engine that will use same wal file name as current datafile
+            // after copy all data from current datafile to temp datafile (all data will be in WAL)
+            // run checkpoint in current database
+
+            _locker.EnterReserved();
+            
+            try
+            {
+                this.WaitAsyncWrite();
+
+                // first do checkpoint with WAL delete
+                _wal.Checkpoint(true, _header, false);
+
+                using (var walStream = _settings.GetDiskFactory().GetWalFileStream(true))
+                {
+                    var s = new EngineSettings
+                    {
+                        DataStream = new MemoryStream(),
+                        WalStream = walStream,
+                        CheckpointOnShutdown = false
+                    };
+
+                    DEBUG(s.WalStream.Length > 0, "WAL must be an empty stream here");
+
+                    // temp datafile
+                    using (var engine = new LiteEngine(s))
+                    {
+                        // get all indexes
+                        var indexes = this.SysIndexes().ToArray();
+
+                        // init transaction in temp engine
+                        var transactionID = engine.BeginTrans();
+
+                        foreach (var collection in this.GetCollectionNames())
+                        {
+                            // first create all user indexes (exclude _id index)
+                            foreach (var index in indexes.Where(x => x["collection"] == collection && x["slot"].AsInt32 > 0))
+                            {
+                                engine.EnsureIndex(collection,
+                                    index["name"].AsString,
+                                    BsonExpression.Create(index["expression"].AsString),
+                                    index["unique"].AsBoolean);
+                            }
+
+                            // get all documents from current collection
+                            var docs = this.Query(collection).ToEnumerable();
+
+                            // and insert into 
+                            engine.Insert(collection, docs, BsonAutoId.ObjectId);
+                        }
+
+                        // update userVersion
+                        engine.UserVersion = this.UserVersion;
+
+                        // commit all temp database
+                        engine.Commit();
+
+                        // add this commited transaction as confirmed transaction in current datafile (to do checkpoint after)
+                        _wal.ConfirmedTransactions.Add(transactionID);
+                    }
+                }
+
+                // show, this checkpoint will use WAL from temp database and will override all datafile pages
+                _wal.Checkpoint(true, _header, false);
+
+                return originalSize - _dataFile.Length;
+            }
+            finally
+            {
+                _locker.ExitReserved();
+            }
         }
     }
 }

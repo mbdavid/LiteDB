@@ -113,7 +113,7 @@ namespace LiteDB.Engine
         {
             if (_factory.IsWalFileExists() == false) return false;
 
-            if (_virtualPosition > 0)
+            if (_dirtyQueue.Count > 0)
             {
                 return true;
             }

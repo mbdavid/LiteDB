@@ -65,6 +65,11 @@ namespace LiteDB.Engine
         public long Length { get => _writer.BaseStream.Length; }
 
         /// <summary>
+        /// Set datafile with new length
+        /// </summary>
+        public void SetLength(long length) => _writer.BaseStream.SetLength(length);
+
+        /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
         /// </summary>
         public BasePage ReadPage(long position, bool clone)

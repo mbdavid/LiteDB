@@ -36,6 +36,7 @@ namespace LiteDB.Engine
 
         public void DeleteWalFile()
         {
+            // stream factory do not delete wal file
         }
 
         /// <summary>

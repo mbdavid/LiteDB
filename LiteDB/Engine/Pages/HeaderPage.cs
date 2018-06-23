@@ -50,29 +50,9 @@ namespace LiteDB.Engine
         public DateTime LastCheckpoint { get; set; }
 
         /// <summary>
-        /// DateTime when database run analyze [8 bytes]
-        /// </summary>
-        public DateTime LastAnalyze { get; set; }
-
-        /// <summary>
-        /// DateTime when database run vaccum [8 bytes]
-        /// </summary>
-        public DateTime LastVaccum { get; set; }
-
-        /// <summary>
-        /// DateTime when database run shrink [8 bytes]
-        /// </summary>
-        public DateTime LastShrink { get; set; }
-
-        /// <summary>
         /// Transaction commit counter - this counter reset after last vaccum/shrink [4 bytes]
         /// </summary>
-        public uint CommitCount { get; set; }
-
-        /// <summary>
-        /// Checkpoint counter - this counter reset after last vaccum/shrink [4 bytes]
-        /// </summary>
-        public uint CheckpointCounter { get; set; }
+        public uint CommitCounter { get; set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -98,11 +78,7 @@ namespace LiteDB.Engine
             this.CreationTime = DateTime.Now;
             this.LastCommit = DateTime.MinValue;
             this.LastCheckpoint = DateTime.MinValue;
-            this.LastAnalyze = DateTime.MinValue;
-            this.LastVaccum = DateTime.MinValue;
-            this.LastShrink = DateTime.MinValue;
-            this.CommitCount = 0;
-            this.CheckpointCounter = 0;
+            this.CommitCounter = 0;
             this.UserVersion = 0;
             this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
@@ -114,7 +90,7 @@ namespace LiteDB.Engine
         {
             this.TransactionID = transactionID;
             this.FreeEmptyPageID = freeEmptyPageID;
-            this.CommitCount++;
+            this.CommitCounter++;
             this.LastCommit = DateTime.Now;
 
             // remove/add collections based on transPages
@@ -172,11 +148,7 @@ namespace LiteDB.Engine
             this.CreationTime = reader.ReadDateTime(utcDate);
             this.LastCommit = reader.ReadDateTime(utcDate);
             this.LastCheckpoint = reader.ReadDateTime(utcDate);
-            this.LastAnalyze = reader.ReadDateTime(utcDate);
-            this.LastVaccum = reader.ReadDateTime(utcDate);
-            this.LastShrink = reader.ReadDateTime(utcDate);
-            this.CommitCount = reader.ReadUInt32();
-            this.CheckpointCounter = reader.ReadUInt32();
+            this.CommitCounter = reader.ReadUInt32();
             this.UserVersion = reader.ReadInt32();
 
             // read resered bytes
@@ -185,7 +157,7 @@ namespace LiteDB.Engine
 
             reader.ReadBytes(reserved);
 
-            DEBUG(reserved != 160, "For current version, reserved space must return 160 bytes");
+            DEBUG(reserved != 188, "For current version, reserved space must return 188 bytes");
 
             for (var i = 0; i < this.ItemCount; i++)
             {
@@ -204,18 +176,14 @@ namespace LiteDB.Engine
             writer.Write(this.CreationTime);
             writer.Write(this.LastCommit);
             writer.Write(this.LastCheckpoint);
-            writer.Write(this.LastAnalyze);
-            writer.Write(this.LastVaccum);
-            writer.Write(this.LastShrink);
-            writer.Write(this.CommitCount);
-            writer.Write(this.CheckpointCounter);
+            writer.Write(this.CommitCounter);
             writer.Write(this.UserVersion);
 
             // write resered bytes
             var used = writer.BaseStream.Position - start;
             var reserved = HEADER_PAGE_FIXED_DATA_SIZE - used;
 
-            DEBUG(reserved != 160, "For current version, reserved space must return 160 bytes");
+            DEBUG(reserved != 188, "For current version, reserved space must return 188 bytes");
 
             writer.Write(new byte[reserved]);
 
@@ -244,11 +212,7 @@ namespace LiteDB.Engine
                 CreationTime = this.CreationTime,
                 LastCommit = this.LastCommit,
                 LastCheckpoint = this.LastCheckpoint,
-                LastAnalyze = this.LastAnalyze,
-                LastVaccum = this.LastVaccum,
-                LastShrink = this.LastShrink,
-                CommitCount = this.CommitCount,
-                CheckpointCounter = this.CheckpointCounter,
+                CommitCounter = this.CommitCounter,
                 UserVersion = this.UserVersion,
                 Collections = new ConcurrentDictionary<string, uint>(this.Collections)
             };

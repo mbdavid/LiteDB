@@ -20,7 +20,7 @@ namespace LiteDB.Demo
         {
             var settings = new EngineSettings
             {
-                Filename = datafile,
+                FileName = datafile,
                 Timeout = TimeSpan.FromSeconds(2)
             };
 

@@ -152,7 +152,6 @@ namespace LiteDB.Engine
                         {
                             last = x as HeaderPage;
                             last.LastCheckpoint = DateTime.Now;
-                            last.CheckpointCounter++;
                         }
                     });
 
@@ -160,10 +159,21 @@ namespace LiteDB.Engine
                 _dataFile.WritePages(pages);
                 
                 // update single header instance with last confirmed header
-                if (header != null && last != null)
+                if (last != null)
                 {
-                    header.LastCheckpoint = last.LastCheckpoint;
-                    header.CheckpointCounter = last.CheckpointCounter;
+                    // update header checkpoint datetime
+                    if (header != null)
+                    {
+                        header.LastCheckpoint = last.LastCheckpoint;
+                    }
+
+                    // shrink datafile if length are large than needed
+                    var length = BasePage.GetPagePosition(last.LastPageID + 1);
+
+                    if (length < _dataFile.Length)
+                    {
+                        _dataFile.SetLength(length);
+                    }
                 }
 
                 // now, all wal pages are saved in data disk - can clear walfile

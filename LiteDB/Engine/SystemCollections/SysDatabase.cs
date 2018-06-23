@@ -12,7 +12,7 @@ namespace LiteDB.Engine
         {
             var doc = new BsonDocument();
 
-            doc["filename"] = _settings.Filename;
+            doc["filename"] = _settings.FileName;
             doc["limitSize"] = _settings.LimitSize;
             doc["initialSize"] = _settings.InitialSize;
             doc["maxMemoryTransactionSize"] = _settings.MaxMemoryTransactionSize;
@@ -22,12 +22,7 @@ namespace LiteDB.Engine
 
             doc["creationTime"] = _header.CreationTime;
             doc["lastCommit"] = _header.LastCommit;
-            doc["lastShrink"] = _header.LastShrink;
             doc["lastCheckpoint"] = _header.LastCheckpoint;
-            doc["lastVaccum"] = _header.LastVaccum;
-
-            doc["commitCounter"] = (int)_header.CommitCount;
-            doc["checkpointCounter"] = (int)_header.CheckpointCounter;
 
             doc["fileSize"] = _dataFile.Length;
             doc["filePageCount"] = _dataFile.Length / PAGE_SIZE;
@@ -36,6 +31,7 @@ namespace LiteDB.Engine
             doc["walTransactions"] = _wal.ConfirmedTransactions.Count;
             doc["walCurrentReadVersion"] = _wal.CurrentReadVersion;
 
+            doc["commitCounter"] = (int)_header.CommitCounter;
             doc["userVersion"] = _header.UserVersion;
 
             yield return doc;

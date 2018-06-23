@@ -34,14 +34,17 @@ namespace LiteDB.Engine
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            var position =
-                origin == SeekOrigin.Begin ? offset :
-                origin == SeekOrigin.Current ? _position + offset :
-                _position - offset;
+            lock(_stream)
+            {
+                var position =
+                    origin == SeekOrigin.Begin ? offset :
+                    origin == SeekOrigin.Current ? _position + offset :
+                    _position - offset;
 
-            _position = position;
+                _position = position;
 
-            return _position;
+                return _position;
+            }
         }
 
         public override int Read(byte[] buffer, int offset, int count)

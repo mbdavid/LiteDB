@@ -46,7 +46,7 @@ namespace LiteDB.Engine
             {
                 if (_tempdb == null)
                 {
-                    _tempdb = new LiteEngine(new EngineSettings { Filename = ":temp:" });
+                    _tempdb = new LiteEngine(new EngineSettings { FileName = ":temp:" });
                 }
 
                 return _tempdb;
@@ -88,7 +88,7 @@ namespace LiteDB.Engine
         /// Initialize LiteEngine using connection string using key=value; parser
         /// </summary>
         public LiteEngine(string filename)
-            : this (new EngineSettings { Filename = filename })
+            : this (new EngineSettings { FileName = filename })
         {
         }
 
@@ -104,7 +104,7 @@ namespace LiteDB.Engine
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
 
-                _log.Info($"initializing database '{settings.Filename}'");
+                _log.Info($"initializing database '{settings.FileName}'");
 
                 // get engine setting
                 _settings = settings;
@@ -181,8 +181,11 @@ namespace LiteDB.Engine
             // wait for all async task write on disk
             _wal?.WalFile.WaitAsyncWrite(true);
 
-            // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)
-            _wal?.Checkpoint(true, null, false);
+            if (_settings.CheckpointOnShutdown)
+            {
+                // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)
+                _wal?.Checkpoint(true, null, false);
+            }
 
             // dispose lockers
             _locker?.Dispose();

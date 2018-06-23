@@ -28,7 +28,7 @@ namespace LiteDB.Engine
             {
                 foreach (var collection in this.GetCollectionNames().OrderBy(x => x))
                 {
-                    var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
+                    var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, collection, false);
 
                     foreach(var index in snapshot.CollectionPage.GetIndexes(true))
                     {

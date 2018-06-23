@@ -33,7 +33,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: ':memory:')
         /// </summary>
-        public string Filename { get; set; } = ":memory:";
+        public string FileName { get; set; } = ":memory:";
 
         /// <summary>
         /// Timeout for waiting unlock operations (default: 1 minute)
@@ -81,6 +81,11 @@ namespace LiteDB.Engine
         public bool AutoIndex { get; set; } = false;
 
         /// <summary>
+        /// Indicate that engine will do a checkpoint on dispose database
+        /// </summary>
+        public bool CheckpointOnShutdown { get; set; } = true;
+
+        /// <summary>
         /// Define max pages a trasaction must keep in-memory before flush to WAL file. Must be larger than 100 (default 1000)
         /// </summary>
         public int MaxMemoryTransactionSize { get; set; } = 1000;
@@ -90,21 +95,23 @@ namespace LiteDB.Engine
         /// </summary>
         internal IDiskFactory GetDiskFactory()
         {
-            if (this.DataStream != null)
+            if (this.FileName == ":memory:")
             {
-                return new StreamDiskFactory(this.DataStream, new TempStream());
+                return new StreamDiskFactory(new MemoryStream(), this.WalStream ?? new MemoryStream());
             }
-            if (this.Filename == ":memory:")
+            else if (this.FileName == ":temp:")
             {
-                return new StreamDiskFactory(new MemoryStream(), new MemoryStream());
+                return new StreamDiskFactory(new TempStream(), this.WalStream ?? new TempStream());
             }
-            else if (this.Filename == ":temp:")
+            else if(!string.IsNullOrEmpty(this.FileName))
             {
-                return new StreamDiskFactory(new TempStream(), new TempStream());
+                return new FileStreamDiskFactory(this.FileName, this.ReadOnly, this.SyncOverAsync);
             }
             else
             {
-                return new FileStreamDiskFactory(this.Filename, this.ReadOnly, this.SyncOverAsync);
+                if (this.DataStream == null) throw new ArgumentException("EngineSettings must have FileName or DataStream as data source");
+
+                return new StreamDiskFactory(this.DataStream, this.WalStream ?? new TempStream());
             }
         }
     }

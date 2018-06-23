@@ -72,7 +72,7 @@ namespace LiteDB.Studio
         {
             var settings = new EngineSettings
             {
-                Filename = txtFileName.Text,
+                FileName = txtFileName.Text,
                 Log = new Logger(Logger.FULL, this.DoLog)
             };
 
@@ -194,7 +194,7 @@ namespace LiteDB.Studio
         {
             tvwDatabase.Nodes.Clear();
 
-            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Settings.Filename));
+            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Settings.FileName));
             var system = root.Nodes.Add("System");
 
             root.ImageKey = "database";
