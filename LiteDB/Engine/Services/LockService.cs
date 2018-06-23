@@ -37,6 +37,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterTransaction()
         {
+            // if current thread are in reserved mode, do not enter in transaction
+            if (_transaction.IsWriteLockHeld) return;
+
             try
             {
                 if (_transaction.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("transaction", _timeout);
@@ -52,6 +55,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitTransaction()
         {
+            // if current thread are in reserved mode, do not exit transaction (will be exit reserved lock)
+            if (_transaction.IsWriteLockHeld) return;
+
             _transaction.ExitReadLock();
         }
 
@@ -60,7 +66,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterRead(string collectionName)
         {
-            DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterRead(name)");
+            DEBUG(_transaction.IsReadLockHeld == false && _transaction.IsWriteLockHeld == false, "Use EnterTransaction() before EnterRead(name)");
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -119,9 +125,10 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter all database in reserved lock - all others can read but not write
+        /// Enter all database in reserved lock. Wait for all reader/writers. 
+        /// If exclusive = false, new readers can read but no writers can write. If exclusive = true, no new readers/writers
         /// </summary>
-        public void EnterReserved()
+        public void EnterReserved(bool exclusive)
         {
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
@@ -133,19 +140,28 @@ namespace LiteDB.Engine
             }
             finally
             {
-                // exit exclusive and allow new readers
-                _transaction.ExitWriteLock();
+                if (exclusive == false)
+                {
+                    // exit exclusive and allow new readers
+                    _transaction.ExitWriteLock();
+                }
             }
         }
 
         /// <summary>
         /// Exit reserved lock
         /// </summary>
-        public void ExitReserved()
+        public void ExitReserved(bool exclusive)
         {
             if (_reserved.IsWriteLockHeld)
             {
                 _reserved.ExitWriteLock();
+            }
+
+            // if in reserved exclusive - unlock transactions
+            if (exclusive == true)
+            {
+                _transaction.ExitWriteLock();
             }
         }
 

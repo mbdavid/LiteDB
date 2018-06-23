@@ -14,7 +14,7 @@ namespace LiteDB.Engine
             // do not accept any command after shutdown database
             if (_shutdown) throw LiteException.DatabaseShutdown();
 
-            _locker.EnterReserved();
+            _locker.EnterReserved(false);
 
             try
             {
@@ -40,7 +40,7 @@ namespace LiteDB.Engine
             }
             finally
             {
-                _locker.ExitReserved();
+                _locker.ExitReserved(true);
             }
         }
     }

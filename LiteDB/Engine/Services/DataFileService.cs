@@ -28,7 +28,7 @@ namespace LiteDB.Engine
 
         public CacheService Cache => _cache;
 
-        public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Logger log)
+        public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Action<HeaderPage> setup, Logger log)
         {
             _factory = factory;
             _timeout = timeout;
@@ -48,7 +48,7 @@ namespace LiteDB.Engine
                 // if empty datafile, create database here
                 if (stream.Length == 0)
                 {
-                    this.CreateDatafile(stream, initialSize);
+                    this.CreateDatafile(stream, initialSize, setup);
                 }
             }
             catch
@@ -168,11 +168,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new datafile based in empty Stream
         /// </summary>
-        private void CreateDatafile(Stream stream, long initialSize)
+        private void CreateDatafile(Stream stream, long initialSize, Action<HeaderPage> setup)
         {
             _writer = new BinaryWriter(stream);
 
             var header = new HeaderPage(0);
+
+            // setup initial header page
+            setup?.Invoke(header);
 
             header.WritePage(_writer);
 

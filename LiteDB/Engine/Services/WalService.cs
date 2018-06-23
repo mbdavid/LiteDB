@@ -117,7 +117,7 @@ namespace LiteDB.Engine
             {
                 // enter in special database reserved lock (wait all readers/writers)
                 // after this, everyone can read but no others can write
-                _locker.EnterReserved();
+                _locker.EnterReserved(false);
             }
 
             try
@@ -196,7 +196,7 @@ namespace LiteDB.Engine
             {
                 if (lockReserved)
                 {
-                    _locker.ExitReserved();
+                    _locker.ExitReserved(false);
                 }
             }
         }

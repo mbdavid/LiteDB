@@ -20,7 +20,7 @@ namespace LiteDB.Engine
             // after copy all data from current datafile to temp datafile (all data will be in WAL)
             // run checkpoint in current database
 
-            _locker.EnterReserved();
+            _locker.EnterReserved(true);
             
             try
             {
@@ -35,7 +35,15 @@ namespace LiteDB.Engine
                     {
                         DataStream = new MemoryStream(),
                         WalStream = walStream,
-                        CheckpointOnShutdown = false
+                        CheckpointOnShutdown = false,
+                        Setup = h =>
+                        {
+                            // init this new database with same header info from current database
+                            h.UserVersion = _header.UserVersion;
+                            h.CreationTime = _header.CreationTime;
+                            h.CommitCounter = _header.CommitCounter;
+                            h.LastCommit = _header.LastCommit;
+                        }
                     };
 
                     DEBUG(s.WalStream.Length > 0, "WAL must be an empty stream here");
@@ -67,9 +75,6 @@ namespace LiteDB.Engine
                             engine.Insert(collection, docs, BsonAutoId.ObjectId);
                         }
 
-                        // update userVersion
-                        engine.UserVersion = this.UserVersion;
-
                         // commit all temp database
                         engine.Commit();
 
@@ -77,15 +82,21 @@ namespace LiteDB.Engine
                         _wal.ConfirmedTransactions.Add(transactionID);
                     }
                 }
+                // must empty main datafile cache
+                _dataFile.Cache.Clear();
 
-                // show, this checkpoint will use WAL from temp database and will override all datafile pages
+                // this checkpoint will use WAL file from temp database and will override all datafile pages
                 _wal.Checkpoint(true, _header, false);
 
-                return originalSize - _dataFile.Length;
+                // must reload header page because current _header has complete different pageIDs for collections
+                _header = _dataFile.ReadPage(0, true) as HeaderPage;
+
+                // if datafile grow (it's possible because index flipcoin can change) return 0
+                return Math.Max(0, originalSize - _dataFile.Length);
             }
             finally
             {
-                _locker.ExitReserved();
+                _locker.ExitReserved(true);
             }
         }
     }
