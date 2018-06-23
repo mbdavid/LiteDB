@@ -156,7 +156,7 @@ namespace LiteDB.Engine
 
                         if (block.ExtendPageID != uint.MaxValue)
                         {
-                            _snapshot.DeletePage(block.ExtendPageID, true);
+                            _snapshot.DeletePages(block.ExtendPageID);
                         }
                     }
 

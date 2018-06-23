@@ -315,47 +315,51 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Delete an page using pageID - transform them in Empty Page and add to EmptyPageList
-        /// If you delete a page, you can using same old instance of page - page will be converter to EmptyPage
-        /// If need deleted page, use GetPage again
+        /// Delete all sequence of pages based on first pageID
         /// </summary>
-        public void DeletePage(uint pageID, bool addSequence = false)
+        public void DeletePages(uint firstPageID)
         {
             // get all pages in sequence or a single one
-            var pages = addSequence ? this.GetSeqPages<BasePage>(pageID) : new BasePage[] { this.GetPage<BasePage>(pageID) };
+            var pages = this.GetSeqPages<BasePage>(firstPageID);
 
-            // adding all pages into a sequence using only NextPageID
             foreach (var page in pages)
             {
-                // create a new empty page based on a normal page
-                var empty = new EmptyPage(page.PageID);
-
-                // add empty page to dirty pages in transaction
-                this.SetDirty(empty);
-
-                if (_transPages.FirstDeletedPage == null)
-                {
-                    // if first page in sequence
-                    _transPages.FirstDeletedPage = empty;
-                    _transPages.LastDeletedPage = empty;
-                }
-                else if(_transPages.FirstDeletedPage.PageID == _transPages.LastDeletedPage.PageID)
-                {
-                    // if is second page on sequence
-                    _transPages.FirstDeletedPage.NextPageID = empty.PageID;
-                    _transPages.LastDeletedPage = empty;
-                }
-                else
-                {
-                    // if any other page, link last with current page
-                    _transPages.LastDeletedPage.NextPageID = empty.PageID;
-                    _transPages.LastDeletedPage = empty;
-                }
-
-                _transPages.DeletedPages++;
+                this.DeletePage(page.PageID);
             }
         }
 
+        /// <summary>
+        /// Delete a page using pageID - transform them in Empty Page and add to EmptyPageList
+        /// </summary>
+        public void DeletePage(uint pageID)
+        {
+            // create a new empty page based on a normal page
+            var empty = new EmptyPage(pageID);
+
+            // add empty page to dirty pages in transaction
+            this.SetDirty(empty);
+
+            if (_transPages.FirstDeletedPage == null)
+            {
+                // if first page in sequence
+                _transPages.FirstDeletedPage = empty;
+                _transPages.LastDeletedPage = empty;
+            }
+            else if (_transPages.FirstDeletedPage.PageID == _transPages.LastDeletedPage.PageID)
+            {
+                // if is second page on sequence
+                _transPages.FirstDeletedPage.NextPageID = empty.PageID;
+                _transPages.LastDeletedPage = empty;
+            }
+            else
+            {
+                // if any other page, link last with current page
+                _transPages.LastDeletedPage.NextPageID = empty.PageID;
+                _transPages.LastDeletedPage = empty;
+            }
+
+            _transPages.DeletedPages++;
+        }
         /// <summary>
         /// Returns a page that contains space enough to data to insert new object - if one does not exit, creates a new page.
         /// </summary>

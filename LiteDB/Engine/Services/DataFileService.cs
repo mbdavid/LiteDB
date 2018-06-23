@@ -108,6 +108,35 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Read all zero pages inside datafile - zero pages was loaded by full empty of 
+        /// </summary>
+        public IEnumerable<uint> ReadZeroPages()
+        {
+            lock (_writer)
+            {
+                var stream = _writer.BaseStream;
+                var reader = new BinaryReader(_writer.BaseStream);
+
+                var position = stream.Position = 0;
+                var length = stream.Length;
+
+                while (position < length)
+                {
+                    // read page bytes to test if is full of zeros
+                    var buffer = reader.ReadBinary(PAGE_SIZE);
+
+                    if (buffer.IsFullZero())
+                    {
+                        var pageID = (uint)(position / PAGE_SIZE);
+
+                        yield return pageID;
+                    }
+
+                    position += PAGE_SIZE;
+                }
+            }
+        }
+        /// <summary>
         /// Write all pages to disk on absolute position (flush after write)
         /// </summary>
         public void WritePages(IEnumerable<BasePage> pages)

@@ -100,7 +100,7 @@ namespace LiteDB.Engine
                 // if there was a extended bytes, delete
                 if (block.ExtendPageID != uint.MaxValue)
                 {
-                    _snapshot.DeletePage(block.ExtendPageID, true);
+                    _snapshot.DeletePages(block.ExtendPageID);
                     block.ExtendPageID = uint.MaxValue;
                 }
             }
@@ -160,7 +160,7 @@ namespace LiteDB.Engine
             // if there a extended page, delete all
             if (block.ExtendPageID != uint.MaxValue)
             {
-                _snapshot.DeletePage(block.ExtendPageID, true);
+                _snapshot.DeletePages(block.ExtendPageID);
             }
 
             // delete block inside page
@@ -226,7 +226,7 @@ namespace LiteDB.Engine
             if (page.NextPageID != uint.MaxValue)
             {
                 // Delete nextpage and all nexts
-                _snapshot.DeletePage(page.NextPageID, true);
+                _snapshot.DeletePages(page.NextPageID);
 
                 // set my page with no NextPageID
                 page.NextPageID = uint.MaxValue;

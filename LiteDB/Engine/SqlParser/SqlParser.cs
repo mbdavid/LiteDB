@@ -37,6 +37,7 @@ namespace LiteDB.Engine
                 case "ANALYZE": return this.ParseAnalyze();
                 case "CHECKPOINT": return this.ParseCheckpoint();
                 case "SHRINK": return this.ParseShrink();
+                case "VACCUM": return this.ParseVaccum();
 
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();

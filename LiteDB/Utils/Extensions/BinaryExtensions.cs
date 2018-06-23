@@ -22,6 +22,36 @@ namespace LiteDB
             return 1;
         }
 
+        /// <summary>
+        /// Very fast way to check if all byte array is full of zero
+        /// </summary>
+        public static unsafe bool IsFullZero(this byte[] data)
+        {
+            fixed (byte* bytes = data)
+            {
+                int len = data.Length;
+                int rem = len % (sizeof(long) * 16);
+                long* b = (long*)bytes;
+                long* e = (long*)(bytes + len - rem);
+
+                while (b < e)
+                {
+                    if ((*(b) | *(b + 1) | *(b + 2) | *(b + 3) | *(b + 4) |
+                        *(b + 5) | *(b + 6) | *(b + 7) | *(b + 8) |
+                        *(b + 9) | *(b + 10) | *(b + 11) | *(b + 12) |
+                        *(b + 13) | *(b + 14) | *(b + 15)) != 0)
+                        return false;
+                    b += 16;
+                }
+
+                for (int i = 0; i < rem; i++)
+                    if (data[len - 1 - i] != 0)
+                        return false;
+
+                return true;
+            }
+        }
+
         //https://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net
         // need: <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         //

@@ -86,6 +86,9 @@ namespace LiteDB.Engine
         {
             DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterReserved(name)");
 
+            // if thread are in full reserved, don't try lock
+            if (_reserved.IsWriteLockHeld) return;
+
             // reserved locker in read lock (if not already reserved in this thread be another snapshot)
             if (_reserved.IsReadLockHeld == false && _reserved.TryEnterReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _timeout);
 
@@ -101,6 +104,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitReserved(string collectionName)
         {
+            // if thread are in full reserved just exit
+            if (_reserved.IsWriteLockHeld) return;
+
             if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.InvalidTransactionState();
 
             collection.ExitUpgradeableReadLock();
