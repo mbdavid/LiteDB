@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using LiteDB.Engine;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
 namespace LiteDB.Tests.Engine

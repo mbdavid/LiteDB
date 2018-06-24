@@ -16,21 +16,18 @@
   <ItemGroup>
     <Compile Remove="Concurrency\**" />
     <Compile Remove="Database\**" />
-    <Compile Remove="Engine\**" />
     <Compile Remove="Mapper\**" />
     <Compile Remove="Repository\**" />
     <Compile Remove="Shell\**" />
     <Compile Remove="Storage\**" />
     <EmbeddedResource Remove="Concurrency\**" />
     <EmbeddedResource Remove="Database\**" />
-    <EmbeddedResource Remove="Engine\**" />
     <EmbeddedResource Remove="Mapper\**" />
     <EmbeddedResource Remove="Repository\**" />
     <EmbeddedResource Remove="Shell\**" />
     <EmbeddedResource Remove="Storage\**" />
     <None Remove="Concurrency\**" />
     <None Remove="Database\**" />
-    <None Remove="Engine\**" />
     <None Remove="Mapper\**" />
     <None Remove="Repository\**" />
     <None Remove="Shell\**" />
@@ -43,7 +40,8 @@
     <None Remove="Document\ExprTests\Method.txt" />
     <None Remove="Document\ExprTests\Operator.txt" />
     <None Remove="Document\ExprTests\Parameter.txt" />
-    <None Remove="Document\Path.txt" />
+    <None Remove="Document\ExprTests\Path.txt" />
+    <None Remove="Utils\Data\zip.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +51,7 @@
     <EmbeddedResource Include="Document\ExprTests\Operator.txt" />
     <EmbeddedResource Include="Document\ExprTests\Method.txt" />
     <EmbeddedResource Include="Document\ExprTests\Path.txt" />
+    <EmbeddedResource Include="Utils\Data\zip.json" />
   </ItemGroup>
 
   <ItemGroup>

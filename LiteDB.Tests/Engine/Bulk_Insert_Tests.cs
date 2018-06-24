@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using LiteDB.Engine;
 
 namespace LiteDB.Tests.Engine
 {
@@ -15,31 +16,19 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Bulk_Insert_Engine()
         {
+            var data = DataGen.Person(20, 10).ToArray();
+
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
-                // let's bulk 500.000 documents
-                db.InsertBulk("col", GetDocs(1, 60000));
+                db.Insert("col", data);
 
-                // and assert if all are inserted (based on collection header only)
-                Assert.AreEqual(60000, db.Count("col"));
+                var result = db.Find("col", Query.LT("age", 10)).Count();
 
-                // and now count all 
-                Assert.AreEqual(60000, db.Count("col", Query.All()));
-            }
-        }
+                Assert.Equals(1, result);
 
-        private IEnumerable<BsonDocument> GetDocs(int initial, int count, int type = 1)
-        {
-            for (var i = initial; i < initial + count; i++)
-            {
-                yield return new BsonDocument
-                {
-                    { "_id", i },
-                    { "name", Guid.NewGuid().ToString() },
-                    { "first", "John" },
-                    { "lorem", LoremIpsum.Generate(3, 5, 2, 3, 3) }
-                };
+
+
             }
         }
     }

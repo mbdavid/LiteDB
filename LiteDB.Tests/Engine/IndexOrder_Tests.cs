@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using LiteDB.Engine;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
 
@@ -21,21 +22,21 @@ namespace LiteDB.Tests.Engine
                 db.EnsureIndex("col", "text");
 
                 var asc = string.Join("",
-                    db.Find("col", Query.All("text"))
+                    db.Query("col").Index(Index.All("text")).ToEnumerable()
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
                 var desc = string.Join("",
-                    db.Find("col", Query.All("text", Query.Descending))
+                    db.Query("col").Index(Index.All("text", Query.Descending)).ToEnumerable()
                     .Select(x => x["text"].AsString)
                     .ToArray());
 
                 Assert.AreEqual("ABCDE", asc);
                 Assert.AreEqual("EDCBA", desc);
 
-                var indexes = db.GetIndexes("col");
+                var indexes = db.Query("$indexes").Where("collection = 'col'").ToEnumerable();
 
-                Assert.AreEqual(1, indexes.Count(x => x.Name == "text"));
+                Assert.AreEqual(1, indexes.Count(x => x["name"] == "text"));
 
             }
         }
