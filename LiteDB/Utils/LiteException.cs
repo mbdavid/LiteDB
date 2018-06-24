@@ -230,9 +230,19 @@ namespace LiteDB
             return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because transaction are in {1} state", method, state);
         }
 
-        internal static LiteException InvalidTransactionState()
+        internal static LiteException AlreadyExistsTransaction()
         {
-            return new LiteException(INVALID_TRANSACTION_STATE, "The current thread already has an open transaction. Use the Dipose method to release the previous transaction.");
+            return new LiteException(INVALID_TRANSACTION_STATE, "The current thread already contains an open transaction. Use the Commit/Rollback method to release the previous transaction.");
+        }
+
+        internal static LiteException MissingTransaction(string method)
+        {
+            return new LiteException(INVALID_TRANSACTION_STATE, "'{0}' are not supported because there is no open transaction in current thread.", method);
+        }
+
+        internal static LiteException CollectionLockerNotFound(string collection)
+        {
+            return new LiteException(INVALID_TRANSACTION_STATE, "Collection locker '{0}' was not found inside dictionary.", collection);
         }
 
         internal static LiteException InvalidFormat(string field)

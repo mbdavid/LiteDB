@@ -46,9 +46,9 @@ namespace LiteDB.Engine
         /// </summary>
         public Guid BeginTrans()
         {
-            var transacion =this.GetTransaction(true, out var isNew);
+            var transacion = this.GetTransaction(true, out var isNew);
 
-            if (isNew == false) throw LiteException.InvalidTransactionState();
+            if (isNew == false) throw LiteException.AlreadyExistsTransaction();
 
             return transacion.TransactionID;
         }
@@ -66,7 +66,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                throw LiteException.InvalidTransactionState();
+                throw LiteException.MissingTransaction("Commit");
             }
         }
 
@@ -83,7 +83,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                throw LiteException.InvalidTransactionState();
+                throw LiteException.MissingTransaction("Rollback");
             }
         }
 

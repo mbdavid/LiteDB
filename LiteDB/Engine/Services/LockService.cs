@@ -46,7 +46,7 @@ namespace LiteDB.Engine
             }
             catch (LockRecursionException)
             {
-                throw LiteException.InvalidTransactionState();
+                throw LiteException.AlreadyExistsTransaction();
             }
         }
 
@@ -80,7 +80,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void ExitRead(string collectionName)
         {
-            if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.InvalidTransactionState();
+            if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.CollectionLockerNotFound(collectionName);
 
             collection.ExitReadLock();
         }
@@ -113,7 +113,7 @@ namespace LiteDB.Engine
             // if thread are in full reserved just exit
             if (_reserved.IsWriteLockHeld) return;
 
-            if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.InvalidTransactionState();
+            if (_collections.TryGetValue(collectionName, out var collection) == false) throw LiteException.CollectionLockerNotFound(collectionName);
 
             collection.ExitUpgradeableReadLock();
 
