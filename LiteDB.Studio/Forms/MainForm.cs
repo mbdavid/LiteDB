@@ -470,10 +470,11 @@ namespace LiteDB.Studio
                         .Where((t, i) => tabControl.GetTabRect(i).Contains(e.Location))
                         .First();
 
-                var task = tab.Tag as TaskData;
-                task.Thread.Abort();
-
-                tabs.Remove(tab);
+                if (tab.Tag is TaskData task)
+                {
+                    task.Thread.Abort();
+                    tabs.Remove(tab);
+                }
             }
         }
 
