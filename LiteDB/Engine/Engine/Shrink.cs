@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static LiteDB.Constants;
@@ -35,15 +36,7 @@ namespace LiteDB.Engine
                     {
                         DataStream = new MemoryStream(),
                         WalStream = walStream,
-                        CheckpointOnShutdown = false,
-                        Setup = h =>
-                        {
-                            // init this new database with same header info from current database
-                            h.UserVersion = _header.UserVersion;
-                            h.CreationTime = _header.CreationTime;
-                            h.CommitCounter = _header.CommitCounter;
-                            h.LastCommit = _header.LastCommit;
-                        }
+                        CheckpointOnShutdown = false
                     };
 
                     DEBUG(s.WalStream.Length > 0, "WAL must be an empty stream here");
@@ -75,6 +68,12 @@ namespace LiteDB.Engine
                             engine.Insert(collection, docs, BsonAutoId.ObjectId);
                         }
 
+                        // update header page and create another fake-transaction
+                        engine._header.CreationTime = _header.CreationTime;
+                        engine._header.CommitCounter = _header.CommitCounter;
+                        engine._header.LastCommit = _header.LastCommit;
+                        engine._header.UserVersion = _header.UserVersion;
+
                         // commit all temp database
                         engine.Commit();
 
@@ -82,6 +81,7 @@ namespace LiteDB.Engine
                         _wal.ConfirmedTransactions.Add(transactionID);
                     }
                 }
+
                 // must empty main datafile cache
                 _dataFile.Cache.Clear();
 

@@ -91,11 +91,6 @@ namespace LiteDB.Engine
         public int MaxMemoryTransactionSize { get; set; } = 1000;
 
         /// <summary>
-        /// Use for modify header page in datafile creation. Used in Shrink for copy data from current datafile to new datafile
-        /// </summary>
-        internal Action<HeaderPage> Setup { get; set; } = null;
-
-        /// <summary>
         /// Get datafile factory
         /// </summary>
         internal IDiskFactory GetDiskFactory()

@@ -117,7 +117,7 @@ namespace LiteDB.Engine
                 // get disk factory from engine settings and open/create datafile/walfile
                 var factory = settings.GetDiskFactory();
 
-                _dataFile = new DataFileService(factory, settings.Timeout, settings.InitialSize, settings.UtcDate, _settings.Setup, _log);
+                _dataFile = new DataFileService(factory, settings.Timeout, settings.InitialSize, settings.UtcDate, _log);
 
                 // initialize wal service
                 _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, settings.UtcDate, _log);
