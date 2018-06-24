@@ -10,6 +10,11 @@ namespace LiteDB.Engine
     internal abstract class BasePage
     {
         /// <summary>
+        /// Create a re-usable buffer with zero value
+        /// </summary>
+        private static byte[] _zeroBuffer = new byte[PAGE_SIZE];
+
+        /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
         /// </summary>
         public uint PageID { get; set; }
@@ -90,7 +95,7 @@ namespace LiteDB.Engine
 
             if (length > 0)
             {
-                writer.Write(new byte[length]);
+                writer.Write(_zeroBuffer, 0, (int)length);
             }
 
             DEBUG(length < 0, "Page overflow. Current page exceeded 8192 bytes.");
@@ -109,22 +114,24 @@ namespace LiteDB.Engine
             this.TransactionID = reader.ReadGuid(); // 16 bytes
             this.ColID = reader.ReadUInt32(); // 4 bytes
 
-            reader.ReadBytes(27); // reserved 27 bytes
+            reader.BaseStream.Position += 27;  // reserved 27 bytes
+                                               // total header: 64 bytes
         }
 
         private void WriteHeader(BinaryWriter writer)
         {
-            writer.Write(this.PageID);
-            writer.Write((byte)this.PageType);
+            writer.Write(this.PageID); // 4 bytes
+            writer.Write((byte)this.PageType); // 1 byte
 
-            writer.Write(this.PrevPageID);
-            writer.Write(this.NextPageID);
-            writer.Write((UInt16)this.ItemCount);
-            writer.Write((UInt16)this.FreeBytes);
-            writer.Write(this.TransactionID);
-            writer.Write(this.ColID);
+            writer.Write(this.PrevPageID); // 4 bytes
+            writer.Write(this.NextPageID); // 4 bytes
+            writer.Write((UInt16)this.ItemCount); // 2 bytes
+            writer.Write((UInt16)this.FreeBytes); // 2 bytes
+            writer.Write(this.TransactionID); // 16 bytes
+            writer.Write(this.ColID); // 4 bytes
 
-            writer.Write(new byte[27]);
+            writer.Write(_zeroBuffer, 0, 27); // 27 bytes
+                                              // total header: 64 bytes
         }
 
         protected abstract void ReadContent(BinaryReader reader, bool utcDate);
