@@ -56,13 +56,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Persist all dirty pages into WAL file using async task. 
         /// </summary>
-        public void Commit()
+        public bool Commit()
         {
             var transaction = this.GetTransaction(false, out var isNew);
 
             if (transaction != null)
             {
-                transaction.Commit();
+                return transaction.Commit();
             }
             else
             {

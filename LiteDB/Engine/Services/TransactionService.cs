@@ -124,11 +124,13 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages into disk and confirm transaction in wal-index
+        /// Write pages into disk and confirm transaction in wal-index. Returns true if any dirty page was updated
         /// </summary>
-        public void Commit()
+        public bool Commit()
         {
             if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("Commit", this.State);
+
+            var commit = false;
 
             if (this.State == TransactionState.Active)
             {
@@ -178,6 +180,8 @@ namespace LiteDB.Engine
 
                             // update global header page to make equals to confirm page
                             _header.Update(Guid.Empty, newEmptyPageID, _transPages);
+
+                            commit = true;
                         }
                     }
                 }
@@ -190,6 +194,8 @@ namespace LiteDB.Engine
             }
 
             this.Done(TransactionState.Commited);
+
+            return commit;
         }
 
         /// <summary>
