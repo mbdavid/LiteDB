@@ -7,6 +7,16 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
+        /// Implement update command to a document inside a collection. Returns true if document was updated
+        /// </summary>
+        public bool Update(string collection, BsonDocument doc)
+        {
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
+
+            return this.Update(collection, new BsonDocument[] { doc }) == 1;
+        }
+
+        /// <summary>
         /// Implement update command to a document inside a collection. Return number of documents updated
         /// </summary>
         public int Update(string collection, IEnumerable<BsonDocument> docs)

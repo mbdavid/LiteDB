@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,6 +19,16 @@ namespace LiteDB
         /// Indicate when a query must execute in descending order
         /// </summary>
         public const int Descending = -1;
+
+        /// <summary>
+        /// Returns all documents that value are equals to value (=)
+        /// </summary>
+        public static Index All(string name, int order = Query.Ascending)
+        {
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
+
+            return Index.All(order);
+        }
 
         /// <summary>
         /// Returns all documents that value are equals to value (=)

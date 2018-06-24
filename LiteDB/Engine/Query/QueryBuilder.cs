@@ -107,16 +107,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Load cross reference documents from path expression (DbRef reference). 
-        /// If called before Where() will load references before filter (worst). If called after Where() will load references only in filtered results.
-        /// Use before Where only if you need add this include in filter expression
-        /// </summary>
-        public QueryBuilder Include(string path)
-        {
-            return this.Include(BsonExpression.Create(path));
-        }
-
-        /// <summary>
         /// Add order by on your result. OrderBy paramter can be an expression
         /// </summary>
         public QueryBuilder OrderBy(BsonExpression orderBy, int order = Query.Ascending)
@@ -131,14 +121,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Add order by on your result. OrderBy paramter can be an expression
-        /// </summary>
-        public QueryBuilder OrderBy(string orderBy, int order = Query.Ascending)
-        {
-            return this.OrderBy(BsonExpression.Create(orderBy), order);
-        }
-
-        /// <summary>
         /// Define GroupBy expression
         /// </summary>
         public QueryBuilder GroupBy(BsonExpression groupBy, int order = Query.Ascending)
@@ -150,14 +132,6 @@ namespace LiteDB.Engine
             _query.GroupByOrder = order;
 
             return this;
-        }
-
-        /// <summary>
-        /// Define GroupBy expression
-        /// </summary>
-        public QueryBuilder GroupBy(string groupBy, int order = Query.Ascending)
-        {
-            return this.GroupBy(BsonExpression.Create(groupBy), order);
         }
 
         /// <summary>
@@ -191,14 +165,6 @@ namespace LiteDB.Engine
             _query.Select = select;
 
             return this;
-        }
-
-        /// <summary>
-        /// Transform your output document using this select expression
-        /// </summary>
-        public QueryBuilder Select(string select)
-        {
-            return this.Select(BsonExpression.Create(select));
         }
 
         /// <summary>

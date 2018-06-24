@@ -87,6 +87,22 @@ namespace LiteDB
         {
         }
 
+        /// <summary>
+        /// Implicit string converter
+        /// </summary>
+        public static implicit operator String(BsonExpression expr)
+        {
+            return expr.Source;
+        }
+
+        /// <summary>
+        /// Implicit string converter
+        /// </summary>
+        public static implicit operator BsonExpression(String expr)
+        {
+            return BsonExpression.Create(expr);
+        }
+
         #region Compile and execute
 
         /// <summary>

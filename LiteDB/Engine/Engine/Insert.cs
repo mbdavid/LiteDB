@@ -7,9 +7,17 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Implements insert documents in a collection - use a buffer to commit transaction in each buffer count
+        /// Insert single document in collection. If document has no _id, use AutoId generation.
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
+        public bool Insert(string collection, BsonDocument document, BsonAutoId autoId = BsonAutoId.ObjectId)
+        {
+            return this.Insert(collection, new[] { document }, autoId) > 0;
+        }
+
+        /// <summary>
+        /// Insert all documents in collection. If document has no _id, use AutoId generation.
+        /// </summary>
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));

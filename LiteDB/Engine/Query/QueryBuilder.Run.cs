@@ -198,7 +198,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int Count()
         {
-            return this.ToEnumerable().Count();
+            return this.ToValues().Count();
         }
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Exists()
         {
-            return this.ExecuteReader().HasValues;
+            return this.ToValues().Any();
         }
 
         /// <summary>

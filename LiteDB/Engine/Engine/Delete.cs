@@ -7,6 +7,14 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
+        /// Implement delete command based on _id value. Returns true if deleted
+        /// </summary>
+        public bool Delete(string collection, BsonValue id)
+        {
+            return this.Delete(collection, new[] { id }) == 1;
+        }
+
+        /// <summary>
         /// Implements delete based on IDs enumerable
         /// </summary>
         public int Delete(string collection, IEnumerable<BsonValue> ids)
