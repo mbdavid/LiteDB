@@ -10,11 +10,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Returns minimal/first value from expression
         /// </summary>
-        public BsonValue Min(string collection, BsonExpression expr)
+        public BsonValue Min(string collection, BsonExpression expression)
         {
             return this.Query(collection)
-                .OrderBy(expr, LiteDB.Query.Ascending)
-                .Select(expr)
+                .OrderBy(expression, LiteDB.Query.Ascending)
+                .Select(expression)
                 .Limit(1)
                 .ToValues()
                 .FirstOrDefault();
@@ -23,20 +23,41 @@ namespace LiteDB.Engine
         /// <summary>
         /// Returns max/last value from expression
         /// </summary>
-        public BsonValue Max(string collection, BsonExpression expr)
+        public BsonValue Max(string collection, BsonExpression expression)
         {
             return this.Query(collection)
-                .OrderBy(expr, LiteDB.Query.Descending)
-                .Select(expr)
+                .OrderBy(expression, LiteDB.Query.Descending)
+                .Select(expression)
                 .Limit(1)
                 .ToValues()
                 .FirstOrDefault();
         }
 
         /// <summary>
+        /// Get collection counter
+        /// </summary>
+        public long Count(string collection)
+        {
+            return (int)this.LongCount(collection);
+        }
+
+        /// <summary>
+        /// Get collection counter
+        /// </summary>
+        public long LongCount(string collection)
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, collection, false);
+
+                return snapshot.CollectionPage?.DocumentCount ?? 0;
+            });
+        }
+
+        /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public BsonValue Count(string collection, Index index)
+        public int Count(string collection, Index index)
         {
             return this.Query(collection)
                 .Index(index)
@@ -47,7 +68,18 @@ namespace LiteDB.Engine
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public BsonValue Count(string collection, BsonExpression query)
+        public long LongCount(string collection, Index index)
+        {
+            return this.Query(collection)
+                .Index(index)
+                .Select(true)
+                .LongCount();
+        }
+
+        /// <summary>
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
+        /// </summary>
+        public int Count(string collection, BsonExpression query)
         {
             return this.Query(collection)
                 .Where(query)
@@ -55,9 +87,19 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
+        /// </summary>
+        public long LongCount(string collection, BsonExpression query)
+        {
+            return this.Query(collection)
+                .Where(query)
+                .LongCount();
+        }
+
+        /// <summary>
         /// Check if has at least one node in a query execution - do not deserialize documents to check
         /// </summary>
-        public BsonValue Exists(string collection, Index index)
+        public bool Exists(string collection, Index index)
         {
             return this.Query(collection)
                 .Index(index)
@@ -68,7 +110,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Check if has at least one node in a query execution - do not deserialize documents to check
         /// </summary>
-        public BsonValue Exists(string collection, BsonExpression query)
+        public bool Exists(string collection, BsonExpression query)
         {
             return this.Query(collection)
                 .Where(query)

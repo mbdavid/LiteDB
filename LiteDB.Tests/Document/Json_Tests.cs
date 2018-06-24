@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace LiteDB.Tests.Engine
+namespace LiteDB.Tests.Document
 {
     [TestClass]
     public class Json_Tests
@@ -34,7 +34,7 @@ namespace LiteDB.Tests.Engine
         }
 
         [TestMethod]
-        public void Json_To_Document_Test()
+        public void Json_To_Document()
         {
             var o = CreateDoc();
 

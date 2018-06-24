@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace LiteDB.Tests.Engine
+namespace LiteDB.Tests.Document
 {
     [TestClass]
     public class ObjectId_Tests
@@ -33,7 +33,7 @@ namespace LiteDB.Tests.Engine
         }
 
         [TestMethod]
-        public void ObjectId_equals_null_does_not_throw()
+        public void ObjectId_Equals_Null_Does_Not_Throw()
         {
             var oid0 = default(ObjectId);
             var oid1 = ObjectId.NewObjectId();

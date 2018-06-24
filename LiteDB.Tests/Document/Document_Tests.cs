@@ -13,7 +13,7 @@ namespace LiteDB.Tests.Document
     public class Document_Test
     {
         [TestMethod]
-        public void Document_ImplicitConvert_Test()
+        public void Document_Implicit_Convert()
         {
             var obj = new Dictionary<string, object>()
             {
@@ -35,7 +35,7 @@ namespace LiteDB.Tests.Document
         }
 
         [TestMethod]
-        public void Document_copies_properties_to_KeyValue_array()
+        public void Document_Copies_Properties_To_KeyValue_Array()
         {
             // ARRANGE
             // create a Bson document with all possible value types

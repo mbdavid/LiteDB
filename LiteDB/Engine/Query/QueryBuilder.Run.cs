@@ -202,6 +202,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Execute count over document resultset
+        /// </summary>
+        public long LongCount()
+        {
+            return this.ToValues().LongCount();
+        }
+
+        /// <summary>
         /// Execute exists over document resultset
         /// </summary>
         public bool Exists()

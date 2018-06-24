@@ -38,13 +38,13 @@ namespace LiteDB.Studio
 
                 while (reader.Read())
                 {
-                    this.Result.Add(reader.Current);
-
-                    if (++index >= RESULT_LIMIT)
+                    if (index++ >= RESULT_LIMIT)
                     {
                         this.LimitExceeded = true;
                         break;
                     }
+
+                    this.Result.Add(reader.Current);
                 }
             }
             while (reader.NextResult());

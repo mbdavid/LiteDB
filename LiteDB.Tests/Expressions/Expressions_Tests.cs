@@ -9,7 +9,7 @@ using System.Text;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace LiteDB.Tests.Document
+namespace LiteDB.Tests.Expressions
 {
     /// <summary>
     /// BsonExpression unit test from external text file 
@@ -25,29 +25,29 @@ namespace LiteDB.Tests.Document
     /// </summary>
 
     [TestClass]
-    public class BsonExpression_Tests
+    public class Expressions_Tests
     {
         [TestMethod]
-        public void BsonExpression_Aggregate() => this.RunTest("Aggregate.txt");
+        public void Expressions_Aggregate() => this.RunTest("Aggregate.txt");
 
         [TestMethod]
-        public void BsonExpression_Path() => this.RunTest("Path.txt");
+        public void Expressions_Path() => this.RunTest("Path.txt");
 
         [TestMethod]
-        public void BsonExpression_Format() => this.RunTest("Format.txt");
+        public void Expressions_Format() => this.RunTest("Format.txt");
 
         [TestMethod]
-        public void BsonExpression_Operator() => this.RunTest("Operator.txt");
+        public void Expressions_Operator() => this.RunTest("Operator.txt");
 
         [TestMethod]
-        public void BsonExpression_Method() => this.RunTest("Method.txt");
+        public void Expressions_Method() => this.RunTest("Method.txt");
 
         [TestMethod]
-        public void BsonExpression_Parameter() => this.RunTest("Parameter.txt");
+        public void Expressions_Parameter() => this.RunTest("Parameter.txt");
 
         public void RunTest(string filename)
         {
-            var tests = this.ReadTests("LiteDB.Tests.Document.ExprTests." + filename);
+            var tests = this.ReadTests("LiteDB.Tests.Expressions.ExprTests." + filename);
 
             foreach(var test in tests)
             {

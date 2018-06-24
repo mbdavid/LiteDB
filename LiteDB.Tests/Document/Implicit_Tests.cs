@@ -13,7 +13,7 @@ namespace LiteDB.Tests.Document
     public class Implicit_Tests
     {
         [TestMethod]
-        public void Implicit_Convert()
+        public void BsonValue_Implicit_Convert()
         {
             int i = int.MaxValue;
             long l = long.MaxValue;

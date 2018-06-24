@@ -13,7 +13,7 @@ namespace LiteDB.Tests.Document
     public class Decimal_Tests
     {
         [TestMethod]
-        public void BsonValueDecimal()
+        public void BsonValue_New_Decimal_Type()
         {
             var d0 = 0m;
             var d1 = 1m;

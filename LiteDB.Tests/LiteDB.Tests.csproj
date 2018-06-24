@@ -35,22 +35,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Document\ExprTests\Aggregate.txt" />
-    <None Remove="Document\ExprTests\Format.txt" />
-    <None Remove="Document\ExprTests\Method.txt" />
-    <None Remove="Document\ExprTests\Operator.txt" />
-    <None Remove="Document\ExprTests\Parameter.txt" />
-    <None Remove="Document\ExprTests\Path.txt" />
+    <None Remove="Expressions\ExprTests\Aggregate.txt" />
+    <None Remove="Expressions\ExprTests\Format.txt" />
+    <None Remove="Expressions\ExprTests\Method.txt" />
+    <None Remove="Expressions\ExprTests\Operator.txt" />
+    <None Remove="Expressions\ExprTests\Parameter.txt" />
+    <None Remove="Expressions\ExprTests\Path.txt" />
+    <None Remove="Utils\Data\person.json" />
     <None Remove="Utils\Data\zip.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Document\ExprTests\Format.txt" />
-    <EmbeddedResource Include="Document\ExprTests\Aggregate.txt" />
-    <EmbeddedResource Include="Document\ExprTests\Parameter.txt" />
-    <EmbeddedResource Include="Document\ExprTests\Operator.txt" />
-    <EmbeddedResource Include="Document\ExprTests\Method.txt" />
-    <EmbeddedResource Include="Document\ExprTests\Path.txt" />
+    <EmbeddedResource Include="Expressions\ExprTests\Format.txt" />
+    <EmbeddedResource Include="Expressions\ExprTests\Aggregate.txt" />
+    <EmbeddedResource Include="Expressions\ExprTests\Parameter.txt" />
+    <EmbeddedResource Include="Expressions\ExprTests\Operator.txt" />
+    <EmbeddedResource Include="Expressions\ExprTests\Method.txt" />
+    <EmbeddedResource Include="Expressions\ExprTests\Path.txt" />
+    <EmbeddedResource Include="Utils\Data\person.json" />
     <EmbeddedResource Include="Utils\Data\zip.json" />
   </ItemGroup>
 

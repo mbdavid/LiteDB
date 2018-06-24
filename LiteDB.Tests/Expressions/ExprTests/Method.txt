@@ -56,26 +56,26 @@
 = {a:false}
 
 # DATE functions
-{d:{$date: "2018-05-01T15:30:45Z"}}
-> YEAR(d)
+{mydate:{$date: "2018-05-01T15:30:45Z"}}
+> YEAR($.mydate)
 = 2018
-> MONTH(d)
+> MONTH($.mydate)
 = 5
-> DAY(d)
+> DAY($.mydate)
 = 1
 
 # dateParts: "y|year", "M|month", "d|day", "h|hour", "m|minute", "s|second"
 
-> DATEADD('d', 1, d)
+> DATEADD('d', 1, $.mydate)
 = {$date: "2018-05-02T15:30:45Z"}
-> DATEADD('d', -1, d)
+> DATEADD('d', -1, $.mydate)
 = {$date: "2018-04-30T15:30:45Z"}
-> DATEADD('M', 12, d)
+> DATEADD('M', 12, $.mydate)
 = {$date: "2019-05-01T15:30:45Z"}
 
-> DATEDIFF('M', d, DATE_UTC(2018, 6, 1))
+> DATEDIFF('M', $.mydate, DATE_UTC(2018, 6, 1))
 = 1
-> DATEDIFF('M', d, DATE_UTC(2018, 4, 1))
+> DATEDIFF('M', $.mydate, DATE_UTC(2018, 4, 1))
 = -1
 
 # Length Method
