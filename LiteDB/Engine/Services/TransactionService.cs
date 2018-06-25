@@ -130,9 +130,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("Commit", this.State);
-
-            var commit = false;
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
 
             if (this.State == TransactionState.Active)
             {
@@ -182,8 +180,6 @@ namespace LiteDB.Engine
 
                             // update global header page to make equals to confirm page
                             _header.Update(Guid.Empty, newEmptyPageID, _transPages);
-
-                            commit = true;
                         }
                     }
                 }
@@ -197,15 +193,15 @@ namespace LiteDB.Engine
 
             this.Done(TransactionState.Commited);
 
-            return commit;
+            return true;
         }
 
         /// <summary>
         /// Rollback transaction operation - ignore all modified pages and return new pages into disk
         /// </summary>
-        public void Rollback(bool returnPages)
+        public bool Rollback(bool returnPages)
         {
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("Commit", this.State);
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
 
             if (this.State == TransactionState.Active)
             {
@@ -224,6 +220,8 @@ namespace LiteDB.Engine
             }
 
             this.Done(TransactionState.Aborted);
+
+            return true;
         }
 
         /// <summary>
@@ -312,10 +310,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            if (this.State == TransactionState.New || this.State == TransactionState.Active)
-            {
-                this.Rollback(true);
-            }
+            this.Rollback(true);
         }
     }
 }

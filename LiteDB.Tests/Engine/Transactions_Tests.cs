@@ -190,70 +190,37 @@ namespace LiteDB.Tests.Engine
         }
 
         [TestMethod]
-        public void Avoid_Two_Transactions_In_Same_Thread()
+        public void Test_Transaction_States()
         {
             using (var db = new LiteEngine())
             {
-                db.BeginTrans();
+                var t0 = db.BeginTrans();
 
-                try
-                {
-                    db.BeginTrans();
+                // must return same transaction;
+                Assert.AreEqual(t0, db.BeginTrans());
 
-                    Assert.Fail("Do not accept second begin");
-                }
-                catch(LiteException ex) when(ex.ErrorCode == LiteException.INVALID_TRANSACTION_STATE)
-                {
-                    // ok!
-                }
-                catch(Exception ex)
-                {
-                    Assert.Fail(ex.Message);
-                }
-            }
-        }
+                db.Insert("person", DataGen.Person().Take(10));
 
-        [TestMethod]
-        public void Avoid_Commit_Without_Transaction()
-        {
-            using (var db = new LiteEngine())
-            {
-                try
-                {
-                    db.Commit();
+                // must commit transaction
+                Assert.IsTrue(db.Commit());
 
-                    Assert.Fail("Do not accept Commit without Begin transaction");
-                }
-                catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_TRANSACTION_STATE)
-                {
-                    // ok!
-                }
-                catch (Exception ex)
-                {
-                    Assert.Fail(ex.Message);
-                }
-            }
-        }
+                // no transaction to commit
+                Assert.IsFalse(db.Commit());
 
-        [TestMethod]
-        public void Avoid_Rollback_Without_Transaction()
-        {
-            using (var db = new LiteEngine())
-            {
-                try
-                {
-                    db.Rollback();
+                // no transaction to rollback;
+                Assert.IsFalse(db.Rollback());
 
-                    Assert.Fail("Do not accept Rollback without Begin transaction");
-                }
-                catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_TRANSACTION_STATE)
-                {
-                    // ok!
-                }
-                catch (Exception ex)
-                {
-                    Assert.Fail(ex.Message);
-                }
+                var t1 = db.BeginTrans();
+
+                Assert.AreNotEqual(t0, t1);
+
+                // no page was changed but ok, let's rollback anyway
+                Assert.IsTrue(db.Rollback());
+
+                // auto-commit
+                db.Insert("person", DataGen.Person().Take(20));
+
+                Assert.AreEqual(30, db.Count("person"));
             }
         }
     }

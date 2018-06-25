@@ -73,7 +73,7 @@ namespace LiteDB.Engine
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
                     {
-                        if (isNew && (transaction.State == TransactionState.New || transaction.State == TransactionState.Active))
+                        if (isNew)
                         {
                             transaction.Commit();
                         }

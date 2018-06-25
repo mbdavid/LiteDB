@@ -48,8 +48,6 @@ namespace LiteDB.Engine
         {
             var transacion = this.GetTransaction(true, out var isNew);
 
-            if (isNew == false) throw LiteException.AlreadyExistsTransaction();
-
             return transacion.TransactionID;
         }
 
@@ -66,24 +64,24 @@ namespace LiteDB.Engine
             }
             else
             {
-                throw LiteException.MissingTransaction("Commit");
+                return false;
             }
         }
 
         /// <summary>
         /// Do rollback to current transaction. Clear dirty pages in memory and return new pages to main empty linked-list
         /// </summary>
-        public void Rollback()
+        public bool Rollback()
         {
             var transaction = this.GetTransaction(false, out var isNew);
 
             if (transaction != null)
             {
-                transaction.Rollback(true);
+                return transaction.Rollback(true);
             }
             else
             {
-                throw LiteException.MissingTransaction("Rollback");
+                return false;
             }
         }
 
@@ -99,7 +97,7 @@ namespace LiteDB.Engine
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew && (transaction.State == TransactionState.New || transaction.State == TransactionState.Active))
+                if (isNew)
                 {
                     transaction.Commit();
                 }

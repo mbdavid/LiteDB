@@ -74,16 +74,17 @@ namespace LiteDB.Engine
                         engine._header.LastCommit = _header.LastCommit;
                         engine._header.UserVersion = _header.UserVersion;
 
-                        // commit temp database
-                        if (engine.Commit() == false)
+                        if (indexes.Length == 0)
                         {
-                            // if commit returns false, no pages was write on disk. Must force write on wal
-                            DEBUG(indexes.Length > 0, "must have no collection in current database");
-
-                            // update header as confirm page and add transactionID
+                            // if there is no collection, force commit only header page 
+                            // by default, commit() will only store confirm page if there is any changed page
                             engine._header.TransactionID = transactionID;
 
                             engine._wal.ConfirmTransaction(engine._header, new List<PagePosition>());
+                        }
+                        else
+                        {
+                            engine.Commit();
                         }
 
                         // add this commited transaction as confirmed transaction in current datafile (to do checkpoint after)
