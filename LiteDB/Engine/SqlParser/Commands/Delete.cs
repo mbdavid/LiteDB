@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// DELETE [colname] WHERE [whereExpr];
+        /// DELETE {collection} WHERE {whereExpr}
         /// </summary>
         private BsonDataReader ParseDelete()
         {

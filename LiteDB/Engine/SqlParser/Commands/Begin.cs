@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// BEGIN [TRANS|ACTION];
+        /// BEGIN [ TRANS | TRANSACTION ]
         /// </summary>
         private BsonDataReader ParseBegin()
         {

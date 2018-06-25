@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// COMMIT [TRANS|ACTION];
+        /// COMMIT [ TRANS | TRANSACTION ]
         /// </summary>
         private BsonDataReader ParseCommit()
         {

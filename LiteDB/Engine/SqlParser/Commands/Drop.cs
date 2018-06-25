@@ -7,8 +7,8 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// DROP INDEX [colName].[indexName];
-        /// DROP COLLECTION [colName];
+        /// DROP INDEX {collection}.{indexName}
+        /// DROP COLLECTION {collection}
         /// </summary>
         private BsonDataReader ParseDrop()
         {

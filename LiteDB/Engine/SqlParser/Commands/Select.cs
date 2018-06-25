@@ -7,17 +7,17 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        ///  SELECT [selectExpr]
-        ///    INTO [newcol] WITH ID=[type]
-        ///    FROM [colname]
-        /// INCLUDE [path0, path1, ..., pathN]
-        ///   WHERE [whereExpr]
-        /// INCLUDE [path0, path1, ..., pathN]
-        ///   GROUP BY [groupByExpr] [ASC|DESC]
-        ///   ORDER BY [orderByExpr] [ASC|DESC]
-        ///   LIMIT [number]
-        ///  OFFSET [number]
-        ///     FOR UPDATE
+        ///    SELECT {selectExpr}
+        ///    [ INTO {newcollection} [ : {type} ] ]
+        ///      FROM {collection}
+        /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
+        ///   [ WHERE {whereExpr} ]
+        /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
+        ///   [ GROUP BY {groupByExpr} [ ASC | DESC ] ]
+        ///   [ ORDER BY {orderByExpr} [ ASC | DESC ] ]
+        ///   [ LIMIT {number} ]
+        ///  [ OFFSET {number} ]
+        ///     [ FOR UPDATE ]
         /// </summary>
         private BsonDataReader ParseSelect()
         {

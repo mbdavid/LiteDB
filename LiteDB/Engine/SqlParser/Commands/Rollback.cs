@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// ROLLBACK [TRANS|ACTION];
+        /// ROLLBACK [ TRANS | TRANSACTION ]
         /// </summary>
         private BsonDataReader ParseRollback()
         {

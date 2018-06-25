@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// ANALYZE [col1, col2, ...]
+        /// ANALYZE [{collection0}, {collection1}, ...]
         /// </summary>
         private BsonDataReader ParseAnalyze()
         {

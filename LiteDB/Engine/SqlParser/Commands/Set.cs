@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// SET KEY = VALUE
+        /// SET {key} = {value}
         /// </summary>
         private BsonDataReader ParseSet()
         {

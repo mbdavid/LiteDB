@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// INSERT INTO [colname] { ... } WITH ID=[TYPE]
+        /// INSERT INTO {collection} VALUES {doc0} [, {docN}] [ WITH ID={type} ] ]
         /// </summary>
         private BsonDataReader ParseInsert()
         {
@@ -15,15 +15,13 @@ namespace LiteDB.Engine
 
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
-            _tokenizer.ReadToken().Expect("VALUES");
-
-            // get list of documents (must read all now)
-            var docs = this.ParseListOfDocuments()
-                .ToList(); //TODO: will review if ID=INT can be changed to support IEnumerable in INSERT SQL command
-
             var autoId = this.ParseWithAutoId();
 
-            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+            _tokenizer.ReadToken().Expect("VALUES");
+
+            // get list of documents (return an IEnumerable)
+            // will validate EOF or ;
+            var docs = this.ParseListOfDocuments();
 
             var result = _engine.Insert(collection, docs, autoId);
 
@@ -31,19 +29,15 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Parse WITH ID=[type] for AutoId
+        /// Parse :[type] for AutoId (just after collection name)
         /// </summary>
         private BsonAutoId ParseWithAutoId()
         {
             var with = _tokenizer.LookAhead();
 
-            if (with.Is("WITH"))
+            if (with.Type == TokenType.Colon)
             {
                 _tokenizer.ReadToken();
-
-                var id = _tokenizer.ReadToken().Expect("ID");
-
-                _tokenizer.ReadToken().Expect(TokenType.Equals);
 
                 var type = _tokenizer.ReadToken().Expect(TokenType.Word);
 

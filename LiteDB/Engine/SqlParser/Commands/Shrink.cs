@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// SHRINK [new-password]
+        /// SHRINK {new-password}
         /// </summary>
         private BsonDataReader ParseShrink()
         {

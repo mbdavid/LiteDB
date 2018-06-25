@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// [expr1], [expr2], ..., [exprN]
+        /// {expr0}, {expr1}, ..., {exprN}
         /// </summary>
         private IEnumerable<BsonExpression> ParseListOfExpressions()
         {
@@ -31,7 +31,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// [value1], [value2], ..., [valueN]
+        /// {doc0}, {doc1}, ..., {docN} {EOF|;}
         /// </summary>
         private IEnumerable<BsonDocument> ParseListOfDocuments()
         {
@@ -58,13 +58,17 @@ namespace LiteDB.Engine
                 }
                 else
                 {
+                    next.Expect(TokenType.EOF, TokenType.SemiColon);
+
+                    _tokenizer.ReadToken();
+
                     yield break;
                 }
             }
         }
 
         /// <summary>
-        /// [word1], [word2], ..., [wordN]
+        /// {word0}, {word1}, ..., {wordN}
         /// </summary>
         private IEnumerable<string> ParseListOfWords()
         {

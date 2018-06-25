@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// checkpoint
+        /// CHECKPOINT
         /// </summary>
         private BsonDataReader ParseCheckpoint()
         {

@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// CREATE [UNQIUE] INDEX [name::word] ON [colname::word] ([expr]);
+        /// CREATE [ UNQIUE ] INDEX {indexName} ON {collection} ({indexExpr})
         /// </summary>
         private BsonDataReader ParseCreate()
         {
@@ -29,12 +29,16 @@ namespace LiteDB.Engine
             // read collectionName
             var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 
+            // read (
             _tokenizer.ReadToken().Expect(TokenType.OpenParenthesis);
 
+            // read index expression
             var expr = BsonExpression.Create(_tokenizer, null);
 
+            // read )
             _tokenizer.ReadToken().Expect(TokenType.CloseParenthesis);
 
+            // read EOF or ;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
             var result = _engine.EnsureIndex(collection, name, expr, unique);

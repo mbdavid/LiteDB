@@ -10,9 +10,9 @@ namespace LiteDB.Engine
         /// UPDATE - will merge current document with modify expression
         /// REPLACE - will replace document for modify expression
         /// 
-        ///  UPDATE|REPLACE [collection]
-        ///             SET [modifyExpr]
-        ///           WHERE [whereExpr]
+        ///  UPDATE|REPLACE {collection}
+        ///             SET {modifyExpr}
+        ///         [ WHERE {whereExpr} ]
         /// </summary>
         private BsonDataReader ParseUpadateReplace(UpdateMode mode)
         {
