@@ -33,7 +33,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// [value1], [value2], ..., [valueN]
         /// </summary>
-        private IEnumerable<BsonValue> ParseListOfValues()
+        private IEnumerable<BsonDocument> ParseListOfDocuments()
         {
             var reader = new JsonReader(_tokenizer);
 
@@ -41,7 +41,14 @@ namespace LiteDB.Engine
             {
                 var value = reader.Deserialize();
 
-                yield return value;
+                if (value.IsDocument)
+                {
+                    yield return value as BsonDocument;
+                }
+                else
+                {
+                    throw LiteException.UnexpectedToken("Value must be a valid document", _tokenizer.Current);
+                }
 
                 var next = _tokenizer.LookAhead();
 

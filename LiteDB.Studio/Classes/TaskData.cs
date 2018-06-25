@@ -48,7 +48,6 @@ namespace LiteDB.Studio
                 }
             }
             while (reader.NextResult());
-
         }
     }
 }

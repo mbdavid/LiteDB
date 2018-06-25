@@ -22,7 +22,7 @@ namespace LiteDB.Tests.Query
         public void Init()
         {
             db = new LiteEngine();
-            person = DataGen.Person().ToArray();
+            person = DataGen.Person(1, 1000).ToArray();
 
             db.Insert("person", person);
             db.EnsureIndex("col", "age");

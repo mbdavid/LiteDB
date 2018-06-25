@@ -19,8 +19,8 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Transaction_Write_Lock_Timeout()
         {
-            var data1 = DataGen.Person().Take(100).ToArray();
-            var data2 = DataGen.Person().Skip(100).Take(100).ToArray();
+            var data1 = DataGen.Person(1, 100).ToArray();
+            var data2 = DataGen.Person(101, 200).ToArray();
 
             using (var db = new LiteEngine(new EngineSettings { Timeout = TimeSpan.FromSeconds(1) }))
             {
@@ -54,18 +54,10 @@ namespace LiteDB.Tests.Engine
                     try
                     {
                         db.Delete("person", BsonExpression.Create("1=1"));
-                        //db.Insert("person", data2);
 
                         Assert.Fail("Must be locked");
                     }
-                    catch(LiteException ex) when (ex.ErrorCode == LiteException.LOCK_TIMEOUT)
-                    {
-                        // ok!
-                    }
-                    catch(Exception ex)
-                    {
-                        Assert.Fail(ex.Message);
-                    }
+                    catch(LiteException ex) when (ex.ErrorCode == LiteException.LOCK_TIMEOUT) { }
 
                 });
 
@@ -83,8 +75,8 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Transaction_Avoid_Drity_Read()
         {
-            var data1 = DataGen.Person().Take(100).ToArray();
-            var data2 = DataGen.Person().Skip(100).Take(100).ToArray();
+            var data1 = DataGen.Person(1, 100).ToArray();
+            var data2 = DataGen.Person(101, 200).ToArray();
 
             using (var db = new LiteEngine())
             {
@@ -141,8 +133,8 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Transaction_Read_Version()
         {
-            var data1 = DataGen.Person().Take(100).ToArray();
-            var data2 = DataGen.Person().Skip(100).Take(100).ToArray();
+            var data1 = DataGen.Person(1, 100).ToArray();
+            var data2 = DataGen.Person(101, 200).ToArray();
 
             using (var db = new LiteEngine())
             {
@@ -192,6 +184,8 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Test_Transaction_States()
         {
+            var data = DataGen.Person(1, 10);
+
             using (var db = new LiteEngine())
             {
                 var t0 = db.BeginTrans();
@@ -199,7 +193,7 @@ namespace LiteDB.Tests.Engine
                 // must return same transaction;
                 Assert.AreEqual(t0, db.BeginTrans());
 
-                db.Insert("person", DataGen.Person().Take(10));
+                db.Insert("person", data);
 
                 // must commit transaction
                 Assert.IsTrue(db.Commit());

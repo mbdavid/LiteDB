@@ -18,9 +18,9 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
             }
 
-            _engine.Rollback();
+            var result = _engine.Rollback();
 
-            return new BsonDataReader();
+            return new BsonDataReader(result);
         }
     }
 }

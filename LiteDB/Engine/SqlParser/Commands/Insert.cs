@@ -18,9 +18,8 @@ namespace LiteDB.Engine
             _tokenizer.ReadToken().Expect("VALUES");
 
             // get list of documents (must read all now)
-            var docs = this.ParseListOfValues()
-                .Select(x => x as BsonDocument)
-                .ToList();
+            var docs = this.ParseListOfDocuments()
+                .ToList(); //TODO: will review if ID=INT can be changed to support IEnumerable in INSERT SQL command
 
             var autoId = this.ParseWithAutoId();
 
