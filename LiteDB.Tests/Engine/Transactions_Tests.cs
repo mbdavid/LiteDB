@@ -54,6 +54,7 @@ namespace LiteDB.Tests.Engine
                     try
                     {
                         db.Delete("person", BsonExpression.Create("1=1"));
+                        //db.Insert("person", data2);
 
                         Assert.Fail("Must be locked");
                     }

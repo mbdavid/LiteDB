@@ -102,7 +102,12 @@ namespace LiteDB.Engine
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
 
             // try enter in reserved lock in collection
-            if (collection.TryEnterUpgradeableReadLock(_timeout) == false) throw LiteException.LockTimeout("reserved", collectionName, _timeout);
+            if (collection.TryEnterUpgradeableReadLock(_timeout) == false)
+            {
+                // if get timeout, release first reserved lock
+                _reserved.ExitReadLock();
+                throw LiteException.LockTimeout("reserved", collectionName, _timeout);
+            }
         }
 
         /// <summary>
@@ -136,7 +141,12 @@ namespace LiteDB.Engine
             try
             {
                 // reserved locker in write lock
-                if (_reserved.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
+                if (_reserved.TryEnterWriteLock(_timeout) == false)
+                {
+                    // exit transaction write lock
+                    _transaction.ExitWriteLock();
+                    throw LiteException.LockTimeout("reserved", _timeout);
+                }
             }
             finally
             {
