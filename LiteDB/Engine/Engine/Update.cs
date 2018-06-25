@@ -26,7 +26,7 @@ namespace LiteDB.Engine
 
             return this.AutoTransaction(transaction =>
             {
-                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
                 var col = snapshot.CollectionPage;

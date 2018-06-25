@@ -5,9 +5,9 @@ using System.IO;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Represents a snapshot open mode
+    /// Represents a snapshot lock mode
     /// </summary>
-    public enum SnapshotMode
+    public enum LockMode
     {
         /// <summary>
         /// Read only snap with read lock
@@ -17,6 +17,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read/Write snapshot with reserved lock
         /// </summary>
-        Write
+        Write,
+
+        /// <summary>
+        /// Current snap has no read/write lock
+        /// </summary>
+        None 
     }
 }

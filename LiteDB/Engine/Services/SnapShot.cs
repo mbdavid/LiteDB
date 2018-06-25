@@ -23,7 +23,7 @@ namespace LiteDB.Engine
 
         // snapshot controls
         private readonly string _collectionName;
-        private SnapshotMode _mode;
+        private LockMode _mode = LockMode.None;
         private CollectionPage _collectionPage;
         private int _readVersion;
         private List<CursorInfo> _cursors = new List<CursorInfo>();
@@ -33,10 +33,10 @@ namespace LiteDB.Engine
         // expose services
         public int ReadVersion => _readVersion;
         public Dictionary<uint, BasePage> LocalPages => _localPages;
-        public SnapshotMode Mode => _mode;
+        public LockMode Mode => _mode;
         public List<CursorInfo> Cursors => _cursors;
 
-        public Snapshot(SnapshotMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, DataFileService dataFile, WalService wal)
+        public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, DataFileService dataFile, WalService wal)
         {
             _header = header;
             _transPages = transPages;
@@ -45,10 +45,9 @@ namespace LiteDB.Engine
             _wal = wal;
 
             _collectionName = collectionName;
-            _mode = mode;
 
             // enter in lock mode according initial mode
-            if (_mode == SnapshotMode.Read)
+            if (mode == LockMode.Read)
             {
                 _locker.EnterRead(_collectionName);
             }
@@ -57,26 +56,34 @@ namespace LiteDB.Engine
                 _locker.EnterReserved(_collectionName);
             }
 
+            _mode = mode;
+
             // initialize version and get read version
             this.Initialize();
         }
 
         /// <summary>
-        /// Enter snapshot in write mode (if not already in write mode)
+        /// Enter snapshot in write lock (if not already in write mode)
         /// </summary>
         public void WriteMode(bool addIfNotExits)
         {
-            if (_mode == SnapshotMode.Read)
+            if (_mode == LockMode.Read)
             {
                 // enter in reserved mode (exit read first)
                 _locker.ExitRead(_collectionName);
+
+                _mode = LockMode.None;
+
+                // after release read lock, try write lock
                 _locker.EnterReserved(_collectionName);
 
-                _mode = SnapshotMode.Write;
+                _mode = LockMode.Write;
 
                 // need initialize cache and wal version
                 this.Initialize();
             }
+
+            DEBUG(_mode != LockMode.Write, "lock mode must be write");
 
             if (addIfNotExits && this.CollectionPage == null)
             {
@@ -133,11 +140,11 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            if (_mode == SnapshotMode.Read)
+            if (_mode == LockMode.Read)
             {
                 _locker.ExitRead(_collectionName);
             }
-            else
+            else if(_mode == LockMode.Write)
             {
                 _locker.ExitReserved(_collectionName);
             }
@@ -172,7 +179,7 @@ namespace LiteDB.Engine
             // if not inside local pages, can be a dirty page already saved in wal file
             if (_transPages.DirtyPagesWal.TryGetValue(pageID, out var position))
             {
-                var dirty = (T)_wal.WalFile.ReadPage(position.Position, _mode == SnapshotMode.Write);
+                var dirty = (T)_wal.WalFile.ReadPage(position.Position, _mode == LockMode.Write);
 
                 // add into local pages
                 _localPages[pageID] = dirty;
@@ -188,7 +195,7 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var walpage = (T)_wal.WalFile.ReadPage(pos, _mode == SnapshotMode.Write);
+                var walpage = (T)_wal.WalFile.ReadPage(pos, _mode == LockMode.Write);
 
                 // copy to my local pages
                 _localPages[pageID] = walpage;
@@ -208,7 +215,7 @@ namespace LiteDB.Engine
             // for last chance, look inside original disk data file
             var pagePosition = BasePage.GetPagePosition(pageID);
 
-            var diskpage = (T)_dataFile.ReadPage(pagePosition, _mode == SnapshotMode.Write);
+            var diskpage = (T)_dataFile.ReadPage(pagePosition, _mode == LockMode.Write);
 
             // add this page into local pages
             _localPages[pageID] = diskpage;

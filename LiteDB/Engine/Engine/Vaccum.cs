@@ -25,7 +25,7 @@ namespace LiteDB.Engine
 
                 return this.AutoTransaction(transaction =>
                 {
-                    var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, "_vaccum", false);
+                    var snapshot = transaction.CreateSnapshot(LockMode.Write, "_vaccum", false);
                     var count = 0;
 
                     foreach (var pageID in _dataFile.ReadZeroPages())

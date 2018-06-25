@@ -30,7 +30,7 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonValue> RunQuery()
             {
-                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? SnapshotMode.Write : SnapshotMode.Read, _query.Collection, false);
+                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _query.Collection, false);
                 var cursor = snapshot.NewCursor();
 
                 // if virtual collection, create a virtual collection page
@@ -73,7 +73,7 @@ namespace LiteDB.Engine
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
                     {
-                        if (isNew)
+                        if (isNew && (transaction.State == TransactionState.New || transaction.State == TransactionState.Active))
                         {
                             transaction.Commit();
                         }

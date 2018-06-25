@@ -27,7 +27,7 @@ namespace LiteDB.Engine
                 this.AutoTransaction(transaction =>
                 {
                     // first, get read-only snapshot
-                    var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, collection, false);
+                    var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
                     var col = snapshot.CollectionPage;
 
                     if (col == null) return 0;

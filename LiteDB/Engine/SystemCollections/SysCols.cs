@@ -28,7 +28,7 @@ namespace LiteDB.Engine
             {
                 foreach (var name in this.GetCollectionNames().OrderBy(x => x))
                 {
-                    var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, name, false);
+                    var snapshot = transaction.CreateSnapshot(LockMode.Write, name, false);
 
                     yield return new BsonDocument
                     {

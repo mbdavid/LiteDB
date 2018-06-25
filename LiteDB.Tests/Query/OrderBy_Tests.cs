@@ -87,5 +87,28 @@ namespace LiteDB.Tests.Query
                 string.Join(",", r0),
                 string.Join(",", r1.Select(x => x.AsInt32)));
         }
+
+        [TestMethod]
+        public void Query_OrderBy_With_Offset_Limit()
+        {
+            var r0 = person
+                .OrderBy(x => x["date"].AsDateTime.Day)
+                .Skip(5)
+                .Take(10)
+                .Select(x => x["date"].AsDateTime.Day)
+                .ToArray();
+
+            var r1 = db.Query("person")
+                .OrderBy("DAY(date)")
+                .Offset(5)
+                .Limit(10)
+                .Select("DAY(date)")
+                .ToValues()
+                .ToArray();
+
+            Assert.AreEqual(
+                string.Join(",", r0),
+                string.Join(",", r1.Select(x => x.AsInt32)));
+        }
     }
 }

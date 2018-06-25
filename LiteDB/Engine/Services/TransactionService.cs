@@ -55,16 +55,18 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create (or get from cache) snapshot and return. Snapshot are thread-safe. Do not call Dispose of snapshot because transaction will do this on end
         /// </summary>
-        internal Snapshot CreateSnapshot(SnapshotMode mode, string collectionName, bool addIfNotExists)
+        internal Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
         {
             // if transaction are commited/aborted do not accept new snapshots
             if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("CreateSnapshot", this.State);
 
             this.State = TransactionState.Active;
 
-            var snapshot = _snapshots.GetOrAdd(collectionName, c => new Snapshot(mode, collectionName, _header, _transPages, _locker, _dataFile, _wal));
+            var snapshot = _snapshots.GetOrAdd(collection, c => new Snapshot(mode, collection, _header, _transPages, _locker, _dataFile, _wal));
 
-            if (mode == SnapshotMode.Write)
+            DEBUG(snapshot.Mode == LockMode.None, "snaphost always need to be read/write lock here");
+
+            if (mode == LockMode.Write)
             {
                 // will create collection if needed only here
                 snapshot.WriteMode(addIfNotExists);
@@ -99,7 +101,7 @@ namespace LiteDB.Engine
             // do not get header page because will use as confirm page (last page)
             // update if transactionID
             var pages = _snapshots.Values
-                .Where(x => x.Mode == SnapshotMode.Write)
+                .Where(x => x.Mode == LockMode.Write)
                 .SelectMany(x => x.LocalPages.Values)
                 .Where(x => x.IsDirty && x.PageType != PageType.Header)
                 .ForEach((i, p) => p.TransactionID = this.TransactionID)
@@ -136,7 +138,7 @@ namespace LiteDB.Engine
             {
                 // first, check if has any write snap
                 var writeSnaps = _snapshots.Values
-                    .Where(x => x.Mode == SnapshotMode.Write)
+                    .Where(x => x.Mode == LockMode.Write)
                     .Any();
 
                 if (writeSnaps)

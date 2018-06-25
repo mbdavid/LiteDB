@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         {
             foreach (var transaction in _transactions.Values)
             {
-                var write = transaction.Snapshots.Values.Where(x => x.Mode == SnapshotMode.Write).Any();
+                var write = transaction.Snapshots.Values.Where(x => x.Mode == LockMode.Write).Any();
 
                 yield return new BsonDocument
                 {

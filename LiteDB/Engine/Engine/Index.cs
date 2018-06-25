@@ -40,7 +40,7 @@ namespace LiteDB.Engine
 
             return this.AutoTransaction(transaction =>
             {
-                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, true);
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var col = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
@@ -106,7 +106,7 @@ namespace LiteDB.Engine
 
             return this.AutoTransaction(transaction =>
             {
-                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot);
             

@@ -23,7 +23,7 @@ namespace LiteDB.Engine
 
             return this.AutoTransaction(transaction =>
             {
-                var snapshot = transaction.CreateSnapshot(SnapshotMode.Write, collection, false);
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var col = snapshot.CollectionPage;
 
                 // if collection do not exist, just exit

@@ -99,10 +99,9 @@ namespace LiteDB.Engine
                 var result = fn(transaction);
 
                 // if this transaction was auto-created for this operation, commit & dispose now
-                if (isNew)
+                if (isNew && (transaction.State == TransactionState.New || transaction.State == TransactionState.Active))
                 {
                     transaction.Commit();
-                    transaction.Dispose();
                 }
 
                 return result;

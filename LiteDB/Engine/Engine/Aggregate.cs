@@ -48,7 +48,7 @@ namespace LiteDB.Engine
         {
             return this.AutoTransaction(transaction =>
             {
-                var snapshot = transaction.CreateSnapshot(SnapshotMode.Read, collection, false);
+                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
 
                 return snapshot.CollectionPage?.DocumentCount ?? 0;
             });

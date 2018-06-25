@@ -73,7 +73,7 @@ namespace LiteDB.Engine
                         last = refCol.AsString;
 
                         // initialize services
-                        snapshot = _transaction.CreateSnapshot(SnapshotMode.Read, last, false);
+                        snapshot = _transaction.CreateSnapshot(LockMode.Read, last, false);
                         indexer = new IndexService(snapshot);
                         data = new DataService(snapshot);
 
@@ -159,7 +159,7 @@ namespace LiteDB.Engine
             }
 
             // create snapshot from temp transaction
-            var snapshot = _tempTransaction.CreateSnapshot(SnapshotMode.Read, Guid.NewGuid().ToString("n"), false);
+            var snapshot = _tempTransaction.CreateSnapshot(LockMode.Read, Guid.NewGuid().ToString("n"), false);
 
             return DoOrderBy();
 
