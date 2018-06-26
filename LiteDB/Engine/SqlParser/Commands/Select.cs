@@ -9,7 +9,7 @@ namespace LiteDB.Engine
         /// <summary>
         ///    SELECT {selectExpr}
         ///    [ INTO {newcollection} [ : {type} ] ]
-        ///      FROM {collection}
+        ///    [ FROM {collection} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {whereExpr} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
@@ -27,9 +27,16 @@ namespace LiteDB.Engine
             var autoId = BsonAutoId.ObjectId;
 
             // read FROM|INTO
-            var from = _tokenizer.ReadToken().Expect(TokenType.Word);
+            var from = _tokenizer.ReadToken();
 
-            if (from.Is("INTO"))
+            if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
+            {
+                // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
+                var result = selectExpr.Execute(true).First();
+
+                return new BsonDataReader(result);
+            }
+            else if (from.Is("INTO"))
             {
                 into = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
 

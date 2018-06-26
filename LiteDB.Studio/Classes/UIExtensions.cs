@@ -28,6 +28,8 @@ namespace LiteDB.Studio
                     value.AsDocument :
                     new BsonDocument { ["[value]"] = value };
 
+                if (doc.Keys.Count == 0) doc["[root]"] = "{}";
+
                 foreach (var key in doc.Keys)
                 {
                     var col = grd.Columns[key];
