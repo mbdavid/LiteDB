@@ -6,6 +6,8 @@ using System.Linq;
 
 namespace LiteDB
 {
+    public enum BsonDataResultMode { Void, Single, Resultset }
+
     /// <summary>
     /// Class to read void, one or a collection of BsonValues. Used in SQL execution commands
     /// </summary>
@@ -16,6 +18,12 @@ namespace LiteDB
         private QueryPlan _query = null;
         private bool _isFirst;
         private bool _hasValues;
+        private readonly BsonDataResultMode _mode;
+
+        /// <summary>
+        /// Return type of data reader: Void, Single or Recordset
+        /// </summary>
+        public BsonDataResultMode Mode => _mode;
 
         internal Func<BsonDataReader> NextResultFunc = () => null;
 
@@ -24,6 +32,7 @@ namespace LiteDB
         /// </summary>
         internal BsonDataReader()
         {
+            _mode = BsonDataResultMode.Void;
             _hasValues = false;
         }
 
@@ -32,6 +41,7 @@ namespace LiteDB
         /// </summary>
         internal BsonDataReader(BsonValue value)
         {
+            _mode = BsonDataResultMode.Single;
             _current = value;
             _isFirst = _hasValues = true;
         }
@@ -41,6 +51,7 @@ namespace LiteDB
         /// </summary>
         internal BsonDataReader(IEnumerable<BsonValue> values, QueryPlan query)
         {
+            _mode = BsonDataResultMode.Resultset;
             _source = values.GetEnumerator();
             _query = query;
 

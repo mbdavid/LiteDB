@@ -8,13 +8,65 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// SET {key} = {value}
+        /// SET {@parameter} = {command}
         /// </summary>
         private BsonDataReader ParseSet()
         {
-            var key = _tokenizer.ReadToken().Expect(TokenType.Word);
+            var token = _tokenizer.ReadToken().Expect(TokenType.Word, TokenType.At);
 
+            if (token.Type == TokenType.Word)
+            {
+                this.ParseSetValue(token);
+            }
+            else
+            {
+                this.ParseSetParameter();
+            }
+
+            return new BsonDataReader();
+        }
+
+        /// <summary>
+        /// Read new command and set return of this value into output parameter
+        /// </summary>
+        /// <returns></returns>
+        private void ParseSetParameter()
+        {
+            var name = _tokenizer.ReadToken(false).Expect(TokenType.Word).Value;
+
+            // read `=`
             _tokenizer.ReadToken().Expect(TokenType.Equals);
 
+            var value = BsonValue.Null;
+
+            // execute
+            using (var result = this.Execute())
+            {
+                if (result.Mode == BsonDataResultMode.Single)
+                {
+                    value = result.Current;
+                }
+                else if (result.Mode == BsonDataResultMode.Resultset)
+                {
+                    var array = new BsonArray();
+
+                    while(result.Read())
+                    {
+                        array.Add(result.Current);
+                    }
+
+                    value = array;
+                }
+            }
+
+            _parameters[name] = value;
+        }
+
+        /// <summary>
+        /// Read key=value to update database settings
+        /// </summary>
+        private void ParseSetValue(Token key)
+        {
             var reader = new JsonReader(_tokenizer);
 
             var value = reader.Deserialize();
@@ -31,8 +83,6 @@ namespace LiteDB.Engine
                 default:
                     throw LiteException.UnexpectedToken("Unkown key value", key);
             }
-
-            return new BsonDataReader();
         }
     }
 }

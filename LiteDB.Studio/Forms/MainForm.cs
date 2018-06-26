@@ -245,7 +245,10 @@ namespace LiteDB.Studio
                         this.LoadResult(task);
                     }), task);
 
-                    using (var reader = _db.Execute(task.Sql))
+                    // clear parameters to new execute
+                    task.Parameters = new BsonDocument();
+
+                    using (var reader = _db.Execute(task.Sql, task.Parameters))
                     {
                         task.ReadResult(reader);
                     }

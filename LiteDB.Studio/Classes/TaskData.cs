@@ -22,6 +22,7 @@ namespace LiteDB.Studio
         public bool LimitExceeded { get; set; }
         public Exception Exception { get; set; } = null;
         public TimeSpan Elapsed { get; set; } = TimeSpan.Zero;
+        public BsonDocument Parameters { get; set; } = new BsonDocument();
 
         public Thread Thread { get; set; }
 

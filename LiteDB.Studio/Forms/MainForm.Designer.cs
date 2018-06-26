@@ -61,12 +61,12 @@
             this.btnCommit = new System.Windows.Forms.ToolStripButton();
             this.btnRollback = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.mnuQuery = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuAnalyze = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
-            this.mnuQuery = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -222,10 +222,10 @@
             // 
             this.tabText.Controls.Add(this.chkExplainPlan);
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 22);
+            this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 335);
+            this.tabText.Size = new System.Drawing.Size(808, 333);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -236,7 +236,7 @@
             this.chkExplainPlan.AutoSize = true;
             this.chkExplainPlan.Checked = true;
             this.chkExplainPlan.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkExplainPlan.Location = new System.Drawing.Point(7, 308);
+            this.chkExplainPlan.Location = new System.Drawing.Point(7, 306);
             this.chkExplainPlan.Name = "chkExplainPlan";
             this.chkExplainPlan.Size = new System.Drawing.Size(121, 19);
             this.chkExplainPlan.TabIndex = 1;
@@ -253,17 +253,17 @@
             this.txtResult.Location = new System.Drawing.Point(6, 5);
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
-            this.txtResult.Size = new System.Drawing.Size(796, 296);
+            this.txtResult.Size = new System.Drawing.Size(796, 294);
             this.txtResult.TabIndex = 0;
             this.txtResult.Text = "";
             // 
             // tabLog
             // 
             this.tabLog.Controls.Add(this.txtLog);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
+            this.tabLog.Location = new System.Drawing.Point(4, 24);
             this.tabLog.Name = "tabLog";
             this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(808, 335);
+            this.tabLog.Size = new System.Drawing.Size(808, 333);
             this.tabLog.TabIndex = 4;
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
@@ -277,7 +277,7 @@
             this.txtLog.Location = new System.Drawing.Point(6, 6);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(796, 319);
+            this.txtLog.Size = new System.Drawing.Size(796, 317);
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             this.txtLog.WordWrap = false;
@@ -437,14 +437,27 @@
             this.mnuSep1,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(181, 126);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 104);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
+            // 
+            // mnuQuery
+            // 
+            this.mnuQuery.Image = ((System.Drawing.Image)(resources.GetObject("mnuQuery.Image")));
+            this.mnuQuery.Name = "mnuQuery";
+            this.mnuQuery.Size = new System.Drawing.Size(155, 22);
+            this.mnuQuery.Tag = "SELECT $ FROM {0};";
+            this.mnuQuery.Text = "Query";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuAnalyze
             // 
             this.mnuAnalyze.Image = ((System.Drawing.Image)(resources.GetObject("mnuAnalyze.Image")));
             this.mnuAnalyze.Name = "mnuAnalyze";
-            this.mnuAnalyze.Size = new System.Drawing.Size(180, 22);
+            this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
             this.mnuAnalyze.Tag = "ANALYZE {0};";
             this.mnuAnalyze.Text = "Analyze";
             // 
@@ -452,35 +465,22 @@
             // 
             this.mnuIndexes.Image = ((System.Drawing.Image)(resources.GetObject("mnuIndexes.Image")));
             this.mnuIndexes.Name = "mnuIndexes";
-            this.mnuIndexes.Size = new System.Drawing.Size(180, 22);
+            this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
             // mnuSep1
             // 
             this.mnuSep1.Name = "mnuSep1";
-            this.mnuSep1.Size = new System.Drawing.Size(177, 6);
+            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuDropCollection
             // 
             this.mnuDropCollection.Image = ((System.Drawing.Image)(resources.GetObject("mnuDropCollection.Image")));
             this.mnuDropCollection.Name = "mnuDropCollection";
-            this.mnuDropCollection.Size = new System.Drawing.Size(180, 22);
+            this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
-            // 
-            // mnuQuery
-            // 
-            this.mnuQuery.Image = ((System.Drawing.Image)(resources.GetObject("mnuQuery.Image")));
-            this.mnuQuery.Name = "mnuQuery";
-            this.mnuQuery.Size = new System.Drawing.Size(180, 22);
-            this.mnuQuery.Tag = "SELECT $ FROM {0};";
-            this.mnuQuery.Text = "Query";
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // MainForm
             // 
