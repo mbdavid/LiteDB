@@ -111,5 +111,78 @@ namespace LiteDB.Tests.Engine
             Assert.AreEqual(10, d["age"].AsInt32);
         }
 
+        [TestMethod]
+        public void Sql_Analyze()
+        {
+            Assert.AreEqual(0, db.Execute("ANALYZE").Current.AsInt32);
+        }
+
+        [TestMethod]
+        public void Sql_Vaccum()
+        {
+            Assert.AreEqual(0, db.Execute("VACCUM").Current.AsInt32);
+        }
+
+        [TestMethod]
+        public void Sql_Checkpoint()
+        {
+            Assert.AreEqual(0, db.Execute("CHECKPOINT").Current.AsInt32);
+        }
+
+        [TestMethod]
+        public void Sql_Transaction()
+        {
+            var t = db.Execute("BEGIN").Current.AsGuid;
+            Assert.AreEqual(t, db.Execute("BEGIN TRANS").Current.AsGuid);
+
+            Assert.IsTrue(db.Execute("COMMIT").Current.AsBoolean);
+            Assert.IsFalse(db.Execute("COMMIT TRANS").Current.AsBoolean);
+            Assert.IsFalse(db.Execute("COMMIT TRANSACTION").Current.AsBoolean);
+
+            Assert.AreNotEqual(t, db.Execute("BEGIN TRANSACTION").Current.AsGuid);
+
+            Assert.IsTrue(db.Execute("ROLLBACK").Current.AsBoolean);
+            Assert.IsFalse(db.Execute("ROLLBACK TRANS").Current.AsBoolean);
+            Assert.IsFalse(db.Execute("ROLLBACK TRANSACTION").Current.AsBoolean);
+        }
+
+        [TestMethod]
+        public void Sql_Create_Drop_Index()
+        {
+            Assert.IsTrue(db.Execute("CREATE INDEX idx1 ON person ( UPPER($.city) );").Current.AsBoolean);
+
+            Assert.IsTrue(db.Execute("CREATE UNIQUE INDEX idx2 ON person (email)").Current.AsBoolean);
+            Assert.IsFalse(db.Execute("CREATE UNIQUE INDEX idx2 ON person ($.email)").Current.AsBoolean);
+
+            Assert.IsTrue(db.Execute("DROP INDEX person.idx1;").Current.AsBoolean);
+            Assert.IsTrue(db.Execute("DROP INDEX person.idx2;").Current.AsBoolean);
+        }
+
+        [TestMethod]
+        public void Sql_Drop_Collection()
+        {
+            db.Execute("INSERT INTO ncol VALUES {a:1};");
+
+            Assert.IsTrue(db.Execute("DROP COLLECTION ncol;").Current.AsBoolean);
+            Assert.IsFalse(db.Execute("DROP COLLECTION ncol;").Current.AsBoolean);
+        }
+
+        [TestMethod]
+        public void Sql_Multi_Commands()
+        {
+            var r = db.Execute("INSERT INTO m0 VALUES {a:1}; INSERT INTO m1 VALUES {a:1}; DROP COLLECTION m0;");
+
+            while (r.NextResult()) ;
+
+            Assert.IsTrue(db.GetCollectionNames().Any(x => x == "m0"));
+        }
+
+        [TestMethod]
+        public void Sql_Select_Simple()
+        {
+            var r = db.Execute("SELECT $ FROM person");
+        }
+
+
     }
 }
