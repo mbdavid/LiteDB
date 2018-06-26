@@ -433,8 +433,16 @@ namespace LiteDB
                     break;
 
                 case '-':
-                    token = new Token(TokenType.Minus, "-", this.Position);
                     this.ReadChar();
+                    if (_char == '-')
+                    {
+                        this.ReadLine();
+                        token = this.ReadNext(eatWhitespace);
+                    }
+                    else
+                    {
+                        token = new Token(TokenType.Minus, "-", this.Position);
+                    }
                     break;
 
                 case '+':
@@ -620,6 +628,19 @@ namespace LiteDB
             this.ReadChar(); // read last " or '
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Read all chars to end of LINE
+        /// </summary>
+        private void ReadLine()
+        {
+            // remove all char until new line
+            while (_char != '\n' && !this.EOF)
+            {
+                this.ReadChar();
+            }
+            if (_char == '\n') this.ReadChar();
         }
 
         public static uint ParseUnicode(char c1, char c2, char c3, char c4)

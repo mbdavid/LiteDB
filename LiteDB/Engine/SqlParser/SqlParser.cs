@@ -47,7 +47,6 @@ namespace LiteDB.Engine
 
                 default:  throw LiteException.UnexpectedToken(first);
             }
-
         }
     }
 }
