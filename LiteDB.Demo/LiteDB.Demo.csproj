@@ -17,10 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite" Version="1.0.106" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
   </ItemGroup>
   

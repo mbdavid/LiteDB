@@ -24,6 +24,8 @@ namespace LiteDB
         /// </summary>
         private Dictionary<ushort, DataBlock> _dataBlocks = new Dictionary<ushort, DataBlock>();
 
+        public Dictionary<ushort, DataBlock> DataBlocks => _dataBlocks;
+
         public DataPage(uint pageID)
             : base(pageID)
         {
