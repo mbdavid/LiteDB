@@ -9,70 +9,53 @@
     - Multi concurrent `Stream` readers - Single async writer
     - No lock for reader
     - Up to 32 indexes per collection
-    - Atomic transactions are back (BeginTrans/Commit/Rollback)
-    - Single physical file to store data and WAL
+    - Atomic multi-document transactions
     - NET45 and NETStandard 2 support only (drop NET35/40)
     - Single process only - optimazed for multi thread
-    - Plans for B+Tree implementation
 
 - New BsonExpression
+    - New super-fast tokenizer parser
     - Clean syntax with optional use of `$`
-    - Parameter support: `@name`
-    - Support complext field name using `$.["first name"]`
+    - Input/Output parameter support: `@name`
     - Simplified document notation `{ _id, name, year }`
-    - Strings supports single/double quotes
     
+- System Collections
+    - Support query over internal collection 
+    - `$transactions`, `$open_cursors`, `$cache`, `$dump`
+
 - New QueryBuilder
     - Fluent API for write queries
     - Simple syntax using BsonExpressions
     - Support OrderBy/GroupBy expressions
-    - Query optimization
-    - Aggregate functions (execute expression over all resultset at once)
+    - Query optimization with Explain Plan
+    - Aggregate functions
     
-```C#
-// using BsonDocument
+- New SQL-Like syntax
+    - Simple SQL syntax for any command
+    - Syntax near to SQL ANSI 
+    - Support INSERT/UPDATE/DELETE/...
 
-engine.Query("customers")
-    .Where("name > @0", value) 
-    .Where("UPPER(FirstName) != UPPER(LastName)")
-    .Include("orders")
-    .OrderBy("FirstName", Query.Asc)
-    .Limit(10)
-    .Offset(200)
-    .Select("{ _id: _id, FullName: FirstName + LastName, Age: DATEDIFF('Y', DATE(), BirthDate) }")
-    .ToList(); // ToEnumerable(), First(), FirstOrDefault(), Count(), Exists(), Into(newCol)
+```SQL
+ SELECT { _id, fullname: name.first + ' ' + name.last, age: 2018 - YEAR(birthday) }
+   FROM customers
+  WHERE name LIKE 'John%'
+    AND _id BETWEEN 1 AND 2000
+INCLUDE orders
+  ORDER BY name
+  LIMIT 10
 
-engine.Query("order")
-    .Where("YEAR(sale_date) = @0", 2018)
-    .Select("SUM(price)")
-    .Aggregate();
-
-engine.Query("order")
-    .Where("status = 'Confirmed')
-    .GroupBy("YEAR(sale_date)")
-    .Select("{ year: YEAR(sale_date), total: SUM(price) }")
-    .ToList();
+SELECT { city, count: COUNT($), high_pop: MAX(pop) }
+  FROM zip
+ GROUP BY city
+```    
     
-// using Linq 
-
-collection.Query()
-    .Where(x => x.Name > value)
-    .Where(x => x.FirstName.ToUpperCase() != x.LastName.ToUpperCase())
-    .Include(x => x.Orders)
-    .OrderBy(x => x.FirstName)
-    .Limit(10)
-    .Offset(200)
-    .ToList()
-```
+- New Native UI - LiteDB.Studio
+    - WinForms app to manipulate database
+    - Based on SQL commands
+    - Show results in grid or as text
+    - Multi tabs, multi threads, multi transactions
     
-- Server-Side support (LiteDB.Server.exe)
-    - NET Core 2 application
-    - HTTP/S REST API protocol
-    - Multi database
-    - Authentication
-    - Background maintaince tasks
-    - Web Admin UI
-
+    
 .. but still...    
 - Embedded support
 - Single database file 
