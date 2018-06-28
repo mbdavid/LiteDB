@@ -41,6 +41,8 @@
             this.grdResult = new System.Windows.Forms.DataGridView();
             this.tabText = new System.Windows.Forms.TabPage();
             this.txtResult = new System.Windows.Forms.RichTextBox();
+            this.tabParameters = new System.Windows.Forms.TabPage();
+            this.txtParameters = new System.Windows.Forms.RichTextBox();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.txtLog = new System.Windows.Forms.RichTextBox();
             this.tabSql = new System.Windows.Forms.TabControl();
@@ -61,14 +63,12 @@
             this.btnRollback = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuQuery = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuExplanPlan = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuAnalyze = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
-            this.tabParameters = new System.Windows.Forms.TabPage();
-            this.txtParameters = new System.Windows.Forms.RichTextBox();
-            this.mnuExplanPlan = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -81,11 +81,11 @@
             this.tabGrid.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).BeginInit();
             this.tabText.SuspendLayout();
+            this.tabParameters.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.stbStatus.SuspendLayout();
             this.tlbMain.SuspendLayout();
             this.ctxMenu.SuspendLayout();
-            this.tabParameters.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtFileName
@@ -225,10 +225,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 24);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 333);
+            this.tabText.Size = new System.Drawing.Size(808, 335);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -247,13 +247,39 @@
             this.txtResult.TabIndex = 0;
             this.txtResult.Text = "";
             // 
+            // tabParameters
+            // 
+            this.tabParameters.Controls.Add(this.txtParameters);
+            this.tabParameters.Location = new System.Drawing.Point(4, 24);
+            this.tabParameters.Name = "tabParameters";
+            this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
+            this.tabParameters.Size = new System.Drawing.Size(808, 333);
+            this.tabParameters.TabIndex = 5;
+            this.tabParameters.Text = "Parameters";
+            this.tabParameters.UseVisualStyleBackColor = true;
+            // 
+            // txtParameters
+            // 
+            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtParameters.HideSelection = false;
+            this.txtParameters.Location = new System.Drawing.Point(6, 6);
+            this.txtParameters.Name = "txtParameters";
+            this.txtParameters.ReadOnly = true;
+            this.txtParameters.Size = new System.Drawing.Size(796, 319);
+            this.txtParameters.TabIndex = 3;
+            this.txtParameters.Text = "";
+            // 
             // tabLog
             // 
             this.tabLog.Controls.Add(this.txtLog);
-            this.tabLog.Location = new System.Drawing.Point(4, 24);
+            this.tabLog.Location = new System.Drawing.Point(4, 22);
             this.tabLog.Name = "tabLog";
             this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(808, 333);
+            this.tabLog.Size = new System.Drawing.Size(808, 335);
             this.tabLog.TabIndex = 4;
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
@@ -428,7 +454,7 @@
             this.mnuSep1,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 148);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 126);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuQuery
@@ -438,6 +464,14 @@
             this.mnuQuery.Size = new System.Drawing.Size(155, 22);
             this.mnuQuery.Tag = "SELECT $ FROM {0};";
             this.mnuQuery.Text = "Query";
+            // 
+            // mnuExplanPlan
+            // 
+            this.mnuExplanPlan.Image = global::LiteDB.Studio.Properties.Resources.table_sort;
+            this.mnuExplanPlan.Name = "mnuExplanPlan";
+            this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
+            this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
+            this.mnuExplanPlan.Text = "Explain Plan";
             // 
             // toolStripSeparator2
             // 
@@ -473,39 +507,6 @@
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
             // 
-            // tabParameters
-            // 
-            this.tabParameters.Controls.Add(this.txtParameters);
-            this.tabParameters.Location = new System.Drawing.Point(4, 24);
-            this.tabParameters.Name = "tabParameters";
-            this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
-            this.tabParameters.Size = new System.Drawing.Size(808, 333);
-            this.tabParameters.TabIndex = 5;
-            this.tabParameters.Text = "Parameters";
-            this.tabParameters.UseVisualStyleBackColor = true;
-            // 
-            // txtParameters
-            // 
-            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtParameters.HideSelection = false;
-            this.txtParameters.Location = new System.Drawing.Point(6, 6);
-            this.txtParameters.Name = "txtParameters";
-            this.txtParameters.Size = new System.Drawing.Size(796, 321);
-            this.txtParameters.TabIndex = 3;
-            this.txtParameters.Text = "";
-            // 
-            // mnuExplanPlan
-            // 
-            this.mnuExplanPlan.Image = global::LiteDB.Studio.Properties.Resources.table_sort;
-            this.mnuExplanPlan.Name = "mnuExplanPlan";
-            this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
-            this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
-            this.mnuExplanPlan.Text = "Explain Plan";
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -534,13 +535,13 @@
             this.tabGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).EndInit();
             this.tabText.ResumeLayout(false);
+            this.tabParameters.ResumeLayout(false);
             this.tabLog.ResumeLayout(false);
             this.stbStatus.ResumeLayout(false);
             this.stbStatus.PerformLayout();
             this.tlbMain.ResumeLayout(false);
             this.tlbMain.PerformLayout();
             this.ctxMenu.ResumeLayout(false);
-            this.tabParameters.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 

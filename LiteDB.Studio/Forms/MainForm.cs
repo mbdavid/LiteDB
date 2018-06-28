@@ -245,7 +245,6 @@ namespace LiteDB.Studio
                         this.LoadResult(task);
                     }), task);
 
-                    // clear parameters to new execute
                     task.Parameters = new BsonDocument();
 
                     using (var reader = _db.Execute(task.Sql, task.Parameters))
@@ -288,6 +287,7 @@ namespace LiteDB.Studio
         private void LoadResult(TaskData data)
         {
             btnRun.Enabled = !data.Running;
+            txtParameters.Text = JsonSerializer.Serialize(data.Parameters, true);
 
             if (data.Running)
             {
