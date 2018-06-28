@@ -154,7 +154,6 @@ namespace LiteDB.Engine
                         ["expr"] = this.GetExpression(this.OrderBy),
                         ["order"] = this.Order
                     },
-                ["orderByOrder"] = this.Order.ToString(),
                 ["limit"] = this.Limit,
                 ["offset"] = this.Offset,
                 ["keyOnly"] = this.KeyOnly,
