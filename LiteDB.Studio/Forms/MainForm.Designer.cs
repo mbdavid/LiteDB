@@ -52,23 +52,28 @@
             this.prgRunning = new System.Windows.Forms.ToolStripProgressBar();
             this.lblElapsed = new System.Windows.Forms.ToolStripStatusLabel();
             this.tlbMain = new System.Windows.Forms.ToolStrip();
-            this.btnConnect = new System.Windows.Forms.ToolStripButton();
             this.tlbSep1 = new System.Windows.Forms.ToolStripSeparator();
-            this.btnRefresh = new System.Windows.Forms.ToolStripButton();
             this.tlbSep2 = new System.Windows.Forms.ToolStripSeparator();
-            this.btnRun = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
+            this.ctxMenuRoot = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.btnConnect = new System.Windows.Forms.ToolStripButton();
+            this.btnRefresh = new System.Windows.Forms.ToolStripButton();
+            this.btnRun = new System.Windows.Forms.ToolStripButton();
             this.btnBegin = new System.Windows.Forms.ToolStripButton();
             this.btnCommit = new System.Windows.Forms.ToolStripButton();
             this.btnRollback = new System.Windows.Forms.ToolStripButton();
-            this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuQuery = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuExplanPlan = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuAnalyze = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
-            this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuVaccum = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuInfo = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -86,6 +91,7 @@
             this.stbStatus.SuspendLayout();
             this.tlbMain.SuspendLayout();
             this.ctxMenu.SuspendLayout();
+            this.ctxMenuRoot.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtFileName
@@ -216,7 +222,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(796, 326);
+            this.grdResult.Size = new System.Drawing.Size(796, 294);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -225,10 +231,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 22);
+            this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 335);
+            this.tabText.Size = new System.Drawing.Size(808, 333);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -276,10 +282,10 @@
             // tabLog
             // 
             this.tabLog.Controls.Add(this.txtLog);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
+            this.tabLog.Location = new System.Drawing.Point(4, 24);
             this.tabLog.Name = "tabLog";
             this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(808, 335);
+            this.tabLog.Size = new System.Drawing.Size(808, 333);
             this.tabLog.TabIndex = 4;
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
@@ -370,78 +376,20 @@
             this.tlbMain.TabIndex = 12;
             this.tlbMain.Text = "toolStrip";
             // 
-            // btnConnect
-            // 
-            this.btnConnect.Image = ((System.Drawing.Image)(resources.GetObject("btnConnect.Image")));
-            this.btnConnect.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Padding = new System.Windows.Forms.Padding(3);
-            this.btnConnect.Size = new System.Drawing.Size(78, 26);
-            this.btnConnect.Text = "Connect";
-            this.btnConnect.Click += new System.EventHandler(this.BtnConnect_Click);
-            // 
             // tlbSep1
             // 
             this.tlbSep1.Name = "tlbSep1";
             this.tlbSep1.Size = new System.Drawing.Size(6, 29);
-            // 
-            // btnRefresh
-            // 
-            this.btnRefresh.Image = ((System.Drawing.Image)(resources.GetObject("btnRefresh.Image")));
-            this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Padding = new System.Windows.Forms.Padding(3);
-            this.btnRefresh.Size = new System.Drawing.Size(72, 26);
-            this.btnRefresh.Text = "Refresh";
-            this.btnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
             // 
             // tlbSep2
             // 
             this.tlbSep2.Name = "tlbSep2";
             this.tlbSep2.Size = new System.Drawing.Size(6, 29);
             // 
-            // btnRun
-            // 
-            this.btnRun.Image = ((System.Drawing.Image)(resources.GetObject("btnRun.Image")));
-            this.btnRun.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnRun.Name = "btnRun";
-            this.btnRun.Padding = new System.Windows.Forms.Padding(3);
-            this.btnRun.Size = new System.Drawing.Size(54, 26);
-            this.btnRun.Text = "Run";
-            this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
-            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 29);
-            // 
-            // btnBegin
-            // 
-            this.btnBegin.Image = ((System.Drawing.Image)(resources.GetObject("btnBegin.Image")));
-            this.btnBegin.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnBegin.Name = "btnBegin";
-            this.btnBegin.Size = new System.Drawing.Size(57, 26);
-            this.btnBegin.Text = "Begin";
-            this.btnBegin.ToolTipText = "Begin Transaction";
-            this.btnBegin.Click += new System.EventHandler(this.BtnBegin_Click);
-            // 
-            // btnCommit
-            // 
-            this.btnCommit.Image = ((System.Drawing.Image)(resources.GetObject("btnCommit.Image")));
-            this.btnCommit.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnCommit.Name = "btnCommit";
-            this.btnCommit.Size = new System.Drawing.Size(71, 26);
-            this.btnCommit.Text = "Commit";
-            this.btnCommit.Click += new System.EventHandler(this.BtnCommit_Click);
-            // 
-            // btnRollback
-            // 
-            this.btnRollback.Image = ((System.Drawing.Image)(resources.GetObject("btnRollback.Image")));
-            this.btnRollback.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnRollback.Name = "btnRollback";
-            this.btnRollback.Size = new System.Drawing.Size(72, 26);
-            this.btnRollback.Text = "Rollback";
-            this.btnRollback.Click += new System.EventHandler(this.BtnRollback_Click);
             // 
             // ctxMenu
             // 
@@ -457,9 +405,88 @@
             this.ctxMenu.Size = new System.Drawing.Size(156, 126);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
+            // 
+            // mnuSep1
+            // 
+            this.mnuSep1.Name = "mnuSep1";
+            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
+            // 
+            // ctxMenuRoot
+            // 
+            this.ctxMenuRoot.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuInfo,
+            this.toolStripSeparator3,
+            this.mnuShrink,
+            this.mnuVaccum});
+            this.ctxMenuRoot.Name = "ctxMenu";
+            this.ctxMenuRoot.Size = new System.Drawing.Size(147, 76);
+            this.ctxMenuRoot.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenuRoot_ItemClicked);
+            // 
+            // btnConnect
+            // 
+            this.btnConnect.Image = global::LiteDB.Studio.Properties.Resources.database_connect;
+            this.btnConnect.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnConnect.Name = "btnConnect";
+            this.btnConnect.Padding = new System.Windows.Forms.Padding(3);
+            this.btnConnect.Size = new System.Drawing.Size(78, 26);
+            this.btnConnect.Text = "Connect";
+            this.btnConnect.Click += new System.EventHandler(this.BtnConnect_Click);
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Image = global::LiteDB.Studio.Properties.Resources.arrow_refresh;
+            this.btnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Padding = new System.Windows.Forms.Padding(3);
+            this.btnRefresh.Size = new System.Drawing.Size(72, 26);
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.Click += new System.EventHandler(this.BtnRefresh_Click);
+            // 
+            // btnRun
+            // 
+            this.btnRun.Image = global::LiteDB.Studio.Properties.Resources.resultset_next;
+            this.btnRun.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRun.Name = "btnRun";
+            this.btnRun.Padding = new System.Windows.Forms.Padding(3);
+            this.btnRun.Size = new System.Drawing.Size(54, 26);
+            this.btnRun.Text = "Run";
+            this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
+            // 
+            // btnBegin
+            // 
+            this.btnBegin.Image = global::LiteDB.Studio.Properties.Resources.database;
+            this.btnBegin.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnBegin.Name = "btnBegin";
+            this.btnBegin.Size = new System.Drawing.Size(57, 26);
+            this.btnBegin.Text = "Begin";
+            this.btnBegin.ToolTipText = "Begin Transaction";
+            this.btnBegin.Click += new System.EventHandler(this.BtnBegin_Click);
+            // 
+            // btnCommit
+            // 
+            this.btnCommit.Image = global::LiteDB.Studio.Properties.Resources.database_save;
+            this.btnCommit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnCommit.Name = "btnCommit";
+            this.btnCommit.Size = new System.Drawing.Size(71, 26);
+            this.btnCommit.Text = "Commit";
+            this.btnCommit.Click += new System.EventHandler(this.BtnCommit_Click);
+            // 
+            // btnRollback
+            // 
+            this.btnRollback.Image = global::LiteDB.Studio.Properties.Resources.database_delete;
+            this.btnRollback.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRollback.Name = "btnRollback";
+            this.btnRollback.Size = new System.Drawing.Size(72, 26);
+            this.btnRollback.Text = "Rollback";
+            this.btnRollback.Click += new System.EventHandler(this.BtnRollback_Click);
+            // 
             // mnuQuery
             // 
-            this.mnuQuery.Image = ((System.Drawing.Image)(resources.GetObject("mnuQuery.Image")));
+            this.mnuQuery.Image = global::LiteDB.Studio.Properties.Resources.table_lightning;
             this.mnuQuery.Name = "mnuQuery";
             this.mnuQuery.Size = new System.Drawing.Size(155, 22);
             this.mnuQuery.Tag = "SELECT $ FROM {0};";
@@ -471,16 +498,11 @@
             this.mnuExplanPlan.Name = "mnuExplanPlan";
             this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
             this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
-            this.mnuExplanPlan.Text = "Explain Plan";
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
+            this.mnuExplanPlan.Text = "Explain plan";
             // 
             // mnuAnalyze
             // 
-            this.mnuAnalyze.Image = ((System.Drawing.Image)(resources.GetObject("mnuAnalyze.Image")));
+            this.mnuAnalyze.Image = global::LiteDB.Studio.Properties.Resources.page_white_gear;
             this.mnuAnalyze.Name = "mnuAnalyze";
             this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
             this.mnuAnalyze.Tag = "ANALYZE {0};";
@@ -488,24 +510,48 @@
             // 
             // mnuIndexes
             // 
-            this.mnuIndexes.Image = ((System.Drawing.Image)(resources.GetObject("mnuIndexes.Image")));
+            this.mnuIndexes.Image = global::LiteDB.Studio.Properties.Resources.key;
             this.mnuIndexes.Name = "mnuIndexes";
             this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
-            // mnuSep1
-            // 
-            this.mnuSep1.Name = "mnuSep1";
-            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
-            // 
             // mnuDropCollection
             // 
-            this.mnuDropCollection.Image = ((System.Drawing.Image)(resources.GetObject("mnuDropCollection.Image")));
+            this.mnuDropCollection.Image = global::LiteDB.Studio.Properties.Resources.table_delete;
             this.mnuDropCollection.Name = "mnuDropCollection";
             this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
+            // 
+            // mnuShrink
+            // 
+            this.mnuShrink.Image = global::LiteDB.Studio.Properties.Resources.compress;
+            this.mnuShrink.Name = "mnuShrink";
+            this.mnuShrink.Size = new System.Drawing.Size(146, 22);
+            this.mnuShrink.Tag = "SHRINK;";
+            this.mnuShrink.Text = "Shrink";
+            // 
+            // mnuVaccum
+            // 
+            this.mnuVaccum.Image = global::LiteDB.Studio.Properties.Resources.brick;
+            this.mnuVaccum.Name = "mnuVaccum";
+            this.mnuVaccum.Size = new System.Drawing.Size(146, 22);
+            this.mnuVaccum.Tag = "VACCUM;";
+            this.mnuVaccum.Text = "Vaccum";
+            // 
+            // mnuInfo
+            // 
+            this.mnuInfo.Image = global::LiteDB.Studio.Properties.Resources.information;
+            this.mnuInfo.Name = "mnuInfo";
+            this.mnuInfo.Size = new System.Drawing.Size(146, 22);
+            this.mnuInfo.Tag = "SELECT $ FROM $database;";
+            this.mnuInfo.Text = "Database Info";
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(143, 6);
             // 
             // MainForm
             // 
@@ -542,6 +588,7 @@
             this.tlbMain.ResumeLayout(false);
             this.tlbMain.PerformLayout();
             this.ctxMenu.ResumeLayout(false);
+            this.ctxMenuRoot.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -588,6 +635,11 @@
         private System.Windows.Forms.TabPage tabParameters;
         private System.Windows.Forms.RichTextBox txtParameters;
         private System.Windows.Forms.ToolStripMenuItem mnuExplanPlan;
+        private System.Windows.Forms.ContextMenuStrip ctxMenuRoot;
+        private System.Windows.Forms.ToolStripMenuItem mnuShrink;
+        private System.Windows.Forms.ToolStripMenuItem mnuVaccum;
+        private System.Windows.Forms.ToolStripMenuItem mnuInfo;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
     }
 }
 

@@ -198,6 +198,8 @@ namespace LiteDB.Studio
             var system = root.Nodes.Add("System");
 
             root.ImageKey = "database";
+            root.ContextMenuStrip = ctxMenuRoot;
+
             system.ImageKey = system.SelectedImageKey = "folder";
 
             foreach (var key in _db.GetSystemCollections().OrderBy(x => x))
@@ -449,6 +451,12 @@ namespace LiteDB.Studio
         {
             var colname = tvwDatabase.SelectedNode.Text;
             var sql = string.Format(e.ClickedItem.Tag.ToString(), colname);
+            this.AddSqlSnippet(sql);
+        }
+
+        private void CtxMenuRoot_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            var sql = e.ClickedItem.Tag.ToString();
             this.AddSqlSnippet(sql);
         }
 
