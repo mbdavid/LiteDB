@@ -40,7 +40,7 @@ namespace LiteDB.Engine
             }
             finally
             {
-                _locker.ExitReserved(true);
+                _locker.ExitReserved(false);
             }
         }
     }
