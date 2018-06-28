@@ -14,12 +14,20 @@ namespace LiteDB.Engine
         /// </summary>
         public BsonDataReader ExecuteReader()
         {
+            return this.ExecuteReader(false);
+        }
+
+        /// <summary>
+        /// Find for documents in a collection using Query definition
+        /// </summary>
+        public BsonDataReader ExecuteReader(bool explainPlan)
+        {
             var transaction = _engine.GetTransaction(true, out var isNew);
 
             try
             {
                 // encapsulate all execution to catch any error
-                return new BsonDataReader(RunQuery(), _query);
+                return new BsonDataReader(RunQuery(), _query.Collection);
             }
             catch
             {
@@ -56,6 +64,21 @@ namespace LiteDB.Engine
 
                 // execute optimization before run query (will fill missing _query properties instance)
                 this.OptimizeQuery(snapshot);
+
+                // if execution is just to get explan plan, return as single document result
+                if (explainPlan)
+                {
+                    cursor.Timer.Stop();
+
+                    yield return _query.GetExplainPlan();
+
+                    if (isNew)
+                    {
+                        transaction.Dispose();
+                    }
+
+                    yield break;
+                }
 
                 var loader = _query.IsVirtual ?
                     (IDocumentLoader)_query.Index :

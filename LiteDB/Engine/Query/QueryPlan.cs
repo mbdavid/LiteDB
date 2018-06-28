@@ -121,74 +121,58 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get detail plan engine will execute
         /// </summary>
-        public string GetExplainPlan()
+        public BsonDocument GetExplainPlan()
         {
-            var sb = new StringBuilder();
-
-            sb.AppendLine("collection: " + this.Collection);
-            sb.AppendLine("index: " + this.Index.ToString() + " " + (this.Index.Order == Query.Ascending ? "ASC" : "DESC"));
-            sb.AppendLine("cost: " + this.IndexCost);
-
-            if (this.Filters.Count > 0)
+            var doc = new BsonDocument
             {
-                foreach(var filter in this.Filters)
+                ["collection"] = this.Collection,
+                ["index"] = new BsonDocument
                 {
-                    sb.AppendLine("filter: " + this.GetExpression(filter));
-                }
-            }
+                    ["name"] = this.Index.Name,
+                    ["mode"] = this.Index.ToString(),
+                    ["expr"] = this.IndexExpression,
+                    ["order"] = this.Index.Order,
+                    ["cost"] = (int)this.IndexCost
+                },
+                ["filters"] = new BsonArray(this.Filters.Select(x => new BsonValue
+                (
+                    this.GetExpression(x)
+                ))),
+                ["select"] = this.GetExpression(this.Select),
+                ["fields"] = new BsonArray(this.Fields.Select(x => new BsonValue(x))),
+                ["groupBy"] = this.GroupBy == null ?
+                    BsonValue.Null :
+                    new BsonDocument
+                    {
+                        ["expr"] = this.GetExpression(this.GroupBy),
+                        ["order"] = this.GroupByOrder
+                    },
+                ["orderBy"] = this.OrderBy == null ?
+                    BsonValue.Null :
+                    new BsonDocument
+                    {
+                        ["expr"] = this.GetExpression(this.OrderBy),
+                        ["order"] = this.Order
+                    },
+                ["orderByOrder"] = this.Order.ToString(),
+                ["limit"] = this.Limit,
+                ["offset"] = this.Offset,
+                ["keyOnly"] = this.KeyOnly,
+                ["aggregate"] = this.Aggregate
+            };
 
-            if (this.Select != null)
-            {
-                sb.AppendLine("select: " + this.GetExpression(this.Select));
-            }
 
-            if (this.Fields != null)
-            {
-                sb.AppendLine("fields: " + string.Join(", ", this.Fields));
-            }
-
-            if (this.GroupBy != null)
-            {
-                sb.AppendLine("groupBy: " + this.GetExpression(this.GroupBy) + (this.GroupByOrder == Query.Ascending ? " ASC" : " DESC"));
-            }
-
-            if (this.OrderBy != null)
-            {
-                sb.AppendLine("orderBy: " + this.GetExpression(this.OrderBy) + (this.Order == Query.Ascending ? " ASC" : " DESC"));
-            }
-
-            if (this.Limit != int.MaxValue)
-            {
-                sb.AppendLine("limit: " + this.Limit);
-            }
-
-            if (this.Offset > 0)
-            {
-                sb.AppendLine("offset: " + this.Offset);
-            }
-
-            if (this.KeyOnly)
-            {
-                sb.AppendLine("keyOnly: true");
-            }
-
-            if (this.Aggregate)
-            {
-                sb.AppendLine("aggregate: true");
-            }
-
-            return sb.ToString().Trim();
+            return doc;
         }
 
         /// <summary>
         /// Render an expression as string - add parameter if have any
         /// </summary>
-        private string GetExpression(BsonExpression expr)
+        private BsonValue GetExpression(BsonExpression expr)
         {
-            return expr.Source +
-                (expr.Parameters.Count > 0 ?
-                " >> @" + JsonSerializer.Serialize(expr.Parameters) :
-                "");
+            if (expr == null) return BsonValue.Null;
+
+            return expr.Source;
         }
 
         #endregion

@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             var reader = sql.Execute();
 
             // when request .NextResult() run another SqlParser
-            reader.NextResultFunc = () =>
+            reader.FetchNextResult += () =>
             {
                 // checks if has more tokens
                 if (tokenizer.Current.Type == TokenType.EOF) return null;

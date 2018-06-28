@@ -6,8 +6,6 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public enum BsonDataResultMode { Void, Single, Resultset }
-
     /// <summary>
     /// Class to read void, one or a collection of BsonValues. Used in SQL execution commands
     /// </summary>
@@ -15,24 +13,20 @@ namespace LiteDB
     {
         private BsonValue _current = null;
         private IEnumerator<BsonValue> _source = null;
-        private QueryPlan _query = null;
+        private string _collection = null;
         private bool _isFirst;
         private bool _hasValues;
-        private readonly BsonDataResultMode _mode;
 
         /// <summary>
-        /// Return type of data reader: Void, Single or Recordset
+        /// Handler function when NextResult() called - return null if no more data
         /// </summary>
-        public BsonDataResultMode Mode => _mode;
-
-        internal Func<BsonDataReader> NextResultFunc = () => null;
+        public event Func<BsonDataReader> FetchNextResult = null;
 
         /// <summary>
         /// Initialize with no value
         /// </summary>
         internal BsonDataReader()
         {
-            _mode = BsonDataResultMode.Void;
             _hasValues = false;
         }
 
@@ -41,7 +35,6 @@ namespace LiteDB
         /// </summary>
         internal BsonDataReader(BsonValue value)
         {
-            _mode = BsonDataResultMode.Single;
             _current = value;
             _isFirst = _hasValues = true;
         }
@@ -49,11 +42,10 @@ namespace LiteDB
         /// <summary>
         /// Initialize with an IEnumerable data source
         /// </summary>
-        internal BsonDataReader(IEnumerable<BsonValue> values, QueryPlan query)
+        internal BsonDataReader(IEnumerable<BsonValue> values, string collection)
         {
-            _mode = BsonDataResultMode.Resultset;
             _source = values.GetEnumerator();
-            _query = query;
+            _collection = collection;
 
             if (_source.MoveNext())
             {
@@ -68,18 +60,23 @@ namespace LiteDB
         public bool NextResult()
         {
             // execute func to request next data reader
-            var next = this.NextResultFunc();
+            var next = this.FetchNextResult?.Invoke();
 
             if (next == null) return false;
 
             _current = next._current;
             _source = next._source;
-            _query = next._query;
+            _collection = next._collection;
             _isFirst = next._isFirst;
             _hasValues = next._hasValues;
 
             return true;
         }
+
+        /// <summary>
+        /// Return true if data reader contains multiple values (recordset)
+        /// </summary>
+        public bool IsRecordset => _source != null;
 
         /// <summary>
         /// Return if has any value in result
@@ -94,12 +91,7 @@ namespace LiteDB
         /// <summary>
         /// Return collection name
         /// </summary>
-        public string Collection => _query?.Collection;
-
-        /// <summary>
-        /// Get query explain plan
-        /// </summary>
-        public string ExplainPlan => _query?.GetExplainPlan();
+        public string Collection => _collection;
 
         /// <summary>
         /// Move cursor to next result. Returns true if read was possible

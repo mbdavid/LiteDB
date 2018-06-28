@@ -37,16 +37,12 @@ namespace LiteDB.Engine
             // read `=`
             _tokenizer.ReadToken().Expect(TokenType.Equals);
 
-            var value = BsonValue.Null;
+            BsonValue value;
 
             // execute
             using (var result = this.Execute())
             {
-                if (result.Mode == BsonDataResultMode.Single)
-                {
-                    value = result.Current;
-                }
-                else if (result.Mode == BsonDataResultMode.Resultset)
+                if (result.IsRecordset)
                 {
                     var array = new BsonArray();
 
@@ -56,6 +52,10 @@ namespace LiteDB.Engine
                     }
 
                     value = array;
+                }
+                else
+                {
+                    value = result.Current ?? BsonValue.Null;
                 }
             }
 

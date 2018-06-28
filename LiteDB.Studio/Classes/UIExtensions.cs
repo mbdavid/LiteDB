@@ -136,25 +136,11 @@ namespace LiteDB.Studio
             cell.Tag = value;
         }
 
-        public static void BindBsonData(this RichTextBox txt, TaskData data, bool showExplainPlan)
+        public static void BindBsonData(this RichTextBox txt, TaskData data)
         {
             var index = 0;
 
             txt.Text = "";
-
-            if (showExplainPlan && data.ExplainPlan != null)
-            {
-                txt.AppendText("> ExplainPlan:" + Environment.NewLine, Color.Blue);
-                txt.AppendText(data.ExplainPlan + Environment.NewLine, Color.Blue);
-                txt.AppendText("============" + Environment.NewLine, Color.Blue);
-            }
-
-            if (data.Parameters.Keys.Count > 0)
-            {
-                txt.AppendText("> Output:" + Environment.NewLine, Color.DarkOrchid);
-                txt.AppendText(JsonSerializer.Serialize(data.Parameters, true) + Environment.NewLine, Color.DarkOrchid);
-                txt.AppendText("============" + Environment.NewLine, Color.DarkOrchid);
-            }
 
             if (data.Result?.Count > 0)
             {

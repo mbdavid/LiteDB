@@ -322,7 +322,7 @@ namespace LiteDB.Studio
                     }
                     else
                     {
-                        txtResult.BindBsonData(data, chkExplainPlan.Checked);
+                        txtResult.BindBsonData(data);
                         grdResult.Clear();
                     }
                 }

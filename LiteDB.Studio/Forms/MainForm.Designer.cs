@@ -40,7 +40,6 @@
             this.tabGrid = new System.Windows.Forms.TabPage();
             this.grdResult = new System.Windows.Forms.DataGridView();
             this.tabText = new System.Windows.Forms.TabPage();
-            this.chkExplainPlan = new System.Windows.Forms.CheckBox();
             this.txtResult = new System.Windows.Forms.RichTextBox();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.txtLog = new System.Windows.Forms.RichTextBox();
@@ -67,6 +66,9 @@
             this.mnuIndexes = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuSep1 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuDropCollection = new System.Windows.Forms.ToolStripMenuItem();
+            this.tabParameters = new System.Windows.Forms.TabPage();
+            this.txtParameters = new System.Windows.Forms.RichTextBox();
+            this.mnuExplanPlan = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -83,6 +85,7 @@
             this.stbStatus.SuspendLayout();
             this.tlbMain.SuspendLayout();
             this.ctxMenu.SuspendLayout();
+            this.tabParameters.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtFileName
@@ -183,6 +186,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabResult.Controls.Add(this.tabGrid);
             this.tabResult.Controls.Add(this.tabText);
+            this.tabResult.Controls.Add(this.tabParameters);
             this.tabResult.Controls.Add(this.tabLog);
             this.tabResult.Location = new System.Drawing.Point(3, 3);
             this.tabResult.Name = "tabResult";
@@ -220,7 +224,6 @@
             // 
             // tabText
             // 
-            this.tabText.Controls.Add(this.chkExplainPlan);
             this.tabText.Controls.Add(this.txtResult);
             this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
@@ -229,19 +232,6 @@
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
-            // 
-            // chkExplainPlan
-            // 
-            this.chkExplainPlan.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.chkExplainPlan.AutoSize = true;
-            this.chkExplainPlan.Checked = true;
-            this.chkExplainPlan.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkExplainPlan.Location = new System.Drawing.Point(7, 306);
-            this.chkExplainPlan.Name = "chkExplainPlan";
-            this.chkExplainPlan.Size = new System.Drawing.Size(121, 19);
-            this.chkExplainPlan.TabIndex = 1;
-            this.chkExplainPlan.Text = "Show explain plan";
-            this.chkExplainPlan.UseVisualStyleBackColor = true;
             // 
             // txtResult
             // 
@@ -253,7 +243,7 @@
             this.txtResult.Location = new System.Drawing.Point(6, 5);
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
-            this.txtResult.Size = new System.Drawing.Size(796, 294);
+            this.txtResult.Size = new System.Drawing.Size(796, 322);
             this.txtResult.TabIndex = 0;
             this.txtResult.Text = "";
             // 
@@ -277,7 +267,7 @@
             this.txtLog.Location = new System.Drawing.Point(6, 6);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(796, 317);
+            this.txtLog.Size = new System.Drawing.Size(796, 315);
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             this.txtLog.WordWrap = false;
@@ -431,13 +421,14 @@
             // 
             this.ctxMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mnuQuery,
+            this.mnuExplanPlan,
             this.toolStripSeparator2,
             this.mnuAnalyze,
             this.mnuIndexes,
             this.mnuSep1,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 104);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 148);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuQuery
@@ -482,6 +473,39 @@
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
             // 
+            // tabParameters
+            // 
+            this.tabParameters.Controls.Add(this.txtParameters);
+            this.tabParameters.Location = new System.Drawing.Point(4, 24);
+            this.tabParameters.Name = "tabParameters";
+            this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
+            this.tabParameters.Size = new System.Drawing.Size(808, 333);
+            this.tabParameters.TabIndex = 5;
+            this.tabParameters.Text = "Parameters";
+            this.tabParameters.UseVisualStyleBackColor = true;
+            // 
+            // txtParameters
+            // 
+            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtParameters.HideSelection = false;
+            this.txtParameters.Location = new System.Drawing.Point(6, 6);
+            this.txtParameters.Name = "txtParameters";
+            this.txtParameters.Size = new System.Drawing.Size(796, 321);
+            this.txtParameters.TabIndex = 3;
+            this.txtParameters.Text = "";
+            // 
+            // mnuExplanPlan
+            // 
+            this.mnuExplanPlan.Image = global::LiteDB.Studio.Properties.Resources.table_sort;
+            this.mnuExplanPlan.Name = "mnuExplanPlan";
+            this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
+            this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
+            this.mnuExplanPlan.Text = "Explain Plan";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -510,13 +534,13 @@
             this.tabGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).EndInit();
             this.tabText.ResumeLayout(false);
-            this.tabText.PerformLayout();
             this.tabLog.ResumeLayout(false);
             this.stbStatus.ResumeLayout(false);
             this.stbStatus.PerformLayout();
             this.tlbMain.ResumeLayout(false);
             this.tlbMain.PerformLayout();
             this.ctxMenu.ResumeLayout(false);
+            this.tabParameters.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -552,7 +576,6 @@
         private System.Windows.Forms.ToolStripMenuItem mnuDropCollection;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.RichTextBox txtLog;
-        private System.Windows.Forms.CheckBox chkExplainPlan;
         private System.Windows.Forms.ToolStripMenuItem mnuAnalyze;
         private System.Windows.Forms.ToolStripSeparator mnuSep1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -561,6 +584,9 @@
         private System.Windows.Forms.ToolStripButton btnRollback;
         private System.Windows.Forms.ToolStripMenuItem mnuQuery;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.TabPage tabParameters;
+        private System.Windows.Forms.RichTextBox txtParameters;
+        private System.Windows.Forms.ToolStripMenuItem mnuExplanPlan;
     }
 }
 

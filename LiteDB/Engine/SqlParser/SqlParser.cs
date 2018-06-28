@@ -26,7 +26,10 @@ namespace LiteDB.Engine
 
             switch(first.Value.ToUpper())
             {
-                case "SELECT": return this.ParseSelect();
+                case "SELECT": return this.ParseSelect(false);
+                case "EXPLAIN":
+                    _tokenizer.ReadToken().Expect("SELECT");
+                    return this.ParseSelect(true);
                 case "INSERT": return this.ParseInsert();
                 case "DELETE": return this.ParseDelete();
                 case "UPDATE": return this.ParseUpadateReplace(UpdateMode.Merge);
