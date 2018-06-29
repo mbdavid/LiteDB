@@ -26,15 +26,8 @@ namespace LiteDB.Engine
 
             try
             {
-                if (_query.Aggregate)
-                {
-                    return new BsonDataReader(RunQuery().FirstOrDefault() ?? BsonValue.Null, _query.Collection);
-                }
-                else
-                {
-                    // encapsulate all execution to catch any error
-                    return new BsonDataReader(RunQuery(), _query.Collection);
-                }
+                // encapsulate all execution to catch any error
+                return new BsonDataReader(RunQuery(), _query.Collection);
             }
             catch
             {
@@ -218,7 +211,7 @@ namespace LiteDB.Engine
         /// </summary>
         public BsonValue Aggregate(BsonExpression select)
         {
-            _query.Select = select;
+            _query.Select = select ?? throw new ArgumentNullException(nameof(select));
             _query.Aggregate = true;
 
             return this.ToValues().First();

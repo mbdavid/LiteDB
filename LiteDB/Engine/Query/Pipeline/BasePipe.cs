@@ -132,17 +132,27 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Pipe: Transaform final result appling expressin transform. Expression must return an BsonDocument (or will be converter into a new documnet)
+        /// Pipe: Transaform final result appling expressin transform. Can return document or simple value
         /// </summary>
-        protected IEnumerable<BsonValue> Select(IEnumerable<BsonDocument> source, BsonExpression expr)
+        protected IEnumerable<BsonValue> Select(IEnumerable<BsonDocument> source, BsonExpression select)
         {
-            foreach(var doc in source)
+            if (select == null)
             {
-                var result = expr.Execute(doc, true);
-
-                foreach(var value in result)
+                foreach (var value in source)
                 {
                     yield return value;
+                }
+            }
+            else
+            {
+                foreach (var doc in source)
+                {
+                    var result = select.Execute(doc, true);
+
+                    foreach (var value in result)
+                    {
+                        yield return value;
+                    }
                 }
             }
         }

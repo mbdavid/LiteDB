@@ -110,14 +110,14 @@ namespace LiteDB.Engine
         /// <summary>
         /// Transform groups of documents into single documents enumerable and apply select expression into group or return first document from each group
         /// </summary>
-        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression expr)
+        private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
         {
             foreach (var group in groups)
             {
                 // transfom group result if contains select expression
-                if (expr != null)
+                if (select != null)
                 {
-                    var result = expr.Execute(group, true);
+                    var result = select.Execute(group, true);
 
                     var value = result.First();
 

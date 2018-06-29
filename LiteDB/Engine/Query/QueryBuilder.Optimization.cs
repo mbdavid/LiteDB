@@ -195,23 +195,18 @@ namespace LiteDB.Engine
         /// </summary>
         private void LoadQueryFields()
         {
-            // if select was not defined, define as full document read
-            if (_query.Select == null)
-            {
-                _query.Select = BsonExpression.Create("$");
-            }
-
             // load only query fields (null return all document)
-            _query.Fields = _query.Select.Fields;
+            _query.Fields = new HashSet<string>();
 
             // if partial document load, add filter, groupby, orderby fields too
+            _query.Fields.AddRange(_query.Select.Fields);
             _query.Fields.AddRange(_query.Filters.SelectMany(x => x.Fields));
             _query.Fields.AddRange(_query.GroupBy?.Fields);
             _query.Fields.AddRange(_query.OrderBy?.Fields);
 
-            if (_query.Fields.Contains("$"))
+            if (_query.Fields.Contains("$") || _query.Fields.Count == 0)
             {
-                _query.Fields = new HashSet<string> { "$" };
+                _query.Fields.Add("$");
             }
             else if(_query.Fields.Count == 1 && _query.IndexExpression == "$." + _query.Fields.First())
             {

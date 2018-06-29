@@ -24,7 +24,7 @@ namespace LiteDB.Engine
             var token = _tokenizer.LookAhead();
             var aggregate = false;
 
-            if (token.Is("AGGREGATE"))
+            if (token.Is("ALL"))
             {
                 aggregate = true;
                 _tokenizer.ReadToken();

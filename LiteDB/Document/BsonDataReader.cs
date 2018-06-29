@@ -75,11 +75,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if data reader contains multiple values (recordset)
-        /// </summary>
-        public bool IsRecordset => _source != null;
-
-        /// <summary>
         /// Return if has any value in result
         /// </summary>
         public bool HasValues => _hasValues;

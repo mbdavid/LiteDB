@@ -99,7 +99,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Transaformation data before return - if null there is no transform (return document)
         /// </summary>
-        public BsonExpression Select { get; set; } = null;
+        public BsonExpression Select { get; set; }
 
         /// <summary>
         /// Get fields name that will be deserialize from disk

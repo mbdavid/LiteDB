@@ -51,21 +51,14 @@ namespace LiteDB.Engine
                 source = this.Include(source, path);
             }
 
-            // transfom result if contains select expression
-            if (query.Select != null)
+            // if is an aggregate query, run select transform over all resultset - will return a single value
+            if (query.Aggregate)
             {
-                // if is an aggregate query, run select transform over all resultset - will return a single value
-                if (query.Aggregate)
-                {
-                    return query.Select.Execute(source);
-                }
-                
-                // otherwise, run select transform in each document result
-                return this.Select(source, query.Select);
+                return query.Select.Execute(source);
             }
-
-            // return document pipe
-            return source;
+                
+            // otherwise, run select transform in each document result
+            return this.Select(source, query.Select);
         }
     }
 }

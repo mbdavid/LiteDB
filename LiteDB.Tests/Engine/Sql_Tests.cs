@@ -63,11 +63,11 @@ namespace LiteDB.Tests.Engine
             Assert.AreEqual(1, output["insert1"].AsInt32, "Insert into single document");
             Assert.AreEqual(3, output["insert3"].AsInt32, "Insert into multi document");
 
-            Assert.AreEqual(1, output["int"][0].AsInt32, "AutoId using Int32");
-            Assert.AreEqual(1, output["long"][0].AsInt32, "AutoId using Long");
-            Assert.AreEqual(1, output["date"][0].AsInt32, "AutoId using Date");
-            Assert.AreEqual(1, output["guid"][0].AsInt32, "AutoId using Guid");
-            Assert.AreEqual(1, output["objectid"][0].AsInt32, "AutoId using ObjectId");
+            Assert.AreEqual(1, output["int"].AsInt32, "AutoId using Int32");
+            Assert.AreEqual(1, output["long"].AsInt32, "AutoId using Long");
+            Assert.AreEqual(1, output["date"].AsInt32, "AutoId using Date");
+            Assert.AreEqual(1, output["guid"].AsInt32, "AutoId using Guid");
+            Assert.AreEqual(1, output["objectid"].AsInt32, "AutoId using ObjectId");
         }
 
         [TestMethod]
@@ -76,7 +76,7 @@ namespace LiteDB.Tests.Engine
             var output = this.Run("Update", db => db.Insert("person", DataGen.Person(1, 10)));
 
             Assert.AreEqual(1, output["count1"].AsInt32, "Update single document");
-            Assert.AreEqual(99, output["newAge"][0].AsInt32, "Document was updated");
+            Assert.AreEqual(99, output["newAge"].AsInt32, "Document was updated");
         }
     }
 }
