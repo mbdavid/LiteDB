@@ -11,9 +11,10 @@ namespace LiteDB.Engine
         ///    [ INTO {newcollection} [ : {type} ] ]
         ///    [ FROM {collection} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
-        ///   [ WHERE {whereExpr} ]
+        ///   [ WHERE {filterExpr} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ GROUP BY {groupByExpr} [ ASC | DESC ] ]
+        ///  [ HAVING {filterExpr} ]
         ///   [ ORDER BY {orderByExpr} [ ASC | DESC ] ]
         ///   [ LIMIT {number} ]
         ///  [ OFFSET {number} ]
@@ -109,6 +110,18 @@ namespace LiteDB.Engine
                 }
 
                 query.GroupBy(groupBy, groupByOrder);
+
+                ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
+
+                if (ahead.Is("HAVING"))
+                {
+                    // read HAVING keyword
+                    _tokenizer.ReadToken();
+
+                    var having = BsonExpression.Create(_tokenizer, _parameters);
+
+                    query.Having(having);
+                }
             }
 
             ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);

@@ -49,6 +49,12 @@ namespace LiteDB.Engine
             // now, get only first document from each group
             source = this.SelectGroupBy(groups, query.Select);
 
+            // if contains having clause, run after select group by
+            if (query.Having != null)
+            {
+                source = this.Having(source, query.Having);
+            }
+
             // if contains OrderBy, must be run on end (after groupby select)
             if (query.OrderBy != null)
             {
@@ -140,6 +146,21 @@ namespace LiteDB.Engine
             }
         }
 
+        /// <summary>
+        /// Pipe: Filter source using having bool expression to skip or include on final resultset
+        /// </summary>
+        protected IEnumerable<BsonDocument> Having(IEnumerable<BsonDocument> source, BsonExpression having)
+        {
+            foreach (var doc in source)
+            {
+                var result = having.Execute(doc, true).First();
+
+                if (result.IsBoolean && result.AsBoolean)
+                {
+                    yield return doc;
+                }
+            }
+        }
         /// <summary>
         /// Bool inside a class to be used as "ref" parameter on ienumerable
         /// </summary>

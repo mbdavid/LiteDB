@@ -77,6 +77,11 @@ namespace LiteDB.Engine
         public BsonExpression GroupBy { get; set; } = null;
 
         /// <summary>
+        /// Filter expression running over GroupBy result
+        /// </summary>
+        public BsonExpression Having { get; set; } = null;
+
+        /// <summary>
         /// Define group by order
         /// </summary>
         public int GroupByOrder { get; set; } = Query.Ascending;
@@ -126,6 +131,7 @@ namespace LiteDB.Engine
             var doc = new BsonDocument
             {
                 ["collection"] = this.Collection,
+                ["snaphost"] = this.ForUpdate ? "write" : "read",
                 ["index"] = new BsonDocument
                 {
                     ["name"] = this.Index.Name,
@@ -134,32 +140,49 @@ namespace LiteDB.Engine
                     ["order"] = this.Index.Order,
                     ["cost"] = (int)this.IndexCost
                 },
-                ["filters"] = new BsonArray(this.Filters.Select(x => new BsonValue
-                (
-                    this.GetExpression(x)
-                ))),
-                ["select"] = this.GetExpression(this.Select),
-                ["fields"] = new BsonArray(this.Fields.Select(x => new BsonValue(x))),
+                ["load"] = new BsonDocument
+                {
+                    ["fields"] = this.KeyOnly ?
+                        BsonValue.Null :
+                        new BsonArray(this.Fields.Select(x => new BsonValue(x))),
+                    ["keyOnly"] = this.KeyOnly
+                },
+                ["pipe"] = this.GroupBy == null ? "queryPipe" : "groupByPipe",
+                ["includeBefore"] = this.IncludeBefore.Count == 0 ?
+                    BsonValue.Null :
+                    new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source))),
+                ["filters"] = this.Filters.Count == 0 ?
+                    BsonValue.Null :
+                    new BsonArray(this.Filters.Select(x => new BsonValue(x.Source))),
+                ["includeAfter"] = this.IncludeAfter.Count == 0 ?
+                    BsonValue.Null :
+                    new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source))),
                 ["groupBy"] = this.GroupBy == null ?
                     BsonValue.Null :
                     new BsonDocument
                     {
-                        ["expr"] = this.GetExpression(this.GroupBy),
-                        ["order"] = this.GroupByOrder
+                        ["expr"] = this.GroupBy.Source,
+                        ["order"] = this.GroupByOrder,
+                        ["select"] = this.Select.Source,
+                        ["having"] = this.Having.Source,
                     },
                 ["orderBy"] = this.OrderBy == null ?
                     BsonValue.Null :
                     new BsonDocument
                     {
-                        ["expr"] = this.GetExpression(this.OrderBy),
-                        ["order"] = this.Order
+                        ["expr"] = this.OrderBy.Source,
+                        ["order"] = this.Order,
                     },
                 ["limit"] = this.Limit,
                 ["offset"] = this.Offset,
-                ["keyOnly"] = this.KeyOnly,
-                ["aggregate"] = this.Aggregate
+                ["select"] = this.GroupBy != null ?
+                    BsonValue.Null :
+                    new BsonDocument
+                    {
+                        ["expr"] = this.Select.Source,
+                        ["aggregate"] = this.Aggregate
+                    }
             };
-
 
             return doc;
         }

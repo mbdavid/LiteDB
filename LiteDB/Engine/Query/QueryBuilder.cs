@@ -135,6 +135,20 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Define Having filter expression (need GroupBy definition)
+        /// </summary>
+        public QueryBuilder Having(BsonExpression filter)
+        {
+            if (filter == null) throw new ArgumentNullException(nameof(filter));
+            if (_query.GroupBy == null) throw new InvalidOperationException("HAVING need GROUP BY expression");
+            if (_optimized) throw new InvalidOperationException("Having() is not avaiable in executed query");
+
+            _query.Having = filter;
+
+            return this;
+        }
+
+        /// <summary>
         /// Limit your resultset
         /// </summary>
         public QueryBuilder Limit(int limit)
@@ -164,18 +178,6 @@ namespace LiteDB.Engine
 
             _query.Select = select;
             _query.Aggregate = aggregate;
-
-            return this;
-        }
-
-        /// <summary>
-        /// If use keyOnly = true, do not load document - use only index key
-        /// </summary>
-        public QueryBuilder Select(bool keyOnly)
-        {
-            if (_optimized) throw new InvalidOperationException("Select() is not avaiable in executed query");
-
-            _query.KeyOnly = keyOnly;
 
             return this;
         }

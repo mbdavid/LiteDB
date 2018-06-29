@@ -33,7 +33,6 @@ namespace LiteDB.Studio
                 this.Result = new List<BsonValue>();
                 this.LimitExceeded = false;
                 this.Collection = reader.Collection;
-                //this.ExplainPlan = reader.ExplainPlan;
 
                 var index = 0;
 

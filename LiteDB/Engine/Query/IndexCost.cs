@@ -11,7 +11,20 @@ namespace LiteDB.Engine
     internal class IndexCost
     {
         public long Cost { get; private set; }
+
+        /// <summary>
+        /// Get filtered expression: "$._id = 10"
+        /// </summary>
         public BsonExpression Expression { get; private set; }
+
+        /// <summary>
+        /// Get index expression only: "$._id"
+        /// </summary>
+        public string IndexExpression { get; private set; }
+
+        /// <summary>
+        /// Get created Index instance used on query
+        /// </summary>
         public Index Index { get; private set; }
 
         public IndexCost(CollectionIndex index, BsonExpression expr, BsonExpression value)
@@ -19,6 +32,7 @@ namespace LiteDB.Engine
             // copy root expression parameters to my value expression
             expr.Parameters.CopyTo(value.Parameters);
 
+            this.IndexExpression = index.Expression;
             this.Expression = expr;
 
             // create index instances

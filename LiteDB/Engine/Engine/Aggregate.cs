@@ -61,7 +61,6 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Index(index)
-                .Select(true)
                 .Count();
         }
 
@@ -72,7 +71,6 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Index(index)
-                .Select(true)
                 .LongCount();
         }
 
@@ -103,7 +101,6 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Index(index)
-                .Select(true)
                 .Exists();
         }
 

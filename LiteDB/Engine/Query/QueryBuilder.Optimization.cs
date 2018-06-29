@@ -38,6 +38,9 @@ namespace LiteDB.Engine
             // load all fields to be deserialize in document
             this.LoadQueryFields();
 
+            // do some validations
+            if (_query.GroupBy != null && _query.Aggregate) throw new NotSupportedException("GroupBy and Aggregate are not support together");
+
             _optimized = true;
         }
 
@@ -71,7 +74,7 @@ namespace LiteDB.Engine
                 {
                     _query.Index = indexCost.Index;
                     _query.IndexCost = indexCost.Cost;
-                    _query.IndexExpression = indexCost.Expression.Source;
+                    _query.IndexExpression = indexCost.Expression.Left.Source;
                 }
                 else
                 {
@@ -202,10 +205,12 @@ namespace LiteDB.Engine
             _query.Fields.AddRange(_query.Select.Fields);
             _query.Fields.AddRange(_query.Filters.SelectMany(x => x.Fields));
             _query.Fields.AddRange(_query.GroupBy?.Fields);
+            _query.Fields.AddRange(_query.Having?.Fields);
             _query.Fields.AddRange(_query.OrderBy?.Fields);
 
             if (_query.Fields.Contains("$") || _query.Fields.Count == 0)
             {
+                _query.Fields.Clear();
                 _query.Fields.Add("$");
             }
             else if(_query.Fields.Count == 1 && _query.IndexExpression == "$." + _query.Fields.First())

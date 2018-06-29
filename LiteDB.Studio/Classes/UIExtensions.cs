@@ -157,7 +157,7 @@ namespace LiteDB.Studio
             }
             else
             {
-                txt.AppendText("void", Color.Gray);
+                txt.AppendText("no resultset", Color.Gray);
             }
 
             txt.SelectionStart = 0;
