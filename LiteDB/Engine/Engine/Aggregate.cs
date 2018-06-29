@@ -120,22 +120,20 @@ namespace LiteDB.Engine
         /// <summary>
         /// Apply aggregation expression over collection. eg: db.Aggregate("col", "SUM(total)")
         /// </summary>
-        public BsonValue Aggregate(string collection, BsonExpression expr)
+        public BsonValue Aggregate(string collection, BsonExpression select)
         {
             return this.Query(collection)
-                .Select(expr)
-                .Aggregate();
+                .Aggregate(select);
         }
 
         /// <summary>
         /// Apply aggregation expression over collection. eg: db.Aggregate("col", "SUM(total)", "_id > 10")
         /// </summary>
-        public BsonValue Aggregate(string collection, BsonExpression expr, BsonExpression query)
+        public BsonValue Aggregate(string collection, BsonExpression select, BsonExpression query)
         {
             return this.Query(collection)
                 .Where(query)
-                .Select(expr)
-                .Aggregate();
+                .Aggregate(select);
         }
     }
 }

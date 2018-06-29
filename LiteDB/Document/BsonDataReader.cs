@@ -33,10 +33,11 @@ namespace LiteDB
         /// <summary>
         /// Initialize with a single value
         /// </summary>
-        internal BsonDataReader(BsonValue value)
+        internal BsonDataReader(BsonValue value, string collection = null)
         {
             _current = value;
             _isFirst = _hasValues = true;
+            _collection = collection;
         }
 
         /// <summary>

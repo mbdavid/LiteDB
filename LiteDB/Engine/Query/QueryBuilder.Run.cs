@@ -26,8 +26,15 @@ namespace LiteDB.Engine
 
             try
             {
-                // encapsulate all execution to catch any error
-                return new BsonDataReader(RunQuery(), _query.Collection);
+                if (_query.Aggregate)
+                {
+                    return new BsonDataReader(RunQuery().FirstOrDefault() ?? BsonValue.Null, _query.Collection);
+                }
+                else
+                {
+                    // encapsulate all execution to catch any error
+                    return new BsonDataReader(RunQuery(), _query.Collection);
+                }
             }
             catch
             {
@@ -207,13 +214,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Execute query running SELECT expression over all resultset
+        /// Execute query running SELECT expression over all resultset. Must return exactly 1 value (BsonNull if not result)
         /// </summary>
-        public BsonValue Aggregate()
+        public BsonValue Aggregate(BsonExpression select)
         {
+            _query.Select = select;
             _query.Aggregate = true;
 
-            return this.ExecuteReader().Current;
+            return this.ToValues().First();
         }
 
         /// <summary>

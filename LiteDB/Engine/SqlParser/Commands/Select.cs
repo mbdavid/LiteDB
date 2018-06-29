@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        ///    SELECT {selectExpr}
+        ///    SELECT [ AGGREGATE ] {selectExpr}
         ///    [ INTO {newcollection} [ : {type} ] ]
         ///    [ FROM {collection} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
@@ -21,6 +21,15 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonDataReader ParseSelect(bool explainPlan)
         {
+            var token = _tokenizer.LookAhead();
+            var aggregate = false;
+
+            if (token.Is("AGGREGATE"))
+            {
+                aggregate = true;
+                _tokenizer.ReadToken();
+            }
+
             // read required SELECT <expr>
             var selectExpr = BsonExpression.Create(_tokenizer, _parameters);
             string into = null;
@@ -54,7 +63,7 @@ namespace LiteDB.Engine
 
             // initialize query builder
             var query = _engine.Query(collection)
-                .Select(selectExpr);
+                .Select(selectExpr, aggregate);
 
             var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 

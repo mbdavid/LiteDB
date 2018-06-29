@@ -155,14 +155,15 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Transform your output document using this select expression
+        /// Transform your output document using this select expression. Use aggregate = true to run Select expression over all resultset
         /// </summary>
-        public QueryBuilder Select(BsonExpression select)
+        public QueryBuilder Select(BsonExpression select, bool aggregate = false)
         {
             if (select == null) throw new ArgumentNullException(nameof(select));
             if (_optimized) throw new InvalidOperationException("Select() is not avaiable in executed query");
 
             _query.Select = select;
+            _query.Aggregate = aggregate;
 
             return this;
         }
