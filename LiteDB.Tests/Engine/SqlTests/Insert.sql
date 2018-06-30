@@ -21,9 +21,9 @@ INSERT INTO col_datatype:guid     VALUES { is_guid: true };
 INSERT INTO col_datatype:objectid VALUES { is_objectid: true };
 
 -- SELECT data into output parameters (SELECT always return an BsonArray value)
-SET @int      = SELECT AGGREGATE COUNT($) FROM col_datatype WHERE is_int = true;
-SET @long     = SELECT AGGREGATE COUNT($) FROM col_datatype WHERE is_long = true;
-SET @date     = SELECT AGGREGATE COUNT($) FROM col_datatype WHERE is_date = true;
-SET @guid     = SELECT AGGREGATE COUNT($) FROM col_datatype WHERE is_guid = true;
-SET @objectid = SELECT AGGREGATE COUNT($) FROM col_datatype WHERE is_objectid = true;
+SET @int      = SELECT ALL COUNT($) FROM col_datatype WHERE is_int = true;
+SET @long     = SELECT ALL COUNT($) FROM col_datatype WHERE is_long = true;
+SET @date     = SELECT ALL COUNT($) FROM col_datatype WHERE is_date = true;
+SET @guid     = SELECT ALL COUNT($) FROM col_datatype WHERE is_guid = true;
+SET @objectid = SELECT ALL COUNT($) FROM col_datatype WHERE is_objectid = true;
 

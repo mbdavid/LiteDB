@@ -84,8 +84,10 @@ namespace LiteDB.Tests.Engine
         {
             var output = this.Run("Query", db => db.Insert("person", DataGen.Person(1, 1000)));
 
+            Assert.AreEqual("Brendan Maxwell", output["name100"].AsString);
+            Assert.AreEqual("Brendan Maxwell", output["nameAll"][100].AsString);
 
-            Assert.AreEqual(6, output["groupBy1"].AsArray.Count);
+            Assert.AreEqual(5, output["groupBy1"].AsArray.Count);
         }
     }
 }
