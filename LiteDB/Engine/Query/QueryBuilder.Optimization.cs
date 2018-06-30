@@ -202,7 +202,7 @@ namespace LiteDB.Engine
             _query.Fields = new HashSet<string>();
 
             // if partial document load, add filter, groupby, orderby fields too
-            _query.Fields.AddRange(_query.Select.Fields);
+            _query.Fields.AddRange(_query.Select?.Fields);
             _query.Fields.AddRange(_query.Filters.SelectMany(x => x.Fields));
             _query.Fields.AddRange(_query.GroupBy?.Fields);
             _query.Fields.AddRange(_query.Having?.Fields);

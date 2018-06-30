@@ -164,13 +164,13 @@ namespace LiteDB.Engine
                         ["expr"] = this.GroupBy.Source,
                         ["order"] = this.GroupByOrder,
                         ["select"] = this.Select.Source,
-                        ["having"] = this.Having.Source,
+                        ["having"] = this.Having?.Source,
                     },
                 ["orderBy"] = this.OrderBy == null ?
                     BsonValue.Null :
                     new BsonDocument
                     {
-                        ["expr"] = this.OrderBy.Source,
+                        ["expr"] = this.OrderBy?.Source,
                         ["order"] = this.Order,
                     },
                 ["limit"] = this.Limit,

@@ -65,6 +65,7 @@ namespace LiteDB.Engine
                     if (where != null) query = query.Where(where);
 
                     var docs = query
+                        .Select("$")
                         .ForUpdate()
                         .ToEnumerable();
 
