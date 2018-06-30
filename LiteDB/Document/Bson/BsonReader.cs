@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -32,7 +33,9 @@ namespace LiteDB
         {
             var length = reader.ReadInt32();
             var end = reader.BaseStream.Position + length - 5;
-            var remaining = fields == null || fields.Contains("$") ? null : new HashSet<string>(fields);
+            var remaining = fields == null || fields.Count == 0 ? null : new HashSet<string>(fields);
+
+            DEBUG(remaining != null && remaining.Contains("$"), "if contains $, should be be empty/full hash");
 
             var doc = new BsonDocument();
 

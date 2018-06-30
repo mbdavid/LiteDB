@@ -17,7 +17,7 @@ namespace LiteDB.Engine
         public override IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
-            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.First());
+            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
 
             // do includes in result before filter
             foreach (var path in query.IncludeBefore)
@@ -31,10 +31,10 @@ namespace LiteDB.Engine
                 source = this.Filter(source, expr);
             }
 
-            // pipe: orderby using groupy expression
-            if (query.RunOrderByOverGroupBy)
+            // pipe: if groupBy order is 0, do not need sort (already sorted by index)
+            if (query.GroupBy.Order != 0)
             {
-                source = this.OrderBy(source, query.GroupBy, query.GroupByOrder, 0, int.MaxValue);
+                source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
             }
 
             // do includes in result before filter
@@ -44,22 +44,22 @@ namespace LiteDB.Engine
             }
 
             // apply groupby
-            var groups = this.GroupBy(source, query.GroupBy);
+            var groups = this.GroupBy(source, query.GroupBy.Expression);
 
             // now, get only first document from each group
-            source = this.SelectGroupBy(groups, query.Select);
+            source = this.SelectGroupBy(groups, query.GroupBy.Select);
 
             // if contains having clause, run after select group by
-            if (query.Having != null)
+            if (query.GroupBy.Having != null)
             {
-                source = this.Having(source, query.Having);
+                source = this.Having(source, query.GroupBy.Having);
             }
 
             // if contains OrderBy, must be run on end (after groupby select)
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit);
+                source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, query.Offset, query.Limit);
             }
             else
             {

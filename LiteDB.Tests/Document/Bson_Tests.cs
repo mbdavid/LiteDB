@@ -115,7 +115,7 @@ namespace LiteDB.Tests.Document
             Assert.AreEqual(src["Last"].AsInt32, doc3["Last"].AsInt32);
 
             // read all document
-            var doc4 = BsonSerializer.Deserialize(bson, false, new HashSet<string>(new string[] { "$" }));
+            var doc4 = BsonSerializer.Deserialize(bson, false);
 
             Assert.AreEqual(src.ToString(), doc4.ToString());
 

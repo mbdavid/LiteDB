@@ -12,7 +12,6 @@ namespace LiteDB.Engine
         ///    [ FROM {collection} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {filterExpr} ]
-        /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ GROUP BY {groupByExpr} [ ASC | DESC ] ]
         ///  [ HAVING {filterExpr} ]
         ///   [ ORDER BY {orderByExpr} [ ASC | DESC ] ]
@@ -121,19 +120,6 @@ namespace LiteDB.Engine
                     var having = BsonExpression.Create(_tokenizer, _parameters);
 
                     query.Having(having);
-                }
-            }
-
-            ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
-
-            if (ahead.Is("INCLUDE"))
-            {
-                // read second INCLUDE (after)
-                _tokenizer.ReadToken();
-
-                foreach (var path in this.ParseListOfExpressions())
-                {
-                    query.Include(path);
                 }
             }
 

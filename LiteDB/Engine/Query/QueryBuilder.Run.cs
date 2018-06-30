@@ -27,7 +27,7 @@ namespace LiteDB.Engine
             try
             {
                 // encapsulate all execution to catch any error
-                return new BsonDataReader(RunQuery(), _query.Collection);
+                return new BsonDataReader(RunQuery(), _collection);
             }
             catch
             {
@@ -38,13 +38,13 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonValue> RunQuery()
             {
-                var snapshot = transaction.CreateSnapshot(_query.ForUpdate ? LockMode.Write : LockMode.Read, _query.Collection, false);
+                var snapshot = transaction.CreateSnapshot(_forUpdate ? LockMode.Write : LockMode.Read, _collection, false);
                 var cursor = snapshot.NewCursor();
 
                 // if virtual collection, create a virtual collection page
-                if (_query.IsVirtual)
+                if (_index is IndexVirtual)
                 {
-                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_query.Collection);
+                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
                 }
 
                 var data = new DataService(snapshot);
@@ -63,14 +63,14 @@ namespace LiteDB.Engine
                 }
 
                 // execute optimization before run query (will fill missing _query properties instance)
-                this.OptimizeQuery(snapshot);
+                var query = this.OptimizeQuery(snapshot);
 
                 // if execution is just to get explan plan, return as single document result
                 if (explainPlan)
                 {
                     cursor.Timer.Stop();
 
-                    yield return _query.GetExplainPlan();
+                    yield return query.GetExplainPlan();
 
                     if (isNew)
                     {
@@ -80,17 +80,17 @@ namespace LiteDB.Engine
                     yield break;
                 }
 
-                var loader = _query.IsVirtual ? (IDocumentLoader)_query.Index :
-                    (_query.IsIndexKeyOnly ?
-                        new IndexKeyLoader(indexer, _query.Fields.First()) :
-                        (IDocumentLoader)new DocumentLoader(data, _engine.Settings.UtcDate, _query.Fields));
+                var loader = query.Index as IDocumentLoader ??
+                    (query.IsIndexKeyOnly ?
+                        new IndexKeyLoader(indexer, query.Fields.First()) :
+                        (IDocumentLoader)new DocumentLoader(data, _engine.Settings.UtcDate, query.Fields));
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = _query.Index.Run(snapshot.CollectionPage, indexer)
+                var nodes = query.Index.Run(snapshot.CollectionPage, indexer)
                         .DistinctBy(x => x.DataBlock, null);
 
                 // get current query pipe: normal or groupby pipe
-                using (var pipe = _query.GroupBy != null ?
+                using (var pipe = query.GroupBy != null ?
                     new GroupByPipe(_engine, transaction, loader) :
                     (BasePipe)new QueryPipe(_engine, transaction, loader))
                 {
@@ -108,7 +108,7 @@ namespace LiteDB.Engine
                     };
 
                     // call safepoint just before return each document
-                    foreach (var value in pipe.Pipe(nodes, _query))
+                    foreach (var value in pipe.Pipe(nodes, query))
                     {
                         transaction.Safepoint();
 
@@ -212,8 +212,7 @@ namespace LiteDB.Engine
         /// </summary>
         public BsonValue Aggregate(BsonExpression select)
         {
-            _query.Select = select ?? throw new ArgumentNullException(nameof(select));
-            _query.Aggregate = true;
+            this.Select(select, true);
 
             return this.ToValues().First();
         }

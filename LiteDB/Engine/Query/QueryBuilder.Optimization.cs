@@ -11,79 +11,97 @@ namespace LiteDB.Engine
     public partial class QueryBuilder
     {
         /// <summary>
-        /// Indicate this query already optimized
-        /// </summary>
-        private bool _optimized = false;
-
-        /// <summary>
-        /// Fill QueryPlan instance (_query)
-        /// - Select best index option (or create new one)
+        /// Build QueryPlan instance based on QueryBuilder fields
+        /// - Load used fields in all expressions
+        /// - Select best index option
         /// - Fill includes 
-        /// - Set orderBy
+        /// - Define orderBy
+        /// - Define groupBy
         /// </summary>
-        private void OptimizeQuery(Snapshot snapshot)
+        private QueryPlan OptimizeQuery(Snapshot snapshot)
         {
-            // if this query already optimazed, do not optmize again
-            if (_optimized) return;
-
-            // try merge multiples OR into same IN conditional
-            this.TryMergeOrExpression();
-
-            // define index (can create if needed)
-            this.DefineIndex(snapshot);
-
-            // try re-use same index order or define a new one
-            this.DefineOrderByGroupBy(snapshot);
+            var query = new QueryPlan(_collection)
+            {
+                Index = _index,
+                Select = _select,
+                ForUpdate = _forUpdate,
+                Limit = _limit,
+                Offset = _offset
+            };
 
             // load all fields to be deserialize in document
-            this.LoadQueryFields();
+            query.Fields = this.DefineQueryFields();
 
-            // do some validations
-            if (_query.GroupBy != null && _query.Aggregate) throw new NotSupportedException("GroupBy and Aggregate are not support together");
+            // define index (can create if needed) + define Where (filter - index)
+            this.DefineIndex(snapshot, query);
 
-            _optimized = true;
+            // optimize order by if possible
+            query.OrderBy = this.DefineOrderBy(query.Index, query.IndexExpression);
+
+            // optimize group by if possible
+            query.GroupBy = this.DefineGroupBy(query.Index, query.IndexExpression);
+
+            return query;
         }
 
-        #region Merge OR clausule
+        #region Document Fields
 
         /// <summary>
-        /// Find OR expression with same left side + operator to use IN operator
+        /// Load all fields that must be deserialize from document.
         /// </summary>
-        private void TryMergeOrExpression()
+        private HashSet<string> DefineQueryFields()
         {
-            //TODO implement TryMergeOrExpression optimization
+            // load only query fields (null return all document)
+            var fields = new HashSet<string>();
+
+            // include all fields detected in all used expressions
+            fields.AddRange(_select?.Expression.Fields);
+            fields.AddRange(_where.SelectMany(x => x.Fields));
+            fields.AddRange(_includes.SelectMany(x => x.Fields));
+            fields.AddRange(_groupBy?.Expression.Fields);
+            fields.AddRange(_groupBy?.Select?.Fields);
+            fields.AddRange(_groupBy?.Having?.Fields);
+            fields.AddRange(_orderBy?.Expression.Fields);
+
+            // if contains $, all fields must be deserialized
+            if (fields.Contains("$"))
+            {
+                fields.Clear();
+            }
+
+            return fields;
         }
 
         #endregion
 
         #region Index Definition
 
-        private void DefineIndex(Snapshot snapshot)
+        private void DefineIndex(Snapshot snapshot, QueryPlan query)
         {
             // selected expression to be used as index
             BsonExpression selected = null;
 
             // if index are not defined yet, get index
-            if (_query.Index == null)
+            if (query.Index == null)
             {
                 // try select best index (or any index)
-                var indexCost = this.ChooseIndex(snapshot);
+                var indexCost = this.ChooseIndex(snapshot, query.Fields);
 
                 // if found an index, use-it
                 if (indexCost != null)
                 {
-                    _query.Index = indexCost.Index;
-                    _query.IndexCost = indexCost.Cost;
-                    _query.IndexExpression = indexCost.IndexExpression;
+                    query.Index = indexCost.Index;
+                    query.IndexCost = indexCost.Cost;
+                    query.IndexExpression = indexCost.IndexExpression;
                 }
                 else
                 {
                     // if has no index to use, use full scan over _id
                     var pk = snapshot.CollectionPage.GetIndex(0);
 
-                    _query.Index = new IndexAll("_id", _order);
-                    _query.IndexCost = _query.Index.GetCost(pk);
-                    _query.IndexExpression = "$._id";
+                    query.Index = new IndexAll("_id", Query.Ascending);
+                    query.IndexCost = query.Index.GetCost(pk);
+                    query.IndexExpression = "$._id";
                 }
 
                 // get selected expression used as index
@@ -92,25 +110,35 @@ namespace LiteDB.Engine
             else
             {
                 // find query user defined index (must exists)
-                var idx = snapshot.CollectionPage.GetIndex(_query.Index.Name);
+                var idx = snapshot.CollectionPage.GetIndex(query.Index.Name);
 
-                if (idx == null) throw LiteException.IndexNotFound(_query.Index.Name, snapshot.CollectionPage.CollectionName);
+                if (idx == null) throw LiteException.IndexNotFound(query.Index.Name, snapshot.CollectionPage.CollectionName);
 
-                _query.IndexCost = _query.Index.GetCost(idx);
-                _query.IndexExpression = idx.Expression;
+                query.IndexCost = query.Index.GetCost(idx);
+                query.IndexExpression = idx.Expression;
+            }
+
+            // if is only 1 field to deserialize and this field are same as index, use IndexKeyOnly = rue
+            if (query.Fields.Count == 1 && query.IndexExpression == "$." + query.Fields.First())
+            {
+                query.IsIndexKeyOnly = true;
             }
 
             // fill filter using all expressions
-            _query.Filters.AddRange(_where.Where(x => x != selected));
+            query.Filters.AddRange(_where.Where(x => x != selected));
         }
 
         /// <summary>
         /// Try select best index (lowest cost) to this list of where expressions
         /// </summary>
-        private IndexCost ChooseIndex(Snapshot snapshot)
+        private IndexCost ChooseIndex(Snapshot snapshot, HashSet<string> fields)
         {
             var indexes = snapshot.CollectionPage.GetIndexes(true).ToArray();
 
+            // if query contains a single field used, give preferred if this index exists
+            var preferred = fields.Count == 1 ? "$." + fields.First() : null;
+
+            // otherwise, check for lowest index cost
             IndexCost lowest = null;
 
             // test all possible condition in where (must be conditional)
@@ -136,12 +164,13 @@ namespace LiteDB.Engine
                 }
             }
 
-            // if no index found, try use same index in orderby/groupby
-            if (lowest == null && (_orderBy != null || _query.GroupBy != null))
+            // if no index found, try use same index in orderby/groupby/preferred
+            if (lowest == null && (_orderBy != null || _groupBy != null || preferred != null))
             {
                 var index = 
-                    indexes.FirstOrDefault(x => x.Expression == _orderBy?.Source) ??
-                    indexes.FirstOrDefault(x => x.Expression == _query.GroupBy?.Source);
+                    indexes.FirstOrDefault(x => x.Expression == _orderBy?.Expression.Source) ??
+                    indexes.FirstOrDefault(x => x.Expression == _groupBy?.Expression.Source) ??
+                    indexes.FirstOrDefault(x => x.Expression == preferred);
 
                 if (index != null)
                 {
@@ -154,70 +183,51 @@ namespace LiteDB.Engine
 
         #endregion
 
-        #region OrderBy Definition
+        #region OrderBy / GroupBy Definition
 
         /// <summary>
-        /// Define order expression and try re-use same index order by (if possible)
+        /// Define OrderBy optimization (try re-use index)
         /// </summary>
-        private void DefineOrderByGroupBy(Snapshot snapshot)
+        private OrderBy DefineOrderBy(Index index, string indexExpression)
         {
-            // if index use OR, is not valid for orderBy
-            if (_query.Index is IndexOr)
-            {
-                _query.OrderBy = _orderBy;
-                _query.Order = _order;
-                return;
-            }
-
-            // get index (here, always exists - never return null)
-            var index = snapshot.CollectionPage.GetIndex(_query.Index.Name);
+            // if has no order by, returns null
+            if (_orderBy == null) return null;
 
             // if index expression are same as orderBy, use index to sort - just update index order
-            if (_orderBy?.Source == index.Expression)
+            if (_orderBy.Expression.Source == indexExpression)
             {
-                _query.Index.Order = _order;
+                // re-use index order and no not run OrderBy
+                index.Order = _orderBy.Order;
+
+                return null;
             }
             else
             {
-                _query.OrderBy = _orderBy;
-                _query.Order = _order;
+                return _orderBy;
+            }
+        }
+
+        /// <summary>
+        /// Define GroupBy optimization (try re-use index)
+        /// </summary>
+        private GroupBy DefineGroupBy(Index index, string indexExpression)
+        {
+            if (_groupBy == null) return null;
+
+            // if groupBy use same expression in index, set group by order to MaxValue to not run
+            if (_groupBy.Expression.Source == indexExpression)
+            {
+                // update index order tu use same as group by (only if has no order by defined)
+                if (_groupBy.Order == index.Order || _orderBy == null)
+                {
+                    _groupBy.Order = 0;
+                    index.Order = _groupBy.Order;
+                }
             }
 
-            // if groupby use same expression in index, set group by order to MaxValue to not run
-            if (_query.GroupBy?.Source == index.Expression)
-            {
-                _query.RunOrderByOverGroupBy = false;
-                _query.Index.Order = _query.GroupByOrder;
-            }
+            return _groupBy;
         }
 
         #endregion
-
-        /// <summary>
-        /// Load all fields that must be deserialize from document. If is possible use only key (without no document deserialization) set KeyOnly = true
-        /// </summary>
-        private void LoadQueryFields()
-        {
-            // load only query fields (null return all document)
-            _query.Fields = new HashSet<string>();
-
-            // if partial document load, add filter, groupby, orderby fields too
-            _query.Fields.AddRange(_query.Select?.Fields);
-            _query.Fields.AddRange(_query.Filters.SelectMany(x => x.Fields));
-            _query.Fields.AddRange(_query.GroupBy?.Fields);
-            _query.Fields.AddRange(_query.Having?.Fields);
-            _query.Fields.AddRange(_query.OrderBy?.Fields);
-
-            if (_query.Fields.Contains("$") || _query.Fields.Count == 0)
-            {
-                _query.Fields.Clear();
-                _query.Fields.Add("$");
-            }
-            else if(_query.Fields.Count == 1 && _query.IndexExpression == "$." + _query.Fields.First())
-            {
-                // if need only 1 key and is same as used in index, do not deserialize document
-                _query.IsIndexKeyOnly = true;
-            }
-        }
     }
 }

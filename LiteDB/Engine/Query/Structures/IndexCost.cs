@@ -10,7 +10,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexCost
     {
-        public long Cost { get; private set; }
+        public long Cost { get; set; }
 
         /// <summary>
         /// Get filtered expression: "$._id = 10"
@@ -50,6 +50,7 @@ namespace LiteDB.Engine
             this.Expression = BsonExpression.Create(index.Expression);
             this.Index = Index.All(index.Name);
             this.Cost = this.Index.GetCost(index);
+            this.IndexExpression = index.Expression;
         }
 
         /// <summary>

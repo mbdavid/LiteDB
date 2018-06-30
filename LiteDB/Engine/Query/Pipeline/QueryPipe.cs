@@ -17,7 +17,7 @@ namespace LiteDB.Engine
         public override IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
-            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.First());
+            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
 
             // do includes in result before filter
             foreach (var path in query.IncludeBefore)
@@ -34,7 +34,7 @@ namespace LiteDB.Engine
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy, query.Order, query.Offset, query.Limit);
+                source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, query.Offset, query.Limit);
             }
             else
             {
@@ -52,13 +52,39 @@ namespace LiteDB.Engine
             }
 
             // if is an aggregate query, run select transform over all resultset - will return a single value
-            if (query.Aggregate)
+            if (query.Select?.Aggregate ?? false)
             {
-                return query.Select.Execute(source);
+                return query.Select.Expression.Execute(source, true);
             }
-                
-            // otherwise, run select transform in each document result
-            return this.Select(source, query.Select);
+
+            // run select transform in each document result (if select == null, return source)
+            return this.Select(source, query.Select?.Expression);
+        }
+
+        /// <summary>
+        /// Pipe: Transaform final result appling expressin transform. Can return document or simple values
+        /// </summary>
+        private IEnumerable<BsonValue> Select(IEnumerable<BsonDocument> source, BsonExpression select)
+        {
+            if (select == null)
+            {
+                foreach (var value in source)
+                {
+                    yield return value;
+                }
+            }
+            else
+            {
+                foreach (var doc in source)
+                {
+                    var result = select.Execute(doc, true);
+
+                    foreach (var value in result)
+                    {
+                        yield return value;
+                    }
+                }
+            }
         }
     }
 }

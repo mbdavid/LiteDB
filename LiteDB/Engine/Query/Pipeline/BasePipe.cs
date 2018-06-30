@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -30,14 +31,16 @@ namespace LiteDB.Engine
         public abstract IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
 
         // load documents from disk or make a "fake" document using index key only (useful for COUNT/EXISTS)
-        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool indexKeyOnly, string name)
+        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool indexKeyOnly, string field)
         {
+            DEBUG(indexKeyOnly && field == null, "should not be indexOnly = null with no field name");
+
             foreach (var node in nodes)
             {
                 // if is indexKeyOnly, load here from IndexNode, otherwise, read from Loader
 
                 yield return indexKeyOnly ?
-                    new BsonDocument { [name] = node.Key, RawId = node.Position } :
+                    new BsonDocument { [field] = node.Key, RawId = node.Position } :
                     _loader.Load(node.DataBlock);
             }
         }
@@ -129,32 +132,6 @@ namespace LiteDB.Engine
                 if (result.IsBoolean && result.AsBoolean == true)
                 {
                     yield return doc;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Pipe: Transaform final result appling expressin transform. Can return document or simple value
-        /// </summary>
-        protected IEnumerable<BsonValue> Select(IEnumerable<BsonDocument> source, BsonExpression select)
-        {
-            if (select == null)
-            {
-                foreach (var value in source)
-                {
-                    yield return value;
-                }
-            }
-            else
-            {
-                foreach (var doc in source)
-                {
-                    var result = select.Execute(doc, true);
-
-                    foreach (var value in result)
-                    {
-                        yield return value;
-                    }
                 }
             }
         }

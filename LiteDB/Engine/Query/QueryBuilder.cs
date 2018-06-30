@@ -9,19 +9,29 @@ namespace LiteDB.Engine
     /// </summary>
     public partial class QueryBuilder
     {
-        private LiteEngine _engine;
-        private QueryPlan _query;
+        private readonly LiteEngine _engine;
+        private readonly string _collection;
+
+        private Index _index = null;
 
         private List<BsonExpression> _where = new List<BsonExpression>();
-        private BsonExpression _orderBy = null;
-        private int _order = Query.Ascending;
+        private List<BsonExpression> _includes = new List<BsonExpression>();
+
+        private OrderBy _orderBy = null;
+        private GroupBy _groupBy = null;
+
+        private Select _select = null;
+
+        private int _offset = 0;
+        private int _limit = int.MaxValue;
+        private bool _forUpdate = false;
 
         /// <summary>
         /// Initalize QueryBuilder with a database collection
         /// </summary>
         public QueryBuilder(string collection, LiteEngine engine)
         {
-            _query = new QueryPlan(collection);
+            _collection = collection;
             _engine = engine;
         }
 
@@ -31,8 +41,7 @@ namespace LiteDB.Engine
         public QueryBuilder(string collection, LiteEngine engine, IEnumerable<BsonDocument> source)
             : this(collection, engine)
         {
-            _query.IsVirtual = true;
-            _query.Index = new IndexVirtual(source);
+            _index = new IndexVirtual(source);
         }
 
         /// <summary>
@@ -40,8 +49,6 @@ namespace LiteDB.Engine
         /// </summary>
         public QueryBuilder Where(BsonExpression predicate)
         {
-            if (_optimized) throw new InvalidOperationException("Where() is not avaiable in executed query");
-
             // add expression in where list breaking AND statments
             if (predicate.IsConditional || predicate.Type == BsonExpressionType.Or)
             {
@@ -84,24 +91,14 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Load cross reference documents from path expression (DbRef reference). 
-        /// If called before Where() will load references before filter (worst). If called after Where() will load references only in filtered results.
-        /// Use before Where only if you need add this include in filter expression
         /// </summary>
         public QueryBuilder Include(BsonExpression path)
         {
             if (path == null) throw new NullReferenceException(nameof(path));
-            if (_optimized) throw new InvalidOperationException("Include() is not avaiable in executed query");
 
             if (path.Type != BsonExpressionType.Path) throw LiteException.InvalidExpressionType(path, BsonExpressionType.Path);
 
-            if (_where.Count == 0)
-            {
-                _query.IncludeBefore.Add(path);
-            }
-            else
-            {
-                _query.IncludeAfter.Add(path);
-            }
+            _includes.Add(path);
 
             return this;
         }
@@ -112,10 +109,9 @@ namespace LiteDB.Engine
         public QueryBuilder OrderBy(BsonExpression orderBy, int order = Query.Ascending)
         {
             if (orderBy == null) throw new ArgumentNullException(nameof(orderBy));
-            if (_optimized) throw new InvalidOperationException("OrderBy() is not avaiable in executed query");
+            if (_orderBy != null) throw new InvalidOperationException("ORDER BY already defined");
 
-            _orderBy = orderBy;
-            _order = order;
+            _orderBy = new OrderBy(orderBy, order);
 
             return this;
         }
@@ -126,10 +122,12 @@ namespace LiteDB.Engine
         public QueryBuilder GroupBy(BsonExpression groupBy, int order = Query.Ascending)
         {
             if (groupBy == null) throw new ArgumentNullException(nameof(groupBy));
-            if (_optimized) throw new InvalidOperationException("GroupBy() is not avaiable in executed query");
+            if (_groupBy != null) throw new InvalidOperationException("GROUP BY already defined");
 
-            _query.GroupBy = groupBy;
-            _query.GroupByOrder = order;
+            _groupBy = new GroupBy(groupBy, order);
+
+            _groupBy.Select = _select?.Expression;
+            _select = null;
 
             return this;
         }
@@ -140,10 +138,10 @@ namespace LiteDB.Engine
         public QueryBuilder Having(BsonExpression filter)
         {
             if (filter == null) throw new ArgumentNullException(nameof(filter));
-            if (_query.GroupBy == null) throw new InvalidOperationException("HAVING need GROUP BY expression");
-            if (_optimized) throw new InvalidOperationException("Having() is not avaiable in executed query");
+            if (_groupBy == null) throw new InvalidOperationException("HAVING need GROUP BY expression");
+            if (_groupBy.Having != null) throw new InvalidOperationException("HAVING already defined");
 
-            _query.Having = filter;
+            _groupBy.Having = filter;
 
             return this;
         }
@@ -153,7 +151,7 @@ namespace LiteDB.Engine
         /// </summary>
         public QueryBuilder Limit(int limit)
         {
-            _query.Limit = limit;
+            _limit = limit;
 
             return this;
         }
@@ -163,21 +161,27 @@ namespace LiteDB.Engine
         /// </summary>
         public QueryBuilder Offset(int offset)
         {
-            _query.Offset = offset;
+            _offset = offset;
 
             return this;
         }
 
         /// <summary>
-        /// Transform your output document using this select expression. Use aggregate = true to run Select expression over all resultset
+        /// Transform your output document using this select expression.
         /// </summary>
         public QueryBuilder Select(BsonExpression select, bool aggregate = false)
         {
             if (select == null) throw new ArgumentNullException(nameof(select));
-            if (_optimized) throw new InvalidOperationException("Select() is not avaiable in executed query");
+            if (_select != null) throw new InvalidOperationException("SELECT already defined");
 
-            _query.Select = select;
-            _query.Aggregate = aggregate;
+            if (_groupBy != null)
+            {
+                _groupBy.Select = select;
+            }
+            else
+            {
+                _select = new Select(select, false);
+            }
 
             return this;
         }
@@ -187,7 +191,7 @@ namespace LiteDB.Engine
         /// </summary>
         public QueryBuilder ForUpdate()
         {
-            _query.ForUpdate = true;
+            _forUpdate = true;
 
             return this;
         }
@@ -200,9 +204,8 @@ namespace LiteDB.Engine
         public QueryBuilder Index(Index index)
         {
             if (index == null) throw new ArgumentNullException(nameof(index));
-            if (_optimized) throw new InvalidOperationException("Index() is not avaiable in executed query");
 
-            _query.Index = index;
+            _index = index;
 
             return this;
         }
