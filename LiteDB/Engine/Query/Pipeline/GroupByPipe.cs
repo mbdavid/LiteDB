@@ -118,7 +118,7 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
         {
-            foreach (var group in groups)
+            foreach (DocumentEnumerable group in groups)
             {
                 // transfom group result if contains select expression
                 if (select != null)
@@ -139,10 +139,12 @@ namespace LiteDB.Engine
                 else
                 {
                     // get first document BUT with full source scan
-                    var doc = group.FirstOrDefault(true);
+                    var doc = group.FirstOrDefault();
 
                     yield return doc;
                 }
+
+                group.Dispose();
             }
         }
 

@@ -380,7 +380,7 @@ namespace LiteDB
 
             // get First value from values using full scan source (important to group by)
 
-            foreach (var pair in ZipValues(keys, values.Select(x => x.FirstOrDefault(true))))
+            foreach (var pair in ZipValues(keys, values.Select(x => x.FirstOrDefault())))
             {
                 var key = pair.First;
                 var value = pair.Second;

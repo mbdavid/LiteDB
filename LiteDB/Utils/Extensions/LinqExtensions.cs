@@ -6,27 +6,6 @@ namespace LiteDB
 {
     internal static class LinqExtensions
     {
-        /// <summary>
-        /// Implement FirstOrDefault() with full scan option. This is used in GroupBy method to read all source even if want only first document
-        /// </summary>
-        public static T FirstOrDefault<T>(this IEnumerable<T> source, bool scanSource)
-            where T : class
-        {
-            if (scanSource == false)
-            {
-                return source.FirstOrDefault();
-            }
-
-            T first = null;
-
-            foreach (var item in source)
-            {
-                if (first == null) first = item;
-            }
-
-            return first;
-        }
-
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<int, T> action)
         {
             var index = 0;

@@ -46,7 +46,7 @@ namespace LiteDB.Tests.Query
             // this query will not deserialize document, using only index key
             var r1 = db.Query("zip")
                 .Index(Index.All("city"))
-                .Select(true)
+                .Select("city")
                 .ToValues()
                 // key only return document { key: value }
                 .Select(x => x["city"].AsString)

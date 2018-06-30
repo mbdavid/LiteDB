@@ -8,8 +8,9 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Implement an IEnumerable document cache that read data first time and store in memory/disk cache
+    /// Used in GroupBy operation and MUST read all IEnumerable source before dispose because are need be linear from main resultset
     /// </summary>
-    internal class DocumentEnumerable : IEnumerable<BsonDocument>
+    internal class DocumentEnumerable : IEnumerable<BsonDocument>, IDisposable
     {
         private IEnumerator<BsonDocument> _enumerator;
         private List<PageAddress> _cache = new List<PageAddress>();
@@ -19,6 +20,17 @@ namespace LiteDB.Engine
         {
             _enumerator = source.GetEnumerator();
             _loader = loader;
+        }
+
+        public void Dispose()
+        {
+            // must read all enumerable before dispose
+            if (_enumerator != null)
+            {
+                while (_enumerator.MoveNext()) ;
+                _enumerator.Dispose();
+                _enumerator = null;
+            }
         }
 
         public IEnumerator<BsonDocument> GetEnumerator()
