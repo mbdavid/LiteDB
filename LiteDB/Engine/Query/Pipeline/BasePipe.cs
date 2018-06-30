@@ -29,13 +29,15 @@ namespace LiteDB.Engine
         /// </summary>
         public abstract IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
 
-        // load documents from disk or make a "fake" document using key only (useful for COUNT/EXISTS)
-        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool keyOnly, string name)
+        // load documents from disk or make a "fake" document using index key only (useful for COUNT/EXISTS)
+        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool indexKeyOnly, string name)
         {
             foreach (var node in nodes)
             {
-                yield return keyOnly ?
-                    new BsonDocument { [name] = node.Key } :
+                // if is indexKeyOnly, load here from IndexNode, otherwise, read from Loader
+
+                yield return indexKeyOnly ?
+                    new BsonDocument { [name] = node.Key, RawId = node.Position } :
                     _loader.Load(node.DataBlock);
             }
         }

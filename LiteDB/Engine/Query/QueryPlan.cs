@@ -39,7 +39,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// If true, gereate document result only with IndexNode.Key (avoid load all document)
         /// </summary>
-        public bool KeyOnly { get; set; } = false;
+        public bool IsIndexKeyOnly { get; set; } = false;
 
         /// <summary>
         /// Indicate this query is for update (lock mode = Write)
@@ -142,10 +142,8 @@ namespace LiteDB.Engine
                 },
                 ["load"] = new BsonDocument
                 {
-                    ["fields"] = this.KeyOnly ?
-                        BsonValue.Null :
-                        new BsonArray(this.Fields.Select(x => new BsonValue(x))),
-                    ["keyOnly"] = this.KeyOnly
+                    ["loader"] = this.IsVirtual ? "virtual" : (this.IsIndexKeyOnly ? "index" : "document"),
+                    ["fields"] = new BsonArray(this.Fields.Select(x => new BsonValue(x))),
                 },
                 ["pipe"] = this.GroupBy == null ? "queryPipe" : "groupByPipe",
                 ["includeBefore"] = this.IncludeBefore.Count == 0 ?

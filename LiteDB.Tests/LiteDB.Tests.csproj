@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <None Remove="Engine\SqlTests\Insert.sql" />
+    <None Remove="Engine\SqlTests\Query.sql" />
     <None Remove="Engine\SqlTests\Update.sql" />
     <None Remove="Expressions\ExprTests\Aggregate.txt" />
     <None Remove="Expressions\ExprTests\Format.txt" />
@@ -27,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Engine\SqlTests\Query.sql" />
     <EmbeddedResource Include="Engine\SqlTests\Update.sql" />
     <EmbeddedResource Include="Engine\SqlTests\Insert.sql" />
     <EmbeddedResource Include="Expressions\ExprTests\Format.txt" />

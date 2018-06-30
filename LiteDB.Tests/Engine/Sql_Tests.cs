@@ -78,5 +78,14 @@ namespace LiteDB.Tests.Engine
             Assert.AreEqual(1, output["count1"].AsInt32, "Update single document");
             Assert.AreEqual(99, output["newAge"].AsInt32, "Document was updated");
         }
+
+        [TestMethod]
+        public void Sql_Query_Commands()
+        {
+            var output = this.Run("Query", db => db.Insert("person", DataGen.Person(1, 1000)));
+
+
+            Assert.AreEqual(6, output["groupBy1"].AsArray.Count);
+        }
     }
 }

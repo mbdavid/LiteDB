@@ -74,7 +74,7 @@ namespace LiteDB.Engine
                 {
                     _query.Index = indexCost.Index;
                     _query.IndexCost = indexCost.Cost;
-                    _query.IndexExpression = indexCost.Expression.Left.Source;
+                    _query.IndexExpression = indexCost.IndexExpression;
                 }
                 else
                 {
@@ -216,7 +216,7 @@ namespace LiteDB.Engine
             else if(_query.Fields.Count == 1 && _query.IndexExpression == "$." + _query.Fields.First())
             {
                 // if need only 1 key and is same as used in index, do not deserialize document
-                _query.KeyOnly = true;
+                _query.IsIndexKeyOnly = true;
             }
         }
     }

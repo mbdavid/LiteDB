@@ -17,7 +17,7 @@ namespace LiteDB.Engine
         public override IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
-            var source = this.LoadDocument(nodes, query.KeyOnly, query.Index.Name);
+            var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.First());
 
             // do includes in result before filter
             foreach (var path in query.IncludeBefore)

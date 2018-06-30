@@ -80,9 +80,10 @@ namespace LiteDB.Engine
                     yield break;
                 }
 
-                var loader = _query.IsVirtual ?
-                    (IDocumentLoader)_query.Index :
-                    new DocumentLoader(data, _engine.Settings.UtcDate, _query.Fields);
+                var loader = _query.IsVirtual ? (IDocumentLoader)_query.Index :
+                    (_query.IsIndexKeyOnly ?
+                        new IndexKeyLoader(indexer, _query.Fields.First()) :
+                        (IDocumentLoader)new DocumentLoader(data, _engine.Settings.UtcDate, _query.Fields));
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = _query.Index.Run(snapshot.CollectionPage, indexer)
