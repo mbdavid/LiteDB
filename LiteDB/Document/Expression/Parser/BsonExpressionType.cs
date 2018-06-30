@@ -7,39 +7,39 @@ using System.Text;
 
 namespace LiteDB
 {
-    public enum BsonExpressionType
+    public enum BsonExpressionType : byte
     {
-        Empty,
+        Empty = 0,
 
-        Double,
-        Int,
-        String,
-        Boolean,
-        Null,
-        Array,
-        Document,
+        Double = 1,
+        Int = 2,
+        String = 3,
+        Boolean = 4,
+        Null = 5,
+        Array = 6,
+        Document = 7,
 
-        Parameter,
-        Call,
-        Path,
+        Parameter = 8,
+        Call = 9,
+        Path = 10,
 
-        Modulo,
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
+        Modulo = 11,
+        Add = 12,
+        Subtract = 13,
+        Multiply = 14,
+        Divide = 15,
 
-        Equal,
-        Like,
-        Between,
-        GreaterThan,
-        GreaterThanOrEqual,
-        LessThan,
-        LessThanOrEqual,
-        NotEqual,
-        In,
+        Equal = 16,
+        Like = 17,
+        Between = 18,
+        GreaterThan = 19,
+        GreaterThanOrEqual = 20,
+        LessThan = 21,
+        LessThanOrEqual = 22,
+        NotEqual = 23,
+        In = 24,
 
-        Or,
-        And
+        Or = 25,
+        And = 26
     }
 }
