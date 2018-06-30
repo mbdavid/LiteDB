@@ -42,11 +42,6 @@ namespace LiteDB.Engine
         public bool IsIndexKeyOnly { get; set; } = false;
 
         /// <summary>
-        /// Indicate this query is for update (lock mode = Write)
-        /// </summary>
-        public bool ForUpdate { get; set; } = false;
-
-        /// <summary>
         /// List of filters of documents
         /// </summary>
         public List<BsonExpression> Filters { get; set; } = new List<BsonExpression>();
@@ -72,6 +67,16 @@ namespace LiteDB.Engine
         public GroupBy GroupBy { get; set; } = null;
 
         /// <summary>
+        /// Transaformation data before return - if null there is no transform (return document)
+        /// </summary>
+        public Select Select { get; set; }
+
+        /// <summary>
+        /// Get fields name that will be deserialize from disk
+        /// </summary>
+        public HashSet<string> Fields { get; set; }
+
+        /// <summary>
         /// Limit resultset
         /// </summary>
         public int Limit { get; set; } = int.MaxValue;
@@ -82,14 +87,9 @@ namespace LiteDB.Engine
         public int Offset { get; set; }
 
         /// <summary>
-        /// Transaformation data before return - if null there is no transform (return document)
+        /// Indicate this query is for update (lock mode = Write)
         /// </summary>
-        public Select Select { get; set; }
-
-        /// <summary>
-        /// Get fields name that will be deserialize from disk
-        /// </summary>
-        public HashSet<string> Fields { get; set; }
+        public bool ForUpdate { get; set; } = false;
 
         #region Explain Plan
 
@@ -132,7 +132,7 @@ namespace LiteDB.Engine
 
             doc["includeAfter"] = this.IncludeAfter.Count == 0 ?
                 BsonValue.Null :
-                new BsonArray(this.IncludeBefore.Select(x => new BsonValue(x.Source)));
+                new BsonArray(this.IncludeAfter.Select(x => new BsonValue(x.Source)));
 
             if (this.GroupBy != null)
             {

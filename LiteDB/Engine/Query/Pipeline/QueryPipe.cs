@@ -31,6 +31,12 @@ namespace LiteDB.Engine
                 source = this.Filter(source, expr);
             }
 
+            // do includes in result after filter
+            foreach (var path in query.IncludeAfter)
+            {
+                source = this.Include(source, path);
+            }
+
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
@@ -43,12 +49,6 @@ namespace LiteDB.Engine
 
                 // pipe: apply limit (no orderby)
                 if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-            }
-
-            // do includes in result before filter
-            foreach (var path in query.IncludeAfter)
-            {
-                source = this.Include(source, path);
             }
 
             // if is an aggregate query, run select transform over all resultset - will return a single value

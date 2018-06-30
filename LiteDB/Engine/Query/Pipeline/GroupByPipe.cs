@@ -31,16 +31,16 @@ namespace LiteDB.Engine
                 source = this.Filter(source, expr);
             }
 
+            // do includes in result after filter
+            foreach (var path in query.IncludeAfter)
+            {
+                source = this.Include(source, path);
+            }
+
             // pipe: if groupBy order is 0, do not need sort (already sorted by index)
             if (query.GroupBy.Order != 0)
             {
                 source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
-            }
-
-            // do includes in result before filter
-            foreach (var path in query.IncludeAfter)
-            {
-                source = this.Include(source, path);
             }
 
             // apply groupby

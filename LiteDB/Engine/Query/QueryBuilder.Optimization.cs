@@ -29,17 +29,20 @@ namespace LiteDB.Engine
                 Offset = _offset
             };
 
-            // load all fields to be deserialize in document
-            query.Fields = this.DefineQueryFields();
+            // define Fields
+            this.DefineQueryFields(query);
 
-            // define index (can create if needed) + define Where (filter - index)
-            this.DefineIndex(snapshot, query);
+            // define Index, IndexCost, IndexExpression, IsIndexKeyOnly + Where (filters - index)
+            this.DefineIndex(query, snapshot);
 
-            // optimize order by if possible
-            query.OrderBy = this.DefineOrderBy(query.Index, query.IndexExpression);
+            // define OrderBy
+            this.DefineOrderBy(query);
 
-            // optimize group by if possible
-            query.GroupBy = this.DefineGroupBy(query.Index, query.IndexExpression);
+            // define GroupBy
+            this.DefineGroupBy(query);
+
+            // define IncludeBefore + IncludeAfter
+            this.DefineIncludes(query);
 
             return query;
         }
@@ -49,7 +52,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Load all fields that must be deserialize from document.
         /// </summary>
-        private HashSet<string> DefineQueryFields()
+        private void DefineQueryFields(QueryPlan query)
         {
             // load only query fields (null return all document)
             var fields = new HashSet<string>();
@@ -69,14 +72,14 @@ namespace LiteDB.Engine
                 fields.Clear();
             }
 
-            return fields;
+            query.Fields = fields;
         }
 
         #endregion
 
         #region Index Definition
 
-        private void DefineIndex(Snapshot snapshot, QueryPlan query)
+        private void DefineIndex(QueryPlan query, Snapshot snapshot)
         {
             // selected expression to be used as index
             BsonExpression selected = null;
@@ -188,46 +191,68 @@ namespace LiteDB.Engine
         /// <summary>
         /// Define OrderBy optimization (try re-use index)
         /// </summary>
-        private OrderBy DefineOrderBy(Index index, string indexExpression)
+        private void DefineOrderBy(QueryPlan query)
         {
             // if has no order by, returns null
-            if (_orderBy == null) return null;
+            if (_orderBy == null) return;
 
             // if index expression are same as orderBy, use index to sort - just update index order
-            if (_orderBy.Expression.Source == indexExpression)
+            if (_orderBy.Expression.Source == query.IndexExpression)
             {
                 // re-use index order and no not run OrderBy
-                index.Order = _orderBy.Order;
-
-                return null;
+                query.Index.Order = _orderBy.Order;
             }
             else
             {
-                return _orderBy;
+                query.OrderBy = _orderBy;
             }
         }
 
         /// <summary>
         /// Define GroupBy optimization (try re-use index)
         /// </summary>
-        private GroupBy DefineGroupBy(Index index, string indexExpression)
+        private void DefineGroupBy(QueryPlan query)
         {
-            if (_groupBy == null) return null;
+            if (_groupBy == null) return;
 
             // if groupBy use same expression in index, set group by order to MaxValue to not run
-            if (_groupBy.Expression.Source == indexExpression)
+            if (_groupBy.Expression.Source == query.IndexExpression)
             {
                 // update index order tu use same as group by (only if has no order by defined)
-                if (_groupBy.Order == index.Order || _orderBy == null)
+                if (_groupBy.Order == query.Index.Order || _orderBy == null)
                 {
                     _groupBy.Order = 0;
-                    index.Order = _groupBy.Order;
+                    query.Index.Order = _groupBy.Order;
                 }
             }
 
-            return _groupBy;
+            query.GroupBy = _groupBy;
         }
 
         #endregion
+
+        /// <summary>
+        /// Will define each include to be run BEFORE where (worst) OR AFTER where (best)
+        /// </summary>
+        private void DefineIncludes(QueryPlan query)
+        {
+            foreach(var include in _includes)
+            {
+                // includes always has one single field
+                var field = include.Fields.Single();
+
+                // test if field are using in any filter
+                var used = query.Filters.Any(x => x.Fields.Contains(field));
+
+                if (used)
+                {
+                    query.IncludeBefore.Add(include);
+                }
+                else
+                {
+                    query.IncludeAfter.Add(include);
+                }
+            }
+        }
     }
 }
