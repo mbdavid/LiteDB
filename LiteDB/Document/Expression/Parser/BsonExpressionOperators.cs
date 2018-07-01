@@ -372,23 +372,38 @@ namespace LiteDB
         #region Object Creation
 
         /// <summary>
-        /// Create a single document based on key-value pairs on parameters. DOCUMENT('_id', 1)
+        /// Create multi documents based on key-value pairs on parameters. DOCUMENT('_id', 1)
         /// </summary>
-        public static IEnumerable<BsonValue> DOCUMENT_INIT(IEnumerable<BsonValue> keys, IEnumerable<IEnumerable<BsonValue>> values)
+        public static IEnumerable<BsonValue> DOCUMENT_INIT(string[] keys, IEnumerable<IEnumerable<BsonValue>> values)
         {
-            var doc = new BsonDocument();
+            var matrix = values.Select(x => x.ToArray()).ToArray();
 
-            // get First value from values using full scan source (important to group by)
+            var i = 0;
 
-            foreach (var pair in ZipValues(keys, values.Select(x => x.FirstOrDefault())))
+            while(true)
             {
-                var key = pair.First;
-                var value = pair.Second;
+                var doc = new BsonDocument();
 
-                doc[key.AsString] = value ?? BsonValue.Null;
+                for (var j = 0; j < keys.Length; j++)
+                {
+                    var key = keys[j];
+                    var counter = matrix[j].Length;
+
+                    if (i < counter)
+                    {
+                        var value = matrix[j][i];
+
+                        doc[key] = value;
+                    }
+                }
+
+                if (doc.Keys.Count == 0) yield break;
+
+                yield return doc;
+
+                i++;
             }
 
-            yield return doc;
         }
 
         /// <summary>

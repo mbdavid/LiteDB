@@ -82,12 +82,45 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Sql_Query_Commands()
         {
+            // do not change init because will change expected results
             var output = this.Run("Query", db => db.Insert("person", DataGen.Person(1, 1000)));
 
+            // SELECT with ORDER BY
             Assert.AreEqual("Brendan Maxwell", output["name100"].AsString);
             Assert.AreEqual("Brendan Maxwell", output["nameAll"][100].AsString);
 
-            Assert.AreEqual(5, output["groupBy1"].AsArray.Count);
+            // SELECT INTO
+            Assert.AreEqual(785, output["col2count"].AsInt32);
+
+            // SELECT ALL
+            Assert.AreEqual("Michelle Porter", output["agesInCA"]["first"].AsString);
+            Assert.AreEqual(789, output["agesInCA"]["ages"].AsInt32);
+
+            // SELECT GROUP BY with array/document aggregation
+            Assert.AreEqual(10, output["top10Domains"].AsArray.Count);
+            TestArray(output["top10Domains"], "domain", "imperdiet.us", "cursus.edu", "ullamcorper.net", "senectus.us", "sagittis.us", "per.edu", "nulla.com", "massa.us", "lorem.net", "lobortis.edu");
+
+            TestArray(output["top10Domains"][0]["users"], "user", "delilah", "uriel", "vance", "maile", "reagan");
+            TestArray(output["top10Domains"][1]["users"], "user", "wayne", "mason", "hoyt", "rhiannon", "maisie");
+            TestArray(output["top10Domains"][2]["users"], "user", "xaviera", "lani", "howard", "colette");
+            
+            // SELECT GROUP BY + HAVING
+            TestArray(output["groupBy1"], "state", "CA", "FL", "MN", "MS", "TX");
+            TestArray(output["groupBy1"], "count", 23, 17, 18, 17, 18);
+        }
+
+        [DebuggerHidden]
+        private void TestArray(BsonValue output, string field, params BsonValue[] expecteds)
+        {
+            var arr = output.AsArray;
+
+            for(var i = 0; i < expecteds.Length; i++)
+            {
+                var expected = expecteds[i];
+                var value = arr[i][field];
+
+                Assert.AreEqual(expected, value);
+            }
         }
     }
 }

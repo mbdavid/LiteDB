@@ -14,6 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Engine\SqlTests\ExplainPlan.sql" />
     <None Remove="Engine\SqlTests\Insert.sql" />
     <None Remove="Engine\SqlTests\Query.sql" />
     <None Remove="Engine\SqlTests\Update.sql" />
@@ -28,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Engine\SqlTests\ExplainPlan.sql" />
     <EmbeddedResource Include="Engine\SqlTests\Query.sql" />
     <EmbeddedResource Include="Engine\SqlTests\Update.sql" />
     <EmbeddedResource Include="Engine\SqlTests\Insert.sql" />

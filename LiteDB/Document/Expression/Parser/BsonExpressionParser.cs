@@ -393,7 +393,7 @@ namespace LiteDB
                 fields.AddRange(value.Fields);
 
                 // add key and value to parameter list (as an expression)
-                keys.Add(Expression.Constant(new BsonValue(key)));
+                keys.Add(Expression.Constant(key));
                 values.Add(value.Expression);
 
                 // include value source in current source
@@ -407,7 +407,7 @@ namespace LiteDB
                 if (tokenizer.Current.Type == TokenType.Comma) continue; else break;
             }
 
-            var arrKeys = Expression.NewArrayInit(typeof(BsonValue), keys.ToArray());
+            var arrKeys = Expression.NewArrayInit(typeof(string), keys.ToArray());
             var arrValues = Expression.NewArrayInit(typeof(IEnumerable<BsonValue>), values.ToArray());
 
             return new BsonExpression

@@ -33,6 +33,35 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Reports the zero-based index of the first occurrence of the specified string in this instance. Support multiple values (only string)
+        /// </summary>
+        public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search)
+        {
+            foreach (var value in ZipValues(values, search))
+            {
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsString) continue;
+
+                yield return value.First.AsString.IndexOf(value.Second.AsString);
+            }
+        }
+
+        /// <summary>
+        /// Reports the zero-based index of the first occurrence of the specified string in this instance. Support multiple values (only string)
+        /// </summary>
+        public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search, IEnumerable<BsonValue> startIndex)
+        {
+            foreach (var value in ZipValues(values, search, startIndex))
+            {
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsString) continue;
+                if (!value.Third.IsNumber) continue;
+
+                yield return value.First.AsString.IndexOf(value.Second.AsString, value.Third.AsInt32);
+            }
+        }
+
+        /// <summary>
         /// Returns substring from string value using index and length (zero-based). Support multiple values (only string)
         /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index)

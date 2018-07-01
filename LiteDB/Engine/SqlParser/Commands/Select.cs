@@ -41,9 +41,9 @@ namespace LiteDB.Engine
             if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
             {
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
-                var result = selectExpr.Execute(true).First();
+                var result = selectExpr.Execute(true);
 
-                return new BsonDataReader(result);
+                return new BsonDataReader(result, null);
             }
             else if (from.Is("INTO"))
             {

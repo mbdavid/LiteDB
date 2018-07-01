@@ -180,7 +180,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                _select = new Select(select, false);
+                _select = new Select(select, aggregate);
             }
 
             return this;
