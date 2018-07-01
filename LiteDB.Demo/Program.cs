@@ -12,7 +12,7 @@ namespace LiteDB.Demo
         [STAThread]
         static void Main(string[] args)
         {
-            var orig = @"C:\Temp\SessionDatabase.ldb";
+            var orig = @"C:\Temp\service.c.db";
             
             var report = LiteEngine.Recovery(orig);
 
