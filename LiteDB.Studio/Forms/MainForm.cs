@@ -42,6 +42,8 @@ namespace LiteDB.Studio
                 this.Disconnect();
             }
 
+            UIExtensions.DefineSyntaxHighlighter(txtSql);
+
             // stop all threads
             this.FormClosing += (s, e) =>
             {

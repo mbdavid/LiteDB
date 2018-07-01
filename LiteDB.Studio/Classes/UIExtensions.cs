@@ -6,9 +6,11 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WinFormsSyntaxHighlighter;
 
 namespace LiteDB.Studio
 {
@@ -219,6 +221,63 @@ namespace LiteDB.Studio
 
             txt.Text = "";
             txt.AppendText(sb.ToString(), Color.Red);
+        }
+
+        public static void DefineSyntaxHighlighter(RichTextBox textBox)
+        {
+            // SyntaxHighlighter source code from
+            // https://github.com/sinairv/WinFormsSyntaxHighlighter
+
+            var syntaxHighlighter = new SyntaxHighlighter(textBox, 1000);
+
+            // comment
+            syntaxHighlighter.AddPattern(new PatternDefinition(new Regex(@"--.*", RegexOptions.Compiled)),
+                new SyntaxStyle(Color.Green));
+
+            // double quote strings
+            syntaxHighlighter.AddPattern(
+                new PatternDefinition(@"\""([^""]|\""\"")+\"""),
+                new SyntaxStyle(Color.Red));
+
+            // single quote strings
+            syntaxHighlighter.AddPattern(
+                new PatternDefinition(@"\'([^']|\'\')+\'"),
+                new SyntaxStyle(Color.Red));
+
+            // parameter
+            syntaxHighlighter.AddPattern(new PatternDefinition(new Regex(@"@\w+", RegexOptions.Compiled)),
+                new SyntaxStyle(Color.Purple));
+
+            // numbers
+            //syntaxHighlighter.AddPattern(
+            //    new PatternDefinition(@"\d+\.\d+|\d+"),
+            //    new SyntaxStyle(Color.Purple));
+
+            syntaxHighlighter.AddPattern(
+                new PatternDefinition("+", "-", ">", "<", "&", "|", "=", "AND", "OR"),
+                new SyntaxStyle(Color.Gray));
+
+            // sql keywords
+            syntaxHighlighter.AddPattern(
+                new PatternDefinition(
+                    "BEGIN", "TRANS", "TRANSACTION", "COMMIT", "ROLLBACK",
+                    "ANALYZE",
+                    "CHECKPOINT",
+                    "CREATE", "INDEX", "UNIQUE",
+                    "DELETE",
+                    "DROP", "COLLECTION",
+                    "INSERT", "VALUES",
+                    "SELECT", "ALL", "INTO", "FROM", "SET", "WHERE", "INCLUDE", "GROUP", "ORDER", "BY", "ASC", "DESC", "HAVING", "LIMIT", "OFFSET", "FOR",
+                    "SET",
+                    "SHRINK",
+                    "UPDATE", "REPLACE",
+                    "VACCUM",
+                    "TRUE", "FALSE", "NULL"),
+                new SyntaxStyle(Color.Blue));
+
+            // expression method names
+            syntaxHighlighter.AddPattern(new PatternDefinition(BsonExpression.Methods),
+                new SyntaxStyle(color: Color.FromArgb(255, 0, 255), bold: false, italic: false));
         }
     }
 }
