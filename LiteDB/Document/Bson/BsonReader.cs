@@ -195,17 +195,17 @@ namespace LiteDB
 
         private string ReadCString(BinaryReader reader)
         {
-            var pos = 0;
-            var buffer = new byte[200];
-
-            while (true)
+            using (var m = new MemoryStream())
             {
-                var data = reader.ReadByte();
-                if (data == 0x00 || pos == 200) break;
-                buffer[pos++] = data;
-            }
+                while (true)
+                {
+                    var data = reader.ReadByte();
+                    if (data == 0x00) break;
+                    m.WriteByte(data);
+                }
 
-            return Encoding.UTF8.GetString(buffer, 0, pos);
+                return Encoding.UTF8.GetString(m.ToArray());
+            }
         }
     }
 }

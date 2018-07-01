@@ -114,8 +114,8 @@ namespace LiteDB.Engine
             this.TransactionID = reader.ReadGuid(); // 16 bytes
             this.ColID = reader.ReadUInt32(); // 4 bytes
 
-            reader.BaseStream.Position += 27;  // reserved 27 bytes
-                                               // total header: 64 bytes
+            reader.BaseStream.Seek(27, SeekOrigin.Current);  // reserved 27 bytes
+                                                             // total header: 64 bytes
         }
 
         private void WriteHeader(BinaryWriter writer)
@@ -215,7 +215,7 @@ namespace LiteDB.Engine
 
             if (length > 0)
             {
-                reader.ReadBytes((int)length);
+                reader.BaseStream.Seek(length, SeekOrigin.Current);
             }
 
             DEBUG(length < 0, "page read overflow");

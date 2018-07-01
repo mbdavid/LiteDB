@@ -45,7 +45,7 @@ namespace LiteDB
         /// <summary>
         /// Internal destroy method. Works only when used with BsonExpression
         /// </summary>
-        internal Action Destroy = () => { };
+        internal Action Destroy = null;
 
         #region Constructor
 

@@ -24,38 +24,45 @@ namespace LiteDB.Demo
                 Timeout = TimeSpan.FromSeconds(2)
             };
 
-            File.Delete(datafile);
-            File.Delete(walfile);
+            //File.Delete(datafile);
+            //File.Delete(walfile);
 
             using (var db = new LiteEngine(settings))
             {
-                Task.Factory.StartNew(() => db.Insert("col1", ReadDocuments(1, 100), BsonAutoId.Int32));
+                //Task.Factory.StartNew(() => db.Insert("col1", ReadDocuments(1, 100), BsonAutoId.Int32));
+                //
+                //Task.Factory.StartNew(() => db.Insert("col2", ReadDocuments(1, 5000), BsonAutoId.Int32));
+                //
+                //db.BeginTrans();
+                //
+                //db.UserVersion = 99;
+                //
+                //Task.Delay(150).Wait();
 
-                Task.Factory.StartNew(() => db.Insert("col2", ReadDocuments(1, 5000), BsonAutoId.Int32));
+                //db.Insert("col1", ReadDocuments(1, 50000), BsonAutoId.Int32);
 
-                db.BeginTrans();
+                var x = db.FindOne("col1", "_id=5000");
 
-                db.UserVersion = 99;
+                ;
 
-                Task.Delay(150).Wait();
             }
 
             Console.WriteLine("Engine Disposed()");
 
-            using (var db = new LiteEngine(settings))
-            {
-                var c1 = db.Query("col1").ToEnumerable().Count();
-                var c2 = db.Query("col2").ToEnumerable().Count();
-
-                var rr = db.Execute("select $ from $cols").Current;
-
-                
-
-                Console.WriteLine("Count col1: " + c1);
-                Console.WriteLine("Count col2: " + c2);
-
-                
-            }
+            //using (var db = new LiteEngine(settings))
+            //{
+            //    var c1 = db.Query("col1").ToEnumerable().Count();
+            //    var c2 = db.Query("col2").ToEnumerable().Count();
+            //
+            //    var rr = db.Execute("select $ from $cols").Current;
+            //
+            //    
+            //
+            //    Console.WriteLine("Count col1: " + c1);
+            //    Console.WriteLine("Count col2: " + c2);
+            //
+            //    
+            //}
 
             Console.WriteLine("FIM");
             Console.ReadKey();
