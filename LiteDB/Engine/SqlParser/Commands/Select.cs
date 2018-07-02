@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        ///    SELECT [ AGGREGATE ] {selectExpr}
+        ///    SELECT [ ALL ] {selectExpr}
         ///    [ INTO {newcollection} [ : {type} ] ]
         ///    [ FROM {collection} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
