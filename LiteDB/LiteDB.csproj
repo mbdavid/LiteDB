@@ -78,4 +78,8 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Interfaces\Database\Collections\" />
+  </ItemGroup>
+
 </Project>

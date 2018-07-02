@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LiteDB
 {
-    public sealed partial class LiteCollection<T>
+    public sealed partial class LiteCollection<T> : ILiteCollection<T>
     {
         private string _name;
         private LazyLoad<LiteEngine> _engine;
