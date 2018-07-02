@@ -108,9 +108,9 @@ namespace LiteDB.Engine
             doc["index"] = new BsonDocument
             {
                 ["name"] = this.Index.Name,
-                ["mode"] = this.Index.ToString(),
                 ["expr"] = this.IndexExpression,
                 ["order"] = this.Index.Order,
+                ["mode"] = this.Index.ToString(),
                 ["cost"] = (int)this.IndexCost
             };
 

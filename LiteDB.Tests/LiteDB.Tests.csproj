@@ -14,10 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Engine\SqlTests\ExplainPlan.sql" />
-    <None Remove="Engine\SqlTests\Insert.sql" />
-    <None Remove="Engine\SqlTests\Query.sql" />
-    <None Remove="Engine\SqlTests\Update.sql" />
+    <None Remove="Query\SqlTests\All_Sql.sql" />
     <None Remove="Expressions\ExprTests\Aggregate.txt" />
     <None Remove="Expressions\ExprTests\Format.txt" />
     <None Remove="Expressions\ExprTests\Method.txt" />
@@ -29,10 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Engine\SqlTests\ExplainPlan.sql" />
-    <EmbeddedResource Include="Engine\SqlTests\Query.sql" />
-    <EmbeddedResource Include="Engine\SqlTests\Update.sql" />
-    <EmbeddedResource Include="Engine\SqlTests\Insert.sql" />
+    <EmbeddedResource Include="Query\SqlTests\All_Sql.sql" />
     <EmbeddedResource Include="Expressions\ExprTests\Format.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Aggregate.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Parameter.txt" />

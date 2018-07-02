@@ -77,11 +77,13 @@ namespace LiteDB.Engine
         /// </summary>
         private void ParseSetValue(Token key)
         {
-            var reader = new JsonReader(_tokenizer);
+            // read =
+            _tokenizer.ReadToken().Expect(TokenType.Equals);
 
+            var reader = new JsonReader(_tokenizer);
             var value = reader.Deserialize();
 
-            // read eof/;
+            // read eof or ;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
             switch (key.Value.ToLower())
