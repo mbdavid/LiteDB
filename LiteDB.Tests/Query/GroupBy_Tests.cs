@@ -39,21 +39,16 @@ namespace LiteDB.Tests.Query
         {
             var r0 = person
                 .GroupBy(x => x["state"])
-                .Select(x => new { State = x.Key.AsString, Count = x.Count() })
-                .ToArray()
-                .ToDictionary(x => x.State, x => x.Count);
+                .Select(x => new BsonDocument { ["state"] = x.Key, ["count"] = x.Count() })
+                .ToArray();
 
             var r1 = db.Query("person")
                 .GroupBy("state")
                 .Select("{ state, count: COUNT($) }")
-                .ToArray()
-                .ToDictionary(x => x["state"].AsString, x => x["count"].AsInt32);
+                .ToArray();
 
             // check for all states counts
-            foreach (var key in r0.Keys)
-            {
-                Assert.AreEqual(r0[key], r1[key]);
-            }
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
@@ -61,21 +56,15 @@ namespace LiteDB.Tests.Query
         {
             var r0 = person
                 .GroupBy(x => x["state"])
-                .Select(x => new { State = x.Key.AsString, Sum = x.Sum(q => q["age"].AsInt32) })
-                .ToArray()
-                .ToDictionary(x => x.State, x => x.Sum);
+                .Select(x => new BsonDocument { ["state"] = x.Key, ["sum"] = x.Sum(q => q["age"].AsInt32) })
+                .ToArray();
 
             var r1 = db.Query("person")
                 .GroupBy("state")
                 .Select("{ state, sum: SUM(age) }")
-                .ToArray()
-                .ToDictionary(x => x["state"].AsString, x => x["sum"].AsInt32);
+                .ToArray();
 
-            // check for all states sums
-            foreach (var key in r0.Keys)
-            {
-                Assert.AreEqual(r0[key], r1[key]);
-            }
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
@@ -84,27 +73,18 @@ namespace LiteDB.Tests.Query
             var r0 = person
                 .Where(x => x["age"] > 35)
                 .GroupBy(x => x["state"])
-                .Select(x => new { State = x.Key.AsString, Count = x.Count() })
-                .OrderBy(x => x.State)
-                .ToArray()
-                .ToDictionary(x => x.State, x => x.Count);
+                .Select(x => new BsonDocument { ["state"] = x.Key, ["count"] = x.Count() })
+                .OrderBy(x => x["state"].AsString)
+                .ToArray();
 
             var r1 = db.Query("person")
                 .Where("age > 35")
                 .GroupBy("state")
                 .Select("{ state, count: COUNT($) }")
                 .OrderBy("state")
-                .ToArray()
-                .ToDictionary(x => x["state"].AsString, x => x["count"].AsInt32);
+                .ToArray();
 
-            // check state order
-            Assert.AreEqual(string.Join(",", r0.Keys), string.Join(",", r1.Keys));
-
-            // check for all states counts
-            foreach (var key in r0.Keys)
-            {
-                Assert.AreEqual(r0[key], r1[key]);
-            }
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
@@ -112,21 +92,56 @@ namespace LiteDB.Tests.Query
         {
             var r0 = person
                 .GroupBy(x => x["date"].AsDateTime.Year)
-                .Select(x => new { Year = x.Key, Count = x.Count() })
-                .ToArray()
-                .ToDictionary(x => x.Year, x => x.Count);
+                .Select(x => new BsonDocument { ["year"] = x.Key, ["count"] = x.Count() })
+                .ToArray();
 
             var r1 = db.Query("person")
                 .GroupBy("YEAR(date)")
                 .Select("{ year: YEAR(date), count: COUNT($) }")
-                .ToArray()
-                .ToDictionary(x => x["year"].AsInt32, x => x["count"].AsInt32);
+                .ToArray();
 
-            // check for all states counts
-            foreach (var key in r0.Keys)
+            Util.Compare(r0, r1, true);
+        }
+
+        [TestMethod]
+        public void Query_GroupBy_With_Array_Aggregation()
+        {
+            var r = db.Query("person")
+                .GroupBy("SUBSTRING(email, INDEXOF(email, '@') + 1)")
+                .Select(@"{ 
+                               domain: SUBSTRING(email, INDEXOF(email, '@') + 1), 
+                               users: [{
+                                   user: LOWER(SUBSTRING(email, 0, INDEXOF(email, '@'))), 
+                                   name, 
+                                   age
+                               }]
+                           }")
+                .OrderBy("LENGTH(users)", -1)
+                .Limit(10)
+                .ToArray();
+
+            for(var i = 0; i < r.Length; i++)
             {
-                Assert.AreEqual(r0[key], r1[key]);
+                var users0 = usersDomain(r[i]["domain"]);
+                var users1 = r[i]["users"].AsArray;
+
+                if (users0.CompareTo(users1) != 0)
+                {
+                    Assert.Fail($"Result are not same: {users0} and {users1}");
+                }
             }
+
+            // return all users from a single email domain
+            BsonArray usersDomain(string domain) {
+                return person
+                    .Where(x => x["email"].AsString.Substring(x["email"].AsString.IndexOf('@') + 1) == domain)
+                    .Select(x => new BsonDocument {
+                        ["user"] = x["email"].AsString.ToLower().Substring(0, x["email"].AsString.IndexOf('@')),
+                        ["name"] = x["name"],
+                        ["age"] = x["age"]
+                    })
+                    .ToBsonArray();
+            };
         }
     }
 }

@@ -22,7 +22,7 @@ namespace LiteDB.Tests.Query
         public void Init()
         {
             db = new LiteEngine();
-            person = DataGen.Person().ToArray();
+            person = DataGen.Person(1, 1000).ToArray();
 
             db.Insert("person", person);
             db.EnsureIndex("col", "age");
@@ -45,11 +45,11 @@ namespace LiteDB.Tests.Query
                 .Where("state = @0", "FL")
                 .ToArray();
 
-            Assert.AreEqual(r0.Length, r1.Length);
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
-        public void Query_Multi_Where()
+        public void Query_Multi_Where_With_Like()
         {
             var r0 = person
                 .Where(x => x["age"] >= 10 && x["age"] <= 40)
@@ -61,7 +61,7 @@ namespace LiteDB.Tests.Query
                 .Where("name LIKE 'Ge%'")
                 .ToArray();
 
-            Assert.AreEqual(r0.Length, r1.Length);
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
@@ -75,7 +75,7 @@ namespace LiteDB.Tests.Query
                 .Where("age = 25 AND active = true")
                 .ToArray();
 
-            Assert.AreEqual(r0.Length, r1.Length);
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
@@ -93,8 +93,8 @@ namespace LiteDB.Tests.Query
                 .Where("age IN [25, 26, 27]")
                 .ToArray();
 
-            Assert.AreEqual(r0.Length, r1.Length);
-            Assert.AreEqual(r1.Length, r2.Length);
+            Util.Compare(r0, r1, true);
+            Util.Compare(r1, r2, true);
         }
     }
 }

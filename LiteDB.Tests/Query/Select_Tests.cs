@@ -39,8 +39,8 @@ namespace LiteDB.Tests.Query
         {
             // must orderBy mem data because index will be sorted
             var r0 = zip
-                .Select(x => x["city"].AsString)
-                .OrderBy(x => x)
+                .Select(x => x["city"])
+                .OrderBy(x => x.AsString)
                 .ToArray();
 
             // this query will not deserialize document, using only index key
@@ -48,20 +48,16 @@ namespace LiteDB.Tests.Query
                 .Index(Index.All("city"))
                 .Select("city")
                 .ToValues()
-                // key only return document { key: value }
-                .Select(x => x["city"].AsString)
                 .ToArray();
 
-            Assert.AreEqual(
-                string.Join(",", r0),
-                string.Join(",", r1));
+            Util.Compare(r0, r1);
         }
 
         [TestMethod]
         public void Query_Select_New_Document()
         {
             var r0 = zip
-                .Select(x => new { city = x["city"].AsString.ToUpper(), lat = x["loc"][0].AsDouble, lng = x["loc"][1].AsDouble })
+                .Select(x => new BsonDocument { ["city"] = x["city"].AsString.ToUpper(), ["lat"] = x["loc"][0].AsDouble, ["lng"] = x["loc"][1].AsDouble })
                 .ToArray();
 
             var r1 = db.Query("zip")
@@ -69,12 +65,7 @@ namespace LiteDB.Tests.Query
                 .ToArray();
 
 
-            for (var i = 0; i < r0.Length; i++)
-            {
-                Assert.AreEqual(r0[i].city, r1[i]["city"].AsString);
-                Assert.AreEqual(r0[i].lat, r1[i]["lat"].AsDouble);
-                Assert.AreEqual(r0[i].lng, r1[i]["lng"].AsDouble);
-            }
+            Util.Compare(r0, r1, true);
         }
 
         [TestMethod]
