@@ -58,7 +58,7 @@ namespace LiteDB.Engine
             var fields = new HashSet<string>();
 
             // include all fields detected in all used expressions
-            fields.AddRange(_select?.Expression.Fields);
+            fields.AddRange(_select?.Expression.Fields ?? new HashSet<string> { "$" });
             fields.AddRange(_where.SelectMany(x => x.Fields));
             fields.AddRange(_includes.SelectMany(x => x.Fields));
             fields.AddRange(_groupBy?.Expression.Fields);
