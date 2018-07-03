@@ -5,6 +5,17 @@ using System.Linq;
 
 namespace LiteDB
 {
+    public static class BsonArrayExtensions
+    {
+        /// <summary>
+        /// Convert an IEnumerable of BsonValues into a single BsonArray with all elements
+        /// </summary>
+        public static BsonArray ToBsonArray(this IEnumerable<BsonValue> values)
+        {
+            return new BsonArray(values);
+        }
+    }
+
     public class BsonArray : BsonValue, IList<BsonValue>
     {
         public BsonArray()
