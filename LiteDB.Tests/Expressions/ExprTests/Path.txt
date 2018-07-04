@@ -104,5 +104,5 @@
 > a + COUNT($)
 - a, $
 > { q: $.a + "str", w: UPPER($.b), z: c.x + c.y }
-= { q: "1str", w: null, z: 3 }
+= { q: "1str", z: 3 }
 - a, b, c
