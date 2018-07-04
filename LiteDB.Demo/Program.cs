@@ -13,7 +13,10 @@ namespace LiteDB.Demo
         static void Main(string[] args)
         {
             var orig = @"C:\Temp\service.c.db";
-            
+
+            var docs = JsonSerializer.DeserializeArray("").Select(x => x.AsDocument);
+
+
             var report = LiteEngine.Recovery(orig);
 
             Console.WriteLine("Recovery Report:\n" + report);

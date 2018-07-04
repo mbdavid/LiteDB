@@ -222,14 +222,20 @@ namespace LiteDB
             {
                 // get temp file ("-temp" suffix)
                 var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
+                var reduced = 0l;
 
-                // get temp disk based on temp file
-                var tempDisk = new FileDiskService(tempFile, false);
+                try
+                {
+                    // get temp disk based on temp file
+                    var tempDisk = new FileDiskService(tempFile, new FileOptions { Journal = false, FileMode = FileMode.Exclusive });
 
-                var reduced = _engine.Value.Shrink(password, tempDisk);
-
-                // delete temp file
-                File.Delete(tempFile);
+                    reduced = _engine.Value.Shrink(password, tempDisk);
+                }
+                finally
+                {
+                    // delete temp file
+                    File.Delete(tempFile);
+                }
 
                 return reduced;
             }
