@@ -222,7 +222,7 @@ namespace LiteDB
             {
                 // get temp file ("-temp" suffix)
                 var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
-                var reduced = 0l;
+                var reduced = 0L;
 
                 try
                 {
