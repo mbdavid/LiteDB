@@ -33,8 +33,8 @@ namespace LiteDB
         {
             // create a temp filename in temp directory
             _filename = Path.Combine(Path.GetTempPath(), "litedb-sort-" + Guid.NewGuid().ToString("n").Substring(0, 6) + ".db");
-            
-            // create disk 
+
+            // create disk
             _stream = this.CreateFileStream(_filename, System.IO.FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
         }
 
@@ -199,17 +199,18 @@ namespace LiteDB
         private FileStream CreateFileStream(string path, System.IO.FileMode mode, FileAccess access, FileShare share)
         {
 #if HAVE_SYNC_OVER_ASYNC
-            // if (_options.Async) 
+            // if (_options.Async)
             {
                 return System.Threading.Tasks.Task.Run(() => new FileStream(path, mode, access, share, BasePage.PAGE_SIZE))
                     .ConfigureAwait(false)
                     .GetAwaiter()
                     .GetResult();
             }
-#endif
-            return new FileStream(path, mode, access, share, 
+#else
+            return new FileStream(path, mode, access, share,
                 BasePage.PAGE_SIZE,
                 System.IO.FileOptions.RandomAccess);
+#endif
         }
 
         #endregion
