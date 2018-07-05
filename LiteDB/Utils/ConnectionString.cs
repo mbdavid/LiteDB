@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace LiteDB
 {
@@ -8,10 +9,20 @@ namespace LiteDB
     /// </summary>
     public class ConnectionString
     {
+        private string _filename = string.Empty;
+
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
         /// </summary>
-        public string Filename { get; set; } = "";
+        public string Filename
+        {
+            get => _filename;
+            set
+            {
+                EnsureValidPath(value);
+                _filename = value;
+            }
+        }
 
         /// <summary>
         /// "journal": Enabled or disable double write check to ensure durability (default: true)
@@ -21,7 +32,7 @@ namespace LiteDB
         /// <summary>
         /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
         /// </summary>
-        public string Password { get; set; } = null;
+        public string Password { get; set; }
 
         /// <summary>
         /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (default: 5000)
@@ -68,16 +79,16 @@ namespace LiteDB
         public bool Upgrade { get; set; } = false;
 
 #if HAVE_SYNC_OVER_ASYNC
-        /// <summary>
-        /// "async": Use "sync over async" to UWP apps access any directory (default: false)
-        /// </summary>
+/// <summary>
+/// "async": Use "sync over async" to UWP apps access any directory (default: false)
+/// </summary>
         public bool Async { get; set; } = false;
 #endif
 
 #if HAVE_FLUSH_DISK
-        /// <summary>
-        /// "flush": If true, apply flush direct to disk, ignoring OS cache [FileStream.Flush(true)]
-        /// </summary>
+/// <summary>
+/// "flush": If true, apply flush direct to disk, ignoring OS cache [FileStream.Flush(true)]
+/// </summary>
         public bool Flush { get; set; } = false;
 #endif
 
@@ -93,39 +104,286 @@ namespace LiteDB
         /// </summary>
         public ConnectionString(string connectionString)
         {
-            if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException(nameof(connectionString));
+            if (string.IsNullOrEmpty(connectionString))
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionString));
 
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Parse(connectionString);
+        }
 
-            // create a dictionary from string name=value collection
-            if (connectionString.Contains("="))
+        private void Parse(string connectionString)
+        {
+            connectionString = connectionString.Trim().TrimEnd(';');
+            if (!connectionString.Contains("="))
             {
-                values.ParseKeyValue(connectionString);
-            }
-            else
-            {
-                values["filename"] = connectionString;
+                Filename = connectionString;
+                return;
             }
 
-            // setting values to properties
-            this.Filename = values.GetValue("filename", this.Filename);
-            this.Journal = values.GetValue("journal", this.Journal);
-            this.Password = values.GetValue<string>("password", this.Password);
-            this.CacheSize = values.GetValue(@"cache size", this.CacheSize);
-            this.Timeout = values.GetValue("timeout", this.Timeout);
-            this.Mode = values.GetValue("mode", this.Mode);
-            this.InitialSize = values.GetFileSize(@"initial size", this.InitialSize);
-            this.LimitSize = values.GetFileSize(@"limit size", this.LimitSize);
-            this.Log = values.GetValue("log", this.Log);
-            this.UtcDate = values.GetValue("utc", this.UtcDate);
-            this.Upgrade = values.GetValue("upgrade", this.Upgrade);
+            var index = 0;
+            var working = connectionString;
+            while (working.Contains("="))
+            {
+                working = working.Substring(index);
+                ConsumeSettingToken(working, out var name, out index);
+
+                working = working.Substring(index);
+                ConsumeValue(working, out var value, out index);
+
+                InitSetting(name, value);
+            }
+
+            if (working.Substring(index).Trim() != string.Empty)
+                throw new FormatException($"Unexpected characters at position {index} in '{working}'");
+
+            if (string.IsNullOrEmpty(Filename))
+                throw new FormatException("Connection string did not contain a filename");
+        }
+
+        private void ConsumeSettingToken(string from, out string setting, out int endIndex)
+        {
+            var index = 0;
+            var lastChar = '\0';
+            var value = string.Empty;
+
+            while (index < from.Length)
+            {
+                var ch = from[index++];
+
+                if (ch == '=')
+                    break;
+
+                if (char.IsWhiteSpace(ch))
+                {
+                    // if we've not yet hit the keyword or there are multiple spaces between words (e.g. "  cache   size")
+                    // then just skip the space
+                    if (value == string.Empty || lastChar == ' ')
+                        continue;
+
+                    value += ' ';
+                }
+                else
+                    value += ch;
+
+                lastChar = ch;
+            }
+
+            setting = value.Trim().ToLower();
+            endIndex = index;
+        }
+
+        private void ConsumeValue(string from, out string value, out int endIndex)
+        {
+            var index = 0;
+            var isQuoted = false;
+            var possibleEscape = false;
+            var expectEnd = false;
+            var trim = true;
+            var workingValue = string.Empty;
+
+            while (index < from.Length)
+            {
+                var ch = from[index++];
+
+                if (char.IsWhiteSpace(ch) && (workingValue == string.Empty || expectEnd))
+                    continue;
+
+                // if a ; is surrounded by quotes then it's part of the value
+                if (ch == ';' && (!isQuoted || expectEnd))
+                    break;
+
+                if (expectEnd && !char.IsWhiteSpace(ch))
+                    throw new FormatException($"Unexpected character '{ch}' at position {index} in '{from}'");
+
+                // this may mean the next character is escaped, or it may just be part of a Windows file path.
+                // currently the only escaped character is " so if the next character is not " then the slash will 
+                // just get added to the string later in this method
+                if (ch == '\\')
+                {
+                    possibleEscape = true;
+                    continue;
+                }
+
+                if (ch == '"' && !possibleEscape)
+                {
+                    // have we've reached the end of the literal block
+                    if (isQuoted)
+                        expectEnd = true;
+
+                    // or are we about to enter a literal block
+                    else if (workingValue == string.Empty)
+                    {
+                        isQuoted = true;
+
+                        // spacing within a literal block is preserved
+                        trim = false;
+                    }
+                    else
+                        throw new FormatException($"Unexpected character '{ch}' at position {index} in '{from}'");
+
+                    continue;
+                }
+
+                if (possibleEscape)
+                {
+                    if (ch != '"')
+                        workingValue += '\\';
+
+                    possibleEscape = false;
+                }
+
+                workingValue += ch;
+            }
+
+            value = trim ? workingValue.Trim() : workingValue;
+            endIndex = index;
+        }
+
+        private void InitSetting(string name, string value)
+        {
+            switch (name)
+            {
+                case "filename":
+                    Filename = value;
+                    break;
+                case "journal":
+                    Journal = ParseBoolSetting(name, value);
+                    break;
+                case "password":
+                    Password = value;
+                    break;
+                case "cache size":
+                    CacheSize = ParseIntSetting(name, value);
+                    break;
+                case "timeout":
+                    Timeout = ParseTimepanSetting(name, value);
+                    break;
+                case "mode":
+                    Mode = ParseFileModeSetting(name, value);
+                    break;
+                case "initial size":
+                    InitialSize = ParseSize(name, value);
+                    break;
+                case "limit size":
+                    LimitSize = ParseSize(name, value);
+                    break;
+                case "upgrade":
+                    Upgrade = ParseBoolSetting(name, value);
+                    break;
+                case "utc":
+                    UtcDate = ParseBoolSetting(name, value);
+                    break;
+                case "log":
+                    Log = ParseByteSetting(name, value);
+                    break;
+                case "async":
 #if HAVE_SYNC_OVER_ASYNC
-            this.Async = values.GetValue("async", this.Async);
+                    Async = ParseBoolSetting(name, value);
 #endif
+                    break;
+                case "flush":
 #if HAVE_FLUSH_DISK
-            this.Flush = values.GetValue("flush", this.Flush);
+                    Flush = ParseBoolSetting(name, value);
 #endif
+                    break;
+                default:
+                    throw new FormatException($"Unexpecting setting name '{name}'");
+            }
+        }
 
+        private void EnsureValidPath(string value)
+        {
+            if (value.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+                throw new FormatException($"Expected filename but read '{value}'");
+        }
+
+        private bool ParseBoolSetting(string setting, string value)
+        {
+            if (!bool.TryParse(value, out var result))
+                throw new FormatException($"Expected boolean value for '{setting}' but read '{value}'");
+
+            return result;
+        }
+
+        private byte ParseByteSetting(string setting, string value)
+        {
+            if (!byte.TryParse(value, out var result))
+                throw new FormatException($"Expected byte value for '{setting}' but read '{value}'");
+
+            return result;
+        }
+
+        private int ParseIntSetting(string setting, string value)
+        {
+            if (!int.TryParse(value, out var result))
+                throw new FormatException($"Expected integer value for '{setting}' but read '{value}'");
+
+            return result;
+        }
+
+        private TimeSpan ParseTimepanSetting(string setting, string value)
+        {
+            if (!TimeSpan.TryParse(value, out var result))
+                throw new FormatException($"Expected timespan value for '{setting}' but read '{value}'");
+
+            return result;
+        }
+
+        private FileMode ParseFileModeSetting(string setting, string value)
+        {
+            try
+            {
+                return (FileMode) Enum.Parse(typeof(FileMode), value, true);
+            }
+            catch
+            {
+                throw new FormatException($"Expected timespan value for '{setting}' but read '{value}'");
+            }
+        }
+
+        private long ParseSize(string setting, string value)
+        {
+            if (long.TryParse(value, out var parsedSize))
+                return parsedSize;
+
+            var numString = string.Empty;
+            var unitString = string.Empty;
+            var isNumEnded = false;
+            foreach (var c in value.Where(c => !char.IsWhiteSpace(c)))
+            {
+                if (!isNumEnded && char.IsDigit(c))
+                    numString += c;
+                else
+                {
+                    isNumEnded = true;
+                    unitString += char.ToLower(c);
+                }
+            }
+
+            if (!long.TryParse(numString, out parsedSize) || parsedSize <= 0)
+                throw new FormatException($"Expected size definition for '{setting}' but read '{value}'");
+
+            switch (unitString)
+            {
+                case "kb":
+                    parsedSize *= 1024L;
+                    break;
+                case "mb":
+                    parsedSize *= 1024L * 1024L;
+                    break;
+                case "gb":
+                    parsedSize *= 1024L * 1024L * 1024L;
+                    break;
+                case "tb": // is this practical?
+                    parsedSize *= 1024L * 1024L * 1024L * 1024L;
+                    break;
+                default:
+                {
+                    throw new FormatException(
+                        $"Unexpected unit of '{unitString}' in '{setting}'.  Valid units are; KB, MB, GB");
+                }
+            }
+
+            return parsedSize;
         }
     }
 }
