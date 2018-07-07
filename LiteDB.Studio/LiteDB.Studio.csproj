@@ -152,5 +152,8 @@
   <ItemGroup>
     <None Include="Resources\textfield_rename.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\application_put.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
