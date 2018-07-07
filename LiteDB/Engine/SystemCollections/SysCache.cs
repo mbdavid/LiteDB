@@ -10,17 +10,21 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysCache()
         {
-            foreach(var item in _dataFile.Cache.Data)
+            var collections = _header.Collections.ToDictionary(x => x.Value, x => x.Key);
+
+            foreach (var item in _dataFile.Cache.Data)
             {
-                yield return this.DumpPage(item.Value, item.Key, null, false, false);
+                yield return this.DumpPage(item.Value, item.Key, null, false, false, collections);
             }
         }
 
         private IEnumerable<BsonDocument> SysCacheWal()
         {
+            var collections = _header.Collections.ToDictionary(x => x.Value, x => x.Key);
+
             foreach (var item in _wal.WalFile.Cache.Data)
             {
-                yield return this.DumpPage(item.Value, item.Key, null, true, true);
+                yield return this.DumpPage(item.Value, item.Key, null, true, true, collections);
             }
         }
     }

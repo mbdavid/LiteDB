@@ -427,13 +427,13 @@
             this.mnuVaccum,
             this.mnuShrink});
             this.ctxMenuRoot.Name = "ctxMenu";
-            this.ctxMenuRoot.Size = new System.Drawing.Size(181, 120);
+            this.ctxMenuRoot.Size = new System.Drawing.Size(147, 98);
             this.ctxMenuRoot.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenuRoot_ItemClicked);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(143, 6);
             // 
             // btnConnect
             // 
@@ -545,7 +545,7 @@
             // 
             this.mnuInfo.Image = global::LiteDB.Studio.Properties.Resources.information;
             this.mnuInfo.Name = "mnuInfo";
-            this.mnuInfo.Size = new System.Drawing.Size(180, 22);
+            this.mnuInfo.Size = new System.Drawing.Size(146, 22);
             this.mnuInfo.Tag = "SELECT $ FROM $database;";
             this.mnuInfo.Text = "Database Info";
             // 
@@ -553,7 +553,7 @@
             // 
             this.mnuCheckpoint.Image = global::LiteDB.Studio.Properties.Resources.application_put;
             this.mnuCheckpoint.Name = "mnuCheckpoint";
-            this.mnuCheckpoint.Size = new System.Drawing.Size(180, 22);
+            this.mnuCheckpoint.Size = new System.Drawing.Size(146, 22);
             this.mnuCheckpoint.Tag = "CHECKPOINT;";
             this.mnuCheckpoint.Text = "Checkpoint";
             // 
@@ -561,7 +561,7 @@
             // 
             this.mnuShrink.Image = global::LiteDB.Studio.Properties.Resources.compress;
             this.mnuShrink.Name = "mnuShrink";
-            this.mnuShrink.Size = new System.Drawing.Size(180, 22);
+            this.mnuShrink.Size = new System.Drawing.Size(146, 22);
             this.mnuShrink.Tag = "SHRINK;";
             this.mnuShrink.Text = "Shrink";
             // 
@@ -569,7 +569,7 @@
             // 
             this.mnuVaccum.Image = global::LiteDB.Studio.Properties.Resources.brick;
             this.mnuVaccum.Name = "mnuVaccum";
-            this.mnuVaccum.Size = new System.Drawing.Size(180, 22);
+            this.mnuVaccum.Size = new System.Drawing.Size(146, 22);
             this.mnuVaccum.Tag = "VACCUM;";
             this.mnuVaccum.Text = "Vaccum";
             // 

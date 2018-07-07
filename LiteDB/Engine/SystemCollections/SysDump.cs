@@ -12,12 +12,13 @@ namespace LiteDB.Engine
         {
             var length = _dataFile.Length;
             var position = 0;
+            var collections = _header.Collections.ToDictionary(x => x.Value, x => x.Key);
 
             while (position < length)
             {
                 var page = _dataFile.ReadPage(position, false);
 
-                yield return this.DumpPage(page, null, null, false, false);
+                yield return this.DumpPage(page, null, null, false, false, collections);
 
                 position += PAGE_SIZE;
             }
@@ -28,6 +29,7 @@ namespace LiteDB.Engine
             var length = _wal.WalFile.Length;
             var position = 0;
             var versions = new Dictionary<Guid, int>();
+            var collections = _header.Collections.ToDictionary(x => x.Value, x => x.Key);
 
             while (position < length)
             {
@@ -44,7 +46,7 @@ namespace LiteDB.Engine
                     }
                 }
 
-                var doc = this.DumpPage(page, position, version, true, false);
+                var doc = this.DumpPage(page, position, version, true, false, collections);
 
                 yield return doc;
 
@@ -55,7 +57,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Dump page information into a BsonDocument
         /// </summary>
-        private BsonDocument DumpPage(BasePage page, long? position, int? version, bool transactionID, bool dirty)
+        private BsonDocument DumpPage(BasePage page, long? position, int? version, bool transactionID, bool dirty, Dictionary<uint, string> collections)
         {
             var doc = new BsonDocument();
 
@@ -72,7 +74,15 @@ namespace LiteDB.Engine
             doc["nextPageID"] = (int)page.NextPageID;
             doc["itemCount"] = (int)page.ItemCount;
             doc["freeBytes"] = (int)page.FreeBytes;
-            doc["colID"] = (int)page.ColID;
+
+            if (collections.TryGetValue(page.ColID, out var collection))
+            {
+                doc["collection"] = collection;
+            }
+            else
+            {
+                doc["collection"] = page.ColID == uint.MaxValue ? BsonValue.Null : new BsonValue((int)page.ColID);
+            }
 
             if (page.PageType == PageType.Header)
             {
