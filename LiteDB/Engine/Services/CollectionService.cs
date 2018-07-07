@@ -24,10 +24,13 @@ namespace LiteDB.Engine
         public CollectionPage Get(string name)
         {
             // first, check if this a new collection (in this transaction)
-            if (_transPages.NewCollections.TryGetValue(name, out var page)) return page;
+            if (_transPages.NewCollections.TryGetValue(name, out var addedPageID))
+            {
+                return _snapshot.GetPage<CollectionPage>(addedPageID);
+            }
 
             // but if collection was deleted, return null
-            if (_transPages.DeletedCollections.ContainsKey(name)) return null;
+            if (_transPages.DeletedCollections.Contains(name)) return null;
 
             // otherwise, try get from header collection
             if (_header.Collections.TryGetValue(name, out var pageID))
@@ -52,7 +55,7 @@ namespace LiteDB.Engine
             if (_transPages.NewCollections.ContainsKey(name)) throw LiteException.AlreadyExistsCollectionName(name);
 
             // test if new collection name do not exceed max length (must re-checked on commit)
-            _header.CheckCollectionsSize(new string[] { name });
+            _header.CheckCollectionsSize(name);
 
             // create new collection page
             var col = _snapshot.NewPage<CollectionPage>();
@@ -72,7 +75,7 @@ namespace LiteDB.Engine
             _snapshot.SetDirty(col);
 
             // add collection into transaction page
-            _transPages.NewCollections.Add(name, col);
+            _transPages.NewCollections.Add(name, col.PageID);
 
             return col;
         }
@@ -83,49 +86,19 @@ namespace LiteDB.Engine
         public IEnumerable<CollectionPage> GetAll()
         {
             // first, return new collections (local)
-            foreach (var page in _transPages.NewCollections.Values)
+            foreach (var pageID in _transPages.NewCollections.Values)
             {
-                yield return page;
+                yield return _snapshot.GetPage<CollectionPage>(pageID);
             }
 
             // get all pages (global)
             foreach (var col in _header.Collections)
             {
                 // exclude deleted pages
-                if (_transPages.DeletedCollections.ContainsKey(col.Key)) continue;
+                if (_transPages.DeletedCollections.Contains(col.Key)) continue;
 
                 yield return _snapshot.GetPage<CollectionPage>(col.Value);
             }
-        }
-
-        /// <summary>
-        /// Rename collection
-        /// </summary>
-        public void Rename(CollectionPage col, string newName)
-        {
-            throw new NotImplementedException();
-
-
-            //// check if newName already exists
-            //if (this.GetAll().Select(x => x.CollectionName).Contains(newName, StringComparer.OrdinalIgnoreCase))
-            //{
-            //    throw LiteException.AlreadyExistsCollectionName(newName);
-            //}
-
-            //var oldName = col.CollectionName;
-            //
-            //// change collection name on collectio page
-            //col.CollectionName = newName;
-            //
-            //// set collection page as dirty
-            //_snapshot.SetDirty(col);
-            //
-            //// update collection list page reference
-            //var colList = _snapshot.GetPage<CollectionListPage>(1);
-            //
-            //colList.Rename(oldName, newName);
-            //
-            //_snapshot.SetDirty(colList);
         }
 
         /// <summary>
@@ -186,7 +159,7 @@ namespace LiteDB.Engine
             if (_transPages.NewCollections.Remove(col.CollectionName) == false)
             {
                 // otherwise, add into delete collection list
-                _transPages.DeletedCollections.Add(col.CollectionName, col);
+                _transPages.DeletedCollections.Add(col.CollectionName);
             }
 
             // remove reference of collection page from snapshot (for current transaction, there is no more this collection)

@@ -43,11 +43,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// New collections added in this transaction
         /// </summary>
-        public Dictionary<string, CollectionPage> NewCollections { get; set; } = new Dictionary<string, CollectionPage>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, uint> NewCollections { get; set; } = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Deleted collections in this transaction
         /// </summary>
-        public Dictionary<string, CollectionPage> DeletedCollections { get; set; } = new Dictionary<string, CollectionPage>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> DeletedCollections { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 }

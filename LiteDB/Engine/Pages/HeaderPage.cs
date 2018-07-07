@@ -96,17 +96,17 @@ namespace LiteDB.Engine
             // remove/add collections based on transPages
             if (transPages != null)
             {
-                foreach (var p in transPages.DeletedCollections)
+                foreach (var name in transPages.DeletedCollections)
                 {
-                    if (this.Collections.TryRemove(p.Key, out var x) == false)
+                    if (this.Collections.TryRemove(name, out var x) == false)
                     {
-                        throw LiteException.CollectionNotFound(p.Key);
+                        throw LiteException.CollectionNotFound(name);
                     }
                 }
 
                 foreach (var p in transPages.NewCollections)
                 {
-                    if (this.Collections.TryAdd(p.Key, p.Value.PageID) == false)
+                    if (this.Collections.TryAdd(p.Key, p.Value) == false)
                     {
                         throw LiteException.CollectionAlreadyExist(p.Key);
                     }
@@ -119,11 +119,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Check if all new collection names fit on header page with all existing collection
         /// </summary>
-        public void CheckCollectionsSize(IEnumerable<string> names)
+        public void CheckCollectionsSize(string newCollection)
         {
             var sum =
                 this.Collections.Sum(x => x.Key.Length + 8) +
-                names.Sum(x => x.Length + 8);
+                (newCollection.Length + 8);
 
             if (sum >= MAX_COLLECTIONS_NAME_SIZE)
             {

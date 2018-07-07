@@ -266,6 +266,7 @@ namespace LiteDB.Studio
                     "CREATE", "INDEX", "ON", "UNIQUE",
                     "DELETE",
                     "DROP", "COLLECTION",
+                    "RENAME", "TO",
                     "INSERT", "INTO", "VALUES",
                     "SELECT", "ALL", "FROM", "WHERE", "INCLUDE", "GROUP", "ORDER", "BY", "ASC", "DESC", "HAVING", "LIMIT", "OFFSET", "FOR",
                     "SET", "EXPLAIN",

@@ -74,6 +74,7 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuVaccum = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuRename = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -231,10 +232,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 24);
+            this.tabText.Location = new System.Drawing.Point(4, 22);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 333);
+            this.tabText.Size = new System.Drawing.Size(808, 335);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -256,10 +257,10 @@
             // tabParameters
             // 
             this.tabParameters.Controls.Add(this.txtParameters);
-            this.tabParameters.Location = new System.Drawing.Point(4, 24);
+            this.tabParameters.Location = new System.Drawing.Point(4, 22);
             this.tabParameters.Name = "tabParameters";
             this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
-            this.tabParameters.Size = new System.Drawing.Size(808, 333);
+            this.tabParameters.Size = new System.Drawing.Size(808, 335);
             this.tabParameters.TabIndex = 5;
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
@@ -458,16 +459,17 @@
             this.mnuAnalyze,
             this.mnuIndexes,
             this.mnuSep1,
+            this.mnuRename,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(156, 126);
+            this.ctxMenu.Size = new System.Drawing.Size(181, 170);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuQuery
             // 
             this.mnuQuery.Image = global::LiteDB.Studio.Properties.Resources.table_lightning;
             this.mnuQuery.Name = "mnuQuery";
-            this.mnuQuery.Size = new System.Drawing.Size(155, 22);
+            this.mnuQuery.Size = new System.Drawing.Size(180, 22);
             this.mnuQuery.Tag = "SELECT $ FROM {0};";
             this.mnuQuery.Text = "Query";
             // 
@@ -475,20 +477,20 @@
             // 
             this.mnuExplanPlan.Image = global::LiteDB.Studio.Properties.Resources.table_sort;
             this.mnuExplanPlan.Name = "mnuExplanPlan";
-            this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
+            this.mnuExplanPlan.Size = new System.Drawing.Size(180, 22);
             this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
             this.mnuExplanPlan.Text = "Explain plan";
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // mnuAnalyze
             // 
             this.mnuAnalyze.Image = global::LiteDB.Studio.Properties.Resources.page_white_gear;
             this.mnuAnalyze.Name = "mnuAnalyze";
-            this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
+            this.mnuAnalyze.Size = new System.Drawing.Size(180, 22);
             this.mnuAnalyze.Tag = "ANALYZE {0};";
             this.mnuAnalyze.Text = "Analyze";
             // 
@@ -496,20 +498,20 @@
             // 
             this.mnuIndexes.Image = global::LiteDB.Studio.Properties.Resources.key;
             this.mnuIndexes.Name = "mnuIndexes";
-            this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
+            this.mnuIndexes.Size = new System.Drawing.Size(180, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
             // mnuSep1
             // 
             this.mnuSep1.Name = "mnuSep1";
-            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
+            this.mnuSep1.Size = new System.Drawing.Size(177, 6);
             // 
             // mnuDropCollection
             // 
             this.mnuDropCollection.Image = global::LiteDB.Studio.Properties.Resources.table_delete;
             this.mnuDropCollection.Name = "mnuDropCollection";
-            this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
+            this.mnuDropCollection.Size = new System.Drawing.Size(180, 22);
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
             // 
@@ -552,6 +554,14 @@
             this.mnuVaccum.Size = new System.Drawing.Size(146, 22);
             this.mnuVaccum.Tag = "VACCUM;";
             this.mnuVaccum.Text = "Vaccum";
+            // 
+            // mnuRename
+            // 
+            this.mnuRename.Image = global::LiteDB.Studio.Properties.Resources.textfield_rename;
+            this.mnuRename.Name = "mnuRename";
+            this.mnuRename.Size = new System.Drawing.Size(180, 22);
+            this.mnuRename.Tag = "RENAME COLLECTION {0} TO new_name;";
+            this.mnuRename.Text = "Rename";
             // 
             // MainForm
             // 
@@ -640,6 +650,7 @@
         private System.Windows.Forms.ToolStripMenuItem mnuVaccum;
         private System.Windows.Forms.ToolStripMenuItem mnuInfo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripMenuItem mnuRename;
     }
 }
 

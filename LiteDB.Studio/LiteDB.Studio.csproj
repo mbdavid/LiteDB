@@ -149,5 +149,8 @@
   <ItemGroup>
     <None Include="Resources\information.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\textfield_rename.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
