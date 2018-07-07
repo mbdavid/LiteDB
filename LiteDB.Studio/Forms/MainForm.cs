@@ -505,5 +505,14 @@ namespace LiteDB.Studio
         {
             this.ExecuteSql("ROLLBACK");
         }
+
+        private void TxtSql_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Tab)
+            {
+                e.Handled = true;
+                txtSql.SelectedText = new string(' ', 4);
+            }
+        }
     }
 }

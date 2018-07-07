@@ -18,6 +18,16 @@ namespace LiteDB.Demo
 
         static void Main(string[] args)
         {
+            var dt = JsonSerializer.Deserialize("{r:" + File.ReadAllText(@"C:\Temp\dt.json") + "}").AsDocument;
+            var kt = JsonSerializer.Deserialize("{r:" + File.ReadAllText(@"C:\Temp\kt.json") + "}").AsDocument;
+
+            var b0 = BsonSerializer.Serialize(dt).Length;
+            var b1  = BsonSerializer.Serialize(kt).Length;
+
+            Console.WriteLine(b0 + b1);
+            ;
+
+            /*
             var settings = new EngineSettings
             {
                 FileName = datafile,
@@ -62,7 +72,7 @@ namespace LiteDB.Demo
             //    Console.WriteLine("Count col2: " + c2);
             //
             //    
-            //}
+            //}*/
 
             Console.WriteLine("FIM");
             Console.ReadKey();
