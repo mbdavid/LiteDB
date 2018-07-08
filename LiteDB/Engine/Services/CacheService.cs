@@ -15,7 +15,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class CacheService
     {
-        private int _cacheCounter = 0;
+        private int _cacheUseCounter = 0;
 
         private ConcurrentDictionary<long, BasePage> _cache = new ConcurrentDictionary<long, BasePage>();
 
@@ -48,15 +48,15 @@ namespace LiteDB.Engine
         {
             if (_cache.TryAdd(position, page))
             {
-                Interlocked.Increment(ref _cacheCounter);
+                Interlocked.Increment(ref _cacheUseCounter);
 
-                if (_cacheCounter > MAX_CACHE_ADD)
+                if (_cacheUseCounter > MAX_CACHE_ADD)
                 {
                     lock(_cache)
                     {
-                        if (_cacheCounter > MAX_CACHE_ADD)
+                        if (_cacheUseCounter > MAX_CACHE_ADD)
                         {
-                            _cacheCounter = 0;
+                            _cacheUseCounter = 0;
 
                             // clear all clean pages
                             var keys = _cache

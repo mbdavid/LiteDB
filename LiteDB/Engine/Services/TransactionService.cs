@@ -156,16 +156,22 @@ namespace LiteDB.Engine
                             if (_transPages.DeletedPages > 0)
                             {
                                 // now, my free list will starts with first page ID
-                                newEmptyPageID = _transPages.FirstDeletedPage.PageID;
+                                newEmptyPageID = _transPages.FirstDeletedPageID;
 
                                 // if free empty list was not empty, let's fix my last page
                                 if (_header.FreeEmptyPageID != uint.MaxValue)
                                 {
-                                    // update nextPageID of last deleted page to old first page ID
-                                    _transPages.LastDeletedPage.NextPageID = _header.FreeEmptyPageID;
+                                    // create new last deleted page from my list to update next linked
+                                    var lastDeletedPage = new EmptyPage(_transPages.LastDeletedPageID)
+                                    {
+                                        // update nextPageID of last deleted page to old first page ID
+                                        NextPageID = _header.FreeEmptyPageID,
+                                        TransactionID = this.TransactionID,
+                                        IsDirty = true
+                                    };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _wal.WalFile.WriteAsyncPages(new BasePage[] { _transPages.LastDeletedPage }, null);
+                                    _wal.WalFile.WriteAsyncPages(new BasePage[] { lastDeletedPage }, null);
                                 }
                             }
 

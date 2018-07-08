@@ -26,14 +26,14 @@ namespace LiteDB.Engine
         public List<uint> NewPages { get; private set; } = new List<uint>();
 
         /// <summary>
-        /// First deleted page 
+        /// First deleted pageID 
         /// </summary>
-        public BasePage FirstDeletedPage { get; set; }
+        public uint FirstDeletedPageID { get; set; } = uint.MaxValue;
 
         /// <summary>
-        /// Last deleted page
+        /// Last deleted pageID
         /// </summary>
-        public BasePage LastDeletedPage { get; set; }
+        public uint LastDeletedPageID { get; set; } = uint.MaxValue;
 
         /// <summary>
         /// Get deleted page count

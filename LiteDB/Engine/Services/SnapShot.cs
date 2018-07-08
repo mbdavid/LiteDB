@@ -343,27 +343,25 @@ namespace LiteDB.Engine
             // create a new empty page based on a normal page
             var empty = new EmptyPage(pageID);
 
-            // add empty page to dirty pages in transaction
-            this.SetDirty(empty);
 
-            if (_transPages.FirstDeletedPage == null)
+            // if first page in sequence
+            if (_transPages.FirstDeletedPageID == uint.MaxValue)
             {
-                // if first page in sequence
-                _transPages.FirstDeletedPage = empty;
-                _transPages.LastDeletedPage = empty;
-            }
-            else if (_transPages.FirstDeletedPage.PageID == _transPages.LastDeletedPage.PageID)
-            {
-                // if is second page on sequence
-                _transPages.FirstDeletedPage.NextPageID = empty.PageID;
-                _transPages.LastDeletedPage = empty;
+                // set first and last deleted page as current deleted page
+                _transPages.FirstDeletedPageID = empty.PageID;
+                _transPages.LastDeletedPageID = empty.PageID;
             }
             else
             {
-                // if any other page, link last with current page
-                _transPages.LastDeletedPage.NextPageID = empty.PageID;
-                _transPages.LastDeletedPage = empty;
+                // set next link from current deleted page to first deleted page
+                empty.NextPageID = _transPages.FirstDeletedPageID;
+
+                // and then, set this current deleted page as first page making a linked list
+                _transPages.FirstDeletedPageID = empty.PageID;
             }
+
+            // add empty page to dirty pages in transaction
+            this.SetDirty(empty);
 
             _transPages.DeletedPages++;
         }
