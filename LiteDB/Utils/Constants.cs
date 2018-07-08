@@ -73,6 +73,13 @@ namespace LiteDB
         public const int MAX_CACHE_ADD = 1000;
 
         /// <summary>
+        /// Both variable are used to identify that current datafile are v7 version and must be upgrade
+        /// v7 has small page header so is not possible check using FILE_VERSION position
+        /// </summary>
+        public static Guid V7_TRANSID = new Guid("00000000-0000-0000-2a2a-205468697320");
+        public const int V7_COLID = 1629516649;
+
+        /// <summary>
         /// Stop VisualStudio if condition are true and we are running over #DEBUG - great for testing unexpected flow
         /// </summary>
         [DebuggerHidden]

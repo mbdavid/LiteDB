@@ -130,6 +130,12 @@ namespace LiteDB.Engine
 
                 // register system collections
                 this.InitializeSystemCollections();
+
+                // if fileVersion are less than current version, must upgrade datafile
+                if (_header.FileVersion < HeaderPage.FILE_VERSION)
+                {
+                    this.Upgrade();
+                }
             }
             catch (Exception ex)
             {

@@ -42,20 +42,20 @@ namespace LiteDB.Engine
                     DEBUG(s.WalStream.Length > 0, "WAL must be an empty stream here");
 
                     // temp datafile
-                    using (var engine = new LiteEngine(s))
+                    using (var temp = new LiteEngine(s))
                     {
                         // get all indexes
                         var indexes = this.SysIndexes().ToArray();
 
                         // init transaction in temp engine
-                        var transactionID = engine.BeginTrans();
+                        var transactionID = temp.BeginTrans();
 
                         foreach (var collection in this.GetCollectionNames())
                         {
                             // first create all user indexes (exclude _id index)
                             foreach (var index in indexes.Where(x => x["collection"] == collection && x["slot"].AsInt32 > 0))
                             {
-                                engine.EnsureIndex(collection,
+                                temp.EnsureIndex(collection,
                                     index["name"].AsString,
                                     BsonExpression.Create(index["expression"].AsString),
                                     index["unique"].AsBoolean);
@@ -65,26 +65,26 @@ namespace LiteDB.Engine
                             var docs = this.Query(collection).ToEnumerable();
 
                             // and insert into 
-                            engine.Insert(collection, docs, BsonAutoId.ObjectId);
+                            temp.Insert(collection, docs, BsonAutoId.ObjectId);
                         }
 
                         // update header page and create another fake-transaction
-                        engine._header.CreationTime = _header.CreationTime;
-                        engine._header.CommitCounter = _header.CommitCounter;
-                        engine._header.LastCommit = _header.LastCommit;
-                        engine._header.UserVersion = _header.UserVersion;
+                        temp._header.CreationTime = _header.CreationTime;
+                        temp._header.CommitCounter = _header.CommitCounter;
+                        temp._header.LastCommit = _header.LastCommit;
+                        temp._header.UserVersion = _header.UserVersion;
 
                         if (indexes.Length == 0)
                         {
                             // if there is no collection, force commit only header page 
                             // by default, commit() will only store confirm page if there is any changed page
-                            engine._header.TransactionID = transactionID;
+                            temp._header.TransactionID = transactionID;
 
-                            engine._wal.ConfirmTransaction(engine._header, new List<PagePosition>());
+                            temp._wal.ConfirmTransaction(temp._header, new List<PagePosition>());
                         }
                         else
                         {
-                            engine.Commit();
+                            temp.Commit();
                         }
 
                         // add this commited transaction as confirmed transaction in current datafile (to do checkpoint after)

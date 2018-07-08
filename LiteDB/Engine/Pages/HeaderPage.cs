@@ -22,7 +22,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Datafile specification version
         /// </summary>
-        private const byte FILE_VERSION = 8;
+        public const byte FILE_VERSION = 8;
 
         /// <summary>
         /// Get/Set the pageID that start sequence with a complete empty pages (can be used as a new page) [4 bytes]
@@ -60,6 +60,11 @@ namespace LiteDB.Engine
         public int UserVersion { get; set; }
 
         /// <summary>
+        /// Get data strcuture file version. If not equals to FILE_VERSION const (8) must be upgrade 
+        /// </summary>
+        public byte FileVersion { get; set; }
+
+        /// <summary>
         /// Contains all collection in database using PageID to direct access
         /// </summary>
         public ConcurrentDictionary<string, uint> Collections { get; set; }
@@ -80,6 +85,7 @@ namespace LiteDB.Engine
             this.LastCheckpoint = DateTime.MinValue;
             this.CommitCounter = 0;
             this.UserVersion = 0;
+            this.FileVersion = FILE_VERSION;
             this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -135,6 +141,16 @@ namespace LiteDB.Engine
 
         protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
+            // this will check for v7 datafile structure
+            if (this.TransactionID == V7_TRANSID && this.ColID == V7_COLID)
+            {
+                this.FileVersion = 7;
+
+                // must stop read now because this page structure is not compatible with old v7
+                return;
+            }
+
+
             var start = reader.BaseStream.Position;
 
             var info = reader.ReadFixedString(HEADER_INFO.Length);

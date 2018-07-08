@@ -14,6 +14,12 @@ namespace LiteDB
             return Encoding.UTF8.GetString(bytes);
         }
 
+        public static string ReadStringLegacy(this BinaryReader reader)
+        {
+            var length = reader.ReadInt32();
+            return ReadFixedString(reader, length);
+        }
+
         public static Guid ReadGuid(this BinaryReader reader)
         {
             return new Guid(reader.ReadBytes(16));
