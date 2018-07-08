@@ -468,7 +468,7 @@
             this.mnuRename,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(181, 192);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 170);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuQuery
@@ -496,9 +496,9 @@
             // 
             this.mnuExport.Image = global::LiteDB.Studio.Properties.Resources.table_save;
             this.mnuExport.Name = "mnuExport";
-            this.mnuExport.Size = new System.Drawing.Size(180, 22);
+            this.mnuExport.Size = new System.Drawing.Size(155, 22);
             this.mnuExport.Tag = "EXPORT";
-            this.mnuExport.Text = "Export to...";
+            this.mnuExport.Text = "Export to JSON";
             // 
             // mnuAnalyze
             // 

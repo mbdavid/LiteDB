@@ -25,18 +25,18 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
-                var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
 
-                if (col == null) return 0;
+                if (snapshot.CollectionPage == null) return 0;
 
                 var count = 0;
-                var pk = col.PK;
+                var pk = snapshot.CollectionPage.PK;
 
                 foreach (var id in ids)
                 {
                     var pkNode = indexer.Find(pk, id, false, LiteDB.Query.Ascending);
+                    var col = snapshot.CollectionPage;
 
                     // if pk not found, continue
                     if (pkNode == null) continue;
