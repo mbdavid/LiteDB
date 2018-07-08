@@ -70,9 +70,10 @@ namespace LiteDB.Engine
 
             if (transactionID) doc["transactionID"] = page.TransactionID;
 
-            doc["prevPageID"] = (int)page.PrevPageID;
-            doc["nextPageID"] = (int)page.NextPageID;
+            doc["prevPageID"] = dumpPageID(page.PrevPageID);
+            doc["nextPageID"] = dumpPageID(page.NextPageID);
             doc["itemCount"] = (int)page.ItemCount;
+            doc["usedBytes"] = (int)(PAGE_SIZE - page.FreeBytes);
             doc["freeBytes"] = (int)page.FreeBytes;
 
             if (collections.TryGetValue(page.ColID, out var collection))
@@ -81,14 +82,14 @@ namespace LiteDB.Engine
             }
             else
             {
-                doc["collection"] = page.ColID == uint.MaxValue ? BsonValue.Null : new BsonValue((int)page.ColID);
+                doc["collection"] = dumpPageID(page.ColID);
             }
 
             if (page.PageType == PageType.Header)
             {
                 var header = page as HeaderPage;
 
-                doc["freeEmptyPageID"] = (int)header.FreeEmptyPageID;
+                doc["freeEmptyPageID"] = dumpPageID(header.FreeEmptyPageID);
                 doc["lastPageID"] = (int)header.LastPageID;
                 doc["creationTime"] = header.CreationTime;
                 doc["lastCommit"] = header.LastCommit;
@@ -101,14 +102,13 @@ namespace LiteDB.Engine
                     ["name"] = x.Key,
                     ["pageID"] = (int)x.Value
                 }));
-
             }
             else if (page.PageType == PageType.Collection)
             {
                 var colPage = page as CollectionPage;
 
                 doc["collectionName"] = colPage.CollectionName;
-                doc["freeDataPageID"] = (int)colPage.FreeDataPageID;
+                doc["freeDataPageID"] = dumpPageID(colPage.FreeDataPageID);
                 doc["documentCount"] = (int)colPage.DocumentCount;
                 doc["sequence"] = (int)colPage.Sequence;
                 doc["creationTime"] = colPage.CreationTime;
@@ -126,8 +126,12 @@ namespace LiteDB.Engine
             }
             // all other page types contains data-only
 
-
             return doc;
+
+            BsonValue dumpPageID(uint pageID)
+            {
+                return pageID == uint.MaxValue ? BsonValue.Null : new BsonValue((int)pageID);
+            }
         }
     }
 }

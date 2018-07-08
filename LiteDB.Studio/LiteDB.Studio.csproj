@@ -155,5 +155,8 @@
   <ItemGroup>
     <None Include="Resources\application_put.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\table_save.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
