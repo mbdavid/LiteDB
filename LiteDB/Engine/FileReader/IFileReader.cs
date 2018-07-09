@@ -7,23 +7,18 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// Interface to read current or old datafile structure - Used to shirnk/upgrade datafile from old LiteDB versions
+    /// </summary>
     interface IFileReader
     {
         DateTime CreationTime { get; }
-        int CommitCounter { get; }
+        uint CommitCounter { get; }
         DateTime LastCommit { get; }
         int UserVersion { get; }
 
         IEnumerable<string> GetCollections();
         IEnumerable<IndexInfo> GetIndexes();
-        IEnumerable<BsonDocument> GetDocuments(string collection);
-    }
-
-    internal class IndexInfo
-    {
-        public string Collection { get; set; }
-        public string Name { get; set; }
-        public string Expression { get; set; }
-        public bool Unique { get; set; }
+        IEnumerable<BsonDocument> GetDocuments(IndexInfo index);
     }
 }

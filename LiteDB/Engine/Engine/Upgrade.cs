@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void Upgrade()
         {
-            _log.Info($"Upgrading datafile from {_header.FileVersion} to new v8 version");
+            _log.Info($"upgrading datafile from {_header.FileVersion} to new v8 version");
 
             var factory = _settings.GetDiskFactory();
 
@@ -23,18 +23,18 @@ namespace LiteDB.Engine
                 throw new NotSupportedException("Current datafile must be upgrade but are not using FileStreamDiskFactory.");
             }
 
-            // make a backup from old version datafile
-            var backup = FileHelper.GetTempFile(factory.FileName, "-backup-v" + _header.FileVersion, true);
+            // make a backup to original datafile
+            var backup = FileHelper.GetTempFile(factory.FileName, "-backup", true);
 
             File.Copy(factory.FileName, backup);
 
             using (var stream = factory.GetDataFileStream(false))
             {
-                var u = new FileReaderV7(stream);
+                var reader = new FileReaderV7(stream);
 
-                var cc = u.GetCollections();
+                // upgrade is same operation than Shrink, but use custom file reader
+                this.Shrink(reader, null);
             }
-
         }
     }
 }

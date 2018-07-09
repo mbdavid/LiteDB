@@ -15,6 +15,14 @@ namespace LiteDB.Engine
         {
             _log.Info("shrink datafile" + (password != null ? " with password" : ""));
 
+            return this.Shrink(new FileReaderV8(this, _header), password);
+        }
+
+        /// <summary>
+        /// Run shrink operation using an file reader interface (can be used as Upgrade datafile)
+        /// </summary>
+        private long Shrink(IFileReader reader,  string password)
+        {
             var originalSize = _dataFile.Length;
 
             // shrink works with a temp engine that will use same wal file name as current datafile
@@ -45,34 +53,34 @@ namespace LiteDB.Engine
                     using (var temp = new LiteEngine(s))
                     {
                         // get all indexes
-                        var indexes = this.SysIndexes().ToArray();
+                        var indexes = reader.GetIndexes().ToArray();
 
                         // init transaction in temp engine
                         var transactionID = temp.BeginTrans();
 
-                        foreach (var collection in this.GetCollectionNames())
+                        foreach (var collection in reader.GetCollections())
                         {
                             // first create all user indexes (exclude _id index)
-                            foreach (var index in indexes.Where(x => x["collection"] == collection && x["slot"].AsInt32 > 0))
+                            foreach (var index in indexes.Where(x => x.Collection == collection && x.Name != "_id"))
                             {
                                 temp.EnsureIndex(collection,
-                                    index["name"].AsString,
-                                    BsonExpression.Create(index["expression"].AsString),
-                                    index["unique"].AsBoolean);
+                                    index.Name,
+                                    BsonExpression.Create(index.Expression),
+                                    index.Unique);
                             }
 
                             // get all documents from current collection
-                            var docs = this.Query(collection).ToEnumerable();
+                            var docs = reader.GetDocuments(indexes.Single(x => x.Collection == collection && x.Name == "_id"));
 
                             // and insert into 
                             temp.Insert(collection, docs, BsonAutoId.ObjectId);
                         }
 
                         // update header page and create another fake-transaction
-                        temp._header.CreationTime = _header.CreationTime;
-                        temp._header.CommitCounter = _header.CommitCounter;
-                        temp._header.LastCommit = _header.LastCommit;
-                        temp._header.UserVersion = _header.UserVersion;
+                        temp._header.CreationTime = reader.CreationTime;
+                        temp._header.CommitCounter = reader.CommitCounter;
+                        temp._header.LastCommit = reader.LastCommit;
+                        temp._header.UserVersion = reader.UserVersion;
 
                         if (indexes.Length == 0)
                         {
