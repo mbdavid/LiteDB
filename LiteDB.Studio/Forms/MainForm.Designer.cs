@@ -78,6 +78,8 @@
             this.mnuVaccum = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.diaExport = new System.Windows.Forms.SaveFileDialog();
+            this.btnFileOpen = new System.Windows.Forms.Button();
+            this.diaOpen = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -105,7 +107,7 @@
             this.txtFileName.Location = new System.Drawing.Point(5, 37);
             this.txtFileName.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtFileName.Name = "txtFileName";
-            this.txtFileName.Size = new System.Drawing.Size(1070, 23);
+            this.txtFileName.Size = new System.Drawing.Size(1024, 23);
             this.txtFileName.TabIndex = 0;
             this.txtFileName.Text = ":memory:";
             // 
@@ -228,7 +230,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(796, 318);
+            this.grdResult.Size = new System.Drawing.Size(796, 316);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -475,7 +477,7 @@
             // 
             this.mnuQuery.Image = global::LiteDB.Studio.Properties.Resources.table_lightning;
             this.mnuQuery.Name = "mnuQuery";
-            this.mnuQuery.Size = new System.Drawing.Size(180, 22);
+            this.mnuQuery.Size = new System.Drawing.Size(155, 22);
             this.mnuQuery.Tag = "SELECT $ FROM {0};";
             this.mnuQuery.Text = "Query";
             // 
@@ -483,14 +485,14 @@
             // 
             this.mnuExplanPlan.Image = global::LiteDB.Studio.Properties.Resources.table_sort;
             this.mnuExplanPlan.Name = "mnuExplanPlan";
-            this.mnuExplanPlan.Size = new System.Drawing.Size(180, 22);
+            this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
             this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
             this.mnuExplanPlan.Text = "Explain plan";
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuExport
             // 
@@ -504,7 +506,7 @@
             // 
             this.mnuAnalyze.Image = global::LiteDB.Studio.Properties.Resources.page_white_gear;
             this.mnuAnalyze.Name = "mnuAnalyze";
-            this.mnuAnalyze.Size = new System.Drawing.Size(180, 22);
+            this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
             this.mnuAnalyze.Tag = "ANALYZE {0};";
             this.mnuAnalyze.Text = "Analyze";
             // 
@@ -512,20 +514,20 @@
             // 
             this.mnuIndexes.Image = global::LiteDB.Studio.Properties.Resources.key;
             this.mnuIndexes.Name = "mnuIndexes";
-            this.mnuIndexes.Size = new System.Drawing.Size(180, 22);
+            this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
             // mnuSep1
             // 
             this.mnuSep1.Name = "mnuSep1";
-            this.mnuSep1.Size = new System.Drawing.Size(177, 6);
+            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuRename
             // 
             this.mnuRename.Image = global::LiteDB.Studio.Properties.Resources.textfield_rename;
             this.mnuRename.Name = "mnuRename";
-            this.mnuRename.Size = new System.Drawing.Size(180, 22);
+            this.mnuRename.Size = new System.Drawing.Size(155, 22);
             this.mnuRename.Tag = "RENAME COLLECTION {0} TO new_name;";
             this.mnuRename.Text = "Rename";
             // 
@@ -533,7 +535,7 @@
             // 
             this.mnuDropCollection.Image = global::LiteDB.Studio.Properties.Resources.table_delete;
             this.mnuDropCollection.Name = "mnuDropCollection";
-            this.mnuDropCollection.Size = new System.Drawing.Size(180, 22);
+            this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
             // 
@@ -591,11 +593,27 @@
             this.diaExport.DefaultExt = "json";
             this.diaExport.Filter = "json|";
             // 
+            // btnFileOpen
+            // 
+            this.btnFileOpen.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.btnFileOpen.Image = global::LiteDB.Studio.Properties.Resources.folder_explore;
+            this.btnFileOpen.Location = new System.Drawing.Point(1035, 36);
+            this.btnFileOpen.Name = "btnFileOpen";
+            this.btnFileOpen.Size = new System.Drawing.Size(37, 25);
+            this.btnFileOpen.TabIndex = 13;
+            this.btnFileOpen.UseVisualStyleBackColor = true;
+            this.btnFileOpen.Click += new System.EventHandler(this.BtnFileOpen_Click);
+            // 
+            // diaOpen
+            // 
+            this.diaOpen.FileName = "openFileDialog1";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1080, 660);
+            this.Controls.Add(this.btnFileOpen);
             this.Controls.Add(this.tlbMain);
             this.Controls.Add(this.stbStatus);
             this.Controls.Add(this.splitMain);
@@ -682,6 +700,8 @@
         private System.Windows.Forms.ToolStripMenuItem mnuCheckpoint;
         private System.Windows.Forms.ToolStripMenuItem mnuExport;
         private System.Windows.Forms.SaveFileDialog diaExport;
+        private System.Windows.Forms.Button btnFileOpen;
+        private System.Windows.Forms.OpenFileDialog diaOpen;
     }
 }
 

@@ -81,7 +81,7 @@ namespace LiteDB.Studio
             _db = new LiteEngine(settings);
             _running = true;
             btnConnect.Text = "Disconnect";
-            txtFileName.Enabled = false;
+            txtFileName.Enabled = btnFileOpen.Enabled = false;
             splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = true;
 
             tabSql.TabPages.Add("+", "+");
@@ -95,7 +95,7 @@ namespace LiteDB.Studio
             _db?.Dispose();
             _running = false;
             btnConnect.Text = "Connect";
-            txtFileName.Enabled = true;
+            txtFileName.Enabled = btnFileOpen.Enabled = true;
 
             splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = false;
 
@@ -566,6 +566,18 @@ namespace LiteDB.Studio
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnFileOpen_Click(object sender, EventArgs e)
+        {
+            diaOpen.FileName = txtFileName.Text;
+
+            if (diaOpen.ShowDialog() == DialogResult.OK)
+            {
+                txtFileName.Text = diaOpen.FileName;
+
+                BtnConnect_Click(null, null);
             }
         }
     }
