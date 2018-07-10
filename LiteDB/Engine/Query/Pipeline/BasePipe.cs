@@ -178,7 +178,7 @@ namespace LiteDB.Engine
                     if ((order == Query.Ascending && diff < 1) ||
                         (order == Query.Descending && diff > -1))
                     {
-                        var tmpNode = indexer.AddNode(index, key, null);
+                        var tmpNode = indexer.AddNode(col, index, key, null);
 
                         // use rawId (position of document inside datafile)
                         tmpNode.DataBlock = doc.RawId;
@@ -191,7 +191,7 @@ namespace LiteDB.Engine
                         {
                             var exceeded = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
 
-                            indexer.Delete(index, exceeded);
+                            indexer.Delete(col, index, exceeded);
 
                             var lnode = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
 

@@ -30,11 +30,6 @@ namespace LiteDB.Engine
         public byte[] Data { get; set; }
 
         /// <summary>
-        /// Get a reference for page
-        /// </summary>
-        public DataPage Page { get; set; }
-
-        /// <summary>
         /// Get length of this dataBlock (persist as ushort 2 bytes)
         /// </summary>
         public int BlockLength
@@ -50,7 +45,7 @@ namespace LiteDB.Engine
             this.DocumentLength = 0;
         }
 
-        public DataBlock Clone(DataPage page)
+        public DataBlock Clone()
         {
             var data = new byte[this.Data.Length];
 
@@ -58,7 +53,6 @@ namespace LiteDB.Engine
 
             return new DataBlock
             {
-                Page = page,
                 Position = this.Position,
                 ExtendPageID = this.ExtendPageID,
                 Data = data,

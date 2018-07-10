@@ -17,16 +17,16 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert data inside a datapage. Returns dataPageID that indicates the first page
         /// </summary>
-        public DataBlock Insert(CollectionPage col, ChunkStream data)
+        public DataBlock Insert(CollectionPage collectionPage, ChunkStream data)
         {
             // need to extend (data is bigger than 1 page)
             var extend = (data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE) > PAGE_AVAILABLE_BYTES;
 
             // if extend, just search for a page with BLOCK_SIZE available
-            var dataPage = _snapshot.GetFreePage<DataPage>(col.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : (int)data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            var dataPage = _snapshot.GetFreePage<DataPage>(collectionPage.FreeDataPageID, extend ? DataBlock.DATA_BLOCK_FIXED_SIZE : (int)data.Length + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             // create a new block with first empty index on DataPage
-            var block = new DataBlock { Page = dataPage, DocumentLength = (int)data.Length };
+            var block = new DataBlock { DocumentLength = (int)data.Length };
 
             // if extend, store all bytes on extended page.
             if (extend)
@@ -47,13 +47,13 @@ namespace LiteDB.Engine
             _snapshot.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space
-            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, collectionPage, ref collectionPage.FreeDataPageID);
 
             // increase document count in collection
-            col.DocumentCount++;
+            collectionPage.DocumentCount++;
 
             // set collection page as dirty
-            _snapshot.SetDirty(col);
+            _snapshot.SetDirty(collectionPage);
 
             return block;
         }
@@ -61,7 +61,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Update data inside a datapage. If new data can be used in same datapage, just update. Otherwise, copy content to a new ExtendedPage
         /// </summary>
-        public DataBlock Update(CollectionPage col, PageAddress blockAddress, ChunkStream data)
+        public DataBlock Update(CollectionPage collectionPage, PageAddress blockAddress, ChunkStream data)
         {
             // get datapage and mark as dirty
             var dataPage = _snapshot.GetPage<DataPage>(blockAddress.PageID);
@@ -109,7 +109,7 @@ namespace LiteDB.Engine
             _snapshot.SetDirty(dataPage);
 
             // add/remove dataPage on freelist if has space AND its on/off free list
-            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
+            _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, collectionPage, ref collectionPage.FreeDataPageID);
 
             return block;
         }
@@ -151,7 +151,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Delete one dataBlock
         /// </summary>
-        public DataBlock Delete(CollectionPage col, PageAddress blockAddress)
+        public DataBlock Delete(CollectionPage collectionPage, PageAddress blockAddress)
         {
             // get page and mark as dirty
             var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
@@ -173,20 +173,20 @@ namespace LiteDB.Engine
             if (page.BlocksCount == 0)
             {
                 // first, remove from free list
-                _snapshot.AddOrRemoveToFreeList(false, page, col, ref col.FreeDataPageID);
+                _snapshot.AddOrRemoveToFreeList(false, page, collectionPage, ref collectionPage.FreeDataPageID);
 
                 _snapshot.DeletePage(page.PageID);
             }
             else
             {
                 // add or remove to free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
+                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DATA_RESERVED_BYTES, page, collectionPage, ref collectionPage.FreeDataPageID);
             }
 
-            col.DocumentCount--;
+            collectionPage.DocumentCount--;
 
             // mark collection page as dirty
-            _snapshot.SetDirty(col);
+            _snapshot.SetDirty(collectionPage);
 
             return block;
         }
@@ -194,7 +194,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Store all bytes in one extended page. If data ir bigger than a page, store in more pages and make all in sequence
         /// </summary>
-        public void StoreExtendData(ExtendPage page, ChunkStream data)
+        public void StoreExtendData(ExtendPage extendPage, ChunkStream data)
         {
             var bytesLeft = (int)data.Length;
             var buffer = new byte[PAGE_AVAILABLE_BYTES];
@@ -205,34 +205,34 @@ namespace LiteDB.Engine
 
                 data.Read(buffer, 0, bytesToCopy);
 
-                page.SetData(buffer, 0, bytesToCopy);
+                extendPage.SetData(buffer, 0, bytesToCopy);
 
                 bytesLeft -= bytesToCopy;
 
                 // set extend page as dirty
-                _snapshot.SetDirty(page);
+                _snapshot.SetDirty(extendPage);
 
                 // if has bytes left, let's get a new page
                 if (bytesLeft > 0)
                 {
                     // if i have a continuous page, get it... or create a new one
-                    page = page.NextPageID != uint.MaxValue ?
-                        _snapshot.GetPage<ExtendPage>(page.NextPageID) :
-                        _snapshot.NewPage<ExtendPage>(page);
+                    extendPage = extendPage.NextPageID != uint.MaxValue ?
+                        _snapshot.GetPage<ExtendPage>(extendPage.NextPageID) :
+                        _snapshot.NewPage<ExtendPage>(extendPage);
                 }
             }
 
             // when finish, check if last page has a nextPageId - if have, delete them
-            if (page.NextPageID != uint.MaxValue)
+            if (extendPage.NextPageID != uint.MaxValue)
             {
                 // Delete nextpage and all nexts
-                _snapshot.DeletePages(page.NextPageID);
+                _snapshot.DeletePages(extendPage.NextPageID);
 
                 // set my page with no NextPageID
-                page.NextPageID = uint.MaxValue;
+                extendPage.NextPageID = uint.MaxValue;
 
                 // set page as dirty
-                _snapshot.SetDirty(page);
+                _snapshot.SetDirty(extendPage);
             }
         }
     }

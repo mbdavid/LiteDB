@@ -84,7 +84,7 @@ namespace LiteDB.Engine
 
             for (var i = 0; i < _indexes.Length; i++)
             {
-                _indexes[i] = new CollectionIndex() { Page = this, Slot = i };
+                _indexes[i] = new CollectionIndex(this.PageID) { Slot = i };
             }
         }
 
@@ -152,10 +152,9 @@ namespace LiteDB.Engine
                 FreeDataPageID = this.FreeDataPageID,
                 DocumentCount = this.DocumentCount,
                 Sequence = this.Sequence,
-                CreationTime = this.CreationTime
+                CreationTime = this.CreationTime,
+                _indexes = _indexes.Select(x => x.Clone()).ToArray()
             };
-
-            page._indexes = _indexes.Select(x => x.Clone(page)).ToArray();
 
             return page;
         }

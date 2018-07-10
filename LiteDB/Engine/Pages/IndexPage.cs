@@ -79,7 +79,6 @@ namespace LiteDB.Engine
 
                 var node = new IndexNode(levels);
 
-                node.Page = this;
                 node.Position = new PageAddress(this.PageID, index);
                 node.Slot = reader.ReadByte();
                 node.PrevNode = reader.ReadPageAddress();
@@ -132,10 +131,8 @@ namespace LiteDB.Engine
                 TransactionID = this.TransactionID,
                 ColID = this.ColID,
                 // index page
-                _nodes = new Dictionary<ushort, IndexNode>()
+                _nodes = _nodes.ToDictionary(x => x.Key, x => x.Value.Clone())
             };
-
-            foreach (var item in _nodes) page._nodes.Add(item.Key, item.Value.Clone(page));
 
             return page;
         }

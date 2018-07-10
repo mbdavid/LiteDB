@@ -92,7 +92,6 @@ namespace LiteDB.Engine
             {
                 var block = new DataBlock();
 
-                block.Page = this;
                 block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
                 block.ExtendPageID = reader.ReadUInt32();
                 block.DocumentLength = reader.ReadInt32();
@@ -128,10 +127,8 @@ namespace LiteDB.Engine
                 TransactionID = this.TransactionID,
                 ColID = this.ColID,
                 // data page
-                _dataBlocks = new Dictionary<ushort, DataBlock>()
+                _dataBlocks = _dataBlocks.ToDictionary(x => x.Key, x => x.Value.Clone())
             };
-
-            foreach (var item in _dataBlocks) page._dataBlocks.Add(item.Key, item.Value.Clone(page));
 
             return page;
         }

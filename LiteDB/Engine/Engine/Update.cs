@@ -146,14 +146,14 @@ namespace LiteDB.Engine
                 // delete changed index nodes
                 foreach (var node in toDelete)
                 {
-                    indexer.Delete(index, node.Position);
+                    indexer.Delete(col, index, node.Position);
                 }
             
                 // insert new nodes
                 foreach (var key in toInsert)
                 {
                     // and add a new one
-                    var node = indexer.AddNode(index, key, pkNode);
+                    var node = indexer.AddNode(col, index, key, pkNode);
             
                     // link my node to data block
                     node.DataBlock = dataBlock.Position;

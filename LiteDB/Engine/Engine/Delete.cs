@@ -49,7 +49,7 @@ namespace LiteDB.Engine
                     {
                         var index = col.GetIndex(linkNode.Slot);
 
-                        indexer.Delete(index, linkNode.Position);
+                        indexer.Delete(col, index, linkNode.Position);
                     }
 
                     // remove object data
