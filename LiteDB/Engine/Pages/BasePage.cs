@@ -93,6 +93,8 @@ namespace LiteDB.Engine
             // padding end of page with 0 byte
             var length = PAGE_SIZE - (writer.BaseStream.Position - start);
 
+            DEBUG(length > PAGE_AVAILABLE_BYTES, "Why this page has more empty space than need");
+
             if (length > 0)
             {
                 writer.Write(_zeroBuffer, 0, (int)length);

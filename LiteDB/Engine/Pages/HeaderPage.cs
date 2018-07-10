@@ -230,6 +230,7 @@ namespace LiteDB.Engine
                 LastCheckpoint = this.LastCheckpoint,
                 CommitCounter = this.CommitCounter,
                 UserVersion = this.UserVersion,
+                FileVersion = this.FileVersion,
                 Collections = new ConcurrentDictionary<string, uint>(this.Collections)
             };
         }

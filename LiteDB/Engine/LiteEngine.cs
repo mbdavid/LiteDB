@@ -173,13 +173,13 @@ namespace LiteDB.Engine
             // of this members can be null yet. 
             if (_shutdown) return;
 
-            _log.Info("shutting down the database");
-
             // start shutdown operation
             _shutdown = true;
 
+            _log.Info("shutting down the database");
+
             // mark all transaction as shotdown status
-            foreach(var trans in _transactions?.Values)
+            foreach (var trans in _transactions?.Values)
             {
                 trans.Shutdown();
             }
@@ -198,6 +198,7 @@ namespace LiteDB.Engine
 
             // close all Dispose services
             _dataFile?.Dispose();
+            _wal?.WalFile?.Dispose();
 
             if (_disposeTempdb)
             {

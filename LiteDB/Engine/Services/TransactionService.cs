@@ -40,7 +40,7 @@ namespace LiteDB.Engine
             _wal = wal;
             _log = log;
             _done = done;
-            _maxTransactionSize = maxTransactionSize;
+            _maxTransactionSize = 1000000; //TODO maxTransactionSize;
 
             // retain instances
             _header = header;
