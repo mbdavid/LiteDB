@@ -181,11 +181,15 @@ namespace LiteDB.Engine
             {
                 var dirty = (T)_wal.WalFile.ReadPage(position.Position);
 
-                // add into local pages
-                _localPages[pageID] = dirty;
+                // do not store ExtendPage when snapshot are read only
+                if (dirty.PageType != PageType.Extend || _mode == LockMode.Write)
+                {
+                    // add into local pages
+                    _localPages[pageID] = dirty;
 
-                // increment transaction size counter
-                _transPages.TransactionSize++;
+                    // increment transaction size counter
+                    _transPages.TransactionSize++;
+                }
 
                 return dirty;
             }
@@ -197,11 +201,15 @@ namespace LiteDB.Engine
             {
                 var walpage = (T)_wal.WalFile.ReadPage(pos);
 
-                // copy to my local pages
-                _localPages[pageID] = walpage;
+                // do not store ExtendPage when snapshot are read only
+                if (walpage.PageType != PageType.Extend || _mode == LockMode.Write)
+                {
+                    // copy to my local pages
+                    _localPages[pageID] = walpage;
 
-                // increment transaction page counter
-                _transPages.TransactionSize++;
+                    // increment transaction page counter
+                    _transPages.TransactionSize++;
+                }
 
                 return walpage;
             }
@@ -217,11 +225,15 @@ namespace LiteDB.Engine
 
             var diskpage = (T)_dataFile.ReadPage(pagePosition);
 
-            // add this page into local pages
-            _localPages[pageID] = diskpage;
+            // do not store ExtendPage when snapshot are read only
+            if (diskpage.PageType != PageType.Extend || _mode == LockMode.Write)
+            {
+                // add this page into local pages
+                _localPages[pageID] = diskpage;
 
-            // increment transaction size counter
-            _transPages.TransactionSize++;
+                // increment transaction size counter
+                _transPages.TransactionSize++;
+            }
 
             return diskpage;
         }

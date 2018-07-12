@@ -37,6 +37,9 @@ namespace LiteDB.Engine
 
             foreach (var node in nodes)
             {
+                // check if transaction all full of pages to clear before continue
+                _transaction.Safepoint();
+
                 // if is indexKeyOnly, load here from IndexNode, otherwise, read from Loader
 
                 yield return indexKeyOnly ?

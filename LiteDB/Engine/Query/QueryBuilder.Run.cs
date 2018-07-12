@@ -110,8 +110,6 @@ namespace LiteDB.Engine
                     // call safepoint just before return each document
                     foreach (var value in pipe.Pipe(nodes, query))
                     {
-                        transaction.Safepoint();
-
                         // stop timer and increase counter
                         cursor.Timer.Stop();
                         cursor.FetchCount++;
