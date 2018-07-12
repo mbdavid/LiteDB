@@ -79,6 +79,7 @@ namespace LiteDB.Engine
 
                 var node = new IndexNode(levels);
 
+                node.Page = this;
                 node.Position = new PageAddress(this.PageID, index);
                 node.Slot = reader.ReadByte();
                 node.PrevNode = reader.ReadPageAddress();
@@ -118,26 +119,6 @@ namespace LiteDB.Engine
             }
         }
 
-        public override BasePage Clone()
-        {
-            var page = new IndexPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID,
-                ColID = this.ColID,
-                // index page
-                _nodes = _nodes.ToDictionary(x => x.Key, x => x.Value.Clone())
-            };
-
-            return page;
-        }
-
         #endregion
-
     }
 }

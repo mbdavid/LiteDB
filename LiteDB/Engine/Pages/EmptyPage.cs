@@ -40,21 +40,6 @@ namespace LiteDB.Engine
         {
         }
 
-        public override BasePage Clone()
-        {
-            return new EmptyPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID,
-                ColID = this.ColID
-            };
-        }
-
         #endregion
     }
 }

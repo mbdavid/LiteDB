@@ -210,7 +210,7 @@ namespace LiteDB.Engine
             }
         }
 
-        public override BasePage Clone()
+        public HeaderPage Clone()
         {
             return new HeaderPage
             {

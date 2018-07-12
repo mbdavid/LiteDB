@@ -22,7 +22,7 @@ namespace LiteDB.Engine
                 if (value == _header.UserVersion || _shutdown) return;
 
                 // clone header to use in writer
-                var confirm = _header.Clone() as HeaderPage;
+                var confirm = _header.Clone();
 
                 confirm.UserVersion = value;
                 confirm.TransactionID = Guid.NewGuid();

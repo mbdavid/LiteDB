@@ -84,7 +84,7 @@ namespace LiteDB.Engine
 
             for (var i = 0; i < _indexes.Length; i++)
             {
-                _indexes[i] = new CollectionIndex(this.PageID) { Slot = i };
+                _indexes[i] = new CollectionIndex() { Page = this, Slot = i };
             }
         }
 
@@ -133,30 +133,6 @@ namespace LiteDB.Engine
                 writer.Write(index.KeyCount);
                 writer.Write(index.UniqueKeyCount);
             }
-        }
-
-        public override BasePage Clone()
-        {
-            var page = new CollectionPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID,
-                ColID = this.ColID,
-                // collection page
-                CollectionName = this.CollectionName,
-                FreeDataPageID = this.FreeDataPageID,
-                DocumentCount = this.DocumentCount,
-                Sequence = this.Sequence,
-                CreationTime = this.CreationTime,
-                _indexes = _indexes.Select(x => x.Clone()).ToArray()
-            };
-
-            return page;
         }
 
         #endregion

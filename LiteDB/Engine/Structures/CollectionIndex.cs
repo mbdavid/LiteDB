@@ -66,11 +66,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get a reference for page
         /// </summary>
-        public uint CollectionPageID { get; private set; }
+        public CollectionPage Page { get; set; }
 
-        public CollectionIndex(uint collectionPageID)
+        public CollectionIndex()
         {
-            this.CollectionPageID = collectionPageID;
         }
 
         /// <summary>
@@ -89,10 +88,11 @@ namespace LiteDB.Engine
             this.UniqueKeyCount = 0;
         }
 
-        public CollectionIndex Clone()
+        public CollectionIndex Clone(CollectionPage page)
         {
-            return new CollectionIndex(this.CollectionPageID)
+            return new CollectionIndex
             {
+                Page = page,
                 Slot = this.Slot,
                 Name = this.Name,
                 Expression = this.Expression,

@@ -227,11 +227,6 @@ namespace LiteDB.Engine
 
         #endregion
 
-        /// <summary>
-        /// Make clone instance of this Page - by default: convert to bytes and read again (can be optimized)
-        /// </summary>
-        public abstract BasePage Clone();
-
         public override string ToString()
         {
             return this.PageID.ToString().PadLeft(4, '0') + " : " + this.PageType + " (" + this.ItemCount + ")";

@@ -81,7 +81,7 @@ namespace LiteDB.Engine
                     foreach (var key in keys)
                     {
                         // insert new index node
-                        var node = indexer.AddNode(col, index, key, pkNode);
+                        var node = indexer.AddNode(index, key, pkNode);
 
                         // link index node to datablock
                         node.DataBlock = pkNode.DataBlock;

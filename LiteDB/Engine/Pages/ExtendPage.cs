@@ -62,28 +62,6 @@ namespace LiteDB.Engine
             writer.Write(_data);
         }
 
-        public override BasePage Clone()
-        {
-            var data = new byte[_data.Length];
-
-            Buffer.BlockCopy(_data, 0, data, 0, _data.Length);
-
-            return new ExtendPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID,
-                ColID = this.ColID,
-                // extend page
-                _data = data
-            };
-        }
-
         #endregion
-
     }
 }

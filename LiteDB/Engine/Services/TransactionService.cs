@@ -171,7 +171,7 @@ namespace LiteDB.Engine
                             }
 
                             // create a header-confirm page based on current header page state (global header are in lock)
-                            var confirm = _header.Clone() as HeaderPage;
+                            var confirm = _header.Clone();
 
                             // update this confirm page with current transactionID
                             confirm.Update(this.TransactionID, newEmptyPageID, _transPages);
@@ -259,7 +259,7 @@ namespace LiteDB.Engine
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
                 // create copy of header page to send to wal file
-                var confirm = _header.Clone() as HeaderPage;
+                var confirm = _header.Clone();
 
                 // update confirm page with my new transaction ID
                 confirm.TransactionID = transactionID;

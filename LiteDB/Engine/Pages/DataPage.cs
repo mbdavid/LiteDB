@@ -92,6 +92,7 @@ namespace LiteDB.Engine
             {
                 var block = new DataBlock();
 
+                block.Page = this;
                 block.Position = new PageAddress(this.PageID, reader.ReadUInt16());
                 block.ExtendPageID = reader.ReadUInt32();
                 block.DocumentLength = reader.ReadInt32();
@@ -114,26 +115,6 @@ namespace LiteDB.Engine
             }
         }
 
-        public override BasePage Clone()
-        {
-            var page = new DataPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID,
-                ColID = this.ColID,
-                // data page
-                _dataBlocks = _dataBlocks.ToDictionary(x => x.Key, x => x.Value.Clone())
-            };
-
-            return page;
-        }
-
         #endregion
-
     }
 }

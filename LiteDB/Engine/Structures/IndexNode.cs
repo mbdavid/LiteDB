@@ -63,6 +63,11 @@ namespace LiteDB.Engine
         public PageAddress DataBlock { get; set; }
 
         /// <summary>
+        /// Get page reference
+        /// </summary>
+        public IndexPage Page { get; set; }
+
+        /// <summary>
         /// Returns Next (order == 1) OR Prev (order == -1)
         /// </summary>
         public PageAddress NextPrev(int index, int order)
@@ -114,23 +119,6 @@ namespace LiteDB.Engine
                 this.Prev[i] = PageAddress.Empty;
                 this.Next[i] = PageAddress.Empty;
             }
-        }
-
-        public IndexNode Clone()
-        {
-            return new IndexNode
-            {
-                Position = this.Position,
-                Slot = this.Slot,
-                KeyLength = this.KeyLength,
-                Key = this.Key,
-                PrevNode = this.PrevNode,
-                NextNode = this.NextNode,
-                DataBlock = this.DataBlock,
-                Prev = this.Prev.ToArray(),
-                Next = this.Next.ToArray(),
-                CacheDocument = this.CacheDocument
-            };
         }
     }
 

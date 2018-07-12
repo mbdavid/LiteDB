@@ -87,7 +87,7 @@ namespace LiteDB.Engine
             var dataBlock = data.Insert(col, stream);
 
             // store id in a PK index [0 array]
-            var pk = indexer.AddNode(col, col.PK, id, null);
+            var pk = indexer.AddNode(col.PK, id, null);
 
             // do link between index <-> data block
             pk.DataBlock = dataBlock.Position;
@@ -104,7 +104,7 @@ namespace LiteDB.Engine
                 foreach(var key in keys)
                 {
                     // insert node
-                    var node = indexer.AddNode(col, index, key, pk);
+                    var node = indexer.AddNode(index, key, pk);
 
                     // link my index node to data block address
                     node.DataBlock = dataBlock.Position;
