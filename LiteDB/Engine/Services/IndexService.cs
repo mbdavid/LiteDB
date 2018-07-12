@@ -204,7 +204,6 @@ namespace LiteDB.Engine
                 // set last node page as dirty
                 // _snapshot.SetDirty(last.Page);
                 // must set=drity outside (from Update cmd)
-                DEBUG(_snapshot.GetPage<IndexPage>(last.Position.PageID).IsDirty == false, "At this point, last index node page always must be dirty");
             }
 
             index.KeyCount++;

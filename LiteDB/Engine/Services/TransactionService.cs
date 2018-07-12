@@ -104,12 +104,7 @@ namespace LiteDB.Engine
                 .Where(x => x.Mode == LockMode.Write)
                 .SelectMany(x => x.LocalPages.Values)
                 .Where(x => x.IsDirty && x.PageType != PageType.Header)
-                .ForEach((i, p) => p.TransactionID = this.TransactionID)
-#if DEBUG
-                .ToArray(); // for better debug propose
-#else
-                ;
-#endif
+                .ForEach((i, p) => p.TransactionID = this.TransactionID);
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
             _wal.WalFile.WritePages(pages, _transPages.DirtyPagesWal);

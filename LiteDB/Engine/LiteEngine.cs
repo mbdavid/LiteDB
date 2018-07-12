@@ -179,9 +179,6 @@ namespace LiteDB.Engine
                 trans.Shutdown();
             }
 
-            // wait for all async task write on disk
-            _wal?.WalFile.Flush();
-
             if (_settings.CheckpointOnShutdown)
             {
                 // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)

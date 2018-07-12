@@ -146,14 +146,6 @@ namespace LiteDB.Engine
             }
         }
 
-        public void Flush()
-        {
-            if (_writer.IsValueCreated)
-            {
-                _writer.Value.BaseStream.Flush();
-            }
-        }
-
         /// <summary>
         /// Clear WAL file content and reset writer position
         /// </summary>
@@ -201,6 +193,7 @@ namespace LiteDB.Engine
             // first dispose writer
             if (_writer?.IsValueCreated ?? false)
             {
+                _writer.Value.BaseStream.FlushToDisk();
                 _writer.Value.BaseStream.Dispose();
             }
 
