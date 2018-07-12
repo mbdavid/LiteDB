@@ -80,7 +80,7 @@ namespace LiteDB.Engine
             confirm.IsDirty = true;
 
             // write header-confirm transaction page in wal file
-            _walFile.WriteAsyncPages(new HeaderPage[] { confirm }, null);
+            _walFile.WritePages(new HeaderPage[] { confirm }, null);
 
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Add(confirm.TransactionID);

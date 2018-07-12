@@ -112,7 +112,7 @@ namespace LiteDB.Engine
 #endif
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
-            _wal.WalFile.WriteAsyncPages(pages, _transPages.DirtyPagesWal);
+            _wal.WalFile.WritePages(pages, _transPages.DirtyPagesWal);
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
@@ -171,7 +171,7 @@ namespace LiteDB.Engine
                                     };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _wal.WalFile.WriteAsyncPages(new BasePage[] { lastDeletedPage }, null);
+                                    _wal.WalFile.WritePages(new BasePage[] { lastDeletedPage }, null);
                                 }
                             }
 
@@ -274,7 +274,7 @@ namespace LiteDB.Engine
                 // persist all pages into wal-file (new run ToList now)
                 var pagePositions = new Dictionary<uint, PagePosition>();
 
-                _wal.WalFile.WriteAsyncPages(pages, pagePositions);
+                _wal.WalFile.WritePages(pages, pagePositions);
 
                 // now commit last confirm page to wal file
                 _wal.ConfirmTransaction(confirm, pagePositions.Values);

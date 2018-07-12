@@ -116,6 +116,7 @@ namespace LiteDB.Engine
 
             // using as cache last
             IndexNode cache = null;
+            IndexPage cachePage = null;
 
             // check key is adding max-value key node (need added before tail)
             var isMax = !index.TailNode.IsEmpty && key.Type == BsonType.MaxValue;
@@ -124,13 +125,19 @@ namespace LiteDB.Engine
             for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // get cache for last node
-                cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+                cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i], out cachePage);
+
+                void SetCurrentFromCache()
+                {
+                    cur = cache;
+                    curPage = cachePage;
+                }
 
                 // for(; <while_not_this>; <do_this>) { ... }
-                for (; cur.Next[i].IsEmpty == false; cur = cache)
+                for (; cur.Next[i].IsEmpty == false; SetCurrentFromCache())
                 {
                     // get cache for last node
-                    cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+                    cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i], out cachePage);
 
                     // read next node to compare
                     var diff = cache.Key.CompareTo(key);
@@ -148,14 +155,6 @@ namespace LiteDB.Engine
                     // cur = current (immediately before - prev)
                     // node = new inserted node
                     // next = next node (where cur is pointing)
-                    // DEBUG(cur.Position.PageID != curPage.PageID, "Current page must be same as currentNode");
-
-                    if (cur.Position.PageID != curPage.PageID)
-                    {
-                        //TODO must avoid this re-load
-                        curPage = _snapshot.GetPage<IndexPage>(cur.Position.PageID);
-                    }
-
                     _snapshot.SetDirty(curPage);
 
                     // if inserting MaxValue, left add just before tail Node (and not after tail)

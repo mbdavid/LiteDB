@@ -16,7 +16,7 @@ namespace LiteDB.Engine
 
             while (position < length)
             {
-                var page = _dataFile.ReadPage(position, false);
+                var page = _dataFile.ReadPage(position);
 
                 yield return this.DumpPage(page, null, null, false, false, collections);
 
@@ -33,7 +33,7 @@ namespace LiteDB.Engine
 
             while (position < length)
             {
-                var page = _wal.WalFile.ReadPage(position, false);
+                var page = _wal.WalFile.ReadPage(position);
 
                 // add versions into an dict grouping al by transactionID
                 if (!versions.TryGetValue(page.TransactionID, out var version))

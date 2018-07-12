@@ -126,7 +126,7 @@ namespace LiteDB.Engine
                 _wal.Checkpoint(false, null, false);
 
                 // load header page
-                _header = _dataFile.ReadPage(0, true) as HeaderPage;
+                _header = _dataFile.ReadPage(0) as HeaderPage;
 
                 // register system collections
                 this.InitializeSystemCollections();
@@ -155,11 +155,6 @@ namespace LiteDB.Engine
         public void Checkpoint(bool delete) => _wal.Checkpoint(delete, _header, true);
 
         /// <summary>
-        /// Execute all async queue writes on disk and flush - this method are called just before dispose datafile
-        /// </summary>
-        public void WaitAsyncWrite() => _wal.WalFile.WaitAsyncWrite(true);
-
-        /// <summary>
         /// Shutdown database
         /// - After dispose engine, no more new transaction
         /// - All transation will throw shutdown exception and do rollback
@@ -185,7 +180,7 @@ namespace LiteDB.Engine
             }
 
             // wait for all async task write on disk
-            _wal?.WalFile.WaitAsyncWrite(true);
+            _wal?.WalFile.Flush();
 
             if (_settings.CheckpointOnShutdown)
             {

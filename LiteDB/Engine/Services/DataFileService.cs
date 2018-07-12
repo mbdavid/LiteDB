@@ -21,12 +21,9 @@ namespace LiteDB.Engine
 
         private TimeSpan _timeout;
         private Logger _log;
-        private CacheService _cache;
         private bool _utcDate;
 
         private BinaryWriter _writer;
-
-        public CacheService Cache => _cache;
 
         public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Logger log)
         {
@@ -34,9 +31,6 @@ namespace LiteDB.Engine
             _timeout = timeout;
             _utcDate = utcDate;
             _log = log;
-
-            // initialize cache service
-            _cache = new CacheService(_log);
 
             // get first stream (will be used as single writer)
             var stream = factory.GetDataFileStream(true);
@@ -72,26 +66,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
         /// </summary>
-        public BasePage ReadPage(long position, bool clone)
-        {
-            // try get page from cache
-            var page = _cache.GetPage(position, clone);
-
-            if (page != null) return page;
-
-            // if not found, get from disk
-            page = this.ReadPageDisk(position);
-
-            // and them add to cache (if page will be used to write, insert in cache clone copy)
-            _cache.AddPage(position, clone ? page.Clone() : page);
-
-            return page;
-        }
-
-        /// <summary>
-        /// Read page direct from disk, ignoring cache
-        /// </summary>
-        private BasePage ReadPageDisk(long position)
+        public BasePage ReadPage(long position)
         {
             // try get reader from pool (if not exists, create new stream from factory)
             if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetDataFileStream(false));
@@ -148,10 +123,6 @@ namespace LiteDB.Engine
         {
             lock(_writer)
             {
-                // must clear cache before start writing from WAL file
-                // because wal pages are different from current wal (and must be update in cache)
-                _cache.Clear();
-
                 foreach(var page in pages)
                 {
                     var position = BasePage.GetPagePosition(page.PageID);

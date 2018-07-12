@@ -33,8 +33,6 @@ namespace LiteDB.Engine
             
             try
             {
-                this.WaitAsyncWrite();
-
                 // first do checkpoint with WAL delete
                 _wal.Checkpoint(true, _header, false);
 
@@ -100,14 +98,11 @@ namespace LiteDB.Engine
                     }
                 }
 
-                // must empty main datafile cache
-                _dataFile.Cache.Clear();
-
                 // this checkpoint will use WAL file from temp database and will override all datafile pages
                 _wal.Checkpoint(true, _header, false);
 
                 // must reload header page because current _header has complete different pageIDs for collections
-                _header = _dataFile.ReadPage(0, true) as HeaderPage;
+                _header = _dataFile.ReadPage(0) as HeaderPage;
 
                 // if datafile grow (it's possible because index flipcoin can change) return 0
                 return Math.Max(0, originalSize - _dataFile.Length);

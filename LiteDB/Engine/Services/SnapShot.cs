@@ -179,7 +179,7 @@ namespace LiteDB.Engine
             // if not inside local pages, can be a dirty page already saved in wal file
             if (_transPages.DirtyPagesWal.TryGetValue(pageID, out var position))
             {
-                var dirty = (T)_wal.WalFile.ReadPage(position.Position, _mode == LockMode.Write);
+                var dirty = (T)_wal.WalFile.ReadPage(position.Position);
 
                 // add into local pages
                 _localPages[pageID] = dirty;
@@ -195,7 +195,7 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var walpage = (T)_wal.WalFile.ReadPage(pos, _mode == LockMode.Write);
+                var walpage = (T)_wal.WalFile.ReadPage(pos);
 
                 // copy to my local pages
                 _localPages[pageID] = walpage;
@@ -215,7 +215,7 @@ namespace LiteDB.Engine
             // for last chance, look inside original disk data file
             var pagePosition = BasePage.GetPagePosition(pageID);
 
-            var diskpage = (T)_dataFile.ReadPage(pagePosition, _mode == LockMode.Write);
+            var diskpage = (T)_dataFile.ReadPage(pagePosition);
 
             // add this page into local pages
             _localPages[pageID] = diskpage;
