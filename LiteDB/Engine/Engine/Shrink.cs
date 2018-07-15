@@ -23,9 +23,6 @@ namespace LiteDB.Engine
         /// </summary>
         private long Shrink(IFileReader reader,  string password)
         {
-            // do not accept any command after shutdown database
-            if (_shutdown) throw LiteException.DatabaseShutdown();
-
             var originalSize = _dataFile.Length;
 
             // shrink works with a temp engine that will use same wal file name as current datafile

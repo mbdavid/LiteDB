@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Get/Set database user version
+        /// Get/Set database user version. If set new value, requires no current transaction
         /// </summary>
         public int UserVersion
         {
@@ -21,7 +21,9 @@ namespace LiteDB.Engine
             {
                 if (value == _header.UserVersion || _shutdown) return;
 
-                lock(_header)
+                if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("UserVersion", TransactionState.Active);
+
+                lock (_header)
                 {
                     // clone header to use in writer
                     var header = _header.Clone();

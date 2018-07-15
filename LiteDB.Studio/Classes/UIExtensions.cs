@@ -254,12 +254,13 @@ namespace LiteDB.Studio
             //    new SyntaxStyle(Color.Purple));
 
             syntaxHighlighter.AddPattern(
-                new PatternDefinition("+", "-", ">", "<", "&", "|", "=", "AND", "OR"),
+                new PatternDefinition("+", "-", ">", "<", "&", "|", "="),
                 new SyntaxStyle(Color.Gray));
 
             // sql keywords
             syntaxHighlighter.AddPattern(
                 new PatternDefinition(
+                    "BETWEEN", "IN", "AND", "OR",
                     "BEGIN", "TRANS", "TRANSACTION", "COMMIT", "ROLLBACK",
                     "ANALYZE",
                     "CHECKPOINT",
