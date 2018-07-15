@@ -140,8 +140,6 @@ namespace LiteDB.Engine
                     {
                         pagePositions[page.PageID] = new PagePosition(page.PageID, pos);
                     }
-
-                    page.IsDirty = false;
                 }
             }
         }

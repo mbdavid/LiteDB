@@ -57,6 +57,11 @@ namespace LiteDB.Engine
         public DateTime CreationTime { get; set; }
 
         /// <summary>
+        /// DateTime from last index counter
+        /// </summary>
+        public DateTime LastAnalyzeTime { get; set; }
+
+        /// <summary>
         /// Get all indexes from this collection - includes non-used indexes
         /// </summary>
         private CollectionIndex[] _indexes;
@@ -72,6 +77,7 @@ namespace LiteDB.Engine
             this.ItemCount = 1; // fixed for CollectionPage
             this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
             this.CreationTime = DateTime.Now;
+            this.LastAnalyzeTime = DateTime.MinValue;
 
             _indexes = new CollectionIndex[INDEX_PER_COLLECTION];
 
@@ -90,6 +96,7 @@ namespace LiteDB.Engine
             this.CollectionName = reader.ReadString();
             this.FreeDataPageID = reader.ReadUInt32();
             this.CreationTime = reader.ReadDateTime(utcDate);
+            this.LastAnalyzeTime = reader.ReadDateTime(utcDate);
 
             // keep 200 bytes in page before starts write indexes
             var skip = INDEX_PAGE_FIXED_HEADER - (reader.BaseStream.Position - start);
@@ -118,6 +125,7 @@ namespace LiteDB.Engine
             writer.Write(this.CollectionName);
             writer.Write(this.FreeDataPageID);
             writer.Write(this.CreationTime);
+            writer.Write(this.LastAnalyzeTime);
 
             var skip = INDEX_PAGE_FIXED_HEADER - (writer.BaseStream.Position - start);
 

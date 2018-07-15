@@ -232,9 +232,8 @@ namespace LiteDB.Engine
             {
                 var walpage = (T)_wal.WalFile.ReadPage(pos);
 
+                // mark page as unconfirmed (at this point can be confirmed in wal disk)
                 walpage.IsConfirmed = false;
-
-                DEBUG(walpage.PageType == PageType.Collection && walpage.IsDirty, "collection pge cant be dirty");
 
                 // do not store ExtendPage when snapshot are read only
                 if ((walpage.PageType != PageType.Extend || _mode == LockMode.Write) &&
@@ -253,6 +252,8 @@ namespace LiteDB.Engine
             // load header page (is a global single instance)
             if (pageID == 0)
             {
+                DEBUG(true, "can't request header page");
+
                 return _header as T;
             }
 

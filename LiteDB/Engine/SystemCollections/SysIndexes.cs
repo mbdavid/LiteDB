@@ -41,7 +41,8 @@ namespace LiteDB.Engine
                             ["unique"] = index.Unique,
                             ["keyCount"] = (int)index.KeyCount,
                             ["uniqueKeyCount"] = (int)index.UniqueKeyCount,
-                            ["maxLevel"] = (int)index.MaxLevel
+                            ["maxLevel"] = (int)index.MaxLevel,
+                            ["lastAnalyzeTime"] = index.Page.LastAnalyzeTime
                         };
                     }
                 }

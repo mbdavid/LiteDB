@@ -14,6 +14,8 @@ namespace LiteDB.Engine
             // do not accept any command after shutdown database
             if (_shutdown) throw LiteException.DatabaseShutdown();
 
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Analyze", TransactionState.Active);
+
             var cols = collections == null || collections.Length == 0 ? _header.Collections.Keys.ToArray() : collections;
             var count = 0;
 
@@ -21,53 +23,51 @@ namespace LiteDB.Engine
 
             foreach (var collection in cols)
             {
-                var dict = new Dictionary<string, uint>();
+                // counters for indexes
+                var keyCount = new Dictionary<string, uint>();
+                var keyUniqueCount = new Dictionary<string, uint>();
 
                 // create one transaction per colection to avoid lock all database
                 this.AutoTransaction(transaction =>
                 {
                     // first, get read-only snapshot
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
-                    var col = snapshot.CollectionPage;
 
-                    if (col == null) return 0;
+                    // do not use "col" local variable because `WriteMode()` clear _collectionPage instance
+                    if (snapshot.CollectionPage == null) return 0;
 
                     var indexer = new IndexService(snapshot);
-                    var indexes = col.GetIndexes(true).ToArray();
+                    var indexes = snapshot.CollectionPage.GetIndexes(true).ToArray();
 
                     foreach (var index in indexes)
                     {
-                        // if unique index, 1 document = 1 unique key
-                        if (index.Unique)
-                        {
-                            dict[index.Name] = index.KeyCount;
-                            continue;
-                        }
-
                         var last = BsonValue.MinValue;
                         var counter = 0u;
+                        var uniqueCounter = 0u;
 
                         foreach (var node in indexer.FindAll(index, LiteDB.Query.Ascending))
                         {
-                            counter += node.Key.Equals(last) ? 0u : 1u;
+                            counter++;
+                            uniqueCounter += node.Key == last ? 0u : 1u;
                             last = node.Key;
                         }
 
-                        dict[index.Name] = counter;
+                        keyCount[index.Name] = counter;
+                        keyUniqueCount[index.Name] = uniqueCounter;
                     }
 
                     // after do all analyze, update snapshot to write mode
                     snapshot.WriteMode(false);
 
-                    foreach (var index in indexes)
+                    foreach (var index in snapshot.CollectionPage.GetIndexes(true))
                     {
-                        if (dict.TryGetValue(index.Name, out var counter))
-                        {
-                            index.UniqueKeyCount = counter;
-                        }
+                        index.KeyCount = keyCount[index.Name];
+                        index.UniqueKeyCount = keyUniqueCount[index.Name];
                     }
 
-                    snapshot.SetDirty(col);
+                    snapshot.CollectionPage.LastAnalyzeTime = DateTime.Now;
+
+                    snapshot.SetDirty(snapshot.CollectionPage);
 
                     return ++count;
                 });
