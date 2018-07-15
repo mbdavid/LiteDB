@@ -158,9 +158,9 @@ namespace LiteDB.Engine
                 if (hasWriteSnapshot)
                 {
                     // persist all pages into wal file
-                    this.PersistDirtyPages(true, !_transPages.WillChangeHeader);
+                    this.PersistDirtyPages(true, !_transPages.HeaderChanged);
 
-                    if (_transPages.WillChangeHeader)
+                    if (_transPages.HeaderChanged)
                     {
                         // lock header page to avoid concurrency when writing on header
                         lock (_header)
@@ -214,6 +214,8 @@ namespace LiteDB.Engine
                     {
                         _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
                     }
+
+                    _wal.WalFile.Flush();
                 }
 
                 // dispose all snaps and release locks only after wal index are updated
@@ -272,12 +274,10 @@ namespace LiteDB.Engine
             {
                 var pageID = _transPages.NewPages[i];
                 var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : uint.MaxValue;
-                var prev = i > 0 ? _transPages.NewPages[i - 1] : 0;
 
                 pages.Add(new EmptyPage(pageID)
                 {
                     NextPageID = next,
-                    PrevPageID = prev,
                     TransactionID = transactionID,
                     IsDirty = true
                 });

@@ -128,7 +128,7 @@ namespace LiteDB.Engine
 
                 foreach (var page in pages)
                 {
-                    DEBUG(page.IsDirty == false, "page always must be dirty when be write on disk (async mode)");
+                    DEBUG(page.IsDirty == false, "page always must be dirty when be write on disk");
                     DEBUG(page.TransactionID == Guid.Empty, "to write on wal, page must have a transactionID");
 
                     var pos = stream.Position;
@@ -143,6 +143,11 @@ namespace LiteDB.Engine
                 }
             }
         }
+
+        /// <summary>
+        /// Do a full flush do disk
+        /// </summary>
+        public void Flush() => _writer.Value.BaseStream.FlushToDisk();
 
         /// <summary>
         /// Clear WAL file content and reset writer position

@@ -53,7 +53,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Detect if this transaction pages need change header
         /// </summary>
-        public bool WillChangeHeader =>
+        public bool HeaderChanged =>
             this.NewPages.Count > 0 ||
             this.DeletedPages > 0 ||
             this.NewCollections.Count > 0 ||
