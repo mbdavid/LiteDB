@@ -26,18 +26,16 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
+                var col = snapshot.CollectionPage;
                 var count = 0;
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
 
                 foreach (var doc in docs)
                 {
-                    // always get new collection page (ensure get instance from localpages)
-                    var col = snapshot.CollectionPage;
+                    transaction.Safepoint();
 
                     this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
-
-                    transaction.Safepoint();
 
                     count++;
                 }
@@ -102,7 +100,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Collection last sequence cache
         /// </summary>
-        private ConcurrentDictionary<string, long> _sequence = new ConcurrentDictionary<string, long>();
+        private ConcurrentDictionary<string, long> _sequence = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Get lastest value from a _id collection and plus 1 - use _sequence cache

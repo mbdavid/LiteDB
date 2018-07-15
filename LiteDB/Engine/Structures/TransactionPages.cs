@@ -46,8 +46,8 @@ namespace LiteDB.Engine
         public Dictionary<string, uint> NewCollections { get; set; } = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Deleted collections in this transaction
+        /// Deleted collection in this transaction (support only 1 drop collection per transaction)
         /// </summary>
-        public HashSet<string> DeletedCollections { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public string DeletedCollection { get; set; }
     }
 }

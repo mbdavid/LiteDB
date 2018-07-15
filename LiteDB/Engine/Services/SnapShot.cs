@@ -100,8 +100,10 @@ namespace LiteDB.Engine
         {
             if (_mode == LockMode.Read) yield break;
 
-            foreach(var page in _localPages.Values.Where(x => x.IsDirty && x.PageType != PageType.Collection))
+            foreach(var page in _localPages.Values.Where(x => x.IsDirty))
             {
+                DEBUG(page.PageType == PageType.Header || page.PageType == PageType.Collection, "local cache cann't contains this page type");
+
                 yield return page;
             }
 
@@ -253,10 +255,14 @@ namespace LiteDB.Engine
             var diskpage = (T)_dataFile.ReadPage(pagePosition);
 
             // do not store ExtendPage when snapshot are read only
-            if (diskpage.PageType != PageType.Extend || _mode == LockMode.Write)
+            // do not store CollectionPage in local cache
+            if ((diskpage.PageType != PageType.Extend || _mode == LockMode.Write) &&
+                diskpage.PageType != PageType.Collection)
             {
                 // add this page into local pages
                 _localPages[pageID] = diskpage;
+
+                DEBUG(diskpage.PageType == PageType.Header, "never should be requested for header page");
 
                 // increment transaction size counter
                 _transPages.TransactionSize++;
@@ -272,6 +278,7 @@ namespace LiteDB.Engine
         {
             if (page.PageType == PageType.Header || page.PageType == PageType.Collection)
             {
+                // header and collection can be inside local cache
                 page.IsDirty = true;
             }
             else if (page.IsDirty == false)
@@ -348,7 +355,7 @@ namespace LiteDB.Engine
                 this.SetDirty(prevPage);
             }
 
-            // define collection pageID for all datafile pages
+            // define ColID for this new page
             if (_collectionPage != null)
             {
                 page.ColID = _collectionPage.PageID;
@@ -357,6 +364,10 @@ namespace LiteDB.Engine
             {
                 page.ColID = page.PageID;
                 _collectionPage = page as CollectionPage;
+            }
+            else
+            {
+                DEBUG(true, "should never create new page with no collection page already created");
             }
 
             // retain a list of created pages to, in a rollback situation, back pages to empty list
@@ -577,9 +588,18 @@ namespace LiteDB.Engine
         /// </summary>
         private void MoveToFreeList(BasePage page, BasePage startPage, ref uint fieldPageID)
         {
+            var isDirty = startPage.IsDirty;
+            var initialValue = fieldPageID;
+
             //TODO: write a better solution
             this.RemoveToFreeList(page, startPage, ref fieldPageID);
             this.AddToFreeList(page, startPage, ref fieldPageID);
+
+            // if has no change on fieldPageID, back isDirty state
+            if (fieldPageID == initialValue)
+            {
+                startPage.IsDirty = isDirty;
+            }
         }
 
         #endregion

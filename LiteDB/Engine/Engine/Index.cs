@@ -70,6 +70,8 @@ namespace LiteDB.Engine
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
                 {
+                    transaction.Safepoint();
+
                     // read binary and deserialize document (select only used field)
                     var buffer = data.Read(data.GetBlock(pkNode.DataBlock));
                     var doc = _bsonReader.Deserialize(buffer, expression.Fields).AsDocument;
@@ -86,8 +88,6 @@ namespace LiteDB.Engine
                         // link index node to datablock
                         node.DataBlock = pkNode.DataBlock;
                     }
-
-                    transaction.Safepoint();
                 }
 
                 return true;

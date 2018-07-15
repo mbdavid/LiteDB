@@ -27,19 +27,19 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
+                var col = snapshot.CollectionPage;
                 var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
-                var col = snapshot.CollectionPage;
                 var count = 0;
 
                 foreach (var doc in docs)
                 {
+                    transaction.Safepoint();
+
                     if (this.UpdateDocument(snapshot, col, doc, indexer, data))
                     {
                         count++;
                     }
-
-                    transaction.Safepoint();
                 }
 
                 return count;

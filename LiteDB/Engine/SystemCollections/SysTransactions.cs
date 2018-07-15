@@ -26,8 +26,7 @@ namespace LiteDB.Engine
                     ["walIndexSize"] = transaction.Pages.DirtyPagesWal.Count,
                     ["newPages"] = transaction.Pages.NewPages.Count,
                     ["deletedPages"] = transaction.Pages.DeletedPages,
-                    ["newCollections"] = transaction.Pages.NewCollections.Count,
-                    ["deletedCollections"] = transaction.Pages.DeletedCollections.Count,
+                    ["newCollections"] = transaction.Pages.NewCollections.Count
                 };
             }
         }

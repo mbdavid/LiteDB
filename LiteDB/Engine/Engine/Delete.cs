@@ -25,6 +25,7 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
+                var col = snapshot.CollectionPage;
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
 
@@ -36,10 +37,11 @@ namespace LiteDB.Engine
                 foreach (var id in ids)
                 {
                     var pkNode = indexer.Find(pk, id, false, LiteDB.Query.Ascending);
-                    var col = snapshot.CollectionPage;
 
                     // if pk not found, continue
                     if (pkNode == null) continue;
+
+                    transaction.Safepoint();
 
                     // get all indexes nodes from this data block
                     var allNodes = indexer.GetNodeList(pkNode, true).ToArray();
@@ -54,8 +56,6 @@ namespace LiteDB.Engine
 
                     // remove object data
                     data.Delete(col, pkNode.DataBlock);
-
-                    transaction.Safepoint();
 
                     count++;
                 }

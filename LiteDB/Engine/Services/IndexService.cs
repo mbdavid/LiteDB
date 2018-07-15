@@ -93,7 +93,6 @@ namespace LiteDB.Engine
         {
             // calc key size
             var keyLength = key.GetBytesCount(false);
-            var isUniqueKey = true;
 
             // test for index key maxlength
             if (keyLength > MAX_INDEX_LENGTH) throw LiteException.IndexKeyTooLong();
@@ -140,8 +139,6 @@ namespace LiteDB.Engine
 
                     // if unique and diff = 0, throw index exception (must rollback transaction - others nodes can be dirty)
                     if (diff == 0 && index.Unique) throw LiteException.IndexDuplicateKey(index.Name, key);
-
-                    if (diff == 0) isUniqueKey = false;
 
                     if (diff == 1) break;
                 }

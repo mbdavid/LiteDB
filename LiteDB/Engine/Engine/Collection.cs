@@ -15,11 +15,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Drop collection including all documents, indexes and extended pages
+        /// Drop collection including all documents, indexes and extended pages (do not support transactions)
         /// </summary>
         public bool DropCollection(string collection)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+
+            // drop collection is possible only in exclusive transaction for this
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DropCollection", TransactionState.Active);
 
             return this.AutoTransaction(transaction =>
             {
@@ -41,7 +44,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Rename a collection
+        /// Rename a collection (do not support transactions)
         /// </summary>
         public bool RenameCollection(string collection, string newName)
         {
@@ -78,7 +81,7 @@ namespace LiteDB.Engine
                 col.CollectionName = newName;
                 currentSnapshot.SetDirty(col);
 
-                transaction.Pages.DeletedCollections.Add(collection);
+                transaction.Pages.DeletedCollection = collection;
                 transaction.Pages.NewCollections.Add(newName, col.PageID);
 
                 return true;

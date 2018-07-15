@@ -29,9 +29,6 @@ namespace LiteDB.Engine
                 return _snapshot.GetPage<CollectionPage>(addedPageID);
             }
 
-            // but if collection was deleted, return null
-            if (_transPages.DeletedCollections.Contains(name)) return null;
-
             // otherwise, try get from header collection
             if (_header.Collections.TryGetValue(name, out var pageID))
             {
@@ -94,9 +91,6 @@ namespace LiteDB.Engine
             // get all pages (global)
             foreach (var col in _header.Collections)
             {
-                // exclude deleted pages
-                if (_transPages.DeletedCollections.Contains(col.Key)) continue;
-
                 yield return _snapshot.GetPage<CollectionPage>(col.Value);
             }
         }
@@ -145,25 +139,20 @@ namespace LiteDB.Engine
             // and now, lets delete all this pages
             foreach (var pageID in pages)
             {
-                // delete page
-                _snapshot.DeletePage(pageID);
-
                 // call safe point to avoid memory leak
                 transaction.Safepoint();
+
+                // delete page
+                _snapshot.DeletePage(pageID);
             }
 
             // mark collection page as deleted
             _snapshot.DeletePage(col.PageID);
 
-            // if deleted page are new page, just remove from new collection list
-            if (_transPages.NewCollections.Remove(col.CollectionName) == false)
-            {
-                // otherwise, add into delete collection list
-                _transPages.DeletedCollections.Add(col.CollectionName);
-            }
+            // otherwise, add into delete collection list
+            _transPages.DeletedCollection = col.CollectionName;
 
-            // remove reference of collection page from snapshot (for current transaction, there is no more this collection)
-            _snapshot.CollectionPage = null;
+            col.IsDirty = false;
         }
     }
 }

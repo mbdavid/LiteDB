@@ -102,11 +102,11 @@ namespace LiteDB.Engine
             // remove/add collections based on transPages
             if (transPages != null)
             {
-                foreach (var name in transPages.DeletedCollections)
+                if (transPages.DeletedCollection != null)
                 {
-                    if (this.Collections.TryRemove(name, out var x) == false)
+                    if (this.Collections.TryRemove(transPages.DeletedCollection, out var x) == false)
                     {
-                        throw LiteException.CollectionNotFound(name);
+                        throw LiteException.CollectionNotFound(transPages.DeletedCollection);
                     }
                 }
 
@@ -118,7 +118,10 @@ namespace LiteDB.Engine
                     }
                 }
 
-                this.ItemCount = this.ItemCount - transPages.DeletedCollections.Count + transPages.NewCollections.Count;
+                // update header collection count
+                this.ItemCount = this.ItemCount 
+                    + transPages.NewCollections.Count
+                    - (transPages.DeletedCollection == null ? 0 : 1);
             }
         }
 
