@@ -11,9 +11,6 @@ namespace LiteDB.Engine
         /// </summary>
         public int Analyze(string[] collections)
         {
-            // do not accept any command after shutdown database
-            if (_shutdown) throw LiteException.DatabaseShutdown();
-
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Analyze", TransactionState.Active);
 
             var cols = collections == null || collections.Length == 0 ? _header.Collections.Keys.ToArray() : collections;

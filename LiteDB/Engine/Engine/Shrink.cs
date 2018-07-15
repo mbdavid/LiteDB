@@ -23,6 +23,9 @@ namespace LiteDB.Engine
         /// </summary>
         private long Shrink(IFileReader reader,  string password)
         {
+            // do not accept any command after shutdown database
+            if (_shutdown) throw LiteException.DatabaseShutdown();
+
             var originalSize = _dataFile.Length;
 
             // shrink works with a temp engine that will use same wal file name as current datafile
@@ -84,6 +87,7 @@ namespace LiteDB.Engine
                             // by default, commit() will only store confirm page if there is any changed page
                             temp._header.TransactionID = transactionID;
                             temp._header.IsConfirmed = true;
+                            temp._header.IsDirty = true;
                             temp._wal.WalFile.WritePages(new[] { temp._header }, null);
 
                             temp._wal.ConfirmTransaction(transactionID, new List<PagePosition>());

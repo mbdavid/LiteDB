@@ -21,21 +21,24 @@ namespace LiteDB.Engine
             {
                 if (value == _header.UserVersion || _shutdown) return;
 
-                // clone header to use in writer
-                var header = _header.Clone();
+                lock(_header)
+                {
+                    // clone header to use in writer
+                    var header = _header.Clone();
 
-                header.UserVersion = value;
-                header.TransactionID = Guid.NewGuid();
-                header.IsConfirmed = true;
-                header.IsDirty = true;
+                    header.UserVersion = value;
+                    header.TransactionID = Guid.NewGuid();
+                    header.IsConfirmed = true;
+                    header.IsDirty = true;
 
-                _wal.WalFile.WritePages(new[] { header }, null);
+                    _wal.WalFile.WritePages(new[] { header }, null);
 
-                // create fake transaction with no pages to update (only confirm page)
-                _wal.ConfirmTransaction(header.TransactionID, new PagePosition[0]);
+                    // create fake transaction with no pages to update (only confirm page)
+                    _wal.ConfirmTransaction(header.TransactionID, new PagePosition[0]);
 
-                // update header instance
-                _header.UserVersion = value;
+                    // update header instance
+                    _header.UserVersion = value;
+                }
             }
         }
     }

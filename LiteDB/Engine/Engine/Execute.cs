@@ -13,9 +13,6 @@ namespace LiteDB.Engine
         /// </summary>
         public BsonDataReader Execute(string command, BsonDocument parameters = null)
         {
-            // do not accept any command after shutdown database
-            if (_shutdown) throw LiteException.DatabaseShutdown();
-
             var tokenizer = new Tokenizer(command);
             var sql = new SqlParser(this, tokenizer, parameters);
             var reader = sql.Execute();

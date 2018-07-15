@@ -51,12 +51,11 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (newName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(newName));
             if (collection.Equals(newName, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("To rename a collection the new name must be different from current collection name");
-            if (_shutdown) throw LiteException.DatabaseShutdown();
 
             // rename collection is possible only in exclusive transaction for this
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("RenameCollection", TransactionState.Active);
 
-            return AutoTransaction(transaction =>
+            return this.AutoTransaction(transaction =>
             {
                 var currentSnapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
                 var newSnapshot = transaction.CreateSnapshot(LockMode.Write, newName, false);
