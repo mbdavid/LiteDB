@@ -28,7 +28,6 @@ namespace LiteDB.Engine
                             ["fetch"] = cursor.FetchCount,
                             ["done"] = cursor.Done
                         };
-
                     }
                 }
             }

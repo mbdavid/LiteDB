@@ -47,7 +47,7 @@ namespace LiteDB.Engine
                     }
                 }
 
-                if(isNew)
+                if (isNew)
                 {
                     transaction.Dispose();
                 }

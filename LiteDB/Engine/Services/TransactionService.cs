@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         public Dictionary<string, Snapshot> Snapshots => _snapshots;
         public TransactionPages Pages => _transPages;
 
-        internal TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<Guid> done)
+        public TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<Guid> done)
         {
             _wal = wal;
             _log = log;
@@ -55,7 +55,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create (or get from cache) snapshot and return. Snapshot are thread-safe. Do not call Dispose of snapshot because transaction will do this on end
         /// </summary>
-        internal Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
+        public Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
         {
             // if transaction are commited/aborted do not accept new snapshots
             if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("CreateSnapshot", this.State);
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// If current transaction contains too much pages, now is safe to remove clean pages from memory and flush to wal disk dirty pages
         /// </summary>
-        internal void Safepoint()
+        public void Safepoint()
         {
             // if transaction is in shutting down, stop transaction and do not commit
             if (_shutdown) throw LiteException.DatabaseShutdown();
@@ -318,7 +318,7 @@ namespace LiteDB.Engine
         /// Define this transaction must stop working and release resources because main thread are shutting down.
         /// If was called by same thread, call rollback now (with no ReturnNewPages)
         /// </summary>
-        internal void Shutdown()
+        public void Shutdown()
         {
             if (Thread.CurrentThread.ManagedThreadId == this.ThreadID)
             {
