@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,28 +51,14 @@ namespace LiteDB.Engine
         /// </summary>
         private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
         {
-            // increase collection sequence _id
-            col.Sequence++;
-
-            snapshot.SetDirty(col);
-
-            // if no _id, add one
+            // if no _id, use AutoId
             if (!doc.RawValue.TryGetValue("_id", out var id))
             {
                 doc["_id"] = id =
                     autoId == BsonAutoId.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :
                     autoId == BsonAutoId.Guid ? new BsonValue(Guid.NewGuid()) :
                     autoId == BsonAutoId.DateTime ? new BsonValue(DateTime.Now) :
-                    autoId == BsonAutoId.Int32 ? new BsonValue((Int32)col.Sequence) :
-                    autoId == BsonAutoId.Int64 ? new BsonValue(col.Sequence) : BsonValue.Null;
-            }
-            // create bubble in sequence number if _id is bigger than current sequence
-            else if(autoId == BsonAutoId.Int32 || autoId == BsonAutoId.Int64)
-            {
-                var current = id.AsInt64;
-
-                // if current id is bigger than sequence, jump sequence to this number. Other was, do not increse sequnce
-                col.Sequence = current >= col.Sequence ? current : col.Sequence - 1;
+                    this.GetSequence(col, snapshot, autoId);
             }
 
             // test if _id is a valid type
@@ -110,6 +97,57 @@ namespace LiteDB.Engine
                     node.DataBlock = dataBlock.Position;
                 }
             }
+        }
+
+        /// <summary>
+        /// Collection last sequence cache
+        /// </summary>
+        private ConcurrentDictionary<string, long> _sequence = new ConcurrentDictionary<string, long>();
+
+        /// <summary>
+        /// Get lastest value from a _id collection and plus 1 - use _sequence cache
+        /// </summary>
+        private BsonValue GetSequence(CollectionPage col, Snapshot snapshot, BsonAutoId autoId)
+        {
+            var next = _sequence.AddOrUpdate(col.CollectionName, (s) =>
+            {
+                // add method
+                var tail = col.GetIndex(0).TailNode;
+                var head = col.GetIndex(0).HeadNode;
+
+                // get tail page and previous page
+                var tailPage = snapshot.GetPage<IndexPage>(tail.PageID);
+                var node = tailPage.GetNode(tail.Index);
+                var prevNode = node.Prev[0];
+
+                if (prevNode == head)
+                {
+                    return 1;
+                }
+                else
+                {
+                    var lastPage = prevNode.PageID == tailPage.PageID ? tailPage : snapshot.GetPage<IndexPage>(prevNode.PageID);
+                    var lastNode = lastPage.GetNode(prevNode.Index);
+
+                    var lastKey = lastNode.Key;
+
+                    if (lastKey.IsNumber == false)
+                    {
+                        throw new LiteException(0, $"It's not possible use AutoId={autoId} because last value from collection '{col.CollectionName}' is '{lastKey}' and is not a number");
+                    }
+
+                    return lastNode.Key.AsInt64 + 1;
+                }
+            },
+            (s, value) =>
+            {
+                // update last value
+                return value + 1;
+            });
+
+            return autoId == BsonAutoId.Int32 ?
+                new BsonValue((int)next) :
+                new BsonValue(next);
         }
     }
 }

@@ -32,7 +32,6 @@ namespace LiteDB.Engine
 
         // expose services
         public int ReadVersion => _readVersion;
-        public Dictionary<uint, BasePage> LocalPages => _localPages;
         public LockMode Mode => _mode;
         public List<CursorInfo> Cursors => _cursors;
 
@@ -93,6 +92,34 @@ namespace LiteDB.Engine
                 _collectionPage = srv.Add(_collectionName);
             }
         }
+
+        /// <summary>
+        /// Return all dirty pages
+        /// </summary>
+        public IEnumerable<BasePage> GetDirtyPages(bool includeCollectionPage)
+        {
+            if (_mode == LockMode.Read) yield break;
+
+            foreach(var page in _localPages.Values.Where(x => x.IsDirty && x.PageType != PageType.Collection))
+            {
+                yield return page;
+            }
+
+            if (includeCollectionPage && _collectionPage != null && _collectionPage.IsDirty)
+            {
+                yield return _collectionPage;
+            }
+        }
+
+        /// <summary>
+        /// Clear all localpages 
+        /// </summary>
+        public void ClearLocalPages() => _localPages.Clear();
+
+        /// <summary>
+        /// Get local pages counter
+        /// </summary>
+        public int LocalPagesCount => _localPages.Count;
 
         /// <summary>
         /// Get/Set collection reference. Returns null if not exists in collections
@@ -243,10 +270,15 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetDirty(BasePage page)
         {
-            // mark as dirty only clean pages
-            if (page.IsDirty == false)
+            if (page.PageType == PageType.Header || page.PageType == PageType.Collection)
             {
                 page.IsDirty = true;
+            }
+            else if (page.IsDirty == false)
+            {
+                // mark as dirty only clean pages
+                page.IsDirty = true;
+
                 _localPages[page.PageID] = page;
 
                 // increment transaction size counter
@@ -554,7 +586,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return _collectionName + " (pages: " + this.LocalPages.Count + ")";
+            return _collectionName + " (pages: " + _localPages.Count + ")";
         }
     }
 }

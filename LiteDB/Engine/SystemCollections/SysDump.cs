@@ -109,8 +109,6 @@ namespace LiteDB.Engine
 
                 doc["collectionName"] = colPage.CollectionName;
                 doc["freeDataPageID"] = dumpPageID(colPage.FreeDataPageID);
-                doc["documentCount"] = (int)colPage.DocumentCount;
-                doc["sequence"] = (int)colPage.Sequence;
                 doc["creationTime"] = colPage.CreationTime;
                 doc["indexes"] = new BsonArray(colPage.GetIndexes(true).Select(x => new BsonDocument
                 {

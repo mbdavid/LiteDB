@@ -19,11 +19,6 @@ namespace LiteDB.Engine
         /// </summary>
         private Dictionary<ushort, DataBlock> _dataBlocks = new Dictionary<ushort, DataBlock>();
 
-        /// <summary>
-        /// Expose DataBlocks
-        /// </summary>
-        public Dictionary<ushort, DataBlock> DataBlocks => _dataBlocks;
-
         private DataPage()
         {
         }

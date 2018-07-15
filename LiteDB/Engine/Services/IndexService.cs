@@ -127,13 +127,13 @@ namespace LiteDB.Engine
             for (var i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // get cache for last node
-                cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+                cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
 
                 // for(; <while_not_this>; <do_this>) { ... }
                 for (; cur.Next[i].IsEmpty == false; cur = cache)
                 {
                     // get cache for last node
-                    cache = cache != null && cache.Position.Equals(cur.Next[i]) ? cache : this.GetNode(cur.Next[i]);
+                    cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
 
                     // read next node to compare
                     var diff = cache.Key.CompareTo(key);
@@ -154,7 +154,7 @@ namespace LiteDB.Engine
                     _snapshot.SetDirty(cur.Page);
 
                     // if inserting MaxValue, left add just before tail Node (and not after tail)
-                    if (isMax && cur.Position.Equals(index.TailNode))
+                    if (isMax && cur.Position == index.TailNode)
                     {
                         cur = this.GetNode(cur.Prev[0]);
                     }
@@ -200,11 +200,6 @@ namespace LiteDB.Engine
                 // set last node page as dirty
                 _snapshot.SetDirty(last.Page);
             }
-
-            index.KeyCount++;
-            if (isUniqueKey) index.UniqueKeyCount++;
-
-            _snapshot.SetDirty(index.Page);
 
             return node;
         }
@@ -303,11 +298,6 @@ namespace LiteDB.Engine
                 nextNode.PrevNode = node.PrevNode;
                 _snapshot.SetDirty(nextNode.Page);
             }
-
-            index.KeyCount--;
-            if (isUniqueKey) index.UniqueKeyCount--;
-
-            _snapshot.SetDirty(index.Page);
         }
 
         /// <summary>

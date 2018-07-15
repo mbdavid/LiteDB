@@ -33,9 +33,7 @@ namespace LiteDB.Engine
                     yield return new BsonDocument
                     {
                         ["name"] = name,
-                        ["creation"] = snapshot.CollectionPage.CreationTime,
-                        ["documentCount"] = snapshot.CollectionPage.DocumentCount,
-                        ["sequence"] = snapshot.CollectionPage.Sequence
+                        ["creation"] = snapshot.CollectionPage.CreationTime
                     };
                 }
 

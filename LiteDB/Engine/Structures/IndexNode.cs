@@ -80,7 +80,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsHeadTail(CollectionIndex index)
         {
-            return this.Position.Equals(index.HeadNode) || this.Position.Equals(index.TailNode);
+            return this.Position == index.HeadNode || this.Position == index.TailNode;
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace LiteDB.Engine
 
             if (x == null || y == null) return false;
 
-            return x.DataBlock.Equals(y.DataBlock);
+            return x.DataBlock == y.DataBlock;
         }
 
         public int GetHashCode(IndexNode obj)

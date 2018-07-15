@@ -38,7 +38,9 @@ namespace LiteDB.Engine
         /// </summary>
         public long Count(string collection)
         {
-            return (int)this.LongCount(collection);
+            return this.Query(collection)
+                .Select("_id")
+                .Count();
         }
 
         /// <summary>
@@ -46,12 +48,9 @@ namespace LiteDB.Engine
         /// </summary>
         public long LongCount(string collection)
         {
-            return this.AutoTransaction(transaction =>
-            {
-                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
-
-                return snapshot.CollectionPage?.DocumentCount ?? 0;
-            });
+            return this.Query(collection)
+                .Select("_id")
+                .LongCount();
         }
 
         /// <summary>
@@ -61,6 +60,7 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Index(index)
+                .Select("_id")
                 .Count();
         }
 
@@ -71,6 +71,7 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Index(index)
+                .Select("_id")
                 .LongCount();
         }
 
@@ -81,6 +82,7 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Where(query)
+                .Select("_id")
                 .Count();
         }
 
@@ -91,6 +93,7 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Where(query)
+                .Select("_id")
                 .LongCount();
         }
 
@@ -101,6 +104,7 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Index(index)
+                .Select("_id")
                 .Exists();
         }
 
@@ -111,6 +115,7 @@ namespace LiteDB.Engine
         {
             return this.Query(collection)
                 .Where(query)
+                .Select("_id")
                 .Exists();
         }
 

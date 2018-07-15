@@ -88,22 +88,20 @@ namespace LiteDB.Engine
 
             if (_transPages.TransactionSize >= _maxTransactionSize)
             {
-                this.PersistDirtyPages();
+                this.PersistDirtyPages(false);
             }
         }
 
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
-        internal void PersistDirtyPages()
+        internal void PersistDirtyPages(bool commit)
         {
             // get all dirty pages from write snapshots
             // do not get header page because will use as confirm page (last page)
             // update if transactionID
             var pages = _snapshots.Values
-                .Where(x => x.Mode == LockMode.Write)
-                .SelectMany(x => x.LocalPages.Values)
-                .Where(x => x.IsDirty && x.PageType != PageType.Header)
+                .SelectMany(x => x.GetDirtyPages(commit))
                 .ForEach((i, p) => p.TransactionID = this.TransactionID);
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
@@ -112,8 +110,7 @@ namespace LiteDB.Engine
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
-                // clear because I will not use anymore in this transaction
-                snapshot.LocalPages.Clear();
+                snapshot.ClearLocalPages();
             }
 
             // there is no local pages in cache and all dirty pages are in wal area, clear page count
@@ -137,7 +134,7 @@ namespace LiteDB.Engine
                 if (writeSnaps)
                 {
                     // persist all pages into wal file
-                    this.PersistDirtyPages();
+                    this.PersistDirtyPages(true);
 
                     // if no dirty page, just skip
                     if (_transPages.DirtyPagesWal.Count > 0)

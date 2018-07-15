@@ -34,6 +34,16 @@ namespace LiteDB.Engine
             return this.PageID == other.PageID && this.Index == other.Index;
         }
 
+        public static bool operator ==(PageAddress lhs, PageAddress rhs)
+        {
+            return lhs.PageID == rhs.PageID && lhs.Index == rhs.Index;
+        }
+
+        public static bool operator !=(PageAddress lhs, PageAddress rhs)
+        {
+            return !(lhs == rhs);
+        }
+
         public override int GetHashCode()
         {
             unchecked

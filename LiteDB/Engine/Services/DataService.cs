@@ -49,12 +49,6 @@ namespace LiteDB.Engine
             // add/remove dataPage on freelist if has space
             _snapshot.AddOrRemoveToFreeList(dataPage.FreeBytes > DATA_RESERVED_BYTES, dataPage, col, ref col.FreeDataPageID);
 
-            // increase document count in collection
-            col.DocumentCount++;
-
-            // set collection page as dirty
-            _snapshot.SetDirty(col);
-
             return block;
         }
 
@@ -182,11 +176,6 @@ namespace LiteDB.Engine
                 // add or remove to free list
                 _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
             }
-
-            col.DocumentCount--;
-
-            // mark collection page as dirty
-            _snapshot.SetDirty(col);
 
             return block;
         }

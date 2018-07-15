@@ -48,14 +48,19 @@ namespace LiteDB.Engine
         public int FreeBytes { get; set; }
 
         /// <summary>
+        /// Set in all datafile pages the page id about data/index collection. Useful if want re-build database without any index
+        /// </summary>
+        public uint ColID { get; set; }
+
+        /// <summary>
         /// Represent transaction page ID that was stored [16 bytes]
         /// </summary>
         public Guid TransactionID { get; set; }
 
         /// <summary>
-        /// Set in all datafile pages the page id about data/index collection. Useful if want re-build database without any index
+        /// Used in WAL, define this page is last transaction page and are confirmed on disk [1 byte]
         /// </summary>
-        public uint ColID { get; set; }
+        public bool IsConfirmation { get; set; }
 
         /// <summary>
         /// Set this pages that was changed and must be persist in disk [not peristable]
@@ -73,8 +78,9 @@ namespace LiteDB.Engine
             this.NextPageID = uint.MaxValue;
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
-            this.TransactionID = Guid.Empty;
             this.ColID = uint.MaxValue;
+            this.TransactionID = Guid.Empty;
+            this.IsConfirmation = false;
             this.IsDirty = false;
         }
 
@@ -113,10 +119,11 @@ namespace LiteDB.Engine
             this.NextPageID = reader.ReadUInt32(); // 4 bytes
             this.ItemCount = reader.ReadUInt16(); // 2 bytes
             this.FreeBytes = reader.ReadUInt16(); // 2 bytes
-            this.TransactionID = reader.ReadGuid(); // 16 bytes
             this.ColID = reader.ReadUInt32(); // 4 bytes
+            this.TransactionID = reader.ReadGuid(); // 16 bytes
+            this.IsConfirmation = reader.ReadBoolean(); // 1 byte
 
-            reader.BaseStream.Seek(27, SeekOrigin.Current);  // reserved 27 bytes
+            reader.BaseStream.Seek(26, SeekOrigin.Current);  // reserved 26 bytes
                                                              // total header: 64 bytes
         }
 
@@ -129,10 +136,11 @@ namespace LiteDB.Engine
             writer.Write(this.NextPageID); // 4 bytes
             writer.Write((UInt16)this.ItemCount); // 2 bytes
             writer.Write((UInt16)this.FreeBytes); // 2 bytes
-            writer.Write(this.TransactionID); // 16 bytes
             writer.Write(this.ColID); // 4 bytes
+            writer.Write(this.TransactionID); // 16 bytes
+            writer.Write(this.IsConfirmation); // 1 bytes
 
-            writer.Write(_zeroBuffer, 0, 27); // 27 bytes
+            writer.Write(_zeroBuffer, 0, 26); // 26 bytes
                                               // total header: 64 bytes
         }
 
@@ -213,14 +221,14 @@ namespace LiteDB.Engine
             page.ReadHeader(reader);
             page.ReadContent(reader, utcDate);
 
-            var length = PAGE_SIZE - (reader.BaseStream.Position - start);
+            var skip = PAGE_SIZE - (reader.BaseStream.Position - start);
 
-            if (length > 0)
+            if (skip > 0)
             {
-                reader.BaseStream.Seek(length, SeekOrigin.Current);
+                reader.BaseStream.Seek(skip, SeekOrigin.Current);
             }
 
-            DEBUG(length < 0, "page read overflow");
+            DEBUG(skip < 0, "page read overflow");
 
             return page;
         }

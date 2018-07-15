@@ -65,9 +65,6 @@ namespace LiteDB.Tests.Engine
                 tb.Start();
 
                 Task.WaitAll(ta, tb);
-
-                // check if no pending transaction
-                Assert.AreEqual(0, db.Count("$transactions"));
             }
         }
 
@@ -124,9 +121,6 @@ namespace LiteDB.Tests.Engine
                 tb.Start();
 
                 Task.WaitAll(ta, tb);
-
-                // check if no pending transaction
-                Assert.AreEqual(0, db.Count("$transactions"));
             }
         }
 

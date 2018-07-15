@@ -13,11 +13,6 @@ namespace LiteDB.Engine
 
         private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
 
-        /// <summary>
-        /// Expose Nodes
-        /// </summary>
-        public Dictionary<ushort, IndexNode> Nodes => _nodes;
-
         private IndexPage()
         {
         }
