@@ -76,7 +76,7 @@ namespace LiteDB.Engine
                 reader.BaseStream.Position = position;
 
                 // read binary data and create page instance page
-                var page = BasePage.ReadPage(reader, _utcDate);
+                var page = BasePage.ReadPage(reader, true, _utcDate);
 
                 return page;
             }
@@ -116,6 +116,7 @@ namespace LiteDB.Engine
                 }
             }
         }
+
         /// <summary>
         /// Write all pages to disk on absolute position (flush after write)
         /// </summary>

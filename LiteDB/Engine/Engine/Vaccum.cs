@@ -9,6 +9,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read database searching for empty pages but non-linked in FreeListPage. Must run Checkpoint before and do lock reserved
         /// Runs only in with no current transaction
+        /// Returns how many pages was mark as deleted page
         /// </summary>
         public int Vaccum()
         {

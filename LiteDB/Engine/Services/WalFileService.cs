@@ -64,7 +64,7 @@ namespace LiteDB.Engine
                 reader.BaseStream.Position = position;
 
                 // read binary data and create page instance page
-                var page = BasePage.ReadPage(reader, _utcDate);
+                var page = BasePage.ReadPage(reader, true, _utcDate);
 
                 return page;
             }
@@ -88,7 +88,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read all pages inside wal file in order. Locking writer to avoid writing durting my disk read. Read direct from disk with no cache
         /// </summary>
-        public IEnumerable<BasePage> ReadPages()
+        public IEnumerable<BasePage> ReadPages(bool readContent)
         {
             // try get reader from pool (if not exists, create new stream from factory)
             if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(false));
@@ -103,7 +103,7 @@ namespace LiteDB.Engine
 
                     while (stream.Position < stream.Length)
                     {
-                        var page = BasePage.ReadPage(reader, _utcDate);
+                        var page = BasePage.ReadPage(reader, readContent, _utcDate);
 
                         yield return page;
                     }
@@ -163,9 +163,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Delete WAL file (check before if is empty) and re-initialize writer for new file
         /// </summary>
-        public bool Delete()
+        public void Delete()
         {
-            if (_factory.IsWalFileExists() == false) return true;
+            if (_factory.IsWalFileExists() == false) return;
 
             if (_writer.Value.BaseStream.Length == 0)
             {
@@ -174,11 +174,11 @@ namespace LiteDB.Engine
                 _factory.DeleteWalFile();
 
                 this.InitializeWriter();
-
-                return true;
             }
-
-            return false;
+            else
+            {
+                throw new InvalidOperationException("WAL file must be empty before delete");
+            }
         }
 
         /// <summary>

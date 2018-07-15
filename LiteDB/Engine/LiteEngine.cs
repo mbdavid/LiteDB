@@ -152,7 +152,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Request a WAL checkpoint
         /// </summary>
-        public void Checkpoint(bool delete) => _wal.Checkpoint(delete, _header, true);
+        public int Checkpoint(bool delete) => _wal.Checkpoint(delete, _header, true);
 
         /// <summary>
         /// Shutdown database

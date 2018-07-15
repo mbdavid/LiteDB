@@ -9,7 +9,8 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Execute single SQL-Like command and return data reader (can contains single or multiple resultsets). Will execute all commands only if NextResult() was called
+        /// Execute single SQL-Like command and return data reader (can contains single or multiple resultsets). 
+        /// Will execute only first command. Need NextResult() called to run anothers commands
         /// </summary>
         public BsonDataReader Execute(string command, BsonDocument parameters = null)
         {

@@ -209,7 +209,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read a page with correct instance page object. Checks for pageType
         /// </summary>
-        public static BasePage ReadPage(BinaryReader reader, bool utcDate)
+        public static BasePage ReadPage(BinaryReader reader, bool readContent, bool utcDate)
         {
             var start = reader.BaseStream.Position;
             
@@ -219,16 +219,24 @@ namespace LiteDB.Engine
             var page = BasePage.CreateInstance(pageID, pageType);
 
             page.ReadHeader(reader);
-            page.ReadContent(reader, utcDate);
 
-            var skip = PAGE_SIZE - (reader.BaseStream.Position - start);
-
-            if (skip > 0)
+            if (readContent)
             {
-                reader.BaseStream.Seek(skip, SeekOrigin.Current);
-            }
+                page.ReadContent(reader, utcDate);
 
-            DEBUG(skip < 0, "page read overflow");
+                var skip = PAGE_SIZE - (reader.BaseStream.Position - start);
+
+                if (skip > 0)
+                {
+                    reader.BaseStream.Seek(skip, SeekOrigin.Current);
+                }
+
+                DEBUG(skip < 0, "page read overflow");
+            }
+            else
+            {
+                reader.BaseStream.Seek(PAGE_AVAILABLE_BYTES, SeekOrigin.Current);
+            }
 
             return page;
         }

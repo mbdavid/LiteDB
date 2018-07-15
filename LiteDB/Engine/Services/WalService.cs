@@ -98,9 +98,8 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Do WAL checkpoint coping confirmed pages transaction from WAL file to datafile. Return how many pages was copied from WAL file to data file
-        /// This process are SYNC and disk was FLUSHED
-        /// If header was passed, update with last checkpoint date/counter
+        /// Do WAL checkpoint coping confirmed pages from WAL file to datafile. 
+        /// Return how many pages was copied from WAL file to data file
         /// </summary>
         public int Checkpoint(bool deleteWalFile, HeaderPage header, bool lockReserved)
         {
@@ -118,10 +117,7 @@ namespace LiteDB.Engine
             {
                 if (_walFile.HasPages() == false)
                 {
-                    if (deleteWalFile && _walFile.Delete() == false)
-                    {
-                        DEBUG(true, "WAL file was not deleted because are not empty");
-                    }
+                    if (deleteWalFile) _walFile.Delete();
 
                     return 0;
                 }
@@ -133,13 +129,11 @@ namespace LiteDB.Engine
                 HeaderPage last = null;
 
                 // get all pages inside WAL file and contains valid confirmed pages
-                var pages = _walFile.ReadPages()
+                var pages = _walFile.ReadPages(true)
                     .Where(x => _confirmedTransactions.Contains(x.TransactionID))
-#if DEBUG
-                    .ForEach((i, x) => DEBUG(x.TransactionID == Guid.Empty, "pages in wal must have transaction id"))
-#endif
                     .ForEach((i, x) =>
                     {
+                        count++;
                         x.TransactionID = Guid.Empty;
                         x.IsConfirmed = false;
 
@@ -152,16 +146,10 @@ namespace LiteDB.Engine
 
                 // write page on data disk
                 _dataFile.WritePages(pages);
-                
+
                 // update single header instance with last confirmed header
                 if (last != null)
                 {
-                    // update header checkpoint datetime
-                    if (header != null)
-                    {
-                        header.LastCheckpoint = last.LastCheckpoint;
-                    }
-
                     // shrink datafile if length are large than needed
                     var length = BasePage.GetPagePosition(last.LastPageID + 1);
 
@@ -171,14 +159,17 @@ namespace LiteDB.Engine
                     }
                 }
 
+                // update header checkpoint datetime
+                if (header != null)
+                {
+                    header.LastCheckpoint = DateTime.Now;
+                }
+
                 // now, all wal pages are saved in data disk - can clear walfile
                 _walFile.Clear();
 
-                // delete wal file
-                if (deleteWalFile && _walFile.Delete() == false)
-                {
-                    DEBUG(true, "WAL file was not deleted because are not empty");
-                }
+                // delete wal file if requested
+                if (deleteWalFile) _walFile.Delete();
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
@@ -203,8 +194,8 @@ namespace LiteDB.Engine
         {
             if (_walFile.HasPages() == false) return;
 
-            // read all pages to get confirmed transactions
-            var items = _walFile.ReadPages()
+            // read all pages to get confirmed transactions (do not read page content, only page header)
+            var items = _walFile.ReadPages(false)
                 .Where(x => x.IsConfirmed)
                 .Select(x => x.TransactionID);
 

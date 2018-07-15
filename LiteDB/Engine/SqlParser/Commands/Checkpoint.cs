@@ -7,15 +7,25 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
-        /// CHECKPOINT
+        /// CHECKPOINT [DELETE]
         /// </summary>
         private BsonDataReader ParseCheckpoint()
         {
-            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+            var token = _tokenizer.ReadToken();
+            var delete = token.Is("DELETE");
 
-            _engine.Checkpoint(false);
+            if (delete)
+            {
+                _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+            }
+            else
+            {
+                token.Expect(TokenType.EOF, TokenType.SemiColon);
+            }
 
-            return new BsonDataReader();
+            var result = _engine.Checkpoint(delete);
+
+            return new BsonDataReader(result);
         }
     }
 }
