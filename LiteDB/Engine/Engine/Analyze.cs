@@ -65,7 +65,7 @@ namespace LiteDB.Engine
                         index.UniqueKeyCount = keyUniqueCount[index.Name];
                     }
 
-                    snapshot.CollectionPage.LastAnalyzeTime = DateTime.Now;
+                    snapshot.CollectionPage.LastAnalyzed = DateTime.Now;
 
                     snapshot.SetDirty(snapshot.CollectionPage);
 
