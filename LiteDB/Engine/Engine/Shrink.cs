@@ -76,8 +76,6 @@ namespace LiteDB.Engine
 
                         // update header page and create another fake-transaction
                         temp._header.CreationTime = reader.CreationTime;
-                        temp._header.CommitCounter = reader.CommitCounter;
-                        temp._header.LastCommit = reader.LastCommit;
                         temp._header.UserVersion = reader.UserVersion;
 
                         if (indexes.Length == 0)
@@ -85,8 +83,10 @@ namespace LiteDB.Engine
                             // if there is no collection, force commit only header page 
                             // by default, commit() will only store confirm page if there is any changed page
                             temp._header.TransactionID = transactionID;
+                            temp._header.IsConfirmed = true;
+                            temp._wal.WalFile.WritePages(new[] { temp._header }, null);
 
-                            temp._wal.ConfirmTransaction(temp._header, new List<PagePosition>());
+                            temp._wal.ConfirmTransaction(transactionID, new List<PagePosition>());
                         }
                         else
                         {

@@ -213,6 +213,8 @@ namespace LiteDB.Engine
                 // do not store ExtendPage when snapshot are read only
                 if (dirty.PageType != PageType.Extend || _mode == LockMode.Write)
                 {
+                    DEBUG(dirty.PageType == PageType.Collection, "this page type can't included in local cache");
+
                     // add into local pages
                     _localPages[pageID] = dirty;
 
@@ -230,8 +232,13 @@ namespace LiteDB.Engine
             {
                 var walpage = (T)_wal.WalFile.ReadPage(pos);
 
+                walpage.IsConfirmed = false;
+
+                DEBUG(walpage.PageType == PageType.Collection && walpage.IsDirty, "collection pge cant be dirty");
+
                 // do not store ExtendPage when snapshot are read only
-                if (walpage.PageType != PageType.Extend || _mode == LockMode.Write)
+                if ((walpage.PageType != PageType.Extend || _mode == LockMode.Write) &&
+                    walpage.PageType != PageType.Collection)
                 {
                     // copy to my local pages
                     _localPages[pageID] = walpage;

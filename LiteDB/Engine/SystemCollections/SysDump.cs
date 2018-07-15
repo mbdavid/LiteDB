@@ -69,6 +69,7 @@ namespace LiteDB.Engine
             doc["pageType"] = page.PageType.ToString();
 
             if (transactionID) doc["transactionID"] = page.TransactionID;
+            if (transactionID) doc["isConfirmed"] = page.IsConfirmed;
 
             doc["prevPageID"] = dumpPageID(page.PrevPageID);
             doc["nextPageID"] = dumpPageID(page.NextPageID);
@@ -92,9 +93,7 @@ namespace LiteDB.Engine
                 doc["freeEmptyPageID"] = dumpPageID(header.FreeEmptyPageID);
                 doc["lastPageID"] = (int)header.LastPageID;
                 doc["creationTime"] = header.CreationTime;
-                doc["lastCommit"] = header.LastCommit;
                 doc["lastCheckpoint"] = header.LastCheckpoint;
-                doc["commitCounter"] = (int)header.CommitCounter;
                 doc["userVersion"] = header.UserVersion;
 
                 doc["colections"] = new BsonArray(header.Collections.Select(x => new BsonDocument

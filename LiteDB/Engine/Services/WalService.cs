@@ -74,16 +74,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write last confirmation page into all and update all indexes
         /// </summary>
-        public void ConfirmTransaction(HeaderPage confirm, IEnumerable<PagePosition> pagePositions)
+        public void ConfirmTransaction(Guid transactionID, IEnumerable<PagePosition> pagePositions)
         {
-            // mark confirm page as dirty
-            confirm.IsDirty = true;
-
-            // write header-confirm transaction page in wal file
-            _walFile.WritePages(new HeaderPage[] { confirm }, null);
-
             // add confirm page into confirmed-queue to be used in checkpoint
-            _confirmedTransactions.Add(confirm.TransactionID);
+            _confirmedTransactions.Add(transactionID);
 
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_index)
@@ -147,6 +141,7 @@ namespace LiteDB.Engine
                     .ForEach((i, x) =>
                     {
                         x.TransactionID = Guid.Empty;
+                        x.IsConfirmed = false;
 
                         if (x.PageType == PageType.Header)
                         {
@@ -210,7 +205,7 @@ namespace LiteDB.Engine
 
             // read all pages to get confirmed transactions
             var items = _walFile.ReadPages()
-                .Where(x => x.PageType == PageType.Header)
+                .Where(x => x.IsConfirmed)
                 .Select(x => x.TransactionID);
 
             _confirmedTransactions.AddRange(items);

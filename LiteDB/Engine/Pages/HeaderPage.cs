@@ -40,19 +40,9 @@ namespace LiteDB.Engine
         public DateTime CreationTime { get; set; }
 
         /// <summary>
-        /// DateTime when database was changed (commited) [8 bytes]
-        /// </summary>
-        public DateTime LastCommit { get; set; }
-
-        /// <summary>
         /// DateTime when database run checkpoint [8 bytes]
         /// </summary>
         public DateTime LastCheckpoint { get; set; }
-
-        /// <summary>
-        /// Transaction commit counter - this counter reset after last vaccum/shrink [4 bytes]
-        /// </summary>
-        public uint CommitCounter { get; set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -81,48 +71,39 @@ namespace LiteDB.Engine
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
             this.CreationTime = DateTime.Now;
-            this.LastCommit = DateTime.MinValue;
             this.LastCheckpoint = DateTime.MinValue;
-            this.CommitCounter = 0;
             this.UserVersion = 0;
             this.FileVersion = FILE_VERSION;
             this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
-        /// Update header page with confirm data
+        /// Update header page with new/drop collections
         /// </summary>
-        public void Update(Guid transactionID, uint freeEmptyPageID, TransactionPages transPages)
+        public void UpdateCollections(TransactionPages transPages)
         {
-            this.TransactionID = transactionID;
-            this.FreeEmptyPageID = freeEmptyPageID;
-            this.CommitCounter++;
-            this.LastCommit = DateTime.Now;
-
             // remove/add collections based on transPages
-            if (transPages != null)
+            if (transPages.DeletedCollection != null)
             {
-                if (transPages.DeletedCollection != null)
+                if (this.Collections.TryRemove(transPages.DeletedCollection, out var x) == false)
                 {
-                    if (this.Collections.TryRemove(transPages.DeletedCollection, out var x) == false)
-                    {
-                        throw LiteException.CollectionNotFound(transPages.DeletedCollection);
-                    }
+                    throw LiteException.CollectionNotFound(transPages.DeletedCollection);
                 }
-
-                foreach (var p in transPages.NewCollections)
-                {
-                    if (this.Collections.TryAdd(p.Key, p.Value) == false)
-                    {
-                        throw LiteException.CollectionAlreadyExist(p.Key);
-                    }
-                }
-
-                // update header collection count
-                this.ItemCount = this.ItemCount 
-                    + transPages.NewCollections.Count
-                    - (transPages.DeletedCollection == null ? 0 : 1);
             }
+
+            // add all new collections
+            foreach (var p in transPages.NewCollections)
+            {
+                if (this.Collections.TryAdd(p.Key, p.Value) == false)
+                {
+                    throw LiteException.CollectionAlreadyExist(p.Key);
+                }
+            }
+
+            // update header collection count
+            this.ItemCount = this.ItemCount 
+                + transPages.NewCollections.Count
+                - (transPages.DeletedCollection == null ? 0 : 1);
         }
 
         /// <summary>
@@ -145,14 +126,12 @@ namespace LiteDB.Engine
         protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
             // this will check for v7 datafile structure
-            if (this.TransactionID == V7_TRANSID && this.ColID == V7_COLID)
+            if (this.TransactionID == V7_TRANSID)
             {
-                this.FileVersion = 7;
-
                 // must stop read now because this page structure is not compatible with old v7
+                this.FileVersion = 7;
                 return;
             }
-
 
             var start = reader.BaseStream.Position;
 
@@ -165,9 +144,7 @@ namespace LiteDB.Engine
             this.FreeEmptyPageID = reader.ReadUInt32();
             this.LastPageID = reader.ReadUInt32();
             this.CreationTime = reader.ReadDateTime(utcDate);
-            this.LastCommit = reader.ReadDateTime(utcDate);
             this.LastCheckpoint = reader.ReadDateTime(utcDate);
-            this.CommitCounter = reader.ReadUInt32();
             this.UserVersion = reader.ReadInt32();
 
             // read resered bytes
@@ -176,7 +153,7 @@ namespace LiteDB.Engine
 
             reader.ReadBytes(reserved);
 
-            DEBUG(reserved != 188, "For current version, reserved space must return 188 bytes");
+            DEBUG(reserved != 200, "For current version, reserved space must return 200 bytes");
 
             for (var i = 0; i < this.ItemCount; i++)
             {
@@ -193,16 +170,14 @@ namespace LiteDB.Engine
             writer.Write(this.FreeEmptyPageID);
             writer.Write(this.LastPageID);
             writer.Write(this.CreationTime);
-            writer.Write(this.LastCommit);
             writer.Write(this.LastCheckpoint);
-            writer.Write(this.CommitCounter);
             writer.Write(this.UserVersion);
 
             // write resered bytes
             var used = writer.BaseStream.Position - start;
             var reserved = HEADER_PAGE_FIXED_DATA_SIZE - used;
 
-            DEBUG(reserved != 188, "For current version, reserved space must return 188 bytes");
+            DEBUG(reserved != 200, "For current version, reserved space must return 200 bytes");
 
             writer.Write(new byte[reserved]);
 
@@ -223,15 +198,14 @@ namespace LiteDB.Engine
                 NextPageID = this.NextPageID,
                 ItemCount = this.ItemCount,
                 FreeBytes = this.FreeBytes,
-                TransactionID = this.TransactionID,
                 ColID = this.ColID,
+                TransactionID = this.TransactionID,
+                IsConfirmed = this.IsConfirmed,
                 // header page
                 FreeEmptyPageID = this.FreeEmptyPageID,
                 LastPageID = this.LastPageID,
                 CreationTime = this.CreationTime,
-                LastCommit = this.LastCommit,
                 LastCheckpoint = this.LastCheckpoint,
-                CommitCounter = this.CommitCounter,
                 UserVersion = this.UserVersion,
                 FileVersion = this.FileVersion,
                 Collections = new ConcurrentDictionary<string, uint>(this.Collections)

@@ -20,8 +20,10 @@ namespace LiteDB.Engine
             doc["timeout"] = _settings.Timeout.ToString();
             doc["utcDate"] = _settings.UtcDate;
 
+            doc["lastPageID"] = (int)_header.LastPageID;
+            doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
+
             doc["creationTime"] = _header.CreationTime;
-            doc["lastCommit"] = _header.LastCommit;
             doc["lastCheckpoint"] = _header.LastCheckpoint;
 
             doc["fileSize"] = _dataFile.Length;
@@ -31,7 +33,6 @@ namespace LiteDB.Engine
             doc["walTransactions"] = _wal.ConfirmedTransactions.Count;
             doc["walCurrentReadVersion"] = _wal.CurrentReadVersion;
 
-            doc["commitCounter"] = (int)_header.CommitCounter;
             doc["userVersion"] = _header.UserVersion;
 
             yield return doc;

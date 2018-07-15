@@ -22,13 +22,17 @@ namespace LiteDB.Engine
                 if (value == _header.UserVersion || _shutdown) return;
 
                 // clone header to use in writer
-                var confirm = _header.Clone();
+                var header = _header.Clone();
 
-                confirm.UserVersion = value;
-                confirm.TransactionID = Guid.NewGuid();
+                header.UserVersion = value;
+                header.TransactionID = Guid.NewGuid();
+                header.IsConfirmed = true;
+                header.IsDirty = true;
+
+                _wal.WalFile.WritePages(new[] { header }, null);
 
                 // create fake transaction with no pages to update (only confirm page)
-                _wal.ConfirmTransaction(confirm, new PagePosition[0]);
+                _wal.ConfirmTransaction(header.TransactionID, new PagePosition[0]);
 
                 // update header instance
                 _header.UserVersion = value;

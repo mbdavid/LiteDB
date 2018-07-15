@@ -49,5 +49,14 @@ namespace LiteDB.Engine
         /// Deleted collection in this transaction (support only 1 drop collection per transaction)
         /// </summary>
         public string DeletedCollection { get; set; }
+
+        /// <summary>
+        /// Detect if this transaction pages need change header
+        /// </summary>
+        public bool WillChangeHeader =>
+            this.NewPages.Count > 0 ||
+            this.DeletedPages > 0 ||
+            this.NewCollections.Count > 0 ||
+            this.DeletedCollection != null;
     }
 }

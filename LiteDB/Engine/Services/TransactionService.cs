@@ -88,24 +88,48 @@ namespace LiteDB.Engine
 
             if (_transPages.TransactionSize >= _maxTransactionSize)
             {
-                this.PersistDirtyPages(false);
+                this.PersistDirtyPages(false, false);
             }
         }
 
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
-        internal void PersistDirtyPages(bool commit)
+        private void PersistDirtyPages(bool includeCollectionPages, bool markLastAsConfirmed)
         {
-            // get all dirty pages from write snapshots
-            // do not get header page because will use as confirm page (last page)
-            // update if transactionID
-            var pages = _snapshots.Values
-                .SelectMany(x => x.GetDirtyPages(commit))
-                .ForEach((i, p) => p.TransactionID = this.TransactionID);
+            // inner method to get all dirty pages
+            IEnumerable<BasePage> _()
+            {
+                // get all dirty pages from all write snapshots
+                // can include (or not) collection pages
+                var pages = _snapshots.Values
+                    .SelectMany(x => x.GetDirtyPages(includeCollectionPages))
+                    .ForEach((i, p) => p.TransactionID = this.TransactionID);
+
+                BasePage last = null;
+
+                foreach (var page in pages)
+                {
+                    if (last != null)
+                    {
+                        yield return last;
+                    }
+
+                    last = page;
+                }
+
+                if (last != null)
+                {
+                    last.IsConfirmed = markLastAsConfirmed;
+                    yield return last;
+                }
+            };
+
+            // get all dirty pages
+            var dirtyPages = _();
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
-            _wal.WalFile.WritePages(pages, _transPages.DirtyPagesWal);
+            _wal.WalFile.WritePages(dirtyPages, _transPages.DirtyPagesWal);
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
@@ -126,18 +150,17 @@ namespace LiteDB.Engine
 
             if (this.State == TransactionState.Active)
             {
-                // first, check if has any write snap
-                var writeSnaps = _snapshots.Values
+                // first, check if has any write snapshot
+                var hasWriteSnapshot = _snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
                     .Any();
 
-                if (writeSnaps)
+                if (hasWriteSnapshot)
                 {
                     // persist all pages into wal file
-                    this.PersistDirtyPages(true);
+                    this.PersistDirtyPages(true, !_transPages.WillChangeHeader);
 
-                    // if no dirty page, just skip
-                    if (_transPages.DirtyPagesWal.Count > 0)
+                    if (_transPages.WillChangeHeader)
                     {
                         // lock header page to avoid concurrency when writing on header
                         lock (_header)
@@ -163,22 +186,33 @@ namespace LiteDB.Engine
                                     };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _wal.WalFile.WritePages(new BasePage[] { lastDeletedPage }, null);
+                                    _wal.WalFile.WritePages(new [] { lastDeletedPage }, null);
                                 }
                             }
 
                             // create a header-confirm page based on current header page state (global header are in lock)
-                            var confirm = _header.Clone();
+                            var header = _header.Clone();
 
                             // update this confirm page with current transactionID
-                            confirm.Update(this.TransactionID, newEmptyPageID, _transPages);
+                            header.UpdateCollections(_transPages);
+                            header.FreeEmptyPageID = newEmptyPageID;
+                            header.TransactionID = this.TransactionID;
+                            header.IsConfirmed = true;
+                            header.IsDirty = true;
+
+                            _wal.WalFile.WritePages(new[] { header }, null);
 
                             // now, write confirm transaction (with header page) and update wal-index
-                            _wal.ConfirmTransaction(confirm, _transPages.DirtyPagesWal.Values);
+                            _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
 
                             // update global header page to make equals to confirm page
-                            _header.Update(Guid.Empty, newEmptyPageID, _transPages);
+                            _header.UpdateCollections(_transPages);
+                            _header.FreeEmptyPageID = newEmptyPageID;
                         }
+                    }
+                    else
+                    {
+                        _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
                     }
                 }
 
@@ -255,24 +289,28 @@ namespace LiteDB.Engine
                 // fix last page with current header free empty page
                 pages.Last().NextPageID = _header.FreeEmptyPageID;
 
-                // create copy of header page to send to wal file
-                var confirm = _header.Clone();
-
-                // update confirm page with my new transaction ID
-                confirm.TransactionID = transactionID;
-
-                _header.Update(transactionID, pages.First().PageID, null);
-
-                // persist all pages into wal-file (new run ToList now)
+                // persist all empty pages into wal-file
                 var pagePositions = new Dictionary<uint, PagePosition>();
 
                 _wal.WalFile.WritePages(pages, pagePositions);
 
-                // now commit last confirm page to wal file
-                _wal.ConfirmTransaction(confirm, pagePositions.Values);
+                // create copy of header page to send to wal file
+                var header = _header.Clone();
 
-                // now can update global header version
-                _header.Update(Guid.Empty, confirm.FreeEmptyPageID, null);
+                // update confirm page with my new transaction ID
+                header.TransactionID = transactionID;
+                header.FreeEmptyPageID = pages.First().PageID;
+                header.IsConfirmed = true;
+                header.IsDirty = true;
+
+                // write last page (is a header page with confirm checked)
+                _wal.WalFile.WritePages(new[] { header }, null);
+
+                // now confirm this transaction to wal
+                _wal.ConfirmTransaction(transactionID, pagePositions.Values);
+
+                // and update curret header
+                _header.FreeEmptyPageID = header.FreeEmptyPageID;
             }
         }
 

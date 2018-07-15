@@ -92,11 +92,6 @@ SET @explain = EXPLAIN SELECT $ FROM person WHERE _id = 1;
 -- DELETE
 SET @delete  = DELETE person WHERE _id IN [1, 2, 3];
 
--- DROP INDEX
-SET @dropIndexName = DROP INDEX person.idx_name;
-
--- DROP COLLECTION
-SET @dropPerson    = DROP COLLECTION person;
 
 
 -- CHECKPOINT, VACCUM, ANALYZE, SHRINK

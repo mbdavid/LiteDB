@@ -91,8 +91,6 @@ namespace LiteDB.Tests.Query
             TestArray(output["groupBy1"], "count", 23, 17, 18, 17, 18);
 
             Assert.AreEqual(3, output["delete"].AsInt32, "delete");
-            Assert.IsTrue(output["dropIndexName"].AsBoolean, "drop index");
-            Assert.IsTrue(output["dropPerson"].AsBoolean, "drop collection");
         }
 
         [DebuggerHidden]

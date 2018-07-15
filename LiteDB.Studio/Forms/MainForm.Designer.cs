@@ -63,6 +63,7 @@
             this.btnRollback = new System.Windows.Forms.ToolStripButton();
             this.ctxMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.mnuQueryAll = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuQueryCount = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuExplanPlan = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.mnuExport = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,7 +81,6 @@
             this.diaExport = new System.Windows.Forms.SaveFileDialog();
             this.btnFileOpen = new System.Windows.Forms.Button();
             this.diaOpen = new System.Windows.Forms.OpenFileDialog();
-            this.mnuQueryCount = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -472,35 +472,43 @@
             this.mnuRename,
             this.mnuDropCollection});
             this.ctxMenu.Name = "ctxMenu";
-            this.ctxMenu.Size = new System.Drawing.Size(181, 214);
+            this.ctxMenu.Size = new System.Drawing.Size(156, 192);
             this.ctxMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenu_ItemClicked);
             // 
             // mnuQueryAll
             // 
             this.mnuQueryAll.Image = global::LiteDB.Studio.Properties.Resources.table_lightning;
             this.mnuQueryAll.Name = "mnuQueryAll";
-            this.mnuQueryAll.Size = new System.Drawing.Size(180, 22);
+            this.mnuQueryAll.Size = new System.Drawing.Size(155, 22);
             this.mnuQueryAll.Tag = "SELECT $ FROM {0};";
             this.mnuQueryAll.Text = "Query";
+            // 
+            // mnuQueryCount
+            // 
+            this.mnuQueryCount.Image = global::LiteDB.Studio.Properties.Resources.table;
+            this.mnuQueryCount.Name = "mnuQueryCount";
+            this.mnuQueryCount.Size = new System.Drawing.Size(155, 22);
+            this.mnuQueryCount.Tag = "SELECT ALL COUNT(_id) FROM {0};";
+            this.mnuQueryCount.Text = "Count";
             // 
             // mnuExplanPlan
             // 
             this.mnuExplanPlan.Image = global::LiteDB.Studio.Properties.Resources.table_sort;
             this.mnuExplanPlan.Name = "mnuExplanPlan";
-            this.mnuExplanPlan.Size = new System.Drawing.Size(180, 22);
+            this.mnuExplanPlan.Size = new System.Drawing.Size(155, 22);
             this.mnuExplanPlan.Tag = "EXPLAIN SELECT $ FROM {0};";
             this.mnuExplanPlan.Text = "Explain plan";
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuExport
             // 
             this.mnuExport.Image = global::LiteDB.Studio.Properties.Resources.table_save;
             this.mnuExport.Name = "mnuExport";
-            this.mnuExport.Size = new System.Drawing.Size(180, 22);
+            this.mnuExport.Size = new System.Drawing.Size(155, 22);
             this.mnuExport.Tag = "EXPORT";
             this.mnuExport.Text = "Export to JSON";
             // 
@@ -508,7 +516,7 @@
             // 
             this.mnuAnalyze.Image = global::LiteDB.Studio.Properties.Resources.page_white_gear;
             this.mnuAnalyze.Name = "mnuAnalyze";
-            this.mnuAnalyze.Size = new System.Drawing.Size(180, 22);
+            this.mnuAnalyze.Size = new System.Drawing.Size(155, 22);
             this.mnuAnalyze.Tag = "ANALYZE {0};";
             this.mnuAnalyze.Text = "Analyze";
             // 
@@ -516,20 +524,20 @@
             // 
             this.mnuIndexes.Image = global::LiteDB.Studio.Properties.Resources.key;
             this.mnuIndexes.Name = "mnuIndexes";
-            this.mnuIndexes.Size = new System.Drawing.Size(180, 22);
+            this.mnuIndexes.Size = new System.Drawing.Size(155, 22);
             this.mnuIndexes.Tag = "SELECT $ FROM $indexes WHERE collection = \"{0}\";";
             this.mnuIndexes.Text = "Indexes";
             // 
             // mnuSep1
             // 
             this.mnuSep1.Name = "mnuSep1";
-            this.mnuSep1.Size = new System.Drawing.Size(177, 6);
+            this.mnuSep1.Size = new System.Drawing.Size(152, 6);
             // 
             // mnuRename
             // 
             this.mnuRename.Image = global::LiteDB.Studio.Properties.Resources.textfield_rename;
             this.mnuRename.Name = "mnuRename";
-            this.mnuRename.Size = new System.Drawing.Size(180, 22);
+            this.mnuRename.Size = new System.Drawing.Size(155, 22);
             this.mnuRename.Tag = "RENAME COLLECTION {0} TO new_name;";
             this.mnuRename.Text = "Rename";
             // 
@@ -537,7 +545,7 @@
             // 
             this.mnuDropCollection.Image = global::LiteDB.Studio.Properties.Resources.table_delete;
             this.mnuDropCollection.Name = "mnuDropCollection";
-            this.mnuDropCollection.Size = new System.Drawing.Size(180, 22);
+            this.mnuDropCollection.Size = new System.Drawing.Size(155, 22);
             this.mnuDropCollection.Tag = "DROP COLLECTION {0};";
             this.mnuDropCollection.Text = "Drop collection";
             // 
@@ -597,7 +605,7 @@
             // 
             // btnFileOpen
             // 
-            this.btnFileOpen.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.btnFileOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnFileOpen.Image = global::LiteDB.Studio.Properties.Resources.folder_explore;
             this.btnFileOpen.Location = new System.Drawing.Point(1035, 36);
             this.btnFileOpen.Name = "btnFileOpen";
@@ -609,14 +617,6 @@
             // diaOpen
             // 
             this.diaOpen.FileName = "openFileDialog1";
-            // 
-            // mnuQueryCount
-            // 
-            this.mnuQueryCount.Image = global::LiteDB.Studio.Properties.Resources.table;
-            this.mnuQueryCount.Name = "mnuQueryCount";
-            this.mnuQueryCount.Size = new System.Drawing.Size(180, 22);
-            this.mnuQueryCount.Tag = "SELECT ALL COUNT(_id) FROM {0};";
-            this.mnuQueryCount.Text = "Count";
             // 
             // MainForm
             // 

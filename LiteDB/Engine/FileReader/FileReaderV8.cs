@@ -24,8 +24,6 @@ namespace LiteDB.Engine
             _engine = engine;
 
             this.CreationTime = header.CreationTime;
-            this.CommitCounter = header.CommitCounter;
-            this.LastCommit = header.LastCommit;
             this.UserVersion = header.UserVersion;
         }
 
