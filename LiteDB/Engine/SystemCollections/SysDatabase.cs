@@ -28,10 +28,12 @@ namespace LiteDB.Engine
 
             doc["fileSize"] = _dataFile.Length;
             doc["filePageCount"] = _dataFile.Length / PAGE_SIZE;
-            doc["walSize"] = _wal.WalFile.Length;
-            doc["walPageCount"] = _wal.WalFile.Length / PAGE_SIZE;
-            doc["walTransactions"] = _wal.ConfirmedTransactions.Count;
-            doc["walCurrentReadVersion"] = _wal.CurrentReadVersion;
+
+            doc["walFileSize"] = _wal.WalFile.Length;
+            doc["walFilePageCount"] = _wal.WalFile.Length / PAGE_SIZE;
+            doc["walTransactionsCount"] = _wal.ConfirmedTransactions.Count;
+
+            doc["currentReadVersion"] = _wal.CurrentReadVersion;
 
             doc["userVersion"] = _header.UserVersion;
 

@@ -103,18 +103,21 @@ namespace LiteDB.Engine
             }
             else if (page.PageType == PageType.Collection)
             {
-                var colPage = page as CollectionPage;
+                var col = page as CollectionPage;
 
-                doc["collectionName"] = colPage.CollectionName;
-                doc["freeDataPageID"] = dumpPageID(colPage.FreeDataPageID);
-                doc["creationTime"] = colPage.CreationTime;
-                doc["indexes"] = new BsonArray(colPage.GetIndexes(true).Select(x => new BsonDocument
+                doc["collectionName"] = col.CollectionName;
+                doc["freeDataPageID"] = dumpPageID(col.FreeDataPageID);
+                doc["creationTime"] = col.CreationTime;
+                doc["lastAnalyzed"] = col.LastAnalyzed;
+                doc["indexes"] = new BsonArray(col.GetIndexes(true).Select(x => new BsonDocument
                 {
                     ["slot"] = x.Slot,
                     ["name"] = x.Name,
                     ["expression"] = x.Expression,
                     ["unique"] = x.Unique,
-                    ["headPageID"] = (int)x.HeadNode.PageID,
+                    ["freeIndexPageID"] = dumpPageID(x.FreeIndexPageID),
+                    ["headPageID"] = dumpPageID(x.HeadNode.PageID),
+                    ["tailPageID"] = dumpPageID(x.TailNode.PageID),
                     ["maxLevel"] = (int)x.MaxLevel,
                     ["keyCount"] = (int)x.KeyCount,
                     ["uniqueKeyCount"] = (int)x.UniqueKeyCount
