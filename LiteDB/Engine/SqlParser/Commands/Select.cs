@@ -249,7 +249,7 @@ namespace LiteDB.Engine
             switch(collection.Value.ToUpper())
             {
                 case "FILE_JSON": return new JsonFileCollection(filename);
-                case "FILE_TEXT": throw new NotImplementedException();
+                case "FILE_TEXT": return new TextFileCollection(filename);
                 case "FILE_CSV": throw new NotImplementedException();
                 case "FILE_BINARY": return new BinaryFileCollection(filename);
                 case "FILE":
@@ -257,7 +257,7 @@ namespace LiteDB.Engine
                     switch (Path.GetExtension(filename).ToLower())
                     {
                         case ".json": return new JsonFileCollection(filename);
-                        case ".txt": throw new NotImplementedException();
+                        case ".txt": return new TextFileCollection(filename);
                         case ".csv": throw new NotImplementedException();
                         default: return new BinaryFileCollection(filename);
                     }
