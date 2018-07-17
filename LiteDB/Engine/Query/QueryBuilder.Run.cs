@@ -247,6 +247,14 @@ namespace LiteDB.Engine
             return _engine.Insert(newCollection, this.ToEnumerable(), autoId);
         }
 
+        /// <summary>
+        /// Execute query and save data into FileCollection implementation
+        /// </summary>
+        public int Into(IFileCollection collection)
+        {
+            return collection.Output(this.ToValues());
+        }
+
         #endregion
     }
 }

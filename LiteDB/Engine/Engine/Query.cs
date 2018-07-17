@@ -22,5 +22,15 @@ namespace LiteDB.Engine
 
             return new QueryBuilder(collection, this);
         }
+
+        /// <summary>
+        /// Return new QueryBuilder based on external data source
+        /// </summary>
+        public QueryBuilder Query(IFileCollection collection)
+        {
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
+
+            return new QueryBuilder(collection.Name, this, collection.Input());
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace LiteDB.Engine
@@ -8,8 +9,8 @@ namespace LiteDB.Engine
     {
         /// <summary>
         ///    SELECT [ ALL ] {selectExpr}
-        ///    [ INTO {newcollection} [ : {type} ] ]
-        ///    [ FROM {collection} ]
+        ///    [ INTO {newcollection|FILE} [ : {type} ] ]
+        ///    [ FROM {collection|FILE} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {filterExpr} ]
         ///   [ GROUP BY {groupByExpr} [ ASC | DESC ] ]
@@ -32,7 +33,7 @@ namespace LiteDB.Engine
 
             // read required SELECT <expr>
             var selectExpr = BsonExpression.Create(_tokenizer, _parameters);
-            string into = null;
+            object into = null;
             var autoId = BsonAutoId.ObjectId;
 
             // read FROM|INTO
@@ -47,7 +48,7 @@ namespace LiteDB.Engine
             }
             else if (from.Is("INTO"))
             {
-                into = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+                into = this.ParseCollection();
 
                 autoId = this.ParseWithAutoId();
 
@@ -59,11 +60,22 @@ namespace LiteDB.Engine
             }
 
             // read FROM <name>
-            var collection = _tokenizer.ReadToken().Expect(TokenType.Word).Value;
+            var collection = this.ParseCollection();
 
             // initialize query builder
-            var query = _engine.Query(collection)
-                .Select(selectExpr, aggregate);
+            QueryBuilder query;
+
+            if (collection is string)
+            {
+                query = _engine.Query((string)collection);
+            }
+            else
+            {
+                query = _engine.Query((IFileCollection)collection);
+            }
+
+            // apply SELECT
+            query = query.Select(selectExpr, aggregate);
 
             var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -183,13 +195,73 @@ namespace LiteDB.Engine
             // execute query as insert or return values
             if (into != null && explainPlan == false)
             {
-                var result = query.Into(into, autoId);
+                var result = 0;
 
-                return new BsonDataReader(into);
+                if (into is string)
+                {
+                    result = query.Into((string)into, autoId);
+
+                }
+                else
+                {
+                    result = query.Into((IFileCollection)into);
+                }
+
+                return new BsonDataReader(result);
             }
             else
             {
                 return query.ExecuteReader(explainPlan);
+            }
+        }
+
+        /// <summary>
+        /// Read collection name OR FILE implementations
+        /// </summary>
+        private object ParseCollection()
+        {
+            var collection = _tokenizer.ReadToken().Expect(TokenType.Word);
+            var next = _tokenizer.LookAhead();
+
+            // simple collection name
+            if (next.Type != TokenType.OpenParenthesis)
+            {
+                return collection.Value;
+            }
+
+            // if contains ( is an FileCollection
+            _tokenizer.ReadToken();
+
+            var filename = _tokenizer.ReadToken().Expect(TokenType.String).Value;
+            BsonValue options = null;
+
+            next = _tokenizer.ReadToken();
+
+            // if contains , read options as BsonValue
+            if (next.Type == TokenType.Comma)
+            {
+                options = new JsonReader(_tokenizer).Deserialize();
+            }
+
+            next.Expect(TokenType.CloseParenthesis);
+
+            // do switch to load correct FileCollection
+            switch(collection.Value.ToUpper())
+            {
+                case "FILE_JSON": return new JsonFileCollection(filename);
+                case "FILE_TEXT": throw new NotImplementedException();
+                case "FILE_CSV": throw new NotImplementedException();
+                case "FILE_BINARY": throw new NotImplementedException();
+                case "FILE":
+                    // auto-detect file handler based on file extension
+                    switch (Path.GetExtension(filename).ToLower())
+                    {
+                        case ".json": return new JsonFileCollection(filename);
+                        case ".txt": throw new NotImplementedException();
+                        case ".csv": throw new NotImplementedException();
+                        default: throw new NotImplementedException();
+                    }
+                default: throw LiteException.UnexpectedToken(collection, "Invalid collection handler");
             }
         }
     }

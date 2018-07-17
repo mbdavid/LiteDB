@@ -337,13 +337,13 @@ namespace LiteDB.Studio
         {
             if (txtSql.Text.Trim().Length == 0)
             {
-                txtSql.Text = sql;
+                txtSql.Text = sql.Replace("\\n", "\n");
             }
             else
             {
                 txtSql.Text += "\n\n";
                 var start = txtSql.TextLength;
-                txtSql.Text += sql;
+                txtSql.Text += sql.Replace("\\n", "\n");
                 txtSql.Select(start, sql.Length);
             }
         }
@@ -453,16 +453,8 @@ namespace LiteDB.Studio
         {
             var colname = tvwDatabase.SelectedNode.Text;
 
-            if (e.ClickedItem.Tag.ToString() == "EXPORT")
-            {
-                ctxMenu.Hide();
-                ExportData(colname);
-            }
-            else
-            {
-                var sql = string.Format(e.ClickedItem.Tag.ToString(), colname);
-                this.AddSqlSnippet(sql);
-            }
+            var sql = string.Format(e.ClickedItem.Tag.ToString(), colname);
+            this.AddSqlSnippet(sql);
         }
 
         private void CtxMenuRoot_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -521,51 +513,6 @@ namespace LiteDB.Studio
             {
                 e.Handled = true;
                 txtSql.SelectedText = new string(' ', 4);
-            }
-        }
-
-        private async void ExportData(string collection)
-        {
-            diaExport.FileName = collection + ".json";
-
-            if (diaExport.ShowDialog() != DialogResult.OK) return;
-
-            var filename = diaExport.FileName;
-            var counter = _db.Count(collection);
-            var index = 0;
-
-            try
-            {
-                var data = _db.FindAll(collection);
-
-                using (var fs = new FileStream(filename, FileMode.CreateNew))
-                {
-                    using (var writer = new StreamWriter(fs))
-                    {
-                        await writer.WriteLineAsync("[");
-
-                        foreach (var doc in data)
-                        {
-                            var json = JsonSerializer.Serialize(doc, false, true);
-
-                            await writer.WriteAsync(json);
-
-                            if (++index < counter) await writer.WriteAsync(",");
-
-                            await writer.WriteLineAsync();
-                        }
-
-                        await writer.WriteAsync("]");
-
-                        await writer.FlushAsync();
-                    }
-                }
-
-                MessageBox.Show($"{counter} document was exported to {Path.GetFileName(filename)}", "Export", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
