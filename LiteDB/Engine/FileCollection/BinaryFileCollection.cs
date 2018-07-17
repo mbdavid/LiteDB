@@ -33,14 +33,16 @@ namespace LiteDB.Engine
             {
                 while((bytesRead = fs.Read(buffer, 0, _bufferSize)) > 0)
                 {
+                    var data = new byte[bytesRead];
+
+                    Buffer.BlockCopy(buffer, 0, data, 0, bytesRead);
+
                     yield return new BsonDocument
                     {
                         ["chunk"] = chunk++,
                         ["length"] = bytesRead,
-                        ["data"] = buffer
+                        ["data"] = data
                     };
-
-                    buffer = new byte[_bufferSize];
                 }
             }
         }
