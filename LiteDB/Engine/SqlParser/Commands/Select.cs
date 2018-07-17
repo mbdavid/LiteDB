@@ -251,7 +251,7 @@ namespace LiteDB.Engine
                 case "FILE_JSON": return new JsonFileCollection(filename);
                 case "FILE_TEXT": throw new NotImplementedException();
                 case "FILE_CSV": throw new NotImplementedException();
-                case "FILE_BINARY": throw new NotImplementedException();
+                case "FILE_BINARY": return new BinaryFileCollection(filename);
                 case "FILE":
                     // auto-detect file handler based on file extension
                     switch (Path.GetExtension(filename).ToLower())
@@ -259,7 +259,7 @@ namespace LiteDB.Engine
                         case ".json": return new JsonFileCollection(filename);
                         case ".txt": throw new NotImplementedException();
                         case ".csv": throw new NotImplementedException();
-                        default: throw new NotImplementedException();
+                        default: return new BinaryFileCollection(filename);
                     }
                 default: throw LiteException.UnexpectedToken(collection, "Invalid collection handler");
             }
