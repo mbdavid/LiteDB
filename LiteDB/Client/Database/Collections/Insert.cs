@@ -16,10 +16,12 @@ namespace LiteDB
             var doc = _mapper.ToDocument(document);
             var removed = this.RemoveDocId(doc);
 
-            var id = _engine.Value.Insert(_name, doc, _autoId);
+            _engine.Value.Insert(_collection, doc, _autoId);
+
+            var id = doc["_id"];
 
             // checks if must update _id value in entity
-            if (removed && _id != null)
+            if (removed)
             {
                 _id.Setter(document, id.RawValue);
             }
@@ -39,7 +41,7 @@ namespace LiteDB
 
             doc["_id"] = id;
 
-            _engine.Value.Insert(_name, doc);
+            _engine.Value.Insert(_collection, doc);
         }
 
         /// <summary>
@@ -49,17 +51,18 @@ namespace LiteDB
         {
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
-            return _engine.Value.Insert(_name, this.GetBsonDocs(docs), _autoId);
+            return _engine.Value.Insert(_collection, this.GetBsonDocs(docs), _autoId);
         }
 
         /// <summary>
         /// Implements bulk insert documents in a collection. Usefull when need lots of documents.
         /// </summary>
+        [Obsolete("Use normal Insert()")]
         public int InsertBulk(IEnumerable<T> docs, int batchSize = 5000)
         {
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
-            return _engine.Value.InsertBulk(_name, this.GetBsonDocs(docs), batchSize, _autoId);
+            return _engine.Value.Insert(_collection, this.GetBsonDocs(docs), _autoId);
         }
 
         /// <summary>
@@ -89,11 +92,11 @@ namespace LiteDB
             if (doc.TryGetValue("_id", out var id)) 
             {
                 // check if exists _autoId and current id is "empty"
-                if ((_autoId == BsonType.ObjectId && (id.IsNull || id.AsObjectId == ObjectId.Empty)) ||
-                    (_autoId == BsonType.Guid && id.AsGuid == Guid.Empty) ||
-                    (_autoId == BsonType.DateTime && id.AsDateTime == DateTime.MinValue) ||
-                    (_autoId == BsonType.Int32 && id.AsInt32 == 0) ||
-                    (_autoId == BsonType.Int64 && id.AsInt64 == 0))
+                if ((_autoId == BsonAutoId.ObjectId && (id.IsNull || id.AsObjectId == ObjectId.Empty)) ||
+                    (_autoId == BsonAutoId.Guid && id.AsGuid == Guid.Empty) ||
+                    (_autoId == BsonAutoId.DateTime && id.AsDateTime == DateTime.MinValue) ||
+                    (_autoId == BsonAutoId.Int32 && id.AsInt32 == 0) ||
+                    (_autoId == BsonAutoId.Int64 && id.AsInt64 == 0))
                 {
                     // in this cases, remove _id and set new value after
                     doc.Remove("_id");

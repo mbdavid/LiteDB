@@ -23,7 +23,7 @@ namespace LiteDB
         {
             if (documents == null) throw new ArgumentNullException(nameof(documents));
 
-            return _engine.Value.Upsert(_name, this.GetBsonDocs(documents), _autoId);
+            return _engine.Value.Upsert(_collection, this.GetBsonDocs(documents), _autoId);
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace LiteDB
             // set document _id using id parameter
             doc["_id"] = id;
 
-            return _engine.Value.Upsert(_name, doc);
+            return _engine.Value.Upsert(_collection, doc);
         }
     }
 }

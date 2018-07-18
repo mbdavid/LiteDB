@@ -36,7 +36,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get collection counter
         /// </summary>
-        public long Count(string collection)
+        public int Count(string collection)
         {
             return this.Query(collection)
                 .Select("_id")

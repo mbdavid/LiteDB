@@ -8,11 +8,12 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Create a new index (or do nothing if already exists) to a collection/field. Name parameter will be used as name and as expression.
+        /// Create a new index (or do nothing if already exists) to a collection. Expression parameter will be used as index name too
         /// </summary>
-        public bool EnsureIndex(string collection, string name, bool unique = false)
+        public bool EnsureIndex(string collection, string expression, bool unique = false)
         {
-            return this.EnsureIndex(collection, name, BsonExpression.Create(name), unique);
+            //TODO: implement a index name cleaning/hash
+            return this.EnsureIndex(collection, expression, expression, unique);
         }
 
         /// <summary>

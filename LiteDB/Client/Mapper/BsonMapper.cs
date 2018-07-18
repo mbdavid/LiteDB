@@ -152,25 +152,9 @@ namespace LiteDB
         #region Get LinqVisitor processor
 
         /// <summary>
-        /// Returns JSON path from a strong typed document using current mapper
+        /// Get BsonExpression object from a strong typed predicate using current mapper
         /// </summary>
-        public string GetPath<T>(Expression<Func<T, object>> property)
-        {
-            return new QueryVisitor<T>(this).GetPath(property);
-        }
-
-        /// <summary>
-        /// Returns field name from a strong typed document using current mapper
-        /// </summary>
-        public string GetField<T>(Expression<Func<T, object>> property)
-        {
-            return new QueryVisitor<T>(this).GetField(property);
-        }
-
-        /// <summary>
-        /// Get Query object from a strong typed predicate using current mapper
-        /// </summary>
-        public Query GetQuery<T>(Expression<Func<T, bool>> predicate)
+        public BsonExpression GetExpression<T>(Expression<Func<T, bool>> predicate)
         {
             return new QueryVisitor<T>(this).Visit(predicate);
         }
@@ -269,9 +253,6 @@ namespace LiteDB
                 {
                     name = "_id";
                 }
-
-                // test if field name is OK (avoid to check in all instances) - do not test internal classes, like DbRef
-                if (BsonDocument.IsValidFieldName(name) == false) throw LiteException.InvalidFormat(memberInfo.Name);
 
                 // create getter/setter function
                 var getter = Reflection.CreateGenericGetter(type, memberInfo);
@@ -396,7 +377,7 @@ namespace LiteDB
                 var idField = entity.Id;
 
                 // #768 if using DbRef with interface with no ID mapped
-                if (idField == null) throw new LiteException("There is no _id field mapped in your type: " + member.DataType.FullName);
+                if (idField == null) throw new LiteException(0, "There is no _id field mapped in your type: " + member.DataType.FullName);
 
                 var id = idField.Getter(obj);
 

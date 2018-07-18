@@ -14,7 +14,7 @@ namespace LiteDB
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            var value = _visitor.GetPath(path);
+            var value = _visitor.Visit(path);
 
             return this.Include(value);
         }
@@ -28,7 +28,7 @@ namespace LiteDB
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
             // cloning this collection and adding this include
-            var newcol = new LiteCollection<T>(_name, _engine, _mapper, _log);
+            var newcol = new LiteCollection<T>(_collection, _engine, _mapper);
 
             newcol._includes.AddRange(_includes);
             newcol._includes.Add(path);

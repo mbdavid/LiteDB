@@ -14,17 +14,17 @@ namespace LiteDB
         public int Count()
         {
             // do not use indexes - collections has DocumentCount property
-            return (int)_engine.Value.Count(_name, null);
+            return _engine.Value.Count(_collection);
         }
 
         /// <summary>
         /// Count documents matching a query. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public int Count(Query query)
+        public int Count(BsonExpression query)
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            return (int)_engine.Value.Count(_name, query);
+            return _engine.Value.Count(_collection, query);
         }
 
         /// <summary>
@@ -47,17 +47,17 @@ namespace LiteDB
         public long LongCount()
         {
             // do not use indexes - collections has DocumentCount property
-            return _engine.Value.Count(_name, null);
+            return _engine.Value.LongCount(_collection);
         }
 
         /// <summary>
         /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
-        public long LongCount(Query query)
+        public long LongCount(BsonExpression query)
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            return _engine.Value.Count(_name, query);
+            return _engine.Value.LongCount(_collection, query);
         }
 
         /// <summary>
@@ -77,11 +77,11 @@ namespace LiteDB
         /// <summary>
         /// Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public bool Exists(Query query)
+        public bool Exists(BsonExpression query)
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            return _engine.Value.Exists(_name, query);
+            return _engine.Value.Exists(_collection, query);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
-            return _engine.Value.Min(_name, field);
+            return _engine.Value.Min(_collection, field);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace LiteDB
         {
             if (property == null) throw new ArgumentNullException(nameof(property));
 
-            var field = _visitor.GetField(property);
+            var field = _visitor.Visit(property);
 
             return this.Min(field);
         }
@@ -135,7 +135,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
-            return _engine.Value.Max(_name, field);
+            return _engine.Value.Max(_collection, field);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace LiteDB
         {
             if (property == null) throw new ArgumentNullException(nameof(property));
 
-            var field = _visitor.GetField(property);
+            var field = _visitor.Visit(property);
 
             return this.Max(field);
         }

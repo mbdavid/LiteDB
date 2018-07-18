@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using LiteDB.Engine;
 
 namespace LiteDB
 {
@@ -12,15 +13,9 @@ namespace LiteDB
     {
         #region Properties
 
-        private LazyLoad<LiteEngine> _engine = null;
+        private readonly Lazy<LiteEngine> _engine = null;
         private BsonMapper _mapper = BsonMapper.Global;
-        private Logger _log = null;
         private ConnectionString _connectionString = null;
-
-        /// <summary>
-        /// Get logger class instance
-        /// </summary>
-        public Logger Log { get { return _log; } }
 
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
@@ -39,40 +34,35 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        public LiteDatabase(string connectionString, BsonMapper mapper = null, Logger log = null)
-            : this(new ConnectionString(connectionString), mapper, log)
+        public LiteDatabase(string connectionString, BsonMapper mapper = null)
+            : this(new ConnectionString(connectionString), mapper)
         {
         }
 
         /// <summary>
         /// Starts LiteDB database using a connection string for file system database
         /// </summary>
-        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null, Logger log = null)
+        public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
         {
-            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-
-            _connectionString = connectionString;
-            _log = log ?? new Logger();
-            _log.Level = log?.Level ?? _connectionString.Log;
-
-            if (_connectionString.Upgrade)
-            {
-                LiteEngine.Upgrade(_connectionString.Filename, _connectionString.Password);
-            }
+            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            var options = new FileOptions
+            _engine = new Lazy<LiteEngine>(() =>
             {
-#if HAVE_SYNC_OVER_ASYNC
-                Async = _connectionString.Async,
-#endif
-                InitialSize = _connectionString.InitialSize,
-                LimitSize = _connectionString.LimitSize,
-                ReadOnly = _connectionString.ReadOnly
-            };
+                var settings = new EngineSettings
+                {
+                    FileName = connectionString.FileName,
+                    InitialSize = connectionString.InitialSize,
+                    LimitSize = connectionString.LimitSize,
+                    UtcDate = connectionString.UtcDate,
+                    MaxMemoryTransactionSize = connectionString.CacheSize,
+                    Timeout = connectionString.Timeout,
+                    LogLevel = connectionString.Log
+                };
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new FileDiskService(_connectionString.Filename, options), _connectionString.Password, _connectionString.Timeout, _connectionString.CacheSize, _log, _connectionString.UtcDate));
+                return new LiteEngine(settings);
+            });
         }
 
         /// <summary>
@@ -83,28 +73,16 @@ namespace LiteDB
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
             _mapper = mapper ?? BsonMapper.Global;
-            _log = new Logger();
 
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(new StreamDiskService(stream, disposeStream), password: password, log: _log));
-        }
+            _engine = new Lazy<LiteEngine>(() =>
+            {
+                var settings = new EngineSettings
+                {
+                    DataStream = stream,
+                };
 
-        /// <summary>
-        /// Starts LiteDB database using a custom IDiskService with all parameters available
-        /// </summary>
-        /// <param name="diskService">Custom implementation of persist data layer</param>
-        /// <param name="mapper">Instance of BsonMapper that map poco classes to document</param>
-        /// <param name="password">Password to encrypt you datafile</param>
-        /// <param name="timeout">Locker timeout for concurrent access</param>
-        /// <param name="cacheSize">Max memory pages used before flush data in Journal file (when available)</param>
-        /// <param name="log">Custom log implementation</param>
-        public LiteDatabase(IDiskService diskService, BsonMapper mapper = null, string password = null, TimeSpan? timeout = null, int cacheSize = 5000, Logger log = null)
-        {
-            if (diskService == null) throw new ArgumentNullException(nameof(diskService));
-
-            _mapper = mapper ?? BsonMapper.Global;
-            _log = log ?? new Logger();
-
-            _engine = new LazyLoad<LiteEngine>(() => new LiteEngine(diskService, password: password, timeout: timeout, cacheSize: cacheSize, log: _log ));
+                return new LiteEngine(settings);
+            });
         }
 
         #endregion
@@ -117,7 +95,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<T> GetCollection<T>(string name)
         {
-            return new LiteCollection<T>(name, _engine, _mapper, _log);
+            return new LiteCollection<T>(name, _engine, _mapper);
         }
 
         /// <summary>
@@ -136,22 +114,22 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new LiteCollection<BsonDocument>(name, _engine, _mapper, _log);
+            return new LiteCollection<BsonDocument>(name, _engine, _mapper);
         }
 
         #endregion
 
         #region FileStorage
 
-        private LiteStorage _fs = null;
-
-        /// <summary>
-        /// Returns a special collection for storage files/stream inside datafile
-        /// </summary>
-        public LiteStorage FileStorage
-        {
-            get { return _fs ?? (_fs = new LiteStorage(_engine.Value)); }
-        }
+        // private LiteStorage _fs = null;
+        // 
+        // /// <summary>
+        // /// Returns a special collection for storage files/stream inside datafile
+        // /// </summary>
+        // public LiteStorage FileStorage
+        // {
+        //     get { return _fs ?? (_fs = new LiteStorage(_engine.Value)); }
+        // }
 
         #endregion
 
@@ -213,26 +191,7 @@ namespace LiteDB
         /// </summary>
         public long Shrink(string password)
         {
-            // if has connection string, use same path
-            if (_connectionString != null)
-            {
-                // get temp file ("-temp" suffix)
-                var tempFile = FileHelper.GetTempFile(_connectionString.Filename);
-
-                // get temp disk based on temp file
-                var tempDisk = new FileDiskService(tempFile);
-
-                var reduced = _engine.Value.Shrink(password, tempDisk);
-
-                // delete temp file
-                File.Delete(tempFile);
-
-                return reduced;
-            }
-            else
-            {
-                return _engine.Value.Shrink(password);
-            }
+            return _engine.Value.Shrink(password);
         }
 
         #endregion

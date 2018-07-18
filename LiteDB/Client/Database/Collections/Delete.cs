@@ -8,11 +8,11 @@ namespace LiteDB
         /// <summary>
         /// Remove all document based on a Query object. Returns removed document counts
         /// </summary>
-        public int Delete(Query query)
+        public int Delete(BsonExpression query)
         {
             if (query == null) throw new ArgumentNullException(nameof(query));
 
-            return _engine.Value.Delete(_name, query);
+            return _engine.Value.Delete(_collection, query);
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
-            return this.Delete(Query.EQ("_id", id)) > 0;
+            return this.Delete(id);
         }
     }
 }

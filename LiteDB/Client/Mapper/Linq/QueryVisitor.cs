@@ -13,9 +13,9 @@ namespace LiteDB
     /// </summary>
     internal class QueryVisitor<T>
     {
-        private BsonMapper _mapper;
-        private Type _type;
-        private ParameterDictionary _parameters = new ParameterDictionary();
+        private readonly BsonMapper _mapper;
+        private readonly Type _type;
+        private readonly ParameterDictionary _parameters = new ParameterDictionary();
         private ParameterExpression _param = null;
 
         public QueryVisitor(BsonMapper mapper)
@@ -24,16 +24,18 @@ namespace LiteDB
             _type = typeof(T);
         }
 
-        public Query Visit(Expression<Func<T, bool>> predicate)
+        public BsonExpression Visit(Expression predicate)
         {
             var lambda = predicate as LambdaExpression;
 
             _param = lambda.Parameters[0];
 
-            return this.VisitExpression(lambda.Body);
-        }
+            throw new NotImplementedException();
 
-        private Query VisitExpression(Expression expr, string prefix = null)
+            //return this.VisitExpression(lambda.Body);
+        }
+/*
+        private BsonExpression VisitExpression(Expression expr, string prefix = null)
         {
             try
             {
@@ -297,60 +299,6 @@ namespace LiteDB
             throw new NotSupportedException("Not implemented System.Linq.Enumerable method");
         }
 
-        /// <summary>
-        /// Based on a LINQ expression, returns document field mapped from class Property.
-        /// Support multi level dotted notation: x => x.Customer.Name
-        /// Prefix is used on array expression like: x => x.Customers.Any(z => z.Name == "John")
-        /// </summary>
-        public string GetField(Expression expr, string prefix = "", bool showArrayItems = false)
-        {
-            var property = prefix + expr.GetPath();
-            var parts = property.Split('.');
-            var fields = new string[parts.Length];
-            var type = _type;
-            var isdbref = false;
-
-            // loop "first.second.last"
-            for (var i = 0; i < parts.Length; i++)
-            {
-                var entity = _mapper.GetEntityMapper(type);
-                var part = parts[i];
-                var prop = entity.Members.Find(x => x.MemberName == part);
-
-                if (prop == null) throw new NotSupportedException(property + " not mapped in " + type.Name);
-
-                // if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
-                type = prop.UnderlyingType;
-
-                fields[i] = prop.FieldName;
-
-                if (showArrayItems && prop.IsList)
-                {
-                    fields[i] += "[*]";
-                }
-
-                if (prop.FieldName == "_id" && isdbref)
-                {
-                    isdbref = false;
-                    fields[i] = "$id";
-                }
-
-                // if this property is DbRef, so if next property is _id, change to $id
-                if (prop.IsDbRef) isdbref = true;
-            }
-
-            return string.Join(".", fields);
-        }
-
-        /// <summary>
-        /// Convert a LINQ expression into a JSON path.
-        /// x => x.Name ==> "$.Name"
-        /// x => x.Items[0].Day ==> "$.Items[0].Day"
-        /// x => x.Items[0].Day ==> "$.Items[0].Day"
-        /// </summary>
-        public string GetPath(Expression expr)
-        {
-            return "$." + this.GetField(expr, "", true);
-        }
+*/
     }
 }

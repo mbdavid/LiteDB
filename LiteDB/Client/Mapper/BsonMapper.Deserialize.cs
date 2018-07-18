@@ -74,8 +74,6 @@ namespace LiteDB
 
         internal object Deserialize(Type type, BsonValue value)
         {
-            Func<BsonValue, object> custom;
-
             // null value - null returns
             if (value.IsNull) return null;
 
@@ -124,7 +122,7 @@ namespace LiteDB
             }
 
             // test if has a custom type implementation
-            else if (_customDeserializer.TryGetValue(type, out custom))
+            else if (_customDeserializer.TryGetValue(type, out Func<BsonValue, object> custom))
             {
                 return custom(value);
             }

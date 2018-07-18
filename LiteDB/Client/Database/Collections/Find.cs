@@ -12,11 +12,11 @@ namespace LiteDB
         /// <summary>
         /// Find documents inside a collection using Query object.
         /// </summary>
-        public IEnumerable<T> Find(Query query, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<T> Find(BsonExpression where, int skip = 0, int limit = int.MaxValue)
         {
-            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (where == null) throw new ArgumentNullException(nameof(where));
 
-            var docs = _engine.Value.Find(_name, query, _includes.ToArray(), skip, limit);
+            var docs = _engine.Value.Find(_collection, where, skip, limit);
 
             foreach(var doc in docs)
             {
@@ -54,7 +54,7 @@ namespace LiteDB
         /// <summary>
         /// Find the first document using Query object. Returns null if not found. Must have index on query expression.
         /// </summary>
-        public T FindOne(Query query)
+        public T FindOne(BsonExpression query)
         {
             return this.Find(query).FirstOrDefault();
         }
@@ -72,7 +72,8 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> FindAll()
         {
-            return this.Find(Query.All());
+            throw new NotImplementedException();
+            //return _engine.Value.FindAll(_name);
         }
 
         #endregion
