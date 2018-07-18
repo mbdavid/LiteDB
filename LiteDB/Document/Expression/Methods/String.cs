@@ -33,6 +33,39 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Apply Left TRIM (start) from string value. Support multiple values (only string)
+        /// </summary>
+        public static IEnumerable<BsonValue> LTRIM(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            {
+                yield return value.TrimStart();
+            }
+        }
+
+        /// <summary>
+        /// Apply Right TRIM (end) from string value. Support multiple values (only string)
+        /// </summary>
+        public static IEnumerable<BsonValue> RTRIM(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            {
+                yield return value.TrimEnd();
+            }
+        }
+
+        /// <summary>
+        /// Apply TRIM from string value. Support multiple values (only string)
+        /// </summary>
+        public static IEnumerable<BsonValue> TRIM(IEnumerable<BsonValue> values)
+        {
+            foreach (var value in values.Where(x => x.IsString).Select(x => x.AsString))
+            {
+                yield return value.Trim();
+            }
+        }
+
+        /// <summary>
         /// Reports the zero-based index of the first occurrence of the specified string in this instance. Support multiple values (only string)
         /// </summary>
         public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search)
