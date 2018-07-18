@@ -77,7 +77,20 @@ namespace LiteDB.Engine
         /// </summary>
         private void ParseSetValue(Token key)
         {
-            // read =
+            // set value factory
+            Action<BsonValue> setFactory;
+
+            switch (key.Value.ToLower())
+            {
+                case "userversion":
+                    setFactory = v => _engine.UserVersion = v.AsInt32;
+                    break;
+
+                default:
+                    throw LiteException.UnexpectedToken("Unkown key or missing @ prefix", key);
+            }
+
+            // read `=`
             _tokenizer.ReadToken().Expect(TokenType.Equals);
 
             var reader = new JsonReader(_tokenizer);
@@ -86,15 +99,7 @@ namespace LiteDB.Engine
             // read eof or ;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            switch (key.Value.ToLower())
-            {
-                case "userversion":
-                    _engine.UserVersion = value.AsInt32;
-                    break;
-
-                default:
-                    throw LiteException.UnexpectedToken("Unkown key value", key);
-            }
+            setFactory(value);
         }
     }
 }

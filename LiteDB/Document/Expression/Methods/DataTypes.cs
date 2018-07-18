@@ -11,63 +11,6 @@ namespace LiteDB
 {
     internal partial class BsonExpressionMethods
     {
-        /// <summary>
-        /// Parse a JSON string into a new BsonValue. Support multiple values (string only)
-        /// JSON('{a:1}') = {a:1}
-        /// </summary>
-        public static IEnumerable<BsonValue> JSON(IEnumerable<BsonValue> values)
-        {
-            foreach (var str in values.Where(x => x.IsString))
-            {
-                BsonValue value;
-
-                try
-                {
-                    value = JsonSerializer.Deserialize(str);
-                }
-                catch(LiteException ex) when (ex.ErrorCode == LiteException.UNEXPECTED_TOKEN)
-                {
-                    value = BsonValue.Null;
-                }
-
-                yield return value;
-            }
-        }
-
-        /// <summary>
-        /// Extend source document with other document. Copy all field from extend to source. Source document will be modified.
-        /// EXTEND($, {a: 2}) = {_id:1, a: 2}
-        /// </summary>
-        public static IEnumerable<BsonValue> EXTEND(IEnumerable<BsonValue> source, IEnumerable<BsonValue> extend)
-        {
-            foreach (var value in ZipValues(source, extend))
-            {
-                if (!value.First.IsDocument) continue;
-                if (!value.Second.IsDocument) continue;
-
-                var dest = value.First.AsDocument;
-
-                value.Second.AsDocument.CopyTo(dest);
-
-                yield return dest;
-            }
-        }
-
-        /// <summary>
-        /// Convert an array into IEnuemrable of values.
-        /// ITEMS([1, 2, null]) = 1, 2, null
-        /// </summary>
-        public static IEnumerable<BsonValue> ITEMS(IEnumerable<BsonValue> array)
-        {
-            foreach (var arr in array.Where(x => x.IsArray).Select(x => x.AsArray))
-            {
-                foreach(var value in arr)
-                {
-                    yield return value;
-                }
-            }
-        }
-
         #region Convert datatypes
 
         /// <summary>
@@ -198,7 +141,7 @@ namespace LiteDB
                 }
                 else if (value.IsString)
                 {
-                    var data = new byte[0];
+                    byte[] data = null;
                     var isBase64 = false;
 
                     try
@@ -237,7 +180,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    var val = ObjectId.Empty;
+                    ObjectId val = null;
                     var isObjectId = false;
 
                     try

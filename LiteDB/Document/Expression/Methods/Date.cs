@@ -80,6 +80,8 @@ namespace LiteDB
 
         #endregion
 
+        #region Date Functions
+
         /// <summary>
         /// Add an interval to date. Use dateParts: "y|year", "M|month", "d|day", "h|hour", "m|minute", "s|second". Support multi values
         /// </summary>
@@ -127,5 +129,7 @@ namespace LiteDB
                 else if (datePart == "s" || datePart == "second") yield return Convert.ToInt32(Math.Truncate(end.Subtract(start).TotalSeconds));
             }
         }
+
+        #endregion
     }
 }
