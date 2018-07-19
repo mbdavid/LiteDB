@@ -265,7 +265,7 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseBool(Tokenizer tokenizer)
         {
-            if (tokenizer.Current.Type == TokenType.Word && (tokenizer.Current.Value == "true" || tokenizer.Current.Value == "false"))
+            if (tokenizer.Current.Type == TokenType.Word && (tokenizer.Current.Is("true") || tokenizer.Current.Is("false")))
             {
                 var boolean = Convert.ToBoolean(tokenizer.Current.Value);
                 var value = Expression.Constant(new BsonValue(boolean));
@@ -289,7 +289,7 @@ namespace LiteDB
         /// </summary>
         private static BsonExpression TryParseNull(Tokenizer tokenizer)
         {
-            if (tokenizer.Current.Type == TokenType.Word && tokenizer.Current.Value == "null")
+            if (tokenizer.Current.Type == TokenType.Word && tokenizer.Current.Is("null"))
             {
                 var value = Expression.Constant(BsonValue.Null);
 

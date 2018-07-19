@@ -80,7 +80,7 @@ namespace LiteDB
                 case TokenType.Int: return new BsonValue(Convert.ToInt32(token.Value));
                 case TokenType.Double: return new BsonValue(Convert.ToDouble(token.Value, CultureInfo.InvariantCulture.NumberFormat));
                 case TokenType.Word:
-                    switch (token.Value)
+                    switch (token.Value.ToLower())
                     {
                         case "null": return BsonValue.Null;
                         case "true": return true;

@@ -168,11 +168,6 @@ namespace LiteDB
 
         #region Static method
 
-        /// <summary>
-        /// Get all methods names
-        /// </summary>
-        public static string[] Methods = typeof(BsonExpressionMethods).GetMethods(BindingFlags.Public | BindingFlags.Static).Select(x => x.Name).ToArray();
-
         private static ConcurrentDictionary<string, BsonExpression> _cache = new ConcurrentDictionary<string, BsonExpression>();
 
         /// <summary>

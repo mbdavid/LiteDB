@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -259,26 +260,11 @@ namespace LiteDB.Studio
 
             // sql keywords
             syntaxHighlighter.AddPattern(
-                new PatternDefinition(
-                    "BETWEEN", "IN", "AND", "OR",
-                    "BEGIN", "TRANS", "TRANSACTION", "COMMIT", "ROLLBACK",
-                    "ANALYZE",
-                    "CHECKPOINT",
-                    "CREATE", "INDEX", "ON", "UNIQUE",
-                    "DELETE",
-                    "DROP", "COLLECTION",
-                    "RENAME", "TO",
-                    "INSERT", "INTO", "VALUES",
-                    "SELECT", "ALL", "FROM", "WHERE", "INCLUDE", "GROUP", "ORDER", "BY", "ASC", "DESC", "HAVING", "LIMIT", "OFFSET", "FOR",
-                    "SET", "EXPLAIN",
-                    "SHRINK",
-                    "UPDATE", "REPLACE",
-                    "VACCUM",
-                    "TRUE", "FALSE", "NULL"),
+                new PatternDefinition(SqlKeywords.Keywords),
                 new SyntaxStyle(Color.Blue));
 
             // expression method names
-            syntaxHighlighter.AddPattern(new PatternDefinition(BsonExpression.Methods),
+            syntaxHighlighter.AddPattern(new PatternDefinition(SqlKeywords.Methods),
                 new SyntaxStyle(color: Color.FromArgb(255, 0, 255), bold: false, italic: false));
         }
     }

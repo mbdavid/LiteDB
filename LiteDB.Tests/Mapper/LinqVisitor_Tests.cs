@@ -51,7 +51,7 @@ namespace LiteDB.Tests.Mapper
         public void Linq_Visitor_Expressions()
         {
             // new class
-            Test(x => new { N = x.Name, A = x.Address }, "{N:$.Name,A:$.Address}");
+            Test(x => new { N = x.Name, A = x.Addresses.Sum(x => x. }, "{N:$.Name,A:$.Address}");
 
 
             // only constants
