@@ -10,13 +10,13 @@ namespace LiteDB
         /// Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents
         /// Returns a new Collection with this action included
         /// </summary>
-        public LiteCollection<T> Include<K>(Expression<Func<T, K>> path)
+        public LiteCollection<T> Include<K>(Expression<Func<T, K>> predicate)
         {
-            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            var value = _visitor.VisitPath(path);
+            var path = _mapper.GetExpression(predicate);
 
-            return this.Include(value);
+            return this.Include(path);
         }
 
         /// <summary>

@@ -39,7 +39,7 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(2, users.Count());
 
                 var carlos = users.Query()
-                    .Where("Name = 'Carlos'")
+                    .Where(x => x.Name == "Carlos")
                     .Single();
 
                 Assert.AreEqual(75000, carlos.Salary);

@@ -83,7 +83,7 @@ namespace LiteDB.Tests.Query
             Assert.AreEqual(99, output["userversion"].AsInt32, "set userversion");
 
             // SELECT
-            Assert.AreEqual("person_ca", output["into"].AsString, "select into");
+            Assert.AreEqual(23, output["into"].AsInt32, "select into");
             Assert.AreEqual(1000, output["count"].AsInt32, "select all count");
 
             // SELECT GROUP BY + HAVING

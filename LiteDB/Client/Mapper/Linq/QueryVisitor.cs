@@ -9,146 +9,238 @@ using ParameterDictionary = System.Collections.Generic.Dictionary<System.Linq.Ex
 
 namespace LiteDB
 {
-    /// <summary>
-    /// Class helper to create Queries based on Linq expressions
-    /// </summary>
-    public class QueryVisitor<T>
+    internal class QueryVisitor : ExpressionVisitor
     {
         private readonly BsonMapper _mapper;
-        private readonly Type _type;
-        private readonly ParameterDictionary _parameters = new ParameterDictionary();
-        private ParameterExpression _param = null;
+        private readonly StringBuilder _builder = new StringBuilder();
+        private readonly BsonDocument _parameters = new BsonDocument();
+        private int _paramIndex = 0;
 
         public QueryVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
-            _type = typeof(T);
         }
 
-        public BsonExpression VisitExpression(Expression predicate)
+        public BsonExpression Resolve(Expression expr)
         {
-            var lambda = predicate as LambdaExpression;
+            this.Visit(expr);
 
-            var sb = new StringBuilder();
-            var parameters = new BsonDocument();
-            var paramIndex = 0;
+            // remove last $ 
+            var expression = _builder.Remove(_builder.Length - 1, 1).ToString();
 
-            _param = lambda.Parameters[0];
-
-            this.VisitExpression(sb, parameters, paramIndex, lambda.Body);
-
-            return BsonExpression.Create(sb.ToString(), parameters);
+            return BsonExpression.Create(expression, _parameters);
         }
 
-        public BsonExpression VisitPath(Expression predicate)
+        protected override Expression VisitBinary(BinaryExpression node)
         {
-            var lambda = predicate as LambdaExpression;
+            var op = this.GetOperator(node.NodeType);
 
-            var sb = new StringBuilder();
-            var parameters = new BsonDocument();
-            var paramIndex = 0;
+            base.Visit(node.Left);
 
-            _param = lambda.Parameters[0];
+            _builder.Append(op);
 
-            this.VisitExpression(sb, parameters, paramIndex, lambda.Body);
-
-            return BsonExpression.Create(sb.ToString(), parameters);
-        }
-
-        private void VisitExpression(StringBuilder sb, BsonDocument parameters, int paramIndex, Expression expr, string prefix = null)
-        {
-            // Single: x.Active
-            if (expr is MemberExpression && expr.Type == typeof(bool))
+            // when object is an native array, do not process right side
+            if (op != "[*]")
             {
-                sb.Append(this.VisitPath(expr, prefix) + " = true");
+                base.Visit(node.Right);
             }
+
+            return node;
         }
 
-        private string VisitPath(Expression expr, string prefix = "", bool showArrayItems = false)
+        protected override Expression VisitConditional(ConditionalExpression node)
         {
-            var property = prefix + expr.GetPath();
-            var parts = property.Split('.');
-            var fields = new string[parts.Length];
-            var type = _type;
-            var isdbref = false;
+            _builder.Append("IIF(");
+            this.Visit(node.Test);
+            _builder.Append(", ");
+            this.Visit(node.IfTrue);
+            _builder.Append(", ");
+            this.Visit(node.IfFalse);
+            _builder.Append(")");
 
-            // loop "first.second.last"
-            for (var i = 0; i < parts.Length; i++)
+            return node;
+        }
+
+        protected override Expression VisitConstant(ConstantExpression node)
+        {
+            var p = "p" + (_paramIndex++);
+
+            _builder.AppendFormat("@" + p);
+
+            _parameters[p] = _mapper.Serialize(node.Type, node.Value);
+
+            return node;
+        }
+
+        protected override Expression VisitUnary(UnaryExpression node)
+        {
+            if (node.NodeType == ExpressionType.Not)
             {
-                var entity = _mapper.GetEntityMapper(type);
-                var part = parts[i];
-                var prop = entity.Members.Find(x => x.MemberName == part);
+                _builder.Append("(");
+                this.Visit(node.Operand);
+                _builder.Append(") = false");
+            }
+            else
+            {
+                base.VisitUnary(node);
+            }
 
-                if (prop == null) throw new NotSupportedException(property + " not mapped in " + type.Name);
+            return node;
+        }
 
-                // if property is an IEnumerable, gets underlying type (otherwise, gets PropertyType)
-                type = prop.UnderlyingType;
+        protected override Expression VisitMember(MemberExpression node)
+        {
+            // for static member, Expression == null
+            if (node.Expression != null)
+            {
+                base.VisitMember(node);
+            }
 
-                fields[i] = prop.FieldName;
+            _builder.Append(this.ResolveName(node.Member));
 
-                if (showArrayItems && prop.IsList)
+            return node;
+        }
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            _builder.Append("$");
+
+            return base.VisitParameter(node);
+        }
+
+        protected override Expression VisitNew(NewExpression node)
+        {
+            if (node.Members == null || node.Members.Count == 0) throw new NotSupportedException("Expression not supported: " + node.ToString());
+
+            _builder.Append("{ ");
+
+            for (var i = 0; i < node.Members.Count; i++)
+            {
+                var member = node.Members[i];
+                _builder.Append(i > 0 ? ", " : "");
+                _builder.AppendFormat("'{0}': ", member.Name);
+                this.Visit(node.Arguments[i]);
+            }
+
+            _builder.Append(" }");
+
+            return node;
+        }
+
+        protected override Expression VisitMethodCall(MethodCallExpression node)
+        {
+            var name = this.ResolveName(node.Method).Split('#');
+
+            // write first part
+            _builder.Append(name[0]);
+
+            // for static method, Object == null
+            this.Visit(node.Object ?? node.Arguments[0]);
+
+            // if has #, write parameters and finish
+            if (name.Length == 2)
+            {
+                foreach (var arg in node.Arguments.Skip(node.Object == null ? 1 : 0))
                 {
-                    fields[i] += "[*]";
+                    _builder.Append(",");
+                    this.Visit(arg);
                 }
 
-                if (prop.FieldName == "_id" && isdbref)
-                {
-                    isdbref = false;
-                    fields[i] = "$id";
-                }
-
-                // if this property is DbRef, so if next property is _id, change to $id
-                if (prop.IsDbRef) isdbref = true;
+                _builder.Append(name[1]);
             }
 
-            return string.Join(".", fields);
+            // when has 2 # is array access #[#]
+            else if (name.Length == 3)
+            {
+                _builder.Append(name[1]);
+
+                // if is simple array access will be converted into [*] all elements
+                if (name[1] != "[*]")
+                {
+                    this.Visit(node.Arguments[1]);
+                }
+
+                _builder.Append(name[2]);
+            }
+
+            return node;
         }
 
-        private BsonValue VisitValue(Expression expr, Expression left)
+        private string GetOperator(ExpressionType nodeType)
         {
-            // check if left side is an enum and convert to string before return
-            BsonValue convert(Type type, object value)
+            switch (nodeType)
             {
-                var enumType = (left as UnaryExpression)?.Operand.Type;
-
-                if (enumType != null && enumType.GetTypeInfo().IsEnum)
-                {
-                    var str = Enum.GetName(enumType, value);
-                    return _mapper.Serialize(typeof(string), str, 0);
-                }
-
-                return _mapper.Serialize(type, value, 0);
+                case ExpressionType.Add: return " + ";
+                case ExpressionType.Multiply: return " * ";
+                case ExpressionType.Subtract: return " - ";
+                case ExpressionType.Divide: return " / ";
+                case ExpressionType.Equal: return " = ";
+                case ExpressionType.NotEqual: return " != ";
+                case ExpressionType.GreaterThan: return " > ";
+                case ExpressionType.GreaterThanOrEqual: return " >= ";
+                case ExpressionType.LessThan: return " < ";
+                case ExpressionType.LessThanOrEqual: return " <= ";
+                case ExpressionType.AndAlso: return " AND ";
+                case ExpressionType.OrElse: return " OR ";
+                case ExpressionType.ArrayIndex: return "[*]";
             }
+            throw new NotSupportedException("Operator not supported: " + nodeType.ToString());
+        }
 
-            // its a constant; Eg: "fixed string"
-            if (expr is ConstantExpression)
-            {
-                var value = (expr as ConstantExpression);
+        private string ResolveName(MemberInfo member)
+        {
+            var isString = member.DeclaringType == typeof(string);
+            var isDate = member.DeclaringType == typeof(DateTime);
+            var isList = Reflection.IsList(member.DeclaringType);
+            var isMethod = (member as MethodInfo) != null;
+            var hasParams = isMethod && ((MethodInfo)member).GetParameters().Length > 1; // extensions always have first parameter
 
-                return convert(value.Type, value.Value);
-            }
-            else if (expr is MemberExpression && _parameters.Count > 0)
-            {
-                var mExpr = (MemberExpression)expr;
-                var mValue = this.VisitValue(mExpr.Expression, left);
-                var value = mValue[mExpr.Member.Name];
+            var name = member.Name;
 
-                return convert(typeof(object), value);
-            }
-            else if (expr is ParameterExpression)
-            {
-                if (_parameters.TryGetValue((ParameterExpression)expr, out BsonValue result))
-                {
-                    return result;
-                }
-            }
+            var result =
+                isList && name == "Length" ? "LENGTH(#)" :
+                isList && name == "get_Item" ? "#[*]#" :
+                isList && name == "ToArray" ? "" :
+                isList && name == "ToList" ? "" :
 
-            // execute expression
-            var objectMember = Expression.Convert(expr, typeof(object));
-            var getterLambda = Expression.Lambda<Func<object>>(objectMember);
-            var getter = getterLambda.Compile();
+                isList && !hasParams && name == "Count" ? "LENGTH(#)" :
+                isList && !hasParams && name.StartsWith("First") ? "[0]" :
+                isList && !hasParams && name.StartsWith("Single") ? "[0]" :
 
-            return convert(typeof(object), getter());
+                // use ElementAt for index array navigation
+                isList && hasParams && name == "ElementAt" ? "#[#]" :
+
+                isDate && name == "Now" ? "DATE()" :
+                isDate && name == "Year" ? "YEAR(#)" :
+                isDate && name == "AddYears" ? "DATEADD('y',#)" :
+
+                isString && name == "Length" ? "LENGTH(#)" :
+                isString && name == "IndexOf" ? "INDEXOF(#)" :
+                isString && name == "Contains" ? "INDEXOF(#) >= 0" :
+                isString && name == "StartsWith" ? " LIKE #%" :
+                //isString && name == "EndsWith" ? ".endsWith(#)" :
+                isString && name == "PadLeft" ? "LPAD(#)" :
+                isString && name == "PadRight" ? "RPAD(#)" :
+                isString && name == "Substring" ? "SUBSTRING(#)" :
+                isString && name == "Split" ? "SPLIT(#)" :
+                isString && name == "Trim" ? "TRIM(#)" :
+                isString && name == "TrimStart" ? "LTRIM(#)" :
+                isString && name == "TrimEnd" ? "RTRIM(#)" :
+                isString && name == "ToUpper" ? "UPPER(#)" :
+                isString && name == "ToLower" ? "LOWER(#)" : null;
+
+            if (isMethod && result == null) throw new NotSupportedException("Method not supported: " + name);
+
+            if (result != null) return result;
+
+            // get class entity from mapper
+            var entity = _mapper.GetEntityMapper(member.DeclaringType);
+
+            var field = entity.Members.FirstOrDefault(x => x.MemberName == name);
+
+            if (field == null) throw new NotSupportedException($"Member {name} not found on BsonMapper.");
+
+            return "." + field.FieldName;
         }
     }
 }

@@ -34,7 +34,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return this.Count(_visitor.VisitExpression(predicate));
+            return this.Count(_mapper.GetExpression(predicate));
         }
 
         #endregion
@@ -67,7 +67,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return this.LongCount(_visitor.VisitExpression(predicate));
+            return this.LongCount(_mapper.GetExpression(predicate));
         }
 
         #endregion
@@ -91,7 +91,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return this.Exists(_visitor.VisitExpression(predicate));
+            return this.Exists(_mapper.GetExpression(predicate));
         }
 
         #endregion
@@ -123,7 +123,7 @@ namespace LiteDB
         {
             if (property == null) throw new ArgumentNullException(nameof(property));
 
-            var field = _visitor.VisitExpression(property);
+            var field = _mapper.GetExpression(property);
 
             return this.Min(field);
         }
@@ -153,7 +153,7 @@ namespace LiteDB
         {
             if (property == null) throw new ArgumentNullException(nameof(property));
 
-            var field = _visitor.VisitExpression(property);
+            var field = _mapper.GetExpression(property);
 
             return this.Max(field);
         }

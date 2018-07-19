@@ -10,7 +10,6 @@ namespace LiteDB
         private readonly Lazy<LiteEngine> _engine;
         private readonly BsonMapper _mapper;
         private readonly List<BsonExpression> _includes;
-        private readonly QueryVisitor<T> _visitor;
         private readonly MemberMapper _id = null;
         private readonly BsonAutoId _autoId = BsonAutoId.ObjectId;
 
@@ -19,17 +18,11 @@ namespace LiteDB
         /// </summary>
         public string Name => _collection;
 
-        /// <summary>
-        /// Returns visitor resolver query only for internals implementations
-        /// </summary>
-        internal QueryVisitor<T> Visitor => _visitor;
-
         internal LiteCollection(string name, Lazy<LiteEngine> engine, BsonMapper mapper)
         {
             _collection = name ?? mapper.ResolveCollectionName(typeof(T));
             _engine = engine;
             _mapper = mapper;
-            _visitor = new QueryVisitor<T>(mapper);
             _includes = new List<BsonExpression>();
 
             // if strong typed collection, get _id member mapped (if exists)

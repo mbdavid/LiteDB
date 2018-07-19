@@ -160,6 +160,7 @@ namespace LiteDB
         {
             if (type.IsArray) return true;
             if (type == typeof(string)) return false; // do not define "String" as IEnumerable<char>
+            if (type == typeof(Enumerable)) return true;
 
             foreach (var @interface in type.GetInterfaces())
             {

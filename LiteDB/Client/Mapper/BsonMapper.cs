@@ -152,11 +152,13 @@ namespace LiteDB
         #region Get LinqVisitor processor
 
         /// <summary>
-        /// Get BsonExpression object from a strong typed predicate using current mapper
+        /// Resolve LINQ expression into BsonExpression
         /// </summary>
-        public BsonExpression GetExpression<T>(Expression<Func<T, bool>> predicate)
+        public BsonExpression GetExpression<T, K>(Expression<Func<T, K>> predicate)
         {
-            return new QueryVisitor<T>(this).VisitExpression(predicate);
+            var v = new QueryVisitor(this);
+
+            return v.Resolve(predicate);
         }
 
         #endregion

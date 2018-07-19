@@ -20,7 +20,7 @@ namespace LiteDB
         /// </summary>
         public int Delete(Expression<Func<T, bool>> predicate)
         {
-            return this.Delete(_visitor.VisitExpression(predicate));
+            return this.Delete(_mapper.GetExpression(predicate));
         }
 
         /// <summary>

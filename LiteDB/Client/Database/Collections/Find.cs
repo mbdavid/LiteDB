@@ -39,7 +39,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return this.Find(_visitor.VisitExpression(predicate), skip, limit);
+            return this.Find(_mapper.GetExpression(predicate), skip, limit);
         }
 
         #endregion

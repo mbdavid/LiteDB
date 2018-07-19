@@ -14,13 +14,11 @@ namespace LiteDB
     {
         private readonly QueryBuilder _query;
         private readonly BsonMapper _mapper;
-        private readonly QueryVisitor<T> _visitor;
 
         internal LiteQueryable(QueryBuilder query, BsonMapper mapper)
         {
             _query = query;
             _mapper = mapper;
-            _visitor = new QueryVisitor<T>(mapper);
         }
 
         #region Includes
@@ -30,7 +28,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Include<K>(Expression<Func<T, K>> dbref)
         {
-            _query.Include(_visitor.VisitPath(dbref));
+            _query.Include(_mapper.GetExpression(dbref));
             return this;
         }
 
@@ -89,7 +87,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Where(Expression<Func<T, bool>> predicate)
         {
-            return this.Where(_visitor.VisitExpression(predicate));
+            return this.Where(_mapper.GetExpression(predicate));
         }
 
         /// <summary>
@@ -172,7 +170,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> OrderBy(Expression<Func<T, bool>> predicate)
         {
-            return this.Where(_visitor.VisitExpression(predicate));
+            return this.Where(_mapper.GetExpression(predicate));
         }
 
         #endregion
@@ -187,7 +185,7 @@ namespace LiteDB
 
         public LiteQueryable<K> Select<K>(Expression<Func<T, K>> predicate)
         {
-            _query.Select(_visitor.VisitExpression(predicate));
+            _query.Select(_mapper.GetExpression(predicate));
             return new LiteQueryable<K>(_query, _mapper);
         }
 
@@ -201,10 +199,10 @@ namespace LiteDB
             return this;
         }
 
-        public LiteQueryable<K> GroupBy<K>(Expression<Func<T, K>> predicate, int order = Query.Ascending)
+        public LiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> predicate, int order = Query.Ascending)
         {
-            _query.GroupBy(_visitor.VisitExpression(predicate), order);
-            return new LiteQueryable<K>(_query, _mapper);
+            _query.GroupBy(_mapper.GetExpression(predicate), order);
+            return this;
         }
 
         public LiteQueryable<T> Having(BsonExpression filter)
@@ -215,7 +213,7 @@ namespace LiteDB
 
         public LiteQueryable<T> Having(Expression<Func<T, bool>> predicate)
         {
-            _query.Having(_visitor.VisitExpression(predicate));
+            _query.Having(_mapper.GetExpression(predicate));
             return this;
         }
         #endregion
@@ -325,7 +323,7 @@ namespace LiteDB
 
         public BsonValue Aggregate(Expression<Func<T, bool>> predicate)
         {
-            return _query.Aggregate(_visitor.VisitExpression(predicate));
+            return _query.Aggregate(_mapper.GetExpression(predicate));
         }
 
         #endregion

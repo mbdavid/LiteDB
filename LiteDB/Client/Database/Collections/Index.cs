@@ -36,11 +36,11 @@ namespace LiteDB
         /// <summary>
         /// Create a new permanent index in all documents inside this collections if index not exists already.
         /// </summary>
-        /// <param name="expr">LinqExpression to be converted into BsonExpression to be indexed</param>
+        /// <param name="predicate">LinqExpression to be converted into BsonExpression to be indexed</param>
         /// <param name="unique">Create a unique keys index?</param>
-        public bool EnsureIndex<K>(Expression<Func<T, K>> expr, bool unique = false)
+        public bool EnsureIndex<K>(Expression<Func<T, K>> predicate, bool unique = false)
         {
-            var expression = _visitor.VisitExpression(expr);
+            var expression = _mapper.GetExpression(predicate);
 
             return _engine.Value.EnsureIndex(_collection, expression.Source, unique);
         }
@@ -48,9 +48,9 @@ namespace LiteDB
         /// <summary>
         /// Create a new permanent index in all documents inside this collections if index not exists already.
         /// </summary>
-        public bool EnsureIndex<K>(string name, Expression<Func<T, K>> expr, bool unique = false)
+        public bool EnsureIndex<K>(string name, Expression<Func<T, K>> predicate, bool unique = false)
         {
-            return _engine.Value.EnsureIndex(_collection, name, _visitor.VisitExpression(expr), unique);
+            return _engine.Value.EnsureIndex(_collection, name, _mapper.GetExpression(predicate), unique);
         }
 
         /// <summary>
