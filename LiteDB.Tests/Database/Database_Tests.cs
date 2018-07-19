@@ -40,9 +40,12 @@ namespace LiteDB.Tests.Database
 
                 var carlos = users.Query()
                     .Where(x => x.Name == "Carlos")
+                    //.Select(x => new { S = x.Salary })
                     .Single();
 
                 Assert.AreEqual(75000, carlos.Salary);
+
+                //Assert.AreEqual(75000, carlos.S);
             }
         }
     }

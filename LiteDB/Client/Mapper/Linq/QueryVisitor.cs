@@ -28,7 +28,14 @@ namespace LiteDB
             // remove last $ 
             var expression = _builder.Remove(_builder.Length - 1, 1).ToString();
 
-            return BsonExpression.Create(expression, _parameters);
+            try
+            {
+                return BsonExpression.Create(expression, _parameters);
+            }
+            catch (Exception ex)
+            {
+                throw new NotSupportedException($"Invalid LINQ expression: {expr.ToString()} - '{expression}'", ex);
+            }
         }
 
         protected override Expression VisitBinary(BinaryExpression node)
@@ -111,6 +118,8 @@ namespace LiteDB
         protected override Expression VisitNew(NewExpression node)
         {
             if (node.Members == null || node.Members.Count == 0) throw new NotSupportedException("Expression not supported: " + node.ToString());
+
+            //TODO: must check if new expression is new anonymous class
 
             _builder.Append("{ ");
 

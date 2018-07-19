@@ -50,6 +50,14 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Visitor_Expressions()
         {
+            // new class
+            Test(x => new { N = x.Name, A = x.Address }, "{N:$.Name,A:$.Address}");
+
+
+            // only constants
+            Test(x => 0, "@p0");
+            Test(x => 1 + 1, "@p0"); // "1 + 1" will be resolved by LINQ before convert
+
             // date methods
             /*
             Test(x => x.CreatedOn.Year, "YEAR($.CreatedOn)");
