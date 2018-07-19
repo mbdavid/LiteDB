@@ -7,34 +7,39 @@ namespace LiteDB
 {
     public partial class LiteCollection<T>
     {
+        /// <summary>
+        /// Return a new LiteQueryable to build more complex queries
+        /// </summary>
+        public LiteQueryable<T> Query()
+        {
+            return new LiteQueryable<T>(_engine.Value.Query(_collection), _mapper);
+        }
+
         #region Find
 
         /// <summary>
-        /// Find documents inside a collection using Query object.
+        /// Find documents inside a collection using query expression.
         /// </summary>
-        public IEnumerable<T> Find(BsonExpression where, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<T> Find(BsonExpression query, int skip = 0, int limit = int.MaxValue)
         {
-            if (where == null) throw new ArgumentNullException(nameof(where));
+            if (query == null) throw new ArgumentNullException(nameof(query));
 
-            var docs = _engine.Value.Find(_collection, where, skip, limit);
-
-            foreach(var doc in docs)
-            {
-                // get object from BsonDocument
-                var obj = _mapper.ToObject<T>(doc);
-
-                yield return obj;
-            }
+            return this.Query()
+                .Include(_includes)
+                .Where(query)
+                .Skip(skip)
+                .Limit(limit)
+                .ToEnumerable();
         }
 
         /// <summary>
-        /// Find documents inside a collection using Linq expression. Must have indexes in linq expression
+        /// Find documents inside a collection using Linq expression (will be converted into BsonExpression).
         /// </summary>
         public IEnumerable<T> Find(Expression<Func<T, bool>> predicate, int skip = 0, int limit = int.MaxValue)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return this.Find(_visitor.Visit(predicate), skip, limit);
+            return this.Find(_visitor.VisitExpression(predicate), skip, limit);
         }
 
         #endregion
@@ -48,7 +53,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
-            return this.Find(Query.EQ("_id", id)).SingleOrDefault();
+            return this.Find("_id = @0", id).FirstOrDefault();
         }
 
         /// <summary>
@@ -72,8 +77,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> FindAll()
         {
-            throw new NotImplementedException();
-            //return _engine.Value.FindAll(_name);
+            return this.Query().ToEnumerable();
         }
 
         #endregion

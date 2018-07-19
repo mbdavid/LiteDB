@@ -14,7 +14,7 @@ namespace LiteDB
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
 
-            var value = _visitor.Visit(path);
+            var value = _visitor.VisitPath(path);
 
             return this.Include(value);
         }

@@ -156,7 +156,7 @@ namespace LiteDB
         /// </summary>
         public BsonExpression GetExpression<T>(Expression<Func<T, bool>> predicate)
         {
-            return new QueryVisitor<T>(this).Visit(predicate);
+            return new QueryVisitor<T>(this).VisitExpression(predicate);
         }
 
         #endregion

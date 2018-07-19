@@ -40,7 +40,7 @@ namespace LiteDB
         /// <param name="unique">Create a unique keys index?</param>
         public bool EnsureIndex<K>(Expression<Func<T, K>> expr, bool unique = false)
         {
-            var expression = _visitor.Visit(expr);
+            var expression = _visitor.VisitExpression(expr);
 
             return _engine.Value.EnsureIndex(_collection, expression.Source, unique);
         }
@@ -50,7 +50,7 @@ namespace LiteDB
         /// </summary>
         public bool EnsureIndex<K>(string name, Expression<Func<T, K>> expr, bool unique = false)
         {
-            return _engine.Value.EnsureIndex(_collection, name, _visitor.Visit(expr), unique);
+            return _engine.Value.EnsureIndex(_collection, name, _visitor.VisitExpression(expr), unique);
         }
 
         /// <summary>

@@ -14,7 +14,7 @@ using System.Threading;
 namespace LiteDB.Tests.Engine
 {
     [TestClass]
-    public class Transactions_Tests
+    public class LinqVisitor_Tests
     {
         [TestMethod]
         public void Transaction_Write_Lock_Timeout()
