@@ -176,6 +176,26 @@ namespace LiteDB
 
         #endregion
 
+        #region Execute SQL
+
+        /// <summary>
+        /// Execute SQL commands and return as data reader
+        /// </summary>
+        public BsonDataReader Execute(string command, BsonDocument parameters = null)
+        {
+            return _engine.Value.Execute(command, parameters);
+        }
+
+        /// <summary>
+        /// Execute SQL commands and return as data reader
+        /// </summary>
+        public BsonDataReader Execute(string command, params BsonValue[] args)
+        {
+            return _engine.Value.Execute(command, args);
+        }
+
+        #endregion
+
         #region Shrink
 
         /// <summary>
