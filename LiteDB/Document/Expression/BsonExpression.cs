@@ -297,6 +297,67 @@ namespace LiteDB
 
         #endregion
 
+        #region MethodCall quick access
+
+        /// <summary>
+        /// Load all static methods from BsonExpressionMethods class. Use a dictionary using name + parameter count
+        /// </summary>
+        private static Dictionary<string, MethodInfo> _methods =
+            typeof(BsonExpressionMethods).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters().Length);
+
+        /// <summary>
+        /// Get expression method with same name and same parameter - return null if not found
+        /// </summary>
+        internal static MethodInfo GetMethod(string name, int parameterCount)
+        {
+            var key = name.ToUpper() + "~" + parameterCount;
+
+            return _methods.GetOrDefault(key);
+        }
+
+        private static void RegisterMethod(MethodInfo method)
+        {
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (method.IsStatic == false || method.IsPublic == false) throw new InvalidOperationException("Custom BsonExpression methods must be static and public.");
+
+            _methods[method.Name.ToUpper() + "~" + method.GetParameters().Length] = method;
+        }
+
+        /// <summary>
+        /// Register a new method to work with BsonExpressions. Method must be public/static method
+        /// </summary>
+        public static void RegisterMethod(Func<IEnumerable<BsonValue>> method)
+        {
+            RegisterMethod(method.Method);
+        }
+
+        /// <summary>
+        /// Register a new method to work with BsonExpressions. Method must be public/static method
+        /// </summary>
+        public static void RegisterMethod(Func<IEnumerable<BsonValue>, IEnumerable<BsonValue>> method)
+        {
+            RegisterMethod(method.Method);
+        }
+
+        /// <summary>
+        /// Register a new method to work with BsonExpressions. Method must be public/static method
+        /// </summary>
+        public static void RegisterMethod(Func<IEnumerable<BsonValue>, IEnumerable<BsonValue>, IEnumerable<BsonValue>> method)
+        {
+            RegisterMethod(method.Method);
+        }
+
+        /// <summary>
+        /// Register a new method to work with BsonExpressions. Method must be public/static method
+        /// </summary>
+        public static void RegisterMethod(Func<IEnumerable<BsonValue>, IEnumerable<BsonValue>, IEnumerable<BsonValue>, IEnumerable<BsonValue>> method)
+        {
+            RegisterMethod(method.Method);
+        }
+
+        #endregion
+
         public override string ToString()
         {
             return $"{this.Source} ({this.Type})";

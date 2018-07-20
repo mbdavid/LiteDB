@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -223,6 +224,7 @@ namespace LiteDB
 
         #region Convert types
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public BsonArray AsArray
         {
             get
@@ -242,6 +244,7 @@ namespace LiteDB
             }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public BsonDocument AsDocument
         {
             get
@@ -261,51 +264,61 @@ namespace LiteDB
             }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Byte[] AsBinary
         {
             get { return this.Type == BsonType.Binary ? (Byte[])this.RawValue : default(Byte[]); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool AsBoolean
         {
             get { return this.Type == BsonType.Boolean ? (Boolean)this.RawValue : default(Boolean); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public string AsString
         {
             get { return this.Type != BsonType.Null ? this.RawValue.ToString() : default(String); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public int AsInt32
         {
             get { return this.IsNumber ? Convert.ToInt32(this.RawValue) : default(Int32); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public long AsInt64
         {
             get { return this.IsNumber ? Convert.ToInt64(this.RawValue) : default(Int64); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public double AsDouble
         {
             get { return this.IsNumber ? Convert.ToDouble(this.RawValue) : default(Double); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public decimal AsDecimal
         {
             get { return this.IsNumber ? Convert.ToDecimal(this.RawValue) : default(Decimal); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public DateTime AsDateTime
         {
             get { return this.Type == BsonType.DateTime ? (DateTime)this.RawValue : default(DateTime); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public ObjectId AsObjectId
         {
             get { return this.Type == BsonType.ObjectId ? (ObjectId)this.RawValue : default(ObjectId); }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Guid AsGuid
         {
             get { return this.Type == BsonType.Guid ? (Guid)this.RawValue : default(Guid); }
@@ -315,81 +328,97 @@ namespace LiteDB
 
         #region IsTypes
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsNull
         {
             get { return this.Type == BsonType.Null; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsArray
         {
             get { return this.Type == BsonType.Array; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsDocument
         {
             get { return this.Type == BsonType.Document; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsInt32
         {
             get { return this.Type == BsonType.Int32; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsInt64
         {
             get { return this.Type == BsonType.Int64; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsDouble
         {
             get { return this.Type == BsonType.Double; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsDecimal
         {
             get { return this.Type == BsonType.Decimal; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsNumber
         {
             get { return this.IsInt32 || this.IsInt64 || this.IsDouble || this.IsDecimal; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsBinary
         {
             get { return this.Type == BsonType.Binary; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsBoolean
         {
             get { return this.Type == BsonType.Boolean; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsString
         {
             get { return this.Type == BsonType.String; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsObjectId
         {
             get { return this.Type == BsonType.ObjectId; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsGuid
         {
             get { return this.Type == BsonType.Guid; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsDateTime
         {
             get { return this.Type == BsonType.DateTime; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsMinValue
         {
             get { return this.Type == BsonType.MinValue; }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool IsMaxValue
         {
             get { return this.Type == BsonType.MaxValue; }

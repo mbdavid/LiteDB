@@ -55,27 +55,6 @@ namespace LiteDB
 
         #endregion
 
-        #region MethodCall quick access
-
-        /// <summary>
-        /// Load all static methods from BsonExpressionMethods class. Use a dictionary using name + parameter count
-        /// </summary>
-        private static Dictionary<string, MethodInfo> _methods =
-            typeof(BsonExpressionMethods).GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .ToDictionary(m => m.Name.ToUpper() + "~" + m.GetParameters().Length);
-
-        /// <summary>
-        /// Get expression method with same name and same parameter - return null if not found
-        /// </summary>
-        private static MethodInfo GetMethod(string name, int parameterCount)
-        {
-            var key = name.ToUpper() + "~" + parameterCount;
-
-            return _methods.GetOrDefault(key);
-        }
-
-        #endregion
-
         /// <summary>
         /// Start parse string into linq expression. Read path, function or base type bson values (int, double, bool, string)
         /// </summary>
@@ -582,7 +561,7 @@ namespace LiteDB
                 }
             }
 
-            var method = GetMethod(token.Value, pars.Count);
+            var method = BsonExpression.GetMethod(token.Value, pars.Count);
 
             if (method == null) throw LiteException.UnexpectedToken("Method '" + token.Value.ToUpper() + "' not exist or invalid parameter count", token);
 

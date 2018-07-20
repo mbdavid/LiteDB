@@ -45,6 +45,21 @@ namespace LiteDB.Tests.Expressions
         [TestMethod]
         public void Expressions_Parameter() => this.RunTest("Parameter.txt");
 
+        [TestMethod]
+        public void Expressions_Custom_Method()
+        {
+            BsonExpression.RegisterMethod(PLUS_ONE);
+
+            var r = BsonExpression.Create("1 + PLUS_ONE(10)").Execute().First();
+
+            Assert.AreEqual(12, r.AsInt32);
+        }
+
+        public static IEnumerable<BsonValue> PLUS_ONE(IEnumerable<BsonValue> values)
+        {
+            return values.Select(x => new BsonValue(x.AsInt32 + 1));
+        }
+
         public void RunTest(string filename)
         {
             var tests = this.ReadTests("LiteDB.Tests.Expressions.ExprTests." + filename);

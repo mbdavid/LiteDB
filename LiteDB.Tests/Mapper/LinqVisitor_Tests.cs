@@ -56,7 +56,6 @@ namespace LiteDB.Tests.Mapper
             //
             //Test(x => new { Total = x.Addresses.Count() }, "SUM($.Addresses[@.Street=@p0].Number)");
 
-
             return;
             Test(x => x.Addresses.Single().Number, "$.Addresses[@.Number=1]");
             Test(x => x.Addresses.Where(z => z.Number == 1), "$.Addresses[@.Number=1]");
