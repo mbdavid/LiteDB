@@ -50,9 +50,21 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Visitor_Expressions()
         {
-            // new class
-            Test(x => new { N = x.Name, A = x.Addresses.Sum(x => x. }, "{N:$.Name,A:$.Address}");
 
+            //Test(x => x.Addresses.Where(z => z.Street == "POA"), "SUM($.Addresses[@.Street=@p0].Number)");
+            //
+            //
+            //Test(x => new { Total = x.Addresses.Count() }, "SUM($.Addresses[@.Street=@p0].Number)");
+
+
+            return;
+            Test(x => x.Addresses.Single().Number, "$.Addresses[@.Number=1]");
+            Test(x => x.Addresses.Where(z => z.Number == 1), "$.Addresses[@.Number=1]");
+            Test(x => x.Addresses.Where(z => z.Number > 0).Count(), "LENGTH($.Addresses[@.Number>0])");
+            Test(x => x.Addresses.Count(), "LENGTH($.Addresses)");
+
+            // new class
+            //Test(x => new { N = x.Name, A = x.Addresses.Sum(x => x. }, "{N:$.Name,A:$.Address}");
 
             // only constants
             Test(x => 0, "@p0");

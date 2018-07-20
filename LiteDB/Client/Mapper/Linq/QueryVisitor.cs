@@ -16,6 +16,8 @@ namespace LiteDB
         private readonly BsonDocument _parameters = new BsonDocument();
         private int _paramIndex = 0;
 
+        private string rootParameter = null;
+
         public QueryVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
@@ -25,8 +27,7 @@ namespace LiteDB
         {
             this.Visit(expr);
 
-            // remove last $ 
-            var expression = _builder.Remove(_builder.Length - 1, 1).ToString();
+            var expression = _builder.ToString();
 
             try
             {
@@ -36,6 +37,33 @@ namespace LiteDB
             {
                 throw new NotSupportedException($"Invalid LINQ expression: {expr.ToString()} - '{expression}'", ex);
             }
+        }
+
+        public override Expression Visit(Expression node)
+        {
+            return base.Visit(node);
+        }
+
+        protected override Expression VisitLambda<T>(Expression<T> node)
+        {
+            var l = base.VisitLambda(node);
+
+            _builder.Length--;
+
+            return l;
+        }
+
+
+        /// <summary>
+        /// Visit: x => `x.`
+        /// </summary>
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            if (rootParameter == null) rootParameter = node.Name;
+
+            _builder.Append(node.Name == rootParameter ? "$" : "@");
+
+            return base.VisitParameter(node);
         }
 
         protected override Expression VisitBinary(BinaryExpression node)
@@ -106,13 +134,6 @@ namespace LiteDB
             _builder.Append(this.ResolveName(node.Member));
 
             return node;
-        }
-
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            _builder.Append("$");
-
-            return base.VisitParameter(node);
         }
 
         protected override Expression VisitNew(NewExpression node)
@@ -208,16 +229,28 @@ namespace LiteDB
 
             var result =
                 isList && name == "Length" ? "LENGTH(#)" :
-                isList && name == "get_Item" ? "#[*]#" :
-                isList && name == "ToArray" ? "" :
-                isList && name == "ToList" ? "" :
-
-                isList && !hasParams && name == "Count" ? "LENGTH(#)" :
-                isList && !hasParams && name.StartsWith("First") ? "[0]" :
-                isList && !hasParams && name.StartsWith("Single") ? "[0]" :
 
                 // use ElementAt for index array navigation
                 isList && hasParams && name == "ElementAt" ? "#[#]" :
+
+                // use Where as filter array
+                isList && name == "Where" ? "#[#]" :
+
+                // use single/first/[] to access all elements
+                isList && !hasParams && name.StartsWith("First") ? "#[*]#" :
+                isList && !hasParams && name.StartsWith("Single") ? "#[*]#" :
+                isList && name == "get_Item" ? "#[*]#" :
+
+                // ignore ToList/ToArray
+                isList && name == "ToArray" ? "" :
+                isList && name == "ToList" ? "" :
+
+                // aggregate functions
+                isList && !hasParams && name == "Count" ? "LENGTH(#)" :
+
+                // not supported ! isList && hasParams && name == "Sum" ? "SUM(#)" :
+
+
 
                 isDate && name == "Now" ? "DATE()" :
                 isDate && name == "Year" ? "YEAR(#)" :
