@@ -106,7 +106,10 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            if (!_types.TryGetValue(node.Method.DeclaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType} not available to convert to BsonExpression");
+            // get method declaring type - if is from any kind of list, read as Enumerable
+            var declaringType = Reflection.IsList(node.Method.DeclaringType) ? typeof(Enumerable) : node.Method.DeclaringType;
+
+            if (!_types.TryGetValue(declaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType} not available to convert to BsonExpression");
 
             var pattern = type.ResolveMethod(node.Method);
 
