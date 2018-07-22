@@ -10,13 +10,13 @@ namespace LiteDB
 {
     internal class ObjectIdResolver : ITypeResolver
     {
-        public bool HasSpecialMember => true;
-
         public string ResolveMethod(MethodInfo method)
         {
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
         }
+
+        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {

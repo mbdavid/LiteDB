@@ -10,8 +10,6 @@ namespace LiteDB
 {
     internal class EnumerableResolver : ITypeResolver
     {
-        public bool HasSpecialMember => false;
-
         public string ResolveMethod(MethodInfo method)
         {
             switch (method.Name)
@@ -49,9 +47,7 @@ namespace LiteDB
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
         }
 
-        public string ResolveMember(MemberInfo member)
-        {
-            throw new NotImplementedException();
-        }
+        public bool HasSpecialMember => false;
+        public string ResolveMember(MemberInfo member) => throw new NotImplementedException();
     }
 }

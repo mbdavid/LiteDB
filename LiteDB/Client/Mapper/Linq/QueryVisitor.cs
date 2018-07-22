@@ -14,12 +14,16 @@ namespace LiteDB
         {
             [typeof(Convert)] = new ConvertResolver(),
             [typeof(DateTime)] = new DateTimeResolver(),
+            [typeof(Decimal)] = new DecimalResolver(),
+            [typeof(Double)] = new DoubleResolver(),
             [typeof(Enumerable)] = new EnumerableResolver(),
             [typeof(Guid)] = new GuidResolver(),
+            [typeof(Int32)] = new Int32Resolver(),
+            [typeof(Int64)] = new Int64Resolver(),
+            [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
             [typeof(Sql)] = new SqlResolver(),
-            [typeof(String)] = new StringResolver(),
-            [typeof(Math)] = new MathResolver()
+            [typeof(String)] = new StringResolver()
         };
 
         private readonly BsonMapper _mapper;

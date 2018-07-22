@@ -11,10 +11,9 @@ namespace LiteDB
 {
     internal interface ITypeResolver
     {
-        bool HasSpecialMember { get; }
-
         string ResolveMethod(MethodInfo method);
 
+        bool HasSpecialMember { get; }
         string ResolveMember(MemberInfo member);
     }
 }

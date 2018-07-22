@@ -10,8 +10,6 @@ namespace LiteDB
 {
     internal class DateTimeResolver : ITypeResolver
     {
-        public bool HasSpecialMember => true;
-
         public string ResolveMethod(MethodInfo method)
         {
             switch (method.Name)
@@ -22,10 +20,15 @@ namespace LiteDB
                 case "AddHours": return "DATEADD('h', @0, #)";
                 case "AddMinutes": return "DATEADD('m', @0, #)";
                 case "AddSeconds": return "DATEADD('s', @0, #)";
+
+                // static methods
+                case "Parse": return "TO_DATETIME(@0)";
             };
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
         }
+
+        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {

@@ -10,8 +10,6 @@ namespace LiteDB
 {
     internal class GuidResolver : ITypeResolver
     {
-        public bool HasSpecialMember => true;
-
         public string ResolveMethod(MethodInfo method)
         {
             switch (method.Name)
@@ -23,6 +21,8 @@ namespace LiteDB
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
         }
+
+        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {

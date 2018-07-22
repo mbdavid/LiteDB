@@ -10,8 +10,6 @@ namespace LiteDB
 {
     internal class MathResolver : ITypeResolver
     {
-        public bool HasSpecialMember => false;
-
         public string ResolveMethod(MethodInfo method)
         {
             var qtParams = method.GetParameters().Length;
@@ -28,9 +26,7 @@ namespace LiteDB
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
         }
 
-        public string ResolveMember(MemberInfo member)
-        {
-            throw new NotImplementedException();
-        }
+        public bool HasSpecialMember => false;
+        public string ResolveMember(MemberInfo member) => throw new NotImplementedException();
     }
 }
