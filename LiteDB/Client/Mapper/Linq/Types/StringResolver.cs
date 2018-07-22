@@ -8,7 +8,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ResolveString : IResolveType
+    internal class StringResolver : ITypeResolver
     {
         public bool HasSpecialMember => true;
 

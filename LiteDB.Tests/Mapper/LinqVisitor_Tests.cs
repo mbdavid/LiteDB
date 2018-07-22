@@ -86,14 +86,14 @@ namespace LiteDB.Tests.Mapper
             Test(x => DateTime.UtcNow, "DATE_UTC()");
 
             // extensions methods aggregation (can change name)
-            Test(x => Sql.Sum(x.Phones.Index().Number), "SUM(Phones[*].Number)");
-            Test(x => Sql.Max(x.Phones.Index()), "MAX(Phones[*])");
-            Test(x => Sql.Count(x.Phones.Index().Number), "COUNT(Phones[*].Number)");
+            Test(x => Sql.Sum(x.Phones.Items().Number), "SUM(Phones[*].Number)");
+            Test(x => Sql.Max(x.Phones.Items()), "MAX(Phones[*])");
+            Test(x => Sql.Count(x.Phones.Items().Number), "COUNT(Phones[*].Number)");
 
             // new `Arr` array access
-            Test(x => x.Phones.Index().Number, "Phones[*].Number");
-            Test(x => x.Phones.Index(1).Number, "Phones[@p0].Number", 1);
-            Test(x => x.Phones.Index(z => z.Prefix == 0).Number, "Phones[@.Prefix = @p0].Number", 0);
+            Test(x => x.Phones.Items().Number, "Phones[*].Number");
+            Test(x => x.Phones.Items(1).Number, "Phones[@p0].Number", 1);
+            Test(x => x.Phones.Items(z => z.Prefix == 0).Number, "Phones[@.Prefix = @p0].Number", 0);
 
             // access using native array index
             Test(x => x.Phones[1].Number, "Phones[@p0].Number", 1);

@@ -11,17 +11,17 @@ namespace LiteDB
 {
     public static class Sql
     {
-        public static T Index<T>(this IEnumerable<T> items)
+        public static T Items<T>(this IEnumerable<T> items)
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
 
-        public static T Index<T>(this IEnumerable<T> items, int index)
+        public static T Items<T>(this IEnumerable<T> items, int index)
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
 
-        public static T Index<T>(this IEnumerable<T> items, Expression<Func<T, bool>> filter)
+        public static T Items<T>(this IEnumerable<T> items, Expression<Func<T, bool>> filter)
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }

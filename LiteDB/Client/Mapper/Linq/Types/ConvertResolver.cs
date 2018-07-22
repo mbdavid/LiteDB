@@ -8,27 +8,23 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ResolveSql : IResolveType
+    internal class ConvertResolver : ITypeResolver
     {
         public bool HasSpecialMember => false;
 
         public string ResolveMethod(MethodInfo method)
         {
-            var qtParams = method.GetParameters().Length;
-
             switch (method.Name)
             {
-                // array index access
-                case "Index": return qtParams == 1 ? "@0[*]" : "@0[@1]";
+                case "ToInt32": return "TO_INT32(@0)";
+                case "ToInt64": return "TO_INT64(@0)";
+                case "ToDouble": return "TO_DOUBLE(@0)";
+                case "ToDecimal": return "TO_DECIMAL(@0)";
 
-                // aggregate methods
-                case "Count": return "COUNT(@0)";
-                case "Sum": return "SUM(@0)";
-                case "Avg": return "AVG(@0)";
-                case "Min": return "MIN(@0)";
-                case "Max": return "MAX(@0)";
-                case "First": return "FIRST(@0)";
-                case "Last": return "LAST(@0)";
+                case "ToDateTime": return "TO_DATE(@0)";
+                case "FromBase64String": return "TO_BINARY(@0)";
+                case "ToBoolean": return "TO_BOOL(@0)";
+                case "ToString": return "TO_STRING(@0)";
             }
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");

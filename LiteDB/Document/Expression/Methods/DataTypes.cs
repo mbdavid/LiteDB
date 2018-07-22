@@ -11,7 +11,7 @@ namespace LiteDB
 {
     internal partial class BsonExpressionMethods
     {
-        #region Convert datatypes
+        #region NEW_INSTANCE
 
         /// <summary>
         /// Return a new instance of MINVALUE
@@ -21,12 +21,70 @@ namespace LiteDB
             yield return BsonValue.MinValue;
         }
 
+        /// <summary>
+        /// Create a new OBJECTID value
+        /// </summary>
+        [Volatile]
+        public static IEnumerable<BsonValue> OBJECTID()
+        {
+            yield return ObjectId.NewObjectId();
+        }
+
+        /// <summary>
+        /// Create a new GUID value
+        /// </summary>
+        [Volatile]
+        public static IEnumerable<BsonValue> GUID()
+        {
+            yield return Guid.NewGuid();
+        }
+
+        /// <summary>
+        /// Return a new DATETIME (Now)
+        /// </summary>
+        [Volatile]
+        public static IEnumerable<BsonValue> NOW()
+        {
+            yield return DateTime.Now;
+        }
+
+        /// <summary>
+        /// Return a new DATETIME (UtcNow)
+        /// </summary>
+        [Volatile]
+        public static IEnumerable<BsonValue> NOW_UTC()
+        {
+            yield return DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Return a new DATETIME (Today)
+        /// </summary>
+        [Volatile]
+        public static IEnumerable<BsonValue> TODAY()
+        {
+            yield return DateTime.Today;
+        }
+
+        /// <summary>
+        /// Return a new instance of MAXVALUE
+        /// </summary>
+        public static IEnumerable<BsonValue> MAXVALUE()
+        {
+            yield return BsonValue.MaxValue;
+        }
+
+        #endregion
+
+        #region TO_DATATYPE
+
+        // ==> MaxValue is a constant
         // ==> "null" are a keyword
 
         /// <summary>
         /// Convert values into INT32. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> INT32(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_INT32(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -47,7 +105,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into INT64. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> INT64(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_INT64(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -68,7 +126,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DOUBLE. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> DOUBLE(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_DOUBLE(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -89,7 +147,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DECIMAL. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> DECIMAL(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_DECIMAL(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -110,7 +168,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into STRING. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> STRING(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_STRING(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -123,7 +181,7 @@ namespace LiteDB
         /// <summary>
         /// Return an array from list of values. Support multiple values but returns a single value
         /// </summary>
-        public static IEnumerable<BsonValue> ARRAY(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_ARRAY(IEnumerable<BsonValue> values)
         {
             yield return new BsonArray(values);
         }
@@ -131,7 +189,7 @@ namespace LiteDB
         /// <summary>
         /// Return an binary from string (base64) values. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> BINARY(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_BINARY(IEnumerable<BsonValue> values)
         {
             foreach(var value in values)
             {
@@ -159,18 +217,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create a new OBJECTID value
-        /// </summary>
-        [Volatile]
-        public static IEnumerable<BsonValue> OBJECTID()
-        {
-            yield return ObjectId.NewObjectId();
-        }
-
-        /// <summary>
         /// Convert values into OBJECTID. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> OBJECTID(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_OBJECTID(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -198,18 +247,9 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Create a new GUID value
-        /// </summary>
-        [Volatile]
-        public static IEnumerable<BsonValue> GUID()
-        {
-            yield return Guid.NewGuid();
-        }
-
-        /// <summary>
         /// Convert values into GUID. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> GUID(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_GUID(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -237,27 +277,39 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return a new DATETIME (Now)
+        /// Return converted value into BOOLEAN value (support multi values)
         /// </summary>
-        [Volatile]
-        public static IEnumerable<BsonValue> DATETIME()
+        public static IEnumerable<BsonValue> TO_BOOLEAN(IEnumerable<BsonValue> values)
         {
-            yield return DateTime.Now;
-        }
+            foreach (var value in values)
+            {
+                if (value.IsBoolean)
+                {
+                    yield return value.AsBoolean;
+                }
+                else
+                {
+                    var val = false;
+                    var isBool = false;
 
-        /// <summary>
-        /// Return a new DATETIME (UtcNow)
-        /// </summary>
-        [Volatile]
-        public static IEnumerable<BsonValue> DATETIME_UTC()
-        {
-            yield return DateTime.UtcNow;
+                    try
+                    {
+                        val = Convert.ToBoolean(value.AsString);
+                        isBool = true;
+                    }
+                    catch
+                    {
+                    }
+
+                    if (isBool) yield return val;
+                }
+            }
         }
 
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_DATETIME(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -278,7 +330,7 @@ namespace LiteDB
         /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert. Support multiple values
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> TO_DATETIME_UTC(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
             {
@@ -298,7 +350,7 @@ namespace LiteDB
         /// <summary>
         /// Create a new instance of DATETIME based on year, month, day (local time)
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
+        public static IEnumerable<BsonValue> TO_DATETIME(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
         {
             foreach (var value in ZipValues(year, month, day))
             {
@@ -312,7 +364,7 @@ namespace LiteDB
         /// <summary>
         /// Create a new instance of DATETIME based on year, month, day (UTC)
         /// </summary>
-        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
+        public static IEnumerable<BsonValue> TO_DATETIME_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day)
         {
             foreach (var value in ZipValues(year, month, day))
             {
@@ -321,14 +373,6 @@ namespace LiteDB
                     yield return new DateTime(value.First.AsInt32, value.Second.AsInt32, value.Third.AsInt32, 0, 0, 0, DateTimeKind.Utc);
                 }
             }
-        }
-
-        /// <summary>
-        /// Return a new instance of MAXVALUE
-        /// </summary>
-        public static IEnumerable<BsonValue> MAXVALUE()
-        {
-            yield return BsonValue.MaxValue;
         }
 
         #endregion
@@ -517,34 +561,24 @@ namespace LiteDB
         #region ALIAS
 
         /// <summary>
-        /// Alias to INT32(values)
+        /// Alias to TO_INT32(values)
         /// </summary>
-        public static IEnumerable<BsonValue> INT(IEnumerable<BsonValue> values) => INT32(values);
+        public static IEnumerable<BsonValue> TO_INT(IEnumerable<BsonValue> values) => TO_INT32(values);
 
         /// <summary>
-        /// Alias to INT64(values)
+        /// Alias to TO_INT64(values)
         /// </summary>
-        public static IEnumerable<BsonValue> LONG(IEnumerable<BsonValue> values) => INT64(values);
+        public static IEnumerable<BsonValue> TO_LONG(IEnumerable<BsonValue> values) => TO_INT64(values);
 
 
         /// <summary>
-        /// Alias to DATETIME() and DATETIME_UTC()
+        /// Alias to TO_DATETIME(values) and TO_DATETIME_UTC(values)
         /// </summary>
-        [Volatile]
-        public static IEnumerable<BsonValue> DATE() => DATETIME();
-        [Volatile]
-        public static IEnumerable<BsonValue> DATE_UTC() => DATETIME_UTC();
+        public static IEnumerable<BsonValue> TO_DATE(IEnumerable<BsonValue> values) => TO_DATETIME(values);
+        public static IEnumerable<BsonValue> TO_DATE_UTC(IEnumerable<BsonValue> values) => TO_DATETIME_UTC(values);
 
-        [Volatile]
-        public static IEnumerable<BsonValue> NOW() => DATETIME();
-        [Volatile]
-        public static IEnumerable<BsonValue> NOW_UTC() => DATETIME_UTC();
-
-        public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values) => DATETIME(values);
-        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> values) => DATETIME_UTC(values);
-
-        public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME(year, month, day);
-        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME_UTC(year, month, day);
+        public static IEnumerable<BsonValue> TO_DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => TO_DATETIME(year, month, day);
+        public static IEnumerable<BsonValue> TO_DATE_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => TO_DATETIME_UTC(year, month, day);
 
         /// <summary>
         /// Alias to IS_INT32(values)

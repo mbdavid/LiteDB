@@ -8,7 +8,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ResolveDateTime : IResolveType
+    internal class DateTimeResolver : ITypeResolver
     {
         public bool HasSpecialMember => true;
 
@@ -32,8 +32,9 @@ namespace LiteDB
             switch (member.Name)
             {
                 // static properties
-                case "Now": return "DATE()";
-                case "UtcNow": return "DATE_UTC()";
+                case "Now": return "NOW()";
+                case "UtcNow": return "NOW_UTC()";
+                case "Today": return "TODAY()";
 
                 // instance properties
                 case "Year": return "YEAR(#)";

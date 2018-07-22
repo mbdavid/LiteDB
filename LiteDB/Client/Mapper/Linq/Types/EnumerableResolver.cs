@@ -8,7 +8,7 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ResolveEnumerable : IResolveType
+    internal class EnumerableResolver : ITypeResolver
     {
         public bool HasSpecialMember => false;
 
@@ -37,13 +37,13 @@ namespace LiteDB
                 // not supported (recommend use Index() extension method)
                 case "Select":
                 case "Any":
-                case "Where": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Index()` extension method to access sub documents fields. Eg: `x => x.Phones.Index(z => z.Type == 'Mobile').Number`");
+                case "Where": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Items()` extension method to access sub documents fields. Eg: `x => x.Phones.Items(z => z.Type == 'Mobile').Number`");
 
                 // not supported (recommend Aggregate)
                 case "Sum":
                 case "Average":
                 case "Max":
-                case "Min": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.Sum(x.Item.Arr().Price)`");
+                case "Min": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.Sum(x.Details.Items().Price)`");
             };
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");

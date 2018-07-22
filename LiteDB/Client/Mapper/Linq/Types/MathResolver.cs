@@ -8,28 +8,21 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ResolveConvert : IResolveType
+    internal class MathResolver : ITypeResolver
     {
         public bool HasSpecialMember => false;
 
         public string ResolveMethod(MethodInfo method)
         {
-            /*
-            Convert.ToInt32();
-            Convert.ToDouble();
-            Convert.ToDateTime();
-            Convert.ToInt64();
-            Convert.ToDecimal();
-            Convert.ToString();
-            Convert.FromBase64String();
-            Convert.ToBoolean();
-            */
-
             var qtParams = method.GetParameters().Length;
 
             switch (method.Name)
             {
-                case "ToInt32": return "INT(@0)";
+                case "Abs": return "ABS(@0)";
+                case "Pow": return "POW(@0, @1)";
+                case "Round":
+                    if (qtParams != 1) throw new ArgumentOutOfRangeException("Method Round need 2 arguments when convert to BsonExpression");
+                    return "ROUND(@0, @1)";
             }
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");

@@ -10,16 +10,16 @@ namespace LiteDB
 {
     internal class QueryVisitor : ExpressionVisitor
     {
-        private static Dictionary<Type, IResolveType> _types = new Dictionary<Type, IResolveType>
+        private static Dictionary<Type, ITypeResolver> _resolver = new Dictionary<Type, ITypeResolver>
         {
-            [typeof(Convert)] = new ResolveConvert(),
-            [typeof(DateTime)] = new ResolveDateTime(),
-            [typeof(Enumerable)] = new ResolveEnumerable(),
-            [typeof(Guid)] = new ResolveGuid(),
-            [typeof(ObjectId)] = new ResolveObjectId(),
-            [typeof(Sql)] = new ResolveSql(),
-            [typeof(String)] = new ResolveString(),
-            [typeof(Math)] = new ResolveMath()
+            [typeof(Convert)] = new ConvertResolver(),
+            [typeof(DateTime)] = new DateTimeResolver(),
+            [typeof(Enumerable)] = new EnumerableResolver(),
+            [typeof(Guid)] = new GuidResolver(),
+            [typeof(ObjectId)] = new ObjectIdResolver(),
+            [typeof(Sql)] = new SqlResolver(),
+            [typeof(String)] = new StringResolver(),
+            [typeof(Math)] = new MathResolver()
         };
 
         private readonly BsonMapper _mapper;
@@ -72,7 +72,7 @@ namespace LiteDB
             var member = node.Member;
 
             // special types contains method access: string.Length, DateTime.Day, ...
-            if (_types.TryGetValue(member.DeclaringType, out var type))
+            if (_resolver.TryGetValue(member.DeclaringType, out var type))
             {
                 var pattern = type.ResolveMember(member).Split('#');
 
@@ -109,7 +109,7 @@ namespace LiteDB
             // get method declaring type - if is from any kind of list, read as Enumerable
             var declaringType = Reflection.IsList(node.Method.DeclaringType) ? typeof(Enumerable) : node.Method.DeclaringType;
 
-            if (!_types.TryGetValue(declaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType} not available to convert to BsonExpression");
+            if (!_resolver.TryGetValue(declaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType} not available to convert to BsonExpression");
 
             var pattern = type.ResolveMethod(node.Method);
 

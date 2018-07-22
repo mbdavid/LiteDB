@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace LiteDB
 {
-    internal interface IResolveType
+    internal interface ITypeResolver
     {
         bool HasSpecialMember { get; }
 

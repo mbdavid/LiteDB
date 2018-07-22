@@ -8,18 +8,12 @@ using System.Text;
 
 namespace LiteDB
 {
-    internal class ResolveGuid : IResolveType
+    internal class ObjectIdResolver : ITypeResolver
     {
         public bool HasSpecialMember => true;
 
         public string ResolveMethod(MethodInfo method)
         {
-            switch (method.Name)
-            {
-                case "NewGuid": return "GUID()";
-                case "Parse": return "GUID(@0)";
-                case "TryParse": throw new NotSupportedException("There is no TryParse translate. Use Guid.Parse()");
-            }
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
         }
@@ -29,7 +23,10 @@ namespace LiteDB
             switch (member.Name)
             {
                 // static properties
-                case "Empty": return "GUID('00000000-0000-0000-0000-000000000000')";
+                case "Empty": return "OBJECTID('000000000000000000000000')";
+
+                    // instance properties (not implemented in BsonExpression)
+                    // case "CreationTime": return "...(#)";
             }
 
             throw new NotSupportedException($"Member {member.Name} not supported when convert to BsonExpression.");
