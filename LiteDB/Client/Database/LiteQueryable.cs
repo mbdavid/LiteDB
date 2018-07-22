@@ -168,9 +168,9 @@ namespace LiteDB
         /// <summary>
         /// Sort resultset based on query expression and order. Support only 1 single order by expression
         /// </summary>
-        public LiteQueryable<T> OrderBy<K>(Expression<Func<T, K>> predicate)
+        public LiteQueryable<T> OrderBy<K>(Expression<Func<T, K>> predicate, int order = Query.Ascending)
         {
-            return this.Where(_mapper.GetExpression(predicate));
+            return this.OrderBy(_mapper.GetExpression(predicate), order);
         }
 
         #endregion

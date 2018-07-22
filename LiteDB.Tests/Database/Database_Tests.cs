@@ -35,8 +35,9 @@ namespace LiteDB.Tests.Database
 
                 users.Insert(new User { Name = "John", Salary = 128000, Active = true });
                 users.Insert(new User { Name = "Carlos", Salary = 75000, Active = true });
+                users.Insert(new User { Name = "John", Salary = 65000, Active = false });
 
-                Assert.AreEqual(2, users.Count());
+                Assert.AreEqual(3, users.Count());
 
                 var carlos = users.Query()
                     .Where(x => x.Name == "Carlos")
@@ -47,13 +48,17 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual("Carlos", carlos.FullName.First);
                 Assert.AreEqual("Smith", carlos.FullName.Last);
 
-
                 var total = users.Query()
+                    .Where(x => x.Active == true)
                     .SelectAll(x => Sql.Sum(x.Salary))
                     .ExecuteScalar();
 
                 Assert.AreEqual(128000 + 75000, total);
 
+                var group = users.Query()
+                    .GroupBy(x => x.Active)
+                    .Select(x => new { x.Active, Count = Sql.Count(x.Id), Salary = Sql.Sum(x.Salary) })
+                    .ToArray();
 
             }
         }
