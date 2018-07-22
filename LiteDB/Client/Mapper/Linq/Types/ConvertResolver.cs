@@ -25,10 +25,10 @@ namespace LiteDB
                 case "ToString": return "TO_STRING(@0)";
             }
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
 
-        public bool HasSpecialMember => false;
-        public string ResolveMember(MemberInfo member) => throw new NotImplementedException();
+        public string ResolveMember(MemberInfo member) => null;
+        public string ResolveCtor(ConstructorInfo ctor) => null;
     }
 }

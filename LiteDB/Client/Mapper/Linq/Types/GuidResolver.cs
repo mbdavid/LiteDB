@@ -15,24 +15,38 @@ namespace LiteDB
             switch (method.Name)
             {
                 case "NewGuid": return "GUID()";
-                case "Parse": return "GUID(@0)";
+                case "Parse": return "TO_GUID(@0)";
                 case "TryParse": throw new NotSupportedException("There is no TryParse translate. Use Guid.Parse()");
             }
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
-
-        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {
             switch (member.Name)
             {
                 // static properties
-                case "Empty": return "GUID('00000000-0000-0000-0000-000000000000')";
+                case "Empty": return "TO_GUID('00000000-0000-0000-0000-000000000000')";
             }
 
-            throw new NotSupportedException($"Member {member.Name} not supported when convert to BsonExpression.");
+            return null;
+        }
+
+        public string ResolveCtor(ConstructorInfo ctor)
+        {
+            var pars = ctor.GetParameters();
+
+            if (pars.Length == 1)
+            {
+                // string s
+                if (pars[0].ParameterType == typeof(string))
+                {
+                    return "TO_GUID(@0)";
+                }
+            }
+
+            return null;
         }
     }
 }

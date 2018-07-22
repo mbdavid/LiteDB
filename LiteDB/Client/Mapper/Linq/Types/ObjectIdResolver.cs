@@ -12,24 +12,43 @@ namespace LiteDB
     {
         public string ResolveMethod(MethodInfo method)
         {
+            switch (method.Name)
+            {
+                // instance methods
+                case "ToString": return "TO_STRING(#)";
+            };
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
-
-        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {
             switch (member.Name)
             {
                 // static properties
-                case "Empty": return "OBJECTID('000000000000000000000000')";
+                case "Empty": return "TO_OBJECTID('000000000000000000000000')";
 
-                    // instance properties (not implemented in BsonExpression)
-                    // case "CreationTime": return "...(#)";
+                // instance properties (not implemented in BsonExpression)
+                // case "CreationTime": return "...(#)";
             }
 
-            throw new NotSupportedException($"Member {member.Name} not supported when convert to BsonExpression.");
+            return null;
+        }
+
+        public string ResolveCtor(ConstructorInfo ctor)
+        {
+            var pars = ctor.GetParameters();
+
+            if (pars.Length == 1)
+            {
+                // string value
+                if (pars[0].ParameterType == typeof(string))
+                {
+                    return "TO_OBJECTID(@0)";
+                }
+            }
+
+            return null;
         }
     }
 }

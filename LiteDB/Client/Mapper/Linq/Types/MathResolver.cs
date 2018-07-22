@@ -23,10 +23,10 @@ namespace LiteDB
                     return "ROUND(@0, @1)";
             }
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
 
-        public bool HasSpecialMember => false;
-        public string ResolveMember(MemberInfo member) => throw new NotImplementedException();
+        public string ResolveMember(MemberInfo member) => null;
+        public string ResolveCtor(ConstructorInfo ctor) => null;
     }
 }

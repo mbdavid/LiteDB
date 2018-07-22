@@ -48,6 +48,7 @@ namespace LiteDB
         }
 
         public bool HasSpecialMember => false;
-        public string ResolveMember(MemberInfo member) => throw new NotImplementedException();
+        public string ResolveMember(MemberInfo member) => throw new NotSupportedException();
+        public string ResolveCtor(ConstructorInfo ctor) => throw new NotSupportedException();
     }
 }

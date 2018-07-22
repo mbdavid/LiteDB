@@ -13,7 +13,8 @@ namespace LiteDB
     {
         string ResolveMethod(MethodInfo method);
 
-        bool HasSpecialMember { get; }
         string ResolveMember(MemberInfo member);
+
+        string ResolveCtor(ConstructorInfo ctor);
     }
 }

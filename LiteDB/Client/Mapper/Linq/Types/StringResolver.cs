@@ -30,6 +30,7 @@ namespace LiteDB
                 case "StartsWith": return "# LIKE (@0 + '%')";
                 case "Contains": return "# LIKE ('%' + @0 + '%')";
                 case "EndsWith": return "# LIKE ('%' + @0)";
+                case "ToString": return "#";
 
                 // static methods
                 case "IsNullOrEmpty": return "(@0 = null OR LENGTH(@0) = 0)";
@@ -38,10 +39,8 @@ namespace LiteDB
                 case "Join": throw new NotImplementedException(); //TODO implement join
             };
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
-
-        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {
@@ -51,7 +50,9 @@ namespace LiteDB
                 case "Empty": return "''";
             }
 
-            throw new NotSupportedException($"Member {member.Name} not supported when convert to BsonExpression.");
+            return null;
         }
+
+        public string ResolveCtor(ConstructorInfo ctor) => null;
     }
 }

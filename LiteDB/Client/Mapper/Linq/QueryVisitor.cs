@@ -51,7 +51,7 @@ namespace LiteDB
             }
             catch (Exception ex)
             {
-                throw new NotSupportedException($"Invalid LINQ expression: {expr.ToString()} - '{expression}'", ex);
+                throw new NotSupportedException($"Invalid BsonExpression when converted from Linq expression: {expr.ToString()} - `{expression}`", ex);
             }
         }
 
@@ -78,15 +78,11 @@ namespace LiteDB
             // special types contains method access: string.Length, DateTime.Day, ...
             if (_resolver.TryGetValue(member.DeclaringType, out var type))
             {
-                var pattern = type.ResolveMember(member).Split('#');
+                var pattern = type.ResolveMember(member);
 
-                _builder.Append(pattern[0]);
+                if (pattern == null) throw new NotSupportedException($"Member {member.Name} are not support in {member.DeclaringType.Name} when convert to BsonExpression ({node.ToString()}).");
 
-                if (node.Expression != null)
-                {
-                    base.VisitMember(node);
-                    _builder.Append(pattern[1]);
-                }
+                this.ResolvePattern(pattern, node.Expression, new Expression[0]);
             }
             else
             {
@@ -113,60 +109,14 @@ namespace LiteDB
             // get method declaring type - if is from any kind of list, read as Enumerable
             var declaringType = Reflection.IsList(node.Method.DeclaringType) ? typeof(Enumerable) : node.Method.DeclaringType;
 
-            if (!_resolver.TryGetValue(declaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType} not available to convert to BsonExpression");
+            if (!_resolver.TryGetValue(declaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType.Name} not available to convert to BsonExpression ({node.ToString()}).");
 
             var pattern = type.ResolveMethod(node.Method);
 
-            // retain current builder var to create another one
-            var current = _builder;
+            if (pattern == null) throw new NotSupportedException($"Method {node.Method.Name} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
 
-            _builder = new StringBuilder();
-
-            if (node.Object != null)
-            {
-                this.Visit(node.Object);
-            }
-
-            // get object expression string
-            var objectExpr = _builder.ToString();
-            var parameters = new Dictionary<int, string>();
-            var index = 0;
-
-            // now, get all parameter expressions strings
-            foreach(var arg in node.Arguments)
-            {
-                _builder = new StringBuilder();
-                this.Visit(arg);
-                parameters[index++] = _builder.ToString();
-            }
-
-            // now, do replace for # to objet and @N as parameters
-            var output = new StringBuilder();
-            var tokenizer = new Tokenizer(pattern);
-
-            // lets use tokenizer to parse this method pattern
-            while(!tokenizer.EOF)
-            {
-                var token = tokenizer.ReadToken(false);
-
-                if (token.Type == TokenType.Hashtag)
-                {
-                    output.Append(objectExpr);
-                }
-                else if(token.Type == TokenType.At)
-                {
-                    var i = Convert.ToInt32(tokenizer.ReadToken(false).Expect(TokenType.Int).Value);
-                    output.Append(parameters[i]);
-                }
-                else
-                {
-                    output.Append(token.Type == TokenType.String ? "'" + token.Value + "'" : token.Value);
-                }
-            }
-
-            // now restore current builder and append output
-            _builder = current;
-            _builder.Append(output.ToString());
+            // run pattern using object as # and args as @n
+            this.ResolvePattern(pattern, node.Object, node.Arguments);
 
             return node;
         }
@@ -211,20 +161,35 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitNew(NewExpression node)
         {
-            // works only for anonymous classes
-            if (node.Members == null || node.Members.Count == 0) throw new NotSupportedException("Expression not supported: " + node.ToString());
-
-            _builder.Append("{ ");
-
-            for (var i = 0; i < node.Members.Count; i++)
+            if (node.Members == null)
             {
-                var member = node.Members[i];
-                _builder.Append(i > 0 ? ", " : "");
-                _builder.AppendFormat("'{0}': ", member.Name);
-                this.Visit(node.Arguments[i]);
-            }
+                if (_resolver.TryGetValue(node.Type, out var type))
+                {
+                    var pattern = type.ResolveCtor(node.Constructor);
 
-            _builder.Append(" }");
+                    if (pattern == null) throw new NotSupportedException($"Constructor for {node.Type.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
+
+                    this.ResolvePattern(pattern, null, node.Arguments);
+                }
+                else
+                {
+                    throw new NotSupportedException($"New instance are not supported for {node.Type} when convert to BsonExpression ({node.ToString()}).");
+                }
+            }
+            else
+            {
+                _builder.Append("{ ");
+
+                for (var i = 0; i < node.Members.Count; i++)
+                {
+                    var member = node.Members[i];
+                    _builder.Append(i > 0 ? ", " : "");
+                    _builder.AppendFormat("'{0}': ", member.Name);
+                    this.Visit(node.Arguments[i]);
+                }
+
+                _builder.Append(" }");
+            }
 
             return node;
         }
@@ -292,6 +257,63 @@ namespace LiteDB
             _builder.Append(")");
 
             return node;
+        }
+
+        /// <summary>
+        /// Resolve string pattern using an object + N arguments. Will write over _builder
+        /// </summary>
+        private void ResolvePattern(string pattern, Expression obj, IEnumerable<Expression> args)
+        {
+            // retain current builder var to create another one
+            var current = _builder;
+
+            _builder = new StringBuilder();
+
+            if (obj != null)
+            {
+                this.Visit(obj);
+            }
+
+            // get object expression string
+            var objectExpr = _builder.ToString();
+            var parameters = new Dictionary<int, string>();
+            var index = 0;
+
+            // now, get all parameter expressions strings
+            foreach (var arg in args)
+            {
+                _builder = new StringBuilder();
+                this.Visit(arg);
+                parameters[index++] = _builder.ToString();
+            }
+
+            // now, do replace for # to objet and @N as parameters
+            var output = new StringBuilder();
+            var tokenizer = new Tokenizer(pattern);
+
+            // lets use tokenizer to parse this method pattern
+            while (!tokenizer.EOF)
+            {
+                var token = tokenizer.ReadToken(false);
+
+                if (token.Type == TokenType.Hashtag)
+                {
+                    output.Append(objectExpr);
+                }
+                else if (token.Type == TokenType.At)
+                {
+                    var i = Convert.ToInt32(tokenizer.ReadToken(false).Expect(TokenType.Int).Value);
+                    output.Append(parameters[i]);
+                }
+                else
+                {
+                    output.Append(token.Type == TokenType.String ? "'" + token.Value + "'" : token.Value);
+                }
+            }
+
+            // now restore current builder and append output
+            _builder = current;
+            _builder.Append(output.ToString());
         }
 
         /// <summary>

@@ -14,21 +14,21 @@ namespace LiteDB
         {
             switch (method.Name)
             {
+                // instance methods
                 case "AddYears": return "DATEADD('y', @0, #)";
                 case "AddMonths": return "DATEADD('M', @0, #)";
                 case "AddDays": return "DATEADD('d', @0, #)";
                 case "AddHours": return "DATEADD('h', @0, #)";
                 case "AddMinutes": return "DATEADD('m', @0, #)";
                 case "AddSeconds": return "DATEADD('s', @0, #)";
+                case "ToString": return "TO_STRING(#)";
 
                 // static methods
                 case "Parse": return "TO_DATETIME(@0)";
             };
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
-
-        public bool HasSpecialMember => true;
 
         public string ResolveMember(MemberInfo member)
         {
@@ -48,7 +48,23 @@ namespace LiteDB
                 case "Second": return "SECOND(#)";
             }
 
-            throw new NotSupportedException($"Member {member.Name} not supported when convert to BsonExpression.");
+            return null;
+        }
+
+        public string ResolveCtor(ConstructorInfo ctor)
+        {
+            var pars = ctor.GetParameters();
+
+            if (pars.Length == 3)
+            {
+                // int year, int month, int day
+                if (pars[0].ParameterType == typeof(int) && pars[1].ParameterType == typeof(int) && pars[2].ParameterType == typeof(int))
+                {
+                    return "TO_DATETIME(@0, @1, @2)";
+                }
+            }
+
+            return null;
         }
     }
 }
