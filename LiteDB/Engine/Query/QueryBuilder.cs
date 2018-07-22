@@ -169,7 +169,17 @@ namespace LiteDB.Engine
         /// <summary>
         /// Transform your output document using this select expression.
         /// </summary>
-        public QueryBuilder Select(BsonExpression select, bool aggregate = false)
+        public QueryBuilder Select(BsonExpression select) => this.Select(select, false);
+
+        /// <summary>
+        /// Transform your output document using this select expression and aggregate all document into a single output
+        /// </summary>
+        public QueryBuilder SelectAll(BsonExpression select) => this.Select(select, true);
+
+        /// <summary>
+        /// Transform your output document using this select expression.
+        /// </summary>
+        internal QueryBuilder Select(BsonExpression select, bool all = false)
         {
             if (select == null) throw new ArgumentNullException(nameof(select));
             if (_select != null) throw new InvalidOperationException("SELECT already defined");
@@ -180,7 +190,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                _select = new Select(select, aggregate);
+                _select = new Select(select, all);
             }
 
             return this;

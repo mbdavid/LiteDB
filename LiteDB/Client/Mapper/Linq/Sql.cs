@@ -31,12 +31,12 @@ namespace LiteDB
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
 
-        public static decimal Sum(decimal values)
+        public static T Sum<T>(T values)
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
 
-        public static decimal Avg(decimal values)
+        public static T Avg<T>(T values)
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }

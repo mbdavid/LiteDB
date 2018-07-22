@@ -23,11 +23,11 @@ namespace LiteDB.Engine
         private BsonDataReader ParseSelect(bool explainPlan)
         {
             var token = _tokenizer.LookAhead();
-            var aggregate = false;
+            var all = false;
 
             if (token.Is("ALL"))
             {
-                aggregate = true;
+                all = true;
                 _tokenizer.ReadToken();
             }
 
@@ -75,7 +75,7 @@ namespace LiteDB.Engine
             }
 
             // apply SELECT
-            query = query.Select(selectExpr, aggregate);
+            query = query.Select(selectExpr, all);
 
             var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -211,7 +211,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                return query.ExecuteReader(explainPlan);
+                return query.ExecuteQuery(explainPlan);
             }
         }
 

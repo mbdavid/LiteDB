@@ -161,7 +161,7 @@ namespace LiteDB.Engine
                 doc["select"] = new BsonDocument
                 {
                     ["expr"] = this.Select.Expression.Source,
-                    ["aggregate"] = this.Select.Aggregate
+                    ["all"] = this.Select.All
                 };
             }
 

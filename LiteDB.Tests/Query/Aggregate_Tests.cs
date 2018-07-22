@@ -79,12 +79,12 @@ namespace LiteDB.Tests.Query
             // sum
             Assert.AreEqual(
                 person.Sum(x => x["age"].AsInt32),
-                db.Aggregate("person", "SUM(age)").AsInt32);
+                db.Query("person").SelectAll("SUM(age)").ExecuteScalar().AsInt32);
 
             // with filter
             Assert.AreEqual(
                 person.Where(x => x["active"].AsBoolean).Sum(x => x["age"].AsInt32),
-                db.Aggregate("person", "SUM(age)", "active = true").AsInt32);
+                db.Query("person").Where("active = true").SelectAll("SUM(age)").ExecuteScalar().AsInt32);
         }
 
         [TestMethod]

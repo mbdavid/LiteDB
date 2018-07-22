@@ -189,6 +189,18 @@ namespace LiteDB
             return new LiteQueryable<K>(_query, _mapper);
         }
 
+        public LiteQueryable<T> SelectAll(BsonExpression select)
+        {
+            _query.Select(select, true);
+            return this;
+        }
+
+        public LiteQueryable<K> SelectAll<K>(Expression<Func<T, K>> predicate)
+        {
+            _query.Select(_mapper.GetExpression(predicate), true);
+            return new LiteQueryable<K>(_query, _mapper);
+        }
+
         #endregion
 
         #region GroupBy/Having
@@ -223,9 +235,27 @@ namespace LiteDB
         /// <summary>
         /// Execute query and returns data reader
         /// </summary>
-        public BsonDataReader ExecuteReader(bool explainPlain = false)
+        public BsonDataReader ExecuteReader()
         {
-            return _query.ExecuteReader(explainPlain);
+            return _query.ExecuteReader();
+        }
+
+        /// <summary>
+        /// Execute query and returns data reader
+        /// </summary>
+        public T ExecuteScalar()
+        {
+            var value = _query.ExecuteScalar();
+
+            return (T)_mapper.Deserialize(typeof(T), value);
+        }
+
+        /// <summary>
+        /// Execute explain plan over query to check how engine will execute query
+        /// </summary>
+        public BsonDocument ExecuteExplainPlan()
+        {
+            return _query.ExecuteExplainPlan();
         }
 
         /// <summary>
@@ -310,20 +340,6 @@ namespace LiteDB
         public bool Exists()
         {
             return _query.Exists();
-        }
-
-        #endregion
-
-        #region Execute Aggregate
-
-        public BsonValue Aggregate(BsonExpression select)
-        {
-            return _query.Aggregate(select);
-        }
-
-        public BsonValue Aggregate(Expression<Func<T, bool>> predicate)
-        {
-            return _query.Aggregate(_mapper.GetExpression(predicate));
         }
 
         #endregion

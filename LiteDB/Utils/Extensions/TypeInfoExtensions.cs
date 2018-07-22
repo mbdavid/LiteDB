@@ -3,11 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LiteDB
 {
     internal static class TypeInfoExtensions
     {
+        public static bool IsAnonymousType(this Type type)
+        {
+            var hasCompilerGeneratedAttribute = type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Count() > 0;
+            var nameContainsAnonymousType = type.FullName.Contains("AnonymousType");
+            var isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
+
+            return isAnonymousType;
+        }
+
 #if HAVE_TYPE_INFO
         public static Type[] GetGenericArguments(this TypeInfo type)
         {

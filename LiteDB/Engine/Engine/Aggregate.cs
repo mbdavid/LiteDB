@@ -118,24 +118,5 @@ namespace LiteDB.Engine
                 .Select("_id")
                 .Exists();
         }
-
-        /// <summary>
-        /// Apply aggregation expression over collection. eg: db.Aggregate("col", "SUM(total)")
-        /// </summary>
-        public BsonValue Aggregate(string collection, BsonExpression select)
-        {
-            return this.Query(collection)
-                .Aggregate(select);
-        }
-
-        /// <summary>
-        /// Apply aggregation expression over collection. eg: db.Aggregate("col", "SUM(total)", "_id > 10")
-        /// </summary>
-        public BsonValue Aggregate(string collection, BsonExpression select, BsonExpression query)
-        {
-            return this.Query(collection)
-                .Where(query)
-                .Aggregate(select);
-        }
     }
 }

@@ -52,7 +52,7 @@ namespace LiteDB.Engine
             }
 
             // if is an aggregate query, run select transform over all resultset - will return a single value
-            if (query.Select?.Aggregate ?? false)
+            if (query.Select?.All ?? false)
             {
                 return query.Select.Expression.Execute(source, true);
             }

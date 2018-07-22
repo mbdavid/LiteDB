@@ -12,15 +12,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Find for documents in a collection using Query definition
         /// </summary>
-        public BsonDataReader ExecuteReader()
-        {
-            return this.ExecuteReader(false);
-        }
-
-        /// <summary>
-        /// Find for documents in a collection using Query definition
-        /// </summary>
-        public BsonDataReader ExecuteReader(bool explainPlan)
+        internal BsonDataReader ExecuteQuery(bool explainPlan)
         {
             var transaction = _engine.GetTransaction(true, out var isNew);
 
@@ -126,11 +118,40 @@ namespace LiteDB.Engine
         #region Execute Shortcut (First/Single/ToList/...)
 
         /// <summary>
+        /// Find for documents in a collection using Query definition
+        /// </summary>
+        public BsonDataReader ExecuteReader()
+        {
+            return this.ExecuteQuery(false);
+        }
+
+        /// <summary>
+        /// Execute query and return single value 
+        /// </summary>
+        public BsonValue ExecuteScalar()
+        {
+            using (var reader = this.ExecuteQuery(false))
+            {
+                return reader.Current;
+            }
+        }
+
+        /// <summary>
+        /// Execute explain plan over query to check how engine will execute query
+        /// </summary>
+        public BsonDocument ExecuteExplainPlan()
+        {
+            using (var reader = this.ExecuteQuery(true))
+            {
+                return reader.Current.AsDocument;
+            }
+        }
+        /// <summary>
         /// Execute query and return all documents as values
         /// </summary>
         public IEnumerable<BsonValue> ToValues()
         {
-            using (var reader = this.ExecuteReader())
+            using (var reader = this.ExecuteQuery(false))
             {
                 while (reader.Read())
                 {
@@ -203,16 +224,6 @@ namespace LiteDB.Engine
         public BsonDocument FirstOrDefault()
         {
             return this.ToEnumerable().FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Execute query running SELECT expression over all resultset. Must return exactly 1 value (BsonNull if not result)
-        /// </summary>
-        public BsonValue Aggregate(BsonExpression select)
-        {
-            this.Select(select, true);
-
-            return this.ToValues().First();
         }
 
         /// <summary>
