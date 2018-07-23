@@ -26,7 +26,7 @@ namespace LiteDB
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
 
-        public static T Count<T>(T values)
+        public static int Count<T>(T values)
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
@@ -60,6 +60,5 @@ namespace LiteDB
         {
             throw new NotImplementedException("This method are used only for LINQ expression converter into BsonExpression");
         }
-
     }
 }

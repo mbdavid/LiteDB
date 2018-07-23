@@ -173,6 +173,16 @@ namespace LiteDB
             return this.OrderBy(_mapper.GetExpression(predicate), order);
         }
 
+        /// <summary>
+        /// Sort resultset based on query expression and order. Support only 1 single order by expression
+        /// </summary>
+        public LiteQueryable<T> OrderByDescending(BsonExpression query) => this.OrderBy(query, Query.Descending);
+
+        /// <summary>
+        /// Sort resultset based on query expression and order. Support only 1 single order by expression
+        /// </summary>
+        public LiteQueryable<T> OrderByDescending<K>(Expression<Func<T, K>> predicate) => this.OrderBy(predicate, Query.Descending);
+
         #endregion
 
         #region Select

@@ -51,10 +51,12 @@ namespace LiteDB.Tests.Database
                 // has phone starts wtih 555
                 var phones = users.Query()
                     .Where(x => x.Phones.Items().StartsWith("555"))
-                    .OrderBy(x => x.Id, -1)
+                    .OrderByDescending(x => x.Id)
+                    .Select(x => new { FirstName = x.Name, PhoneCount = Sql.Count(x.Phones.Items()) })
                     .ToArray();
 
-
+                Assert.AreEqual("Marco", phones[0].FirstName);
+                Assert.AreEqual(2, phones[0].PhoneCount);
 
             }
         }

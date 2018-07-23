@@ -117,6 +117,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Add order by on your result. OrderBy paramter can be an expression
+        /// </summary>
+        public QueryBuilder OrderByDescending(BsonExpression orderBy) => this.OrderBy(orderBy, Query.Descending);
+ 
+        /// <summary>
         /// Define GroupBy expression
         /// </summary>
         public QueryBuilder GroupBy(BsonExpression groupBy, int order = Query.Ascending)
