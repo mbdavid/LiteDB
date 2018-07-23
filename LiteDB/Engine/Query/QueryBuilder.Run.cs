@@ -137,9 +137,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Execute explain plan over query to check how engine will execute query
+        /// Execute explain plan over current query definition to see how engine will execute query
         /// </summary>
-        public BsonDocument ExecuteExplainPlan()
+        public BsonDocument ExplainPlan()
         {
             using (var reader = this.ExecuteQuery(true))
             {
