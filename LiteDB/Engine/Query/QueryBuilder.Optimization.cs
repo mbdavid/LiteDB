@@ -144,8 +144,8 @@ namespace LiteDB.Engine
             // otherwise, check for lowest index cost
             IndexCost lowest = null;
 
-            // test all possible condition in where (must be conditional)
-            foreach (var expr in _where.Where(x => x.IsConditional))
+            // test all possible predicates in where
+            foreach (var expr in _where.Where(x => x.IsPredicate))
             {
                 // get index that match with expression left/right side 
                 var index = indexes

@@ -140,14 +140,14 @@ namespace LiteDB
             return new LiteException(COLLECTION_NOT_FOUND, "Collection not found: '{0}'", key);
         }
 
-        internal static LiteException InvalidExpressionType(BsonExpression path, BsonExpressionType type)
+        internal static LiteException InvalidExpressionType(BsonExpression expr, BsonExpressionType type)
         {
-            return new LiteException(INVALID_EXPRESSION_TYPE, "Expression '{0}' must be a {1} type.", path.Source, type);
+            return new LiteException(INVALID_EXPRESSION_TYPE, "Expression '{0}' must be a {1} type.", expr.Source, type);
         }
 
-        internal static LiteException InvalidExpressionTypeConditional(BsonExpression path)
+        internal static LiteException InvalidExpressionTypePredicate(BsonExpression expr)
         {
-            return new LiteException(INVALID_EXPRESSION_TYPE, "Expression '{0}' are not supported as conditional clause.", path.Source);
+            return new LiteException(INVALID_EXPRESSION_TYPE, "Expression '{0}' are not supported as predicate expression.", expr.Source);
         }
 
         internal static LiteException CollectionAlreadyExist(string key)

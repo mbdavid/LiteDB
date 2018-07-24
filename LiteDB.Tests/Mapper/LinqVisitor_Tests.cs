@@ -96,15 +96,15 @@ namespace LiteDB.Tests.Mapper
 
 
         [TestMethod]
-        public void Linq_Conditionals()
+        public void Linq_Predicate()
         {
-            // conditionals
+            // binary expressions
             Test(x => x.Salary > 50, "Salary > @p0", 50);
             Test(x => x.Salary != 50, "Salary != @p0", 50);
             Test(x => x.Salary == x.Id, "Salary = _id");
             Test(x => x.Salary > 50 && x.Name == "John", "Salary > @p0 AND Name = @p1", 50, "John");
 
-            // unary
+            // unary expressions
             Test(x => x.Active == true, "Active = @p0", true);
             Test(x => x.Active && true, "Active AND @p0", true);
             Test(x => !x.Active, "(Active) = false");

@@ -105,7 +105,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Conditional
+        #region Predicates
 
         /// <summary>
         /// Test if left and right are same value. Returns true or false. Support multiples values

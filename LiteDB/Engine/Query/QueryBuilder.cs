@@ -45,12 +45,12 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Add new WHERE statement in your query. Can be executed with an index or via full scan
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
         public QueryBuilder Where(BsonExpression predicate)
         {
             // add expression in where list breaking AND statments
-            if (predicate.IsConditional || predicate.Type == BsonExpressionType.Or)
+            if (predicate.IsPredicate || predicate.Type == BsonExpressionType.Or)
             {
                 _where.Add(predicate);
             }
@@ -67,14 +67,14 @@ namespace LiteDB.Engine
             }
             else
             {
-                throw LiteException.InvalidExpressionTypeConditional(predicate);
+                throw LiteException.InvalidExpressionTypePredicate(predicate);
             }
 
             return this;
         }
 
         /// <summary>
-        /// Add new WHERE statement in your query. Can be executed with an index or via full scan
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
         public QueryBuilder Where(string predicate, params BsonValue[] args)
         {
@@ -82,7 +82,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Add new WHERE statement in your query. Can be executed with an index or via full scan
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
         public QueryBuilder Where(string predicate, BsonDocument parameters)
         {
@@ -90,7 +90,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Load cross reference documents from path expression (DbRef reference). 
+        /// Load cross reference documents from path expression (DbRef reference)
         /// </summary>
         public QueryBuilder Include(BsonExpression path)
         {
@@ -104,32 +104,32 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Add order by on your result. OrderBy paramter can be an expression
+        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
         /// </summary>
-        public QueryBuilder OrderBy(BsonExpression orderBy, int order = Query.Ascending)
+        public QueryBuilder OrderBy(BsonExpression keySelector, int order = Query.Ascending)
         {
-            if (orderBy == null) throw new ArgumentNullException(nameof(orderBy));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             if (_orderBy != null) throw new InvalidOperationException("ORDER BY already defined");
 
-            _orderBy = new OrderBy(orderBy, order);
+            _orderBy = new OrderBy(keySelector, order);
 
             return this;
         }
 
         /// <summary>
-        /// Add order by on your result. OrderBy paramter can be an expression
+        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
         /// </summary>
-        public QueryBuilder OrderByDescending(BsonExpression orderBy) => this.OrderBy(orderBy, Query.Descending);
- 
+        public QueryBuilder OrderByDescending(BsonExpression keySelector) => this.OrderBy(keySelector, Query.Descending);
+
         /// <summary>
-        /// Define GroupBy expression
+        /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public QueryBuilder GroupBy(BsonExpression groupBy, int order = Query.Ascending)
+        public QueryBuilder GroupBy(BsonExpression keySelector, int order = Query.Ascending)
         {
-            if (groupBy == null) throw new ArgumentNullException(nameof(groupBy));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             if (_groupBy != null) throw new InvalidOperationException("GROUP BY already defined");
 
-            _groupBy = new GroupBy(groupBy, order);
+            _groupBy = new GroupBy(keySelector, order);
 
             _groupBy.Select = _select?.Expression;
             _select = null;
@@ -138,21 +138,21 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Define Having filter expression (need GroupBy definition)
+        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
         /// </summary>
-        public QueryBuilder Having(BsonExpression filter)
+        public QueryBuilder Having(BsonExpression predicate)
         {
-            if (filter == null) throw new ArgumentNullException(nameof(filter));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (_groupBy == null) throw new InvalidOperationException("HAVING need GROUP BY expression");
             if (_groupBy.Having != null) throw new InvalidOperationException("HAVING already defined");
 
-            _groupBy.Having = filter;
+            _groupBy.Having = predicate;
 
             return this;
         }
 
         /// <summary>
-        /// Limit your resultset
+        /// Return a specified number of contiguous documents from start of resultset
         /// </summary>
         public QueryBuilder Limit(int limit)
         {
@@ -162,7 +162,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Skip/offset your resultset
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents
         /// </summary>
         public QueryBuilder Offset(int offset)
         {
@@ -172,37 +172,39 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Transform your output document using this select expression.
+        /// Project each document of resultset into a new document/value based on selector expression
         /// </summary>
-        public QueryBuilder Select(BsonExpression select) => this.Select(select, false);
+        public QueryBuilder Select(BsonExpression selector) => this.Select(selector, false);
 
         /// <summary>
-        /// Transform your output document using this select expression and aggregate all document into a single output
+        /// Project each document of resultset into a new document/value based on selector expression
+        /// Apply expression function over all results and will output a single result
         /// </summary>
-        public QueryBuilder SelectAll(BsonExpression select) => this.Select(select, true);
+        public QueryBuilder SelectAll(BsonExpression selector) => this.Select(selector, true);
 
         /// <summary>
-        /// Transform your output document using this select expression.
+        /// Project each document of resultset into a new document/value based on selector expression. 
+        /// If all = true: apply expression function over all results and will output a single result
         /// </summary>
-        internal QueryBuilder Select(BsonExpression select, bool all = false)
+        internal QueryBuilder Select(BsonExpression selector, bool all = false)
         {
-            if (select == null) throw new ArgumentNullException(nameof(select));
+            if (selector == null) throw new ArgumentNullException(nameof(selector));
             if (_select != null) throw new InvalidOperationException("SELECT already defined");
 
             if (_groupBy != null)
             {
-                _groupBy.Select = select;
+                _groupBy.Select = selector;
             }
             else
             {
-                _select = new Select(select, all);
+                _select = new Select(selector, all);
             }
 
             return this;
         }
 
         /// <summary>
-        /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends.
+        /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends
         /// </summary>
         public QueryBuilder ForUpdate()
         {
@@ -212,7 +214,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Define your own index conditional expression to run over collection. 
+        /// Define your own index predicate expression to run over collection. 
         /// If not defined (default), optimization will be auto select best option or create a new one.
         /// Use this option only if you want define index and do not use optimize function.
         /// </summary>

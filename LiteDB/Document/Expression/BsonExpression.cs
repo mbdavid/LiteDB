@@ -42,12 +42,12 @@ namespace LiteDB
         public BsonDocument Parameters { get; private set; } = new BsonDocument();
 
         /// <summary>
-        /// In conditional/or/and expressions, indicate Left side
+        /// In predicate expressions, indicate Left side
         /// </summary>
         internal BsonExpression Left { get; set; }
 
         /// <summary>
-        /// In conditional/or/and expressions, indicate Rigth side
+        /// In predicate expressions, indicate Rigth side
         /// </summary>
         internal BsonExpression Right { get; set; }
 
@@ -62,9 +62,9 @@ namespace LiteDB
         public HashSet<string> Fields { get; set; }
 
         /// <summary>
-        /// Indicate that expression are binary conditional expression (=, >, ...)
+        /// Indicate that expression evaluate to TRUE or FALSE (=, >, ...). OR and AND are not considered Predicate expressions
         /// </summary>
-        internal bool IsConditional =>
+        internal bool IsPredicate =>
             this.Type == BsonExpressionType.Equal ||
             this.Type == BsonExpressionType.Like ||
             this.Type == BsonExpressionType.Between ||

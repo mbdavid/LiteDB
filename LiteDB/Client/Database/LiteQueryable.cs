@@ -24,16 +24,16 @@ namespace LiteDB
         #region Includes
 
         /// <summary>
-        /// Include DBRef field in result query execution
+        /// Load cross reference documents from path expression (DbRef reference)
         /// </summary>
-        public LiteQueryable<T> Include<K>(Expression<Func<T, K>> dbref)
+        public LiteQueryable<T> Include<K>(Expression<Func<T, K>> path)
         {
-            _query.Include(_mapper.GetExpression(dbref));
+            _query.Include(_mapper.GetExpression(path));
             return this;
         }
 
         /// <summary>
-        /// Include DBRef path in result query execution
+        /// Load cross reference documents from path expression (DbRef reference)
         /// </summary>
         public LiteQueryable<T> Include(BsonExpression path)
         {
@@ -42,7 +42,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Include DBRef path in result query execution
+        /// Load cross reference documents from path expression (DbRef reference)
         /// </summary>
         public LiteQueryable<T> Include(List<BsonExpression> paths)
         {
@@ -58,32 +58,34 @@ namespace LiteDB
         #region Where
 
         /// <summary>
-        /// Add new Where expression to final query. Can contains multiple clausules. 
-        /// Where("Name LIKE 'John%' AND Age > 20")
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
-        public LiteQueryable<T> Where(BsonExpression query)
+        public LiteQueryable<T> Where(BsonExpression predicate)
         {
-            _query.Where(query);
+            _query.Where(predicate);
             return this;
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
-        public LiteQueryable<T> Where(BsonExpression query, BsonDocument parameters)
+        public LiteQueryable<T> Where(BsonExpression predicate, BsonDocument parameters)
         {
-            _query.Where(query, parameters);
+            _query.Where(predicate, parameters);
             return this;
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
-        public LiteQueryable<T> Where(BsonExpression query, params BsonValue[] args)
+        public LiteQueryable<T> Where(BsonExpression predicate, params BsonValue[] args)
         {
-            _query.Where(query, args);
+            _query.Where(predicate, args);
             return this;
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression
         /// </summary>
         public LiteQueryable<T> Where(Expression<Func<T, bool>> predicate)
         {
@@ -91,27 +93,31 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression. Will apply filter only if condition are true
         /// </summary>
-        public LiteQueryable<T> Where(bool condition, BsonExpression query)
+        public LiteQueryable<T> Where(bool condition, BsonExpression predicate)
         {
-            return condition ? this.Where(query) : this;
+            return condition ? this.Where(predicate) : this;
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression. Will apply filter only if condition are true
         /// </summary>
-        public LiteQueryable<T> Where(bool condition, BsonExpression query, BsonDocument parameters)
+        public LiteQueryable<T> Where(bool condition, BsonExpression predicate, BsonDocument parameters)
         {
-            return condition ? this.Where(query, parameters) : this;
+            return condition ? this.Where(predicate, parameters) : this;
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression. Will apply filter only if condition are true
         /// </summary>
-        public LiteQueryable<T> Where(bool condition, BsonExpression query, params BsonValue[] args)
+        public LiteQueryable<T> Where(bool condition, BsonExpression predicate, params BsonValue[] args)
         {
-            return condition ? this.Where(query, args) : this;
+            return condition ? this.Where(predicate, args) : this;
         }
 
         /// <summary>
+        /// Filters a sequence of documents based on a predicate expression. Will apply filter only if condition are true
         /// </summary>
         public LiteQueryable<T> Where(bool condition, Expression<Func<T, bool>> predicate)
         {
@@ -122,6 +128,9 @@ namespace LiteDB
 
         #region Offset/Limit/ForUpdate
 
+        /// <summary>
+        /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends
+        /// </summary>
         public LiteQueryable<T> ForUpdate()
         {
             _query.ForUpdate();
@@ -129,7 +138,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Skip N results before starts returing entities
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents
         /// </summary>
         public LiteQueryable<T> Offset(int offset)
         {
@@ -138,13 +147,13 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Skip N results before starts returing entities
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents
         /// </summary>
         [Obsolete("Use Offset() method")]
         public LiteQueryable<T> Skip(int offset) => this.Offset(offset);
 
         /// <summary>
-        /// Limit (Take) results 
+        /// Return a specified number of contiguous documents from start of resultset
         /// </summary>
         public LiteQueryable<T> Limit(int limit)
         {
@@ -157,57 +166,71 @@ namespace LiteDB
         #region OrderBy
 
         /// <summary>
-        /// Sort resultset based on query expression and order. Support only 1 single order by expression
+        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
         /// </summary>
-        public LiteQueryable<T> OrderBy(BsonExpression query, int order = Query.Ascending)
+        public LiteQueryable<T> OrderBy(BsonExpression keySelector, int order = Query.Ascending)
         {
-            _query.OrderBy(query, order);
+            _query.OrderBy(keySelector, order);
             return this;
         }
 
         /// <summary>
-        /// Sort resultset based on query expression and order. Support only 1 single order by expression
+        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
         /// </summary>
-        public LiteQueryable<T> OrderBy<K>(Expression<Func<T, K>> predicate, int order = Query.Ascending)
+        public LiteQueryable<T> OrderBy<K>(Expression<Func<T, K>> keySelector, int order = Query.Ascending)
         {
-            return this.OrderBy(_mapper.GetExpression(predicate), order);
+            return this.OrderBy(_mapper.GetExpression(keySelector), order);
         }
 
         /// <summary>
-        /// Sort resultset based on query expression and order. Support only 1 single order by expression
+        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
         /// </summary>
-        public LiteQueryable<T> OrderByDescending(BsonExpression query) => this.OrderBy(query, Query.Descending);
+        public LiteQueryable<T> OrderByDescending(BsonExpression keySelector) => this.OrderBy(keySelector, Query.Descending);
 
         /// <summary>
-        /// Sort resultset based on query expression and order. Support only 1 single order by expression
+        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
         /// </summary>
-        public LiteQueryable<T> OrderByDescending<K>(Expression<Func<T, K>> predicate) => this.OrderBy(predicate, Query.Descending);
+        public LiteQueryable<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector) => this.OrderBy(keySelector, Query.Descending);
 
         #endregion
 
         #region Select
 
-        public LiteQueryable<T> Select(BsonExpression select)
+        /// <summary>
+        /// Project each document of resultset into a new document/value based on selector expression
+        /// </summary>
+        public LiteQueryable<T> Select(BsonExpression selector)
         {
-            _query.Select(select);
+            _query.Select(selector);
             return this;
         }
 
-        public LiteQueryable<K> Select<K>(Expression<Func<T, K>> predicate)
+        /// <summary>
+        /// Project each document of resultset into a new document/value based on selector expression
+        /// </summary>
+        public LiteQueryable<K> Select<K>(Expression<Func<T, K>> selector)
         {
-            _query.Select(_mapper.GetExpression(predicate));
+            _query.Select(_mapper.GetExpression(selector));
             return new LiteQueryable<K>(_query, _mapper);
         }
 
-        public LiteQueryable<T> SelectAll(BsonExpression select)
+        /// <summary>
+        /// Project each document of resultset into a new document/value based on selector expression
+        /// Apply expression function over all results and will output a single result
+        /// </summary>
+        public LiteQueryable<T> SelectAll(BsonExpression selector)
         {
-            _query.Select(select, true);
+            _query.Select(selector, true);
             return this;
         }
 
-        public LiteQueryable<K> SelectAll<K>(Expression<Func<T, K>> predicate)
+        /// <summary>
+        /// Project each document of resultset into a new document/value based on selector expression
+        /// Apply expression function over all results and will output a single result
+        /// </summary>
+        public LiteQueryable<K> SelectAll<K>(Expression<Func<T, K>> selector)
         {
-            _query.Select(_mapper.GetExpression(predicate), true);
+            _query.Select(_mapper.GetExpression(selector), true);
             return new LiteQueryable<K>(_query, _mapper);
         }
 
@@ -215,35 +238,48 @@ namespace LiteDB
 
         #region GroupBy/Having
 
-        public LiteQueryable<T> GroupBy(BsonExpression groupBy, int order = Query.Ascending)
+        /// <summary>
+        /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
+        /// </summary>
+        public LiteQueryable<T> GroupBy(BsonExpression keySelector, int order = Query.Ascending)
         {
-            _query.GroupBy(groupBy, order);
+            _query.GroupBy(keySelector, order);
             return this;
         }
 
-        public LiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> predicate, int order = Query.Ascending)
+        /// <summary>
+        /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
+        /// </summary>
+        public LiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> keySelector, int order = Query.Ascending)
         {
-            _query.GroupBy(_mapper.GetExpression(predicate), order);
+            _query.GroupBy(_mapper.GetExpression(keySelector), order);
             return this;
         }
 
-        public LiteQueryable<T> Having(BsonExpression filter)
+        /// <summary>
+        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
+        /// </summary>
+        public LiteQueryable<T> Having(BsonExpression predicate)
         {
-            _query.Having(filter);
+            _query.Having(predicate);
             return this;
         }
 
-        public LiteQueryable<T> Having<K>(Expression<Func<T, K>> predicate)
+        /// <summary>
+        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
+        /// </summary>
+        public LiteQueryable<T> Having(Expression<Func<T, bool>> predicate)
         {
             _query.Having(_mapper.GetExpression(predicate));
             return this;
         }
+
         #endregion
 
         #region Execute Result
 
         /// <summary>
-        /// Execute query and returns data reader
+        /// Execute query and returns resultset as generic BsonDataReader
         /// </summary>
         public BsonDataReader ExecuteReader()
         {
@@ -251,7 +287,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute query and returns data reader
+        /// Execute query and return single value
         /// </summary>
         public T ExecuteScalar()
         {
@@ -269,7 +305,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute query returning IEnumerable results.
+        /// Execute query returning IEnumerable results
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
@@ -304,21 +340,33 @@ namespace LiteDB
 
         #region Execute Single/First
 
+        /// <summary>
+        /// Returns the only document of resultset, and throw an exception if there not exactly one document in the sequence
+        /// </summary>
         public T Single()
         {
             return this.ToEnumerable().Single();
         }
 
+        /// <summary>
+        /// Returns the only document of resultset, or null if resultset are empty; this method throw an exception if there not exactly one document in the sequence
+        /// </summary>
         public T SingleOrDefault()
         {
             return this.ToEnumerable().SingleOrDefault();
         }
 
+        /// <summary>
+        /// Returns first document of resultset
+        /// </summary>
         public T First()
         {
             return this.ToEnumerable().First();
         }
 
+        /// <summary>
+        /// Returns first document of resultset or null if resultset are empty
+        /// </summary>
         public T FirstOrDefault()
         {
             return this.ToEnumerable().FirstOrDefault();

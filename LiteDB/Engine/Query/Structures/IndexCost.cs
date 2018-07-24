@@ -54,7 +54,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Create index based on expression conditional
+        /// Create index based on expression predicate
         /// </summary>
         private Index CreateIndex(BsonExpressionType type, string name, BsonValue value)
         {
