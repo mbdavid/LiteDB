@@ -28,20 +28,20 @@ namespace LiteDB
                 // LENGTH() for Array/String/...
                 case "Count": return "LENGTH(@0)";
 
-                // converter methods has no effect here
-                case "ToList": return "";
-                case "ToArray": return "";
-
-                // not supported (recommend use Index() extension method)
+                // not supported (recommend use Sql extension method)
                 case "Select":
                 case "Any":
                 case "Where": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Items()` extension method to access sub documents fields. Eg: `x => x.Phones.Items(z => z.Type == 'Mobile').Number`");
 
-                // not supported (recommend Aggregate)
+                // not supported (recommend use Sql extension method)
                 case "Sum":
                 case "Average":
                 case "Max":
                 case "Min": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.Sum(x.Details.Items().Price)`");
+
+                // not supported (recommend use Sql extension method)
+                case "ToList": 
+                case "ToArray": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.ToArray(x.Details.Items().Price)`");
             };
 
             throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");

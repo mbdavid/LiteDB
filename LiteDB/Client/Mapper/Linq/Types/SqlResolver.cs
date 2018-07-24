@@ -27,6 +27,13 @@ namespace LiteDB
                 case "Max": return "MAX(@0)";
                 case "First": return "FIRST(@0)";
                 case "Last": return "LAST(@0)";
+
+                // convert methods
+                case "ToArray":
+                case "ToList": return "TO_ARRAY(@0)";
+
+                // date extension
+                case "DateDiff": return "DATEDIFF(@0, @1, @2)";
             }
 
             return null;

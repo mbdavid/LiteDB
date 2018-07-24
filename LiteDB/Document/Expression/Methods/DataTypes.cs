@@ -82,7 +82,7 @@ namespace LiteDB
         // ==> "null" are a keyword
 
         /// <summary>
-        /// Convert values into INT32. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into INT32. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_INT32(IEnumerable<BsonValue> values)
         {
@@ -103,7 +103,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into INT64. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into INT64. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_INT64(IEnumerable<BsonValue> values)
         {
@@ -124,7 +124,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into DOUBLE. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into DOUBLE. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_DOUBLE(IEnumerable<BsonValue> values)
         {
@@ -145,7 +145,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into DECIMAL. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into DECIMAL. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_DECIMAL(IEnumerable<BsonValue> values)
         {
@@ -166,7 +166,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into STRING. Support multiple values
+        /// Convert values into STRING
         /// </summary>
         public static IEnumerable<BsonValue> TO_STRING(IEnumerable<BsonValue> values)
         {
@@ -187,7 +187,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return an binary from string (base64) values. Support multiple values
+        /// Return an binary from string (base64) values
         /// </summary>
         public static IEnumerable<BsonValue> TO_BINARY(IEnumerable<BsonValue> values)
         {
@@ -217,7 +217,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into OBJECTID. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into OBJECTID. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_OBJECTID(IEnumerable<BsonValue> values)
         {
@@ -247,7 +247,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into GUID. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into GUID. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_GUID(IEnumerable<BsonValue> values)
         {
@@ -277,7 +277,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return converted value into BOOLEAN value (support multi values)
+        /// Return converted value into BOOLEAN value
         /// </summary>
         public static IEnumerable<BsonValue> TO_BOOLEAN(IEnumerable<BsonValue> values)
         {
@@ -307,7 +307,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into DATETIME. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_DATETIME(IEnumerable<BsonValue> values)
         {
@@ -328,7 +328,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Convert values into DATETIME. Returns empty if not possible to convert. Support multiple values
+        /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> TO_DATETIME_UTC(IEnumerable<BsonValue> values)
         {
@@ -380,7 +380,7 @@ namespace LiteDB
         #region IS_DATETYPE
 
         /// <summary>
-        /// Return true if value is MINVALUE. Support multiple values
+        /// Return true if value is MINVALUE
         /// </summary>
         public static IEnumerable<BsonValue> IS_MINVALUE(IEnumerable<BsonValue> values)
         {
@@ -391,7 +391,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is NULL. Support multiple values
+        /// Return true if value is NULL
         /// </summary>
         public static IEnumerable<BsonValue> IS_NULL(IEnumerable<BsonValue> values)
         {
@@ -402,7 +402,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is INT32. Support multiple values
+        /// Return true if value is INT32
         /// </summary>
         public static IEnumerable<BsonValue> IS_INT32(IEnumerable<BsonValue> values)
         {
@@ -413,7 +413,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is INT64. Support multiple values
+        /// Return true if value is INT64
         /// </summary>
         public static IEnumerable<BsonValue> IS_INT64(IEnumerable<BsonValue> values)
         {
@@ -424,7 +424,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is DOUBLE. Support multiple values
+        /// Return true if value is DOUBLE
         /// </summary>
         public static IEnumerable<BsonValue> IS_DOUBLE(IEnumerable<BsonValue> values)
         {
@@ -436,7 +436,7 @@ namespace LiteDB
 
 
         /// <summary>
-        /// Return true if value is DECIMAL. Support multiple values
+        /// Return true if value is DECIMAL
         /// </summary>
         public static IEnumerable<BsonValue> IS_DECIMAL(IEnumerable<BsonValue> values)
         {
@@ -447,8 +447,8 @@ namespace LiteDB
         }
         
         /// <summary>
-                 /// Return true if value is NUMBER (int, double, decimal). Support multiple values
-                 /// </summary>
+        /// Return true if value is NUMBER (int, double, decimal)
+        /// </summary>
         public static IEnumerable<BsonValue> IS_NUMBER(IEnumerable<BsonValue> values)
         {
             foreach (var value in values)
@@ -458,7 +458,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is STRING. Support multiple values
+        /// Return true if value is STRING
         /// </summary>
         public static IEnumerable<BsonValue> IS_STRING(IEnumerable<BsonValue> values)
         {
@@ -469,7 +469,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is DOCUMENT. Support multiple values
+        /// Return true if value is DOCUMENT
         /// </summary>
         public static IEnumerable<BsonValue> IS_DOCUMENT(IEnumerable<BsonValue> values)
         {
@@ -480,7 +480,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is ARRAY. Support multiple values
+        /// Return true if value is ARRAY
         /// </summary>
         public static IEnumerable<BsonValue> IS_ARRAY(IEnumerable<BsonValue> values)
         {
@@ -491,7 +491,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is BINARY. Support multiple values
+        /// Return true if value is BINARY
         /// </summary>
         public static IEnumerable<BsonValue> IS_BINARY(IEnumerable<BsonValue> values)
         {
@@ -502,7 +502,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is OBJECTID. Support multiple values
+        /// Return true if value is OBJECTID
         /// </summary>
         public static IEnumerable<BsonValue> IS_OBJECTID(IEnumerable<BsonValue> values)
         {
@@ -513,7 +513,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is GUID. Support multiple values
+        /// Return true if value is GUID
         /// </summary>
         public static IEnumerable<BsonValue> IS_GUID(IEnumerable<BsonValue> values)
         {
@@ -524,7 +524,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is BOOLEAN. Support multiple values
+        /// Return true if value is BOOLEAN
         /// </summary>
         public static IEnumerable<BsonValue> IS_BOOLEAN(IEnumerable<BsonValue> values)
         {
@@ -535,7 +535,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is DATETIME. Support multiple values
+        /// Return true if value is DATETIME
         /// </summary>
         public static IEnumerable<BsonValue> IS_DATETIME(IEnumerable<BsonValue> values)
         {
@@ -546,7 +546,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return true if value is DATE (alias to DATETIME). Support multiple values
+        /// Return true if value is DATE (alias to DATETIME)
         /// </summary>
         public static IEnumerable<BsonValue> IS_MAXVALUE(IEnumerable<BsonValue> values)
         {

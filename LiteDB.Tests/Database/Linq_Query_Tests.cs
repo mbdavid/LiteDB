@@ -58,6 +58,12 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual("Marco", phones[0].FirstName);
                 Assert.AreEqual(2, phones[0].PhoneCount);
 
+                // array of int phones
+                var arrp = users.Query()
+                    .Select(x => new { x.Name, Arr = Sql.ToArray(Convert.ToInt32(x.Phones.Items().Substring(0, 3))) })
+                    .ToList();
+
+                Assert.AreEqual(555, arrp[0].Arr[0]);
             }
         }
     }

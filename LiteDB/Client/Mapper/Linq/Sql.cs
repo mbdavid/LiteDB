@@ -29,6 +29,15 @@ namespace LiteDB
 
         public static T Last<T>(T values) => throw new NotSupportedException(MESSAGE);
 
+        public static T[] ToArray<T>(T values) => throw new NotSupportedException(MESSAGE);
+
+        public static List<T> ToList<T>(T values) => throw new NotSupportedException(MESSAGE);
+
+        /// <summary>
+        /// Get difference of 2 dates. Can define type of date internval. Use dateInterval: "y" (or "year"), "M" (or "month"), "d" (or "day"), "h" (or "hour"), "m" (or "minute"), "s" or ("second").
+        /// </summary>
+        public static int DateDiff(string dateInterval, DateTime start, DateTime ends) => throw new NotSupportedException(MESSAGE);
+
         #region SUM
 
         public static Byte Sum(Byte values) => throw new NotSupportedException(MESSAGE);

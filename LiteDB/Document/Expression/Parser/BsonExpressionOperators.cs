@@ -13,7 +13,7 @@ namespace LiteDB
         #region Arithmetic
 
         /// <summary>
-        /// Add two number values. If any side are string, concat left+right as string. Support multiples values
+        /// Add two number values. If any side are string, concat left+right as string
         /// </summary>
         public static IEnumerable<BsonValue> ADD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -40,7 +40,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Minus two number values. Support multiples values
+        /// Minus two number values
         /// </summary>
         public static IEnumerable<BsonValue> MINUS(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -62,7 +62,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Multiply two number values. Support multiples values
+        /// Multiply two number values
         /// </summary>
         public static IEnumerable<BsonValue> MULTIPLY(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -76,7 +76,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Divide two number values. Support multiples values
+        /// Divide two number values
         /// </summary>
         public static IEnumerable<BsonValue> DIVIDE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -90,7 +90,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Mod two number values. Support multiples values
+        /// Mod two number values
         /// </summary>
         public static IEnumerable<BsonValue> MOD(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -108,7 +108,7 @@ namespace LiteDB
         #region Predicates
 
         /// <summary>
-        /// Test if left and right are same value. Returns true or false. Support multiples values
+        /// Test if left and right are same value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> EQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -119,7 +119,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left is "SQL LIKE" with right. Returns true or false. Support multiples values. Works only when left and right are string
+        /// Test if left is "SQL LIKE" with right. Returns true or false. Works only when left and right are string
         /// </summary>
         public static IEnumerable<BsonValue> LIKE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -157,7 +157,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left is greater than right value. Returns true or false. Support multiples values
+        /// Test if left is greater than right value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> GT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -168,7 +168,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left is greater or equals than right value. Returns true or false. Support multiples values
+        /// Test if left is greater or equals than right value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> GTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -179,7 +179,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left is less than right value. Returns true or false. Support multiples values
+        /// Test if left is less than right value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> LT(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -190,7 +190,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left is less or equals than right value. Returns true or false. Support multiples values
+        /// Test if left is less or equals than right value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> LTE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -201,7 +201,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left and right are not same value. Returns true or false. Support multiples values
+        /// Test if left and right are not same value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> NEQ(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -212,7 +212,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test if left are in any value in right side (when right side is an array). If right side is not an array, just implement a simple Equals (=). Returns true or false. Support multiples values
+        /// Test if left are in any value in right side (when right side is an array). If right side is not an array, just implement a simple Equals (=). Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> IN(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -234,7 +234,7 @@ namespace LiteDB
         #region Logic
 
         /// <summary>
-        /// Test left AND right value. Returns true or false. Support multiples values
+        /// Test left AND right value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> AND(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {
@@ -245,7 +245,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Test left OR right value. Returns true or false. Support multiples values
+        /// Test left OR right value. Returns true or false
         /// </summary>
         public static IEnumerable<BsonValue> OR(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
         {

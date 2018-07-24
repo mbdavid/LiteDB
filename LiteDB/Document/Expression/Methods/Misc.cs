@@ -11,7 +11,7 @@ namespace LiteDB
     internal partial class BsonExpressionMethods
     {
         /// <summary>
-        /// Parse a JSON string into a new BsonValue. Support multiple values (string only)
+        /// Parse a JSON string into a new BsonValue
         /// JSON('{a:1}') = {a:1}
         /// </summary>
         public static IEnumerable<BsonValue> JSON(IEnumerable<BsonValue> values)
@@ -83,7 +83,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Conditional IF statment. If condition are true, returns TRUE value, otherwise, FALSE value. Support multiple values (only string)
+        /// Conditional IF statment. If condition are true, returns TRUE value, otherwise, FALSE value
         /// </summary>
         public static IEnumerable<BsonValue> IIF(IEnumerable<BsonValue> condition, IEnumerable<BsonValue> ifTrue, IEnumerable<BsonValue> ifFalse)
         {

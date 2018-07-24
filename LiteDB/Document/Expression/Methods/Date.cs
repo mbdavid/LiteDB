@@ -13,7 +13,7 @@ namespace LiteDB
         #region Year/Month/Day/Hour/Minute/Second
 
         /// <summary>
-        /// Get year from date. Support multiple values
+        /// Get year from date
         /// </summary>
         public static IEnumerable<BsonValue> YEAR(IEnumerable<BsonValue> values)
         {
@@ -24,7 +24,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get month from date. Support multiple values
+        /// Get month from date
         /// </summary>
         public static IEnumerable<BsonValue> MONTH(IEnumerable<BsonValue> values)
         {
@@ -35,7 +35,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get day from date. Support multiple values
+        /// Get day from date
         /// </summary>
         public static IEnumerable<BsonValue> DAY(IEnumerable<BsonValue> values)
         {
@@ -46,7 +46,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get hour from date. Support multiple values
+        /// Get hour from date
         /// </summary>
         public static IEnumerable<BsonValue> HOUR(IEnumerable<BsonValue> values)
         {
@@ -57,7 +57,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get minute from date. Support multiple values
+        /// Get minute from date
         /// </summary>
         public static IEnumerable<BsonValue> MINUTE(IEnumerable<BsonValue> values)
         {
@@ -68,7 +68,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get seconds from date. Support multiple values
+        /// Get seconds from date
         /// </summary>
         public static IEnumerable<BsonValue> SECOND(IEnumerable<BsonValue> values)
         {
@@ -83,11 +83,11 @@ namespace LiteDB
         #region Date Functions
 
         /// <summary>
-        /// Add an interval to date. Use dateParts: "y|year", "M|month", "d|day", "h|hour", "m|minute", "s|second". Support multi values
+        /// Add an interval to date. Use dateInterval: "y" (or "year"), "M" (or "month"), "d" (or "day"), "h" (or "hour"), "m" (or "minute"), "s" or ("second")
         /// </summary>
-        public static IEnumerable<BsonValue> DATEADD(IEnumerable<BsonValue> dateParts, IEnumerable<BsonValue> numbers, IEnumerable<BsonValue> values)
+        public static IEnumerable<BsonValue> DATEADD(IEnumerable<BsonValue> dateInterval, IEnumerable<BsonValue> numbers, IEnumerable<BsonValue> values)
         {
-            foreach (var value in ZipValues(dateParts, numbers, values))
+            foreach (var value in ZipValues(dateInterval, numbers, values))
             {
                 if (!value.First.IsString || !value.Second.IsNumber || !value.Third.IsDateTime) continue;
 
@@ -107,11 +107,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns an interval about 2 dates. Use dateParts: "y|year", "M|month", "d|day", "h|hour", "m|minute", "s|second". Support multi values
+        /// Returns an interval about 2 dates. Use dateInterval: "y|year", "M|month", "d|day", "h|hour", "m|minute", "s|second"
         /// </summary>
-        public static IEnumerable<BsonValue> DATEDIFF(IEnumerable<BsonValue> dateParts, IEnumerable<BsonValue> starts, IEnumerable<BsonValue> ends)
+        public static IEnumerable<BsonValue> DATEDIFF(IEnumerable<BsonValue> dateInterval, IEnumerable<BsonValue> starts, IEnumerable<BsonValue> ends)
         {
-            foreach (var value in ZipValues(dateParts, starts, ends))
+            foreach (var value in ZipValues(dateInterval, starts, ends))
             {
                 if (!value.First.IsString || !value.Second.IsDateTime || !value.Third.IsDateTime) continue;
 

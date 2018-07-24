@@ -11,7 +11,7 @@ namespace LiteDB
     internal partial class BsonExpressionMethods
     {
         /// <summary>
-        /// Return lower case from string value. Support multiple values (only string)
+        /// Return lower case from string value
         /// </summary>
         public static IEnumerable<BsonValue> LOWER(IEnumerable<BsonValue> values)
         {
@@ -22,7 +22,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return UPPER case from string value. Support multiple values (only string)
+        /// Return UPPER case from string value
         /// </summary>
         public static IEnumerable<BsonValue> UPPER(IEnumerable<BsonValue> values)
         {
@@ -33,7 +33,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Apply Left TRIM (start) from string value. Support multiple values (only string)
+        /// Apply Left TRIM (start) from string value
         /// </summary>
         public static IEnumerable<BsonValue> LTRIM(IEnumerable<BsonValue> values)
         {
@@ -44,7 +44,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Apply Right TRIM (end) from string value. Support multiple values (only string)
+        /// Apply Right TRIM (end) from string value
         /// </summary>
         public static IEnumerable<BsonValue> RTRIM(IEnumerable<BsonValue> values)
         {
@@ -55,7 +55,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Apply TRIM from string value. Support multiple values (only string)
+        /// Apply TRIM from string value
         /// </summary>
         public static IEnumerable<BsonValue> TRIM(IEnumerable<BsonValue> values)
         {
@@ -66,7 +66,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Reports the zero-based index of the first occurrence of the specified string in this instance. Support multiple values (only string)
+        /// Reports the zero-based index of the first occurrence of the specified string in this instance
         /// </summary>
         public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search)
         {
@@ -80,7 +80,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Reports the zero-based index of the first occurrence of the specified string in this instance. Support multiple values (only string)
+        /// Reports the zero-based index of the first occurrence of the specified string in this instance
         /// </summary>
         public static IEnumerable<BsonValue> INDEXOF(IEnumerable<BsonValue> values, IEnumerable<BsonValue> search, IEnumerable<BsonValue> startIndex)
         {
@@ -95,7 +95,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns substring from string value using index and length (zero-based). Support multiple values (only string)
+        /// Returns substring from string value using index and length (zero-based)
         /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index)
         {
@@ -109,7 +109,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns substring from string value using index and length (zero-based). Support multiple values (only string)
+        /// Returns substring from string value using index and length (zero-based)
         /// </summary>
         public static IEnumerable<BsonValue> SUBSTRING(IEnumerable<BsonValue> values, IEnumerable<BsonValue> index, IEnumerable<BsonValue> length)
         {
@@ -124,7 +124,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns replaced string changing oldValue with newValue. Support multiple values (only string)
+        /// Returns replaced string changing oldValue with newValue
         /// </summary>
         public static IEnumerable<BsonValue> REPLACE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> oldValues, IEnumerable<BsonValue> newValues)
         {
@@ -139,7 +139,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return value string with left padding. Support multiple values
+        /// Return value string with left padding
         /// </summary>
         public static IEnumerable<BsonValue> LPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
@@ -154,7 +154,7 @@ namespace LiteDB
 
 
         /// <summary>
-        /// Return value string with right padding. Support multiple values
+        /// Return value string with right padding
         /// </summary>
         public static IEnumerable<BsonValue> RPAD(IEnumerable<BsonValue> values, IEnumerable<BsonValue> totalWidth, IEnumerable<BsonValue> paddingChar)
         {
@@ -168,7 +168,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Return format value string using format definition (same as String.Format("{0:~}", values)). Support multiple values (only string)
+        /// Return format value string using format definition (same as String.Format("{0:~}", values)).
         /// </summary>
         public static IEnumerable<BsonValue> FORMAT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> format)
         {

@@ -11,7 +11,7 @@ namespace LiteDB
     internal partial class BsonExpressionMethods
     {
         /// <summary>
-        /// Apply absolute value (ABS) method in all number values. Support multiple values
+        /// Apply absolute value (ABS) method in all number values
         /// </summary>
         public static IEnumerable<BsonValue> ABS(IEnumerable<BsonValue> values)
         {
@@ -28,7 +28,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Round number method in all number values. Support multiple values
+        /// Round number method in all number values
         /// </summary>
         public static IEnumerable<BsonValue> ROUND(IEnumerable<BsonValue> values, IEnumerable<BsonValue> digits)
         {
@@ -48,7 +48,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Implement POWER (x and y). Support multiple values
+        /// Implement POWER (x and y)
         /// </summary>
         public static IEnumerable<BsonValue> POW(IEnumerable<BsonValue> x, IEnumerable<BsonValue> y)
         {

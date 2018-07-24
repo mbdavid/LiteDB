@@ -55,6 +55,7 @@ namespace LiteDB.Tests.Database
 
                 Assert.AreEqual(128000 + 75000, total);
 
+
                 var group = users.Query()
                     .GroupBy(x => x.Active)
                     .Select(x => new { x.Active, Count = Sql.Count(x.Id), Salary = Sql.Sum(x.Salary) })
