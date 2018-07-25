@@ -156,9 +156,9 @@ namespace LiteDB
         /// </summary>
         public BsonExpression GetExpression<T, K>(Expression<Func<T, K>> predicate)
         {
-            var v = new QueryVisitor(this);
+            var visitor = new LinqExpressionVisitor(this);
 
-            return v.Resolve(predicate);
+            return visitor.Resolve(predicate);
         }
 
         #endregion

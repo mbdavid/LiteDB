@@ -5,10 +5,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
-    internal class QueryVisitor : ExpressionVisitor
+    internal class LinqExpressionVisitor : ExpressionVisitor
     {
         private static Dictionary<Type, ITypeResolver> _resolver = new Dictionary<Type, ITypeResolver>
         {
@@ -29,12 +30,13 @@ namespace LiteDB
         private readonly BsonMapper _mapper;
         private readonly BsonDocument _parameters = new BsonDocument();
 
-        private StringBuilder _builder = new StringBuilder();
+        private string rootParameter = null;
         private int _paramIndex = 0;
 
-        private string rootParameter = null;
+        private StringBuilder _builder = new StringBuilder();
+        private Stack<Expression> _nodes = new Stack<Expression>();
 
-        public QueryVisitor(BsonMapper mapper)
+        public LinqExpressionVisitor(BsonMapper mapper)
         {
             _mapper = mapper;
         }
@@ -42,6 +44,8 @@ namespace LiteDB
         public BsonExpression Resolve(Expression expr)
         {
             this.Visit(expr);
+
+            DEBUG(_nodes.Count > 0, "node stack must be empty when finish expression resolve");
 
             var expression = _builder.ToString();
 
@@ -69,10 +73,25 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Visit :: x => `x`.Customer.Name
+        /// </summary>
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            if (rootParameter == null) rootParameter = node.Name;
+
+            _builder.Append(node.Name == rootParameter ? "$" : "@");
+
+            return base.VisitParameter(node);
+        }
+
+        /// <summary>
         /// Visit :: x => x.`Customer.Name`
         /// </summary>
         protected override Expression VisitMember(MemberExpression node)
         {
+            // test if member access is based on parameter expression or constant/external variable
+            var isParam = ParameterExpressionVisitor.Test(node);
+
             var member = node.Member;
 
             // special types contains method access: string.Length, DateTime.Day, ...
@@ -89,14 +108,32 @@ namespace LiteDB
                 // for static member, Expression == null
                 if (node.Expression != null)
                 {
-                    base.VisitMember(node);
+                    _nodes.Push(node);
+
+                    base.Visit(node.Expression);
+
+                    if (isParam)
+                    {
+                        var name = this.ResolveMember(member);
+
+                        _builder.Append(name);
+                    }
                 }
+                // static member is not parameter expression - compile and execute as constant
+                else
+                {
+                    var func = Expression.Lambda(node).Compile();
+                    var value = func.DynamicInvoke();
 
-                var name = this.ResolveMember(member);
-
-                _builder.Append(name);
-
+                    base.Visit(Expression.Constant(value));
+                }
             }
+
+            if (_nodes.Count > 0)
+            {
+                _nodes.Pop();
+            }
+
 
             return node;
         }
@@ -109,7 +146,21 @@ namespace LiteDB
             // get method declaring type - if is from any kind of list, read as Enumerable
             var declaringType = Reflection.IsList(node.Method.DeclaringType) ? typeof(Enumerable) : node.Method.DeclaringType;
 
-            if (!_resolver.TryGetValue(declaringType, out var type)) throw new NotSupportedException($"Type {node.Method.DeclaringType.Name} not available to convert to BsonExpression ({node.ToString()}).");
+            if (!_resolver.TryGetValue(declaringType, out var type))
+            {
+                // if method are called by parameter expression and it's not exists, throw error
+                var isParam = ParameterExpressionVisitor.Test(node);
+
+                if (isParam) throw new NotSupportedException($"Method {node.Method.Name} not available to convert to BsonExpression ({node.ToString()}).");
+
+                // otherwise, try compile and execute
+                var func = Expression.Lambda(node).Compile();
+                var value = func.DynamicInvoke();
+
+                base.Visit(Expression.Constant(value));
+
+                return node;
+            }
 
             var pattern = type.ResolveMethod(node.Method);
 
@@ -126,13 +177,33 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            var p = "p" + (_paramIndex++);
+            MemberExpression prevNode;
+            var value = node.Value;
 
-            _builder.AppendFormat("@" + p);
+            // https://stackoverflow.com/a/29708655/3286260
+            while (_nodes.Count > 0 && (prevNode = _nodes.Peek() as MemberExpression) != null)
+            {
+                if (prevNode.Member is FieldInfo fieldInfo)
+                {
+                    value = fieldInfo.GetValue(value);
+                }
+                else if (prevNode.Member is PropertyInfo propertyInfo)
+                {
+                    value = propertyInfo.GetValue(value);
+                }
 
-            var value = _mapper.Serialize(node.Type, node.Value);
+                _nodes.Pop();
+            }
 
-            _parameters[p] = value;
+            DEBUG(_nodes.Count > 0, "counter stack must be zero to eval all properties/field over object");
+
+            var parameter = "p" + (_paramIndex++);
+
+            _builder.AppendFormat("@" + parameter);
+
+            var arg = value == null ? BsonValue.Null : _mapper.Serialize(value.GetType(), value);
+
+            _parameters[parameter] = arg;
 
             return node;
         }
@@ -213,18 +284,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Visit :: x => `x`.Customer.Name
-        /// </summary>
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            if (rootParameter == null) rootParameter = node.Name;
-
-            _builder.Append(node.Name == rootParameter ? "$" : "@");
-
-            return base.VisitParameter(node);
-        }
-
-        /// <summary>
         /// Visit :: x => x.Id `+` 10
         /// </summary>
         protected override Expression VisitBinary(BinaryExpression node)
@@ -264,10 +323,13 @@ namespace LiteDB
         /// </summary>
         private void ResolvePattern(string pattern, Expression obj, IEnumerable<Expression> args)
         {
-            // retain current builder var to create another one
-            var current = _builder;
+            // retain current builder/stack/isMemberParameter variables
+            var currentBuilder = _builder;
+            var currentNodes = _nodes;
 
+            // create new instances
             _builder = new StringBuilder();
+            _nodes = new Stack<Expression>();
 
             if (obj != null)
             {
@@ -311,8 +373,11 @@ namespace LiteDB
                 }
             }
 
-            // now restore current builder and append output
-            _builder = current;
+            // now restore instances before run pattern
+            _builder = currentBuilder;
+            _nodes = currentNodes;
+
+            // append into builder result of resolve pattern
             _builder.Append(output.ToString());
         }
 

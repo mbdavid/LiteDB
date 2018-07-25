@@ -15,7 +15,7 @@ using System.Linq.Expressions;
 namespace LiteDB.Tests.Mapper
 {
     [TestClass]
-    public class LinqVisitor_Tests
+    public class QueryVisitor_Tests
     {
         public class User
         {
@@ -35,6 +35,8 @@ namespace LiteDB.Tests.Mapper
             public string Street { get; set; }
             public int Number { get; set; }
             public City City { get; set; }
+
+            public string InvalidMethod() => "will thow error in eval";
         }
 
         public class City
@@ -57,6 +59,11 @@ namespace LiteDB.Tests.Mapper
 
         private BsonMapper _mapper = new BsonMapper();
 
+        private static Address StaticProp { get; set; } = new Address { Number = 99 };
+        private const int CONST_INT = 100;
+        private string MyMethod() => "ok";
+        private int MyIndex() => 5;
+
         [TestMethod]
         public void Linq_Document_Navigation()
         {
@@ -65,13 +72,53 @@ namespace LiteDB.Tests.Mapper
             Test(x => x.Name, "Name");
             Test(x => x.Address.Street, "Address.Street");
             Test(x => x.Address.City.Country, "Address.City.Country");
+        }
+
+        [TestMethod]
+        public void Linq_Constants()
+        {
+            // only constants
+            var today = DateTime.Today;
+            var john = "JOHN";
+            var a = new { b = new { c = "JOHN" } };
 
             // only constants
             Test(x => 0, "@p0", 0);
             Test(x => 1 + 1, "@p0", 2); // "1 + 1" will be resolved by LINQ before convert
 
+            // values from variables
+            Test(x => today, "@p0", today);
 
+            // values from deep object variables
+            Test(x => a.b.c, "@p0", a.b.c);
+            Test(x => x.Address.Street == a.b.c, "Address.Street = @p0", a.b.c);
 
+            // class constants
+            Test(x => CONST_INT, "@p0", CONST_INT);
+            Test(x => QueryVisitor_Tests.StaticProp.Number, "@p0", QueryVisitor_Tests.StaticProp.Number);
+
+            // methods inside constants
+            Test(x => "demo".Trim(), "TRIM(@p0)", "demo");
+
+            // execute method inside variables
+            Test(x => john.Trim(), "TRIM(@p0)", john);
+            Test(x => today.Day, "DAY(@p0)", today);
+
+            // testing node stack using parameter-expression vs variable-expression
+            Test(x => x.Name.Length > john.Length, "LENGTH(Name) > LENGTH(@p0)", john);
+
+            // calling external methods
+            Test(x => x.Name == MyMethod(), "Name = @p0", MyMethod());
+            Test(x => MyMethod().Length, "LENGTH(@p0)", MyMethod());
+
+            try
+            {
+                Test(x => x.Name == x.Address.InvalidMethod(), "Name = Address");
+                Assert.Fail("must throw error when call parameter expression method");
+            }
+            catch(NotSupportedException)
+            {
+            }
         }
 
         [TestMethod]
@@ -92,6 +139,13 @@ namespace LiteDB.Tests.Mapper
             // fixed position based on method names
             Test(x => x.Phones.First(), "Phones[0]");
             Test(x => x.Phones.Last(), "Phones[-1]");
+
+            // call external method/props/const inside parameter expression
+            var a = new { b = new { c = 123 } };
+
+            Test(x => x.Phones.Items(a.b.c).Number, "Phones[@p0].Number", a.b.c);
+            Test(x => x.Phones.Items(CONST_INT).Number, "Phones[@p0].Number", CONST_INT);
+            Test(x => x.Phones.Items(MyIndex()).Number, "Phones[@p0].Number", MyIndex());
         }
 
 
