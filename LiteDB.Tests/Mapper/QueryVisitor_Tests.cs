@@ -247,6 +247,28 @@ namespace LiteDB.Tests.Mapper
 
         }
 
+        [TestMethod]
+        public void Linq_Complex_Expressions()
+        {
+            // { 'CityName': $.Address.City.CityName, 
+            // 'Cnt': COUNT(IIF(TO_STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)), 
+            // 'List': TO_ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number) }
+
+            Test(x => new
+            {
+                x.Address.City.CityName,
+                Cnt = Sql.Count(x.Phones.Items(z => z.Type == PhoneType.Landline).Number.ToString() == "555" ? MyMethod() : x.Name),
+                List = Sql.ToList(x.Phones.Items().Number + x.Phones.Items(z => z.Prefix > x.Salary).Number)
+            },
+            @"
+            {
+                CityName: $.Address.City.CityName,
+                Cnt: COUNT(IIF(TO_STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)),
+                List: TO_ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number)    
+            }", 
+            (int)PhoneType.Landline, "555", MyMethod());
+        }
+
         /// <summary>
         /// Compare LINQ expression with expected BsonExpression
         /// </summary>
