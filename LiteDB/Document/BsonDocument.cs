@@ -10,7 +10,7 @@ namespace LiteDB
     public class BsonDocument : BsonValue, IDictionary<string, BsonValue>
     {
         public BsonDocument()
-            : base(new Dictionary<string, BsonValue>())
+            : base(new Dictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase))
         {
         }
 

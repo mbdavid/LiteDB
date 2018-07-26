@@ -169,7 +169,7 @@ namespace LiteDB
                 // test first for dictionary (because IDictionary implements IEnumerable)
                 if (value is System.Collections.IDictionary dictionary)
                 {
-                    var dict = new Dictionary<string, BsonValue>();
+                    var dict = new Dictionary<string, BsonValue>(StringComparer.OrdinalIgnoreCase);
 
                     foreach (var key in dictionary.Keys)
                     {
