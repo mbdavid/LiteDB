@@ -50,6 +50,12 @@ namespace LiteDB.Engine
                     return false;
                 }
 
+                // expressions must be immutable
+                if (expression.IsImmutable == false)
+                {
+                    throw new LiteException(0, "Index expressions must contains only immutable methods. Do not use NOW(), GUID(), OBJECTID() or any other volatile methods.");
+                }
+
                 // create index head
                 var index = indexer.CreateIndex(col);
 

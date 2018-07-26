@@ -531,7 +531,7 @@ namespace LiteDB
             // method call with no parameters
             if (tokenizer.LookAhead().Type == TokenType.CloseParenthesis)
             {
-                tokenizer.ReadToken(); // read )
+                source.Append(tokenizer.ReadToken().Value); // read )
             }
             else
             {
