@@ -10,11 +10,11 @@ namespace LiteDB
         /// Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents
         /// Returns a new Collection with this action included
         /// </summary>
-        public LiteCollection<T> Include<K>(Expression<Func<T, K>> predicate)
+        public LiteCollection<T> Include<K>(Expression<Func<T, K>> keySelector)
         {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-            var path = _mapper.GetExpression(predicate);
+            var path = _mapper.GetExpression(keySelector);
 
             return this.Include(path);
         }
@@ -23,15 +23,15 @@ namespace LiteDB
         /// Run an include action in each document returned by Find(), FindById(), FindOne() and All() methods to load DbRef documents
         /// Returns a new Collection with this action included
         /// </summary>
-        public LiteCollection<T> Include(string path)
+        public LiteCollection<T> Include(BsonExpression keySelector)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
             // cloning this collection and adding this include
             var newcol = new LiteCollection<T>(_collection, _engine, _mapper);
 
             newcol._includes.AddRange(_includes);
-            newcol._includes.Add(path);
+            newcol._includes.Add(keySelector);
 
             return newcol;
         }

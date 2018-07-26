@@ -47,12 +47,12 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Update documents using expression to find (where) and modify (modify expression must retun a document)
+        /// Update documents using expression to find (predicate) and modify (extend expression must retun a document)
         /// </summary>
-        public int Update(string collection, BsonExpression modify, UpdateMode mode, BsonExpression where)
+        public int Update(string collection, BsonExpression extend, UpdateMode mode, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (modify == null) throw new ArgumentNullException(nameof(modify));
+            if (extend == null) throw new ArgumentNullException(nameof(extend));
 
             return this.AutoTransaction(transaction =>
             {
@@ -62,7 +62,7 @@ namespace LiteDB.Engine
                 {
                     var query = this.Query(collection);
 
-                    if (where != null) query = query.Where(where);
+                    if (predicate != null) query = query.Where(predicate);
 
                     var docs = query
                         .Select("$")
@@ -72,9 +72,9 @@ namespace LiteDB.Engine
                     foreach (var doc in docs)
                     {
                         var id = doc["_id"];
-                        var result = modify.Execute(doc, true).First();
+                        var result = extend.Execute(doc, true).First();
 
-                        if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(modify));
+                        if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(extend));
 
                         var output = mode == UpdateMode.Merge ?
                             doc.Extend(result.AsDocument) :

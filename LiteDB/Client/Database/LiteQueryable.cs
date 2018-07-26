@@ -138,7 +138,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Bypasses a specified number of documents in resultset and retun the remaining documents
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Skip)
         /// </summary>
         public LiteQueryable<T> Offset(int offset)
         {
@@ -147,9 +147,8 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Bypasses a specified number of documents in resultset and retun the remaining documents
+        /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Offset)
         /// </summary>
-        [Obsolete("Use Offset() method")]
         public LiteQueryable<T> Skip(int offset) => this.Offset(offset);
 
         /// <summary>

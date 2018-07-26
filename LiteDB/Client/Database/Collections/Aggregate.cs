@@ -20,11 +20,11 @@ namespace LiteDB
         /// <summary>
         /// Count documents matching a query. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public int Count(BsonExpression query)
+        public int Count(BsonExpression predicate)
         {
-            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.Count(_collection, query);
+            return _engine.Value.Count(_collection, predicate);
         }
 
         /// <summary>
@@ -53,11 +53,11 @@ namespace LiteDB
         /// <summary>
         /// Count documents matching a query. This method does not deserialize any documents. Needs indexes on query expression
         /// </summary>
-        public long LongCount(BsonExpression query)
+        public long LongCount(BsonExpression predicate)
         {
-            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.LongCount(_collection, query);
+            return _engine.Value.LongCount(_collection, predicate);
         }
 
         /// <summary>
@@ -77,11 +77,11 @@ namespace LiteDB
         /// <summary>
         /// Returns true if query returns any document. This method does not deserialize any document. Needs indexes on query expression
         /// </summary>
-        public bool Exists(BsonExpression query)
+        public bool Exists(BsonExpression predicate)
         {
-            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.Exists(_collection, query);
+            return _engine.Value.Exists(_collection, predicate);
         }
 
         /// <summary>
@@ -99,17 +99,17 @@ namespace LiteDB
         #region Min/Max
 
         /// <summary>
-        /// Returns the first/min value from a index field
+        /// Returns the min value from specified key value in collection
         /// </summary>
-        public BsonValue Min(string path)
+        public BsonValue Min(BsonExpression keySelector)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
-            return _engine.Value.Min(_collection, path);
+            return _engine.Value.Min(_collection, keySelector);
         }
 
         /// <summary>
-        /// Returns the first/min _id field
+        /// Returns the min value of _id index
         /// </summary>
         public BsonValue Min()
         {
@@ -117,7 +117,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns the first/min field using a linq expression
+        /// Returns the min value from specified key value in collection
         /// </summary>
         public K Min<K>(Expression<Func<T, K>> keySelector)
         {
@@ -131,21 +131,21 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns the last/max value from a index field
+        /// Returns the max value from specified key value in collection
         /// </summary>
-        public BsonValue Max(string path)
+        public BsonValue Max(BsonExpression keySelector)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
-            return _engine.Value.Max(_collection, path);
+            return _engine.Value.Max(_collection, keySelector);
         }
 
         /// <summary>
-        /// Returns the last/max _id field
+        /// Returns the max _id index key value
         /// </summary>
         public BsonValue Max()
         {
-            return this.Max("_id");
+            return _engine.Value.Max(_collection);
         }
 
         /// <summary>

@@ -37,12 +37,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} = @{p}");
-            expr.Parameters[p] = value ?? BsonValue.Null;
-
-            return expr;
+            return BsonExpression.Create($"{field} = @0", value);
         }
 
         /// <summary>
@@ -52,12 +47,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} < @{p}");
-            expr.Parameters[p] = value ?? BsonValue.Null;
-
-            return expr;
+            return BsonExpression.Create($"{field} < @0", value);
         }
 
         /// <summary>
@@ -67,12 +57,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} <= @{p}");
-            expr.Parameters[p] = value ?? BsonValue.Null;
-
-            return expr;
+            return BsonExpression.Create($"{field} <= @0", value);
         }
 
         /// <summary>
@@ -82,12 +67,8 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
+            return BsonExpression.Create($"{field} > @0", value);
 
-            var expr = BsonExpression.Create($"{field} > @{p}");
-            expr.Parameters[p] = value ?? BsonValue.Null;
-
-            return expr;
         }
 
         /// <summary>
@@ -97,12 +78,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} >= @{p}");
-            expr.Parameters[p] = value ?? BsonValue.Null;
-
-            return expr;
+            return BsonExpression.Create($"{field} >= @0", value);
         }
 
         /// <summary>
@@ -112,14 +88,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var s = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-            var e = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} BETWEEN @{s} AND @{e}");
-            expr.Parameters[s] = start ?? BsonValue.Null;
-            expr.Parameters[e] = end ?? BsonValue.Null;
-
-            return expr;
+            return BsonExpression.Create($"{field} BETWEEN @0 AND @1", start, end);
         }
 
         /// <summary>
@@ -130,12 +99,7 @@ namespace LiteDB
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
             if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} LIKE @{p}");
-            expr.Parameters[p] = value + "%";
-
-            return expr;
+            return BsonExpression.Create($"{field} LIKE @0", value + "%");
         }
 
         /// <summary>
@@ -146,12 +110,7 @@ namespace LiteDB
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
             if (value.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(value));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} LIKE @{p}");
-            expr.Parameters[p] = "%" + value + "%";
-
-            return expr;
+            return BsonExpression.Create($"{field} LIKE @0", "%" + value + "%");
         }
 
         /// <summary>
@@ -161,12 +120,7 @@ namespace LiteDB
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} != @{p}");
-            expr.Parameters[p] = value ?? BsonValue.Null;
-
-            return expr;
+            return BsonExpression.Create($"{field} != @0", value);
         }
 
         /// <summary>
@@ -177,12 +131,7 @@ namespace LiteDB
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            var p = "p" + Guid.NewGuid().ToString().Substring(0, 6);
-
-            var expr = BsonExpression.Create($"{field} = ITEMS(@{p})");
-            expr.Parameters[p] = value;
-
-            return expr;
+            return BsonExpression.Create($"{field} IN @0", value);
         }
 
         /// <summary>

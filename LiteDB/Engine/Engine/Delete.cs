@@ -67,27 +67,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// Implements delete based on filter expression
         /// </summary>
-        public int Delete(string collection, BsonExpression where)
+        public int Delete(string collection, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
-            if (where == null) throw new ArgumentNullException(nameof(where));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return this.AutoTransaction(transaction =>
             {
                 // do optimization for when using "_id = constant" key
-                if (where.Type == BsonExpressionType.Equal && 
-                    where.Left.Type == BsonExpressionType.Path && 
-                    where.Left.Source == "$._id" && 
-                    where.Right.IsConstant)
+                if (predicate.Type == BsonExpressionType.Equal && 
+                    predicate.Left.Type == BsonExpressionType.Path && 
+                    predicate.Left.Source == "$._id" && 
+                    predicate.Right.IsConstant)
                 {
-                    var id = where.Right.Execute().First();
+                    var id = predicate.Right.Execute().First();
 
                     return this.Delete(collection, new BsonValue[] { id });
                 }
                 else
                 {
                     var q = this.Query(collection)
-                        .Where(where)
+                        .Where(predicate)
                         .Select("_id")
                         .ForUpdate()
                         .ToValues();

@@ -22,10 +22,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Find documents in collection using expression as filter/index
         /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, BsonExpression query, int offset = 0, int limit = int.MaxValue)
+        public IEnumerable<BsonDocument> Find(string collection, BsonExpression predicate, int offset = 0, int limit = int.MaxValue)
         {
             return this.Query(collection)
-                .Where(query)
+                .Where(predicate)
                 .Offset(offset)
                 .Limit(limit)
                 .ToEnumerable();
@@ -34,9 +34,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Find first or default document based in collection based on Query filter
         /// </summary>
-        public BsonDocument FindOne(string collection, BsonExpression query)
+        public BsonDocument FindOne(string collection, BsonExpression predicate)
         {
-            return this.Find(collection, query).FirstOrDefault();
+            return this.Find(collection, predicate).FirstOrDefault();
         }
 
         /// <summary>

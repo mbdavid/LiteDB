@@ -13,17 +13,12 @@ namespace LiteDB
     {
         #region Properties
 
-        private LiteDatabase _db = null;
+        private readonly LiteDatabase _db = null;
 
         /// <summary>
         /// Get database instance
         /// </summary>
         public LiteDatabase Database { get { return _db; } }
-
-        /// <summary>
-        /// Get engine instance
-        /// </summary>
-        public LiteEngine Engine { get { return _db.Engine; } }
 
         #endregion
 
@@ -34,7 +29,7 @@ namespace LiteDB
         /// </summary>
         public LiteRepository(string connectionString, BsonMapper mapper = null)
         {
-            _db = new LiteDB.LiteDatabase(connectionString, mapper);
+            _db = new LiteDatabase(connectionString, mapper);
         }
 
         /// <summary>
@@ -42,7 +37,7 @@ namespace LiteDB
         /// </summary>
         public LiteRepository(ConnectionString connectionString, BsonMapper mapper = null)
         {
-            _db = new LiteDB.LiteDatabase(connectionString, mapper);
+            _db = new LiteDatabase(connectionString, mapper);
         }
 
         /// <summary>
@@ -50,20 +45,20 @@ namespace LiteDB
         /// </summary>
         public LiteRepository(Stream stream, BsonMapper mapper = null, string password = null)
         {
-            _db = new LiteDB.LiteDatabase(stream, mapper, password);
+            _db = new LiteDatabase(stream, mapper, password);
         }
 
         #endregion
 
-        #region Shortchut from Database/Engine
+        #region Shortchut from FileStorage
 
-        /// <summary>
-        /// Returns a special collection for storage files/stream inside datafile
-        /// </summary>
-        public LiteStorage FileStorage
-        {
-            get { return _db.FileStorage; }
-        }
+        // /// <summary>
+        // /// Returns a special collection for storage files/stream inside datafile
+        // /// </summary>
+        // public LiteStorage FileStorage
+        // {
+        //     get { return _db.FileStorage; }
+        // }
 
         #endregion
 
@@ -140,9 +135,9 @@ namespace LiteDB
         /// <summary>
         /// Delete entity based on Query
         /// </summary>
-        public int Delete<T>(Query query, string collectionName = null)
+        public int Delete<T>(BsonExpression predicate, string collectionName = null)
         {
-            return _db.GetCollection<T>(collectionName).Delete(query);
+            return _db.GetCollection<T>(collectionName).Delete(predicate);
         }
 
         /// <summary>
@@ -162,7 +157,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Query<T>(string collectionName = null)
         {
-            return new LiteQueryable<T>(_db.GetCollection<T>(collectionName));
+            return _db.GetCollection<T>(collectionName).Query();
         }
 
         #endregion
@@ -180,10 +175,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(query).ToList();
         /// </summary>
-        public List<T> Fetch<T>(Query query = null, string collectionName = null)
+        public List<T> Fetch<T>(BsonExpression predicate = null, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(query ?? LiteDB.Query.All())
+                .Where(predicate != null, predicate)
                 .ToList();
         }
 
@@ -200,10 +195,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(query).First();
         /// </summary>
-        public T First<T>(Query query = null, string collectionName = null)
+        public T First<T>(BsonExpression predicate = null, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(query ?? LiteDB.Query.All())
+                .Where(predicate != null, predicate)
                 .First();
         }
 
@@ -220,10 +215,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(query).FirstOrDefault();
         /// </summary>
-        public T FirstOrDefault<T>(Query query = null, string collectionName = null)
+        public T FirstOrDefault<T>(BsonExpression predicate = null, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(query ?? LiteDB.Query.All())
+                .Where(predicate != null, predicate)
                 .FirstOrDefault();
         }
 
@@ -240,10 +235,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(query).Single();
         /// </summary>
-        public T Single<T>(Query query = null, string collectionName = null)
+        public T Single<T>(BsonExpression predicate = null, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(query ?? LiteDB.Query.All())
+                .Where(predicate != null, predicate)
                 .Single();
         }
 
@@ -260,10 +255,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(query).SingleOrDefault();
         /// </summary>
-        public T SingleOrDefault<T>(Query query = null, string collectionName = null)
+        public T SingleOrDefault<T>(BsonExpression predicate = null, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(query ?? LiteDB.Query.All())
+                .Where(predicate != null, predicate)
                 .SingleOrDefault();
         }
 

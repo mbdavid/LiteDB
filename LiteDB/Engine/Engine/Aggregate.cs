@@ -8,26 +8,46 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Returns minimal/first value from expression
+        /// Returns min value from _id key index
         /// </summary>
-        public BsonValue Min(string collection, BsonExpression expression)
+        public BsonValue Min(string collection)
         {
             return this.Query(collection)
-                .OrderBy(expression, LiteDB.Query.Ascending)
-                .Select(expression)
-                .Limit(1)
+                .Index(Index.All("_id", LiteDB.Query.Ascending))
+                .Select("_id")
                 .ExecuteScalar();
         }
 
         /// <summary>
-        /// Returns max/last value from expression
+        /// Returns min value from expression
         /// </summary>
-        public BsonValue Max(string collection, BsonExpression expression)
+        public BsonValue Min(string collection, BsonExpression keySelector)
         {
             return this.Query(collection)
-                .OrderBy(expression, LiteDB.Query.Descending)
-                .Select(expression)
-                .Limit(1)
+                .OrderBy(keySelector, LiteDB.Query.Ascending)
+                .Select(keySelector)
+                .ExecuteScalar();
+        }
+
+        /// <summary>
+        /// Returns max value from _id key index
+        /// </summary>
+        public BsonValue Max(string collection)
+        {
+            return this.Query(collection)
+                .Index(Index.All("_id", LiteDB.Query.Descending))
+                .Select("_id")
+                .ExecuteScalar();
+        }
+
+        /// <summary>
+        /// Returns max value from expression
+        /// </summary>
+        public BsonValue Max(string collection, BsonExpression keySelector)
+        {
+            return this.Query(collection)
+                .OrderBy(keySelector, LiteDB.Query.Descending)
+                .Select(keySelector)
                 .ExecuteScalar();
         }
 
@@ -76,10 +96,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public int Count(string collection, BsonExpression query)
+        public int Count(string collection, BsonExpression predicate)
         {
             return this.Query(collection)
-                .Where(query)
+                .Where(predicate)
                 .Select("_id")
                 .Count();
         }
@@ -87,10 +107,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public long LongCount(string collection, BsonExpression query)
+        public long LongCount(string collection, BsonExpression predicate)
         {
             return this.Query(collection)
-                .Where(query)
+                .Where(predicate)
                 .Select("_id")
                 .LongCount();
         }
@@ -109,10 +129,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Check if has at least one node in a query execution - do not deserialize documents to check
         /// </summary>
-        public bool Exists(string collection, BsonExpression query)
+        public bool Exists(string collection, BsonExpression predicate)
         {
             return this.Query(collection)
-                .Where(query)
+                .Where(predicate)
                 .Select("_id")
                 .Exists();
         }
