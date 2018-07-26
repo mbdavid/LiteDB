@@ -10,11 +10,6 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexService
     {
-        /// <summary>
-        /// Max size of a index entry - usde for string, binary, array and documents
-        /// </summary>
-        public const int MAX_INDEX_LENGTH = 512;
-
         private Snapshot _snapshot;
         private Random _rand = new Random();
 
@@ -69,10 +64,14 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode AddNode(CollectionIndex index, BsonValue key, IndexNode last)
         {
+            // do not accept Min/Max value as index key (only head/tail can have this value)
+            if (key.IsMaxValue || key.IsMinValue)
+            {
+                throw LiteException.InvalidIndexKey($"BsonValue MaxValue/MinValue are not supported as index key");
+            }
+
             // when min/max values, use max level
-            var level = 
-                key.Type == BsonType.MinValue || key.Type == BsonType.MaxValue ?
-                (byte)MAX_LEVEL_LENGTH : this.FlipCoin();
+            var level = this.FlipCoin();
 
             // set index collection with max-index level
             if (level > index.MaxLevel)
@@ -95,7 +94,7 @@ namespace LiteDB.Engine
             var keyLength = key.GetBytesCount(false);
 
             // test for index key maxlength
-            if (keyLength > MAX_INDEX_LENGTH) throw LiteException.IndexKeyTooLong();
+            if (keyLength > MAX_INDEX_KEY_LENGTH) throw LiteException.InvalidIndexKey($"Index key must be less than {MAX_INDEX_KEY_LENGTH} bytes.");
 
             // creating a new index node
             var node = new IndexNode(level)
@@ -118,9 +117,6 @@ namespace LiteDB.Engine
 
             // using as cache last
             IndexNode cache = null;
-
-            // check key is adding max-value key node (need added before tail)
-            var isMax = !index.TailNode.IsEmpty && key.Type == BsonType.MaxValue;
 
             // scan from top left
             for (var i = index.MaxLevel - 1; i >= 0; i--)
@@ -149,12 +145,6 @@ namespace LiteDB.Engine
                     // node = new inserted node
                     // next = next node (where cur is pointing)
                     _snapshot.SetDirty(cur.Page);
-
-                    // if inserting MaxValue, left add just before tail Node (and not after tail)
-                    if (isMax && cur.Position == index.TailNode)
-                    {
-                        cur = this.GetNode(cur.Prev[0]);
-                    }
 
                     node.Next[i] = cur.Next[i];
                     node.Prev[i] = cur.Position;

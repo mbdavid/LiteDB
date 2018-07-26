@@ -68,6 +68,11 @@ namespace LiteDB
         public const int MAX_LEVEL_LENGTH = 32;
 
         /// <summary>
+        /// Max size of a index entry - usde for string, binary, array and documents
+        /// </summary>
+        public const int MAX_INDEX_KEY_LENGTH = 512;
+
+        /// <summary>
         /// When add item cache counter get this size, try clean 
         /// </summary>
         public const int MAX_CACHE_ADD = 1000;

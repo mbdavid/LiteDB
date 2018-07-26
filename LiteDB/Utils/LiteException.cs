@@ -22,7 +22,7 @@ namespace LiteDB
         public const int INDEX_DROP_ID = 108;
         public const int INDEX_LIMIT_EXCEEDED = 109;
         public const int INDEX_DUPLICATE_KEY = 110;
-        public const int INDEX_KEY_TOO_LONG = 111;
+        public const int INVALID_INDEX_KEY = 111;
         public const int INDEX_NOT_FOUND = 112;
         public const int INVALID_DBREF = 113;
         public const int LOCK_TIMEOUT = 120;
@@ -175,9 +175,9 @@ namespace LiteDB
             return new LiteException(INDEX_DUPLICATE_KEY, "Cannot insert duplicate key in unique index '{0}'. The duplicate value is '{1}'.", field, key);
         }
 
-        internal static LiteException IndexKeyTooLong()
+        internal static LiteException InvalidIndexKey(string text)
         {
-            return new LiteException(INDEX_KEY_TOO_LONG, "Index key must be less than {0} bytes.", IndexService.MAX_INDEX_LENGTH);
+            return new LiteException(INVALID_INDEX_KEY, text);
         }
 
         internal static LiteException IndexNotFound(string collection, string name)
