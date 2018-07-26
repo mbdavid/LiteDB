@@ -75,7 +75,7 @@ namespace LiteDB.Engine
                 var loader = query.Index as IDocumentLoader ??
                     (query.IsIndexKeyOnly ?
                         new IndexKeyLoader(indexer, query.Fields.First()) :
-                        (IDocumentLoader)new DocumentLoader(data, _engine.Settings.UtcDate, query.Fields));
+                        (IDocumentLoader)new DocumentLoader(data, _engine.UtcDate, query.Fields));
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = query.Index.Run(snapshot.CollectionPage, indexer)

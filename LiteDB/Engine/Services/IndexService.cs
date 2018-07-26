@@ -349,6 +349,9 @@ namespace LiteDB.Engine
 
         #region Find
 
+        /// <summary>
+        /// Return all index nodes from an index
+        /// </summary>
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
             var cur = this.GetNode(order == Query.Ascending ? index.HeadNode : index.TailNode);

@@ -36,7 +36,7 @@ namespace LiteDB.Engine
                 // first do checkpoint with WAL delete
                 _wal.Checkpoint(true, _header, false);
 
-                using (var walStream = _settings.GetDiskFactory().GetWalFileStream(true))
+                using (var walStream = _factory.GetWalFileStream(true))
                 {
                     var s = new EngineSettings
                     {

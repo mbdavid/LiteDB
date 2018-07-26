@@ -33,6 +33,7 @@ namespace LiteDB
 
         /// <summary>
         /// If true, indicate that it's possible execute this expression without document - always same result
+        /// Can be a parameter os a fixed constant
         /// </summary>
         internal bool IsConstant { get; set; }
 

@@ -15,20 +15,18 @@ namespace LiteDB.Engine
         {
             _log.Info($"upgrading datafile from {_header.FileVersion} to new v8 version");
 
-            var factory = _settings.GetDiskFactory();
-
             // only FileStream can be upgratable
-            if (!(factory is FileStreamDiskFactory))
+            if (!(_factory is FileStreamDiskFactory))
             {
                 throw new NotSupportedException("Current datafile must be upgrade but are not using FileStreamDiskFactory.");
             }
 
             // make a backup to original datafile
-            var backup = FileHelper.GetTempFile(factory.FileName, "-backup", true);
+            var backup = FileHelper.GetTempFile(_factory.FileName, "-backup", true);
 
-            File.Copy(factory.FileName, backup);
+            File.Copy(_factory.FileName, backup);
 
-            using (var stream = factory.GetDataFileStream(false))
+            using (var stream = _factory.GetDataFileStream(false))
             {
                 var reader = new FileReaderV7(stream);
 

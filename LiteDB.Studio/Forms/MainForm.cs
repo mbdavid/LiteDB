@@ -196,7 +196,7 @@ namespace LiteDB.Studio
         {
             tvwDatabase.Nodes.Clear();
 
-            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Settings.FileName));
+            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.FileName));
             var system = root.Nodes.Add("System");
 
             root.ImageKey = "database";

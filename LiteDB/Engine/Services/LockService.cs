@@ -14,12 +14,17 @@ namespace LiteDB.Engine
     /// </summary>
     public class LockService : IDisposable
     {
-        private TimeSpan _timeout;
-        private Logger _log;
+        private readonly TimeSpan _timeout;
+        private readonly Logger _log;
 
         private ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
         private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
+        /// <summary>
+        /// Get lock timeout
+        /// </summary>
+        public TimeSpan Timeout => _timeout;
 
         internal LockService(TimeSpan timeout, Logger log)
         {

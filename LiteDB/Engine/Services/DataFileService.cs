@@ -19,16 +19,14 @@ namespace LiteDB.Engine
         private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
         private IDiskFactory _factory;
 
-        private TimeSpan _timeout;
         private Logger _log;
         private bool _utcDate;
 
         private BinaryWriter _writer;
 
-        public DataFileService(IDiskFactory factory, TimeSpan timeout, long initialSize, bool utcDate, Logger log)
+        public DataFileService(IDiskFactory factory, long initialSize, bool utcDate, Logger log)
         {
             _factory = factory;
-            _timeout = timeout;
             _utcDate = utcDate;
             _log = log;
 

@@ -21,6 +21,7 @@ namespace LiteDB.Engine
             {
                 if (value == _header.UserVersion || _shutdown) return;
 
+                if (_readOnly) throw LiteException.ReadOnlyDatabase();
                 if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("UserVersion", TransactionState.Active);
 
                 lock (_header)

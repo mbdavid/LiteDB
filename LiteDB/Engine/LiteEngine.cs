@@ -28,7 +28,12 @@ namespace LiteDB.Engine
 
         private readonly BsonWriter _bsonWriter;
 
-        private readonly EngineSettings _settings;
+        // immutable settings
+        private readonly IDiskFactory _factory;
+        private readonly bool _utcDate;
+        private readonly bool _readOnly;
+        private readonly bool _checkpointOnShutdown;
+        private readonly int _maxMemoryTransactionSize;
 
         private bool _shutdown = false;
 
@@ -68,9 +73,14 @@ namespace LiteDB.Engine
         public Logger Log => _log;
 
         /// <summary>
-        /// Get database settings - settings 
+        /// Get if date must be read from Bson as UTC date 
         /// </summary>
-        public EngineSettings Settings => _settings;
+        internal bool UtcDate => _utcDate;
+
+        /// <summary>
+        /// Get database file name
+        /// </summary>
+        public string FileName => _factory.FileName;
 
         #endregion
 
@@ -106,8 +116,12 @@ namespace LiteDB.Engine
 
                 _log.Info($"initializing database '{settings.FileName}'");
 
-                // get engine setting
-                _settings = settings;
+                // copy settings into class variables (turn values in immutable values)
+                _factory = settings.GetDiskFactory();
+                _utcDate = settings.UtcDate;
+                _checkpointOnShutdown = settings.CheckpointOnShutdown;
+                _maxMemoryTransactionSize = settings.MaxMemoryTransactionSize;
+                _readOnly = settings.ReadOnly;
 
                 _bsonReader = new BsonReader(settings.UtcDate);
                 _bsonWriter = new BsonWriter();
@@ -117,10 +131,10 @@ namespace LiteDB.Engine
                 // get disk factory from engine settings and open/create datafile/walfile
                 var factory = settings.GetDiskFactory();
 
-                _dataFile = new DataFileService(factory, settings.Timeout, settings.InitialSize, settings.UtcDate, _log);
+                _dataFile = new DataFileService(factory, settings.InitialSize, settings.UtcDate, _log);
 
                 // initialize wal service
-                _wal = new WalService(_locker, _dataFile, factory, settings.Timeout, settings.LimitSize, settings.UtcDate, _log);
+                _wal = new WalService(_locker, _dataFile, factory, settings.LimitSize, settings.UtcDate, _log);
 
                 // if WAL file have content, must run checkpoint
                 _wal.Checkpoint(false, null, false);
@@ -179,7 +193,7 @@ namespace LiteDB.Engine
                 trans.Shutdown();
             }
 
-            if (_settings.CheckpointOnShutdown)
+            if (_checkpointOnShutdown && _readOnly == false)
             {
                 // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)
                 _wal?.Checkpoint(true, null, false);

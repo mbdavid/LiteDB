@@ -12,13 +12,12 @@ namespace LiteDB.Engine
         {
             var doc = new BsonDocument();
 
-            doc["filename"] = _settings.FileName;
-            doc["limitSize"] = _settings.LimitSize;
-            doc["initialSize"] = _settings.InitialSize;
-            doc["maxMemoryTransactionSize"] = _settings.MaxMemoryTransactionSize;
-            doc["readOnly"] = _settings.ReadOnly;
-            doc["timeout"] = _settings.Timeout.ToString();
-            doc["utcDate"] = _settings.UtcDate;
+            doc["filename"] = _factory.FileName;
+            doc["limitSize"] = _wal.WalFile.LimitSize;
+            doc["readOnly"] = _readOnly;
+            doc["timeout"] = _locker.Timeout.ToString();
+            doc["utcDate"] = _utcDate;
+            doc["maxMemoryTransactionSize"] = _maxMemoryTransactionSize;
 
             doc["lastPageID"] = (int)_header.LastPageID;
             doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;

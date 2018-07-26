@@ -24,13 +24,13 @@ namespace LiteDB.Engine
         public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
         public HashSet<Guid> ConfirmedTransactions => _confirmedTransactions;
 
-        public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
+        public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
         {
             _locker = locker;
             _dataFile = dataFile;
             _log = log;
 
-            _walFile = new WalFileService(factory, timeout, sizeLimit, utcDate, log);
+            _walFile = new WalFileService(factory, sizeLimit, utcDate, log);
 
             this.LoadConfirmedTransactions();
         }

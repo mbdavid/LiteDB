@@ -16,20 +16,23 @@ namespace LiteDB.Engine
     internal class WalFileService : IDisposable
     {
         private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
-        private IDiskFactory _factory;
+        private readonly IDiskFactory _factory;
 
-        private TimeSpan _timeout;
-        private long _sizeLimit;
-        private Logger _log;
-        private bool _utcDate;
+        private readonly long _limitSize;
+        private readonly Logger _log;
+        private readonly bool _utcDate;
 
         private Lazy<BinaryWriter> _writer;
 
-        public WalFileService(IDiskFactory factory, TimeSpan timeout, long sizeLimit, bool utcDate, Logger log)
+        /// <summary>
+        /// Get limit of datafile in bytes (not WAL file size)
+        /// </summary>
+        public long LimitSize => _limitSize;
+
+        public WalFileService(IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
         {
             _factory = factory;
-            _timeout = timeout;
-            _sizeLimit = sizeLimit;
+            _limitSize = sizeLimit;
             _utcDate = utcDate;
             _log = log;
 
