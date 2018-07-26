@@ -16,8 +16,7 @@ namespace LiteDB.Engine
                 .OrderBy(expression, LiteDB.Query.Ascending)
                 .Select(expression)
                 .Limit(1)
-                .ToValues()
-                .FirstOrDefault();
+                .ExecuteScalar();
         }
 
         /// <summary>
@@ -29,8 +28,7 @@ namespace LiteDB.Engine
                 .OrderBy(expression, LiteDB.Query.Descending)
                 .Select(expression)
                 .Limit(1)
-                .ToValues()
-                .FirstOrDefault();
+                .ExecuteScalar();
         }
 
         /// <summary>

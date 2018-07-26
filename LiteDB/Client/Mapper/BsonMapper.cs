@@ -158,7 +158,7 @@ namespace LiteDB
         {
             var visitor = new LinqExpressionVisitor(this);
 
-            return visitor.Resolve(predicate);
+            return visitor.Resolve(predicate, typeof(K) == typeof(bool));
         }
 
         #endregion

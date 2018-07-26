@@ -58,6 +58,10 @@ namespace LiteDB.Engine
                     autoId == BsonAutoId.DateTime ? new BsonValue(DateTime.Now) :
                     this.GetSequence(col, snapshot, autoId);
             }
+            else if(id.IsNumber)
+            {
+                this.SetSequence(col, id);
+            }
 
             // test if _id is a valid type
             if (id.IsNull || id.IsMinValue || id.IsMaxValue)
@@ -146,6 +150,12 @@ namespace LiteDB.Engine
             return autoId == BsonAutoId.Int32 ?
                 new BsonValue((int)next) :
                 new BsonValue(next);
+        }
+
+        private void SetSequence(CollectionPage col, BsonValue lastId)
+        {
+            // TODO must update sequence when passed by user?
+            //_sequence.TryUpdate()
         }
     }
 }

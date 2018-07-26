@@ -101,11 +101,11 @@ namespace LiteDB
         /// <summary>
         /// Returns the first/min value from a index field
         /// </summary>
-        public BsonValue Min(string field)
+        public BsonValue Min(string path)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            return _engine.Value.Min(_collection, field);
+            return _engine.Value.Min(_collection, path);
         }
 
         /// <summary>
@@ -119,23 +119,25 @@ namespace LiteDB
         /// <summary>
         /// Returns the first/min field using a linq expression
         /// </summary>
-        public BsonValue Min<K>(Expression<Func<T, K>> property)
+        public K Min<K>(Expression<Func<T, K>> keySelector)
         {
-            if (property == null) throw new ArgumentNullException(nameof(property));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-            var field = _mapper.GetExpression(property);
+            var expr = _mapper.GetExpression(keySelector);
 
-            return this.Min(field);
+            var value = _engine.Value.Min(_collection, expr);
+
+            return (K)_mapper.Deserialize(typeof(K), value);
         }
 
         /// <summary>
         /// Returns the last/max value from a index field
         /// </summary>
-        public BsonValue Max(string field)
+        public BsonValue Max(string path)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
 
-            return _engine.Value.Max(_collection, field);
+            return _engine.Value.Max(_collection, path);
         }
 
         /// <summary>
@@ -149,13 +151,15 @@ namespace LiteDB
         /// <summary>
         /// Returns the last/max field using a linq expression
         /// </summary>
-        public BsonValue Max<K>(Expression<Func<T, K>> property)
+        public K Max<K>(Expression<Func<T, K>> keySelector)
         {
-            if (property == null) throw new ArgumentNullException(nameof(property));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-            var field = _mapper.GetExpression(property);
+            var expr = _mapper.GetExpression(keySelector);
 
-            return this.Max(field);
+            var value = _engine.Value.Max(_collection, expr);
+
+            return (K)_mapper.Deserialize(typeof(K), value);
         }
 
         #endregion

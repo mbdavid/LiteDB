@@ -152,16 +152,17 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Predicate()
         {
+            // unary expressions
+            Test(x => x.Active, "Active = true");
+            Test(x => x.Active == true, "Active = @p0", true);
+            Test(x => x.Active && true, "Active AND @p0", true);
+            Test(x => !x.Active, "(Active) = false");
+
             // binary expressions
             Test(x => x.Salary > 50, "Salary > @p0", 50);
             Test(x => x.Salary != 50, "Salary != @p0", 50);
             Test(x => x.Salary == x.Id, "Salary = _id");
             Test(x => x.Salary > 50 && x.Name == "John", "Salary > @p0 AND Name = @p1", 50, "John");
-
-            // unary expressions
-            Test(x => x.Active == true, "Active = @p0", true);
-            Test(x => x.Active && true, "Active AND @p0", true);
-            Test(x => !x.Active, "(Active) = false");
 
             // iif (c ? true : false)
             Test(x => x.Id > 10 ? x.Id : 0, "IIF(_id > @p0, _id, @p1)", 10, 0);
@@ -250,9 +251,9 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Complex_Expressions()
         {
-            // { 'CityName': $.Address.City.CityName, 
+            // 'CityName': $.Address.City.CityName, 
             // 'Cnt': COUNT(IIF(TO_STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)), 
-            // 'List': TO_ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number) }
+            // 'List': TO_ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number)
 
             Test(x => new
             {
