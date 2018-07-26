@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -12,8 +13,9 @@ namespace LiteDB.Engine
         /// </summary>
         public bool EnsureIndex(string collection, string expression, bool unique = false)
         {
-            //TODO: implement a index name cleaning/hash
-            return this.EnsureIndex(collection, expression, expression, unique);
+            var name = Regex.Replace(expression, @"[^a-z]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+            return this.EnsureIndex(collection, name, expression, unique);
         }
 
         /// <summary>
