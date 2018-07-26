@@ -32,8 +32,7 @@ namespace LiteDB.Engine
                     return this.ParseSelect(true);
                 case "INSERT": return this.ParseInsert();
                 case "DELETE": return this.ParseDelete();
-                case "UPDATE": return this.ParseUpadateReplace(UpdateMode.Merge);
-                case "REPLACE": return this.ParseUpadateReplace(UpdateMode.Replace);
+                case "UPDATE": return this.ParseUpadate();
                 case "DROP": return this.ParseDrop();
                 case "RENAME": return this.ParseRename();
                 case "CREATE": return this.ParseCreate();

@@ -47,9 +47,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Update documents using expression to find (predicate) and modify (extend expression must retun a document)
+        /// Update documents using extend expression to extend found document using predicate
         /// </summary>
-        public int Update(string collection, BsonExpression extend, UpdateMode mode, BsonExpression predicate)
+        public int Update(string collection, BsonExpression extend, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (extend == null) throw new ArgumentNullException(nameof(extend));
@@ -76,9 +76,7 @@ namespace LiteDB.Engine
 
                         if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(extend));
 
-                        var output = mode == UpdateMode.Merge ?
-                            doc.Extend(result.AsDocument) :
-                            result.AsDocument;
+                        var output = doc.Extend(result.AsDocument);
 
                         // be sure result document will contain same _id as current doc
                         if(output.TryGetValue("_id", out var newId))
