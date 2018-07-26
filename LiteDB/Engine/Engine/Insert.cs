@@ -60,7 +60,8 @@ namespace LiteDB.Engine
             }
             else if(id.IsNumber)
             {
-                this.SetSequence(col, id);
+                // update memory sequence of numeric _id
+                this.SetSequence(col, snapshot, id);
             }
 
             // test if _id is a valid type
@@ -104,42 +105,28 @@ namespace LiteDB.Engine
         /// <summary>
         /// Collection last sequence cache
         /// </summary>
-        private ConcurrentDictionary<string, long> _sequence = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, long> _sequences = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Get lastest value from a _id collection and plus 1 - use _sequence cache
         /// </summary>
         private BsonValue GetSequence(CollectionPage col, Snapshot snapshot, BsonAutoId autoId)
         {
-            var next = _sequence.AddOrUpdate(col.CollectionName, (s) =>
+            var next = _sequences.AddOrUpdate(col.CollectionName, (s) =>
             {
-                // add method
-                var tail = col.GetIndex(0).TailNode;
-                var head = col.GetIndex(0).HeadNode;
+                var lastId = this.GetLastId(col, snapshot);
 
-                // get tail page and previous page
-                var tailPage = snapshot.GetPage<IndexPage>(tail.PageID);
-                var node = tailPage.GetNode(tail.Index);
-                var prevNode = node.Prev[0];
+                // emtpy collection, return 1
+                if (lastId.IsMinValue) return 1;
 
-                if (prevNode == head)
+                // if lastId is not number, throw exception
+                if (!lastId.IsNumber)
                 {
-                    return 1;
+                    throw new LiteException(0, $"It's not possible use AutoId={autoId} because '{col.CollectionName}' collection constains not only numbers in _id index ({lastId}).");
                 }
-                else
-                {
-                    var lastPage = prevNode.PageID == tailPage.PageID ? tailPage : snapshot.GetPage<IndexPage>(prevNode.PageID);
-                    var lastNode = lastPage.GetNode(prevNode.Index);
 
-                    var lastKey = lastNode.Key;
-
-                    if (lastKey.IsNumber == false)
-                    {
-                        throw new LiteException(0, $"It's not possible use AutoId={autoId} because last value from collection '{col.CollectionName}' is '{lastKey}' and is not a number");
-                    }
-
-                    return lastNode.Key.AsInt64 + 1;
-                }
+                // return nextId
+                return lastId.AsInt64 + 1;
             },
             (s, value) =>
             {
@@ -152,10 +139,62 @@ namespace LiteDB.Engine
                 new BsonValue(next);
         }
 
-        private void SetSequence(CollectionPage col, BsonValue lastId)
+        /// <summary>
+        /// Update sequence number with new _id passed by user, IF this number are higher than current last _id
+        /// At this point, newId.Type is Number
+        /// </summary>
+        private void SetSequence(CollectionPage col, Snapshot snapshot, BsonValue newId)
         {
-            // TODO must update sequence when passed by user?
-            //_sequence.TryUpdate()
+            _sequences.AddOrUpdate(col.CollectionName, (s) =>
+            {
+                var lastId = this.GetLastId(col, snapshot);
+
+                // create new collection based with max value between last _id index key or new passed _id
+                if (lastId.IsNumber)
+                {
+                    return Math.Max(lastId.AsInt64, newId.AsInt64);
+                }
+                else
+                {
+                    // if collection last _id is not an number (is empty collection or contains another data type _id)
+                    // use newId
+                    return newId.AsInt64;
+                }
+
+            }, (s, value) =>
+            {
+                // return max value between current sequence value vs new inserted value
+                return Math.Max(value, newId.AsInt64);
+            });
+        }
+
+        /// <summary>
+        /// Get last _id index key from collection. Returns MinValue if collection are empty
+        /// </summary>
+        private BsonValue GetLastId(CollectionPage col, Snapshot snapshot)
+        {
+            // add method
+            var tail = col.GetIndex(0).TailNode;
+            var head = col.GetIndex(0).HeadNode;
+
+            // get tail page and previous page
+            var tailPage = snapshot.GetPage<IndexPage>(tail.PageID);
+            var node = tailPage.GetNode(tail.Index);
+            var prevNode = node.Prev[0];
+
+            if (prevNode == head)
+            {
+                return BsonValue.MinValue;
+            }
+            else
+            {
+                var lastPage = prevNode.PageID == tailPage.PageID ? tailPage : snapshot.GetPage<IndexPage>(prevNode.PageID);
+                var lastNode = lastPage.GetNode(prevNode.Index);
+
+                var lastKey = lastNode.Key;
+
+                return lastKey;
+            }
         }
     }
 }

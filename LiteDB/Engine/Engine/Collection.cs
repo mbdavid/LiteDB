@@ -37,7 +37,7 @@ namespace LiteDB.Engine
                 srv.Drop(col, transaction);
 
                 // remove sequence number (if exists)
-                _sequence.TryRemove(collection, out var dummy);
+                _sequences.TryRemove(collection, out var dummy);
 
                 return true;
             });
