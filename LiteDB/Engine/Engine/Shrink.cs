@@ -25,6 +25,8 @@ namespace LiteDB.Engine
         {
             var originalSize = _dataFile.Length;
 
+            if (!string.IsNullOrEmpty(password)) throw new NotImplementedException("Database encryption are not implemented yet on v5.");
+
             // shrink works with a temp engine that will use same wal file name as current datafile
             // after copy all data from current datafile to temp datafile (all data will be in WAL)
             // run checkpoint in current database

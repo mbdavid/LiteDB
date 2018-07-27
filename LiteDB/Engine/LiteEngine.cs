@@ -111,6 +111,9 @@ namespace LiteDB.Engine
 
             try
             {
+                // not implemented encryption
+                if (!string.IsNullOrEmpty(settings.Password)) throw new NotImplementedException("Database encryption are not implemented yet on v5.");
+
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
 

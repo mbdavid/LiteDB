@@ -36,6 +36,11 @@ namespace LiteDB.Engine
         public string FileName { get; set; } = ":memory:";
 
         /// <summary>
+        /// Password database encryption (not implemented yet)
+        /// </summary>
+        public string Password { get; set; } = null;
+
+        /// <summary>
         /// Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
