@@ -31,7 +31,6 @@ namespace LiteDB.Engine
         // immutable settings
         private readonly IDiskFactory _factory;
         private readonly bool _utcDate;
-        private readonly bool _readOnly;
         private readonly bool _checkpointOnShutdown;
         private readonly int _maxMemoryTransactionSize;
 
@@ -124,7 +123,6 @@ namespace LiteDB.Engine
                 _utcDate = settings.UtcDate;
                 _checkpointOnShutdown = settings.CheckpointOnShutdown;
                 _maxMemoryTransactionSize = settings.MaxMemoryTransactionSize;
-                _readOnly = settings.ReadOnly;
 
                 _bsonReader = new BsonReader(settings.UtcDate);
                 _bsonWriter = new BsonWriter();
@@ -196,7 +194,7 @@ namespace LiteDB.Engine
                 trans.Shutdown();
             }
 
-            if (_checkpointOnShutdown && _readOnly == false)
+            if (_checkpointOnShutdown)
             {
                 // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)
                 _wal?.Checkpoint(true, null, false);

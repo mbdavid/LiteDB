@@ -46,11 +46,6 @@ namespace LiteDB.Engine
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
-        /// Define if datafile will be read only, with no write operations. Datafile must already created with no WAL file (default: false)
-        /// </summary>
-        public bool ReadOnly { get; set; } = false;
-
-        /// <summary>
         /// If database is new, initialize with allocated space - support KB, MB, GB (default: 0)
         /// </summary>
         public long InitialSize { get; set; } = 0;
@@ -105,7 +100,7 @@ namespace LiteDB.Engine
             }
             else if(!string.IsNullOrEmpty(this.FileName))
             {
-                return new FileStreamDiskFactory(this.FileName, this.ReadOnly);
+                return new FileStreamDiskFactory(this.FileName);
             }
             else
             {

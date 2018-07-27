@@ -14,7 +14,6 @@ namespace LiteDB.Engine
 
             doc["filename"] = _factory.FileName;
             doc["limitSize"] = _wal.WalFile.LimitSize;
-            doc["readOnly"] = _readOnly;
             doc["timeout"] = _locker.Timeout.ToString();
             doc["utcDate"] = _utcDate;
             doc["maxMemoryTransactionSize"] = _maxMemoryTransactionSize;

@@ -30,7 +30,6 @@ namespace LiteDB
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
         public const int DATABASE_WRONG_PASSWORD = 123;
         public const int ALREADY_OPEN_DATAFILE = 124;
-        public const int READ_ONLY_DATABASE = 125;
         public const int INVALID_TRANSACTION_STATE = 126;
         public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
         public const int INVALID_INDEX_NAME = 129;
@@ -213,11 +212,6 @@ namespace LiteDB
         internal static LiteException DatabaseWrongPassword()
         {
             return new LiteException(DATABASE_WRONG_PASSWORD, "Invalid database password.");
-        }
-
-        internal static LiteException ReadOnlyDatabase()
-        {
-            return new LiteException(READ_ONLY_DATABASE, "This action are not supported because database was opened in read only mode.");
         }
 
         internal static LiteException InvalidDbRef(string path)

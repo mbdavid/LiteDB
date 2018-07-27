@@ -14,13 +14,11 @@ namespace LiteDB.Engine
     {
         private string _dataFileName;
         private string _walFileName;
-        private bool _readOnly;
 
-        public FileStreamDiskFactory(string filename, bool readOnly)
+        public FileStreamDiskFactory(string filename)
         {
             _dataFileName = filename;
             _walFileName = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + "-wal" + Path.GetExtension(filename));
-            _readOnly = readOnly;
         }
 
         /// <summary>
@@ -53,8 +51,8 @@ namespace LiteDB.Engine
         private Stream GetStreamInternal(string filename, bool write, FileOptions options)
         {
             return new FileStream(filename,
-                _readOnly || !write ? FileMode.Open : FileMode.OpenOrCreate,
-                _readOnly || !write ? FileAccess.Read : FileAccess.ReadWrite,
+                write == false ? FileMode.Open : FileMode.OpenOrCreate,
+                write == false ? FileAccess.Read : FileAccess.ReadWrite,
                 write ? FileShare.Read : FileShare.ReadWrite, // TODO: tenho duvia se nao precisa ser somente Write 
                 PAGE_SIZE,
                 options);
