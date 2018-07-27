@@ -66,11 +66,6 @@ namespace LiteDB.Engine
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// Use "sync over async" to UWP apps access any directory (default: false)
-        /// </summary>
-        public bool SyncOverAsync { get; set; } = false;
-
-        /// <summary>
         /// When wal file get this checkpoint limit, write over data disk
         /// </summary>
         public int Checkpoint { get; set; } = 1000;
@@ -105,7 +100,7 @@ namespace LiteDB.Engine
             }
             else if(!string.IsNullOrEmpty(this.FileName))
             {
-                return new FileStreamDiskFactory(this.FileName, this.ReadOnly, this.SyncOverAsync);
+                return new FileStreamDiskFactory(this.FileName, this.ReadOnly);
             }
             else
             {

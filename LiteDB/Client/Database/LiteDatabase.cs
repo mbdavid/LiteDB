@@ -56,7 +56,6 @@ namespace LiteDB
                     InitialSize = connectionString.InitialSize,
                     LimitSize = connectionString.LimitSize,
                     UtcDate = connectionString.UtcDate,
-                    MaxMemoryTransactionSize = connectionString.CacheSize,
                     Timeout = connectionString.Timeout,
                     LogLevel = connectionString.Log
                 };

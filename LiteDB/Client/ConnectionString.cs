@@ -20,11 +20,6 @@ namespace LiteDB
         public string Password { get; set; } = null;
 
         /// <summary>
-        /// "cache size": Max number of pages in cache. After this size, flush data to disk to avoid too memory usage (default: 5000)
-        /// </summary>
-        public int CacheSize { get; set; } = 5000;
-
-        /// <summary>
         /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
@@ -48,13 +43,6 @@ namespace LiteDB
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
         /// </summary>
         public bool UtcDate { get; set; } = false;
-
-#if HAVE_SYNC_OVER_ASYNC
-        /// <summary>
-        /// "async": Use "sync over async" to UWP apps access any directory (default: false)
-        /// </summary>
-        public bool Async { get; set; } = false;
-#endif
 
         /// <summary>
         /// Initialize empty connection string
@@ -85,16 +73,11 @@ namespace LiteDB
             // setting values to properties
             this.FileName = values.GetValue("filename", this.FileName);
             this.Password = values.GetValue<string>("password", this.Password);
-            this.CacheSize = values.GetValue(@"cache size", this.CacheSize);
             this.Timeout = values.GetValue("timeout", this.Timeout);
             this.InitialSize = values.GetFileSize(@"initial size", this.InitialSize);
             this.LimitSize = values.GetFileSize(@"limit size", this.LimitSize);
             this.Log = values.GetValue("log", this.Log);
             this.UtcDate = values.GetValue("utc", this.UtcDate);
-#if HAVE_SYNC_OVER_ASYNC
-            this.Async = values.GetValue("async", this.Async);
-#endif
-
         }
     }
 }

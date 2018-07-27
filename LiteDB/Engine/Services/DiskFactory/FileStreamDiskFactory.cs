@@ -15,14 +15,12 @@ namespace LiteDB.Engine
         private string _dataFileName;
         private string _walFileName;
         private bool _readOnly;
-        private bool _syncOverAsync;
 
-        public FileStreamDiskFactory(string filename, bool readOnly, bool syncOverAsync)
+        public FileStreamDiskFactory(string filename, bool readOnly)
         {
             _dataFileName = filename;
             _walFileName = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + "-wal" + Path.GetExtension(filename));
             _readOnly = readOnly;
-            _syncOverAsync = syncOverAsync;
         }
 
         /// <summary>
@@ -35,15 +33,6 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetDataFileStream(bool write)
         {
-#if HAVE_SYNC_OVER_ASYNC
-            if (_syncOverAsync)
-            {
-                return System.Threading.Tasks.Task.Run(() => GetStreamInternal(_dataFileName, write, FileOptions.RandomAccess))
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-#endif
             return GetStreamInternal(_dataFileName, write, FileOptions.RandomAccess);
         }
 
@@ -54,15 +43,6 @@ namespace LiteDB.Engine
         {
             var options = write ? FileOptions.SequentialScan : FileOptions.RandomAccess;
 
-#if HAVE_SYNC_OVER_ASYNC
-            if (_syncOverAsync)
-            {
-                return System.Threading.Tasks.Task.Run(() => GetStreamInternal(_dataFileName, write, options))
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-#endif
             return GetStreamInternal(_walFileName, write, options);
         }
 
