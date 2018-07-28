@@ -20,7 +20,7 @@ namespace LiteDB.Engine
         ///  [ OFFSET {number} ]
         ///     [ FOR UPDATE ]
         /// </summary>
-        private BsonDataReader ParseSelect(bool explainPlan)
+        private BsonDataReader ParseSelect(bool explain)
         {
             var token = _tokenizer.LookAhead();
             var all = false;
@@ -193,7 +193,7 @@ namespace LiteDB.Engine
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
             // execute query as insert or return values
-            if (into != null && explainPlan == false)
+            if (into != null && explain == false)
             {
                 var result = 0;
 
@@ -211,7 +211,7 @@ namespace LiteDB.Engine
             }
             else
             {
-                return query.ExecuteQuery(explainPlan);
+                return query.ExecuteQuery(explain);
             }
         }
 

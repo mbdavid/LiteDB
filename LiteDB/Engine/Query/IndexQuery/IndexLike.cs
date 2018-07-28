@@ -19,13 +19,16 @@ namespace LiteDB.Engine
 
         internal override uint GetCost(CollectionIndex index)
         {
+            if (index.KeyCount == 0) return uint.MaxValue;
+
             if (_startsWith.Length > 0)
             {
-                // need some statistics here... assuming read 20% of total
+                // need some statistics here (histogram)... assuming read 20% of total
                 return (uint)(index.KeyCount * (0.2));
             }
             else
             {
+                // index full scan
                 return index.KeyCount;
             }
         }
@@ -76,7 +79,7 @@ namespace LiteDB.Engine
         public override string ToString()
         {
             return string.Format("{0}({1} LIKE \"{2}\")",
-                _startsWith.Length > 0 ? "INDEX RANGE SCAN" : "FULL INDEX SCAN",
+                _startsWith.Length > 0 ? "INDEX SEEK (+RANGE SCAN)" : "FULL INDEX SCAN",
                 this.Name,
                 _pattern);
         }

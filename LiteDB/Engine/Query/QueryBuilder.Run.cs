@@ -10,9 +10,9 @@ namespace LiteDB.Engine
     public partial class QueryBuilder
     {
         /// <summary>
-        /// Find for documents in a collection using Query definition
+        /// Find for documents in a collection using Query definition. If executionPlan = true, returns only execution plan
         /// </summary>
-        internal BsonDataReader ExecuteQuery(bool explainPlan)
+        internal BsonDataReader ExecuteQuery(bool executionPlan)
         {
             var transaction = _engine.GetTransaction(true, out var isNew);
 
@@ -58,11 +58,11 @@ namespace LiteDB.Engine
                 var query = this.OptimizeQuery(snapshot);
 
                 // if execution is just to get explan plan, return as single document result
-                if (explainPlan)
+                if (executionPlan)
                 {
                     cursor.Timer.Stop();
 
-                    yield return query.GetExplainPlan();
+                    yield return query.GetExecutionPlan();
 
                     if (isNew)
                     {
@@ -137,9 +137,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Execute explain plan over current query definition to see how engine will execute query
+        /// Get execution plan over current query definition to see how engine will execute query
         /// </summary>
-        public BsonDocument ExplainPlan()
+        public BsonDocument GetPlan()
         {
             using (var reader = this.ExecuteQuery(true))
             {

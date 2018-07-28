@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -35,10 +36,10 @@ namespace LiteDB.Engine
             this.IndexExpression = index.Expression;
             this.Expression = expr;
 
-            // create index instances
-            var indexes = value.Execute().Select(x => this.CreateIndex(expr.Type, index.Name, x)).ToList();
+            // create index instance
+            this.Index = value.Execute().Select(x => this.CreateIndex(expr.Type, index.Name, x)).FirstOrDefault();
 
-            this.Index = indexes.Count == 1 ? indexes[0] : new IndexOr(indexes);
+            DEBUG(this.Index == null, "index must be not null");
 
             // calcs index cost
             this.Cost = this.Index.GetCost(index);

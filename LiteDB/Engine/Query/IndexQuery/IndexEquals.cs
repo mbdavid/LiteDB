@@ -23,12 +23,17 @@ namespace LiteDB.Engine
             {
                 return 1; // best case, ever!
             }
+            else if(index.KeyCount == 0)
+            {
+                return uint.MaxValue; // index are not analyzed
+            }
             else
             {
-                // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
-                var uniq = (double)Math.Min(index.UniqueKeyCount, index.KeyCount);
+                var density = index.Density;
 
-                return (uint)(index.KeyCount / uniq);
+                var cost = density == 0 ? index.KeyCount : (uint)Math.Round(1d / density);
+
+                return cost;
             }
         }
 
@@ -54,7 +59,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("INDEX SCAN({0} = {1})", this.Name, _value);
+            return string.Format("INDEX SEEK({0} = {1})", this.Name, _value);
         }
     }
 }

@@ -296,11 +296,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute explain plan over current query definition to see how engine will execute query
+        /// Get execution plan over current query definition to see how engine will execute query
         /// </summary>
-        public BsonDocument ExplainPlan()
+        public BsonDocument GetPlan()
         {
-            return _query.ExplainPlan();
+            return _query.GetPlan();
         }
 
         /// <summary>

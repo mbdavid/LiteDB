@@ -91,12 +91,12 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ForUpdate { get; set; } = false;
 
-        #region Explain Plan
+        #region Execution Plan
 
         /// <summary>
-        /// Get detail plan engine will execute
+        /// Get detail about execution plan for this query definition
         /// </summary>
-        public BsonDocument GetExplainPlan()
+        public BsonDocument GetExecutionPlan()
         {
             var doc = new BsonDocument
             {
@@ -114,11 +114,11 @@ namespace LiteDB.Engine
                 ["cost"] = (int)this.IndexCost
             };
 
-            doc["load"] = new BsonDocument
+            doc["lookup"] = new BsonDocument
             {
                 ["loader"] = this.Index is IndexVirtual ? "virtual" : (this.IsIndexKeyOnly ? "index" : "document"),
                 ["fields"] =
-                    this.Fields.Count == 0 ? new BsonValue("<full>") :
+                    this.Fields.Count == 0 ? new BsonValue("$") :
                     (BsonValue)new BsonArray(this.Fields.Select(x => new BsonValue(x))),
             };
 
@@ -166,16 +166,6 @@ namespace LiteDB.Engine
             }
 
             return doc;
-        }
-
-        /// <summary>
-        /// Render an expression as string - add parameter if have any
-        /// </summary>
-        private BsonValue GetExpression(BsonExpression expr)
-        {
-            if (expr == null) return BsonValue.Null;
-
-            return expr.Source;
         }
 
         #endregion

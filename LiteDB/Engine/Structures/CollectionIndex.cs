@@ -56,6 +56,26 @@ namespace LiteDB.Engine
         public uint UniqueKeyCount { get; set; } = 0;
 
         /// <summary>
+        /// Get index density based on KeyCount vs UniqueKeyCount. Value are from 0 to 1.
+        /// 0 means completed unique keys (best)
+        /// 1 means has only 1 single unique key in all index (worst)
+        /// </summary>
+        public double Density
+        {
+            get
+            {
+                if (this.Unique) return 0;
+                if (this.UniqueKeyCount == 0 || this.KeyCount == 0) return 1;
+
+                var density = (double)Math.Min(this.UniqueKeyCount, this.KeyCount) /
+                    (double)this.KeyCount;
+                    
+
+                return Math.Round(density, 2);
+            }
+        }
+
+        /// <summary>
         /// Returns if this index slot is empty and can be used as new index
         /// </summary>
         public bool IsEmpty

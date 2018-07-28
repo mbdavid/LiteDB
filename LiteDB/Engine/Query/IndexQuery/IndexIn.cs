@@ -19,16 +19,24 @@ namespace LiteDB.Engine
 
         internal override uint GetCost(CollectionIndex index)
         {
+            var count = (uint)_values.Count;
+
             if (index.Unique)
             {
-                return 1; // best case, ever!
+                return count; // best case, ever!
+            }
+            else if (index.KeyCount == 0)
+            {
+                return uint.MaxValue;
             }
             else
             {
-                // how unique is this index? (sometimes, unique key counter can be bigger than normal counter - it's because deleted nodes and will be fix only in next analyze collection)
-                var uniq = (double)Math.Min(index.UniqueKeyCount, index.KeyCount);
+                // use same cost from Equals, but multiply with values count
+                var density = index.Density;
 
-                return (uint)(index.KeyCount / uniq);
+                var cost = density == 0 ? index.KeyCount : (uint)(1d / density);
+
+                return cost * count;
             }
         }
 
@@ -45,7 +53,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("INDEX SCAN({0} IN {1})", this.Name, JsonSerializer.Serialize(_values));
+            return string.Format("INDEX SEEK({0} IN {1})", this.Name, JsonSerializer.Serialize(_values));
         }
     }
 }

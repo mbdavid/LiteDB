@@ -149,10 +149,10 @@ namespace LiteDB.Engine
             {
                 // get index that match with expression left/right side 
                 var index = indexes
-                    .Where(x => expr.Left.Source == x.Expression && expr.Left.IsImmutable && expr.Right.IsConstant)
+                    .Where(x => x.Expression == expr.Left.Source && expr.Right.IsConstant)
                     .Select(x => Tuple.Create(x, expr.Right))
                     .Union(indexes
-                        .Where(x => expr.Right.Source == x.Expression && expr.Right.IsImmutable && expr.Left.IsConstant)
+                        .Where(x => x.Expression == expr.Right.Source && expr.Left.IsConstant)
                         .Select(x => Tuple.Create(x, expr.Left))
                     ).FirstOrDefault();
 
@@ -161,7 +161,7 @@ namespace LiteDB.Engine
                 // calculate index score and store highest score
                 var current = new IndexCost(index.Item1, expr, index.Item2);
 
-                if (lowest == null || lowest.Cost < current.Cost)
+                if (lowest == null || current.Cost < lowest.Cost)
                 {
                     lowest = current;
                 }

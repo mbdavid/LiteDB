@@ -16,6 +16,9 @@ namespace LiteDB.Engine
 
         internal override uint GetCost(CollectionIndex index)
         {
+            // no analyzed index
+            if (index.KeyCount == 0) return uint.MaxValue;
+
             // always worst cost - return all documents with no index use (just for order)
             return index.KeyCount;
         }
@@ -27,7 +30,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("FULL SCAN({0})", this.Name);
+            return string.Format("FULL INDEX SCAN({0})", this.Name);
         }
     }
 }
