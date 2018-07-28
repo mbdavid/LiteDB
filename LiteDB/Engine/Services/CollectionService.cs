@@ -45,7 +45,7 @@ namespace LiteDB.Engine
         {
             if (name.Length > COLLECTION_NAME_MAX_LENGTH) throw LiteException.InvalidCollectionName(name, "MaxLength = " + COLLECTION_NAME_MAX_LENGTH);
             if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
-            if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for virtual collections)");
+            if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for system collections)");
 
             // test if not exists (global or local)
             if (_header.Collections.ContainsKey(name)) throw LiteException.AlreadyExistsCollectionName(name);

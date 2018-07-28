@@ -21,7 +21,11 @@ namespace LiteDB
                 case "AddHours": return "DATEADD('h', @0, #)";
                 case "AddMinutes": return "DATEADD('m', @0, #)";
                 case "AddSeconds": return "DATEADD('s', @0, #)";
-                case "ToString": return "TO_STRING(#)";
+                case "ToString":
+                    var pars = method.GetParameters();
+                    if (pars.Length == 0) return "TO_STRING(#)";
+                    else if (pars.Length == 1 && pars[0].ParameterType == typeof(string)) return "FORMAT(#, @0)";
+                    break;
 
                 // static methods
                 case "Parse": return "TO_DATETIME(@0)";

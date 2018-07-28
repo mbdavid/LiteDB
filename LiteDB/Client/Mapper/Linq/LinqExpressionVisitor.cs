@@ -15,12 +15,12 @@ namespace LiteDB
         {
             [typeof(Convert)] = new ConvertResolver(),
             [typeof(DateTime)] = new DateTimeResolver(),
-            [typeof(Decimal)] = new DecimalResolver(),
-            [typeof(Double)] = new DoubleResolver(),
+            [typeof(Int32)] = new NumberResolver("TO_INT32"),
+            [typeof(Int64)] = new NumberResolver("TO_INT64"),
+            [typeof(Decimal)] = new NumberResolver("TO_DECIMAL"),
+            [typeof(Double)] = new NumberResolver("TO_DOUBLE"),
             [typeof(Enumerable)] = new EnumerableResolver(),
             [typeof(Guid)] = new GuidResolver(),
-            [typeof(Int32)] = new Int32Resolver(),
-            [typeof(Int64)] = new Int64Resolver(),
             [typeof(Math)] = new MathResolver(),
             [typeof(ObjectId)] = new ObjectIdResolver(),
             [typeof(Sql)] = new SqlResolver(),
@@ -79,6 +79,11 @@ namespace LiteDB
             _builder.Length--;
 
             return l;
+        }
+
+        protected override Expression VisitTypeBinary(TypeBinaryExpression node)
+        {
+            return base.VisitTypeBinary(node);
         }
 
         /// <summary>
@@ -227,6 +232,21 @@ namespace LiteDB
                 _builder.Append("(");
                 this.Visit(node.Operand);
                 _builder.Append(") = false");
+            }
+            else if (node.NodeType == ExpressionType.Convert)
+            {
+                var methodName = "To" + node.Type.Name.ToString();
+
+                var convert = typeof(Convert).GetMethods()
+                    .Where(x => x.Name == methodName)
+                    .Where(x => x.GetParameters().Length == 1 && x.GetParameters().Any(z => z.ParameterType == node.Operand.Type))
+                    .FirstOrDefault();
+
+                if (convert == null) throw new NotSupportedException($"Cast from {node.Type.Name} are not supported when convert to BsonExpression");
+
+                var method = Expression.Call(null, convert, node.Operand);
+
+                this.VisitMethodCall(method);
             }
             else
             {

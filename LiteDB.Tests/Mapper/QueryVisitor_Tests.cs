@@ -169,6 +169,18 @@ namespace LiteDB.Tests.Mapper
         }
 
         [TestMethod]
+        public void Linq_Cast_Convert_Types()
+        {
+            // works only with BSON data types (not UInt32, UInt64, ...)
+
+            // int cast/convert/parse
+            Test(x => (int)123d, "TO_INT(@p0)", 123d);
+            Test(x => Convert.ToInt32("123"), "TO_INT(@p0)", "123");
+            Test(x => Int32.Parse("123"), "TO_INT(@p0)", "123");
+
+        }
+
+        [TestMethod]
         public void Linq_Methods()
         {
             // string instance methods
@@ -199,6 +211,12 @@ namespace LiteDB.Tests.Mapper
             Test(x => Guid.NewGuid(), "GUID()");
             Test(x => Guid.Empty, "TO_GUID('00000000-0000-0000-0000-000000000000')");
             Test(x => Guid.Parse("1A3B944E-3632-467B-A53A-206305310BAC"), "TO_GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
+
+            // toString/Format
+            Test(x => x.Id.ToString(), "TO_STRING(_id)");
+            Test(x => x.CreatedOn.ToString(), "TO_STRING(CreatedOn)");
+            Test(x => x.CreatedOn.ToString("yyyy-MM-dd"), "FORMAT(CreatedOn, @p0)", "yyyy-MM-dd");
+            Test(x => x.Salary.ToString("#.##0,00"), "FORMAT(Salary, @p0)", "#.##0,00");
 
             // adding dates
             Test(x => x.CreatedOn.AddYears(5), "DATEADD('y', @p0, CreatedOn)", 5);

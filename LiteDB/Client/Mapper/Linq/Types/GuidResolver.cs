@@ -14,6 +14,10 @@ namespace LiteDB
         {
             switch (method.Name)
             {
+                // instance methods
+                case "ToString": return "TO_STRING(#)";
+
+                // static methods
                 case "NewGuid": return "GUID()";
                 case "Parse": return "TO_GUID(@0)";
                 case "TryParse": throw new NotSupportedException("There is no TryParse translate. Use Guid.Parse()");
