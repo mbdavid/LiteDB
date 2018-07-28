@@ -235,18 +235,30 @@ namespace LiteDB
             }
             else if (node.NodeType == ExpressionType.Convert)
             {
-                var methodName = "To" + node.Type.Name.ToString();
+                var fromType = node.Operand.Type;
+                var toType = node.Type;
 
-                var convert = typeof(Convert).GetMethods()
-                    .Where(x => x.Name == methodName)
-                    .Where(x => x.GetParameters().Length == 1 && x.GetParameters().Any(z => z.ParameterType == node.Operand.Type))
-                    .FirstOrDefault();
+                // do Numeric cast only from "Double/Decimal" to "Int32/Int64"
+                if ((fromType == typeof(Double) || fromType == typeof(Decimal)) &&
+                    (toType == typeof(Int32) || toType == typeof(Int64)))
+                {
+                    var methodName = "To" + toType.Name.ToString();
 
-                if (convert == null) throw new NotSupportedException($"Cast from {node.Type.Name} are not supported when convert to BsonExpression");
+                    var convert = typeof(Convert).GetMethods()
+                        .Where(x => x.Name == methodName)
+                        .Where(x => x.GetParameters().Length == 1 && x.GetParameters().Any(z => z.ParameterType == fromType))
+                        .FirstOrDefault();
 
-                var method = Expression.Call(null, convert, node.Operand);
+                    if (convert == null) throw new NotSupportedException($"Cast from {fromType.Name} are not supported when convert to BsonExpression");
 
-                this.VisitMethodCall(method);
+                    var method = Expression.Call(null, convert, node.Operand);
+
+                    this.VisitMethodCall(method);
+                }
+                else
+                {
+                    base.VisitUnary(node);
+                }
             }
             else
             {

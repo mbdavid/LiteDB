@@ -201,9 +201,12 @@ namespace LiteDB.Engine
             {
                 // re-use index order and no not run OrderBy
                 query.Index.Order = _orderBy.Order;
+
+                // in this case "query.OrderBy" will be null
             }
             else
             {
+                // otherwise, query.OrderBy will be setted according user defined
                 query.OrderBy = _orderBy;
             }
         }
@@ -218,12 +221,13 @@ namespace LiteDB.Engine
             // if groupBy use same expression in index, set group by order to MaxValue to not run
             if (_groupBy.Expression.Source == query.IndexExpression)
             {
-                // update index order tu use same as group by (only if has no order by defined)
-                if (_groupBy.Order == query.Index.Order || _orderBy == null)
-                {
-                    _groupBy.Order = 0;
-                    query.Index.Order = _groupBy.Order;
-                }
+                // do not sort when run groupBy (already sorted by index)
+                _groupBy.Order = 0;
+            }
+            else
+            {
+                // by default, groupBy sort as ASC only
+                _groupBy.Order = Query.Ascending;
             }
 
             query.GroupBy = _groupBy;

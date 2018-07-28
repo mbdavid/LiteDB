@@ -72,8 +72,7 @@ namespace LiteDB.Tests.Query
             Assert.IsTrue(output["index"].AsBoolean, "create index");
             Assert.IsTrue(output["uniqueIndex"].AsBoolean, "create unique index");
 
-            Assert.AreEqual(1000, output["update"].AsInt32, "update - merge");
-            Assert.AreEqual(1, output["replace"].AsInt32, "update - replace");
+            Assert.AreEqual(1000, output["update"].AsInt32, "update");
 
             Assert.IsTrue(output["trans"].IsGuid, "begin transaction");
             Assert.IsTrue(output["commit"].AsBoolean, "commit");

@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         ///    [ FROM {collection|FILE} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {filterExpr} ]
-        ///   [ GROUP BY {groupByExpr} [ ASC | DESC ] ]
+        ///   [ GROUP BY {groupByExpr} ]
         ///  [ HAVING {filterExpr} ]
         ///   [ ORDER BY {orderByExpr} [ ASC | DESC ] ]
         ///   [ LIMIT {number} ]
@@ -112,15 +112,7 @@ namespace LiteDB.Engine
 
                 var groupBy = BsonExpression.Create(_tokenizer, _parameters);
 
-                var groupByOrder = Query.Ascending;
-                var groupByToken = _tokenizer.LookAhead();
-
-                if (groupByToken.Is("ASC") || groupByToken.Is("DESC"))
-                {
-                    groupByOrder = _tokenizer.ReadToken().Is("ASC") ? Query.Ascending : Query.Descending;
-                }
-
-                query.GroupBy(groupBy, groupByOrder);
+                query.GroupBy(groupBy);
 
                 ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 

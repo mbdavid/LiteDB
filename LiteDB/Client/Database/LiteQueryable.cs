@@ -240,18 +240,18 @@ namespace LiteDB
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public LiteQueryable<T> GroupBy(BsonExpression keySelector, int order = Query.Ascending)
+        public LiteQueryable<T> GroupBy(BsonExpression keySelector)
         {
-            _query.GroupBy(keySelector, order);
+            _query.GroupBy(keySelector);
             return this;
         }
 
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public LiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> keySelector, int order = Query.Ascending)
+        public LiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
         {
-            _query.GroupBy(_mapper.GetExpression(keySelector), order);
+            _query.GroupBy(_mapper.GetExpression(keySelector));
             return this;
         }
 

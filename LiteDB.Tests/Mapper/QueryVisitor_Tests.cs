@@ -171,13 +171,13 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Cast_Convert_Types()
         {
-            // works only with BSON data types (not UInt32, UInt64, ...)
+            // cast only fromType Double/Decimal to Int32/64
 
             // int cast/convert/parse
-            Test(x => (int)123d, "TO_INT(@p0)", 123d);
+            Test(x => (int)123.44, "TO_INT(@p0)", 123.44);
+            Test(x => (int)123.99m, "TO_INT(@p0)", 123.99m);
             Test(x => Convert.ToInt32("123"), "TO_INT(@p0)", "123");
             Test(x => Int32.Parse("123"), "TO_INT(@p0)", "123");
-
         }
 
         [TestMethod]

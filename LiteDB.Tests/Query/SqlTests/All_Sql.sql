@@ -32,11 +32,8 @@ SET @index       = CREATE INDEX idx_name ON person (name);
 -- CREATE UNIQUE INDEX
 SET @uniqueIndex = CREATE UNIQUE INDEX idx_email ON person (email);
 
--- UPDATE (merge)
-SET @update  = UPDATE person SET { age: age + 5, email: LOWER(email) } WHERE age > 0;
-
--- UPDATE (replace)
-SET @replace = REPLACE person SET { id, name } WHERE _id = 999;
+-- UPDATE
+SET @update = UPDATE person SET { age: age + 5, email: LOWER(email) } WHERE age > 0;
 
 -- BEGIN TRANSACTION
 SET @trans = BEGIN;

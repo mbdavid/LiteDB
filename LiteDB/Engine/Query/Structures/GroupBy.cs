@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupBy : OrderBy
     {
-        public GroupBy(BsonExpression expression, int order) : base(expression, order)
+        public GroupBy(BsonExpression expression) : base(expression, 0)
         {
         }
 

@@ -124,12 +124,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public QueryBuilder GroupBy(BsonExpression keySelector, int order = Query.Ascending)
+        public QueryBuilder GroupBy(BsonExpression keySelector)
         {
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             if (_groupBy != null) throw new InvalidOperationException("GROUP BY already defined");
 
-            _groupBy = new GroupBy(keySelector, order);
+            _groupBy = new GroupBy(keySelector);
 
             _groupBy.Select = _select?.Expression;
             _select = null;
