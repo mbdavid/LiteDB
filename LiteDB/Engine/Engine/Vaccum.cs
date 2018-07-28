@@ -13,6 +13,9 @@ namespace LiteDB.Engine
         /// </summary>
         public int Vaccum()
         {
+            // shrink can only run with no transaction
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Vaccum", TransactionState.Active);
+
             _locker.EnterReserved(false);
 
             try

@@ -8,16 +8,20 @@ namespace LiteDB
     /// <summary>
     /// Storage is a special collection to store files/streams. Transactions are not supported in Upload/Download operations.
     /// </summary>
-    public class LiteStorage
+    public class LiteStorage<T>
     {
-        internal const string FILES = "_files";
-        internal const string CHUNKS = "_chunks";
+        private readonly LiteDatabase _db;
 
-        private LiteEngine _engine;
+        private readonly LiteCollection<BsonDocument> _files;
+        private readonly LiteCollection<BsonDocument> _chunks;
+        private readonly int _chunkSize;
 
-        public LiteStorage(LiteEngine engine)
+        public LiteStorage(LiteDatabase db, string filesCollection, string chunkCollection, int chunkSize)
         {
-            _engine = engine;
+            _db = db;
+            _files = db.GetCollection(filesCollection);
+            _chunks = db.GetCollection(chunkCollection);
+            _chunkSize = chunkSize;
         }
 
         #region Upload
@@ -25,7 +29,7 @@ namespace LiteDB
         /// <summary>
         /// Open/Create new file storage and returns linked Stream to write operations
         /// </summary>
-        public LiteFileStream OpenWrite(string id, string filename, BsonDocument metadata = null)
+        public LiteFileStream OpenWrite(T id, string filename, BsonDocument metadata = null)
         {
             // checks if file exists
             var file = this.FindById(id);
@@ -138,11 +142,11 @@ namespace LiteDB
         /// <summary>
         /// Find a file inside datafile and returns FileEntry instance. Returns null if not found
         /// </summary>
-        public LiteFileInfo FindById(string id)
+        public LiteFileInfo<T> FindById(T id)
         {
-            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(id));
+            if (id == null) throw new ArgumentNullException(nameof(id));
 
-            var doc = _engine.Find(FILES, Query.EQ("_id", id)).FirstOrDefault();
+            var doc = _files.FindById()
 
             if (doc == null) return null;
 
@@ -150,28 +154,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns all FileEntry founded starting with id passed.
-        /// </summary>
-        public IEnumerable<LiteFileInfo> Find(string startsWith)
-        {
-            var query = startsWith.IsNullOrWhiteSpace() ?
-                Query.All() :
-                Query.StartsWith("_id", startsWith);
-
-            var docs = _engine.Find(FILES, query);
-
-            foreach (var doc in docs)
-            {
-                yield return new LiteFileInfo(_engine, doc);
-            }
-        }
-
-        /// <summary>
         /// Returns if a file exisits in database
         /// </summary>
-        public bool Exists(string id)
+        public bool Exists(T id)
         {
-            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(id));
+            if (id == null) throw new ArgumentNullException(nameof(id));
 
             return _engine.Exists(FILES, Query.EQ("_id", id));
         }
@@ -179,9 +166,9 @@ namespace LiteDB
         /// <summary>
         /// Returns all FileEntry inside database
         /// </summary>
-        public IEnumerable<LiteFileInfo> FindAll()
+        public IEnumerable<LiteFileInfo<T>> FindAll()
         {
-            return this.Find(null);
+            return this.Find;
         }
 
         #endregion
@@ -191,9 +178,11 @@ namespace LiteDB
         /// <summary>
         /// Delete a file inside datafile and all metadata related
         /// </summary>
-        public bool Delete(string id)
+        public bool Delete(T id)
         {
-            if (id.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(id));
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
+            //TODO: adicionar transação
 
             // remove file reference in _files
             var deleted = _engine.Delete(FILES, id);

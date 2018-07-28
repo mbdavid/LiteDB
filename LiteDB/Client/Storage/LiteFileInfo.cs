@@ -8,16 +8,9 @@ namespace LiteDB
     /// <summary>
     /// Represents a file inside storage collection
     /// </summary>
-    public class LiteFileInfo
+    public class LiteFileInfo<T>
     {
-        /// <summary>
-        /// File id have a specific format - it's like file path.
-        /// </summary>
-        public const string ID_PATTERN = @"^[\w-$@!+%;\.]+(\/[\w-$@!+%;\.]+)*$";
-
-        private static Regex IdPattern = new Regex(ID_PATTERN, RegexOptions.Compiled);
-
-        public string Id { get; private set; }
+        public T Id { get; private set; }
         public string Filename { get; private set; }
         public string MimeType { get; private set; }
         public long Length { get; internal set; }
@@ -25,13 +18,11 @@ namespace LiteDB
         public DateTime UploadDate { get; internal set; }
         public BsonDocument Metadata { get; set; }
 
-        private LiteEngine _engine;
+        private LiteDatabase _db;
 
-        internal LiteFileInfo(LiteEngine engine, string id, string filename)
+        internal LiteFileInfo(LiteDatabase db, T id, string filename)
         {
-            if (!IdPattern.IsMatch(id)) throw LiteException.InvalidFormat(id);
-
-            _engine = engine;
+            _db = db;
 
             this.Id = id;
             this.Filename = Path.GetFileName(filename);
@@ -42,11 +33,11 @@ namespace LiteDB
             this.Metadata = new BsonDocument();
         }
 
-        internal LiteFileInfo(LiteEngine engine, BsonDocument doc)
+        internal LiteFileInfo(LiteDatabase db, BsonDocument doc)
         {
-            _engine = engine;
+            _db = db;
 
-            this.Id = doc["_id"].AsString;
+            this.Id = (T)db.Mapper.Deserialize(typeof(T), doc["_id"]);
             this.Filename = doc["filename"].AsString;
             this.MimeType = doc["mimeType"].AsString;
             this.Length = doc["length"].AsInt64;
@@ -61,7 +52,7 @@ namespace LiteDB
             {
                 return new BsonDocument
                 {
-                    { "_id", this.Id },
+                    { "_id", _db.Mapper.Serialize(typeof(T), this.Id) },
                     { "filename", this.Filename },
                     { "mimeType", this.MimeType },
                     { "length", this.Length },

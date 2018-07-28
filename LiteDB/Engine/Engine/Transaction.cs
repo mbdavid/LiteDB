@@ -42,13 +42,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Initialize a new transaction
+        /// Initialize a new transaction. Transaction are created "per-thread". There is only one single transaction per thread.
+        /// Return true if transaction was created or false if current thread already in a transaction.
         /// </summary>
-        public Guid BeginTrans()
+        public bool BeginTrans()
         {
             var transacion = this.GetTransaction(true, out var isNew);
 
-            return transacion.TransactionID;
+            return isNew;
         }
 
         /// <summary>

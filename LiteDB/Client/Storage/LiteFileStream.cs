@@ -11,7 +11,7 @@ namespace LiteDB
         /// </summary>
         public const int MAX_CHUNK_SIZE = 255 * 1024; // 255kb like GridFS
 
-        private LiteEngine _engine;
+        private LiteCollection<FileChunk> _engine;
         private LiteFileInfo _file;
         private FileAccess _mode;
 
@@ -21,7 +21,7 @@ namespace LiteDB
         private int _positionInChunk = 0;
         private MemoryStream _buffer;
 
-        internal LiteFileStream(LiteEngine engine, LiteFileInfo file, FileAccess mode)
+        internal LiteFileStream(LiteEngine engine, LiteFileInfo<> file, FileAccess mode)
         {
             _engine = engine;
             _file = file;
@@ -72,11 +72,6 @@ namespace LiteDB
         {
             get { return _streamPosition; }
             set { throw new NotSupportedException(); }
-        }
-
-        internal static string GetChunckId(string id, int index)
-        {
-            return string.Format("{0}\\{1:00000}", id, index);
         }
 
         #region Dispose

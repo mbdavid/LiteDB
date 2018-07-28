@@ -81,11 +81,6 @@ namespace LiteDB
             return l;
         }
 
-        protected override Expression VisitTypeBinary(TypeBinaryExpression node)
-        {
-            return base.VisitTypeBinary(node);
-        }
-
         /// <summary>
         /// Visit :: x => `x`.Customer.Name
         /// </summary>

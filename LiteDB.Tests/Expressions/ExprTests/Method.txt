@@ -73,9 +73,9 @@
 > DATEADD('M', 12, $.mydate)
 = {$date: "2019-05-01T15:30:45Z"}
 
-> DATEDIFF('M', $.mydate, DATE_UTC(2018, 6, 1))
+> DATEDIFF('M', $.mydate, TO_DATE_UTC(2018, 6, 1))
 = 1
-> DATEDIFF('M', $.mydate, DATE_UTC(2018, 4, 1))
+> DATEDIFF('M', $.mydate, TO_DATE_UTC(2018, 4, 1))
 = -1
 
 # Length Method

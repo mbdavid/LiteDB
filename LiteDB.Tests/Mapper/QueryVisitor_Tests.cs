@@ -174,10 +174,11 @@ namespace LiteDB.Tests.Mapper
             // cast only fromType Double/Decimal to Int32/64
 
             // int cast/convert/parse
-            Test(x => (int)123.44, "TO_INT(@p0)", 123.44);
-            Test(x => (int)123.99m, "TO_INT(@p0)", 123.99m);
-            Test(x => Convert.ToInt32("123"), "TO_INT(@p0)", "123");
-            Test(x => Int32.Parse("123"), "TO_INT(@p0)", "123");
+            Test(x => (int)x.Salary, "TO_INT32(Salary)");
+            Test(x => (int)x.Salary, "TO_INT32(Salary)");
+            Test(x => (double)x.Id, "_id");
+            Test(x => Convert.ToInt32("123"), "TO_INT32(@p0)", "123");
+            Test(x => Int32.Parse("123"), "TO_INT32(@p0)", "123");
         }
 
         [TestMethod]

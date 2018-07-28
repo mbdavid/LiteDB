@@ -119,6 +119,26 @@ namespace LiteDB
 
         #endregion
 
+        #region Transaction
+
+        /// <summary>
+        /// Initialize a new transaction. Transaction are created "per-thread". There is only one single transaction per thread.
+        /// Return true if transaction was created or false if current thread already in a transaction.
+        /// </summary>
+        public bool BeginTrans() => _engine.Value.BeginTrans();
+
+        /// <summary>
+        /// Commit current transaction
+        /// </summary>
+        public bool Commit() => _engine.Value.Commit();
+
+        /// <summary>
+        /// Rollback current transaction
+        /// </summary>
+        public bool Rollback() => _engine.Value.Rollback();
+
+        #endregion
+
         #region FileStorage
 
         // private LiteStorage _fs = null;

@@ -27,6 +27,9 @@ namespace LiteDB.Engine
 
             if (!string.IsNullOrEmpty(password)) throw new NotImplementedException("Database encryption are not implemented yet on v5.");
 
+            // shrink can only run with no transaction
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Shrink", TransactionState.Active);
+
             // shrink works with a temp engine that will use same wal file name as current datafile
             // after copy all data from current datafile to temp datafile (all data will be in WAL)
             // run checkpoint in current database
@@ -55,8 +58,8 @@ namespace LiteDB.Engine
                         // get all indexes
                         var indexes = reader.GetIndexes().ToArray();
 
-                        // init transaction in temp engine
-                        var transactionID = temp.BeginTrans();
+                        // begin transaction and get TransactionID
+                        var transactionID = this.GetTransaction(true, out var isNew).TransactionID;
 
                         foreach (var collection in reader.GetCollections())
                         {

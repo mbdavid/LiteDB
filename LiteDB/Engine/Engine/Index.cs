@@ -65,8 +65,6 @@ namespace LiteDB.Engine
                 index.Expression = expression.Source;
                 index.Unique = unique;
 
-                var counter = 0u;
-
                 // test if this new name/expression fit on PAGE_SIZE
                 col.CalculateNameSize();
 
@@ -90,13 +88,8 @@ namespace LiteDB.Engine
 
                         // link index node to datablock
                         node.DataBlock = pkNode.DataBlock;
-
-                        counter++;
                     }
                 }
-
-                // define key counter
-                index.KeyCount = counter;
 
                 return true;
             });
