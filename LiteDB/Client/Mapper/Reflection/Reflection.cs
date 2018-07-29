@@ -177,6 +177,14 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Returns if Type is a generic Dictionary
+        /// </summary>
+        public static bool IsDictionary(Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>);
+        }
+
+        /// <summary>
         /// Select member from a list of member using predicate order function to select
         /// </summary>
         public static MemberInfo SelectMember(IEnumerable<MemberInfo> members, params Func<MemberInfo, bool>[] predicates)

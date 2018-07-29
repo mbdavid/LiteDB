@@ -9,17 +9,17 @@ namespace LiteDB
     /// Storage is a special collection to store files/streams. Transactions are not supported in Upload/Download operations.
     /// </summary>
     public class LiteStorage<T>
+        where T : IEquatable<T>
     {
         private readonly LiteDatabase _db;
-
-        private readonly LiteCollection<BsonDocument> _files;
+        private readonly LiteCollection<LiteFileInfo<T>> _files;
         private readonly LiteCollection<BsonDocument> _chunks;
         private readonly int _chunkSize;
 
         public LiteStorage(LiteDatabase db, string filesCollection, string chunkCollection, int chunkSize)
         {
             _db = db;
-            _files = db.GetCollection(filesCollection);
+            _files = db.GetCollection<LiteFileInfo<T>>(filesCollection);
             _chunks = db.GetCollection(chunkCollection);
             _chunkSize = chunkSize;
         }
@@ -36,10 +36,10 @@ namespace LiteDB
 
             if (file == null)
             {
-                file = new LiteFileInfo(_engine, id, filename ?? id);
+                file = new LiteFileInfo(_db, id, filename);
 
                 // insert if new
-                _engine.Insert(FILES, file.AsDocument);
+                _files.Insert(file.AsDocument);
             }
 
             // update metadata if passed
@@ -54,7 +54,7 @@ namespace LiteDB
         /// <summary>
         /// Upload a file based on stream data
         /// </summary>
-        public LiteFileInfo Upload(string id, string filename, Stream stream)
+        public LiteFileInfo<T> Upload(T id, string filename, Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
@@ -63,10 +63,10 @@ namespace LiteDB
 
             if (file == null)
             {
-                file = new LiteFileInfo(_engine, id, filename ?? id);
+                file = new LiteFileInfo(_db, id, filename);
 
                 // insert if new
-                _engine.Insert(FILES, file.AsDocument);
+                _files.Insert(file.AsDocument);
             }
 
             // copy stream content to litedb file stream
@@ -81,7 +81,7 @@ namespace LiteDB
         /// <summary>
         /// Upload a file based on file system data
         /// </summary>
-        public LiteFileInfo Upload(string id, string filename)
+        public LiteFileInfo<T> Upload(T id, string filename)
         {
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
 
@@ -94,12 +94,16 @@ namespace LiteDB
         /// <summary>
         /// Update metadata on a file. File must exist.
         /// </summary>
-        public bool SetMetadata(string id, BsonDocument metadata)
+        public bool SetMetadata(T id, BsonDocument metadata)
         {
             var file = this.FindById(id);
+
             if (file == null) return false;
+
             file.Metadata = metadata ?? new BsonDocument();
-            _engine.Update(FILES, file.AsDocument);
+
+            _files.Update(file.AsDocument);
+
             return true;
         }
 
@@ -110,11 +114,11 @@ namespace LiteDB
         /// <summary>
         /// Load data inside storage and returns as Stream
         /// </summary>
-        public LiteFileStream OpenRead(string id)
+        public LiteFileStream OpenRead(T id)
         {
             var file = this.FindById(id);
 
-            if (file == null) throw LiteException.FileNotFound(id);
+            if (file == null) throw LiteException.FileNotFound(id.ToString());
 
             return file.OpenRead();
         }
@@ -122,7 +126,7 @@ namespace LiteDB
         /// <summary>
         /// Copy all file content to a steam
         /// </summary>
-        public LiteFileInfo Download(string id, Stream stream)
+        public LiteFileInfo<T> Download(T id, Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
@@ -146,11 +150,11 @@ namespace LiteDB
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            var doc = _files.FindById()
+            var doc = _files.FindOne(x => x.Id == id);
 
             if (doc == null) return null;
 
-            return new LiteFileInfo(_engine, doc);
+            return new LiteFileInfo<T>(_db, doc);
         }
 
         /// <summary>
@@ -160,7 +164,7 @@ namespace LiteDB
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            return _engine.Exists(FILES, Query.EQ("_id", id));
+            return _files.Exists("_id = @0", id);
         }
 
         /// <summary>
@@ -182,7 +186,7 @@ namespace LiteDB
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            //TODO: adicionar transação
+            var newTransaction = _db.BeginTrans();
 
             // remove file reference in _files
             var deleted = _engine.Delete(FILES, id);
@@ -198,6 +202,10 @@ namespace LiteDB
             {
                 deleted = _engine.Delete(CHUNKS, LiteFileStream.GetChunckId(id, index++)); // index zero based
             }
+
+            // if new transaction was created, commit now
+            if (newTransaction) _db.Commit();
+
 
             return true;
         }

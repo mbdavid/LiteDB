@@ -13,6 +13,9 @@ namespace LiteDB
     {
         private static Dictionary<Type, ITypeResolver> _resolver = new Dictionary<Type, ITypeResolver>
         {
+            [typeof(BsonValue)] = new BsonValueResolver(),
+            [typeof(BsonArray)] = new BsonValueResolver(),
+            [typeof(BsonDocument)] = new BsonValueResolver(),
             [typeof(Convert)] = new ConvertResolver(),
             [typeof(DateTime)] = new DateTimeResolver(),
             [typeof(Int32)] = new NumberResolver("TO_INT32"),
@@ -131,8 +134,7 @@ namespace LiteDB
                 // static member is not parameter expression - compile and execute as constant
                 else
                 {
-                    var func = Expression.Lambda(node).Compile();
-                    var value = func.DynamicInvoke();
+                    var value = this.Evaluate(node);
 
                     base.Visit(Expression.Constant(value));
                 }
@@ -153,8 +155,31 @@ namespace LiteDB
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             // get method declaring type - if is from any kind of list, read as Enumerable
-            var declaringType = Reflection.IsList(node.Method.DeclaringType) ? typeof(Enumerable) : node.Method.DeclaringType;
+            var isList = Reflection.IsList(node.Method.DeclaringType);
 
+            var declaringType = isList ? typeof(Enumerable) : node.Method.DeclaringType;
+
+            // if special "get_Item" resolve execution inner value
+            if (node.Method.Name == "get_Item")
+            {
+                this.Visit(node.Object);
+
+                var index = this.Evaluate(node.Arguments[0]);
+
+                if (index is string)
+                {
+                    _builder.Append(".");
+                    _builder.Append($"['{index}']");
+                }
+                else
+                {
+                    _builder.Append($"[{index}]");
+                }
+
+                return node;
+            }
+
+            // if not found in resolver, try run method
             if (!_resolver.TryGetValue(declaringType, out var type))
             {
                 // if method are called by parameter expression and it's not exists, throw error
@@ -163,14 +188,14 @@ namespace LiteDB
                 if (isParam) throw new NotSupportedException($"Method {node.Method.Name} not available to convert to BsonExpression ({node.ToString()}).");
 
                 // otherwise, try compile and execute
-                var func = Expression.Lambda(node).Compile();
-                var value = func.DynamicInvoke();
+                var value = this.Evaluate(node);
 
                 base.Visit(Expression.Constant(value));
 
                 return node;
             }
 
+            // otherwise I have resolver for this method
             var pattern = type.ResolveMethod(node.Method);
 
             if (pattern == null) throw new NotSupportedException($"Method {node.Method.Name} in {node.Method.DeclaringType.Name} are not supported when convert to BsonExpression ({node.ToString()}).");
@@ -224,9 +249,19 @@ namespace LiteDB
         {
             if (node.NodeType == ExpressionType.Not)
             {
-                _builder.Append("(");
-                this.Visit(node.Operand);
-                _builder.Append(") = false");
+                // when is only "not boolean" resolve as 'x => !x.Active' = '$.Active = false'
+                if (node.Operand.NodeType == ExpressionType.MemberAccess)
+                {
+                    this.Visit(node.Operand);
+                    _builder.Append(" = false");
+                }
+                // otherwise, resolve all expression as inner expression = false
+                else
+                {
+                    _builder.Append("(");
+                    this.Visit(node.Operand);
+                    _builder.Append(") = false");
+                }
             }
             else if (node.NodeType == ExpressionType.Convert)
             {
@@ -457,6 +492,26 @@ namespace LiteDB
             if (field == null) throw new NotSupportedException($"Member {name} not found on BsonMapper for type {member.DeclaringType}.");
 
             return "." + field.FieldName;
+        }
+
+        /// <summary>
+        /// Compile and execute expression (can be cached)
+        /// </summary>
+        public object Evaluate(Expression expr)
+        {
+            if (expr.NodeType == ExpressionType.Constant)
+            {
+                var constant = (ConstantExpression)expr;
+
+                return constant.Value;
+            }
+            else
+            {
+                var func = Expression.Lambda(expr).Compile();
+                var value = func.DynamicInvoke();
+
+                return value;
+            }
         }
     }
 }

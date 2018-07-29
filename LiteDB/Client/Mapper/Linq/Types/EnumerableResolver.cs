@@ -44,11 +44,10 @@ namespace LiteDB
                 case "ToArray": throw new NotSupportedException($"Method {method.Name} are not supported. Try use `Sql` static methods. Eg: `x => Sql.ToArray(x.Details.Items().Price)`");
             };
 
-            throw new NotSupportedException($"Method {method.Name} are not supported when convert to BsonExpression.");
+            return null;
         }
 
-        public bool HasSpecialMember => false;
-        public string ResolveMember(MemberInfo member) => throw new NotSupportedException();
-        public string ResolveCtor(ConstructorInfo ctor) => throw new NotSupportedException();
+        public string ResolveMember(MemberInfo member) => null;
+        public string ResolveCtor(ConstructorInfo ctor) => null;
     }
 }
