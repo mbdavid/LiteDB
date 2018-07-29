@@ -2,49 +2,131 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LiteDB
 {
     /// <summary>
     /// Storage is a special collection to store files and streams. 
     /// </summary>
-    public class LiteStorage<T>
+    public class LiteStorage<TFileId>
     {
         private readonly LiteDatabase _db;
-        private readonly LiteCollection<LiteFileInfo<T>> _files;
+        private readonly LiteCollection<LiteFileInfo<TFileId>> _files;
         private readonly LiteCollection<BsonDocument> _chunks;
-        private readonly int _chunkSize;
 
-        public LiteStorage(LiteDatabase db, string filesCollection, string chunkCollection, int chunkSize)
+        public LiteStorage(LiteDatabase db, string filesCollection, string chunksCollection)
         {
             _db = db;
-            _files = db.GetCollection<LiteFileInfo<T>>(filesCollection);
-            _chunks = db.GetCollection(chunkCollection);
-            _chunkSize = chunkSize;
+            _files = db.GetCollection<LiteFileInfo<TFileId>>(filesCollection);
+            _chunks = db.GetCollection(chunksCollection);
         }
+
+        #region Find Files
+
+        /// <summary>
+        /// Find a file inside datafile and returns LiteFileInfo instance. Returns null if not found
+        /// </summary>
+        public LiteFileInfo<TFileId> FindById(TFileId id)
+        {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
+            var fileId = _db.Mapper.Serialize(typeof(TFileId), id);
+
+            var file = _files.FindById(fileId);
+
+            if (file == null) return null;
+
+            file.SetReference(fileId, _files, _chunks);
+
+            return file;
+        }
+
+        /// <summary>
+        /// Find all files that match with predicate expression.
+        /// </summary>
+        public IEnumerable<LiteFileInfo<TFileId>> Find(BsonExpression predicate)
+        {
+            var files = _files.Query()
+                .Where(predicate != null, predicate)
+                .ToEnumerable();
+
+            foreach (var file in files)
+            {
+                var fileId = _db.Mapper.Serialize(typeof(TFileId), file.Id);
+
+                file.SetReference(fileId, _files, _chunks);
+
+                yield return file;
+            }
+        }
+
+        /// <summary>
+        /// Find all files that match with predicate expression.
+        /// </summary>
+        public IEnumerable<LiteFileInfo<TFileId>> Find(string predicate, BsonDocument parameters) => this.Find(BsonExpression.Create(predicate, parameters));
+
+        /// <summary>
+        /// Find all files that match with predicate expression.
+        /// </summary>
+        public IEnumerable<LiteFileInfo<TFileId>> Find(string predicate, params BsonValue[] args) => this.Find(BsonExpression.Create(predicate, args));
+
+        /// <summary>
+        /// Find all files that match with predicate expression.
+        /// </summary>
+        public IEnumerable<LiteFileInfo<TFileId>> Find(Expression<Func<LiteFileInfo<TFileId>, bool>> predicate) => this.Find(_db.Mapper.GetExpression(predicate));
+
+        /// <summary>
+        /// Find all files inside file collections
+        /// </summary>
+        public IEnumerable<LiteFileInfo<TFileId>> FindAll() => this.Find((BsonExpression)null);
+
+        /// <summary>
+        /// Returns if a file exisits in database
+        /// </summary>
+        public bool Exists(TFileId id)
+        {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
+            var fileId = _db.Mapper.Serialize(typeof(TFileId), id);
+
+            return _files.Exists("_id = @0", fileId);
+        }
+
+        #endregion
 
         #region Upload
 
         /// <summary>
-        /// Open/Create new file storage and returns linked Stream to write operations
+        /// Open/Create new file storage and returns linked Stream to write operations.
         /// </summary>
-        public LiteFileStream OpenWrite(T id, string filename, BsonDocument metadata = null)
+        public LiteFileStream<TFileId> OpenWrite(TFileId id, string filename, BsonDocument metadata = null)
         {
+            // get _id as BsonValue
+            var fileId = _db.Mapper.Serialize(typeof(TFileId), id);
+
             // checks if file exists
             var file = this.FindById(id);
 
             if (file == null)
             {
-                file = new LiteFileInfo<T>(_db, id, filename);
+                file = new LiteFileInfo<TFileId>
+                {
+                    Id = id,
+                    Filename = Path.GetFileName(filename),
+                    MimeType = MimeTypeConverter.GetMimeType(filename),
+                    Metadata = metadata ?? new BsonDocument()
+                };
 
-                // insert if new
-                _files.Insert(file);
+                // set files/chunks instances
+                file.SetReference(fileId, _files, _chunks);
             }
-
-            // update metadata if passed
-            if (metadata != null)
+            else
             {
-                file.Metadata = metadata;
+                // if filename/metada was changed
+                file.Filename = Path.GetFileName(filename);
+                file.MimeType = MimeTypeConverter.GetMimeType(filename);
+                file.Metadata = metadata ?? file.Metadata;
             }
 
             return file.OpenWrite();
@@ -53,34 +135,20 @@ namespace LiteDB
         /// <summary>
         /// Upload a file based on stream data
         /// </summary>
-        public LiteFileInfo<T> Upload(T id, string filename, Stream stream)
+        public LiteFileInfo<TFileId> Upload(TFileId id, string filename, Stream stream, BsonDocument metadata = null)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
-            // checks if file exists
-            var file = this.FindById(id);
-
-            if (file == null)
-            {
-                file = new LiteFileInfo(_db, id, filename);
-
-                // insert if new
-                _files.Insert(file.AsDocument);
-            }
-
-            // copy stream content to litedb file stream
-            using (var writer = file.OpenWrite())
+            using (var writer = this.OpenWrite(id, filename, metadata))
             {
                 stream.CopyTo(writer);
-            }
 
-            return file;
+                return writer.FileInfo;
+            }
         }
 
         /// <summary>
         /// Upload a file based on file system data
         /// </summary>
-        public LiteFileInfo<T> Upload(T id, string filename)
+        public LiteFileInfo<TFileId> Upload(TFileId id, string filename)
         {
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
 
@@ -93,7 +161,7 @@ namespace LiteDB
         /// <summary>
         /// Update metadata on a file. File must exist.
         /// </summary>
-        public bool SetMetadata(T id, BsonDocument metadata)
+        public bool SetMetadata(TFileId id, BsonDocument metadata)
         {
             var file = this.FindById(id);
 
@@ -101,7 +169,7 @@ namespace LiteDB
 
             file.Metadata = metadata ?? new BsonDocument();
 
-            _files.Update(file.AsDocument);
+            _files.Update(file);
 
             return true;
         }
@@ -113,7 +181,7 @@ namespace LiteDB
         /// <summary>
         /// Load data inside storage and returns as Stream
         /// </summary>
-        public LiteFileStream OpenRead(T id)
+        public LiteFileStream<TFileId> OpenRead(TFileId id)
         {
             var file = this.FindById(id);
 
@@ -125,57 +193,25 @@ namespace LiteDB
         /// <summary>
         /// Copy all file content to a steam
         /// </summary>
-        public LiteFileInfo<T> Download(T id, Stream stream)
+        public LiteFileInfo<TFileId> Download(TFileId id, Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-
-            var file = this.FindById(id);
-
-            if (file == null) throw LiteException.FileNotFound(id);
+            var file = this.FindById(id) ?? throw LiteException.FileNotFound(id.ToString());
 
             file.CopyTo(stream);
 
             return file;
         }
 
-        #endregion
-
-        #region Find Files
-
         /// <summary>
-        /// Find a file inside datafile and returns FileEntry instance. Returns null if not found
+        /// Copy all file content to a file
         /// </summary>
-        public LiteFileInfo<T> FindById(T id)
+        public LiteFileInfo<TFileId> Download(TFileId id, string filename, bool overwritten)
         {
-            if (id == null) throw new ArgumentNullException(nameof(id));
+            var file = this.FindById(id) ?? throw LiteException.FileNotFound(id.ToString());
 
-            var value = _db.Mapper.Serialize(typeof(T), id);
+            file.SaveAs(filename, overwritten);
 
-            var doc = _files.FindById(value);
-
-            if (doc == null) return null;
-
-            return new LiteFileInfo<T>(_db, doc);
-        }
-
-        /// <summary>
-        /// Returns if a file exisits in database
-        /// </summary>
-        public bool Exists(T id)
-        {
-            if (id == null) throw new ArgumentNullException(nameof(id));
-
-            var value = _db.Mapper.Serialize(typeof(T), id);
-
-            return _files.Exists("_id = @0", value);
-        }
-
-        /// <summary>
-        /// Returns all FileEntry inside database
-        /// </summary>
-        public IEnumerable<LiteFileInfo<T>> FindAll()
-        {
-            return _files.FindAll();
+            return file;
         }
 
         #endregion
@@ -185,32 +221,23 @@ namespace LiteDB
         /// <summary>
         /// Delete a file inside datafile and all metadata related
         /// </summary>
-        public bool Delete(T id)
+        public bool Delete(TFileId id)
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            var newTransaction = _db.BeginTrans();
+            // get Id as BsonValue
+            var fileId = _db.Mapper.Serialize(typeof(TFileId), id);
 
-            // remove file reference in _files
-            var deleted = _engine.Delete(FILES, id);
+            // remove file reference
+            var deleted = _files.Delete(fileId);
 
-            // if not found, just return false
-            if (!deleted) return false;
-
-            // delete all files chunks based on _id string
-            var index = 0;
-
-            // delete one-by-one to avoid all pages files dirty in memory
-            while(deleted)
+            if (deleted)
             {
-                deleted = _engine.Delete(CHUNKS, LiteFileStream.GetChunckId(id, index++)); // index zero based
+                // delete all chunks
+                _chunks.DeleteMany("_id BETWEEN { f: @0, n: 0} AND {f: @0, n: @1 }", fileId, int.MaxValue);
             }
 
-            // if new transaction was created, commit now
-            if (newTransaction) _db.Commit();
-
-
-            return true;
+            return deleted;
         }
 
         #endregion

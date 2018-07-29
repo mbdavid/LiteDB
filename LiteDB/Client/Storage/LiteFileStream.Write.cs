@@ -4,19 +4,8 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public partial class LiteFileStream : Stream
+    public partial class LiteFileStream<TFileId> : Stream
     {
-        public override void Flush()
-        {
-            // write last unsaved chunks
-            this.WriteChunks();
-
-            _file.UploadDate = DateTime.Now;
-            _file.Length = _streamPosition;
-
-            _engine.Update(LiteStorage.FILES, _file.AsDocument);
-        }
-
         public override void Write(byte[] buffer, int offset, int count)
         {
             _streamPosition += count;
@@ -25,24 +14,35 @@ namespace LiteDB
 
             if (_buffer.Length >= MAX_CHUNK_SIZE)
             {
-                this.WriteChunks();
+                this.WriteChunks(false);
             }
         }
 
+        public override void Flush()
+        {
+            // write last unsaved chunks
+            this.WriteChunks(true);
+        }
+
         /// <summary>
-        /// Consume all _buffer bytes and write to database
+        /// Consume all _buffer bytes and write to chunk collection
         /// </summary>
-        private void WriteChunks()
+        private void WriteChunks(bool flush)
         {
             var buffer = new byte[MAX_CHUNK_SIZE];
             var read = 0;
+
             _buffer.Seek(0, SeekOrigin.Begin);
 
             while ((read = _buffer.Read(buffer, 0, MAX_CHUNK_SIZE)) > 0)
             {
                 var chunk = new BsonDocument
                 {
-                    { "_id", GetChunckId(_file.Id, _file.Chunks++) } // index zero based
+                    ["_id"] = new BsonDocument
+                    {
+                        ["f"] = _fileId,
+                        ["n"] = _file.Chunks++ // zero-based index
+                    }
                 };
 
                 // get chunk byte array part
@@ -58,7 +58,16 @@ namespace LiteDB
                 }
 
                 // insert chunk part
-                _engine.Insert(LiteStorage.CHUNKS, chunk);
+                _chunks.Insert(chunk);
+            }
+
+            // if stream was closed/flush, update file too
+            if (flush)
+            {
+                _file.UploadDate = DateTime.Now;
+                _file.Length = _streamPosition;
+
+                _files.Upsert(_file);
             }
 
             _buffer = new MemoryStream();

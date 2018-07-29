@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public partial class LiteFileStream : Stream
+    public partial class LiteFileStream<TFileId> : Stream
     {
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -37,12 +37,11 @@ namespace LiteDB
         private byte[] GetChunkData(int index)
         {
             // check if there is no more chunks in this file
-            var chunk = _engine
-                .Find(LiteStorage.CHUNKS, Query.EQ("_id", GetChunckId(_file.Id, index)))
-                .FirstOrDefault();
+            var chunk = _chunks
+                .FindOne("_id = { f: @0, n: @1 }", _fileId, index);
 
             // if chunk is null there is no more chunks
-            return chunk == null ? null : chunk["data"].AsBinary;
+            return chunk?["data"].AsBinary;
         }
     }
 }

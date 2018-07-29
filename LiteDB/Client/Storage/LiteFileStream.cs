@@ -4,16 +4,18 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public partial class LiteFileStream : Stream
+    public partial class LiteFileStream<TFileId> : Stream
     {
         /// <summary>
         /// Number of bytes on each chunk document to store
         /// </summary>
         public const int MAX_CHUNK_SIZE = 255 * 1024; // 255kb like GridFS
 
-        private LiteCollection<FileChunk> _engine;
-        private LiteFileInfo _file;
-        private FileAccess _mode;
+        private readonly LiteCollection<LiteFileInfo<TFileId>> _files;
+        private readonly LiteCollection<BsonDocument> _chunks;
+        private readonly LiteFileInfo<TFileId> _file;
+        private readonly BsonValue _fileId;
+        private readonly FileAccess _mode;
 
         private long _streamPosition = 0;
         private int _currentChunkIndex = 0;
@@ -21,10 +23,12 @@ namespace LiteDB
         private int _positionInChunk = 0;
         private MemoryStream _buffer;
 
-        internal LiteFileStream(LiteEngine engine, LiteFileInfo<> file, FileAccess mode)
+        internal LiteFileStream(LiteCollection<LiteFileInfo<TFileId>> files, LiteCollection<BsonDocument> chunks, LiteFileInfo<TFileId> file, BsonValue fileId, FileAccess mode)
         {
-            _engine = engine;
+            _files = files;
+            _chunks = chunks;
             _file = file;
+            _fileId = fileId;
             _mode = mode;
 
             if (mode == FileAccess.Read)
@@ -36,29 +40,21 @@ namespace LiteDB
             {
                 _buffer = new MemoryStream(MAX_CHUNK_SIZE);
 
-                // delete chunks content if needed
-                if (file.Length > 0)
+                if (_file.Length > 0)
                 {
-                    var index = 0;
-                    var deleted = true;
+                    _file.Length = 0;
+                    _file.Chunks = 0;
 
-                    // delete one-by-one to avoid all pages files dirty in memory
-                    while (deleted)
-                    {
-                        deleted = _engine.Delete(LiteStorage.CHUNKS, LiteFileStream.GetChunckId(_file.Id, index++)); // index zero based
-                    }
+                    // delete all chunks before re-write
+                    _chunks.DeleteMany("_id BETWEEN { f: @0, n: 0} AND {f: @0, n: @1 }", _fileId, int.MaxValue);
                 }
-
-                // clear size counters
-                file.Length = 0;
-                file.Chunks = 0;
             }
         }
 
         /// <summary>
         /// Get file information
         /// </summary>
-        public LiteFileInfo FileInfo { get { return _file; } }
+        public LiteFileInfo<TFileId> FileInfo { get { return _file; } }
 
         public override long Length { get { return _file.Length; } }
 

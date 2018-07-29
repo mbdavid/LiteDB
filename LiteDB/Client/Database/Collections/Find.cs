@@ -20,13 +20,13 @@ namespace LiteDB
         /// <summary>
         /// Find documents inside a collection using predicate expression.
         /// </summary>
-        public IEnumerable<T> Find(BsonExpression query, int skip = 0, int limit = int.MaxValue)
+        public IEnumerable<T> Find(BsonExpression predicate, int skip = 0, int limit = int.MaxValue)
         {
-            if (query == null) throw new ArgumentNullException(nameof(query));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return this.Query()
                 .Include(_includes)
-                .Where(query)
+                .Where(predicate)
                 .Skip(skip)
                 .Limit(limit)
                 .ToEnumerable();
@@ -48,7 +48,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
-            return this.Find("_id = @0", id).FirstOrDefault();
+            return this.Find(BsonExpression.Create("_id = @0", id)).FirstOrDefault();
         }
 
         /// <summary>

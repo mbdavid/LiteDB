@@ -8,75 +8,54 @@ namespace LiteDB
     /// <summary>
     /// Represents a file inside storage collection
     /// </summary>
-    public class LiteFileInfo<T>
+    public class LiteFileInfo<TFileId>
     {
-        public T Id { get; private set; }
-        public string Filename { get; private set; }
-        public string MimeType { get; private set; }
-        public long Length { get; internal set; }
-        public int Chunks { get; internal set; }
-        public DateTime UploadDate { get; internal set; }
-        public BsonDocument Metadata { get; set; }
+        public TFileId Id { get; internal set; }
 
-        private LiteDatabase _db;
+        [BsonField("filename")]
+        public string Filename { get; internal set; }
 
-        internal LiteFileInfo(LiteDatabase db, T id, string filename)
+        [BsonField("mimeType")]
+        public string MimeType { get; internal set; }
+
+        [BsonField("length")]
+        public long Length { get; internal set; } = 0;
+
+        [BsonField("chunks")]
+        public int Chunks { get; internal set; } = 0;
+
+        [BsonField("uploadDate")]
+        public DateTime UploadDate { get; internal set; } = DateTime.Now;
+
+        [BsonField("metadata")]
+        public BsonDocument Metadata { get; set; } = new BsonDocument();
+
+        // database instances references
+        private BsonValue _fileId;
+        private LiteCollection<LiteFileInfo<TFileId>> _files;
+        private LiteCollection<BsonDocument> _chunks;
+
+        internal void SetReference(BsonValue fileId, LiteCollection<LiteFileInfo<TFileId>> files, LiteCollection<BsonDocument> chunks)
         {
-            _db = db;
-
-            this.Id = id;
-            this.Filename = Path.GetFileName(filename);
-            this.MimeType = MimeTypeConverter.GetMimeType(this.Filename);
-            this.Length = 0;
-            this.Chunks = 0;
-            this.UploadDate = DateTime.Now;
-            this.Metadata = new BsonDocument();
-        }
-
-        internal LiteFileInfo(LiteDatabase db, BsonDocument doc)
-        {
-            _db = db;
-
-            this.Id = (T)db.Mapper.Deserialize(typeof(T), doc["_id"]);
-            this.Filename = doc["filename"].AsString;
-            this.MimeType = doc["mimeType"].AsString;
-            this.Length = doc["length"].AsInt64;
-            this.Chunks = doc["chunks"].AsInt32;
-            this.UploadDate = doc["uploadDate"].AsDateTime;
-            this.Metadata = doc["metadata"].AsDocument;
-        }
-
-        public BsonDocument AsDocument
-        {
-            get
-            {
-                return new BsonDocument
-                {
-                    { "_id", _db.Mapper.Serialize(typeof(T), this.Id) },
-                    { "filename", this.Filename },
-                    { "mimeType", this.MimeType },
-                    { "length", this.Length },
-                    { "chunks", this.Chunks },
-                    { "uploadDate", this.UploadDate },
-                    { "metadata", this.Metadata ?? new BsonDocument() }
-                };
-            }
+            _fileId = fileId;
+            _files = files;
+            _chunks = chunks;
         }
 
         /// <summary>
         /// Open file stream to read from database
         /// </summary>
-        public LiteFileStream OpenRead()
+        public LiteFileStream<TFileId> OpenRead()
         {
-            return new LiteFileStream(_engine, this, FileAccess.Read);
+            return new LiteFileStream<TFileId>(_files, _chunks, this, _fileId, FileAccess.Read);
         }
 
         /// <summary>
         /// Open file stream to write to database
         /// </summary>
-        public LiteFileStream OpenWrite()
+        public LiteFileStream<TFileId> OpenWrite()
         {
-            return new LiteFileStream(_engine, this, FileAccess.Write);
+            return new LiteFileStream<TFileId>(_files, _chunks, this, _fileId, FileAccess.Write);
         }
 
         /// <summary>
@@ -101,7 +80,10 @@ namespace LiteDB
 
             using (var file = File.Open(filename, overwritten ? System.IO.FileMode.Create : System.IO.FileMode.CreateNew))
             {
-                OpenRead().CopyTo(file);
+                using (var stream = this.OpenRead())
+                {
+                    stream.CopyTo(file);
+                }
             }
         }
     }

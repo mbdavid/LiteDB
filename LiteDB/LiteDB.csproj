@@ -63,21 +63,18 @@
 
   <ItemGroup>
     <Compile Remove="Client\Repository\**" />
-    <Compile Remove="Client\Storage\**" />
     <Compile Remove="Database\**" />
     <Compile Remove="Mapper\**" />
     <Compile Remove="Repository\**" />
     <Compile Remove="Shell\**" />
     <Compile Remove="Storage\**" />
     <EmbeddedResource Remove="Client\Repository\**" />
-    <EmbeddedResource Remove="Client\Storage\**" />
     <EmbeddedResource Remove="Database\**" />
     <EmbeddedResource Remove="Mapper\**" />
     <EmbeddedResource Remove="Repository\**" />
     <EmbeddedResource Remove="Shell\**" />
     <EmbeddedResource Remove="Storage\**" />
     <None Remove="Client\Repository\**" />
-    <None Remove="Client\Storage\**" />
     <None Remove="Database\**" />
     <None Remove="Mapper\**" />
     <None Remove="Repository\**" />
