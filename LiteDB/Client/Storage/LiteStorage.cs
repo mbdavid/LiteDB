@@ -9,7 +9,6 @@ namespace LiteDB
     /// Storage is a special collection to store files/streams. Transactions are not supported in Upload/Download operations.
     /// </summary>
     public class LiteStorage<T>
-        where T : IEquatable<T>
     {
         private readonly LiteDatabase _db;
         private readonly LiteCollection<LiteFileInfo<T>> _files;
@@ -36,10 +35,10 @@ namespace LiteDB
 
             if (file == null)
             {
-                file = new LiteFileInfo(_db, id, filename);
+                file = new LiteFileInfo<T>(_db, id, filename);
 
                 // insert if new
-                _files.Insert(file.AsDocument);
+                _files.Insert(file);
             }
 
             // update metadata if passed

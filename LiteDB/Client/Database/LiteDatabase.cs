@@ -216,7 +216,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Shrink
+        #region Shrink/Analyze/Vaccum/Checkpoint
 
         /// <summary>
         /// Reduce disk size re-arranging unused spaces.
@@ -232,6 +232,30 @@ namespace LiteDB
         public long Shrink(string password)
         {
             return _engine.Value.Shrink(password);
+        }
+
+        /// <summary>
+        /// Do datafile WAL checkpoint. Copy all commited transaction in log file into datafile.
+        /// </summary>
+        public int Checkpoint()
+        {
+            return _engine.Value.Checkpoint(false);
+        }
+
+        /// <summary>
+        /// Analyze indexes in collections to better index choose decision
+        /// </summary>
+        public int Analyze(params string[] collections)
+        {
+            return _engine.Value.Analyze(collections);
+        }
+
+        /// <summary>
+        /// Analyze all database to find-and-fix non linked empty pages
+        /// </summary>
+        public int Vaccum()
+        {
+            return _engine.Value.Vaccum();
         }
 
         #endregion

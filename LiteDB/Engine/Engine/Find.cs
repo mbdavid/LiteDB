@@ -8,18 +8,6 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Find documents in collection using Index filter only
-        /// </summary>
-        public IEnumerable<BsonDocument> Find(string collection, Index index, int offset = 0, int limit = int.MaxValue)
-        {
-            return this.Query(collection)
-                .Index(index)
-                .Offset(offset)
-                .Limit(limit)
-                .ToEnumerable();
-        }
-
-        /// <summary>
         /// Find documents in collection using expression as filter/index
         /// </summary>
         public IEnumerable<BsonDocument> Find(string collection, BsonExpression predicate, int offset = 0, int limit = int.MaxValue)
@@ -32,11 +20,33 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Find first or default document based in collection based on Query filter
+        /// Find first or default document based in collection using expression predicate
         /// </summary>
         public BsonDocument FindOne(string collection, BsonExpression predicate)
         {
-            return this.Find(collection, predicate).FirstOrDefault();
+            return this.Query(collection)
+                .Where(predicate)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Find first or default document based in collection using expression predicate
+        /// </summary>
+        public BsonDocument FindOne(string collection, string predicate, BsonDocument parameters)
+        {
+            return this.Query(collection)
+                .Where(predicate, parameters)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Find first or default document based in collection using expression predicate
+        /// </summary>
+        public BsonDocument FindOne(string collection, string predicate, params BsonValue[] args)
+        {
+            return this.Query(collection)
+                .Where(predicate, args)
+                .FirstOrDefault();
         }
 
         /// <summary>
@@ -46,7 +56,8 @@ namespace LiteDB.Engine
         {
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
-            return this.Find(collection, Index.EQ("_id", id)).FirstOrDefault();
+            return this.Query(collection)
+                .SingleById(id);
         }
 
         /// <summary>
@@ -54,7 +65,8 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> FindAll(string collection)
         {
-            return this.Find(collection, Index.All());
+            return this.Query(collection)
+                .ToEnumerable();
         }
     }
 }

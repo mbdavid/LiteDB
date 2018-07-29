@@ -67,7 +67,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Implements delete based on filter expression
         /// </summary>
-        public int Delete(string collection, BsonExpression predicate)
+        public int DeleteMany(string collection, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));

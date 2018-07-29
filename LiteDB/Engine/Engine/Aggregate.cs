@@ -7,6 +7,8 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
+        #region Min/Max
+
         /// <summary>
         /// Returns min value from _id key index
         /// </summary>
@@ -51,6 +53,10 @@ namespace LiteDB.Engine
                 .ExecuteScalar();
         }
 
+        #endregion
+
+        #region Count
+
         /// <summary>
         /// Get collection counter
         /// </summary>
@@ -59,16 +65,6 @@ namespace LiteDB.Engine
             return this.Query(collection)
                 .Select("_id")
                 .Count();
-        }
-
-        /// <summary>
-        /// Get collection counter
-        /// </summary>
-        public long LongCount(string collection)
-        {
-            return this.Query(collection)
-                .Select("_id")
-                .LongCount();
         }
 
         /// <summary>
@@ -85,10 +81,34 @@ namespace LiteDB.Engine
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public long LongCount(string collection, Index index)
+        public int Count(string collection, BsonExpression predicate)
         {
             return this.Query(collection)
-                .Index(index)
+                .Where(predicate)
+                .Select("_id")
+                .Count();
+        }
+
+        /// <summary>
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
+        /// </summary>
+        public int Count(string collection, string predicate, BsonDocument parameters) => this.Count(collection, BsonExpression.Create(predicate, parameters));
+
+        /// <summary>
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
+        /// </summary>
+        public int Count(string collection, string predicate, params BsonValue[] args) => this.Count(collection, BsonExpression.Create(predicate, args));
+
+        #endregion
+
+        #region LongCount
+
+        /// <summary>
+        /// Get collection counter
+        /// </summary>
+        public long LongCount(string collection)
+        {
+            return this.Query(collection)
                 .Select("_id")
                 .LongCount();
         }
@@ -96,12 +116,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
         /// </summary>
-        public int Count(string collection, BsonExpression predicate)
+        public long LongCount(string collection, Index index)
         {
             return this.Query(collection)
-                .Where(predicate)
+                .Index(index)
                 .Select("_id")
-                .Count();
+                .LongCount();
         }
 
         /// <summary>
@@ -114,6 +134,20 @@ namespace LiteDB.Engine
                 .Select("_id")
                 .LongCount();
         }
+
+        /// <summary>
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
+        /// </summary>
+        public long LongCount(string collection, string predicate, BsonDocument parameters) => this.Count(collection, BsonExpression.Create(predicate, parameters));
+
+        /// <summary>
+        /// Count all nodes from a query execution - do not deserialize documents to count. If query is null, use Collection counter variable
+        /// </summary>
+        public long LongCount(string collection, string predicate, params BsonValue[] args) => this.Count(collection, BsonExpression.Create(predicate, args));
+
+        #endregion
+
+        #region Exists
 
         /// <summary>
         /// Check if has at least one node in a query execution - do not deserialize documents to check
@@ -136,5 +170,17 @@ namespace LiteDB.Engine
                 .Select("_id")
                 .Exists();
         }
+
+        /// <summary>
+        /// Check if has at least one node in a query execution - do not deserialize documents to check
+        /// </summary>
+        public bool Exists(string collection, string predicate, BsonDocument parameters) => this.Exists(collection, BsonExpression.Create(predicate, parameters));
+
+        /// <summary>
+        /// Check if has at least one node in a query execution - do not deserialize documents to check
+        /// </summary>
+        public bool Exists(string collection, string predicate, params BsonValue[] args) => this.Exists(collection, BsonExpression.Create(predicate, args));
+
+        #endregion
     }
 }
