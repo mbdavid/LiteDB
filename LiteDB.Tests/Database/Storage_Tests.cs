@@ -39,11 +39,11 @@ namespace LiteDB.Tests.Database
         }
 
         [TestMethod]
-        public void Storage_Upload()
+        public void Storage_Upload_Download()
         {
-            //using (var f = new TempFile())
-            //using (var db = new LiteDatabase(f.Filename))
-            using (var db = new LiteDatabase(@"c:\temp\file.db"))
+            using (var f = new TempFile())
+            using (var db = new LiteDatabase(f.Filename))
+            //using (var db = new LiteDatabase(@"c:\temp\file.db"))
             {
                 var fs = db.GetStorage<int>("_files", "_chunks");
 
@@ -69,7 +69,12 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(repl.Chunks, nrepl.Chunks);
 
                 // update metadata
-                fs.SetMetadata(100, new BsonDocument { ["x"] = 100 });
+                fs.SetMetadata(100, new BsonDocument { ["x"] = 100, ["y"] = 99 });
+
+                // find using metadata
+                var md = fs.Find(x => x.Metadata["x"] == 100).FirstOrDefault();
+
+                Assert.AreEqual(99, md.Metadata["y"].AsInt32);
             }
         }
 
