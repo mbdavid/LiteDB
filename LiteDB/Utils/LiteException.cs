@@ -79,7 +79,7 @@ namespace LiteDB
 
         #region Method Errors
 
-        internal static LiteException FileNotFound(string fileId)
+        internal static LiteException FileNotFound(object fileId)
         {
             return new LiteException(FILE_NOT_FOUND, "File '{0}' not found.", fileId);
         }

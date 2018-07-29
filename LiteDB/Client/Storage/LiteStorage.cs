@@ -6,7 +6,7 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Storage is a special collection to store files/streams. Transactions are not supported in Upload/Download operations.
+    /// Storage is a special collection to store files and streams. 
     /// </summary>
     public class LiteStorage<T>
     {
@@ -149,7 +149,9 @@ namespace LiteDB
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            var doc = _files.FindOne(x => x.Id == id);
+            var value = _db.Mapper.Serialize(typeof(T), id);
+
+            var doc = _files.FindById(value);
 
             if (doc == null) return null;
 
@@ -163,7 +165,9 @@ namespace LiteDB
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            return _files.Exists("_id = @0", id);
+            var value = _db.Mapper.Serialize(typeof(T), id);
+
+            return _files.Exists("_id = @0", value);
         }
 
         /// <summary>
@@ -171,7 +175,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<LiteFileInfo<T>> FindAll()
         {
-            return this.Find;
+            return _files.FindAll();
         }
 
         #endregion

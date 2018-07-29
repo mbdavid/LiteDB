@@ -85,4 +85,8 @@
     <None Remove="Storage\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Client\Database\LiteRepository.cs" />
+  </ItemGroup>
+
 </Project>

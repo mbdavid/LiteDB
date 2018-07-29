@@ -19,7 +19,7 @@ namespace LiteDB.Engine
 
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.Delete(collection, where);
+            var result = _engine.DeleteMany(collection, where);
 
             return new BsonDataReader(result);
         }

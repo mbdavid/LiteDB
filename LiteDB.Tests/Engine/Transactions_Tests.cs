@@ -53,7 +53,7 @@ namespace LiteDB.Tests.Engine
 
                     try
                     {
-                        db.Delete("person", BsonExpression.Create("1=1"));
+                        db.DeleteMany("person", BsonExpression.Create("1=1"));
 
                         Assert.Fail("Must be locked");
                     }
