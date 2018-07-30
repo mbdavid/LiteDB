@@ -35,16 +35,17 @@ namespace LiteDB
             ["BETWEEN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("BETWEEN"), BsonExpressionType.Between),
             ["IN"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("IN"), BsonExpressionType.In),
 
-            ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
             [">"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GT"), BsonExpressionType.GreaterThan),
             [">="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("GTE"), BsonExpressionType.GreaterThanOrEqual),
             ["<"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LT"), BsonExpressionType.LessThan),
             ["<="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("LTE"), BsonExpressionType.LessThanOrEqual),
+
             ["!="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("NEQ"), BsonExpressionType.NotEqual),
+            ["="] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("EQ"), BsonExpressionType.Equal),
 
             // logic
-            ["OR"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or),
-            ["AND"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("AND"), BsonExpressionType.And)
+            ["AND"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("AND"), BsonExpressionType.And),
+            ["OR"] = Tuple.Create(typeof(BsonExpressionOperators).GetMethod("OR"), BsonExpressionType.Or)
         };
 
         private static MethodInfo _parameterPathMethod = typeof(BsonExpressionOperators).GetMethod("PARAMETER_PATH");
