@@ -42,7 +42,7 @@ namespace LiteDB
         {
             var expression = _mapper.GetExpression(keySelector);
 
-            return _engine.Value.EnsureIndex(_collection, expression.Source, unique);
+            return _engine.Value.EnsureIndex(_collection, expression, unique);
         }
 
         /// <summary>

@@ -167,6 +167,9 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Salary == x.Id, "Salary = _id");
             TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "Salary > @p0 AND Name = @p1", 50, "John");
 
+            // test for precedence order
+            TestPredicate<User>(x => x.Name.StartsWith("J") == false, "Name LIKE (@p0 + '%') = @p1", "J", false);
+
             // iif (c ? true : false)
             TestExpr<User>(x => x.Id > 10 ? x.Id : 0, "IIF(_id > @p0, _id, @p1)", 10, 0);
         }
