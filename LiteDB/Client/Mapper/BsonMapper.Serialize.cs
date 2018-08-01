@@ -18,7 +18,7 @@ namespace LiteDB
             // if object is BsonDocument, just return them
             if (entity is BsonDocument) return (BsonDocument)(object)entity;
 
-            return this.Serialize(type, entity).AsDocument;
+            return this.Serialize(type, entity, 0).AsDocument;
         }
 
         /// <summary>
@@ -29,7 +29,12 @@ namespace LiteDB
             return this.ToDocument(typeof(T), entity).AsDocument;
         }
 
-        internal BsonValue Serialize(Type type, object obj, int depth = 0)
+        public BsonValue Serialize(Type type, object obj)
+        {
+            return this.Serialize(type, obj, 0);
+        }
+
+        internal BsonValue Serialize(Type type, object obj, int depth)
         {
             if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH, type);
 

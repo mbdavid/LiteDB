@@ -50,6 +50,7 @@ namespace LiteDB
                 case "Hour": return "HOUR(#)";
                 case "Minute": return "MINUTE(#)";
                 case "Second": return "SECOND(#)";
+                case "Date": return "TO_DATETIME(YEAR(#), MONTH(#), DAY(#))";
             }
 
             return null;

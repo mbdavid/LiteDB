@@ -317,8 +317,22 @@ namespace LiteDB
                 {
                     var arr = value.AsArray;
 
+                    // for expr.Type = parameter, just get value as index (fixed position)
+                    if (expr.Type == BsonExpressionType.Parameter)
+                    {
+                        // update parameters in expression
+                        parameters.CopyTo(expr.Parameters);
+
+                        // get fixed position based on parameter value (must return int value)
+                        var idx = expr.Execute(root, root, true).First();
+
+                        if (!idx.IsNumber) throw new LiteException(0, "Parameter expression must return number when called inside an array");
+
+                        index = idx.AsInt32;
+                    }
+
                     // [<expr>] - index are an expression
-                    if (expr.Type != BsonExpressionType.Empty)
+                    if (expr.Type != BsonExpressionType.Empty && expr.Type != BsonExpressionType.Parameter)
                     {
                         // update parameters in expression
                         parameters.CopyTo(expr.Parameters);

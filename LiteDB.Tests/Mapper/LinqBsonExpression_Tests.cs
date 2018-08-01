@@ -16,7 +16,7 @@ using System.Diagnostics;
 namespace LiteDB.Tests.Mapper
 {
     [TestClass]
-    public class QueryVisitor_Tests
+    public class LinqBsonExpression_Tests
     {
         #region Model
 
@@ -105,7 +105,7 @@ namespace LiteDB.Tests.Mapper
 
             // class constants
             TestExpr(x => CONST_INT, "@p0", CONST_INT);
-            TestExpr(x => QueryVisitor_Tests.StaticProp.Number, "@p0", QueryVisitor_Tests.StaticProp.Number);
+            TestExpr(x => StaticProp.Number, "@p0", StaticProp.Number);
 
             // methods inside constants
             TestExpr(x => "demo".Trim(), "TRIM(@p0)", "demo");
@@ -125,7 +125,7 @@ namespace LiteDB.Tests.Mapper
         }
 
         [TestMethod]
-        public void Linq_Array_Access()
+        public void Linq_Array_Navigation()
         {
             // new `Items` array access
             TestExpr<User>(x => x.Phones.Items().Number, "Phones[*].Number");
@@ -240,6 +240,8 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.CreatedOn.Hour, "HOUR(CreatedOn)");
             TestExpr<User>(x => x.CreatedOn.Minute, "MINUTE(CreatedOn)");
             TestExpr<User>(x => x.CreatedOn.Second, "SECOND(CreatedOn)");
+
+            TestExpr<User>(x => x.CreatedOn.Date, "TO_DATETIME(YEAR(CreatedOn), MONTH(CreatedOn), DAY(CreatedOn))");
 
             // static date
             TestExpr<User>(x => DateTime.Now, "NOW()");
