@@ -47,7 +47,7 @@ namespace LiteDB.Tests.Mapper
             Mobile, Landline
         }
 
-        private BsonMapper _mapper = new BsonMapper { TrimWhitespace = false };
+        private BsonMapper _mapper = new BsonMapper();
 
         [TestMethod]
         public void Linq_Date_Eval()

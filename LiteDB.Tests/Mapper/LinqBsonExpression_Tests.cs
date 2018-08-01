@@ -1,17 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using LiteDB.Engine;
-using System.Threading;
-using System.Linq.Expressions;
 using System.Diagnostics;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LiteDB.Tests.Mapper
 {
@@ -129,7 +121,7 @@ namespace LiteDB.Tests.Mapper
         {
             // new `Items` array access
             TestExpr<User>(x => x.Phones.Items().Number, "Phones[*].Number");
-            TestExpr<User>(x => x.Phones.Items(1).Number, "Phones[@p0].Number", 1);
+            TestExpr<User>(x => x.Phones.Items(1).Number, "Phones[1].Number");
             TestExpr<User>(x => x.Phones.Items(z => z.Prefix == 0).Number, "Phones[@.Prefix = @p0].Number", 0);
 
             // access using native array index (special "get_Item" eval index value)
@@ -146,9 +138,10 @@ namespace LiteDB.Tests.Mapper
             // call external method/props/const inside parameter expression
             var a = new { b = new { c = 123 } };
 
-            TestExpr<User>(x => x.Phones.Items(a.b.c).Number, "Phones[@p0].Number", a.b.c);
-            TestExpr<User>(x => x.Phones.Items(CONST_INT).Number, "Phones[@p0].Number", CONST_INT);
-            TestExpr<User>(x => x.Phones.Items(MyIndex()).Number, "Phones[@p0].Number", MyIndex());
+            // Items(int) generate eval value index
+            TestExpr<User>(x => x.Phones.Items(a.b.c).Number, "Phones[123].Number");
+            TestExpr<User>(x => x.Phones.Items(CONST_INT).Number, "Phones[100].Number");
+            TestExpr<User>(x => x.Phones.Items(MyIndex()).Number, "Phones[5].Number");
         }
 
         [TestMethod]

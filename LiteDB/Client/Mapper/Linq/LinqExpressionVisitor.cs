@@ -159,12 +159,12 @@ namespace LiteDB
 
             var declaringType = isList ? typeof(Enumerable) : node.Method.DeclaringType;
 
-            // if special "get_Item" resolve execution inner value
-            if (node.Method.Name == "get_Item")
+            // if special method for index access, eval index value (do not use parameters)
+            if (this.IsMethodIndexEval(node, out var obj, out var idx))
             {
-                this.Visit(node.Object);
+                this.Visit(obj);
 
-                var index = this.Evaluate(node.Arguments[0]);
+                var index = this.Evaluate(idx);
 
                 if (index is string)
                 {
@@ -235,7 +235,12 @@ namespace LiteDB
 
             _builder.AppendFormat("@" + parameter);
 
-            var arg = value == null ? BsonValue.Null : _mapper.Serialize(value.GetType(), value);
+            var type = value.GetType();
+
+            // if type is string, use direct BsonValue(string) to avoid rules like TrimWhitespace/EmptyStringToNull in mapper
+            var arg = value == null ? BsonValue.Null : 
+                type == typeof(string) ? new BsonValue((string)value) :
+                _mapper.Serialize(value.GetType(), value);
 
             _parameters[parameter] = arg;
 
@@ -492,6 +497,39 @@ namespace LiteDB
             if (field == null) throw new NotSupportedException($"Member {name} not found on BsonMapper for type {member.DeclaringType}.");
 
             return "." + field.FieldName;
+        }
+
+        /// <summary>
+        /// Define if this method is index access and must eval index value (do not use parameter)
+        /// </summary>
+        private bool IsMethodIndexEval(MethodCallExpression node, out Expression obj, out Expression idx)
+        {
+            var method = node.Method;
+            var type = method.DeclaringType;
+            var pars = method.GetParameters();
+
+            // for List/Dictionary [int/string]
+            if (method.Name == "get_Item" && pars.Length == 1 && 
+                (pars[0].ParameterType == typeof(int) || pars[0].ParameterType == typeof(string)))
+            {
+                obj = node.Object;
+                idx = node.Arguments[0];
+                return true;
+            }
+
+            // for Sql.Items(int)
+            if (type == typeof(Sql) && method.Name == "Items" && 
+                pars.Length == 2 && pars[1].ParameterType == typeof(int))
+            {
+                obj = node.Arguments[0];
+                idx = node.Arguments[1];
+                return true;
+            }
+
+            obj = null;
+            idx = null;
+
+            return false;
         }
 
         /// <summary>
