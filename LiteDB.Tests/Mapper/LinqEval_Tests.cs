@@ -102,6 +102,12 @@ namespace LiteDB.Tests.Mapper
             Eval(u, x => x.Id == 2 && x.Active == true, false);
             Eval(u, x => x.Id == 2 && x.Active == true, false);
 
+            // unary
+            Eval(u, x => x.Active, false);
+            Eval(u, x => !x.Active, true);
+            Eval(u, x => !x.Active && !x.Active, true);
+            Eval(u, x => x.Active || !x.Active, true);
+
         }
 
         [TestMethod]
@@ -158,7 +164,7 @@ namespace LiteDB.Tests.Mapper
         /// <summary>
         /// Eval expression and check with expected
         /// </summary>
-        // [DebuggerHidden]
+        [DebuggerHidden]
         private void Eval<T, K>(T entity, Expression<Func<T, K>> expr, params K[] expect)
         {
             var expression = _mapper.GetExpression(expr);
