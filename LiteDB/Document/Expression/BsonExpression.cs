@@ -64,6 +64,7 @@ namespace LiteDB
 
         /// <summary>
         /// Indicate that expression evaluate to TRUE or FALSE (=, >, ...). OR and AND are not considered Predicate expressions
+        /// Predicate expressions must have Left/Right expressions
         /// </summary>
         internal bool IsPredicate =>
             this.Type == BsonExpressionType.Equal ||

@@ -113,6 +113,13 @@ namespace LiteDB
                     var left = values.ElementAt(n);
                     var right = values.ElementAt(n + 1);
 
+                    // when operation is AND/OR, test if both sides are predicates
+                    if (op.Value.Item2 == BsonExpressionType.Add || op.Value.Item2 == BsonExpressionType.Or)
+                    {
+                        if (left.IsPredicate == false) throw LiteException.InvalidExpressionTypePredicate(left);
+                        if (right.IsPredicate == false) throw LiteException.InvalidExpressionTypePredicate(right);
+                    }
+
                     // process result in a single value
                     var result = new BsonExpression
                     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -147,6 +147,8 @@ namespace LiteDB.Engine
             // test all possible predicates in where (exclude OR/ANR)
             foreach (var expr in _where.Where(x => x.IsPredicate))
             {
+                DEBUG(expr.Left == null || expr.Right == null, "predicate expression must has left/right expressions");
+
                 // get index that match with expression left/right side 
                 var index = indexes
                     .Where(x => x.Expression == expr.Left.Source && expr.Right.IsConstant)
