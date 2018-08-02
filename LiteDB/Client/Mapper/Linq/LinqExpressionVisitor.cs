@@ -257,8 +257,9 @@ namespace LiteDB
                 // when is only "not boolean" resolve as 'x => !x.Active' = '$.Active = false'
                 if (node.Operand.NodeType == ExpressionType.MemberAccess)
                 {
+                    _builder.Append("(");
                     this.Visit(node.Operand);
-                    _builder.Append(" = false");
+                    _builder.Append(" = false)");
                 }
                 // otherwise, resolve all expression as inner expression = false
                 else
@@ -366,14 +367,26 @@ namespace LiteDB
         {
             var op = this.GetOperator(node.NodeType);
 
+            _builder.Append("(");
+
             base.Visit(node.Left);
 
             _builder.Append(op);
 
-            base.Visit(node.Right);
-
             // when object is native array, access child using [n] is an Binary expression
-            if (op == "[") _builder.Append("]");
+            if (op == "[")
+            {
+                // on array (native) index, eval value
+                var index = this.Evaluate(node.Right);
+                _builder.Append(index);
+                _builder.Append("]");
+            }
+            else
+            {
+                base.Visit(node.Right);
+            }
+
+            _builder.Append(")");
 
             return node;
         }

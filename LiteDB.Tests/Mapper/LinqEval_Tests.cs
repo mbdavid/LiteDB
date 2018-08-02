@@ -18,6 +18,8 @@ namespace LiteDB.Tests.Mapper
     [TestClass]
     public class LinqEval_Tests
     {
+        #region Model
+
         public class User
         {
             public int Id { get; set; }
@@ -46,6 +48,8 @@ namespace LiteDB.Tests.Mapper
         {
             Mobile, Landline
         }
+
+        #endregion
 
         private BsonMapper _mapper = new BsonMapper();
 
@@ -114,6 +118,18 @@ namespace LiteDB.Tests.Mapper
 
             // checks "Name: " will not apply "Trim" as default option in BsonMapper
             Eval(u, x => "Name: " + x.Name, "Name: John");
+        }
+
+        [TestMethod]
+        public void Linq_Math_Eval()
+        {
+            var u = new User { Id = 5 };
+
+            Eval(u, x => u.Id + 10 * 2, 25);
+            Eval(u, x => (u.Id + 10) * 2, 30);
+
+            Eval(u, x => Math.Abs(u.Id - 20), 15);
+            Eval(u, x => Math.Round((double)u.Id / 3, 2), 1.67);
         }
 
         [TestMethod]

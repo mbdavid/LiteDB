@@ -504,6 +504,8 @@ namespace LiteDB
                 IsImmutable = inner.IsImmutable,
                 Fields = inner.Fields,
                 Expression = inner.Expression,
+                Left = inner.Left,
+                Right = inner.Right,
                 Source = "(" + inner.Source + ")"
             };
         }
