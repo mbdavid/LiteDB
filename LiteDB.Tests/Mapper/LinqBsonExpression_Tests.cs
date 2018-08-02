@@ -122,7 +122,7 @@ namespace LiteDB.Tests.Mapper
             // new `Items` array access
             TestExpr<User>(x => x.Phones.Items().Number, "Phones[*].Number");
             TestExpr<User>(x => x.Phones.Items(1).Number, "Phones[1].Number");
-            TestExpr<User>(x => x.Phones.Items(z => z.Prefix == 0).Number, "Phones[@.Prefix = @p0].Number", 0);
+            TestExpr<User>(x => x.Phones.Items(z => z.Prefix == 0).Number, "Phones[(@.Prefix = @p0)].Number", 0);
 
             // access using native array index (special "get_Item" eval index value)
             TestExpr<User>(x => x.Phones[1].Number, "Phones[1].Number");
@@ -148,23 +148,23 @@ namespace LiteDB.Tests.Mapper
         public void Linq_Predicate()
         {
             // unary expressions
-            TestPredicate<User>(x => x.Active, "Active = true");
-            TestPredicate<User>(x => x.Active == true, "Active = @p0", true);
-            TestPredicate<User>(x => x.Active && true, "Active AND @p0", true);
-            TestPredicate<User>(x => !x.Active, "Active = false");
-            TestPredicate<User>(x => !(x.Salary == 50), "(Salary = @p0) = false", 50);
+            TestPredicate<User>(x => x.Active, "Active");
+            TestPredicate<User>(x => x.Active == true, "(Active = @p0)", true);
+            TestPredicate<User>(x => x.Active && true, "((Active = true) AND (@p0 = true))", true);
+            TestPredicate<User>(x => !x.Active, "(Active = false)");
+            TestPredicate<User>(x => !(x.Salary == 50), "((Salary = @p0) = false)", 50);
 
             // binary expressions
-            TestPredicate<User>(x => x.Salary > 50, "Salary > @p0", 50);
-            TestPredicate<User>(x => x.Salary != 50, "Salary != @p0", 50);
-            TestPredicate<User>(x => x.Salary == x.Id, "Salary = _id");
-            TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "Salary > @p0 AND Name = @p1", 50, "John");
+            TestPredicate<User>(x => x.Salary > 50, "(Salary > @p0)", 50);
+            TestPredicate<User>(x => x.Salary != 50, "(Salary != @p0)", 50);
+            TestPredicate<User>(x => x.Salary == x.Id, "(Salary = _id)");
+            TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
 
             // test for precedence order
-            TestPredicate<User>(x => x.Name.StartsWith("J") == false, "Name LIKE (@p0 + '%') = @p1", "J", false);
+            TestPredicate<User>(x => x.Name.StartsWith("J") == false, "((Name LIKE (@p0 + '%')) = @p1)", "J", false);
 
             // iif (c ? true : false)
-            TestExpr<User>(x => x.Id > 10 ? x.Id : 0, "IIF(_id > @p0, _id, @p1)", 10, 0);
+            TestExpr<User>(x => x.Id > 10 ? x.Id : 0, "IIF((_id > @p0), _id, @p1)", 10, 0);
         }
 
         [TestMethod]
