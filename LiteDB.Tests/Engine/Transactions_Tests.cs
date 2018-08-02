@@ -182,10 +182,11 @@ namespace LiteDB.Tests.Engine
 
             using (var db = new LiteEngine())
             {
-                var t0 = db.BeginTrans();
+                // first time transaction will be opened
+                Assert.IsTrue(db.BeginTrans());
 
-                // must return same transaction;
-                Assert.AreEqual(t0, db.BeginTrans());
+                // but in second type transaction will be same
+                Assert.IsFalse(db.BeginTrans());
 
                 db.Insert("person", data);
 
@@ -198,9 +199,7 @@ namespace LiteDB.Tests.Engine
                 // no transaction to rollback;
                 Assert.IsFalse(db.Rollback());
 
-                var t1 = db.BeginTrans();
-
-                Assert.AreNotEqual(t0, t1);
+                Assert.IsTrue(db.BeginTrans());
 
                 // no page was changed but ok, let's rollback anyway
                 Assert.IsTrue(db.Rollback());

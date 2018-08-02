@@ -95,7 +95,6 @@ namespace LiteDB
             }
 
             var order = 0;
-            var andOperator = _operators.Count - 1; // last operator are AND
 
             // now, process operator in correct order
             while (values.Count >= 2)
@@ -113,11 +112,11 @@ namespace LiteDB
                     var left = values.ElementAt(n);
                     var right = values.ElementAt(n + 1);
 
-                    // when operation is AND/OR, test if both sides are predicates
-                    if (op.Value.Item2 == BsonExpressionType.Add || op.Value.Item2 == BsonExpressionType.Or)
+                    // when operation is AND/OR, test if both sides are predicates (or and/or)
+                    if (op.Value.Item2 == BsonExpressionType.And || op.Value.Item2 == BsonExpressionType.Or)
                     {
-                        if (left.IsPredicate == false) throw LiteException.InvalidExpressionTypePredicate(left);
-                        if (right.IsPredicate == false) throw LiteException.InvalidExpressionTypePredicate(right);
+                        if (!(left.IsPredicate || left.Type == BsonExpressionType.And || left.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(left);
+                        if (!(right.IsPredicate || right.Type == BsonExpressionType.And || right.Type == BsonExpressionType.Or)) throw LiteException.InvalidExpressionTypePredicate(right);
                     }
 
                     // process result in a single value

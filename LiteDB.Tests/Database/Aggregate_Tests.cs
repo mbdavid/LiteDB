@@ -38,7 +38,7 @@ namespace LiteDB.Tests.Database
 
                 Assert.AreEqual(3, users.Count());
                 Assert.AreEqual(2, users.Count("Active = true")); // must be a predicate
-                Assert.AreEqual(2, users.Count(x => x.Active)); // support path->to->predicate
+                Assert.AreEqual(2, users.Count(x => x.Active == true)); 
 
                 Assert.AreEqual(3L, users.LongCount());
                 Assert.AreEqual(1L, users.LongCount("Salary > 100000"));

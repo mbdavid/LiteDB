@@ -44,7 +44,7 @@ namespace LiteDB
             _mapper = mapper;
         }
 
-        public BsonExpression Resolve(Expression expr, bool predicate)
+        public BsonExpression Resolve(Expression expr)
         {
             this.Visit(expr);
 
@@ -54,16 +54,7 @@ namespace LiteDB
 
             try
             {
-                var e = BsonExpression.Create(expression, _parameters);
-
-                // if resolver expect predicate expression but parserd expression are path 
-                // adds ` = true` to transform in predicate expression (`x => x.IsActive`)
-                if (e.Type == BsonExpressionType.Path && predicate)
-                {
-                    e = BsonExpression.Create(e.Source + " = true", _parameters);
-                }
-
-                return e;
+                return BsonExpression.Create(expression, _parameters);
             }
             catch (Exception ex)
             {
@@ -264,9 +255,8 @@ namespace LiteDB
                 // otherwise, resolve all expression as inner expression = false
                 else
                 {
-                    _builder.Append("(");
                     this.Visit(node.Operand);
-                    _builder.Append(") = false");
+                    _builder.Append(" = false");
                 }
             }
             else if (node.NodeType == ExpressionType.Convert)

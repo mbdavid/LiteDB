@@ -74,7 +74,7 @@ namespace LiteDB.Tests.Query
 
             Assert.AreEqual(1000, output["update"].AsInt32, "update");
 
-            Assert.IsTrue(output["trans"].IsGuid, "begin transaction");
+            Assert.IsTrue(output["trans"].IsBoolean, "begin transaction");
             Assert.IsTrue(output["commit"].AsBoolean, "commit");
             Assert.IsTrue(output["rollback"].AsBoolean, "rollback");
             Assert.AreEqual(1, output["col1"].AsInt32, "rollback works");

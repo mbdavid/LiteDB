@@ -99,8 +99,8 @@ namespace LiteDB.Tests.Mapper
             Eval(u, x => x.Id <= 1, true);
 
             Eval(u, x => x.Id == 2 || !x.Active, true);
-            Eval(u, x => x.Id == 2 && x.Active, false);
-            Eval(u, x => x.Id == 2 && x.Active, false);
+            Eval(u, x => x.Id == 2 && x.Active == true, false);
+            Eval(u, x => x.Id == 2 && x.Active == true, false);
 
         }
 

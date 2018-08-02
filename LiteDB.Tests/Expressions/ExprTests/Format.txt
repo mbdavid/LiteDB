@@ -21,10 +21,10 @@
 > [1,2,{$guid:"826944a6-72ec-4fc0-a1bc-9fd9f846c266"}]
 
 # And/Or
-> true   and false
-~ true AND false
-> 1 or "two" or three
-~ 1 OR "two" OR $.three
+> 1 =  true   and false > "A"
+~ 1=true AND false>"A"
+> 1 < 1 or "two" = "two" or three > three
+~ 1<1 OR "two"="two" OR $.three>$.three
 > ( 1 + 2) = 3    and X  +  y = 9
 ~ (1+2)=3 AND $.X+$.y=9
 
