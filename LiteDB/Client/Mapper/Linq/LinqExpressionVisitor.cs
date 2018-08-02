@@ -44,7 +44,7 @@ namespace LiteDB
             _mapper = mapper;
         }
 
-        public BsonExpression Resolve(Expression expr)
+        public BsonExpression Resolve(Expression expr, bool predicate)
         {
             this.Visit(expr);
 
@@ -54,7 +54,17 @@ namespace LiteDB
 
             try
             {
-                return BsonExpression.Create(expression, _parameters);
+                var e = BsonExpression.Create(expression, _parameters);
+
+                // if expression must return an predicate but expression result is Path/Call/Constant add `= true`
+                if (predicate && (e.Type == BsonExpressionType.Path || e.Type == BsonExpressionType.Call || e.IsConstant))
+                {
+                    expression = "(" + expression + " = true)";
+
+                    e = BsonExpression.Create(expression, _parameters);
+                }
+
+                return e;
             }
             catch (Exception ex)
             {
@@ -356,10 +366,11 @@ namespace LiteDB
         protected override Expression VisitBinary(BinaryExpression node)
         {
             var op = this.GetOperator(node.NodeType);
+            var andOr = node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse;
 
             _builder.Append("(");
 
-            base.Visit(node.Left);
+            this.VisitAsPredicate(node.Left, andOr);
 
             _builder.Append(op);
 
@@ -373,7 +384,7 @@ namespace LiteDB
             }
             else
             {
-                base.Visit(node.Right);
+                this.VisitAsPredicate(node.Right, andOr);
             }
 
             _builder.Append(")");
@@ -536,9 +547,30 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Visit expression but, if ensurePredicate = true, force expression be a predicate (appending ` = true`)
+        /// </summary>
+        private void VisitAsPredicate(Expression expr, bool ensurePredicate)
+        {
+            // apppend `= true` only if expression is path (MemberAccess), method call or constant
+            ensurePredicate = ensurePredicate &&
+                (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call || expr.NodeType == ExpressionType.Constant);
+
+            if (ensurePredicate)
+            {
+                _builder.Append("(");
+                base.Visit(expr);
+                _builder.Append(" = true)");
+            }
+            else
+            {
+                base.Visit(expr);
+            }
+        }
+
+        /// <summary>
         /// Compile and execute expression (can be cached)
         /// </summary>
-        public object Evaluate(Expression expr)
+        private object Evaluate(Expression expr)
         {
             if (expr.NodeType == ExpressionType.Constant)
             {

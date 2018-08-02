@@ -147,8 +147,6 @@ namespace LiteDB.Tests.Mapper
         [TestMethod]
         public void Linq_Predicate()
         {
-            // *not working* TestPredicate<User>(x => x.Active, "Active = true");
-
             // binary expressions
             TestPredicate<User>(x => x.Active == true, "(Active = @p0)", true);
             TestPredicate<User>(x => x.Salary > 50, "(Salary > @p0)", 50);
@@ -157,6 +155,10 @@ namespace LiteDB.Tests.Mapper
             TestPredicate<User>(x => x.Salary > 50 && x.Name == "John", "((Salary > @p0) AND (Name = @p1))", 50, "John");
 
             // unary expressions
+            TestPredicate<User>(x => x.Active, "(Active = true)");
+            TestPredicate<User>(x => x.Active && x.Active, "((Active = true) AND (Active = true))");
+            TestPredicate<User>(x => x.Active && x.Active && x.Active, "((($.Active=true) AND ($.Active=true)) AND ($.Active=true))");
+            TestPredicate<User>(x => x.Active && !x.Active, "((Active = true) AND (Active = false))");
             TestPredicate<User>(x => !x.Active, "(Active = false)");
             TestPredicate<User>(x => !x.Active == true, "((Active = false) = @p0)", true);
             TestPredicate<User>(x => !(x.Salary == 50), "(Salary = @p0) = false", 50);
