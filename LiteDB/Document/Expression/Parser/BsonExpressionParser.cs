@@ -619,7 +619,7 @@ namespace LiteDB
             var isImmutable = true;
             var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            source.Append(scope);
+            source.Append(scope == TokenType.Dollar ? "$" : "@");
 
             // read field name (or "" if root)
             var field = ReadField(tokenizer, source);
