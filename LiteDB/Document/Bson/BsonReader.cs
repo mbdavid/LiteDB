@@ -22,7 +22,7 @@ namespace LiteDB
         {
             using(var reader = new BinaryReader(stream))
             {
-                return this.ReadDocument(reader, fields == null ? null : new HashSet<string>(fields));
+                return this.ReadDocument(reader, fields);
             }
         }
 

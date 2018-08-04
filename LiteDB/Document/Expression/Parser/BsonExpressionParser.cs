@@ -125,7 +125,7 @@ namespace LiteDB
                         Type = op.Value.Item2,
                         IsConstant = left.IsConstant && right.IsConstant,
                         IsImmutable = left.IsImmutable && right.IsImmutable,
-                        Fields = new HashSet<string>(left.Fields).AddRange(right.Fields),
+                        Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                         Expression = Expression.Call(op.Value.Item1, left.Expression, right.Expression),
                         Left = left,
                         Right = right,
@@ -198,7 +198,7 @@ namespace LiteDB
                     Type = BsonExpressionType.Double,
                     IsConstant = true,
                     IsImmutable = true,
-                    Fields = new HashSet<string>(),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.NewArrayInit(typeof(BsonValue), constant),
                     Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
@@ -238,7 +238,7 @@ namespace LiteDB
                     Type = BsonExpressionType.Int,
                     IsConstant = true,
                     IsImmutable = true,
-                    Fields = new HashSet<string>(),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.NewArrayInit(typeof(BsonValue), constant),
                     Source = number.ToString(CultureInfo.InvariantCulture.NumberFormat)
                 };
@@ -262,7 +262,7 @@ namespace LiteDB
                     Type = BsonExpressionType.Boolean,
                     IsConstant = true,
                     IsImmutable = true,
-                    Fields = new HashSet<string>(),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                     Source = boolean.ToString().ToLower()
                 };
@@ -285,7 +285,7 @@ namespace LiteDB
                     Type = BsonExpressionType.Null,
                     IsConstant = true,
                     IsImmutable = true,
-                    Fields = new HashSet<string>(),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                     Source = "null"
                 };
@@ -309,7 +309,7 @@ namespace LiteDB
                     Type = BsonExpressionType.String,
                     IsConstant = true,
                     IsImmutable = true,
-                    Fields = new HashSet<string>(),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.NewArrayInit(typeof(BsonValue), value),
                     Source = JsonSerializer.Serialize(bstr)
                 };
@@ -331,7 +331,7 @@ namespace LiteDB
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
-            var fields = new HashSet<string>();
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             source.Append("{");
 
@@ -367,7 +367,7 @@ namespace LiteDB
                         Type = BsonExpressionType.Path,
                         IsConstant = false,
                         IsImmutable = isImmutable,
-                        Fields = new HashSet<string>(new string[] { key }),
+                        Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(new string[] { key }),
                         Expression = Expression.Call(_memberPathMethod, root, Expression.Constant(key)) as Expression,
                         Source = "$." + (fname.IsWord() ? fname : "[" + fname + "]")
                     };
@@ -419,7 +419,7 @@ namespace LiteDB
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
-            var fields = new HashSet<string>();
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             source.Append("[");
 
@@ -479,7 +479,7 @@ namespace LiteDB
                     Type = BsonExpressionType.Parameter,
                     IsConstant = true,
                     IsImmutable = false,
-                    Fields = new HashSet<string>(),
+                    Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                     Expression = Expression.Call(_parameterPathMethod, parameters, name),
                     Source = "@" + parameterName
                 };
@@ -534,7 +534,7 @@ namespace LiteDB
             var source = new StringBuilder();
             var isConstant = true;
             var isImmutable = true;
-            var fields = new HashSet<string>();
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             source.Append(token.Value.ToUpper() + "(");
 
@@ -600,11 +600,11 @@ namespace LiteDB
             // test $ or @ or WORD
             if (tokenizer.Current.Type != TokenType.At && tokenizer.Current.Type != TokenType.Dollar && tokenizer.Current.Type != TokenType.Word) return null;
 
-            var scope = isRoot ? "$" : "@";
+            var scope = isRoot ? TokenType.Dollar : TokenType.At;
 
             if (tokenizer.Current.Type == TokenType.At || tokenizer.Current.Type == TokenType.Dollar)
             {
-                scope = tokenizer.Current.Type == TokenType.Dollar ? "$" : "@";
+                scope = tokenizer.Current.Type;
 
                 var ahead = tokenizer.LookAhead(false);
 
@@ -617,18 +617,25 @@ namespace LiteDB
 
             var source = new StringBuilder();
             var isImmutable = true;
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             source.Append(scope);
 
             // read field name (or "" if root)
             var field = ReadField(tokenizer, source);
             var name = Expression.Constant(field);
-            var expr = Expression.Call(_memberPathMethod, scope == "$" ? root : current, name) as Expression;
+            var expr = Expression.Call(_memberPathMethod, scope == TokenType.Dollar ? root : current, name) as Expression;
+
+            // add as field only if working with root document
+            if (scope == TokenType.Dollar)
+            {
+                fields.Add(field.Length == 0 ? "$" : field);
+            }
 
             // parse the rest of path
             while (!tokenizer.EOF)
             {
-                var result = ParsePath(tokenizer, expr, root, parameters, source, ref isImmutable);
+                var result = ParsePath(tokenizer, expr, root, parameters, fields, ref isImmutable, source);
 
                 if (result == null) break;
 
@@ -640,7 +647,7 @@ namespace LiteDB
                 Type = BsonExpressionType.Path,
                 IsConstant = false,
                 IsImmutable = isImmutable,
-                Fields = new HashSet<string>(new string[] { field.Length == 0 ? "$" : field }),
+                Fields = fields,
                 Expression = expr,
                 Source = source.ToString()
             };
@@ -649,7 +656,7 @@ namespace LiteDB
         /// <summary>
         /// Implement a JSON-Path like navigation on BsonDocument. Support a simple range of paths
         /// </summary>
-        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression root, ParameterExpression parameters, StringBuilder source, ref bool isImmutable)
+        private static Expression ParsePath(Tokenizer tokenizer, Expression expr, ParameterExpression root, ParameterExpression parameters, HashSet<string> fields, ref bool isImmutable, StringBuilder source)
         {
             var ahead = tokenizer.LookAhead(false);
 
@@ -703,6 +710,9 @@ namespace LiteDB
                     // if array filter is not immutable, update ref (update only when false)
                     if (inner.IsImmutable == false) isImmutable = false;
 
+                    // add inner fields (can contains root call)
+                    fields.AddRange(inner.Fields);
+
                     source.Append(inner.Source);
                 }
 
@@ -733,7 +743,7 @@ namespace LiteDB
                 Type = BsonExpressionType.Array,
                 IsConstant = isConstant,
                 IsImmutable = isImmutable,
-                Fields = new HashSet<string>(item0.Fields).AddRange(item1.Fields),
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(item0.Fields).AddRange(item1.Fields),
                 Expression = Expression.Call(_arrayInitMethod, new Expression[] { arrValues }),
                 Source = item0.Source + " AND " + item1.Source
             };
@@ -750,7 +760,7 @@ namespace LiteDB
                 Type = _operators[op].Item2,
                 IsConstant = left.IsConstant && right.IsConstant,
                 IsImmutable = left.IsImmutable && right.IsImmutable,
-                Fields = new HashSet<string>(left.Fields).AddRange(right.Fields),
+                Fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase).AddRange(left.Fields).AddRange(right.Fields),
                 Expression = Expression.Call(_operators[op].Item1, left.Expression, right.Expression),
                 Left = left,
                 Right = right,

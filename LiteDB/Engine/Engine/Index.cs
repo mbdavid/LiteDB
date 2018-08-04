@@ -26,6 +26,7 @@ namespace LiteDB.Engine
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
             if (expression == null) throw new ArgumentNullException(nameof(expression));
+            if (expression.IsImmutable == false) new ArgumentException("Index expressions must contains only immutable methods. Do not use parameters, NOW(), GUID(), OBJECTID() or any other volatile methods.", nameof(expression));
 
             if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_PER_COLLECTION);
             if (!name.IsWord()) throw LiteException.InvalidIndexName(name, collection, "Use only [a-Z$_]");
@@ -50,12 +51,6 @@ namespace LiteDB.Engine
                     if (current.Expression != expression.Source) throw LiteException.IndexAlreadyExist(name);
 
                     return false;
-                }
-
-                // expressions must be immutable
-                if (expression.IsImmutable == false)
-                {
-                    throw new LiteException(0, "Index expressions must contains only immutable methods. Do not use NOW(), GUID(), OBJECTID() or any other volatile methods.");
                 }
 
                 // create index head

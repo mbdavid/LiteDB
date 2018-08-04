@@ -29,13 +29,13 @@ namespace LiteDB
         /// <summary>
         /// If true, this expression do not change if same document/paramter are passed (only few methods change - like NOW() - or parameters)
         /// </summary>
-        internal bool IsImmutable { get; set; }
+        public bool IsImmutable { get; internal set; }
 
         /// <summary>
         /// If true, indicate that it's possible execute this expression without document - always same result
         /// Can be a parameter os a fixed constant
         /// </summary>
-        internal bool IsConstant { get; set; }
+        public bool IsConstant { get; internal set; }
 
         /// <summary>
         /// Get/Set parameter values that will be used on expression execution
@@ -60,7 +60,7 @@ namespace LiteDB
         /// <summary>
         /// Fill this hashset with all fields used in root level of document (be used to partial deserialize) - "$" means all fields
         /// </summary>
-        public HashSet<string> Fields { get; set; }
+        public HashSet<string> Fields { get; internal set; }
 
         /// <summary>
         /// Indicate that expression evaluate to TRUE or FALSE (=, >, ...). OR and AND are not considered Predicate expressions
@@ -78,7 +78,7 @@ namespace LiteDB
             this.Type == BsonExpressionType.In;
 
         /// <summary>
-        /// Compiled Expression into a function to be executed
+        /// Compiled Expression into a function to be executed: func(root, current, parameters)
         /// </summary>
         private Func<IEnumerable<BsonDocument>, IEnumerable<BsonValue>, BsonDocument, IEnumerable<BsonValue>> _func;
 

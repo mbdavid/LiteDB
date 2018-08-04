@@ -55,10 +55,10 @@ namespace LiteDB.Engine
         private void DefineQueryFields(QueryPlan query)
         {
             // load only query fields (null return all document)
-            var fields = new HashSet<string>();
+            var fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             // include all fields detected in all used expressions
-            fields.AddRange(_select?.Expression.Fields ?? new HashSet<string> { "$" });
+            fields.AddRange(_select?.Expression.Fields ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "$" });
             fields.AddRange(_where.SelectMany(x => x.Fields));
             fields.AddRange(_includes.SelectMany(x => x.Fields));
             fields.AddRange(_groupBy?.Expression.Fields);
