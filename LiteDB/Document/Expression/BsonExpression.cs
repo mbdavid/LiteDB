@@ -32,12 +32,6 @@ namespace LiteDB
         public bool IsImmutable { get; internal set; }
 
         /// <summary>
-        /// If true, indicate that it's possible execute this expression without document - always same result
-        /// Can be a parameter os a fixed constant
-        /// </summary>
-        public bool IsConstant { get; internal set; }
-
-        /// <summary>
         /// Get/Set parameter values that will be used on expression execution
         /// </summary>
         public BsonDocument Parameters { get; private set; } = new BsonDocument();
@@ -76,6 +70,21 @@ namespace LiteDB
             this.Type == BsonExpressionType.LessThanOrEqual ||
             this.Type == BsonExpressionType.NotEqual ||
             this.Type == BsonExpressionType.In;
+
+        /// <summary>
+        /// This expression can be indexed? To index some expression must contains fields (at least 1) and
+        /// must use only immutable methods and no parameters
+        /// </summary>
+        internal bool IsIndexable =>
+            this.Fields.Count > 0 &&
+            this.IsImmutable == true &&
+            this.Parameters.Count == 0;
+
+        /// <summary>
+        /// This expression has no dependency of BsonDocument so can be used as user value (when select index)
+        /// </summary>
+        internal bool IsValue =>
+            this.Fields.Count == 0;
 
         /// <summary>
         /// Compiled Expression into a function to be executed: func(root, current, parameters)
@@ -199,7 +208,6 @@ namespace LiteDB
             return new BsonExpression
             {
                 Expression = expr.Expression,
-                IsConstant = expr.IsConstant,
                 IsImmutable = expr.IsImmutable,
                 Fields = expr.Fields,
                 Left = expr.Left,
@@ -250,7 +258,6 @@ namespace LiteDB
             return new BsonExpression
             {
                 Expression = expr.Expression,
-                IsConstant = expr.IsConstant,
                 IsImmutable = expr.IsImmutable,
                 Parameters = parameters ?? new BsonDocument(),
                 Fields = expr.Fields,

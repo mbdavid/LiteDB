@@ -74,11 +74,11 @@ namespace LiteDB.Engine
 
             return this.AutoTransaction(transaction =>
             {
-                // do optimization for when using "_id = constant" key
+                // do optimization for when using "_id = value" key
                 if (predicate.Type == BsonExpressionType.Equal && 
                     predicate.Left.Type == BsonExpressionType.Path && 
                     predicate.Left.Source == "$._id" && 
-                    predicate.Right.IsConstant)
+                    predicate.Right.IsValue)
                 {
                     var id = predicate.Right.Execute().First();
 

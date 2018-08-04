@@ -151,10 +151,10 @@ namespace LiteDB.Engine
 
                 // get index that match with expression left/right side 
                 var index = indexes
-                    .Where(x => x.Expression == expr.Left.Source && expr.Right.IsConstant)
+                    .Where(x => x.Expression == expr.Left.Source && expr.Right.IsValue)
                     .Select(x => Tuple.Create(x, expr.Right))
                     .Union(indexes
-                        .Where(x => x.Expression == expr.Right.Source && expr.Left.IsConstant)
+                        .Where(x => x.Expression == expr.Right.Source && expr.Left.IsValue)
                         .Select(x => Tuple.Create(x, expr.Left))
                     ).FirstOrDefault();
 

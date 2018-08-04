@@ -56,8 +56,8 @@ namespace LiteDB
             {
                 var e = BsonExpression.Create(expression, _parameters);
 
-                // if expression must return an predicate but expression result is Path/Call/Constant add `= true`
-                if (predicate && (e.Type == BsonExpressionType.Path || e.Type == BsonExpressionType.Call || e.IsConstant))
+                // if expression must return an predicate but expression result is Path/Call add `= true`
+                if (predicate && (e.Type == BsonExpressionType.Path || e.Type == BsonExpressionType.Call))
                 {
                     expression = "(" + expression + " = true)";
 

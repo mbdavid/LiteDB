@@ -41,8 +41,10 @@ namespace LiteDB.Tests.Expressions
             t("{ Active, _id: 1 }", "Active");
             t("[ Active, _id, null, UPPER(Name.First)]", "Active", "_id", "Name");
 
-            // only new document with no fields
+            // no fields
             t("{ Active: 1, _id: 2 }");
+            t("123");
+            t("UPPER(@p0) = 'JOHN' OR YEAR(NOW()) = 2018");
 
             // duplicate 
             t("{ Active: active, NewActive: active, Root: $ }", "active", "$");
@@ -62,17 +64,6 @@ namespace LiteDB.Tests.Expressions
 
         }
 
-        [TestMethod]
-        public void Expression_Parameters()
-        {
-
-        }
-
-        [TestMethod]
-        public void Expression_Constant()
-        {
-
-        }
         [TestMethod]
         public void Expression_Immutable()
         {
