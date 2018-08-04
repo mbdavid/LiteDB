@@ -42,7 +42,7 @@ namespace LiteDB.Tests.Database
         public void Storage_Upload_Download()
         {
             using (var f = new TempFile())
-            using (var db = new LiteDatabase(f.Filename))
+            using (var db = new LiteDatabase(f.FileName))
             //using (var db = new LiteDatabase(@"c:\temp\file.db"))
             {
                 var fs = db.GetStorage<int>("_files", "_chunks");

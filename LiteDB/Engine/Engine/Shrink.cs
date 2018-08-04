@@ -59,48 +59,56 @@ namespace LiteDB.Engine
                         var indexes = reader.GetIndexes().ToArray();
 
                         // begin transaction and get TransactionID
-                        var transactionID = this.GetTransaction(true, out var isNew).TransactionID;
+                        var transaction = temp.GetTransaction(true, out var isNew);
 
-                        foreach (var collection in reader.GetCollections())
+                        try
                         {
-                            // first create all user indexes (exclude _id index)
-                            foreach (var index in indexes.Where(x => x.Collection == collection && x.Name != "_id"))
+                            foreach (var collection in reader.GetCollections())
                             {
-                                temp.EnsureIndex(collection,
-                                    index.Name,
-                                    BsonExpression.Create(index.Expression),
-                                    index.Unique);
+                                // first create all user indexes (exclude _id index)
+                                foreach (var index in indexes.Where(x => x.Collection == collection && x.Name != "_id"))
+                                {
+                                    temp.EnsureIndex(collection,
+                                        index.Name,
+                                        BsonExpression.Create(index.Expression),
+                                        index.Unique);
+                                }
+
+                                // get all documents from current collection
+                                var docs = reader.GetDocuments(indexes.Single(x => x.Collection == collection && x.Name == "_id"));
+
+                                // and insert into 
+                                temp.Insert(collection, docs, BsonAutoId.ObjectId);
                             }
 
-                            // get all documents from current collection
-                            var docs = reader.GetDocuments(indexes.Single(x => x.Collection == collection && x.Name == "_id"));
+                            // update header page and create another fake-transaction
+                            temp._header.CreationTime = reader.CreationTime;
+                            temp._header.UserVersion = reader.UserVersion;
 
-                            // and insert into 
-                            temp.Insert(collection, docs, BsonAutoId.ObjectId);
+                            if (indexes.Length == 0)
+                            {
+                                // if there is no collection, force commit only header page 
+                                // by default, commit() will only store confirm page if there is any changed page
+                                temp._header.TransactionID = transaction.TransactionID;
+                                temp._header.IsConfirmed = true;
+                                temp._header.IsDirty = true;
+                                temp._wal.WalFile.WritePages(new[] { temp._header }, null);
+
+                                temp._wal.ConfirmTransaction(transaction.TransactionID, new List<PagePosition>());
+                            }
+                            else
+                            {
+                                temp.Commit();
+                            }
+
+                            // add this commited transaction as confirmed transaction in current datafile (to do checkpoint after)
+                            _wal.ConfirmedTransactions.Add(transaction.TransactionID);
+
                         }
-
-                        // update header page and create another fake-transaction
-                        temp._header.CreationTime = reader.CreationTime;
-                        temp._header.UserVersion = reader.UserVersion;
-
-                        if (indexes.Length == 0)
+                        finally
                         {
-                            // if there is no collection, force commit only header page 
-                            // by default, commit() will only store confirm page if there is any changed page
-                            temp._header.TransactionID = transactionID;
-                            temp._header.IsConfirmed = true;
-                            temp._header.IsDirty = true;
-                            temp._wal.WalFile.WritePages(new[] { temp._header }, null);
-
-                            temp._wal.ConfirmTransaction(transactionID, new List<PagePosition>());
+                            transaction.Dispose();
                         }
-                        else
-                        {
-                            temp.Commit();
-                        }
-
-                        // add this commited transaction as confirmed transaction in current datafile (to do checkpoint after)
-                        _wal.ConfirmedTransactions.Add(transactionID);
                     }
                 }
 
