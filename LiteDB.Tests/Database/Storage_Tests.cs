@@ -53,8 +53,8 @@ namespace LiteDB.Tests.Database
                 Assert.AreEqual(small.Length, _smallFile.Length);
                 Assert.AreEqual(big.Length, _bigFile.Length);
 
-                var f0 = fs.Find(x => x.Filename == "photo_small.png").First();
-                var f1 = fs.Find(x => x.Filename == "photo_big.png").First();
+                var f0 = fs.Find(x => x.FileName == "photo_small.png").First();
+                var f1 = fs.Find(x => x.FileName == "photo_big.png").First();
 
                 Assert.AreEqual(_smallHash, this.HashFile(f0.OpenRead()));
                 Assert.AreEqual(_bigHash, this.HashFile(f1.OpenRead()));
