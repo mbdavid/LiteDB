@@ -197,12 +197,18 @@ namespace LiteDB.Engine
                             header.UpdateCollections(_transPages);
                             header.FreeEmptyPageID = newEmptyPageID;
                             header.TransactionID = this.TransactionID;
+
+                            // this header page will be masked as confirmed page in WAL file
                             header.IsConfirmed = true;
                             header.IsDirty = true;
 
+                            // persist header in WAL file
                             _wal.WalFile.WritePages(new[] { header }, null);
 
-                            // now, write confirm transaction (with header page) and update wal-index
+                            // flush wal file (inside _header lock)
+                            _wal.WalFile.Flush();
+
+                            // and update wal-index (before release _header lock)
                             _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
 
                             // update global header page to make equals to confirm page
@@ -210,12 +216,14 @@ namespace LiteDB.Engine
                             _header.FreeEmptyPageID = newEmptyPageID;
                         }
                     }
-                    else
+                    else if (_transPages.DirtyPagesWal.Count > 0)
                     {
+                        // flush wal file
+                        _wal.WalFile.Flush();
+
+                        // and update wal-index 
                         _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
                     }
-
-                    _wal.WalFile.Flush();
                 }
 
                 // dispose all snaps and release locks only after wal index are updated

@@ -74,8 +74,11 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write last confirmation page into all and update all indexes
         /// </summary>
-        public void ConfirmTransaction(Guid transactionID, IEnumerable<PagePosition> pagePositions)
+        public void ConfirmTransaction(Guid transactionID, ICollection<PagePosition> pagePositions)
         {
+            // if no pages was saved, just exit with no confirmed transaction
+            if (pagePositions.Count == 0) return;
+
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Add(transactionID);
 

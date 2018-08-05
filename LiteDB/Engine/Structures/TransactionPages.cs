@@ -51,12 +51,12 @@ namespace LiteDB.Engine
         public string DeletedCollection { get; set; }
 
         /// <summary>
-        /// Detect if this transaction pages need change header
+        /// Detect if this transaction will need persist header page (has added/deleted pages or added/deleted collections)
         /// </summary>
         public bool HeaderChanged =>
             this.NewPages.Count > 0 ||
             this.DeletedPages > 0 ||
-            this.NewCollections.Count > 0 ||
-            this.DeletedCollection != null;
+            this.NewCollections.Count > 0 || // test NewCollections/DeletedCollection is redundant because this two operations
+            this.DeletedCollection != null; // always Added/Removed pages
     }
 }
