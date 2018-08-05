@@ -71,11 +71,6 @@ namespace LiteDB.Engine
         public int Checkpoint { get; set; } = 1000;
 
         /// <summary>
-        /// Define if engine can auto create index for run queries
-        /// </summary>
-        public bool AutoIndex { get; set; } = false;
-
-        /// <summary>
         /// Indicate that engine will do a checkpoint on dispose database
         /// </summary>
         public bool CheckpointOnShutdown { get; set; } = true;
