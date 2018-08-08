@@ -12,8 +12,8 @@ namespace LiteDB.Engine
     /// </summary>
     public class FileStreamDiskFactory : IDiskFactory
     {
-        private string _dataFilename;
-        private string _walFilename;
+        private readonly string _dataFilename;
+        private readonly string _walFilename;
 
         public FileStreamDiskFactory(string filename)
         {
@@ -31,7 +31,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetDataFileStream(bool write)
         {
-            return GetStreamInternal(_dataFilename, write, FileOptions.RandomAccess);
+            return this.GetStreamInternal(_dataFilename, write, FileOptions.RandomAccess);
         }
 
         /// <summary>

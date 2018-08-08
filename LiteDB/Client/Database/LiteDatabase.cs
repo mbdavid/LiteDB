@@ -48,20 +48,16 @@ namespace LiteDB
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new Lazy<LiteEngine>(() =>
-            {
-                var settings = new EngineSettings
-                {
-                    Filename = connectionString.Filename,
-                    InitialSize = connectionString.InitialSize,
-                    LimitSize = connectionString.LimitSize,
-                    UtcDate = connectionString.UtcDate,
-                    Timeout = connectionString.Timeout,
-                    LogLevel = connectionString.Log
-                };
+            _engine = new Lazy<LiteEngine>(() => connectionString.GetEngine());
+        }
 
-                return new LiteEngine(settings);
-            });
+        /// <summary>
+        /// Starts LiteDB database using custom ILiteEngine implementation
+        /// </summary>
+        public LiteDatabase(LiteEngine engine, BsonMapper mapper = null)
+        {
+            _engine = new Lazy<LiteEngine>(() => engine);
+            _mapper = mapper ?? BsonMapper.Global;
         }
 
         /// <summary>
@@ -77,7 +73,7 @@ namespace LiteDB
             {
                 var settings = new EngineSettings
                 {
-                    DataStream = stream,
+                    DataStream = stream
                 };
 
                 return new LiteEngine(settings);

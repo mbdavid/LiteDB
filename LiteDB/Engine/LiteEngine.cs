@@ -104,7 +104,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Initialize LiteEngine using initial engine settings
         /// </summary>
-        public LiteEngine(EngineSettings settings)
+        public LiteEngine(IEngineSettings settings)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
@@ -113,13 +113,13 @@ namespace LiteDB.Engine
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
 
-                _log.Info($"initializing database '{settings.Filename}'");
-
                 // copy settings into class variables (turn values in immutable values)
                 _factory = settings.GetDiskFactory();
                 _utcDate = settings.UtcDate;
                 _checkpointOnShutdown = settings.CheckpointOnShutdown;
                 _maxMemoryTransactionSize = settings.MaxMemoryTransactionSize;
+
+                _log.Info($"initializing database '{_factory.Filename}'");
 
                 _bsonReader = new BsonReader(settings.UtcDate);
                 _bsonWriter = new BsonWriter();

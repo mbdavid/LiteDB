@@ -13,7 +13,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// All engine settings used to starts new engine
     /// </summary>
-    public class EngineSettings
+    public class EngineSettings : IEngineSettings
     {
         /// <summary>
         /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStrem/WalStream null)
@@ -51,7 +51,7 @@ namespace LiteDB.Engine
         public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
-        /// Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
+        /// Debug messages from database - (default: Logger.NONE)
         /// </summary>
         public byte LogLevel { get; set; } = Logger.NONE;
 
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get datafile factory
         /// </summary>
-        internal IDiskFactory GetDiskFactory()
+        public IDiskFactory GetDiskFactory()
         {
             if (this.Filename == ":memory:")
             {
