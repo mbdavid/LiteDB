@@ -9,23 +9,21 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Reduce disk size re-arranging unused spaces. Can change password.
+        /// Reduce disk size re-arranging unused spaces.
         /// </summary>
-        public long Shrink(string password = null)
+        public long Shrink()
         {
-            _log.Info("shrink datafile" + (password != null ? " with password" : ""));
+            _log.Info("shrink datafile");
 
-            return this.Shrink(new FileReaderV8(this, _header), password);
+            return this.Shrink(new FileReaderV8(this, _header));
         }
 
         /// <summary>
         /// Run shrink operation using an file reader interface (can be used as Upgrade datafile)
         /// </summary>
-        private long Shrink(IFileReader reader,  string password)
+        private long Shrink(IFileReader reader)
         {
             var originalSize = _dataFile.Length;
-
-            if (!string.IsNullOrEmpty(password)) throw new NotImplementedException("Database encryption are not implemented yet on v5.");
 
             // shrink can only run with no transaction
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Shrink", TransactionState.Active);

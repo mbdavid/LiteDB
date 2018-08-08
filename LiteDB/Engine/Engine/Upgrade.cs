@@ -31,7 +31,7 @@ namespace LiteDB.Engine
                 var reader = new FileReaderV7(stream);
 
                 // upgrade is same operation than Shrink, but use custom file reader
-                this.Shrink(reader, null);
+                this.Shrink(reader);
             }
         }
     }

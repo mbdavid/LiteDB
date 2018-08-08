@@ -28,7 +28,6 @@ namespace LiteDB
         public const int LOCK_TIMEOUT = 120;
         public const int INVALID_COMMAND = 121;
         public const int ALREADY_EXISTS_COLLECTION_NAME = 122;
-        public const int DATABASE_WRONG_PASSWORD = 123;
         public const int ALREADY_OPEN_DATAFILE = 124;
         public const int INVALID_TRANSACTION_STATE = 126;
         public const int INDEX_NAME_LIMIT_EXCEEDED = 128;
@@ -207,11 +206,6 @@ namespace LiteDB
         internal static LiteException AlreadyOpenDatafile(string filename)
         {
             return new LiteException(ALREADY_OPEN_DATAFILE, "Your datafile '{0}' is open in another process.", filename);
-        }
-
-        internal static LiteException DatabaseWrongPassword()
-        {
-            return new LiteException(DATABASE_WRONG_PASSWORD, "Invalid database password.");
         }
 
         internal static LiteException InvalidDbRef(string path)

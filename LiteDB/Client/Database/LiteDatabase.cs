@@ -53,7 +53,6 @@ namespace LiteDB
                 var settings = new EngineSettings
                 {
                     Filename = connectionString.Filename,
-                    Password = connectionString.Password,
                     InitialSize = connectionString.InitialSize,
                     LimitSize = connectionString.LimitSize,
                     UtcDate = connectionString.UtcDate,
@@ -68,7 +67,7 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteDatabase(Stream stream, BsonMapper mapper = null, string password = null, bool disposeStream = false)
+        public LiteDatabase(Stream stream, BsonMapper mapper = null, bool disposeStream = false)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
@@ -231,15 +230,7 @@ namespace LiteDB
         /// </summary>
         public long Shrink()
         {
-            return this.Shrink(_connectionString == null ? null : _connectionString.Password);
-        }
-
-        /// <summary>
-        /// Reduce disk size re-arranging unused space. Can change password. If a temporary disk was not provided, use MemoryStream temp disk
-        /// </summary>
-        public long Shrink(string password)
-        {
-            return _engine.Value.Shrink(password);
+            return _engine.Value.Shrink();
         }
 
         /// <summary>
