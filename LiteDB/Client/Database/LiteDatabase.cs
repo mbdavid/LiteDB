@@ -52,7 +52,7 @@ namespace LiteDB
             {
                 var settings = new EngineSettings
                 {
-                    FileName = connectionString.FileName,
+                    Filename = connectionString.Filename,
                     Password = connectionString.Password,
                     InitialSize = connectionString.InitialSize,
                     LimitSize = connectionString.LimitSize,

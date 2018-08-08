@@ -50,7 +50,7 @@ namespace LiteDB.Engine
             {
                 if (_tempdb == null)
                 {
-                    _tempdb = new LiteEngine(new EngineSettings { FileName = ":temp:" });
+                    _tempdb = new LiteEngine(new EngineSettings { Filename = ":temp:" });
                 }
 
                 return _tempdb;
@@ -79,7 +79,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get database file name
         /// </summary>
-        public string FileName => _factory.FileName;
+        public string Filename => _factory.Filename;
 
         #endregion
 
@@ -97,7 +97,7 @@ namespace LiteDB.Engine
         /// Initialize LiteEngine using connection string using key=value; parser
         /// </summary>
         public LiteEngine(string filename)
-            : this (new EngineSettings { FileName = filename })
+            : this (new EngineSettings { Filename = filename })
         {
         }
 
@@ -116,7 +116,7 @@ namespace LiteDB.Engine
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
 
-                _log.Info($"initializing database '{settings.FileName}'");
+                _log.Info($"initializing database '{settings.Filename}'");
 
                 // copy settings into class variables (turn values in immutable values)
                 _factory = settings.GetDiskFactory();

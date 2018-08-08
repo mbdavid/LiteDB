@@ -22,9 +22,9 @@ namespace LiteDB.Engine
             }
 
             // make a backup to original datafile
-            var backup = FileHelper.GetTempFile(_factory.FileName, "-backup", true);
+            var backup = FileHelper.GetTempFile(_factory.Filename, "-backup", true);
 
-            File.Copy(_factory.FileName, backup);
+            File.Copy(_factory.Filename, backup);
 
             using (var stream = _factory.GetDataFileStream(false))
             {

@@ -16,7 +16,7 @@ namespace LiteDB.Tests.Engine
             var minimal = 8192 * 4; // 1 header + 1 collection + 1 data + 1 index = 4 pages minimal
 
             using (var file = new TempFile())
-            using (var db = new LiteEngine(new EngineSettings { FileName = file.FileName, InitialSize = initial }))
+            using (var db = new LiteEngine(new EngineSettings { Filename = file.Filename, InitialSize = initial }))
             {
                 // test if file has 40kb
                 Assert.AreEqual(initial, file.Size);

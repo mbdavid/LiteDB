@@ -12,26 +12,26 @@ namespace LiteDB.Engine
     /// </summary>
     public class FileStreamDiskFactory : IDiskFactory
     {
-        private string _dataFileName;
-        private string _walFileName;
+        private string _dataFilename;
+        private string _walFilename;
 
         public FileStreamDiskFactory(string filename)
         {
-            _dataFileName = filename;
-            _walFileName = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + "-wal" + Path.GetExtension(filename));
+            _dataFilename = filename;
+            _walFilename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + "-wal" + Path.GetExtension(filename));
         }
 
         /// <summary>
         /// Get data filename
         /// </summary>
-        public string FileName => _dataFileName;
+        public string Filename => _dataFilename;
 
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
         public Stream GetDataFileStream(bool write)
         {
-            return GetStreamInternal(_dataFileName, write, FileOptions.RandomAccess);
+            return GetStreamInternal(_dataFilename, write, FileOptions.RandomAccess);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace LiteDB.Engine
         {
             var options = write ? FileOptions.SequentialScan : FileOptions.RandomAccess;
 
-            return GetStreamInternal(_walFileName, write, options);
+            return GetStreamInternal(_walFilename, write, options);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsWalFileExists()
         {
-            return File.Exists(_walFileName);
+            return File.Exists(_walFilename);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void DeleteWalFile()
         {
-            File.Delete(_walFileName);
+            File.Delete(_walFilename);
         }
 
         /// <summary>

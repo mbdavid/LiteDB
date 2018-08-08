@@ -60,7 +60,7 @@ namespace LiteDB.Engine
                 origin == SeekOrigin.Current ? _stream.Position + offset :
                 _stream.Position - offset;
 
-            // when offset pass limit first time, change current _stream from MemoryStrem to FileStream with TempFileName()
+            // when offset pass limit first time, change current _stream from MemoryStrem to FileStream with TempFilename()
             if (position > _maxMemoryUsage && this.InMemory)
             {
                 // create new filename if not passed on ctor (must be unique

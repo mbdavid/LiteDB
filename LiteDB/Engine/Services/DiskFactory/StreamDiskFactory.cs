@@ -23,7 +23,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Stream has no name (use stream type)
         /// </summary>
-        public string FileName => _data is MemoryStream ? ":memory:" : _data is TempStream ? ":temp:" : ":stream:";
+        public string Filename => _data is MemoryStream ? ":memory:" : _data is TempStream ? ":temp:" : ":stream:";
 
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)

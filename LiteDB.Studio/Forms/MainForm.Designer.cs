@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.txtFileName = new System.Windows.Forms.TextBox();
+            this.txtFilename = new System.Windows.Forms.TextBox();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.tvwDatabase = new System.Windows.Forms.TreeView();
             this.imgList = new System.Windows.Forms.ImageList(this.components);
@@ -101,16 +101,16 @@
             this.ctxMenuRoot.SuspendLayout();
             this.SuspendLayout();
             // 
-            // txtFileName
+            // txtFilename
             // 
-            this.txtFileName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtFilename.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtFileName.Location = new System.Drawing.Point(5, 37);
-            this.txtFileName.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.txtFileName.Name = "txtFileName";
-            this.txtFileName.Size = new System.Drawing.Size(1024, 23);
-            this.txtFileName.TabIndex = 0;
-            this.txtFileName.Text = ":memory:";
+            this.txtFilename.Location = new System.Drawing.Point(5, 37);
+            this.txtFilename.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.txtFilename.Name = "txtFilename";
+            this.txtFilename.Size = new System.Drawing.Size(1024, 23);
+            this.txtFilename.TabIndex = 0;
+            this.txtFilename.Text = ":memory:";
             // 
             // splitMain
             // 
@@ -631,7 +631,7 @@
             this.Controls.Add(this.tlbMain);
             this.Controls.Add(this.stbStatus);
             this.Controls.Add(this.splitMain);
-            this.Controls.Add(this.txtFileName);
+            this.Controls.Add(this.txtFilename);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -666,7 +666,7 @@
 
         #endregion
 
-        private System.Windows.Forms.TextBox txtFileName;
+        private System.Windows.Forms.TextBox txtFilename;
         private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.TreeView tvwDatabase;
         private System.Windows.Forms.StatusStrip stbStatus;

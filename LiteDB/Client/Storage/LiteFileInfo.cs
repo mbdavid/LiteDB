@@ -13,7 +13,7 @@ namespace LiteDB
         public TFileId Id { get; internal set; }
 
         [BsonField("filename")]
-        public string FileName { get; internal set; }
+        public string Filename { get; internal set; }
 
         [BsonField("mimeType")]
         public string MimeType { get; internal set; }

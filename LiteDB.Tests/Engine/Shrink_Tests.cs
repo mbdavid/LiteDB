@@ -17,7 +17,7 @@ namespace LiteDB.Tests.Engine
         public void Shrink_After_DropCollection()
         {
             using (var file = new TempFile())
-            using (var db = new LiteEngine(file.FileName))
+            using (var db = new LiteEngine(file.Filename))
             {
                 db.Insert("col", DataGen.Zip());
 
@@ -45,7 +45,7 @@ namespace LiteDB.Tests.Engine
 
             using (var file = new TempFile())
             {
-                using (var db = new LiteEngine(file.FileName))
+                using (var db = new LiteEngine(file.Filename))
                 {
                     db.UserVersion = 99;
                     db.EnsureIndex("col", "city", false);
@@ -74,7 +74,7 @@ namespace LiteDB.Tests.Engine
                 }
 
                 // re-open and shrink again
-                using (var db = new LiteEngine(file.FileName))
+                using (var db = new LiteEngine(file.Filename))
                 {
                     DoTest(db);
 

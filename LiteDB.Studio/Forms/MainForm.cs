@@ -29,11 +29,11 @@ namespace LiteDB.Studio
             // For performance https://stackoverflow.com/questions/4255148/how-to-improve-painting-performance-of-datagridview
             grdResult.DoubleBuffered(true);
 
-            txtFileName.Text = filename ?? "";
+            txtFilename.Text = filename ?? "";
 
             _synchronizationContext = SynchronizationContext.Current;
 
-            if (txtFileName.Text.Length > 0)
+            if (txtFilename.Text.Length > 0)
             {
                 this.Connect();
             }
@@ -55,7 +55,7 @@ namespace LiteDB.Studio
         {
             try
             {
-                if (txtFileName.Enabled)
+                if (txtFilename.Enabled)
                 {
                     this.Connect();
                 }
@@ -74,14 +74,14 @@ namespace LiteDB.Studio
         {
             var settings = new EngineSettings
             {
-                FileName = txtFileName.Text,
+                Filename = txtFilename.Text,
                 Log = new Logger(Logger.FULL, this.DoLog)
             };
 
             _db = new LiteEngine(settings);
             _running = true;
             btnConnect.Text = "Disconnect";
-            txtFileName.Enabled = btnFileOpen.Enabled = false;
+            txtFilename.Enabled = btnFileOpen.Enabled = false;
             splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = true;
 
             tabSql.TabPages.Add("+", "+");
@@ -95,7 +95,7 @@ namespace LiteDB.Studio
             _db?.Dispose();
             _running = false;
             btnConnect.Text = "Connect";
-            txtFileName.Enabled = btnFileOpen.Enabled = true;
+            txtFilename.Enabled = btnFileOpen.Enabled = true;
 
             splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = false;
 
@@ -196,7 +196,7 @@ namespace LiteDB.Studio
         {
             tvwDatabase.Nodes.Clear();
 
-            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.FileName));
+            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Filename));
             var system = root.Nodes.Add("System");
 
             root.ImageKey = "database";
@@ -518,11 +518,11 @@ namespace LiteDB.Studio
 
         private void BtnFileOpen_Click(object sender, EventArgs e)
         {
-            diaOpen.FileName = txtFileName.Text;
+            diaOpen.FileName = txtFilename.Text;
 
             if (diaOpen.ShowDialog() == DialogResult.OK)
             {
-                txtFileName.Text = diaOpen.FileName;
+                txtFilename.Text = diaOpen.FileName;
 
                 BtnConnect_Click(null, null);
             }

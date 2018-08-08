@@ -14,7 +14,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get filename
         /// </summary>
-        string FileName { get; }
+        string Filename { get; }
 
         /// <summary>
         /// Get new datafile stream instance

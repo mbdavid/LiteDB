@@ -113,7 +113,7 @@ namespace LiteDB
                 file = new LiteFileInfo<TFileId>
                 {
                     Id = id,
-                    FileName = Path.GetFileName(filename),
+                    Filename = Path.GetFileName(filename),
                     MimeType = MimeTypeConverter.GetMimeType(filename),
                     Metadata = metadata ?? new BsonDocument()
                 };
@@ -124,7 +124,7 @@ namespace LiteDB
             else
             {
                 // if filename/metada was changed
-                file.FileName = Path.GetFileName(filename);
+                file.Filename = Path.GetFileName(filename);
                 file.MimeType = MimeTypeConverter.GetMimeType(filename);
                 file.Metadata = metadata ?? file.Metadata;
             }

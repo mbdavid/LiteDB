@@ -12,7 +12,7 @@ namespace LiteDB
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
         /// </summary>
-        public string FileName { get; set; } = "";
+        public string Filename { get; set; } = "";
 
         /// <summary>
         /// "password": Encrypt (using AES) your datafile with a password (default: null - no encryption)
@@ -71,7 +71,7 @@ namespace LiteDB
             }
 
             // setting values to properties
-            this.FileName = values.GetValue("filename", this.FileName);
+            this.Filename = values.GetValue("filename", this.Filename);
             this.Password = values.GetValue<string>("password", this.Password);
             this.Timeout = values.GetValue("timeout", this.Timeout);
             this.InitialSize = values.GetFileSize(@"initial size", this.InitialSize);

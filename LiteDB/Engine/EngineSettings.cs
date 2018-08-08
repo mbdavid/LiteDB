@@ -33,7 +33,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: ':memory:')
         /// </summary>
-        public string FileName { get; set; } = ":memory:";
+        public string Filename { get; set; } = ":memory:";
 
         /// <summary>
         /// Password database encryption (not implemented yet)
@@ -85,21 +85,21 @@ namespace LiteDB.Engine
         /// </summary>
         internal IDiskFactory GetDiskFactory()
         {
-            if (this.FileName == ":memory:")
+            if (this.Filename == ":memory:")
             {
                 return new StreamDiskFactory(new MemoryStream(), this.WalStream ?? new MemoryStream());
             }
-            else if (this.FileName == ":temp:")
+            else if (this.Filename == ":temp:")
             {
                 return new StreamDiskFactory(new TempStream(), this.WalStream ?? new TempStream());
             }
-            else if(!string.IsNullOrEmpty(this.FileName))
+            else if(!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamDiskFactory(this.FileName);
+                return new FileStreamDiskFactory(this.Filename);
             }
             else
             {
-                if (this.DataStream == null) throw new ArgumentException("EngineSettings must have FileName or DataStream as data source");
+                if (this.DataStream == null) throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
 
                 return new StreamDiskFactory(this.DataStream, this.WalStream ?? new TempStream());
             }

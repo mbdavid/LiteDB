@@ -8,14 +8,14 @@ namespace LiteDB.Tests
 {
     public class TempFile : IDisposable
     {
-        public string FileName { get; private set; }
+        public string Filename { get; private set; }
 
         public TempFile()
         {
             var path = Path.GetTempPath();
             var name = "test-" + Guid.NewGuid().ToString("d").Substring(0, 5) + ".db";
 
-            this.FileName = Path.Combine(path, name);
+            this.Filename = Path.Combine(path, name);
         }
 
         #region Dispose
@@ -46,15 +46,15 @@ namespace LiteDB.Tests
 
             // check file integrity
 
-            File.Delete(this.FileName);
+            File.Delete(this.Filename);
 
             _disposed = true;
         }
 
         #endregion
 
-        public long Size => new FileInfo(this.FileName).Length;
+        public long Size => new FileInfo(this.Filename).Length;
 
-        public string ReadAsText() => File.ReadAllText(this.FileName);
+        public string ReadAsText() => File.ReadAllText(this.Filename);
     }
 }

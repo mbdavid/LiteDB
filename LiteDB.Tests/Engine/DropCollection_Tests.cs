@@ -12,7 +12,7 @@ namespace LiteDB.Tests.Engine
         public void DropCollection()
         {
             using (var file = new TempFile())
-            using (var db = new LiteEngine(file.FileName))
+            using (var db = new LiteEngine(file.Filename))
             {
                 Assert.IsFalse(db.GetCollectionNames().Any(x => x == "col"));
 
