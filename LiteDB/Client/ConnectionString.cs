@@ -40,24 +40,6 @@ namespace LiteDB
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// Get ILiteEngine from this connection string
-        /// </summary>
-        internal LiteEngine GetEngine()
-        {
-            var settings = new EngineSettings
-            {
-                Filename = this.Filename,
-                InitialSize = this.InitialSize,
-                LimitSize = this.LimitSize,
-                UtcDate = this.UtcDate,
-                Timeout = this.Timeout,
-                LogLevel = this.Log
-            };
-
-            return new LiteEngine(settings);
-        }
-
-        /// <summary>
         /// Initialize empty connection string
         /// </summary>
         public ConnectionString()

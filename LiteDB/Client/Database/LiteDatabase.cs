@@ -15,7 +15,6 @@ namespace LiteDB
 
         private readonly Lazy<LiteEngine> _engine = null;
         private BsonMapper _mapper = BsonMapper.Global;
-        private ConnectionString _connectionString = null;
 
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
@@ -44,26 +43,30 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
         {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            if(connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new Lazy<LiteEngine>(() => connectionString.GetEngine());
-        }
+            _engine = new Lazy<LiteEngine>(() =>
+            {
+                var settings = new EngineSettings
+                {
+                    Filename = connectionString.Filename,
+                    InitialSize = connectionString.InitialSize,
+                    LimitSize = connectionString.LimitSize,
+                    UtcDate = connectionString.UtcDate,
+                    Timeout = connectionString.Timeout,
+                    LogLevel = connectionString.Log
+                };
 
-        /// <summary>
-        /// Starts LiteDB database using custom ILiteEngine implementation
-        /// </summary>
-        public LiteDatabase(LiteEngine engine, BsonMapper mapper = null)
-        {
-            _engine = new Lazy<LiteEngine>(() => engine);
-            _mapper = mapper ?? BsonMapper.Global;
+                return new LiteEngine(settings);
+            });
         }
 
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteDatabase(Stream stream, BsonMapper mapper = null, bool disposeStream = false)
+        public LiteDatabase(Stream stream, BsonMapper mapper = null)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
@@ -78,6 +81,28 @@ namespace LiteDB
 
                 return new LiteEngine(settings);
             });
+        }
+
+        /// <summary>
+        /// Starts LiteDB database using custom LiteEngine settings
+        /// </summary>
+        public LiteDatabase(IEngineSettings settings, BsonMapper mapper = null)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+
+            _engine = new Lazy<LiteEngine>(() => new LiteEngine(settings));
+            _mapper = mapper ?? BsonMapper.Global;
+        }
+
+        /// <summary>
+        /// Starts LiteDB database using custom ILiteEngine implementation
+        /// </summary>
+        public LiteDatabase(LiteEngine engine, BsonMapper mapper = null)
+        {
+            if (engine == null) throw new ArgumentNullException(nameof(engine));
+
+            _engine = new Lazy<LiteEngine>(() => engine);
+            _mapper = mapper ?? BsonMapper.Global;
         }
 
         #endregion
