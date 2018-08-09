@@ -8,17 +8,9 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Insert single document in collection. If document has no _id, use AutoId generation.
-        /// </summary>
-        public bool Insert(string collection, BsonDocument document, BsonAutoId autoId = BsonAutoId.ObjectId)
-        {
-            return this.Insert(collection, new[] { document }, autoId) > 0;
-        }
-
-        /// <summary>
         /// Insert all documents in collection. If document has no _id, use AutoId generation.
         /// </summary>
-        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId = BsonAutoId.ObjectId)
+        public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));

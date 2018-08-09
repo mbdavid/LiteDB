@@ -8,7 +8,6 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// UPDATE - will merge current document with modify expression
-        /// 
         ///  UPDATE {collection}
         ///     SET {extendExpr}
         /// [ WHERE {whereExpr} ]

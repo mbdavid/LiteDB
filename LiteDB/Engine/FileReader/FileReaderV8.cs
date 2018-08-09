@@ -40,16 +40,19 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<IndexInfo> GetIndexes()
         {
-            foreach(var index in _engine.Query("$indexes").ToEnumerable())
+            using(var reader = _engine.Query("$indexes", new QueryDefinition()))
             {
-                yield return new IndexInfo
+                while(reader.Read())
                 {
-                    Collection = index["collection"].AsString,
-                    Name = index["name"].AsString,
-                    Expression = index["expression"].AsString,
-                    Unique = index["unique"].AsBoolean,
-                    HeadPageID = 0 // not used
-                };
+                    yield return new IndexInfo
+                    {
+                        Collection = reader.Current["collection"].AsString,
+                        Name = reader.Current["name"].AsString,
+                        Expression = reader.Current["expression"].AsString,
+                        Unique = reader.Current["unique"].AsBoolean,
+                        HeadPageID = 0 // not used
+                    };
+                }
             }
         }
 

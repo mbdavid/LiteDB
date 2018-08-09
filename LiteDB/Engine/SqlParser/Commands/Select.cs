@@ -63,11 +63,12 @@ namespace LiteDB.Engine
             var collection = this.ParseCollection();
 
             // initialize query builder
-            QueryBuilder query;
+            var query = new QueryDefinition();
 
             if (collection is string)
             {
-                query = _engine.Query((string)collection);
+                query.Into = (string)collection;
+                query.Output = QueryOutput.NewCollection;
             }
             else
             {
@@ -75,7 +76,8 @@ namespace LiteDB.Engine
             }
 
             // apply SELECT
-            query = query.Select(selectExpr, all);
+            query.Select = selectExpr;
+            query.SelectAll = all;
 
             var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -86,7 +88,7 @@ namespace LiteDB.Engine
 
                 foreach(var path in this.ParseListOfExpressions())
                 {
-                    query.Include(path);
+                    query.Includes.Add(path);
                 }
             }
 
@@ -99,7 +101,7 @@ namespace LiteDB.Engine
 
                 var where = BsonExpression.Create(_tokenizer, _parameters);
 
-                query.Where(where);
+                query.Where.Add(where);
             }
 
             ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
@@ -112,7 +114,7 @@ namespace LiteDB.Engine
 
                 var groupBy = BsonExpression.Create(_tokenizer, _parameters);
 
-                query.GroupBy(groupBy);
+                query.GroupBy = groupBy;
 
                 ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -123,7 +125,7 @@ namespace LiteDB.Engine
 
                     var having = BsonExpression.Create(_tokenizer, _parameters);
 
-                    query.Having(having);
+                    query.Having = having;
                 }
             }
 
@@ -145,7 +147,8 @@ namespace LiteDB.Engine
                     orderByOrder = _tokenizer.ReadToken().Is("ASC") ? Query.Ascending : Query.Descending;
                 }
 
-                query.OrderBy(orderBy, orderByOrder);
+                query.OrderBy = orderBy;
+                query.Order = orderByOrder;
             }
 
             ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
@@ -156,7 +159,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 var limit = _tokenizer.ReadToken().Expect(TokenType.Int).Value;
 
-                query.Limit(Convert.ToInt32(limit));
+                query.Limit = Convert.ToInt32(limit);
             }
 
             ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
@@ -167,7 +170,7 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 var offset = _tokenizer.ReadToken().Expect(TokenType.Int).Value;
 
-                query.Offset(Convert.ToInt32(offset));
+                query.Offset = Convert.ToInt32(offset);
             }
 
             ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
@@ -178,33 +181,13 @@ namespace LiteDB.Engine
                 _tokenizer.ReadToken();
                 _tokenizer.ReadToken().Expect("UPDATE");
 
-                query.ForUpdate();
+                query.ForUpdate = true;
             }
 
             // read eof/;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            // execute query as insert or return values
-            if (into != null && explain == false)
-            {
-                var result = 0;
-
-                if (into is string)
-                {
-                    result = query.Into((string)into, autoId);
-
-                }
-                else
-                {
-                    result = query.Into((IFileCollection)into);
-                }
-
-                return new BsonDataReader(result);
-            }
-            else
-            {
-                return query.ExecuteQuery(explain);
-            }
+            return _engine.Query(collection, query);
         }
 
         /// <summary>

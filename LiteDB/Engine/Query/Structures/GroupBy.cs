@@ -11,18 +11,23 @@ namespace LiteDB.Engine
     /// </summary>
     internal class GroupBy : OrderBy
     {
-        public GroupBy(BsonExpression expression) : base(expression, 0)
+        private readonly BsonExpression _select;
+        private readonly BsonExpression _having;
+
+        public GroupBy(BsonExpression expression, BsonExpression select, BsonExpression having) : base(expression, 0)
         {
+            _select = select;
+            _having = having;
         }
 
         /// <summary>
         /// Get/Set transform expression in group by
         /// </summary>
-        public BsonExpression Select { get; set; } = null;
+        public BsonExpression Select => _select;
 
         /// <summary>
         /// Get/Set if have filter after group by
         /// </summary>
-        public BsonExpression Having { get; set; } = null;
+        public BsonExpression Having => _having;
     }
 }

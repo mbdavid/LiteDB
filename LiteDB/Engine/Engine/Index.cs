@@ -9,16 +9,6 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Create a new index (or do nothing if already exists) to a collection. Expression parameter will be used as index name too
-        /// </summary>
-        public bool EnsureIndex(string collection, BsonExpression expression, bool unique = false)
-        {
-            var name = Regex.Replace(expression.Source, @"[^a-z]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-            return this.EnsureIndex(collection, name, expression, unique);
-        }
-
-        /// <summary>
         /// Create a new index (or do nothing if already exists) to a collection/field
         /// </summary>
         public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)

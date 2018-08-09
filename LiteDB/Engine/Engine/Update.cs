@@ -7,16 +7,6 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Implement update command to a document inside a collection. Returns true if document was updated
-        /// </summary>
-        public bool Update(string collection, BsonDocument doc)
-        {
-            if (doc == null) throw new ArgumentNullException(nameof(doc));
-
-            return this.Update(collection, new BsonDocument[] { doc }) == 1;
-        }
-
-        /// <summary>
         /// Implement update command to a document inside a collection. Return number of documents updated
         /// </summary>
         public int Update(string collection, IEnumerable<BsonDocument> docs)
@@ -49,7 +39,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Update documents using extend expression to extend found document using predicate
         /// </summary>
-        public int Update(string collection, BsonExpression extend, BsonExpression predicate)
+        public int UpdateMany(string collection, BsonExpression extend, BsonExpression predicate)
         {
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (extend == null) throw new ArgumentNullException(nameof(extend));
@@ -79,7 +69,7 @@ namespace LiteDB.Engine
                         var output = doc.Extend(result.AsDocument);
 
                         // be sure result document will contain same _id as current doc
-                        if(output.TryGetValue("_id", out var newId))
+                        if (output.TryGetValue("_id", out var newId))
                         {
                             if (newId != id) throw LiteException.InvalidUpdateField("_id");
                         }
