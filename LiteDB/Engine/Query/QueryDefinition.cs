@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Engine
 {
-    public enum QueryOutput { Recordset, ExecutionPlan, NewCollection, JsonFile, TextFile, BinaryFile }
-
     public class QueryDefinition
     {
         public List<BsonExpression> Where { get; set; } = new List<BsonExpression>();
@@ -29,7 +27,6 @@ namespace LiteDB.Engine
         public string Into { get; set; }
         public BsonAutoId IntoAutoId { get; set; } = BsonAutoId.ObjectId;
 
-        public QueryOutput Output { get; set; } = QueryOutput.Recordset;
-        //public IOutputOptions OutputOptions { get; set; } = null;
+        public bool ExplainPlan { get; set; }
     }
 }

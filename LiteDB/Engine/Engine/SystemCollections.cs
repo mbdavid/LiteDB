@@ -5,7 +5,7 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        private Dictionary<string, Func<IEnumerable<BsonDocument>>> _systemCollections = new Dictionary<string, Func<IEnumerable<BsonDocument>>>(StringComparer.InvariantCultureIgnoreCase);
+        private Dictionary<string, SystemCollection> _systemCollections = new Dictionary<string, SystemCollection>();
 
         /// <summary>
         /// Get name of all system collections
@@ -13,15 +13,39 @@ namespace LiteDB.Engine
         public IEnumerable<string> GetSystemCollections() => _systemCollections.Keys;
 
         /// <summary>
-        /// Register a new system collection that can be used in query (used for system information)
-        /// Collection name must stasts with $
+        /// Get registered system collection
         /// </summary>
-        public void RegisterSystemCollection(string collectionName, Func<IEnumerable<BsonDocument>> factory)
+        internal SystemCollection GetSystemCollection(string name)
+        {
+            if (_systemCollections.TryGetValue(name, out var sys))
+            {
+                return sys;
+            }
+
+            throw new LiteException(0, $"System collection '{name}' are not registered as system collection");
+        }
+
+        /// <summary>
+        /// Register a new system collection that can be used in query for input/output data
+        /// Collection name must starts with $
+        /// </summary>
+        public void RegisterSystemCollection(SystemCollection systemCollection)
+        {
+            if (systemCollection == null) throw new ArgumentNullException(nameof(systemCollection));
+
+            _systemCollections[systemCollection.Name] = systemCollection;
+        }
+
+        /// <summary>
+        /// Register a new system collection that can be used in query for input data
+        /// Collection name must starts with $
+        /// </summary>
+        public void RegisterSystemCollection(string collectionName, Func<BsonValue, IEnumerable<BsonDocument>> factory)
         {
             if (collectionName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collectionName));
-            if (!collectionName.StartsWith("$")) throw new ArgumentException("System collection name must starts with $");
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
 
-            _systemCollections[collectionName] = factory ?? throw new ArgumentNullException(nameof(factory));
+            _systemCollections[collectionName] = new SystemCollection(collectionName, factory);
         }
     }
 }

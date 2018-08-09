@@ -357,9 +357,12 @@ namespace LiteDB.Studio
                 if (current == value) return current;
 
                 var r = _db.Execute($"UPDATE {_active.Collection} SET {{ {field}: @0 }} WHERE _id = @1 AND {field} = @2",
-                    value,
-                    id,
-                    current);
+                    new BsonDocument
+                    {
+                        ["0"] = value,
+                        ["1"] = id,
+                        ["2"] = current
+                    });
 
                 if (r.Current == 1) return value;
 

@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     {
         /// <summary>
         ///    SELECT [ ALL ] {selectExpr}
-        ///    [ INTO {newcollection|FILE} [ : {type} ] ]
+        ///    [ INTO {newcollection|FILE} [ : {autoId} ] ]
         ///    [ FROM {collection|FILE} ]
         /// [ INCLUDE {pathExpr0} [, {pathExprN} ]
         ///   [ WHERE {filterExpr} ]
@@ -22,19 +22,19 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonDataReader ParseSelect(bool explain)
         {
+            // initialize query definition
+            var query = new QueryDefinition();
+
             var token = _tokenizer.LookAhead();
-            var all = false;
 
             if (token.Is("ALL"))
             {
-                all = true;
+                query.SelectAll = true;
                 _tokenizer.ReadToken();
             }
 
             // read required SELECT <expr>
-            var selectExpr = BsonExpression.Create(_tokenizer, _parameters);
-            object into = null;
-            var autoId = BsonAutoId.ObjectId;
+            query.Select = BsonExpression.Create(_tokenizer, _parameters);
 
             // read FROM|INTO
             var from = _tokenizer.ReadToken();
@@ -42,15 +42,14 @@ namespace LiteDB.Engine
             if (from.Type == TokenType.EOF || from.Type == TokenType.SemiColon)
             {
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
-                var result = selectExpr.Execute(true);
+                var result = query.Select.Execute(true);
 
                 return new BsonDataReader(result, null);
             }
             else if (from.Is("INTO"))
             {
-                into = this.ParseCollection();
-
-                autoId = this.ParseWithAutoId();
+                query.Into = ParseCollection(_tokenizer);
+                query.IntoAutoId = this.ParseWithAutoId();
 
                 _tokenizer.ReadToken().Expect("FROM");
             }
@@ -60,24 +59,7 @@ namespace LiteDB.Engine
             }
 
             // read FROM <name>
-            var collection = this.ParseCollection();
-
-            // initialize query builder
-            var query = new QueryDefinition();
-
-            if (collection is string)
-            {
-                query.Into = (string)collection;
-                query.Output = QueryOutput.NewCollection;
-            }
-            else
-            {
-                query = _engine.Query((IFileCollection)collection);
-            }
-
-            // apply SELECT
-            query.Select = selectExpr;
-            query.SelectAll = all;
+            var collection = ParseCollection(_tokenizer);
 
             var ahead = _tokenizer.LookAhead().Expect(TokenType.Word, TokenType.EOF, TokenType.SemiColon);
 
@@ -191,53 +173,44 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read collection name OR FILE implementations
+        /// Read collection name and parameter (in case of system collections)
         /// </summary>
-        private object ParseCollection()
+        public static string ParseCollection(Tokenizer tokenizer)
         {
-            var collection = _tokenizer.ReadToken().Expect(TokenType.Word);
-            var next = _tokenizer.LookAhead();
+            return ParseCollection(tokenizer, out var name, out var options);
+        }
 
-            // simple collection name
-            if (next.Type != TokenType.OpenParenthesis)
+        /// <summary>
+        /// Read collection name and parameter (in case of system collections)
+        /// </summary>
+        public static string ParseCollection(Tokenizer tokenizer, out string name, out BsonValue options)
+        {
+            name = tokenizer.ReadToken().Expect(TokenType.Word).Value;
+
+            // if collection starts with $, check if exist any parameter
+            if (name.StartsWith("$"))
             {
-                return collection.Value;
+                var next = tokenizer.LookAhead();
+
+                if (next.Type == TokenType.OpenParenthesis)
+                {
+                    tokenizer.ReadToken(); // read (
+
+                    options = new JsonReader(tokenizer).Deserialize();
+
+                    tokenizer.ReadToken().Expect(TokenType.CloseParenthesis); // read )
+                }
+                else
+                {
+                    options = null;
+                }
+            }
+            else
+            {
+                options = null;
             }
 
-            // if contains ( is an FileCollection
-            _tokenizer.ReadToken();
-
-            var filename = _tokenizer.ReadToken().Expect(TokenType.String).Value;
-            BsonValue options = null;
-
-            next = _tokenizer.ReadToken();
-
-            // if contains , read options as BsonValue
-            if (next.Type == TokenType.Comma)
-            {
-                options = new JsonReader(_tokenizer).Deserialize();
-            }
-
-            next.Expect(TokenType.CloseParenthesis);
-
-            // do switch to load correct FileCollection
-            switch(collection.Value.ToUpper())
-            {
-                case "FILE_JSON": return new JsonFileCollection(filename);
-                case "FILE_TEXT": return new TextFileCollection(filename);
-                case "FILE_CSV": throw new NotImplementedException();
-                case "FILE_BINARY": return new BinaryFileCollection(filename);
-                case "FILE":
-                    // auto-detect file handler based on file extension
-                    switch (Path.GetExtension(filename).ToLower())
-                    {
-                        case ".json": return new JsonFileCollection(filename);
-                        case ".txt": return new TextFileCollection(filename);
-                        case ".csv": throw new NotImplementedException();
-                        default: return new BinaryFileCollection(filename);
-                    }
-                default: throw LiteException.UnexpectedToken(collection, "Invalid collection handler");
-            }
+            return name + (options == null ? "" : "(" + options.ToString() + ")");
         }
     }
 }

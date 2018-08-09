@@ -50,35 +50,38 @@ namespace LiteDB.Engine
 
                 IEnumerable<BsonDocument> ExtendDocs()
                 {
-                    var query = this.Query(collection);
+                    var q = new QueryDefinition { Select = "$", ForUpdate = true };
 
-                    if (predicate != null) query = query.Where(predicate);
-
-                    var docs = query
-                        .Select("$")
-                        .ForUpdate()
-                        .ToEnumerable();
-
-                    foreach (var doc in docs)
+                    if (predicate != null)
                     {
-                        var id = doc["_id"];
-                        var result = extend.Execute(doc, true).First();
+                        q.Where.Add(predicate);
+                    }
 
-                        if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(extend));
-
-                        var output = doc.Extend(result.AsDocument);
-
-                        // be sure result document will contain same _id as current doc
-                        if (output.TryGetValue("_id", out var newId))
+                    using (var reader = this.Query(collection, q))
+                    {
+                        while(reader.Read())
                         {
-                            if (newId != id) throw LiteException.InvalidUpdateField("_id");
-                        }
-                        else
-                        {
-                            output["_id"] = id;
-                        }
+                            var doc = reader.Current.AsDocument;
 
-                        yield return output;
+                            var id = doc["_id"];
+                            var result = extend.Execute(doc, true).First();
+
+                            if (!result.IsDocument) throw new ArgumentException("Extend expression must return a document", nameof(extend));
+
+                            var output = doc.Extend(result.AsDocument);
+
+                            // be sure result document will contain same _id as current doc
+                            if (output.TryGetValue("_id", out var newId))
+                            {
+                                if (newId != id) throw LiteException.InvalidUpdateField("_id");
+                            }
+                            else
+                            {
+                                output["_id"] = id;
+                            }
+
+                            yield return output;
+                        }
                     }
                 }
             });

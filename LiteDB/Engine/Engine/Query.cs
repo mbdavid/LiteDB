@@ -18,9 +18,15 @@ namespace LiteDB.Engine
             IEnumerable<BsonDocument> source = null;
 
             // test if is an system collection
-            if (collection.StartsWith("$") && _systemCollections.TryGetValue(collection, out var factory))
+            if (collection.StartsWith("$"))
             {
-                source = factory();
+                SqlParser.ParseCollection(new Tokenizer(collection), out var name, out var options);
+
+                // get registered system collection to get data source
+                var sys = this.GetSystemCollection(name);
+
+                source = sys.Input(options);
+                collection = sys.Name;
             }
 
             var exec = new QueryExecutor(this, collection, query, source);
@@ -28,17 +34,5 @@ namespace LiteDB.Engine
             return exec.ExecuteQuery();
         }
 
-        /// <summary>
-        /// Execute query using custom collection implementation (external data source)
-        /// </summary>
-        public BsonDataReader Query(IFileCollection collection, QueryDefinition query)
-        {
-            if (collection == null) throw new ArgumentNullException(nameof(collection));
-            if (query == null) throw new ArgumentNullException(nameof(query));
-
-            var exec = new QueryExecutor(this, collection.Name, query, collection.Input());
-
-            return exec.ExecuteQuery();
-        }
     }
 }

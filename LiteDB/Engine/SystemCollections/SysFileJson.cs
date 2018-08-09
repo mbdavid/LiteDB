@@ -3,29 +3,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    /// <summary>
-    /// Represent an external file with an array data source
-    /// </summary>
-    public class JsonFileCollection : IFileCollection
+    internal class SysFileJson : SystemCollection
     {
-        private readonly string _filename;
-        private readonly bool _pretty;
-
-        public JsonFileCollection(string filename, bool pretty = true)
+        public SysFileJson() : base("$file_json")
         {
-            _filename = filename;
-            _pretty = pretty;
         }
 
-        public string Name => Path.GetFileName(_filename);
-
-        public IEnumerable<BsonDocument> Input()
+        public override IEnumerable<BsonDocument> Input(BsonValue options)
         {
-            using (var fs = new FileStream(_filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            if (options == null) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
+
+            var filename = options.AsString;
+
+            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 using (var reader = new StreamReader(fs))
                 {
@@ -35,7 +29,7 @@ namespace LiteDB.Engine
                         .Select(x => x.AsDocument);
 
                     // read documents inside file and return one-by-one
-                    foreach(var doc in source)
+                    foreach (var doc in source)
                     {
                         yield return doc;
                     }
@@ -43,11 +37,15 @@ namespace LiteDB.Engine
             }
         }
 
-        public int Output(IEnumerable<BsonValue> source)
+        public override int Output(IEnumerable<BsonValue> source, BsonValue options)
         {
-            var index = 0;
+            if (options == null) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
 
-            using (var fs = new FileStream(_filename, FileMode.CreateNew))
+            var filename = options.AsString;
+            var index = 0;
+            var pretty = false;
+
+            using (var fs = new FileStream(filename, FileMode.CreateNew))
             {
                 using (var writer = new StreamWriter(fs))
                 {
@@ -57,7 +55,7 @@ namespace LiteDB.Engine
                     {
                         if (index++ > 0) writer.Write(",");
 
-                        var json = JsonSerializer.Serialize(value, _pretty, true);
+                        var json = JsonSerializer.Serialize(value, pretty, true);
 
                         writer.WriteLine(json);
                     }

@@ -43,9 +43,9 @@ namespace LiteDB
         /// <summary>
         /// Starts LiteDB database using a Stream disk
         /// </summary>
-        public LiteRepository(Stream stream, BsonMapper mapper = null, string password = null)
+        public LiteRepository(Stream stream, BsonMapper mapper = null)
         {
-            _db = new LiteDatabase(stream, mapper, password);
+            _db = new LiteDatabase(stream, mapper);
         }
 
         #endregion
@@ -135,17 +135,17 @@ namespace LiteDB
         /// <summary>
         /// Delete entity based on Query
         /// </summary>
-        public int Delete<T>(BsonExpression predicate, string collectionName = null)
+        public int DeleteMany<T>(BsonExpression predicate, string collectionName = null)
         {
-            return _db.GetCollection<T>(collectionName).Delete(predicate);
+            return _db.GetCollection<T>(collectionName).DeleteMany(predicate);
         }
 
         /// <summary>
         /// Delete entity based on predicate filter expression
         /// </summary>
-        public int Delete<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
+        public int DeleteMany<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
         {
-            return _db.GetCollection<T>(collectionName).Delete(predicate);
+            return _db.GetCollection<T>(collectionName).DeleteMany(predicate);
         }
 
         #endregion
@@ -169,7 +169,7 @@ namespace LiteDB
         /// </summary>
         public T SingleById<T>(BsonValue id, string collectionName = null)
         {
-            return this.Query<T>(collectionName).SingleById(id);
+            return _db.GetCollection<T>(collectionName).FindById(id);
         }
 
         /// <summary>

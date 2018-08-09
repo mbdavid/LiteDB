@@ -33,7 +33,7 @@ namespace LiteDB.Engine
             // read eof
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            var result = _engine.Update(collection, extend, where);
+            var result = _engine.UpdateMany(collection, extend, where);
 
             return new BsonDataReader(result);
         }

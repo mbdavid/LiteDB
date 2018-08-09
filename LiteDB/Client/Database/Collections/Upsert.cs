@@ -40,7 +40,7 @@ namespace LiteDB
             // set document _id using id parameter
             doc["_id"] = id;
 
-            return _engine.Value.Upsert(_collection, doc);
+            return _engine.Value.Upsert(_collection, new[] { doc }, _autoId) > 0;
         }
     }
 }

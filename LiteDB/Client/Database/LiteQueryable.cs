@@ -12,13 +12,17 @@ namespace LiteDB
     /// </summary>
     public class LiteQueryable<T>
     {
-        private readonly QueryBuilder _query;
+        private readonly LiteEngine _engine;
         private readonly BsonMapper _mapper;
+        private readonly string _collection;
+        private readonly QueryDefinition _query;
 
-        internal LiteQueryable(QueryBuilder query, BsonMapper mapper)
+        internal LiteQueryable(LiteEngine engine, BsonMapper mapper, string collection, QueryDefinition query)
         {
-            _query = query;
+            _engine = engine;
             _mapper = mapper;
+            _collection = collection;
+            _query = query;
         }
 
         #region Includes
@@ -28,7 +32,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Include<K>(Expression<Func<T, K>> path)
         {
-            _query.Include(_mapper.GetExpression(path));
+            _query.Includes.Add(_mapper.GetExpression(path));
             return this;
         }
 
@@ -37,7 +41,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Include(BsonExpression path)
         {
-            _query.Include(path);
+            _query.Includes.Add(path);
             return this;
         }
 
@@ -46,10 +50,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Include(List<BsonExpression> paths)
         {
-            foreach(var path in paths)
-            {
-                _query.Include(path);
-            }
+            _query.Includes.AddRange(paths);
             return this;
         }
 
@@ -62,25 +63,25 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Where(BsonExpression predicate)
         {
-            _query.Where(predicate);
+            _query.Where.Add(predicate);
             return this;
         }
 
         /// <summary>
         /// Filters a sequence of documents based on a predicate expression
         /// </summary>
-        public LiteQueryable<T> Where(BsonExpression predicate, BsonDocument parameters)
+        public LiteQueryable<T> Where(string predicate, BsonDocument parameters)
         {
-            _query.Where(predicate, parameters);
+            _query.Where.Add(BsonExpression.Create(predicate, parameters));
             return this;
         }
 
         /// <summary>
         /// Filters a sequence of documents based on a predicate expression
         /// </summary>
-        public LiteQueryable<T> Where(BsonExpression predicate, params BsonValue[] args)
+        public LiteQueryable<T> Where(string predicate, params BsonValue[] args)
         {
-            _query.Where(predicate, args);
+            _query.Where.Add(BsonExpression.Create(predicate, args));
             return this;
         }
 
@@ -133,7 +134,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> ForUpdate()
         {
-            _query.ForUpdate();
+            _query.ForUpdate = true;
             return this;
         }
 
@@ -142,7 +143,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Offset(int offset)
         {
-            _query.Offset(offset);
+            _query.Offset = offset;
             return this;
         }
 
@@ -156,7 +157,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Limit(int limit)
         {
-            _query.Limit(limit);
+            _query.Limit = limit;
             return this;
         }
 
@@ -169,7 +170,8 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> OrderBy(BsonExpression keySelector, int order = Query.Ascending)
         {
-            _query.OrderBy(keySelector, order);
+            _query.OrderBy = keySelector;
+            _query.Order = order;
             return this;
         }
 
@@ -200,7 +202,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Select(BsonExpression selector)
         {
-            _query.Select(selector);
+            _query.Select = selector;
             return this;
         }
 
@@ -209,8 +211,8 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<K> Select<K>(Expression<Func<T, K>> selector)
         {
-            _query.Select(_mapper.GetExpression(selector));
-            return new LiteQueryable<K>(_query, _mapper);
+            _query.Select = _mapper.GetExpression(selector);
+            return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
         }
 
         /// <summary>
@@ -219,7 +221,8 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> SelectAll(BsonExpression selector)
         {
-            _query.Select(selector, true);
+            _query.Select = selector;
+            _query.SelectAll = true;
             return this;
         }
 
@@ -229,8 +232,9 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<K> SelectAll<K>(Expression<Func<T, K>> selector)
         {
-            _query.Select(_mapper.GetExpression(selector), true);
-            return new LiteQueryable<K>(_query, _mapper);
+            _query.Select = _mapper.GetExpression(selector);
+            _query.SelectAll = true;
+            return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
         }
 
         #endregion
@@ -242,7 +246,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> GroupBy(BsonExpression keySelector)
         {
-            _query.GroupBy(keySelector);
+            _query.GroupBy = keySelector;
             return this;
         }
 
@@ -251,7 +255,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
         {
-            _query.GroupBy(_mapper.GetExpression(keySelector));
+            _query.GroupBy = _mapper.GetExpression(keySelector);
             return this;
         }
 
@@ -260,7 +264,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Having(BsonExpression predicate)
         {
-            _query.Having(predicate);
+            _query.Having = predicate;
             return this;
         }
 
@@ -269,7 +273,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Having(Expression<Func<T, bool>> predicate)
         {
-            _query.Having(_mapper.GetExpression(predicate));
+            _query.Having = _mapper.GetExpression(predicate);
             return this;
         }
 
@@ -278,11 +282,29 @@ namespace LiteDB
         #region Execute Result
 
         /// <summary>
+        /// Return query and result only values (not only documents)
+        /// </summary>
+        public IEnumerable<BsonValue> ToValues()
+        {
+            _query.ExplainPlan = false;
+
+            using (var reader = _engine.Query(_collection, _query))
+            {
+                while(reader.Read())
+                {
+                    yield return reader.Current;
+                }
+            }
+        }
+
+        /// <summary>
         /// Execute query and returns resultset as generic BsonDataReader
         /// </summary>
         public BsonDataReader ExecuteReader()
         {
-            return _query.ExecuteReader();
+            _query.ExplainPlan = false;
+
+            return _engine.Query(_collection, _query);
         }
 
         /// <summary>
@@ -290,7 +312,9 @@ namespace LiteDB
         /// </summary>
         public T ExecuteScalar()
         {
-            var value = _query.ExecuteScalar();
+            var value = this.ToValues().FirstOrDefault();
+
+            if (value == null) return default(T);
 
             return (T)_mapper.Deserialize(typeof(T), value);
         }
@@ -300,7 +324,12 @@ namespace LiteDB
         /// </summary>
         public BsonDocument GetPlan()
         {
-            return _query.GetPlan();
+            _query.ExplainPlan = true;
+
+            using (var reader = _engine.Query(_collection, _query))
+            {
+                return reader.Current.AsDocument;
+            }
         }
 
         /// <summary>
@@ -308,7 +337,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
-            return _query.ToEnumerable().Select(x => _mapper.ToObject<T>(x));
+            return this.ToValues().Select(x => _mapper.ToObject<T>(x.AsDocument));
         }
 
         /// <summary>
@@ -325,14 +354,6 @@ namespace LiteDB
         public T[] ToArray()
         {
             return this.ToEnumerable().ToArray();
-        }
-
-        /// <summary>
-        /// Return query and result only values (not only documents)
-        /// </summary>
-        public IEnumerable<BsonValue> ToValues()
-        {
-            return _query.ToValues();
         }
 
         #endregion
@@ -371,14 +392,6 @@ namespace LiteDB
             return this.ToEnumerable().FirstOrDefault();
         }
 
-        /// <summary>
-        /// Return entity by _id key. Throws InvalidOperationException if no document
-        /// </summary>
-        public T SingleById(BsonValue id)
-        {
-            return _mapper.ToObject<T>(_query.SingleById(id));
-        }
-
         #endregion
 
         #region Execute Count
@@ -388,7 +401,19 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            return _query.Count();
+            this.SelectAll("COUNT(_id)");
+
+            return this.ToValues().Single().AsInt32;
+        }
+
+        /// <summary>
+        /// Execute Count methos in filter query
+        /// </summary>
+        public long LongCount()
+        {
+            this.SelectAll("COUNT(_id)");
+
+            return this.ToValues().Single().AsInt64;
         }
 
         /// <summary>
@@ -396,7 +421,9 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            return _query.Exists();
+            this.SelectAll("ANY(_id)");
+
+            return this.ToValues().Single().AsBoolean;
         }
 
         #endregion
@@ -405,12 +432,10 @@ namespace LiteDB
 
         public int Into(string newCollection, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
-            return _query.Into(newCollection, autoId);
-        }
+            _query.Into = newCollection;
+            _query.IntoAutoId = autoId;
 
-        public int Into(IFileCollection file)
-        {
-            return _query.Into(file);
+            return this.ToValues().Single().AsInt32;
         }
 
         #endregion

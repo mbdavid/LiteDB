@@ -16,7 +16,7 @@ namespace LiteDB
             var doc = _mapper.ToDocument(document);
             var removed = this.RemoveDocId(doc);
 
-            _engine.Value.Insert(_collection, doc, _autoId);
+            _engine.Value.Insert(_collection, new[] { doc }, _autoId);
 
             var id = doc["_id"];
 
@@ -41,7 +41,7 @@ namespace LiteDB
 
             doc["_id"] = id;
 
-            _engine.Value.Insert(_collection, doc);
+            _engine.Value.Insert(_collection, new [] { doc }, _autoId);
         }
 
         /// <summary>

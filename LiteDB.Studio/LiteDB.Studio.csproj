@@ -93,12 +93,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LiteDB\LiteDB.csproj">
-      <Project>{9497da19-1fca-4c2e-a1ab-8dfaacbc76e1}</Project>
-      <Name>LiteDB</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\table_sort.png" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +160,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\layout_add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiteDB\LiteDB.csproj">
+      <Project>{9497da19-1fca-4c2e-a1ab-8dfaacbc76e1}</Project>
+      <Name>LiteDB</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -12,18 +12,21 @@ namespace LiteDB.Engine
         /// </summary>
         private void InitializeSystemCollections()
         {
-            this.RegisterSystemCollection("$database", () => this.SysDatabase());
+            this.RegisterSystemCollection("$database", p => this.SysDatabase());
 
-            this.RegisterSystemCollection("$cols", () => this.SysCols());
-            this.RegisterSystemCollection("$indexes", () => this.SysIndexes());
+            this.RegisterSystemCollection("$cols", p => this.SysCols());
+            this.RegisterSystemCollection("$indexes", p => this.SysIndexes());
 
-            this.RegisterSystemCollection("$dump", () => this.SysDumpData());
-            this.RegisterSystemCollection("$dump_wal", () => this.SysDumpWal());
+            this.RegisterSystemCollection("$dump", p => this.SysDumpData());
+            this.RegisterSystemCollection("$dump_wal", p => this.SysDumpWal());
 
-            this.RegisterSystemCollection("$sequences", () => this.SysSequences());
-            this.RegisterSystemCollection("$transactions", () => this.SysTransactions());
-            this.RegisterSystemCollection("$snapshots", () => this.SysSnapshots());
-            this.RegisterSystemCollection("$open_cursors", () => this.SysOpenCursors());
+            this.RegisterSystemCollection("$sequences", p => this.SysSequences());
+            this.RegisterSystemCollection("$transactions", p => this.SysTransactions());
+            this.RegisterSystemCollection("$snapshots", p => this.SysSnapshots());
+            this.RegisterSystemCollection("$open_cursors", p => this.SysOpenCursors());
+
+            // external collections
+            this.RegisterSystemCollection(new SysFileJson());
         }
     }
 }

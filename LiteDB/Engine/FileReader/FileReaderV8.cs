@@ -61,7 +61,13 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<BsonDocument> GetDocuments(IndexInfo index)
         {
-            return _engine.Query(index.Collection).ToEnumerable();
+            using (var reader = _engine.Query(index.Collection, new QueryDefinition()))
+            {
+                while(reader.Read())
+                {
+                    yield return reader.Current.AsDocument;
+                }
+            }
         }
     }
 }

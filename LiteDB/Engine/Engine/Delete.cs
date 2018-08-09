@@ -86,13 +86,21 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    var q = this.Query(collection)
-                        .Where(predicate)
-                        .Select("_id")
-                        .ForUpdate()
-                        .ToValues();
+                    IEnumerable<BsonValue> getIds()
+                    {
+                        var q = new QueryDefinition { Select = "_id", ForUpdate = true };
+                        q.Where.Add(predicate);
 
-                    return this.Delete(collection, q);
+                        using (var reader = this.Query(collection, q))
+                        {
+                            while (reader.Read())
+                            {
+                                yield return reader.Current;
+                            }
+                        }
+                    }
+
+                    return this.Delete(collection, getIds());
                 }
             });
         }

@@ -26,13 +26,14 @@ namespace LiteDB.Engine
 
         public BsonDataReader ExecuteQuery()
         {
-            switch(_queryDefinition.Output)
+            if (_queryDefinition.Into == null)
             {
-                case QueryOutput.Recordset: return this.ExecuteQuery(false);
-                case QueryOutput.ExecutionPlan: return this.ExecuteQuery(true);
+                return this.ExecuteQuery(_queryDefinition.ExplainPlan);
             }
-
-            throw new NotImplementedException();
+            else
+            {
+                return this.ExecuteQueryInto(_queryDefinition.Into, _queryDefinition.IntoAutoId);
+            }
         }
 
         /// <summary>
@@ -140,6 +141,42 @@ namespace LiteDB.Engine
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Execute query and insert result into another collection. Support external collections
+        /// </summary>
+        internal BsonDataReader ExecuteQueryInto(string into, BsonAutoId autoId)
+        {
+            IEnumerable<BsonValue> getResultset()
+            {
+                using (var reader = this.ExecuteQuery(false))
+                {
+                    while(reader.Read())
+                    {
+                        yield return reader.Current;
+                    }
+                }
+            }
+
+            var result = 0;
+
+            // if collection starts with $ it's system collection
+            if (into.StartsWith("$"))
+            {
+                SqlParser.ParseCollection(new Tokenizer(into), out var name, out var options);
+
+                var sys = _engine.GetSystemCollection(name);
+
+                result = sys.Output(getResultset(), options);
+            }
+            // otherwise insert as normal collection
+            else
+            {
+                result = _engine.Insert(into, getResultset().Select(x => x.AsDocument), autoId);
+            }
+
+            return new BsonDataReader(result);
         }
     }
 }

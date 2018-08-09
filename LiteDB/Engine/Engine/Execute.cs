@@ -12,10 +12,10 @@ namespace LiteDB.Engine
         /// Execute single SQL-Like command and return data reader (can contains single or multiple resultsets). 
         /// Will execute only first command. Need NextResult() called to run anothers commands
         /// </summary>
-        public BsonDataReader Execute(string command, BsonDocument parameters)
+        public BsonDataReader Execute(string command, BsonDocument args)
         {
             var tokenizer = new Tokenizer(command);
-            var sql = new SqlParser(this, tokenizer, parameters);
+            var sql = new SqlParser(this, tokenizer, args);
             var reader = sql.Execute();
 
             // when request .NextResult() run another SqlParser
@@ -31,7 +31,7 @@ namespace LiteDB.Engine
                     if (ahead.Type == TokenType.EOF) return null;
                 }
 
-                var next = new SqlParser(this, tokenizer, parameters);
+                var next = new SqlParser(this, tokenizer, args);
 
                 return next.Execute();
             };

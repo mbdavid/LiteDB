@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,7 +13,7 @@ namespace LiteDB
         /// </summary>
         public LiteQueryable<T> Query()
         {
-            return new LiteQueryable<T>(_engine.Value.Query(_collection), _mapper);
+            return new LiteQueryable<T>(_engine.Value, _mapper, _collection, new QueryDefinition());
         }
 
         #region Find

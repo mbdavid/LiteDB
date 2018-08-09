@@ -124,17 +124,6 @@ namespace LiteDB
             }
         }
 
-        /// <summary>
-        /// Loop over all input data source and returns values as an IEnuemrable
-        /// </summary>
-        public IEnumerable<BsonValue> ToValues()
-        {
-            while(this.Read())
-            {
-                yield return _current;
-            }
-        }
-
         public void Dispose()
         {
             _source?.Dispose();

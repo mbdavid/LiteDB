@@ -239,7 +239,16 @@ namespace LiteDB
         /// </summary>
         public BsonDataReader Execute(string command, params BsonValue[] args)
         {
-            return _engine.Value.Execute(command, args);
+            var p = new BsonDocument();
+            var index = 0;
+
+            foreach(var arg in args)
+            {
+                p[index.ToString()] = arg;
+                index++;
+            }
+
+            return _engine.Value.Execute(command, p);
         }
 
         #endregion

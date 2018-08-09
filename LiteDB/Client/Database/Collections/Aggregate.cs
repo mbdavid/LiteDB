@@ -14,7 +14,7 @@ namespace LiteDB
         public int Count()
         {
             // do not use indexes - collections has DocumentCount property
-            return _engine.Value.Count(_collection);
+            return this.Query().Count();
         }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.Count(_collection, predicate);
+            return this.Query().Where(predicate).Count();
         }
 
         /// <summary>
@@ -51,8 +51,7 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            // do not use indexes - collections has DocumentCount property
-            return _engine.Value.LongCount(_collection);
+            return this.Query().LongCount();
         }
 
         /// <summary>
@@ -62,7 +61,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.LongCount(_collection, predicate);
+            return this.Query().Where(predicate).LongCount();
         }
 
         /// <summary>
@@ -91,7 +90,7 @@ namespace LiteDB
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return _engine.Value.Exists(_collection, predicate);
+            return this.Query().Where(predicate).Exists();
         }
 
         /// <summary>
@@ -120,7 +119,11 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
-            return _engine.Value.Min(_collection, keySelector);
+            return this.Query()
+                .OrderBy(keySelector)
+                .Select(keySelector)
+                .ToValues()
+                .First();
         }
 
         /// <summary>
@@ -137,7 +140,7 @@ namespace LiteDB
 
             var expr = _mapper.GetExpression(keySelector);
 
-            var value = _engine.Value.Min(_collection, expr);
+            var value = this.Min(expr);
 
             return (K)_mapper.Deserialize(typeof(K), value);
         }
@@ -149,13 +152,17 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
-            return _engine.Value.Max(_collection, keySelector);
+            return this.Query()
+                .OrderByDescending(keySelector)
+                .Select(keySelector)
+                .ToValues()
+                .First();
         }
 
         /// <summary>
         /// Returns the max _id index key value
         /// </summary>
-        public BsonValue Max() => _engine.Value.Max(_collection);
+        public BsonValue Max() => this.Max("_id");
 
         /// <summary>
         /// Returns the last/max field using a linq expression
@@ -166,7 +173,7 @@ namespace LiteDB
 
             var expr = _mapper.GetExpression(keySelector);
 
-            var value = _engine.Value.Max(_collection, expr);
+            var value = this.Max(expr);
 
             return (K)_mapper.Deserialize(typeof(K), value);
         }
