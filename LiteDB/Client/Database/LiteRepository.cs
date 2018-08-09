@@ -169,7 +169,9 @@ namespace LiteDB
         /// </summary>
         public T SingleById<T>(BsonValue id, string collectionName = null)
         {
-            return _db.GetCollection<T>(collectionName).FindById(id);
+            return _db.GetCollection<T>(collectionName).Query()
+                .Where("_id = @0", id)
+                .Single();
         }
 
         /// <summary>

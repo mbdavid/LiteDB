@@ -122,15 +122,10 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ANY(IEnumerable<BsonValue> values)
         {
-            // implement full scan of ANY - this avoid not read all results and problems with groupby
-            var result = false;
-
-            foreach(var value in values.Where(x => x.IsBoolean).Select(x => x.AsBoolean))
-            {
-                if (value) result = true;
-            }
-
-            yield return result;
+            yield return values
+                .Where(x => x.IsBoolean)
+                .Select(x => x.AsBoolean)
+                .Any(x => x == true);
         }
 
         /// <summary>

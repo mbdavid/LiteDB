@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 namespace LiteDB
 {
     /// <summary>
-    /// An IQueryable-like class to write fluent query in LiteDB. Implement same methods from QueryBuilder for strong typed documents
+    /// An IQueryable-like class to write fluent query in LiteDB. Supports Where, OrderBy, GroupBy, Select, Limit/Offset. Execute query as BsonDataReader, IEnumerable, List
     /// </summary>
     public class LiteQueryable<T>
     {
@@ -417,11 +417,11 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Returns true/false if filter returns any result
+        /// Returns true/false if query returns any result
         /// </summary>
         public bool Exists()
         {
-            this.SelectAll("ANY(_id)");
+            this.SelectAll("ANY(_id != null)");
 
             return this.ToValues().Single().AsBoolean;
         }

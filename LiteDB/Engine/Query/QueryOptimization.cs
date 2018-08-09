@@ -13,6 +13,7 @@ namespace LiteDB.Engine
         private readonly Snapshot _snapshot;
         private readonly QueryDefinition _queryDefinition;
         private readonly QueryPlan _query;
+        private readonly List<BsonExpression> _terms = new List<BsonExpression>();
 
         public QueryOptimization(Snapshot snapshot, QueryDefinition queryDefinition, IEnumerable<BsonDocument> source)
         {
@@ -40,6 +41,9 @@ namespace LiteDB.Engine
         /// </summary>
         public QueryPlan ProcessQuery()
         {
+            // split where expressions into TERMs (splited by AND type)
+            this.SplitWherePredicateInTerms();
+
             // define Fields
             this.DefineQueryFields();
 
@@ -58,6 +62,46 @@ namespace LiteDB.Engine
             return _query;
         }
 
+        #region Split Where
+
+        /// <summary>
+        /// Fill terms from where predicate list
+        /// </summary>
+        private void SplitWherePredicateInTerms()
+        {
+            void add(BsonExpression predicate)
+            {
+                // add expression in where list breaking AND statments
+                if (predicate.IsPredicate || predicate.Type == BsonExpressionType.Or)
+                {
+                    _terms.Add(predicate);
+                }
+                else if (predicate.Type == BsonExpressionType.And)
+                {
+                    var left = predicate.Left;
+                    var right = predicate.Right;
+
+                    left.Parameters.Extend(predicate.Parameters);
+                    right.Parameters.Extend(predicate.Parameters);
+
+                    add(left);
+                    add(right);
+                }
+                else
+                {
+                    throw LiteException.InvalidExpressionTypePredicate(predicate);
+                }
+            }
+
+            // check all where predicate for AND operators
+            foreach(var predicate in _queryDefinition.Where)
+            {
+                add(predicate);
+            }
+        }
+
+        #endregion
+
         #region Document Fields
 
         /// <summary>
@@ -70,7 +114,7 @@ namespace LiteDB.Engine
 
             // include all fields detected in all used expressions
             fields.AddRange(_queryDefinition.Select?.Fields ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "$" });
-            fields.AddRange(_queryDefinition.Where.SelectMany(x => x.Fields));
+            fields.AddRange(_terms.SelectMany(x => x.Fields));
             fields.AddRange(_queryDefinition.Includes.SelectMany(x => x.Fields));
             fields.AddRange(_queryDefinition.GroupBy?.Fields);
             fields.AddRange(_queryDefinition.Having?.Fields);
@@ -138,7 +182,7 @@ namespace LiteDB.Engine
             }
 
             // fill filter using all expressions
-            _query.Filters.AddRange(_queryDefinition.Where.Where(x => x != selected));
+            _query.Filters.AddRange(_terms.Where(x => x != selected));
         }
 
         /// <summary>
@@ -154,8 +198,8 @@ namespace LiteDB.Engine
             // otherwise, check for lowest index cost
             IndexCost lowest = null;
 
-            // test all possible predicates in where (exclude OR/ANR)
-            foreach (var expr in _queryDefinition.Where.Where(x => x.IsPredicate))
+            // test all possible predicates in terms
+            foreach (var expr in _terms.Where(x => x.IsPredicate))
             {
                 DEBUG(expr.Left == null || expr.Right == null, "predicate expression must has left/right expressions");
 
