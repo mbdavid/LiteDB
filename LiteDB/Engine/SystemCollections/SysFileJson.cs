@@ -52,18 +52,18 @@ namespace LiteDB.Engine
             {
                 using (var writer = new StreamWriter(fs))
                 {
-                    writer.WriteLine("[");
+                    writer.Write("[");
 
                     foreach (var value in source)
                     {
-                        if (index++ > 0) writer.Write(",");
+                        writer.WriteLine(index++ > 0 ? "," : "");
 
-                        var json = JsonSerializer.Serialize(value, pretty, true);
-
-                        writer.WriteLine(json);
+                        JsonSerializer.Serialize(value, writer, pretty, true);
                     }
 
-                    writer.Write("]");
+                    if (index > 0) writer.WriteLine();
+
+                    writer.WriteLine("]");
                     writer.Flush();
                 }
             }
