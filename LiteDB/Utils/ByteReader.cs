@@ -6,6 +6,7 @@ namespace LiteDB
     internal class ByteReader
     {
         private byte[] _buffer;
+        private int _length;
         private int _pos;
 
         public int Position { get { return _pos; } set { _pos = value; } }
@@ -13,6 +14,7 @@ namespace LiteDB
         public ByteReader(byte[] buffer)
         {
             _buffer = buffer;
+            _length = buffer.Length;
             _pos = 0;
         }
 
@@ -117,14 +119,53 @@ namespace LiteDB
         public string ReadString()
         {
             var length = this.ReadInt32();
-            var bytes = this.ReadBytes(length);
-            return Encoding.UTF8.GetString(bytes, 0, length);
+            var str = Encoding.UTF8.GetString(_buffer, _pos, length);
+            _pos += length;
+
+            return str;
         }
 
         public string ReadString(int length)
         {
-            var bytes = this.ReadBytes(length);
-            return Encoding.UTF8.GetString(bytes, 0, length);
+            var str = Encoding.UTF8.GetString(_buffer, _pos, length);
+            _pos += length;
+
+            return str;
+        }
+
+        /// <summary>
+        /// Read BSON string add \0x00 at and of string and add this char in length before
+        /// </summary>
+        public string ReadBsonString()
+        {
+            var length = this.ReadInt32();
+            var str = Encoding.UTF8.GetString(_buffer, _pos, length - 1);
+            _pos += length;
+
+            return str;
+        }
+
+        public string ReadCString()
+        {
+            var pos = _pos;
+            var length = 0;
+
+            while (true)
+            {
+                if (_buffer[pos] == 0x00)
+                {
+                    var str = Encoding.UTF8.GetString(_buffer, _pos, length);
+                    _pos += length + 1; // read last 0x00
+                    return str;
+                }
+                else if (pos > _length)
+                {
+                    return "_";
+                }
+
+                pos++;
+                length++;
+            }
         }
 
         public DateTime ReadDateTime()

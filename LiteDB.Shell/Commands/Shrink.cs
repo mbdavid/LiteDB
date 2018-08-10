@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LiteDB.Shell.Commands
 {
@@ -8,8 +8,8 @@ namespace LiteDB.Shell.Commands
         Syntax = "shrink <password>",
         Description = "Shrink datafile to reduce file size. Can be define a password. If password was not passed, datafile will remove password. Returns how many bytes as reduced.",
         Examples = new string[] {
-            "open mydb.db",
-            "open filename=mydb.db; password=johndoe; initial=100Mb"
+            "shrink",
+            "shrink mynewpass"
         }
     )]
     internal class Shrink : IShellCommand
