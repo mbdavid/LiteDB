@@ -13,11 +13,13 @@ namespace LiteDB.Engine
         {
         }
 
+        public override bool IsFunction => true;
+
         public override IEnumerable<BsonDocument> Input(BsonValue options)
         {
-            if (options == null) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
+            if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, $"Collection ${this.Name} requires a string/object parameter");
 
-            var filename = options.AsString;
+            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
 
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -39,11 +41,12 @@ namespace LiteDB.Engine
 
         public override int Output(IEnumerable<BsonValue> source, BsonValue options)
         {
-            if (options == null) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
+            if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
 
-            var filename = options.AsString;
+            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
+            var pretty = GetOption<bool>(options, false, "pretty", false);
+
             var index = 0;
-            var pretty = false;
 
             using (var fs = new FileStream(filename, FileMode.CreateNew))
             {

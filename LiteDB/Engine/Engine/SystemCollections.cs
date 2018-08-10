@@ -8,9 +8,17 @@ namespace LiteDB.Engine
         private Dictionary<string, SystemCollection> _systemCollections = new Dictionary<string, SystemCollection>();
 
         /// <summary>
-        /// Get name of all system collections
+        /// Get name of all system collections (returns only non-function collections)
         /// </summary>
-        public IEnumerable<string> GetSystemCollections() => _systemCollections.Keys;
+        public IEnumerable<string> GetSystemCollections()
+        {
+            foreach(var item in _systemCollections)
+            {
+                if (item.Value.IsFunction) continue;
+
+                yield return item.Key;
+            }
+        }
 
         /// <summary>
         /// Get registered system collection
