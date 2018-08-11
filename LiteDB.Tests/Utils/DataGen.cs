@@ -9,50 +9,49 @@ namespace LiteDB.Tests
     public class DataGen
     {
         /// <summary>
-        /// Return fixed 1000 persons:
-        /// { "name": "Kelsey Garza", "age": 66, "phone": "624-744-6218", "email": "Kelly@suscipit.edu", "address": "62702 West Bosnia and Herzegovina Way", "city": "Wheaton", "state": "MO", "date": { "$date": "1950-08-07"}, "active": true }
+        /// Return fixed 1000 Person instances
         /// </summary>
-        public static IEnumerable<BsonDocument> Person()
+        public static IEnumerable<Person> Person()
         {
-            using (var stream = typeof(DataGen).Assembly.GetManifestResourceStream("LiteDB.Tests.Utils.Data.person.json"))
+            using (var stream = typeof(DataGen).Assembly.GetManifestResourceStream("LiteDB.Tests.Utils.Json.person.json"))
             {
                 var reader = new StreamReader(stream);
 
                 var s = reader.ReadToEnd();
 
                 return JsonSerializer.DeserializeArray(s)
-                    .Select(x => x.AsDocument);
+                    .Select(x => x.AsDocument)
+                    .Select(x => BsonMapper.Global.ToObject<Person>(x));
             }
         }
 
         /// <summary>
-        /// Return fixed up to 1000 persons:
-        /// { "_id": 1, "name": "Kelsey Garza", "age": 66, "phone": "624-744-6218", "email": "Kelly@suscipit.edu", "address": "62702 West Bosnia and Herzegovina Way", "city": "Wheaton", "state": "MO", "date": { "$date": "1950-08-07"}, "active": true }
+        /// Return Person instances
         /// </summary>
-        public static IEnumerable<BsonDocument> Person(int start, int end)
+        public static IEnumerable<Person> Person(int start, int end)
         {
-            foreach(var doc in Person().Take(end - start + 1).Skip(start - 1))
+            foreach(var p in Person().Take(end - start + 1).Skip(start - 1))
             {
-                doc["_id"] = start++;
+                p.Id = start++;
 
-                yield return doc;
+                yield return p;
             }
         }
 
         /// <summary>
-        /// Return fixed 29353 zips: 
-        /// { "_id" : "99950", "city" : "KETCHIKAN", "loc" : [ -133.18479, 55.942471 ], "pop" : 422, "state" : "AK" }
+        /// Return fixed 29353 Zips instances
         /// </summary>
-        public static IEnumerable<BsonDocument> Zip()
+        public static IEnumerable<Zip> Zip()
         {
-            using (var stream = typeof(DataGen).Assembly.GetManifestResourceStream("LiteDB.Tests.Utils.Data.zip.json"))
+            using (var stream = typeof(DataGen).Assembly.GetManifestResourceStream("LiteDB.Tests.Utils.Json.zip.json"))
             {
                 var reader = new StreamReader(stream);
 
                 var s = reader.ReadToEnd();
 
                 return JsonSerializer.DeserializeArray(s)
-                    .Select(x => x.AsDocument);
+                    .Select(x => x.AsDocument)
+                    .Select(x => BsonMapper.Global.ToObject<Zip>(x));
             }
         }
     }

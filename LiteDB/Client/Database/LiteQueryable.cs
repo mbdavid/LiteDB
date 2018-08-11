@@ -202,10 +202,11 @@ namespace LiteDB
         /// <summary>
         /// Project each document of resultset into a new document/value based on selector expression
         /// </summary>
-        public LiteQueryable<T> Select(BsonExpression selector)
+        public LiteQueryable<BsonDocument> Select(BsonExpression selector)
         {
             _query.Select = selector;
-            return this;
+
+            return new LiteQueryable<BsonDocument>(_engine, _mapper, _collection, _query);
         }
 
         /// <summary>
@@ -214,6 +215,7 @@ namespace LiteDB
         public LiteQueryable<K> Select<K>(Expression<Func<T, K>> selector)
         {
             _query.Select = _mapper.GetExpression(selector);
+
             return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
         }
 
@@ -221,11 +223,12 @@ namespace LiteDB
         /// Project each document of resultset into a new document/value based on selector expression
         /// Apply expression function over all results and will output a single result
         /// </summary>
-        public LiteQueryable<T> SelectAll(BsonExpression selector)
+        public LiteQueryable<BsonDocument> SelectAll(BsonExpression selector)
         {
             _query.Select = selector;
             _query.SelectAll = true;
-            return this;
+
+            return new LiteQueryable<BsonDocument>(_engine, _mapper, _collection, _query);
         }
 
         /// <summary>
@@ -236,6 +239,7 @@ namespace LiteDB
         {
             _query.Select = _mapper.GetExpression(selector);
             _query.SelectAll = true;
+
             return new LiteQueryable<K>(_engine, _mapper, _collection, _query);
         }
 
@@ -339,7 +343,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
-            return this.ToValues().Select(x => _mapper.ToObject<T>(x.AsDocument));
+            return this.ToValues().Select(x => (T)_mapper.Deserialize(typeof(T), x));
         }
 
         /// <summary>

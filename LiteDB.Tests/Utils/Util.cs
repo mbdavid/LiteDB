@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,9 @@ namespace LiteDB.Tests
 {
     public class Util
     {
-        public static void Compare(BsonValue[] first, BsonValue[] second, bool sort = false)
+        [DebuggerHidden]
+        public static void Compare<T>(T[] first, T[] second, bool sort = false)
+            where T : IEqualityComparer<T>
         {
             if (first.Length != second.Length)
             {
@@ -24,9 +27,9 @@ namespace LiteDB.Tests
 
             foreach(var zip in first.Zip(second, (First, Second) => new { First,  Second }))
             {
-                var r = zip.First.CompareTo(zip.Second);
+                var r = zip.First.Equals(zip.First, zip.Second);
 
-                if (r != 0)
+                if (r == false)
                 {
                     Assert.Fail($"Values are not same `{zip.First}` and `{zip.Second}`");
                 }

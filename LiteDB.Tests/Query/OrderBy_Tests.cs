@@ -1,114 +1,109 @@
-﻿//using Microsoft.VisualStudio.TestTools.UnitTesting;
-//using System;
-//using System.IO;
-//using System.Linq;
-//using System.Threading.Tasks;
-//using System.Collections;
-//using System.Collections.Generic;
-//using System.Text;
-//using System.Reflection;
-//using System.Text.RegularExpressions;
-//using LiteDB.Engine;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using LiteDB.Engine;
 
-//namespace LiteDB.Tests.Query
-//{
-//    [TestClass]
-//    public class OrderBy_Tests
-//    {
-//        private LiteEngine db;
-//        private BsonDocument[] person;
+namespace LiteDB.Tests.Query
+{
+    [TestClass]
+    public class OrderBy_Tests
+    {
+        private Person[] local;
 
-//        [TestInitialize]
-//        public void Init()
-//        {
-//            db = new LiteEngine();
-//            person = DataGen.Person(1, 20).ToArray();
+        private LiteDatabase db;
+        private LiteCollection<Person> collection;
 
-//            db.Insert("person", person);
-//            db.EnsureIndex("col", "name");
-//        }
+        [TestInitialize]
+        public void Init()
+        {
+            local = DataGen.Person(1, 20).ToArray();
 
-//        [TestCleanup]
-//        public void CleanUp()
-//        {
-//            db.Dispose();
-//        }
+            db = new LiteDatabase(new MemoryStream());
+            collection = db.GetCollection<Person>();
 
-//        [TestMethod]
-//        public void Query_OrderBy_Using_Index()
-//        {
-//            var r0 = person
-//                .OrderBy(x => x["name"].AsString)
-//                .Select(x => x["name"].AsString)
-//                .ToArray();
+            collection.Insert(local);
+            collection.EnsureIndex(x => x.Name);
+        }
 
-//            var r1 = db.Query("person")
-//                .OrderBy("name")
-//                .Select("name")
-//                .ToValues();
+        [TestCleanup]
+        public void CleanUp()
+        {
+            db.Dispose();
+        }
 
-//            Assert.AreEqual(
-//                string.Join(",", r0),
-//                string.Join(",", r1.Select(x => x.AsString)));
-//        }
+        [TestMethod]
+        public void Query_OrderBy_Using_Index()
+        {
+            var r0 = local
+                .OrderBy(x => x.Name)
+                .Select(x => x.Name)
+                .ToArray();
 
-//        [TestMethod]
-//        public void Query_OrderBy_Using_Index_Desc()
-//        {
-//            var r0 = person
-//                .OrderByDescending(x => x["name"].AsString)
-//                .Select(x => x["name"].AsString)
-//                .ToArray();
+            var r1 = collection.Query()
+                .OrderBy(x => x.Name)
+                .Select(x => x.Name)
+                .ToArray();
 
-//            var r1 = db.Query("person")
-//                .OrderBy("name", LiteDB.Query.Descending)
-//                .Select("name")
-//                .ToValues();
+            Assert.IsTrue(r0.SequenceEqual(r1));
+        }
 
-//            Assert.AreEqual(
-//                string.Join(",", r0),
-//                string.Join(",", r1.Select(x => x.AsString)));
-//        }
+        [TestMethod]
+        public void Query_OrderBy_Using_Index_Desc()
+        {
+            var r0 = local
+                .OrderByDescending(x => x.Name)
+                .Select(x => x.Name)
+                .ToArray();
 
-//        [TestMethod]
-//        public void Query_OrderBy_With_Func()
-//        {
-//            var r0 = person
-//                .OrderBy(x => x["date"].AsDateTime.Day)
-//                .Select(x => x["date"].AsDateTime.Day)
-//                .ToArray();
+            var r1 = collection.Query()
+                .OrderByDescending(x => x.Name)
+                .Select(x => x.Name)
+                .ToArray();
 
-//            var r1 = db.Query("person")
-//                .OrderBy("DAY(date)")
-//                .Select("DAY(date)")
-//                .ToValues();
+            Assert.IsTrue(r0.SequenceEqual(r1));
+        }
 
-//            Assert.AreEqual(
-//                string.Join(",", r0),
-//                string.Join(",", r1.Select(x => x.AsInt32)));
-//        }
+        [TestMethod]
+        public void Query_OrderBy_With_Func()
+        {
+            var r0 = local
+                .OrderBy(x => x.Date.Day)
+                .Select(x => x.Date.Day)
+                .ToArray();
 
-//        [TestMethod]
-//        public void Query_OrderBy_With_Offset_Limit()
-//        {
-//            var r0 = person
-//                .OrderBy(x => x["date"].AsDateTime.Day)
-//                .Skip(5)
-//                .Take(10)
-//                .Select(x => x["date"].AsDateTime.Day)
-//                .ToArray();
+            var r1 = collection.Query()
+                .OrderBy(x => x.Date.Day)
+                .Select(x => x.Date.Day)
+                .ToArray();
 
-//            var r1 = db.Query("person")
-//                .OrderBy("DAY(date)")
-//                .Offset(5)
-//                .Limit(10)
-//                .Select("DAY(date)")
-//                .ToValues()
-//                .ToArray();
+            Assert.IsTrue(r0.SequenceEqual(r1));
+        }
 
-//            Assert.AreEqual(
-//                string.Join(",", r0),
-//                string.Join(",", r1.Select(x => x.AsInt32)));
-//        }
-//    }
-//}
+        [TestMethod]
+        public void Query_OrderBy_With_Offset_Limit()
+        {
+            var r0 = local
+                .OrderBy(x => x.Date.Day)
+                .Skip(5)
+                .Take(10)
+                .Select(x => x.Date.Day)
+                .ToArray();
+
+            var r1 = collection.Query()
+                .OrderBy(x => x.Date.Day)
+                .Offset(5)
+                .Limit(10)
+                .Select(x => x.Date.Day)
+                .ToArray();
+
+            Assert.IsTrue(r0.SequenceEqual(r1));
+        }
+    }
+}

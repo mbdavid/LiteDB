@@ -14,27 +14,40 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Query\SqlTests\All_Sql.sql" />
+    <Compile Remove="Database\**" />
+    <Compile Remove="Engine\**" />
+    <EmbeddedResource Remove="Database\**" />
+    <EmbeddedResource Remove="Engine\**" />
+    <None Remove="Database\**" />
+    <None Remove="Engine\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Query\Sql_Tests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Sql\SqlTests\All_Sql.sql" />
     <None Remove="Expressions\ExprTests\Aggregate.txt" />
     <None Remove="Expressions\ExprTests\Format.txt" />
     <None Remove="Expressions\ExprTests\Method.txt" />
     <None Remove="Expressions\ExprTests\Operator.txt" />
     <None Remove="Expressions\ExprTests\Parameter.txt" />
     <None Remove="Expressions\ExprTests\Path.txt" />
-    <None Remove="Utils\Data\person.json" />
-    <None Remove="Utils\Data\zip.json" />
+    <None Remove="Utils\Json\person.json" />
+    <None Remove="Utils\Json\zip.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Query\SqlTests\All_Sql.sql" />
+    <EmbeddedResource Include="Sql\SqlTests\All_Sql.sql" />
     <EmbeddedResource Include="Expressions\ExprTests\Format.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Aggregate.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Parameter.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Operator.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Method.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Path.txt" />
-    <EmbeddedResource Include="Utils\Data\person.json" />
-    <EmbeddedResource Include="Utils\Data\zip.json" />
+    <EmbeddedResource Include="Utils\Json\person.json" />
+    <EmbeddedResource Include="Utils\Json\zip.json" />
   </ItemGroup>
 
   <ItemGroup>

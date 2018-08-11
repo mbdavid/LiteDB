@@ -296,6 +296,12 @@ namespace LiteDB
                     base.VisitUnary(node);
                 }
             }
+            else if (node.NodeType == ExpressionType.ArrayLength)
+            {
+                _builder.Append("LENGTH(");
+                this.Visit(node.Operand);
+                _builder.Append(")");
+            }
             else
             {
                 base.VisitUnary(node);

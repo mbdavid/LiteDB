@@ -1,84 +1,78 @@
-﻿//using Microsoft.VisualStudio.TestTools.UnitTesting;
-//using System;
-//using System.IO;
-//using System.Linq;
-//using System.Threading.Tasks;
-//using System.Collections;
-//using System.Collections.Generic;
-//using System.Text;
-//using System.Reflection;
-//using System.Text.RegularExpressions;
-//using LiteDB.Engine;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using LiteDB.Engine;
 
-//namespace LiteDB.Tests.Query
-//{
-//    [TestClass]
-//    public class Select_Tests
-//    {
-//        private LiteEngine db;
-//        private BsonDocument[] zip;
+namespace LiteDB.Tests.Query
+{
+    [TestClass]
+    public class Select_Tests
+    {
+        private Zip[] local;
 
-//        [TestInitialize]
-//        public void Init()
-//        {
-//            db = new LiteEngine();
-//            zip = DataGen.Zip().Take(20).ToArray();
+        private LiteDatabase db;
+        private LiteCollection<Zip> collection;
 
-//            db.EnsureIndex("zip", "city");
-//            db.Insert("zip", zip);
-//        }
+        [TestInitialize]
+        public void Init()
+        {
+            local = DataGen.Zip().Take(20).ToArray();
 
-//        [TestCleanup]
-//        public void CleanUp()
-//        {
-//            db.Dispose();
-//        }
+            db = new LiteDatabase(new MemoryStream());
+            collection = db.GetCollection<Zip>();
 
-//        [TestMethod]
-//        public void Query_Select_Key_Only()
-//        {
-//            // must orderBy mem data because index will be sorted
-//            var r0 = zip
-//                .Select(x => x["city"])
-//                .OrderBy(x => x.AsString)
-//                .ToArray();
+            collection.EnsureIndex("city");
+            collection.Insert(local);
+        }
 
-//            // this query will not deserialize document, using only index key
-//            var r1 = db.Query("zip")
-//                .Index(Index.All("city"))
-//                .Select("city")
-//                .ToValues()
-//                .ToArray();
+        [TestCleanup]
+        public void CleanUp()
+        {
+            db.Dispose();
+        }
 
-//            Util.Compare(r0, r1);
-//        }
+        [TestMethod]
+        public void Query_Select_Key_Only()
+        {
+            // must orderBy mem data because index will be sorted
+            var r0 = local
+                .Select(x => x.City)
+                .OrderBy(x => x)
+                .ToArray();
 
-//        [TestMethod]
-//        public void Query_Select_New_Document()
-//        {
-//            var r0 = zip
-//                .Select(x => new BsonDocument { ["city"] = x["city"].AsString.ToUpper(), ["lat"] = x["loc"][0].AsDouble, ["lng"] = x["loc"][1].AsDouble })
-//                .ToArray();
+            // this query will not deserialize document, using only index key
+            var r1 = collection.Query()
+                .OrderBy(x => x.City)
+                .Select(x => x.City)
+                .ToArray();
 
-//            var r1 = db.Query("zip")
-//                .Select("{ city: UPPER(city), lat: loc[0], lng: loc[1] }")
-//                .ToArray();
+            Assert.IsTrue(r0.SequenceEqual(r1));
+        }
 
+        [TestMethod]
+        public void Query_Select_New_Document()
+        {
+            var r0 = local
+                .Select(x => new { city = x.City.ToUpper(), lat = x.Loc[0], lng = x.Loc[1] })
+                .ToArray();
 
-//            Util.Compare(r0, r1, true);
-//        }
+            var r1 = collection.Query()
+                .Select(x => new { city = x.City.ToUpper(), lat = x.Loc[0], lng = x.Loc[1] })
+                .ToArray();
 
-//        [TestMethod]
-//        public void Query_Select_Values()
-//        {
-//            // return 1 row per result in loc
-//            var r1 = db.Query("zip")
-//                .Select("ITEMS(loc)")
-//                .ToValues()
-//                .ToArray();
-
-//            // all loc array contains 2 values (lat,lng)
-//            Assert.AreEqual(zip.Length * 2, r1.Length);
-//        }
-//    }
-//}
+            foreach(var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
+            {
+                Assert.AreEqual(r.left.city, r.right.city);
+                Assert.AreEqual(r.left.lat, r.right.lat);
+                Assert.AreEqual(r.left.lng, r.right.lng);
+            }
+        }
+    }
+}

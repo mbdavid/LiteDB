@@ -24,6 +24,9 @@ namespace LiteDB.Tests.Mapper
             public List<Phone> Phones { get; set; }
             public Phone[] Phones2 { get; set; }
 
+            [BsonField("USER_DOMAIN_NAME")]
+            public string DomainName { get; }
+
             /// <summary>
             /// This type will be render as new BsonDoctument { [key] = value }
             /// </summary>
@@ -311,6 +314,19 @@ namespace LiteDB.Tests.Mapper
             TestExpr<BsonValue>(x => x["arr"][0]["demo"], "$.arr[0].demo");
             TestExpr<BsonValue>(x => x["phones"].AsArray.Items(z => z["type"] == 1)["number"], "$.phones[(type = @p0)].number", 1);
             TestExpr<BsonValue>(x => x["age"] == 1, "($.age = @p0)", 1);
+        }
+
+        [TestMethod]
+        public void Linq_Custom_Field_Name()
+        {
+            // first use
+            TestExpr<User>(x => x.DomainName, "$.USER_DOMAIN_NAME");
+
+            // in creation new class
+            TestExpr<User>(x => new { x.DomainName }, "{ USER_DOMAIN_NAME: $.USER_DOMAIN_NAME }");
+
+            // in creation new class non related
+            TestExpr<User>(x => new { DomainName = 123, NewName = 456 }, "{ USER_DOMAIN_NAME: @0, NewName: @1", 123, 456);
         }
 
         #region Test helper
