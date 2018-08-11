@@ -115,7 +115,7 @@ namespace LiteDB
         /// <param name="name">Collection name (case insensitive)</param>
         public LiteCollection<T> GetCollection<T>(string name)
         {
-            return new LiteCollection<T>(name, _engine, _mapper);
+            return new LiteCollection<T>(name, BsonAutoId.ObjectId, _engine, _mapper);
         }
 
         /// <summary>
@@ -127,14 +127,23 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Get a collection using a name based on typeof(T).Name (BsonMapper.ResolveCollectionName function)
+        /// </summary>
+        public LiteCollection<T> GetCollection<T>(BsonAutoId autoId)
+        {
+            return this.GetCollection<T>(null);
+        }
+
+        /// <summary>
         /// Get a collection using a generic BsonDocument. If collection does not exits, create a new one.
         /// </summary>
         /// <param name="name">Collection name (case insensitive)</param>
-        public LiteCollection<BsonDocument> GetCollection(string name)
+        /// <param name="autoId">Define autoId data type (when document contains no _id field)</param>
+        public LiteCollection<BsonDocument> GetCollection(string name, BsonAutoId autoId = BsonAutoId.ObjectId)
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return new LiteCollection<BsonDocument>(name, _engine, _mapper);
+            return new LiteCollection<BsonDocument>(name, autoId, _engine, _mapper);
         }
 
         #endregion
@@ -253,7 +262,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Shrink/Analyze/Vaccum/Checkpoint
+        #region Shrink/Analyze/Vaccum/Checkpoint/UserVersion
 
         /// <summary>
         /// Reduce disk size re-arranging unused spaces.
@@ -285,6 +294,15 @@ namespace LiteDB
         public int Vaccum()
         {
             return _engine.Value.Vaccum();
+        }
+
+        /// <summary>
+        /// Get/Set database user version - use this version number to control database change model
+        /// </summary>
+        public int UserVersion
+        {
+            get => _engine.Value.UserVersion;
+            set => _engine.Value.UserVersion = value;
         }
 
         #endregion

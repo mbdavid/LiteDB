@@ -16,6 +16,7 @@ namespace LiteDB
         private readonly BsonMapper _mapper;
         private readonly string _collection;
         private readonly QueryDefinition _query;
+        private readonly string _uniqueField;
 
         internal LiteQueryable(LiteEngine engine, BsonMapper mapper, string collection, QueryDefinition query)
         {
@@ -23,6 +24,7 @@ namespace LiteDB
             _mapper = mapper;
             _collection = collection;
             _query = query;
+            _uniqueField = collection.StartsWith("$") ? "$" : "_id"; // used in Count/Exists/Any - system collection has no _id field
         }
 
         #region Includes
@@ -401,7 +403,7 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            this.SelectAll("COUNT(_id)");
+            this.SelectAll($"COUNT({_uniqueField})");
 
             return this.ToValues().Single().AsInt32;
         }
@@ -411,7 +413,7 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            this.SelectAll("COUNT(_id)");
+            this.SelectAll($"COUNT({_uniqueField})");
 
             return this.ToValues().Single().AsInt64;
         }
@@ -421,7 +423,7 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            this.SelectAll("ANY(_id != null)");
+            this.SelectAll($"ANY({_uniqueField} != null)");
 
             return this.ToValues().Single().AsBoolean;
         }

@@ -92,7 +92,7 @@ namespace LiteDB.Engine
                                 temp._header.IsDirty = true;
                                 temp._wal.WalFile.WritePages(new[] { temp._header }, null);
 
-                                temp._wal.ConfirmTransaction(transaction.TransactionID, new List<PagePosition>());
+                                temp._wal.ConfirmTransaction(transaction.TransactionID, new PagePosition[0]);
                             }
                             else
                             {

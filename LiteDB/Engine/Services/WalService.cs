@@ -76,11 +76,11 @@ namespace LiteDB.Engine
         /// </summary>
         public void ConfirmTransaction(Guid transactionID, ICollection<PagePosition> pagePositions)
         {
-            // if no pages was saved, just exit with no confirmed transaction
-            if (pagePositions.Count == 0) return;
-
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Add(transactionID);
+
+            // if no pages was saved, just exit
+            if (pagePositions.Count == 0) return;
 
             // must lock commit operation to update WAL-Index (memory only operation)
             lock (_index)

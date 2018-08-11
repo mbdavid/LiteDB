@@ -19,7 +19,7 @@ namespace LiteDB.Tests.Engine
             using (var file = new TempFile())
             using (var db = new LiteEngine(file.Filename))
             {
-                db.Insert("col", DataGen.Zip());
+                db.Insert("col", DataGen.Zip(), BsonAutoId.Int32);
 
                 db.DropCollection("col");
 
@@ -37,29 +37,32 @@ namespace LiteDB.Tests.Engine
         public void Shrink_Large_Files()
         {
             // do some tests
-            Action<LiteEngine> DoTest = (db) =>
+            void DoTest(LiteDatabase db, LiteCollection<BsonDocument> col)
             {
-                Assert.AreEqual(1, db.Count("col"));
+                Assert.AreEqual(1, col.Count());
                 Assert.AreEqual(99, db.UserVersion);
             };
 
             using (var file = new TempFile())
             {
-                using (var db = new LiteEngine(file.Filename))
+                using (var db = new LiteDatabase(file.Filename))
                 {
-                    db.UserVersion = 99;
-                    db.EnsureIndex("col", "city", false);
+                    var col = db.GetCollection("col");
 
-                    var inserted = db.Insert("col", DataGen.Zip()); // 29.353 docs
-                    var deleted = db.DeleteMany("col", "_id != '01001'"); // delete 29.352 docs
+                    db.UserVersion = 99;
+
+                    col.EnsureIndex("city", false);
+
+                    var inserted = col.Insert(DataGen.Zip()); // 29.353 docs
+                    var deleted = col.DeleteMany("_id != '01001'"); // delete 29.352 docs
 
                     Assert.AreEqual(29353, inserted);
                     Assert.AreEqual(29352, deleted);
 
-                    Assert.AreEqual(1, db.Count("col"));
+                    Assert.AreEqual(1, col.Count());
 
                     // must checkpoint
-                    db.Checkpoint(false);
+                    db.Checkpoint();
 
                     // file still large than 5mb (even with only 1 document)
                     Assert.IsTrue(file.Size > 5 * 1024 * 1024);
@@ -70,17 +73,19 @@ namespace LiteDB.Tests.Engine
                     // now file are small than 50kb
                     Assert.IsTrue(file.Size < 50 * 1024);
 
-                    DoTest(db);
+                    DoTest(db, col);
                 }
 
                 // re-open and shrink again
-                using (var db = new LiteEngine(file.Filename))
+                using (var db = new LiteDatabase(file.Filename))
                 {
-                    DoTest(db);
+                    var col = db.GetCollection("col");
+
+                    DoTest(db, col);
 
                     db.Shrink();
 
-                    DoTest(db);
+                    DoTest(db, col);
                 }
             }
         }

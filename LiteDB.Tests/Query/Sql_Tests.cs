@@ -58,7 +58,7 @@ namespace LiteDB.Tests.Query
         [TestMethod]
         public void Sql_All_Commands()
         {
-            var output = this.Run("All_Sql", db => db.Insert("person", DataGen.Person(1, 1000)));
+            var output = this.Run("All_Sql", db => db.Insert("person", DataGen.Person(1, 1000), BsonAutoId.Int32));
 
             Assert.AreEqual(1, output["insert1"].AsInt32, "single insert");
             Assert.AreEqual(3, output["insert3"].AsInt32, "multiple inserts");

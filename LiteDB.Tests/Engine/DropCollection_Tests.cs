@@ -12,11 +12,14 @@ namespace LiteDB.Tests.Engine
         public void DropCollection()
         {
             using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteDatabase(file.Filename))
             {
                 Assert.IsFalse(db.GetCollectionNames().Any(x => x == "col"));
 
-                db.Insert("col", new BsonDocument { { "a", 1 } });
+                var col = db.GetCollection("col");
+
+                col.Insert(new BsonDocument { ["a"] = 1 });
+
                 Assert.IsTrue(db.GetCollectionNames().Any(x => x == "col"));
 
                 db.DropCollection("col");

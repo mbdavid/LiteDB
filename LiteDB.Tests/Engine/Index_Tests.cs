@@ -20,18 +20,21 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_With_No_Name()
         {
-            using (var db = new LiteEngine())
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
-                db.Insert("users", new BsonDocument { ["name"] = new BsonDocument { ["first"] = "John", ["last"] = "Doe" } });
-                db.Insert("users", new BsonDocument { ["name"] = new BsonDocument { ["first"] = "Marco", ["last"] = "Pollo" } });
+                var users = db.GetCollection("users");
+                var indexes = db.GetCollection("$indexes");
+
+                users.Insert(new BsonDocument { ["name"] = new BsonDocument { ["first"] = "John", ["last"] = "Doe" } });
+                users.Insert(new BsonDocument { ["name"] = new BsonDocument { ["first"] = "Marco", ["last"] = "Pollo" } });
 
                 // no index name defined
-                db.EnsureIndex("users", "name.last");
-                db.EnsureIndex("users", "$.name.first", true);
+                users.EnsureIndex("name.last");
+                users.EnsureIndex("$.name.first", true);
 
                 // default name: remove all non-[a-z] chars
-                Assert.IsNotNull(db.Query("$indexes").Where("collection = 'users' AND name = 'namelast'").ExecuteScalar());
-                Assert.IsNotNull(db.Query("$indexes").Where("collection = 'users' AND name = 'namefirst'").ExecuteScalar());
+                Assert.IsNotNull(indexes.FindOne("collection = 'users' AND name = 'namelast'"));
+                Assert.IsNotNull(indexes.FindOne("collection = 'users' AND name = 'namefirst'"));
             }
         }
     }

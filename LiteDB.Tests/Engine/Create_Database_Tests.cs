@@ -22,7 +22,7 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual(initial, file.Size);
 
                 // insert minimal data
-                db.Execute("insert into col1 values {a:1}");
+                db.Execute("insert into col1 values {a:1}", null);
 
                 Assert.AreEqual(initial, file.Size);
 

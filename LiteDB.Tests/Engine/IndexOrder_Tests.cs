@@ -11,26 +11,26 @@ namespace LiteDB.Tests.Engine
         [TestMethod]
         public void Index_Order()
         {
-            using (var tmp = new TempFile())
-            using (var db = new LiteEngine(tmp.Filename))
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
-                db.Insert("col", new BsonDocument { { "text", "D" } });
-                db.Insert("col", new BsonDocument { { "text", "A" } });
-                db.Insert("col", new BsonDocument { { "text", "E" } });
-                db.Insert("col", new BsonDocument { { "text", "C" } });
-                db.Insert("col", new BsonDocument { { "text", "B" } });
+                var col = db.GetCollection("col");
+                var indexes = db.GetCollection("$indexes");
 
-                db.EnsureIndex("col", "text");
+                col.Insert(new BsonDocument { { "text", "D" } });
+                col.Insert(new BsonDocument { { "text", "A" } });
+                col.Insert(new BsonDocument { { "text", "E" } });
+                col.Insert(new BsonDocument { { "text", "C" } });
+                col.Insert(new BsonDocument { { "text", "B" } });
 
-                var asc = string.Join("",
-                    db.Query("col")
+                col.EnsureIndex("text");
+
+                var asc = string.Join("", col.Query()
                     .OrderBy("text")
                     .Select("text")
                     .ToValues()
                     .Select(x => x.AsString));
 
-                var desc = string.Join("",
-                    db.Query("col")
+                var desc = string.Join("", col.Query()
                     .OrderByDescending("text")
                     .Select("text")
                     .ToValues()
@@ -39,10 +39,9 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual("ABCDE", asc);
                 Assert.AreEqual("EDCBA", desc);
 
-                var indexes = db.Query("$indexes").Where("collection = 'col'").ToArray();
+                var rr = indexes.Query().ToList();
 
-                Assert.AreEqual(1, indexes.Count(x => x["name"] == "text"));
-
+                Assert.AreEqual(1, indexes.Count("name = 'text'"));
             }
         }
     }

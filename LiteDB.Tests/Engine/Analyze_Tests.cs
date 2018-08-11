@@ -21,16 +21,17 @@ namespace LiteDB.Tests.Engine
         {
             var zip = DataGen.Zip().Take(100).ToArray();
 
-            using (var db = new LiteEngine())
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
+                var col = db.GetCollection("zip", BsonAutoId.Int32);
+
                 // init zip collection with 100 document
-                db.Insert("zip", zip);
+                col.Insert(zip);
 
-                db.EnsureIndex("zip", "city", "$.city", false);
-                db.EnsureIndex("zip", "loc", "$.loc[*]", false);
+                col.EnsureIndex("city", "$.city", false);
+                col.EnsureIndex("loc", "$.loc[*]", false);
 
-                var indexes = db.Query("$indexes")
-                    .ToEnumerable()
+                var indexes = db.GetCollection("$indexes").FindAll()
                     .ToDictionary(x => x["name"].AsString, x => x);
 
                 // testing for just-created indexes (always be zero)
@@ -41,10 +42,9 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual(0, indexes["loc"]["keyCount"].AsInt32);
                 Assert.AreEqual(0, indexes["loc"]["uniqueKeyCount"].AsInt32);
 
-                db.Analyze(new[] { "zip" });
+                db.Analyze("zip");
 
-                indexes = db.Query("$indexes")
-                    .ToEnumerable()
+                indexes = db.GetCollection("$indexes").FindAll()
                     .ToDictionary(x => x["name"].AsString, x => x);
 
                 // count unique values

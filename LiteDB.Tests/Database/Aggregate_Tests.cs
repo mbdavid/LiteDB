@@ -38,16 +38,14 @@ namespace LiteDB.Tests.Database
 
                 Assert.AreEqual(3, users.Count());
                 Assert.AreEqual(2, users.Count("Active = true")); // must be a predicate
-                Assert.AreEqual(2, users.Count(x => x.Active == true)); 
 
                 Assert.AreEqual(3L, users.LongCount());
-                Assert.AreEqual(1L, users.LongCount("Salary > 100000"));
-                Assert.AreEqual(1L, users.LongCount(x => x.Salary > 100000));
+                Assert.AreEqual(1L, users.LongCount("Salary > @0", 100000));
 
                 Assert.AreEqual("Zarlos", users.Max(x => x.Name));
                 Assert.AreEqual("Ana", users.Min(x => x.Name));
 
-                Assert.IsTrue(users.Exists(x => x.Salary == 75000));
+                Assert.IsTrue(users.Exists("Salary = @0", 75000));
             }
         }
     }

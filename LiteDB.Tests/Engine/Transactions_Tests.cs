@@ -22,10 +22,12 @@ namespace LiteDB.Tests.Engine
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
 
-            using (var db = new LiteEngine(new EngineSettings { Timeout = TimeSpan.FromSeconds(1) }))
+            using (var db = new LiteDatabase("filename=:memory:;timeout=1"))
             {
+                var person = db.GetCollection("person");
+
                 // init person collection with 100 document
-                db.Insert("person", data1);
+                person.Insert(data1);
 
                 // task A will open transaction and will insert +100 documents 
                 // but will commit only 2s later
@@ -33,11 +35,11 @@ namespace LiteDB.Tests.Engine
                 {
                     db.BeginTrans();
 
-                    db.Insert("person", data2);
+                    person.Insert(data2);
 
                     Task.Delay(2000).Wait();
 
-                    var count = db.Count("person", "1 = 1");
+                    var count = person.Count();
 
                     Assert.AreEqual(data1.Length + data2.Length, count);
 
@@ -53,11 +55,11 @@ namespace LiteDB.Tests.Engine
 
                     try
                     {
-                        db.DeleteMany("person", BsonExpression.Create("1=1"));
+                        person.DeleteMany("1 = 1");
 
                         Assert.Fail("Must be locked");
                     }
-                    catch(LiteException ex) when (ex.ErrorCode == LiteException.LOCK_TIMEOUT) { }
+                    catch (LiteException ex) when (ex.ErrorCode == LiteException.LOCK_TIMEOUT) { }
 
                 });
 
@@ -75,10 +77,12 @@ namespace LiteDB.Tests.Engine
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
 
-            using (var db = new LiteEngine())
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
+                var person = db.GetCollection("person");
+
                 // init person collection with 100 document
-                db.Insert("person", data1);
+                person.Insert(data1);
 
                 // task A will open transaction and will insert +100 documents 
                 // but will commit only 1s later - this plus +100 document must be visible only inside task A
@@ -86,11 +90,11 @@ namespace LiteDB.Tests.Engine
                 {
                     db.BeginTrans();
 
-                    db.Insert("person", data2);
+                    person.Insert(data2);
 
                     Task.Delay(1000).Wait();
 
-                    var count = db.Count("person", "1 = 1");
+                    var count = person.Count();
 
                     Assert.AreEqual(data1.Length + data2.Length, count);
 
@@ -104,7 +108,7 @@ namespace LiteDB.Tests.Engine
                 {
                     Task.Delay(250).Wait();
 
-                    var count = db.Count("person", "1 = 1"); // using 1=1 to force full scan
+                    var count = person.Count();
 
                     // read 100 documents
                     Assert.AreEqual(data1.Length, count);
@@ -112,7 +116,7 @@ namespace LiteDB.Tests.Engine
                     ta.Wait();
 
                     // read 200 documets
-                    count = db.Count("person", "1 = 1");
+                    count = person.Count();
 
                     Assert.AreEqual(data1.Length + data2.Length, count);
                 });
@@ -130,17 +134,19 @@ namespace LiteDB.Tests.Engine
             var data1 = DataGen.Person(1, 100).ToArray();
             var data2 = DataGen.Person(101, 200).ToArray();
 
-            using (var db = new LiteEngine())
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
+                var person = db.GetCollection("person");
+
                 // init person collection with 100 document
-                db.Insert("person", data1);
+                person.Insert(data1);
 
                 // task A will insert more 100 documents but will commit only 1s later
                 var ta = new Task(() =>
                 {
                     db.BeginTrans();
 
-                    db.Insert("person", data2);
+                    person.Insert(data2);
 
                     Task.Delay(1000).Wait();
 
@@ -155,7 +161,7 @@ namespace LiteDB.Tests.Engine
 
                     Task.Delay(250).Wait();
 
-                    var count = db.Count("person", "1 = 1"); // using 1=1 to force full scan
+                    var count = person.Count();
 
                     // read 100 documents
                     Assert.AreEqual(data1.Length, count);
@@ -163,7 +169,7 @@ namespace LiteDB.Tests.Engine
                     ta.Wait();
 
                     // keep reading 100 documets because i'm still in same transaction
-                    count = db.Count("person", "1 = 1");
+                    count = person.Count();
 
                     Assert.AreEqual(data1.Length, count);
                 });
@@ -180,15 +186,17 @@ namespace LiteDB.Tests.Engine
         {
             var data = DataGen.Person(1, 10);
 
-            using (var db = new LiteEngine())
+            using (var db = new LiteDatabase(new MemoryStream()))
             {
+                var person = db.GetCollection("person");
+
                 // first time transaction will be opened
                 Assert.IsTrue(db.BeginTrans());
 
                 // but in second type transaction will be same
                 Assert.IsFalse(db.BeginTrans());
 
-                db.Insert("person", data);
+                person.Insert(data);
 
                 // must commit transaction
                 Assert.IsTrue(db.Commit());
@@ -205,9 +213,9 @@ namespace LiteDB.Tests.Engine
                 Assert.IsTrue(db.Rollback());
 
                 // auto-commit
-                db.Insert("person", DataGen.Person().Take(20));
+                person.Insert(DataGen.Person().Take(20));
 
-                Assert.AreEqual(30, db.Count("person"));
+                Assert.AreEqual(30, person.Count());
             }
         }
     }

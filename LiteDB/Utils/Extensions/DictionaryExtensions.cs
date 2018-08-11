@@ -53,21 +53,21 @@ namespace LiteDB
 
             while(!s.EOF)
             {
-                var key = Read("=");
-                var value = Read(";");
+                var key = Read(TokenType.Equals);
+                var value = Read(TokenType.SemiColon);
 
                 dict[key] = value;
             }
 
-            string Read(string delim)
+            string Read(TokenType delim)
             {
                 var sb = new StringBuilder();
-                s.ReadToken();
+                var token = s.ReadToken();
 
-                while (!s.EOF && s.Current.Value != delim)
+                while (token.Type != TokenType.EOF && token.Type != delim)
                 {
-                    sb.Append(s.Current.Value);
-                    s.ReadToken(false);
+                    sb.Append(token.Value);
+                    token = s.ReadToken(false);
                 }
 
                 return sb.ToString().Trim();
@@ -87,7 +87,15 @@ namespace LiteDB
 
                 if (typeof(T) == typeof(TimeSpan))
                 {
-                    return (T)(object)TimeSpan.Parse(value);
+                    // if timespan are numbers only, convert as seconds
+                    if (Regex.IsMatch(value, @"^\d$", RegexOptions.Compiled))
+                    {
+                        return (T)(object)TimeSpan.FromSeconds(Convert.ToInt32(value));
+                    }
+                    else
+                    {
+                        return (T)(object)TimeSpan.Parse(value);
+                    }
                 }
                 else if (typeof(T).GetTypeInfo().IsEnum)
                 {

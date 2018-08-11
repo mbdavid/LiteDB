@@ -175,7 +175,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).ToList();
+        /// Execute Query[T].Where(predicate).ToList();
         /// </summary>
         public List<T> Fetch<T>(BsonExpression predicate = null, string collectionName = null)
         {
@@ -185,7 +185,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).ToList();
+        /// Execute Query[T].Where(predicate).ToList();
         /// </summary>
         public List<T> Fetch<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
         {
@@ -195,7 +195,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).First();
+        /// Execute Query[T].Where(predicate).First();
         /// </summary>
         public T First<T>(BsonExpression predicate = null, string collectionName = null)
         {
@@ -205,7 +205,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).First();
+        /// Execute Query[T].Where(predicate).First();
         /// </summary>
         public T First<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
         {
@@ -215,7 +215,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).FirstOrDefault();
+        /// Execute Query[T].Where(predicate).FirstOrDefault();
         /// </summary>
         public T FirstOrDefault<T>(BsonExpression predicate = null, string collectionName = null)
         {
@@ -225,7 +225,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).FirstOrDefault();
+        /// Execute Query[T].Where(predicate).FirstOrDefault();
         /// </summary>
         public T FirstOrDefault<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
         {
@@ -235,7 +235,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).Single();
+        /// Execute Query[T].Where(predicate).Single();
         /// </summary>
         public T Single<T>(BsonExpression predicate = null, string collectionName = null)
         {
@@ -245,7 +245,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).Single();
+        /// Execute Query[T].Where(predicate).Single();
         /// </summary>
         public T Single<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
         {
@@ -255,7 +255,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).SingleOrDefault();
+        /// Execute Query[T].Where(predicate).SingleOrDefault();
         /// </summary>
         public T SingleOrDefault<T>(BsonExpression predicate = null, string collectionName = null)
         {
@@ -265,7 +265,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Execute Query[T].Where(query).SingleOrDefault();
+        /// Execute Query[T].Where(predicate).SingleOrDefault();
         /// </summary>
         public T SingleOrDefault<T>(Expression<Func<T, bool>> predicate, string collectionName = null)
         {
