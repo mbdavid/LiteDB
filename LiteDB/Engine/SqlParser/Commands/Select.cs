@@ -20,7 +20,7 @@ namespace LiteDB.Engine
         ///  [ OFFSET {number} ]
         ///     [ FOR UPDATE ]
         /// </summary>
-        private BsonDataReader ParseSelect(bool explain)
+        private IBsonDataReader ParseSelect(bool explain)
         {
             // initialize query definition
             var query = new QueryDefinition();

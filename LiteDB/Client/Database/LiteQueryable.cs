@@ -306,7 +306,7 @@ namespace LiteDB
         /// <summary>
         /// Execute query and returns resultset as generic BsonDataReader
         /// </summary>
-        public BsonDataReader ExecuteReader()
+        public IBsonDataReader ExecuteReader()
         {
             _query.ExplainPlan = false;
 

@@ -7,9 +7,9 @@ using System.Linq;
 namespace LiteDB
 {
     /// <summary>
-    /// Class to read void, one or a collection of BsonValues. Used in SQL execution commands
+    /// Class to read void, one or a collection of BsonValues. Used in SQL execution commands and query returns. Use local data source (IEnumerable[BsonDocument])
     /// </summary>
-    public class BsonDataReader : IDisposable
+    public class BsonDataReader : IBsonDataReader
     {
         private BsonValue _current = null;
         private IEnumerator<BsonValue> _source = null;
@@ -20,7 +20,7 @@ namespace LiteDB
         /// <summary>
         /// Handler function when NextResult() called - return null if no more data
         /// </summary>
-        public event Func<BsonDataReader> FetchNextResult = null;
+        public event Func<IBsonDataReader> FetchNextResult = null;
 
         /// <summary>
         /// Initialize with no value
@@ -61,7 +61,7 @@ namespace LiteDB
         public bool NextResult()
         {
             // execute func to request next data reader
-            var next = this.FetchNextResult?.Invoke();
+            var next = (BsonDataReader)this.FetchNextResult?.Invoke();
 
             if (next == null) return false;
 

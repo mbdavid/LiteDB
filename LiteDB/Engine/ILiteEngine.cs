@@ -15,7 +15,7 @@ namespace LiteDB.Engine
         bool Rollback();
 
 
-        BsonDataReader Query(string collection, QueryDefinition query);
+        IBsonDataReader Query(string collection, QueryDefinition query);
 
         int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId);
         int Update(string collection, IEnumerable<BsonDocument> docs);
@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         bool DropCollection(string collection);
         bool DropIndex(string collection, string name);
 
-        BsonDataReader Execute(string command, BsonDocument args);
+        IBsonDataReader Execute(string command, BsonDocument args);
 
         bool RenameCollection(string collection, string newName);
 

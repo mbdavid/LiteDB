@@ -26,7 +26,7 @@ namespace LiteDB.Studio
 
         public Thread Thread { get; set; }
 
-        public void ReadResult(BsonDataReader reader)
+        public void ReadResult(IBsonDataReader reader)
         {
             do
             {

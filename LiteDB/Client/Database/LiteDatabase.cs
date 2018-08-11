@@ -242,7 +242,7 @@ namespace LiteDB
         /// <summary>
         /// Execute SQL commands and return as data reader
         /// </summary>
-        public BsonDataReader Execute(string command, BsonDocument parameters = null)
+        public IBsonDataReader Execute(string command, BsonDocument parameters = null)
         {
             return _engine.Value.Execute(command, parameters);
         }
@@ -250,7 +250,7 @@ namespace LiteDB
         /// <summary>
         /// Execute SQL commands and return as data reader
         /// </summary>
-        public BsonDataReader Execute(string command, params BsonValue[] args)
+        public IBsonDataReader Execute(string command, params BsonValue[] args)
         {
             var p = new BsonDocument();
             var index = 0;

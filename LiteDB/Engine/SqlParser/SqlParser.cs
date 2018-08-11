@@ -20,7 +20,7 @@ namespace LiteDB.Engine
             _parameters = parameters ?? new BsonDocument();
         }
 
-        public BsonDataReader Execute()
+        public IBsonDataReader Execute()
         {
             var first = _tokenizer.ReadToken().Expect(TokenType.Word);
 
