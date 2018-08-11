@@ -323,10 +323,7 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.DomainName, "$.USER_DOMAIN_NAME");
 
             // in creation new class
-            TestExpr<User>(x => new { x.DomainName }, "{ USER_DOMAIN_NAME: $.USER_DOMAIN_NAME }");
-
-            // in creation new class non related
-            TestExpr<User>(x => new { DomainName = 123, NewName = 456 }, "{ USER_DOMAIN_NAME: @0, NewName: @1", 123, 456);
+            TestExpr<User>(x => new { x.DomainName }, "{ DomainName: $.USER_DOMAIN_NAME }");
         }
 
         #region Test helper
