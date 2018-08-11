@@ -83,7 +83,7 @@ namespace LiteDB.Engine
             switch (key.Value.ToLower())
             {
                 case "userversion":
-                    setFactory = v => _engine.UserVersion = v.AsInt32;
+                    setFactory = v => _engine.SetUserVersion(v.AsInt32);
                     break;
 
                 default:

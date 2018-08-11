@@ -12,7 +12,7 @@ namespace LiteDB
         {
             if (id == null || id.IsNull) throw new ArgumentNullException(nameof(id));
 
-            return _engine.Value.Delete(_collection, id);
+            return _engine.Value.Delete(_collection, new [] { id }) == 1;
         }
 
         /// <summary>

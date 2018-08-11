@@ -301,8 +301,8 @@ namespace LiteDB
         /// </summary>
         public int UserVersion
         {
-            get => _engine.Value.UserVersion;
-            set => _engine.Value.UserVersion = value;
+            get => _engine.Value.GetUserVersion();
+            set => _engine.Value.SetUserVersion(value);
         }
 
         #endregion
