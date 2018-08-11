@@ -23,16 +23,16 @@ namespace LiteDB.Tests.Engine
 
             using (var db = new LiteDatabase(new MemoryStream()))
             {
-                var col = db.GetCollection("zip", BsonAutoId.Int32);
+                var col = db.GetCollection<Zip>();
 
                 // init zip collection with 100 document
                 col.Insert(zip);
 
-                col.EnsureIndex("city", "$.city", false);
-                col.EnsureIndex("loc", "$.loc[*]", false);
+                col.EnsureIndex(x => x.City);
+                col.EnsureIndex(x => x.Loc.Items());
 
                 var indexes = db.GetCollection("$indexes").FindAll()
-                    .ToDictionary(x => x["name"].AsString, x => x);
+                    .ToDictionary(x => x["name"].AsString, x => x, StringComparer.OrdinalIgnoreCase);
 
                 // testing for just-created indexes (always be zero)
                 Assert.AreEqual(0, indexes["_id"]["keyCount"].AsInt32);
@@ -45,11 +45,11 @@ namespace LiteDB.Tests.Engine
                 db.Analyze("zip");
 
                 indexes = db.GetCollection("$indexes").FindAll()
-                    .ToDictionary(x => x["name"].AsString, x => x);
+                    .ToDictionary(x => x["name"].AsString, x => x, StringComparer.OrdinalIgnoreCase);
 
                 // count unique values
-                var uniqueCity = new HashSet<string>(zip.Select(x => x["city"].AsString));
-                var uniqueLoc = new HashSet<double>(zip.Select(x => x["loc"][0].AsDouble).Union(zip.Select(x => x["loc"][1].AsDouble)));
+                var uniqueCity = new HashSet<string>(zip.Select(x => x.City));
+                var uniqueLoc = new HashSet<double>(zip.Select(x => x.Loc[0]).Union(zip.Select(x => x.Loc[1])));
 
                 Assert.AreEqual(zip.Length, indexes["_id"]["keyCount"].AsInt32);
                 Assert.AreEqual(zip.Length, indexes["_id"]["uniqueKeyCount"].AsInt32);

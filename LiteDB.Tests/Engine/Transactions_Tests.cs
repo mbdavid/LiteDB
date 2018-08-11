@@ -24,7 +24,7 @@ namespace LiteDB.Tests.Engine
 
             using (var db = new LiteDatabase("filename=:memory:;timeout=1"))
             {
-                var person = db.GetCollection("person");
+                var person = db.GetCollection<Person>();
 
                 // init person collection with 100 document
                 person.Insert(data1);
@@ -79,7 +79,7 @@ namespace LiteDB.Tests.Engine
 
             using (var db = new LiteDatabase(new MemoryStream()))
             {
-                var person = db.GetCollection("person");
+                var person = db.GetCollection<Person>();
 
                 // init person collection with 100 document
                 person.Insert(data1);
@@ -136,7 +136,7 @@ namespace LiteDB.Tests.Engine
 
             using (var db = new LiteDatabase(new MemoryStream()))
             {
-                var person = db.GetCollection("person");
+                var person = db.GetCollection<Person>();
 
                 // init person collection with 100 document
                 person.Insert(data1);
@@ -188,7 +188,7 @@ namespace LiteDB.Tests.Engine
 
             using (var db = new LiteDatabase(new MemoryStream()))
             {
-                var person = db.GetCollection("person");
+                var person = db.GetCollection<Person>();
 
                 // first time transaction will be opened
                 Assert.IsTrue(db.BeginTrans());

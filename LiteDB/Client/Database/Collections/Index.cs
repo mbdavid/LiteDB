@@ -31,7 +31,7 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(expression)) throw new ArgumentNullException(nameof(expression));
 
-            var name = Regex.Replace(expression.Source, @"[^a-z]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var name = Regex.Replace(expression.Source, @"[^a-z0-9]", "", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
             return this.EnsureIndex(name, expression, unique);
         }
@@ -45,7 +45,7 @@ namespace LiteDB
         {
             var expression = _mapper.GetExpression(keySelector);
 
-            return this.EnsureIndex(_collection, expression, unique);
+            return this.EnsureIndex(expression, unique);
         }
 
         /// <summary>

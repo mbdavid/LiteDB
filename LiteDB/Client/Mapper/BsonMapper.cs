@@ -292,13 +292,10 @@ namespace LiteDB
                 }
 
                 // support callback to user modify member mapper
-                if (this.ResolveMember != null)
-                {
-                    this.ResolveMember(type, memberInfo, member);
-                }
+                this.ResolveMember?.Invoke(type, memberInfo, member);
 
                 // test if has name and there is no duplicate field
-                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName == name) == false)
+                if (member.FieldName != null && mapper.Members.Any(x => x.FieldName.Equals(name, StringComparison.InvariantCultureIgnoreCase)) == false)
                 {
                     mapper.Members.Add(member);
                 }

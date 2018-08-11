@@ -14,20 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Database\**" />
-    <Compile Remove="Engine\**" />
-    <EmbeddedResource Remove="Database\**" />
-    <EmbeddedResource Remove="Engine\**" />
-    <None Remove="Database\**" />
-    <None Remove="Engine\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Query\Sql_Tests.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Sql\SqlTests\All_Sql.sql" />
+    <None Remove="Sql\Scripts\All_Sql.sql" />
     <None Remove="Expressions\ExprTests\Aggregate.txt" />
     <None Remove="Expressions\ExprTests\Format.txt" />
     <None Remove="Expressions\ExprTests\Method.txt" />
@@ -39,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Sql\SqlTests\All_Sql.sql" />
+    <EmbeddedResource Include="Sql\Scripts\All_Sql.sql" />
     <EmbeddedResource Include="Expressions\ExprTests\Format.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Aggregate.txt" />
     <EmbeddedResource Include="Expressions\ExprTests\Parameter.txt" />

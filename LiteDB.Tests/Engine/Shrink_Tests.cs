@@ -17,9 +17,11 @@ namespace LiteDB.Tests.Engine
         public void Shrink_After_DropCollection()
         {
             using (var file = new TempFile())
-            using (var db = new LiteEngine(file.Filename))
+            using (var db = new LiteDatabase(file.Filename))
             {
-                db.Insert("col", DataGen.Zip(), BsonAutoId.Int32);
+                var col = db.GetCollection<Zip>();
+
+                col.Insert(DataGen.Zip());
 
                 db.DropCollection("col");
 
@@ -37,7 +39,7 @@ namespace LiteDB.Tests.Engine
         public void Shrink_Large_Files()
         {
             // do some tests
-            void DoTest(LiteDatabase db, LiteCollection<BsonDocument> col)
+            void DoTest(LiteDatabase db, LiteCollection<Zip> col)
             {
                 Assert.AreEqual(1, col.Count());
                 Assert.AreEqual(99, db.UserVersion);
@@ -47,14 +49,14 @@ namespace LiteDB.Tests.Engine
             {
                 using (var db = new LiteDatabase(file.Filename))
                 {
-                    var col = db.GetCollection("col");
+                    var col = db.GetCollection<Zip>();
 
                     db.UserVersion = 99;
 
                     col.EnsureIndex("city", false);
 
                     var inserted = col.Insert(DataGen.Zip()); // 29.353 docs
-                    var deleted = col.DeleteMany("_id != '01001'"); // delete 29.352 docs
+                    var deleted = col.DeleteMany(x => x.Id != "01001"); // delete 29.352 docs
 
                     Assert.AreEqual(29353, inserted);
                     Assert.AreEqual(29352, deleted);
@@ -79,7 +81,7 @@ namespace LiteDB.Tests.Engine
                 // re-open and shrink again
                 using (var db = new LiteDatabase(file.Filename))
                 {
-                    var col = db.GetCollection("col");
+                    var col = db.GetCollection<Zip>();
 
                     DoTest(db, col);
 

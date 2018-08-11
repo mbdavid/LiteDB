@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LiteDB
 {
@@ -44,6 +45,43 @@ namespace LiteDB
             if (documents == null) throw new ArgumentNullException(nameof(documents));
 
             return _engine.Value.Update(_collection, documents.Select(x => _mapper.ToDocument(x)));
+        }
+
+        /// <summary>
+        /// Update many document based on merge current document with extend expression (must return a new document). This merge will be applied in all predicate results
+        /// Eg: col.UpdateMany("{Name: UPPER(Name)}", "_id > 0")
+        /// </summary>
+        public int UpdateMany(BsonExpression extend, BsonExpression predicate)
+        {
+            if (extend == null) throw new ArgumentNullException(nameof(extend));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            if (extend.Type != BsonExpressionType.Document)
+            {
+                throw new ArgumentException("Extend expression must return a document. Eg: `col.UpdateMany('{ Name: UPPER(Name) }', 'Age > 10')`");
+            }
+
+            return _engine.Value.UpdateMany(_collection, extend, predicate);
+        }
+
+        /// <summary>
+        /// Update many document based on merge current document with extend expression (must return a new document). This merge will be applied in all predicate results
+        /// Eg: col.UpdateMany("{Name: UPPER(Name)}", "_id > 0")
+        /// </summary>
+        public int UpdateMany<K>(Expression<Func<T, K>> extend, Expression<Func<T, bool>> predicate)
+        {
+            if (extend == null) throw new ArgumentNullException(nameof(extend));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            var ext = _mapper.GetExpression(extend);
+            var pred = _mapper.GetExpression(predicate);
+
+            if (ext.Type != BsonExpressionType.Document)
+            {
+                throw new ArgumentException("Extend expression must return an anonymous class to be merge with entities. Eg: `col.UpdateMany(x => new { Name = x.Name.ToUpper() }, x => x.Age > 10)`");
+            }
+
+            return _engine.Value.UpdateMany(_collection, ext, pred);
         }
     }
 }
