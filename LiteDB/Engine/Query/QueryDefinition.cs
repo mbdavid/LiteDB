@@ -8,6 +8,10 @@ namespace LiteDB.Engine
 {
     public class QueryDefinition
     {
+        public QueryDefinition()
+        {
+        }
+
         public List<BsonExpression> Where { get; set; } = new List<BsonExpression>();
         public List<BsonExpression> Includes { get; set; } = new List<BsonExpression>();
 

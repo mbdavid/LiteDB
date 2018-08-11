@@ -12,13 +12,13 @@ namespace LiteDB
     /// </summary>
     public class LiteQueryable<T>
     {
-        private readonly LiteEngine _engine;
+        private readonly ILiteEngine _engine;
         private readonly BsonMapper _mapper;
         private readonly string _collection;
         private readonly QueryDefinition _query;
         private readonly string _uniqueField;
 
-        internal LiteQueryable(LiteEngine engine, BsonMapper mapper, string collection, QueryDefinition query)
+        internal LiteQueryable(ILiteEngine engine, BsonMapper mapper, string collection, QueryDefinition query)
         {
             _engine = engine;
             _mapper = mapper;

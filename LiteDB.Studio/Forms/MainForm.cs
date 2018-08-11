@@ -18,7 +18,8 @@ namespace LiteDB.Studio
     {
         private readonly SynchronizationContext _synchronizationContext;
 
-        private LiteEngine _db;
+        private LiteDatabase _db;
+        private string _filename;
         private TaskData _active = null;
         private bool _running = true;
 
@@ -72,13 +73,11 @@ namespace LiteDB.Studio
 
         private void Connect()
         {
-            var settings = new EngineSettings
-            {
-                Filename = txtFilename.Text,
-                Log = new Logger(Logger.FULL, this.DoLog)
-            };
+            var cn = new ConnectionString(txtFilename.Text);
 
-            _db = new LiteEngine(settings);
+            _db = new LiteDatabase(cn);
+            _filename = cn.Filename;
+
             _running = true;
             btnConnect.Text = "Disconnect";
             txtFilename.Enabled = btnFileOpen.Enabled = false;
@@ -196,7 +195,7 @@ namespace LiteDB.Studio
         {
             tvwDatabase.Nodes.Clear();
 
-            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_db.Filename));
+            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_filename));
             var system = root.Nodes.Add("System");
 
             root.ImageKey = "database";
@@ -204,10 +203,17 @@ namespace LiteDB.Studio
 
             system.ImageKey = system.SelectedImageKey = "folder";
 
-            foreach (var key in _db.GetSystemCollections().OrderBy(x => x))
+            var sc = _db.GetCollection("$cols")
+                .Query()
+                .Where("type = 'system'")
+                .OrderBy("name")
+                .Select("name")
+                .ToValues();
+
+            foreach (var key in sc)
             {
-                var col = system.Nodes.Add(key);
-                col.Tag = $"SELECT $ FROM {key}";
+                var col = system.Nodes.Add(key.AsString);
+                col.Tag = $"SELECT $ FROM {key.AsString}";
                 col.ImageKey = col.SelectedImageKey = "table_gear";
             }
 

@@ -13,18 +13,13 @@ namespace LiteDB
     {
         #region Properties
 
-        private readonly Lazy<LiteEngine> _engine = null;
+        private readonly Lazy<ILiteEngine> _engine = null;
         private BsonMapper _mapper = BsonMapper.Global;
 
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
         /// </summary>
         public BsonMapper Mapper { get { return _mapper; } }
-
-        /// <summary>
-        /// Get current database engine instance. Engine is lower data layer that works with BsonDocuments only (no mapper, no LINQ)
-        /// </summary>
-        public LiteEngine Engine { get { return _engine.Value; } }
 
         #endregion
 
@@ -47,7 +42,7 @@ namespace LiteDB
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new Lazy<LiteEngine>(() =>
+            _engine = new Lazy<ILiteEngine>(() =>
             {
                 var settings = new EngineSettings
                 {
@@ -72,7 +67,7 @@ namespace LiteDB
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new Lazy<LiteEngine>(() =>
+            _engine = new Lazy<ILiteEngine>(() =>
             {
                 var settings = new EngineSettings
                 {
@@ -90,18 +85,18 @@ namespace LiteDB
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
-            _engine = new Lazy<LiteEngine>(() => new LiteEngine(settings));
+            _engine = new Lazy<ILiteEngine>(() => new LiteEngine(settings));
             _mapper = mapper ?? BsonMapper.Global;
         }
 
         /// <summary>
         /// Starts LiteDB database using custom ILiteEngine implementation
         /// </summary>
-        public LiteDatabase(LiteEngine engine, BsonMapper mapper = null)
+        public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
 
-            _engine = new Lazy<LiteEngine>(() => engine);
+            _engine = new Lazy<ILiteEngine>(() => engine);
             _mapper = mapper ?? BsonMapper.Global;
         }
 
@@ -197,7 +192,16 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            return _engine.Value.GetCollectionNames();
+            // use $cols system collection with type = user only
+            var cols = this.GetCollection("$cols")
+                .Query()
+                .Where("type = 'user'")
+                .Select("name")
+                .ToValues()
+                .Select(x => x.AsString)
+                .ToArray();
+
+            return cols;
         }
 
         /// <summary>
@@ -207,7 +211,7 @@ namespace LiteDB
         {
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
-            return _engine.Value.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
+            return this.GetCollectionNames().Contains(name, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

@@ -10,38 +10,24 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysCols()
         {
-            var transaction = this.GetTransaction(true, out var isNew);
-
-            try
+            foreach (var name in _header.Collections.Keys)
             {
-                // encapsulate all execution to catch any error
-                return GetCollections();
-            }
-            catch
-            {
-                // if any error, rollback transaction
-                transaction.Dispose();
-                throw;
-            }
-
-            IEnumerable<BsonDocument> GetCollections()
-            {
-                foreach (var name in this.GetCollectionNames().OrderBy(x => x))
+                yield return new BsonDocument
                 {
-                    var snapshot = transaction.CreateSnapshot(LockMode.Read, name, false);
-
-                    yield return new BsonDocument
-                    {
-                        ["name"] = name,
-                        ["creationTime"] = snapshot.CollectionPage.CreationTime
-                    };
-                }
-
-                if (isNew)
-                {
-                    transaction.Dispose();
-                }
+                    ["name"] = name,
+                    ["type"] = "user"
+                };
             }
+
+            foreach (var item in _systemCollections)
+            {
+                yield return new BsonDocument
+                {
+                    ["name"] = item.Key,
+                    ["type"] = item.Value.IsFunction ? "function" : "system"
+                };
+            }
+
         }
     }
 }

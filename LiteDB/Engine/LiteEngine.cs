@@ -10,7 +10,7 @@ namespace LiteDB.Engine
     /// A public class that take care of all engine data structure access - it´s basic implementation of a NoSql database
     /// Its isolated from complete solution - works on low level only (no linq, no poco... just Bson objects)
     /// </summary>
-    public partial class LiteEngine : IDisposable
+    public partial class LiteEngine : ILiteEngine
     {
         #region Services instances
 
@@ -67,19 +67,9 @@ namespace LiteDB.Engine
         #endregion
 
         /// <summary>
-        /// Get log instance for debug operations
-        /// </summary>
-        public Logger Log => _log;
-
-        /// <summary>
         /// Get if date must be read from Bson as UTC date 
         /// </summary>
         internal bool UtcDate => _utcDate;
-
-        /// <summary>
-        /// Get database file name
-        /// </summary>
-        public string Filename => _factory.Filename;
 
         #endregion
 

@@ -26,7 +26,7 @@ namespace LiteDB.Engine
 
             IEnumerable<BsonDocument> GetIndexes()
             {
-                foreach (var collection in this.GetCollectionNames().OrderBy(x => x))
+                foreach (var collection in _header.Collections.Keys)
                 {
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
 
