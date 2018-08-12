@@ -41,12 +41,12 @@ namespace LiteDB.Engine
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
-        /// If database is new, initialize with allocated space - support KB, MB, GB (default: 0)
+        /// If database is new, initialize with allocated space (in bytes) (default: 0)
         /// </summary>
         public long InitialSize { get; set; } = 0;
 
         /// <summary>
-        /// "limit size": Max limit of datafile - support KB, MB, GB (default: null)
+        /// Max limit of datafile (in bytes) (default: MaxValue)
         /// </summary>
         public long LimitSize { get; set; } = long.MaxValue;
 

@@ -15,7 +15,7 @@ namespace LiteDB.Engine
 
         public override bool IsFunction => true;
 
-        public override IEnumerable<BsonDocument> Input(BsonValue options)
+        public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
         {
             if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, $"Collection ${this.Name} requires a string/object parameter");
 

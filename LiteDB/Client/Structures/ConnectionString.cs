@@ -9,6 +9,8 @@ namespace LiteDB
     /// </summary>
     public class ConnectionString
     {
+        private readonly Dictionary<string, string> _values;
+
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
         /// </summary>
@@ -44,34 +46,39 @@ namespace LiteDB
         /// </summary>
         public ConnectionString()
         {
+            _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Initialize connection string parsing string in "key1=value1;key2=value2;...." format or only "filename" as default (when no ; char found)
         /// </summary>
         public ConnectionString(string connectionString)
+            : this()
         {
             if (string.IsNullOrEmpty(connectionString)) throw new ArgumentNullException(nameof(connectionString));
-
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             // create a dictionary from string name=value collection
             if (connectionString.Contains("="))
             {
-                values.ParseKeyValue(connectionString);
+                _values.ParseKeyValue(connectionString);
             }
             else
             {
-                values["filename"] = connectionString;
+                _values["filename"] = connectionString;
             }
 
             // setting values to properties
-            this.Filename = values.GetValue("filename", this.Filename);
-            this.Timeout = values.GetValue("timeout", this.Timeout);
-            this.InitialSize = values.GetFileSize(@"initial size", this.InitialSize);
-            this.LimitSize = values.GetFileSize(@"limit size", this.LimitSize);
-            this.Log = values.GetValue("log", this.Log);
-            this.UtcDate = values.GetValue("utc", this.UtcDate);
+            this.Filename = _values.GetValue("filename", this.Filename);
+            this.Timeout = _values.GetValue("timeout", this.Timeout);
+            this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
+            this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
+            this.Log = _values.GetValue("log", this.Log);
+            this.UtcDate = _values.GetValue("utc", this.UtcDate);
         }
+
+        /// <summary>
+        /// Get value from parsed connection string. Returns null if not found
+        /// </summary>
+        public string this[string key] => _values.GetOrDefault(key);
     }
 }

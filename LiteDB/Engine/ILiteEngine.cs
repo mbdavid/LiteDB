@@ -14,7 +14,6 @@ namespace LiteDB.Engine
         bool Commit();
         bool Rollback();
 
-
         IBsonDataReader Query(string collection, QueryDefinition query);
 
         int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId);

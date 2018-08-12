@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         /// Register a new system collection that can be used in query for input data
         /// Collection name must starts with $
         /// </summary>
-        public void RegisterSystemCollection(string collectionName, Func<BsonValue, IEnumerable<BsonDocument>> factory)
+        public void RegisterSystemCollection(string collectionName, Func<IEnumerable<BsonDocument>> factory)
         {
             if (collectionName.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collectionName));
             if (factory == null) throw new ArgumentNullException(nameof(factory));

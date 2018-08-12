@@ -152,7 +152,6 @@ namespace LiteDB
             }
         }
 
-
         /// <summary>
         /// Return value string with right padding
         /// </summary>
@@ -164,6 +163,25 @@ namespace LiteDB
                 if (!value.Third.IsString) continue;
 
                 yield return value.First.AsString.PadRight(value.Second.AsInt32, value.Third.AsString.ToCharArray()[0]);
+            }
+        }
+
+        /// <summary>
+        /// Split string value into enumerate of items
+        /// </summary>
+        public static IEnumerable<BsonValue> SPLIT(IEnumerable<BsonValue> values, IEnumerable<BsonValue> delimiter)
+        {
+            foreach (var value in ZipValues(values, delimiter))
+            {
+                if (!value.First.IsString) continue;
+                if (!value.Second.IsString) continue;
+
+                var items = value.First.AsString.Split(value.Second.AsString[0]);
+
+                foreach(var item in items)
+                {
+                    yield return item;
+                }
             }
         }
 

@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     public class SystemCollection
     {
         private readonly string _name;
-        private Func<BsonValue, IEnumerable<BsonDocument>> _input = null;
+        private Func<IEnumerable<BsonDocument>> _input = null;
 
         public SystemCollection(string name)
         {
@@ -20,7 +20,7 @@ namespace LiteDB.Engine
             _name = name;
         }
 
-        public SystemCollection(string name, Func<BsonValue, IEnumerable<BsonDocument>> input)
+        public SystemCollection(string name, Func<IEnumerable<BsonDocument>> input)
             : this(name)
         {
             _input = input;
@@ -39,7 +39,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get input data source factory
         /// </summary>
-        public virtual IEnumerable<BsonDocument> Input(BsonValue options) => _input(options);
+        public virtual IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options) => _input();
 
         /// <summary>
         /// Get output data source factory (must implement in inherit class)
