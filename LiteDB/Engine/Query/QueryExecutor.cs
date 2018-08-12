@@ -103,7 +103,7 @@ namespace LiteDB.Engine
                 var loader = queryPlan.Index as IDocumentLoader ??
                     (queryPlan.IsIndexKeyOnly ?
                         new IndexKeyLoader(indexer, queryPlan.Fields.First()) :
-                        (IDocumentLoader)new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields));
+                        (IDocumentLoader)new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor));
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = queryPlan.Index.Run(snapshot.CollectionPage, indexer)
@@ -111,8 +111,8 @@ namespace LiteDB.Engine
 
                 // get current query pipe: normal or groupby pipe
                 using (var pipe = queryPlan.GroupBy != null ?
-                    new GroupByPipe(_engine, transaction, loader) :
-                    (BasePipe)new QueryPipe(_engine, transaction, loader))
+                    new GroupByPipe(_engine, transaction, loader, cursor) :
+                    (BasePipe)new QueryPipe(_engine, transaction, loader, cursor))
                 {
                     // commit transaction before close pipe
                     pipe.Disposing += (s, e) =>
@@ -132,7 +132,7 @@ namespace LiteDB.Engine
                     {
                         // stop timer and increase counter
                         cursor.Timer.Stop();
-                        cursor.FetchCount++;
+                        cursor.DocumentResult++;
 
                         yield return value;
 

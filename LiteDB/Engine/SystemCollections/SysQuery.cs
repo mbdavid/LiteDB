@@ -7,6 +7,9 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// This class implement $query experimental system function to run sub-queries. It's experimental only - possible not be present in final release
+    /// </summary>
     internal class SysQuery : SystemCollection
     {
         public SysQuery() : base("$query")

@@ -25,7 +25,8 @@ namespace LiteDB.Engine
                             ["mode"] = snapshot.Mode.ToString(),
                             ["elapsedMS"] = cursor.Timer.Elapsed.TotalMilliseconds,
                             ["elapsed"] = cursor.Timer.Elapsed.ToString(),
-                            ["fetch"] = cursor.FetchCount,
+                            ["documentFetch"] = cursor.DocumentFetch,
+                            ["documentResult"] = cursor.DocumentResult,
                             ["done"] = cursor.Done
                         };
                     }

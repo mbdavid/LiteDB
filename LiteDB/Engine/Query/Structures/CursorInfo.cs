@@ -17,9 +17,14 @@ namespace LiteDB.Engine
         public Stopwatch Timer { get; set; } = new Stopwatch();
 
         /// <summary>
-        /// Get how many records returns on query
+        /// Get how many document query pipe read from disk/cache
         /// </summary>
-        public int FetchCount { get; set; } = 0;
+        public int DocumentFetch { get; set; } = 0;
+
+        /// <summary>
+        /// Get how many documents returns on query
+        /// </summary>
+        public int DocumentResult { get; set; } = 0;
 
         /// <summary>
         /// Get/Set if current cursor are done (read all data)

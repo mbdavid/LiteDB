@@ -15,14 +15,16 @@ namespace LiteDB.Engine
         protected readonly LiteEngine _engine;
         protected readonly TransactionService _transaction;
         protected readonly IDocumentLoader _loader;
+        protected readonly CursorInfo _cursor;
 
         private TransactionService _tempTransaction = null;
 
-        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader)
+        public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader, CursorInfo cursor)
         {
             _engine = engine;
             _transaction = transaction;
             _loader = loader;
+            _cursor = cursor;
         }
 
         /// <summary>
@@ -86,7 +88,7 @@ namespace LiteDB.Engine
                         data = new DataService(snapshot);
 
                         //TODO: oferecer suporte a include com campos selecionados!!
-                        loader = new DocumentLoader(data, _engine.UtcDate, null);
+                        loader = new DocumentLoader(data, _engine.UtcDate, null, _cursor);
 
                         index = snapshot.CollectionPage?.PK;
                     }
