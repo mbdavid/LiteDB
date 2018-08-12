@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -12,6 +13,8 @@ namespace LiteDB.Engine
         private readonly HashSet<string> _fields;
         private readonly CursorInfo _cursor;
 
+        private Cache<PageAddress, BsonDocument> _cache = new Cache<PageAddress, BsonDocument>(MAX_CACHE_SIZE);
+
         public DocumentLoader(DataService data, bool utcDate, HashSet<string> fields, CursorInfo cursor)
         {
             _data = data;
@@ -22,18 +25,22 @@ namespace LiteDB.Engine
 
         public BsonDocument Load(PageAddress rawId)
         {
-            // first, get datablock
-            var block = _data.GetBlock(rawId);
+            return _cache.GetOrAdd(rawId, id =>
+            {
+                // first, get datablock
+                var block = _data.GetBlock(id);
 
-            // otherwise, load byte array and deserialize
-            var buffer = _data.Read(block);
-            var doc = _bsonReader.Deserialize(buffer, _fields);
-            doc.RawId = rawId;
+                // otherwise, load byte array and deserialize
+                var buffer = _data.Read(block);
 
-            // inc cursor document fetch
-            _cursor.DocumentFetch++;
+                var doc = _bsonReader.Deserialize(buffer, _fields);
+                doc.RawId = id;
 
-            return doc;
+                // inc cursor document fetch
+                _cursor.DocumentFetch++;
+
+                return doc;
+            });
         }
     }
 }

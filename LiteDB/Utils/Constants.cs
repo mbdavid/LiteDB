@@ -73,12 +73,12 @@ namespace LiteDB
         public const int MAX_INDEX_KEY_LENGTH = 512;
 
         /// <summary>
-        /// When add item cache counter get this size, try clean 
+        /// DocumentLoader max cache size
         /// </summary>
-        public const int MAX_CACHE_ADD = 1000;
+        public const int MAX_CACHE_SIZE = 1000;
 
         /// <summary>
-        /// Both variable are used to identify that current datafile are v7 version and must be upgrade
+        /// This variable are used to identify that current datafile are v7 version and must be upgrade
         /// v7 has small page header so is not possible check using FILE_VERSION position
         /// </summary>
         public static Guid V7_TRANSID = new Guid("00000000-2a2a-5420-6869-732069732061");
