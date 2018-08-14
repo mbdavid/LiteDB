@@ -110,8 +110,8 @@ namespace LiteDB.Engine
                         loader = new IndexKeyLoader(indexer, queryPlan.Fields.Single());
                     }
 
-                    //loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor, 1000);
-                    loader = new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
+                    loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor, 1000);
+                    //loader = new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
                 }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
