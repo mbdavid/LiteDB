@@ -9,8 +9,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexVirtual : Index, IDocumentLoader
     {
-        private IEnumerable<BsonDocument> _source;
-        private Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
+        private readonly IEnumerable<BsonDocument> _source;
+        private readonly Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
         private uint _counter = 0;
 
         public IndexVirtual(IEnumerable<BsonDocument> source)

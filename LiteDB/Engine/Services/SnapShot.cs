@@ -146,22 +146,16 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get collection name - always have a value
+        /// </summary>
+        public string CollectionName => _collectionName;
+
+        /// <summary>
         /// Create instance of collection service using snapshot variables
         /// </summary>
         public CollectionService GetCollectionService()
         {
             return new CollectionService(this, _header, _transPages);
-        }
-
-        /// <summary>
-        /// Create new cursor instance and add to cursor list
-        /// </summary>
-        public CursorInfo NewCursor()
-        {
-            var cursor = new CursorInfo();
-            cursor.Timer.Start();
-            _cursors.Add(cursor);
-            return cursor;
         }
 
         /// <summary>

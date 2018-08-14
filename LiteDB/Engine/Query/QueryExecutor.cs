@@ -58,7 +58,7 @@ namespace LiteDB.Engine
             IEnumerable<BsonValue> RunQuery()
             {
                 var snapshot = transaction.CreateSnapshot(_queryDefinition.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
-                var cursor = snapshot.NewCursor();
+                var cursor = _engine.NewCursor(transaction, snapshot);
 
                 // if query will run over external data source, create fake collection page from virtual index
                 if (_source != null)
@@ -66,13 +66,15 @@ namespace LiteDB.Engine
                     snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
                 }
 
+                cursor.Start();
+
                 var data = new DataService(snapshot);
                 var indexer = new IndexService(snapshot);
 
                 // no collection, no documents
                 if (snapshot.CollectionPage == null)
                 {
-                    cursor.Timer.Stop();
+                    cursor.Finish();
 
                     if (isNew)
                     {
@@ -100,10 +102,17 @@ namespace LiteDB.Engine
                     yield break;
                 }
 
-                var loader = queryPlan.Index as IDocumentLoader ??
-                    (queryPlan.IsIndexKeyOnly ?
-                        new IndexKeyLoader(indexer, queryPlan.Fields.First()) :
-                        (IDocumentLoader)new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor));
+                // define document loader
+                if (!(queryPlan.Index is IDocumentLoader loader)) // use index as document loader (virtual collection)
+                {
+                    if (queryPlan.IsIndexKeyOnly)
+                    {
+                        loader = new IndexKeyLoader(indexer, queryPlan.Fields.Single());
+                    }
+
+                    //loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor, 1000);
+                    loader = new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
+                }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
                 var nodes = queryPlan.Index.Run(snapshot.CollectionPage, indexer)
@@ -132,7 +141,7 @@ namespace LiteDB.Engine
                     {
                         // stop timer and increase counter
                         cursor.Timer.Stop();
-                        cursor.DocumentResult++;
+                        cursor.DocumentCount++;
 
                         yield return value;
 

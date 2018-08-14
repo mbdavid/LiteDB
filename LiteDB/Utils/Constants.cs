@@ -78,6 +78,11 @@ namespace LiteDB
         public const int MAX_CACHE_SIZE = 1000;
 
         /// <summary>
+        /// Max cursor info history
+        /// </summary>
+        public const int MAX_CURSOR_HISTORY = 1000;
+
+        /// <summary>
         /// This variable are used to identify that current datafile are v7 version and must be upgrade
         /// v7 has small page header so is not possible check using FILE_VERSION position
         /// </summary>

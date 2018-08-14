@@ -8,12 +8,10 @@ namespace LiteDB.Engine
     /// </summary>
     internal class DocumentLoader : IDocumentLoader
     {
-        private readonly DataService _data;
-        private readonly BsonReader _bsonReader;
-        private readonly HashSet<string> _fields;
-        private readonly CursorInfo _cursor;
-
-        private Cache<PageAddress, BsonDocument> _cache = new Cache<PageAddress, BsonDocument>(MAX_CACHE_SIZE);
+        protected readonly DataService _data;
+        protected readonly BsonReader _bsonReader;
+        protected readonly HashSet<string> _fields;
+        protected readonly CursorInfo _cursor;
 
         public DocumentLoader(DataService data, bool utcDate, HashSet<string> fields, CursorInfo cursor)
         {
@@ -23,24 +21,21 @@ namespace LiteDB.Engine
             _cursor = cursor;
         }
 
-        public BsonDocument Load(PageAddress rawId)
+        public virtual BsonDocument Load(PageAddress rawId)
         {
-            return _cache.GetOrAdd(rawId, id =>
-            {
-                // first, get datablock
-                var block = _data.GetBlock(id);
+            // first, get datablock
+            var block = _data.GetBlock(rawId);
 
-                // otherwise, load byte array and deserialize
-                var buffer = _data.Read(block);
+            // otherwise, load byte array and deserialize
+            var buffer = _data.Read(block);
 
-                var doc = _bsonReader.Deserialize(buffer, _fields);
-                doc.RawId = id;
+            var doc = _bsonReader.Deserialize(buffer, _fields);
+            doc.RawId = rawId;
 
-                // inc cursor document fetch
-                _cursor.DocumentFetch++;
+            // inc cursor document fetch
+            _cursor.DocumentLoad++;
 
-                return doc;
-            });
+            return doc;
         }
     }
 }
