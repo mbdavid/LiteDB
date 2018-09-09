@@ -40,11 +40,7 @@
             this.tabGrid = new System.Windows.Forms.TabPage();
             this.grdResult = new System.Windows.Forms.DataGridView();
             this.tabText = new System.Windows.Forms.TabPage();
-            this.txtResult = new System.Windows.Forms.RichTextBox();
             this.tabParameters = new System.Windows.Forms.TabPage();
-            this.txtParameters = new System.Windows.Forms.RichTextBox();
-            this.tabLog = new System.Windows.Forms.TabPage();
-            this.txtLog = new System.Windows.Forms.RichTextBox();
             this.tabSql = new System.Windows.Forms.TabControl();
             this.stbStatus = new System.Windows.Forms.StatusStrip();
             this.lblCursor = new System.Windows.Forms.ToolStripStatusLabel();
@@ -81,6 +77,8 @@
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.diaOpen = new System.Windows.Forms.OpenFileDialog();
             this.btnFileOpen = new System.Windows.Forms.Button();
+            this.txtParameters = new System.Windows.Forms.TextBox();
+            this.txtResult = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -94,7 +92,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).BeginInit();
             this.tabText.SuspendLayout();
             this.tabParameters.SuspendLayout();
-            this.tabLog.SuspendLayout();
             this.stbStatus.SuspendLayout();
             this.tlbMain.SuspendLayout();
             this.ctxMenu.SuspendLayout();
@@ -202,7 +199,6 @@
             this.tabResult.Controls.Add(this.tabGrid);
             this.tabResult.Controls.Add(this.tabText);
             this.tabResult.Controls.Add(this.tabParameters);
-            this.tabResult.Controls.Add(this.tabLog);
             this.tabResult.Location = new System.Drawing.Point(3, 3);
             this.tabResult.Name = "tabResult";
             this.tabResult.SelectedIndex = 0;
@@ -240,78 +236,24 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 22);
+            this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 335);
+            this.tabText.Size = new System.Drawing.Size(808, 333);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
             // 
-            // txtResult
-            // 
-            this.txtResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtResult.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtResult.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtResult.Location = new System.Drawing.Point(6, 5);
-            this.txtResult.Name = "txtResult";
-            this.txtResult.ReadOnly = true;
-            this.txtResult.Size = new System.Drawing.Size(796, 320);
-            this.txtResult.TabIndex = 0;
-            this.txtResult.Text = "";
-            // 
             // tabParameters
             // 
             this.tabParameters.Controls.Add(this.txtParameters);
-            this.tabParameters.Location = new System.Drawing.Point(4, 22);
+            this.tabParameters.Location = new System.Drawing.Point(4, 24);
             this.tabParameters.Name = "tabParameters";
             this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
-            this.tabParameters.Size = new System.Drawing.Size(808, 335);
+            this.tabParameters.Size = new System.Drawing.Size(808, 333);
             this.tabParameters.TabIndex = 5;
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
-            // 
-            // txtParameters
-            // 
-            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtParameters.HideSelection = false;
-            this.txtParameters.Location = new System.Drawing.Point(6, 6);
-            this.txtParameters.Name = "txtParameters";
-            this.txtParameters.ReadOnly = true;
-            this.txtParameters.Size = new System.Drawing.Size(796, 317);
-            this.txtParameters.TabIndex = 3;
-            this.txtParameters.Text = "";
-            // 
-            // tabLog
-            // 
-            this.tabLog.Controls.Add(this.txtLog);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
-            this.tabLog.Name = "tabLog";
-            this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(808, 335);
-            this.tabLog.TabIndex = 4;
-            this.tabLog.Text = "Log";
-            this.tabLog.UseVisualStyleBackColor = true;
-            // 
-            // txtLog
-            // 
-            this.txtLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtLog.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtLog.Location = new System.Drawing.Point(6, 6);
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(796, 315);
-            this.txtLog.TabIndex = 0;
-            this.txtLog.Text = "";
-            this.txtLog.WordWrap = false;
             // 
             // tabSql
             // 
@@ -559,27 +501,27 @@
             this.mnuVaccum,
             this.mnuShrink});
             this.ctxMenuRoot.Name = "ctxMenu";
-            this.ctxMenuRoot.Size = new System.Drawing.Size(181, 142);
+            this.ctxMenuRoot.Size = new System.Drawing.Size(171, 120);
             this.ctxMenuRoot.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CtxMenuRoot_ItemClicked);
             // 
             // mnuInfo
             // 
             this.mnuInfo.Image = global::LiteDB.Studio.Properties.Resources.information;
             this.mnuInfo.Name = "mnuInfo";
-            this.mnuInfo.Size = new System.Drawing.Size(180, 22);
+            this.mnuInfo.Size = new System.Drawing.Size(170, 22);
             this.mnuInfo.Tag = "SELECT $ FROM $database;";
             this.mnuInfo.Text = "Database Info";
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(167, 6);
             // 
             // mnuImport
             // 
             this.mnuImport.Image = global::LiteDB.Studio.Properties.Resources.layout_add;
             this.mnuImport.Name = "mnuImport";
-            this.mnuImport.Size = new System.Drawing.Size(180, 22);
+            this.mnuImport.Size = new System.Drawing.Size(170, 22);
             this.mnuImport.Tag = "SELECT $\\n  INTO new_col\\n  FROM $file_json(\'C:/temp/file.json\');";
             this.mnuImport.Text = "Import from JSON";
             // 
@@ -587,7 +529,7 @@
             // 
             this.mnuCheckpoint.Image = global::LiteDB.Studio.Properties.Resources.application_put;
             this.mnuCheckpoint.Name = "mnuCheckpoint";
-            this.mnuCheckpoint.Size = new System.Drawing.Size(180, 22);
+            this.mnuCheckpoint.Size = new System.Drawing.Size(170, 22);
             this.mnuCheckpoint.Tag = "CHECKPOINT;";
             this.mnuCheckpoint.Text = "Checkpoint";
             // 
@@ -595,7 +537,7 @@
             // 
             this.mnuVaccum.Image = global::LiteDB.Studio.Properties.Resources.brick;
             this.mnuVaccum.Name = "mnuVaccum";
-            this.mnuVaccum.Size = new System.Drawing.Size(180, 22);
+            this.mnuVaccum.Size = new System.Drawing.Size(170, 22);
             this.mnuVaccum.Tag = "VACCUM;";
             this.mnuVaccum.Text = "Vaccum";
             // 
@@ -603,7 +545,7 @@
             // 
             this.mnuShrink.Image = global::LiteDB.Studio.Properties.Resources.compress;
             this.mnuShrink.Name = "mnuShrink";
-            this.mnuShrink.Size = new System.Drawing.Size(180, 22);
+            this.mnuShrink.Size = new System.Drawing.Size(170, 22);
             this.mnuShrink.Tag = "SHRINK;";
             this.mnuShrink.Text = "Shrink";
             // 
@@ -621,6 +563,32 @@
             this.btnFileOpen.TabIndex = 13;
             this.btnFileOpen.UseVisualStyleBackColor = true;
             this.btnFileOpen.Click += new System.EventHandler(this.BtnFileOpen_Click);
+            // 
+            // txtParameters
+            // 
+            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtParameters.Location = new System.Drawing.Point(5, 4);
+            this.txtParameters.Multiline = true;
+            this.txtParameters.Name = "txtParameters";
+            this.txtParameters.ReadOnly = true;
+            this.txtParameters.Size = new System.Drawing.Size(799, 324);
+            this.txtParameters.TabIndex = 1;
+            // 
+            // txtResult
+            // 
+            this.txtResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtResult.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtResult.Location = new System.Drawing.Point(5, 4);
+            this.txtResult.Multiline = true;
+            this.txtResult.Name = "txtResult";
+            this.txtResult.ReadOnly = true;
+            this.txtResult.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtResult.Size = new System.Drawing.Size(799, 324);
+            this.txtResult.TabIndex = 1;
             // 
             // MainForm
             // 
@@ -651,8 +619,9 @@
             this.tabGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).EndInit();
             this.tabText.ResumeLayout(false);
+            this.tabText.PerformLayout();
             this.tabParameters.ResumeLayout(false);
-            this.tabLog.ResumeLayout(false);
+            this.tabParameters.PerformLayout();
             this.stbStatus.ResumeLayout(false);
             this.stbStatus.PerformLayout();
             this.tlbMain.ResumeLayout(false);
@@ -676,7 +645,6 @@
         private System.Windows.Forms.TabPage tabGrid;
         private System.Windows.Forms.DataGridView grdResult;
         private System.Windows.Forms.TabPage tabText;
-        private System.Windows.Forms.RichTextBox txtResult;
         private System.Windows.Forms.ToolStripStatusLabel lblResultCount;
         private System.Windows.Forms.ToolStrip tlbMain;
         private System.Windows.Forms.ToolStripButton btnConnect;
@@ -692,8 +660,6 @@
         private System.Windows.Forms.RichTextBox txtSql;
         private System.Windows.Forms.TabControl tabSql;
         private System.Windows.Forms.ToolStripMenuItem mnuDropCollection;
-        private System.Windows.Forms.TabPage tabLog;
-        private System.Windows.Forms.RichTextBox txtLog;
         private System.Windows.Forms.ToolStripMenuItem mnuAnalyze;
         private System.Windows.Forms.ToolStripSeparator mnuSep1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -703,7 +669,6 @@
         private System.Windows.Forms.ToolStripMenuItem mnuQueryAll;
         private System.Windows.Forms.ToolStripSeparator mnuSep2;
         private System.Windows.Forms.TabPage tabParameters;
-        private System.Windows.Forms.RichTextBox txtParameters;
         private System.Windows.Forms.ToolStripMenuItem mnuExplanPlan;
         private System.Windows.Forms.ContextMenuStrip ctxMenuRoot;
         private System.Windows.Forms.ToolStripMenuItem mnuShrink;
@@ -717,6 +682,8 @@
         private System.Windows.Forms.OpenFileDialog diaOpen;
         private System.Windows.Forms.ToolStripMenuItem mnuQueryCount;
         private System.Windows.Forms.ToolStripMenuItem mnuImport;
+        private System.Windows.Forms.TextBox txtResult;
+        private System.Windows.Forms.TextBox txtParameters;
     }
 }
 

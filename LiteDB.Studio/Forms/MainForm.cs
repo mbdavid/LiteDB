@@ -109,31 +109,6 @@ namespace LiteDB.Studio
             tvwDatabase.Nodes.Clear();
         }
 
-        private void DoLog(LogEntry log)
-        {
-            _synchronizationContext.Post(new SendOrPostCallback(o =>
-            {
-                try
-                {
-                    var l = (LogEntry)o;
-
-                    txtLog.AppendText(
-                        string.Format("{0}: {1:HH:mm:ss} [{2}] - {3}\n",
-                        l.ThreadID,
-                        l.Time,
-                        l.Level,
-                        l.Message.Replace('\r', ';').Replace('\n', ' ')));
-
-                    txtLog.ScrollToCaret();
-                }
-                catch
-                {
-                }
-
-            }), log);
-
-        }
-
         private void AddNewTab()
         {
             var tab = tabSql.TabPages.Cast<TabPage>().Where(x => x.Text == "+").Single();

@@ -139,31 +139,38 @@ namespace LiteDB.Studio
             cell.Tag = value;
         }
 
-        public static void BindBsonData(this RichTextBox txt, TaskData data)
+        public static void BindBsonData(this TextBox txt, TaskData data)
         {
             var index = 0;
+            var sb = new StringBuilder();
 
-            txt.Text = "";
+            txt.ForeColor = Color.Black;
+            txt.Text = "<wait>";
+            txt.Update();
 
             if (data.Result?.Count > 0)
             {
                 foreach (var value in data.Result)
                 {
-                    txt.AppendText($"[{index++ + 1}]:" + Environment.NewLine, Color.DarkGreen);
-                    txt.AppendText(JsonSerializer.Serialize(value, true, true) + Environment.NewLine, Color.Black);
+                    sb.AppendLine($"[{index++ + 1}]:");
+                    sb.AppendLine(JsonSerializer.Serialize(value, true, true));
                 }
 
                 if (data.LimitExceeded)
                 {
-                    txt.AppendText("Limit exceeded", Color.OrangeRed);
+                    sb.AppendLine("...");
+                    sb.AppendLine("Limit exceeded");
                 }
             }
             else
             {
-                txt.AppendText("no resultset", Color.Gray);
+                sb.AppendLine("no resultset");
             }
 
-            txt.SelectionStart = 0;
+            txt.SetVScrollPos(0);
+            txt.SuspendLayout();
+            txt.Text = sb.ToString();
+            txt.ResumeLayout();
         }
 
         public static void DoubleBuffered(this DataGridView dgv, bool setting)
@@ -173,23 +180,13 @@ namespace LiteDB.Studio
             pi.SetValue(dgv, setting, null);
         }
 
-        public static void AppendText(this RichTextBox box, string text, Color color)
-        {
-            box.SelectionStart = box.TextLength;
-            box.SelectionLength = 0;
-
-            box.SelectionColor = color;
-            box.AppendText(text);
-            box.SelectionColor = box.ForeColor;
-        }
-
         public static void Clear(this DataGridView grd)
         {
             grd.Columns.Clear();
             grd.DataSource = null;
         }
 
-        public static void BindErrorMessage(this RichTextBox txt, string sql, Exception ex)
+        public static void BindErrorMessage(this TextBox txt, string sql, Exception ex)
         {
             var sb = new StringBuilder();
 
@@ -220,8 +217,9 @@ namespace LiteDB.Studio
                 }
             }
 
-            txt.Text = "";
-            txt.AppendText(sb.ToString(), Color.Red);
+            txt.ForeColor = Color.Red;
+            txt.Text = sb.ToString();
+            txt.SetHScrollPos(0);
         }
 
         public static void DefineSyntaxHighlighter(RichTextBox textBox)
