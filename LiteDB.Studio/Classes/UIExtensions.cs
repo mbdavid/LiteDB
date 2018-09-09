@@ -145,7 +145,7 @@ namespace LiteDB.Studio
             var sb = new StringBuilder();
 
             txt.ForeColor = Color.Black;
-            txt.Text = "<wait>";
+            txt.Text = "<loading>";
             txt.Update();
 
             if (data.Result?.Count > 0)
@@ -154,6 +154,13 @@ namespace LiteDB.Studio
                 {
                     sb.AppendLine($"[{index++ + 1}]:");
                     sb.AppendLine(JsonSerializer.Serialize(value, true, true));
+
+                    // limit in 300kb
+                    if (sb.Length > 300000)
+                    {
+                        data.LimitExceeded = true;
+                        break;
+                    }
                 }
 
                 if (data.LimitExceeded)
@@ -167,9 +174,10 @@ namespace LiteDB.Studio
                 sb.AppendLine("no resultset");
             }
 
-            txt.SetVScrollPos(0);
             txt.SuspendLayout();
+            txt.SetVScrollPos(0);
             txt.Text = sb.ToString();
+            
             txt.ResumeLayout();
         }
 

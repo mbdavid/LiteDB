@@ -41,6 +41,7 @@
             this.grdResult = new System.Windows.Forms.DataGridView();
             this.tabText = new System.Windows.Forms.TabPage();
             this.tabParameters = new System.Windows.Forms.TabPage();
+            this.txtParameters = new System.Windows.Forms.TextBox();
             this.tabSql = new System.Windows.Forms.TabControl();
             this.stbStatus = new System.Windows.Forms.StatusStrip();
             this.lblCursor = new System.Windows.Forms.ToolStripStatusLabel();
@@ -77,7 +78,6 @@
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.diaOpen = new System.Windows.Forms.OpenFileDialog();
             this.btnFileOpen = new System.Windows.Forms.Button();
-            this.txtParameters = new System.Windows.Forms.TextBox();
             this.txtResult = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
@@ -254,6 +254,20 @@
             this.tabParameters.TabIndex = 5;
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
+            // 
+            // txtParameters
+            // 
+            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtParameters.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtParameters.Location = new System.Drawing.Point(5, 4);
+            this.txtParameters.Multiline = true;
+            this.txtParameters.Name = "txtParameters";
+            this.txtParameters.ReadOnly = true;
+            this.txtParameters.Size = new System.Drawing.Size(799, 322);
+            this.txtParameters.TabIndex = 1;
             // 
             // tabSql
             // 
@@ -564,30 +578,19 @@
             this.btnFileOpen.UseVisualStyleBackColor = true;
             this.btnFileOpen.Click += new System.EventHandler(this.BtnFileOpen_Click);
             // 
-            // txtParameters
-            // 
-            this.txtParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtParameters.Location = new System.Drawing.Point(5, 4);
-            this.txtParameters.Multiline = true;
-            this.txtParameters.Name = "txtParameters";
-            this.txtParameters.ReadOnly = true;
-            this.txtParameters.Size = new System.Drawing.Size(799, 324);
-            this.txtParameters.TabIndex = 1;
-            // 
             // txtResult
             // 
             this.txtResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtResult.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtResult.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtResult.Location = new System.Drawing.Point(5, 4);
             this.txtResult.Multiline = true;
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
             this.txtResult.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtResult.Size = new System.Drawing.Size(799, 324);
+            this.txtResult.Size = new System.Drawing.Size(797, 322);
             this.txtResult.TabIndex = 1;
             // 
             // MainForm
@@ -682,8 +685,8 @@
         private System.Windows.Forms.OpenFileDialog diaOpen;
         private System.Windows.Forms.ToolStripMenuItem mnuQueryCount;
         private System.Windows.Forms.ToolStripMenuItem mnuImport;
-        private System.Windows.Forms.TextBox txtResult;
         private System.Windows.Forms.TextBox txtParameters;
+        private System.Windows.Forms.TextBox txtResult;
     }
 }
 
