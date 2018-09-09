@@ -135,19 +135,19 @@ namespace LiteDB.Engine
 
             var start = reader.BaseStream.Position;
 
-            var info = reader.ReadFixedString(HEADER_INFO.Length);
-            var ver = reader.ReadByte();
+            var info = reader.ReadFixedString(HEADER_INFO.Length); // 27
+            var ver = reader.ReadByte(); // 1
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.FreeEmptyPageID = reader.ReadUInt32();
-            this.LastPageID = reader.ReadUInt32();
-            this.CreationTime = reader.ReadDateTime(utcDate);
-            this.LastCheckpoint = reader.ReadDateTime(utcDate);
-            this.UserVersion = reader.ReadInt32();
+            this.FreeEmptyPageID = reader.ReadUInt32(); // 4
+            this.LastPageID = reader.ReadUInt32(); // 4
+            this.CreationTime = reader.ReadDateTime(utcDate); // 8
+            this.LastCheckpoint = reader.ReadDateTime(utcDate); // 8
+            this.UserVersion = reader.ReadInt32(); // 4
 
-            // read resered bytes
+            // read resered bytes (256 - 56 = 200 bytes)
             var used = reader.BaseStream.Position - start;
             var reserved = (int)(HEADER_PAGE_FIXED_DATA_SIZE - used);
 

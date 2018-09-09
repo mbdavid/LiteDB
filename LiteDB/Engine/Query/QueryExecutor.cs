@@ -51,7 +51,7 @@ namespace LiteDB.Engine
             catch
             {
                 // if any error, rollback transaction
-                transaction.Dispose();
+                transaction.Rollback();
                 throw;
             }
 
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
 
                     if (isNew)
                     {
-                        transaction.Dispose();
+                        transaction.Release();
                     }
                     yield break;
                 }
@@ -96,7 +96,7 @@ namespace LiteDB.Engine
 
                     if (isNew)
                     {
-                        transaction.Dispose();
+                        transaction.Release();
                     }
 
                     yield break;
@@ -128,7 +128,8 @@ namespace LiteDB.Engine
                     {
                         if (isNew)
                         {
-                            transaction.Commit();
+                            //TODO: this was .Commit() before, but I don't remember why... if is a new transaction, just release
+                            transaction.Release();
                         }
 
                         // finish timer and mark cursor as done

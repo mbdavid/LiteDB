@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     /// Represent a single transaction service. Need a new instance for each transaction.
     /// You must run each transaction in a different thread - no 2 transaction in same thread (locks as per-thread)
     /// </summary>
-    internal class TransactionService : IDisposable
+    internal class TransactionService
     {
         // instances from Engine
         private readonly HeaderPage _header;
@@ -241,19 +241,35 @@ namespace LiteDB.Engine
         /// <summary>
         /// Rollback transaction operation - ignore all modified pages and return new pages into disk
         /// </summary>
-        public bool Rollback(bool returnPages)
+        public bool Rollback()
         {
             if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
 
             if (this.State == TransactionState.Active)
             {
-                // if this aborted transaction requested for new pages, create new transaction do return this pages do database (as EmptyList pages)
-                // this returnPages are optional because TempDB can "loose" this pages
-                if (returnPages && _transPages.NewPages.Count > 0)
-                {
-                    this.ReturnNewPages();
-                }
+                this.ReturnNewPages();
 
+                // dispose all snaps an release locks
+                foreach (var snaphost in _snapshots.Values)
+                {
+                    snaphost.Dispose();
+                }
+            }
+
+            this.Done(TransactionState.Aborted);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Release transaction as is - it's same as rollback but has no return pages (for new pages) and 
+        /// </summary>
+        public bool Release()
+        {
+            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
+
+            if (this.State == TransactionState.Active)
+            {
                 // dispose all snaps an release locks
                 foreach (var snaphost in _snapshots.Values)
                 {
@@ -330,7 +346,7 @@ namespace LiteDB.Engine
         {
             if (Thread.CurrentThread.ManagedThreadId == this.ThreadID)
             {
-                this.Rollback(false);
+                this.Rollback();
             }
             else
             {
@@ -350,11 +366,6 @@ namespace LiteDB.Engine
 
             // call done
             _done(this.TransactionID);
-        }
-
-        public void Dispose()
-        {
-            this.Rollback(true);
         }
     }
 }

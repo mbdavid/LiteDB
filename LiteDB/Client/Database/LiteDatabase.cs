@@ -19,7 +19,7 @@ namespace LiteDB
         /// <summary>
         /// Get current instance of BsonMapper used in this database instance (can be BsonMapper.Global)
         /// </summary>
-        public BsonMapper Mapper { get { return _mapper; } }
+        public BsonMapper Mapper => _mapper;
 
         #endregion
 
@@ -38,7 +38,7 @@ namespace LiteDB
         /// </summary>
         public LiteDatabase(ConnectionString connectionString, BsonMapper mapper = null)
         {
-            if(connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             _mapper = mapper ?? BsonMapper.Global;
 

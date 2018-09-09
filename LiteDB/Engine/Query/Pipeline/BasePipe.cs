@@ -234,8 +234,8 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            // if temp transaction was used, rollback (no not save) here
-            _tempTransaction?.Rollback(false);
+            // if temp transaction was used, release (no not save) here
+            _tempTransaction?.Release();
 
             // call disposing event
             this.Disposing?.Invoke(this, EventArgs.Empty);

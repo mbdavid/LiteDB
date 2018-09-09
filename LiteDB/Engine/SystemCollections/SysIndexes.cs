@@ -20,7 +20,7 @@ namespace LiteDB.Engine
             catch
             {
                 // if any error, rollback transaction
-                transaction.Dispose();
+                transaction.Rollback();
                 throw;
             }
 
@@ -49,7 +49,7 @@ namespace LiteDB.Engine
 
                 if (isNew)
                 {
-                    transaction.Dispose();
+                    transaction.Release();
                 }
             }
         }

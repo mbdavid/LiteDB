@@ -8,12 +8,12 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    internal class WalService
+    internal class WalService : IDisposable
     {
-        private LockService _locker;
-        private DataFileService _dataFile;
-        private WalFileService _walFile;
-        private Logger _log;
+        private readonly LockService _locker;
+        private readonly DataFileService _dataFile;
+        private readonly WalFileService _walFile;
+        private readonly Logger _log;
 
         private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
         private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
@@ -203,6 +203,11 @@ namespace LiteDB.Engine
                 .Select(x => x.TransactionID);
 
             _confirmedTransactions.AddRange(items);
+        }
+
+        public void Dispose()
+        {
+            _walFile.Dispose();
         }
     }
 }

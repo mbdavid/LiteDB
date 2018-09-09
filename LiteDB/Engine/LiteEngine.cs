@@ -35,6 +35,7 @@ namespace LiteDB.Engine
         private readonly int _maxMemoryTransactionSize;
 
         private bool _shutdown = false;
+        private bool _disposed = false;
 
         #region TempDB
 
@@ -143,8 +144,8 @@ namespace LiteDB.Engine
             {
                 _log.Error(ex);
 
-                // explicit dispose
-                this.Dispose();
+                // explicit dispose (but do not run shutdown operation)
+                this.Dispose(true);
                 throw;
             }
         }
@@ -157,6 +158,58 @@ namespace LiteDB.Engine
         public int Checkpoint(bool delete) => _wal.Checkpoint(delete, _header, true);
 
         /// <summary>
+        /// Shutdown database and do not accept any other access. Wait finish all transactions
+        /// </summary>
+        private void Shutdown()
+        {
+            // here all private instances are loaded
+
+            if (_shutdown) return;
+
+            // start shutdown operation
+            _shutdown = true;
+
+            _log.Info("shutting down the database");
+
+            // mark all transaction as shotdown status
+            foreach (var trans in _transactions.Values)
+            {
+                trans.Shutdown();
+            }
+
+            if (_checkpointOnShutdown)
+            {
+                // do checkpoint (with no-lock check) and delete wal file
+                _wal.Checkpoint(true, null, false);
+            }
+        }
+
+        private void Dispose(bool disposing)
+        {
+            // this method can be called from Ctor, so many 
+            // of this members can be null yet (even if are readonly). 
+
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // dispose lockers
+                _locker?.Dispose();
+
+                // close all Dispose services
+                _dataFile?.Dispose();
+                _wal?.Dispose();
+
+                if (_disposeTempdb)
+                {
+                    _tempdb?.Dispose(disposing);
+                }
+            }
+
+            _disposed = true;
+        }
+
+        /// <summary>
         /// Shutdown database
         /// - After dispose engine, no more new transaction
         /// - All transation will throw shutdown exception and do rollback
@@ -166,38 +219,18 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            // this method can be called from Ctor, so many 
-            // of this members can be null yet. 
-            if (_shutdown) return;
+            // shutdown all operations
+            this.Shutdown();
 
-            // start shutdown operation
-            _shutdown = true;
+            // dispose data file
+            this.Dispose(true);
 
-            _log.Info("shutting down the database");
+            GC.SuppressFinalize(this);
+        }
 
-            // mark all transaction as shotdown status
-            foreach (var trans in _transactions?.Values)
-            {
-                trans.Shutdown();
-            }
-
-            if (_checkpointOnShutdown)
-            {
-                // do checkpoint (with no-lock check) and delete wal file (will dispose wal file too)
-                _wal?.Checkpoint(true, null, false);
-            }
-
-            // dispose lockers
-            _locker?.Dispose();
-
-            // close all Dispose services
-            _dataFile?.Dispose();
-            _wal?.WalFile?.Dispose();
-
-            if (_disposeTempdb)
-            {
-                _tempdb?.Dispose();
-            }
+        ~LiteEngine()
+        {
+            this.Dispose(false);
         }
     }
 }

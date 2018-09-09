@@ -78,7 +78,7 @@ namespace LiteDB.Engine
 
             if (transaction != null)
             {
-                return transaction.Rollback(true);
+                return transaction.Rollback();
             }
             else
             {
@@ -109,9 +109,7 @@ namespace LiteDB.Engine
             {
                 _log.Error(ex);
 
-                // if database are is in shutdown process, just abort transaction and do not return new pages (will need VACCUM later)
-                // otherwise, do rollabck with "ReturnNewPages" function
-                transaction.Rollback(_shutdown == false);
+                transaction.Rollback();
 
                 throw;
             }

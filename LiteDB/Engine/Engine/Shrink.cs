@@ -105,7 +105,7 @@ namespace LiteDB.Engine
                         }
                         finally
                         {
-                            transaction.Dispose();
+                            transaction.Release();
                         }
                     }
                 }
