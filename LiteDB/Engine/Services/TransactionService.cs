@@ -247,7 +247,11 @@ namespace LiteDB.Engine
 
             if (this.State == TransactionState.Active)
             {
-                this.ReturnNewPages();
+                // only return pages if transaction has new pages
+                if (_transPages.NewPages.Count > 0)
+                {
+                    this.ReturnNewPages();
+                }
 
                 // dispose all snaps an release locks
                 foreach (var snaphost in _snapshots.Values)
