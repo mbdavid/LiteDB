@@ -179,11 +179,11 @@ namespace LiteDB.Tests.Mapper
             // cast only fromType Double/Decimal to Int32/64
 
             // int cast/convert/parse
-            TestExpr<User>(x => (int)x.Salary, "TO_INT32(Salary)");
-            TestExpr<User>(x => (int)x.Salary, "TO_INT32(Salary)");
+            TestExpr<User>(x => (int)x.Salary, "INT32(Salary)");
+            TestExpr<User>(x => (int)x.Salary, "INT32(Salary)");
             TestExpr<User>(x => (double)x.Id, "_id");
-            TestExpr(x => Convert.ToInt32("123"), "TO_INT32(@p0)", "123");
-            TestExpr(x => Int32.Parse("123"), "TO_INT32(@p0)", "123");
+            TestExpr(x => Convert.ToInt32("123"), "INT32(@p0)", "123");
+            TestExpr(x => Int32.Parse("123"), "INT32(@p0)", "123");
         }
 
         [TestMethod]
@@ -215,12 +215,12 @@ namespace LiteDB.Tests.Mapper
 
             // guid initialize/converter
             TestExpr<User>(x => Guid.NewGuid(), "GUID()");
-            TestExpr<User>(x => Guid.Empty, "TO_GUID('00000000-0000-0000-0000-000000000000')");
-            TestExpr<User>(x => Guid.Parse("1A3B944E-3632-467B-A53A-206305310BAC"), "TO_GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
+            TestExpr<User>(x => Guid.Empty, "GUID('00000000-0000-0000-0000-000000000000')");
+            TestExpr<User>(x => Guid.Parse("1A3B944E-3632-467B-A53A-206305310BAC"), "GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
 
             // toString/Format
-            TestExpr<User>(x => x.Id.ToString(), "TO_STRING(_id)");
-            TestExpr<User>(x => x.CreatedOn.ToString(), "TO_STRING(CreatedOn)");
+            TestExpr<User>(x => x.Id.ToString(), "STRING(_id)");
+            TestExpr<User>(x => x.CreatedOn.ToString(), "STRING(CreatedOn)");
             TestExpr<User>(x => x.CreatedOn.ToString("yyyy-MM-dd"), "FORMAT(CreatedOn, @p0)", "yyyy-MM-dd");
             TestExpr<User>(x => x.Salary.ToString("#.##0,00"), "FORMAT(Salary, @p0)", "#.##0,00");
 
@@ -240,7 +240,7 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => x.CreatedOn.Minute, "MINUTE(CreatedOn)");
             TestExpr<User>(x => x.CreatedOn.Second, "SECOND(CreatedOn)");
 
-            TestExpr<User>(x => x.CreatedOn.Date, "TO_DATETIME(YEAR(CreatedOn), MONTH(CreatedOn), DAY(CreatedOn))");
+            TestExpr<User>(x => x.CreatedOn.Date, "DATETIME(YEAR(CreatedOn), MONTH(CreatedOn), DAY(CreatedOn))");
 
             // static date
             TestExpr<User>(x => DateTime.Now, "NOW()");
@@ -278,9 +278,9 @@ namespace LiteDB.Tests.Mapper
             TestExpr<User>(x => new int[] { x.Id, 6, 7 }, "[_id, @p0, @p1]", 6, 7);
 
             // new fixed types
-            TestExpr(x => new DateTime(2018, 5, 28), "TO_DATETIME(@p0, @p1, @p2)", 2018, 5, 28);
+            TestExpr(x => new DateTime(2018, 5, 28), "DATETIME(@p0, @p1, @p2)", 2018, 5, 28);
 
-            TestExpr(x => new Guid("1A3B944E-3632-467B-A53A-206305310BAC"), "TO_GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
+            TestExpr(x => new Guid("1A3B944E-3632-467B-A53A-206305310BAC"), "GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
 
         }
 
@@ -288,8 +288,8 @@ namespace LiteDB.Tests.Mapper
         public void Linq_Complex_Expressions()
         {
             // 'CityName': $.Address.City.CityName, 
-            // 'Cnt': COUNT(IIF(TO_STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)), 
-            // 'List': TO_ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number)
+            // 'Cnt': COUNT(IIF(STRING($.Phones[@.Type = @p0].Number) = @p1, @p2, $.Name)), 
+            // 'List': ARRAY($.Phones[*].Number + $.Phones[@.Prefix > $.Salary].Number)
 
             TestExpr<User>(x => new
             {
@@ -300,8 +300,8 @@ namespace LiteDB.Tests.Mapper
             @"
             {
                 CityName: $.Address.City.CityName,
-                Cnt: COUNT(IIF((TO_STRING($.Phones[(@.Type = @p0)].Number) = @p1), @p2, $.Name)),
-                List: TO_ARRAY(($.Phones[*].Number + $.Phones[(@.Prefix > $.Salary)].Number))    
+                Cnt: COUNT(IIF((STRING($.Phones[(@.Type = @p0)].Number) = @p1), @p2, $.Name)),
+                List: ARRAY(($.Phones[*].Number + $.Phones[(@.Prefix > $.Salary)].Number))    
             }", 
             (int)PhoneType.Landline, "555", MyMethod());
         }

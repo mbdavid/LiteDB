@@ -24,7 +24,7 @@ namespace LiteDB
                 // instance methods
                 case "ToString":
                     var pars = method.GetParameters();
-                    if (pars.Length == 0) return "TO_STRING(#)";
+                    if (pars.Length == 0) return "STRING(#)";
                     else if (pars.Length == 1 && pars[0].ParameterType == typeof(string)) return "FORMAT(#, @0)";
                     break;
 

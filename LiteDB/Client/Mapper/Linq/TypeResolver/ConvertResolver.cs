@@ -14,15 +14,15 @@ namespace LiteDB
         {
             switch (method.Name)
             {
-                case "ToInt32": return "TO_INT32(@0)";
-                case "ToInt64": return "TO_INT64(@0)";
-                case "ToDouble": return "TO_DOUBLE(@0)";
-                case "ToDecimal": return "TO_DECIMAL(@0)";
+                case "ToInt32": return "INT32(@0)";
+                case "ToInt64": return "INT64(@0)";
+                case "ToDouble": return "DOUBLE(@0)";
+                case "ToDecimal": return "DECIMAL(@0)";
 
-                case "ToDateTime": return "TO_DATE(@0)";
-                case "FromBase64String": return "TO_BINARY(@0)";
-                case "ToBoolean": return "TO_BOOL(@0)";
-                case "ToString": return "TO_STRING(@0)";
+                case "ToDateTime": return "DATE(@0)";
+                case "FromBase64String": return "BINARY(@0)";
+                case "ToBoolean": return "BOOL(@0)";
+                case "ToString": return "STRING(@0)";
             }
 
             return null;

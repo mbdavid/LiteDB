@@ -23,12 +23,12 @@ namespace LiteDB
                 case "AddSeconds": return "DATEADD('s', @0, #)";
                 case "ToString":
                     var pars = method.GetParameters();
-                    if (pars.Length == 0) return "TO_STRING(#)";
+                    if (pars.Length == 0) return "STRING(#)";
                     else if (pars.Length == 1 && pars[0].ParameterType == typeof(string)) return "FORMAT(#, @0)";
                     break;
 
                 // static methods
-                case "Parse": return "TO_DATETIME(@0)";
+                case "Parse": return "DATETIME(@0)";
             };
 
             return null;
@@ -50,7 +50,7 @@ namespace LiteDB
                 case "Hour": return "HOUR(#)";
                 case "Minute": return "MINUTE(#)";
                 case "Second": return "SECOND(#)";
-                case "Date": return "TO_DATETIME(YEAR(#), MONTH(#), DAY(#))";
+                case "Date": return "DATETIME(YEAR(#), MONTH(#), DAY(#))";
             }
 
             return null;
@@ -65,7 +65,7 @@ namespace LiteDB
                 // int year, int month, int day
                 if (pars[0].ParameterType == typeof(int) && pars[1].ParameterType == typeof(int) && pars[2].ParameterType == typeof(int))
                 {
-                    return "TO_DATETIME(@0, @1, @2)";
+                    return "DATETIME(@0, @1, @2)";
                 }
             }
 

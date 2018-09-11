@@ -15,11 +15,11 @@ namespace LiteDB
             switch (method.Name)
             {
                 // instance methods
-                case "ToString": return "TO_STRING(#)";
+                case "ToString": return "STRING(#)";
 
                 // static methods
                 case "NewGuid": return "GUID()";
-                case "Parse": return "TO_GUID(@0)";
+                case "Parse": return "GUID(@0)";
                 case "TryParse": throw new NotSupportedException("There is no TryParse translate. Use Guid.Parse()");
             }
 
@@ -31,7 +31,7 @@ namespace LiteDB
             switch (member.Name)
             {
                 // static properties
-                case "Empty": return "TO_GUID('00000000-0000-0000-0000-000000000000')";
+                case "Empty": return "GUID('00000000-0000-0000-0000-000000000000')";
             }
 
             return null;
@@ -46,7 +46,7 @@ namespace LiteDB
                 // string s
                 if (pars[0].ParameterType == typeof(string))
                 {
-                    return "TO_GUID(@0)";
+                    return "GUID(@0)";
                 }
             }
 

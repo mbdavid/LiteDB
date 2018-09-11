@@ -59,7 +59,7 @@ namespace LiteDB.Tests.Expressions
             t("Items[$.Root = 1].Type = Age", "Items", "Root", "Age");
 
             // predicate + method
-            t("_id = Age + YEAR(TO_DATETIME(2000, 1, DAY(NewField))) AND UPPER(TRIM(Name)) = @0",
+            t("_id = Age + YEAR(DATETIME(2000, 1, DAY(NewField))) AND UPPER(TRIM(Name)) = @0",
                 "_id", "Age", "NewField", "Name");
 
         }
@@ -75,7 +75,7 @@ namespace LiteDB.Tests.Expressions
             // some immutable expression
             t("_id", true);
             t("{ a: 1, n: UPPER(name) }", true);
-            t("TO_GUID('00000000-0000-0000-0000-000000000000')", true);
+            t("GUID('00000000-0000-0000-0000-000000000000')", true);
 
             // using method that are not immutable 
             t("_id + DAY(NOW())", false);

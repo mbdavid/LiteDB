@@ -15,7 +15,7 @@ namespace LiteDB
             switch (method.Name)
             {
                 // instance methods
-                case "ToString": return "TO_STRING(#)";
+                case "ToString": return "STRING(#)";
             };
 
             return null;
@@ -26,7 +26,7 @@ namespace LiteDB
             switch (member.Name)
             {
                 // static properties
-                case "Empty": return "TO_OBJECTID('000000000000000000000000')";
+                case "Empty": return "OBJECTID('000000000000000000000000')";
 
                 // instance properties (not implemented in BsonExpression)
                 // case "CreationTime": return "...(#)";
@@ -44,7 +44,7 @@ namespace LiteDB
                 // string value
                 if (pars[0].ParameterType == typeof(string))
                 {
-                    return "TO_OBJECTID(@0)";
+                    return "OBJECTID(@0)";
                 }
             }
 

@@ -67,7 +67,7 @@
 = true
 = true
 = false
-> TO_ARRAY(names[@ LIKE "J%"])
+> ARRAY(names[@ LIKE "J%"])
 = ["John", "Joana"]
 
 # Array filter using root/current
@@ -79,5 +79,5 @@
 
 # MongoDB examples
 { "_id" : 3, "date" : "October 30", "temps" : [ 18, 6, 8 ] }
-> { date, "temps in Fahrenheit": TO_ARRAY(temps[*]*(9/5)+32)}
+> { date, "temps in Fahrenheit": ARRAY(temps[*]*(9/5)+32)}
 = { "date" : "October 30", "temps in Fahrenheit" : [ 64.4, 42.8, 46.4 ] }

@@ -30,7 +30,7 @@ namespace LiteDB
 
                 // convert methods
                 case "ToArray":
-                case "ToList": return "TO_ARRAY(@0)";
+                case "ToList": return "ARRAY(@0)";
 
                 // date extension
                 case "DateDiff": return "DATEDIFF(@0, @1, @2)";
