@@ -29,6 +29,17 @@ namespace LiteDB
             return this.ToDocument(typeof(T), entity).AsDocument;
         }
 
+        /// <summary>
+        /// Serialize to BsonValue any .NET object based on T type (using mapping rules)
+        /// </summary>
+        public BsonValue Serialize<T>(T obj)
+        {
+            return this.Serialize(typeof(T), obj, 0);
+        }
+
+        /// <summary>
+        /// Serialize to BsonValue any .NET object based on type parameter (using mapping rules)
+        /// </summary>
         public BsonValue Serialize(Type type, object obj)
         {
             return this.Serialize(type, obj, 0);
@@ -39,8 +50,6 @@ namespace LiteDB
             if (++depth > MAX_DEPTH) throw LiteException.DocumentMaxDepth(MAX_DEPTH, type);
 
             if (obj == null) return BsonValue.Null;
-
-            Func<object, BsonValue> custom;
 
             // if is already a bson value
             if (obj is BsonValue) return new BsonValue((BsonValue)obj);
@@ -94,7 +103,7 @@ namespace LiteDB
                 return new BsonValue(obj.ToString());
             }
             // check if is a custom type
-            else if (_customSerializer.TryGetValue(type, out custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
+            else if (_customSerializer.TryGetValue(type, out var custom) || _customSerializer.TryGetValue(obj.GetType(), out custom))
             {
                 return custom(obj);
             }

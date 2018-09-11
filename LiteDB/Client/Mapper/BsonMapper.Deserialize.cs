@@ -8,39 +8,6 @@ namespace LiteDB
 {
     public partial class BsonMapper
     {
-        /// <summary>
-        /// Deserialize a BsonDocument to entity class
-        /// </summary>
-        public virtual object ToObject(Type type, BsonDocument doc)
-        {
-            if (doc == null) throw new ArgumentNullException(nameof(doc));
-
-            // if T is BsonDocument, just return them
-            if (type == typeof(BsonDocument)) return doc;
-
-            return this.Deserialize(type, doc);
-        }
-
-        /// <summary>
-        /// Deserialize a BsonDocument to entity class
-        /// </summary>
-        public virtual T ToObject<T>(BsonDocument doc)
-        {
-            return (T)this.ToObject(typeof(T), doc);
-        }
-
-        /// <summary>
-        /// Deserialize an BsonValue to .NET object typed in T
-        /// </summary>
-        internal T Deserialize<T>(BsonValue value)
-        {
-            if (value == null) return default(T);
-
-            var result = this.Deserialize(typeof(T), value);
-
-            return (T)result;
-        }
-
         #region Basic direct .NET convert types
 
         // direct bson types
@@ -72,7 +39,43 @@ namespace LiteDB
 
         #endregion
 
-        internal object Deserialize(Type type, BsonValue value)
+        /// <summary>
+        /// Deserialize a BsonDocument to entity class
+        /// </summary>
+        public virtual object ToObject(Type type, BsonDocument doc)
+        {
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
+
+            // if T is BsonDocument, just return them
+            if (type == typeof(BsonDocument)) return doc;
+
+            return this.Deserialize(type, doc);
+        }
+
+        /// <summary>
+        /// Deserialize a BsonDocument to entity class
+        /// </summary>
+        public virtual T ToObject<T>(BsonDocument doc)
+        {
+            return (T)this.ToObject(typeof(T), doc);
+        }
+
+        /// <summary>
+        /// Deserialize a BsonValue to .NET object typed in T
+        /// </summary>
+        public T Deserialize<T>(BsonValue value)
+        {
+            if (value == null) return default(T);
+
+            var result = this.Deserialize(typeof(T), value);
+
+            return (T)result;
+        }
+
+        /// <summary>
+        /// Deserilize a BsonValue to .NET object based on type parameter
+        /// </summary>
+        public object Deserialize(Type type, BsonValue value)
         {
             // null value - null returns
             if (value.IsNull) return null;
