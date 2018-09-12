@@ -94,21 +94,31 @@ namespace LiteDB.Tests.Engine
 
                 var all = db.ExecuteValues<string>("SELECT name FROM names");
 
-                // startsWith
+                // LIKE are case insensitive
 
                 var r0 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'Mau%'");
-
-                Assert.AreEqual(1, r0.Length); 
-
                 var r1 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'MAU%'");
-
-                Assert.AreEqual(2, r1.Length);
-
                 var r2 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'mau%'");
-                var r3 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'MAU%'");
 
+                Assert.AreEqual(5, r0.Length);
+                Assert.AreEqual(5, r1.Length);
+                Assert.AreEqual(5, r2.Length);
 
+                // only `mauricio´
+                var r3 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'ma%ci%'");
+                var r4 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'maUriCIO");
 
+                Assert.AreEqual(4, r3.Length);
+                Assert.AreEqual(4, r4.Length);
+
+                var r5 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'marc_o");
+
+                Assert.AreEqual(0, r5.Length);
+
+                // `marcelo`
+                var r6 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'marc__o");
+
+                Assert.AreEqual(1, r6.Length);
 
             }
         }
