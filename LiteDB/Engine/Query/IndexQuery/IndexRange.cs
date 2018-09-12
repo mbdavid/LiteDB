@@ -9,21 +9,20 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexRange : Index
     {
-        private BsonValue _start;
-        private BsonValue _end;
+        private readonly BsonValue _start;
+        private readonly BsonValue _end;
 
-        private bool _startEquals;
-        private bool _endEquals;
+        private readonly bool _startEquals;
+        private readonly bool _endEquals;
 
         public IndexRange(string name, BsonValue start, BsonValue end, bool startEquals, bool endEquals, int order)
             : base(name, order)
         {
-            // if order as desc, use swap start/end values
-            _start = order == Query.Ascending ? start : end;
-            _end = order == Query.Ascending ? end : start;
+            _start = start;
+            _end = end;
 
-            _startEquals = order == Query.Ascending ? startEquals : endEquals;
-            _endEquals = order == Query.Ascending ? endEquals : startEquals;
+            _startEquals = startEquals;
+            _endEquals = endEquals;
         }
 
         internal override uint GetCost(CollectionIndex index)
@@ -37,21 +36,44 @@ namespace LiteDB.Engine
 
         internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
+            // if order are desc, swap start/end values
+            var start = this.Order == Query.Ascending ? _start : _end;
+            var end = this.Order == Query.Ascending ? _end : _start;
+
+            var startEquals = this.Order == Query.Ascending ? _startEquals : _endEquals;
+            var endEquals = this.Order == Query.Ascending ? _endEquals : _startEquals;
+
             // find first indexNode (or get from head/tail if Min/Max value)
-            var node = 
-                _start.Type == BsonType.MinValue ? indexer.GetNode(index.HeadNode) :
-                _start.Type == BsonType.MaxValue ? indexer.GetNode(index.TailNode) :
-                indexer.Find(index, _start, true, this.Order);
+            var first = 
+                start.Type == BsonType.MinValue ? indexer.GetNode(index.HeadNode) :
+                start.Type == BsonType.MaxValue ? indexer.GetNode(index.TailNode) :
+                indexer.Find(index, start, true, this.Order);
+
+            var node = first;
+
+            // if startsEquals, return all equals value from start linked list
+            if (startEquals && node != null)
+            {
+                // going backward in same value list to get first value
+                while (!node.NextPrev(0, -this.Order).IsEmpty && ((node = indexer.GetNode(node.NextPrev(0, -this.Order))).Key.CompareTo(start) == 0))
+                {
+                    if (node.IsHeadTail(index)) yield break;
+
+                    yield return node;
+                }
+
+                node = first;
+            }
 
             // returns (or not) equals start value
             while (node != null)
             {
-                var diff = node.Key.CompareTo(_start);
+                var diff = node.Key.CompareTo(start);
 
                 // if current value are not equals start, go out this loop
                 if (diff != 0) break;
 
-                if (_startEquals && !node.IsHeadTail(index))
+                if (startEquals && !node.IsHeadTail(index))
                 {
                     yield return node;
                 }
@@ -62,9 +84,9 @@ namespace LiteDB.Engine
             // navigate using next[0] do next node - if less or equals returns
             while (node != null)
             {
-                var diff = node.Key.CompareTo(_end);
+                var diff = node.Key.CompareTo(end);
 
-                if (_endEquals && diff == 0 && !node.IsHeadTail(index))
+                if (endEquals && diff == 0 && !node.IsHeadTail(index))
                 {
                     yield return node;
                 }

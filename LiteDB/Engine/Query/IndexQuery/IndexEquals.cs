@@ -47,11 +47,24 @@ namespace LiteDB.Engine
 
             if (index.Unique == false)
             {
-                // navigate using next[0] do next node - if equals, returns
+                // navigate in both sides to return all nodes found
+                var first = node;
+
+                // first go fordward
                 while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(_value) == 0))
                 {
                     if (node.IsHeadTail(index)) yield break;
 
+                    yield return node;
+                }
+
+                node = first;
+                
+                // and than, go backward
+                while (!node.Prev[0].IsEmpty && ((node = indexer.GetNode(node.Prev[0])).Key.CompareTo(_value) == 0))
+                {
+                    if (node.IsHeadTail(index)) yield break;
+                
                     yield return node;
                 }
             }

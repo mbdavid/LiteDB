@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
     internal class IndexLike : Index
     {
-        private string _startsWith;
-        private bool _testSqlLike;
-        private string _pattern;
+        private readonly string _startsWith;
+        private readonly bool _equals;
+        private readonly bool _testSqlLike;
+        private readonly string _pattern;
 
         public IndexLike(string name, BsonValue value, int order)
             : base(name, order)
         {
             _pattern = value.AsString;
             _startsWith = _pattern.SqlLikeStartsWith(out _testSqlLike);
+            _equals = _pattern == _startsWith;
         }
 
         internal override uint GetCost(CollectionIndex index)
@@ -37,7 +40,7 @@ namespace LiteDB.Engine
         {
             // if contains startsWith string, search using index Find
             // otherwise, use index full scan and test results
-            return _startsWith.Length == 0 ? 
+            return _startsWith.Length > 0 ? 
                 this.ExecuteStartsWith(indexer, index) : 
                 this.ExecuteLike(indexer, index);
         }
@@ -45,26 +48,67 @@ namespace LiteDB.Engine
         private IEnumerable<IndexNode> ExecuteStartsWith(IndexService indexer, CollectionIndex index)
         {
             // find first indexNode
-            var node = indexer.Find(index, _startsWith, true, this.Order);
+            var first = indexer.Find(index, _startsWith, true, this.Order);
+            var node = first;
 
+            // if collection exists but are empty
+            if (first == null) yield break;
+
+            // first, go backward to get all same values
             while (node != null)
             {
+                // if current node are edges exit while
+                if (node.IsHeadTail(index)) break;
+
                 var valueString = node.Key.AsString;
 
-                // value will not be null because null occurs before string (bsontype sort order)
-                if (valueString.StartsWith(_startsWith))
+                if (_equals ?
+                    valueString.Equals(_startsWith, StringComparison.OrdinalIgnoreCase) :
+                    valueString.StartsWith(_startsWith, StringComparison.OrdinalIgnoreCase))
                 {
                     // must still testing SqlLike method for rest of pattern - only if exists more to test (avoid slow SqlLike test)
-                    if (!node.DataBlock.IsEmpty && (_testSqlLike && valueString.SqlLike(_pattern)))
+                    if ((_testSqlLike == false) ||
+                        (_testSqlLike == true && valueString.SqlLike(_pattern) == true))
                     {
                         yield return node;
                     }
                 }
                 else
                 {
-                    break; // if no more starts with, stop scanning
+                    break;
                 }
 
+                node = indexer.GetNode(node.NextPrev(0, -this.Order));
+            }
+
+            // move fordward
+            node = indexer.GetNode(first.NextPrev(0, this.Order));
+
+            while (node != null)
+            {
+                // if current node are edges exit while
+                if (node.IsHeadTail(index)) break;
+
+                var valueString = node.Key.AsString;
+
+                if (_equals ?
+                    valueString.Equals(_pattern, StringComparison.OrdinalIgnoreCase) :
+                    valueString.StartsWith(_startsWith, StringComparison.OrdinalIgnoreCase))
+                {
+                    // must still testing SqlLike method for rest of pattern - only if exists more to test (avoid slow SqlLike test)
+                    if (node.DataBlock.IsEmpty == false &&
+                        ((_testSqlLike == false) ||
+                        (_testSqlLike == true && valueString.SqlLike(_pattern) == true)))
+                    {
+                        yield return node;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+
+                // first, go backward to get all same values
                 node = indexer.GetNode(node.NextPrev(0, this.Order));
             }
         }

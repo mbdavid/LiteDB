@@ -74,5 +74,43 @@ namespace LiteDB.Tests.Engine
                 Assert.AreEqual(1, indexes.Count("name = 'text'"));
             }
         }
+
+        [TestMethod]
+        public void Index_With_Like()
+        {
+            using (var db = new LiteEngine())
+            {
+                db.Insert("names", new[] {
+                    new BsonDocument { ["name"] = "marcelo" },
+                    new BsonDocument { ["name"] = "mauricio" },
+                    new BsonDocument { ["name"] = "Mauricio" },
+                    new BsonDocument { ["name"] = "MAUricio" },
+                    new BsonDocument { ["name"] = "MAURICIO" },
+                    new BsonDocument { ["name"] = "mauRO" },
+                    new BsonDocument { ["name"] = "ANA" }
+                }, BsonAutoId.Int32);
+
+                db.EnsureIndex("names", "idx_name", "name", false);
+
+                var all = db.ExecuteValues<string>("SELECT name FROM names");
+
+                // startsWith
+
+                var r0 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'Mau%'");
+
+                Assert.AreEqual(1, r0.Length); 
+
+                var r1 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'MAU%'");
+
+                Assert.AreEqual(2, r1.Length);
+
+                var r2 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'mau%'");
+                var r3 = db.ExecuteValues<string>("SELECT name FROM names WHERE name LIKE 'MAU%'");
+
+
+
+
+            }
+        }
     }
 }

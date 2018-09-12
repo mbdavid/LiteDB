@@ -368,8 +368,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Find first node that index match with value. If not found but sibling = true, returns near node (only non-unique index)
-        /// Before find, value must be normalized
+        /// Find first node that index match with value . 
+        /// If index are unique, return unique value - if index are not unique, return first found (can start, middle or end)
+        /// If not found but sibling = true, returns near node (only non-unique index)
         /// </summary>
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
@@ -388,35 +389,15 @@ namespace LiteDB.Engine
                         return next.IsHeadTail(index) ? null : next;
                     }
 
-                    // if equals, test for duplicates - go back to first occurs on duplicate values
+                    // if equals, return index node
                     if (diff == 0)
                     {
-                        // if unique index has no duplicates - just return node
-                        if (index.Unique) return next;
-
-                        return this.FindBoundary(index, next, value, order * -1, i);
+                        return next;
                     }
                 }
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Goto the first/last occurrence of this index value
-        /// </summary>
-        private IndexNode FindBoundary(CollectionIndex index, IndexNode cur, BsonValue value, int order, int level)
-        {
-            var last = cur;
-
-            while (cur.Key.CompareTo(value) == 0)
-            {
-                last = cur;
-                cur = this.GetNode(cur.NextPrev(0, order));
-                if (cur.IsHeadTail(index)) break;
-            }
-
-            return last;
         }
 
         #endregion

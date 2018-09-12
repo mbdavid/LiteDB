@@ -34,13 +34,12 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Implement SqlLike in C# string 
+        /// Implement SqlLike in C# string - based on
         /// https://stackoverflow.com/a/8583383/3286260
+        /// I remove support for [ and ] to avoid missing close brackets
         /// </summary>
         public static bool SqlLike(this string str, string pattern)
         {
-            //TODO remove ToUpper in SqlLike (must be tested outside)
-
             var isMatch = true;
             var isWildCardOn = false;
             var isCharWildCardOn = false;
@@ -49,7 +48,7 @@ namespace LiteDB
             var endOfPattern = false;
             var lastWildCard = -1;
             var patternIndex = 0;
-            var set = new List<char>();
+            //var set = new List<char>();
             var p = '\0';
 
             for (var i = 0; i < str.Length; i++)
@@ -86,45 +85,6 @@ namespace LiteDB
                         isCharWildCardOn = true;
                         patternIndex++;
                     }
-                    else if (p == '[')
-                    {
-                        if (pattern[++patternIndex] == '^')
-                        {
-                            isNotCharSetOn = true;
-                            patternIndex++;
-                        }
-                        else
-                        {
-                            isCharSetOn = true;
-                        }
-
-                        set.Clear();
-
-                        if (pattern[patternIndex + 1] == '-' && pattern[patternIndex + 3] == ']')
-                        {
-                            var start = char.ToUpper(pattern[patternIndex]);
-                            patternIndex += 2;
-                            var end = char.ToUpper(pattern[patternIndex]);
-
-                            if (start <= end)
-                            {
-                                for (var ci = start; ci <= end; ci++)
-                                {
-                                    set.Add(ci);
-                                }
-                            }
-
-                            patternIndex++;
-                        }
-
-                        while (patternIndex < pattern.Length && pattern[patternIndex] != ']')
-                        {
-                            set.Add(pattern[patternIndex]);
-                            patternIndex++;
-                        }
-
-                        patternIndex++;
-                    }
                 }
 
                 if (isWildCardOn)
@@ -141,9 +101,10 @@ namespace LiteDB
                 }
                 else if (isCharSetOn || isNotCharSetOn)
                 {
-                    var charMatch = (set.Contains(char.ToUpper(c)));
+                    //var charMatch = (set.Contains(char.ToUpper(c))); // -- always "false" - remove [abc] support
+                    //if ((isNotCharSetOn && charMatch) || (isCharSetOn && !charMatch))
 
-                    if ((isNotCharSetOn && charMatch) || (isCharSetOn && !charMatch))
+                    if (isCharSetOn)
                     {
                         if (lastWildCard >= 0)
                         {
@@ -201,29 +162,29 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get first string before any %, _, [... used to index startswith - out if has more string pattern after found wildcard
+        /// Get first string before any `%` or `_` ... used to index startswith - out if has more string pattern after found wildcard
         /// </summary>
         public static string SqlLikeStartsWith(this string str, out bool hasMore)
         {
-            var sb = new StringBuilder();
+            var i = 0;
+            var len = str.Length;
+            var c = '\0';
 
-            hasMore = true;
-
-            for (int i = 0; i < str.Length; i++)
+            while(i < len)
             {
-                var c = str[i];
+                c = str[i];
 
-                if (c == '%' || c == '[' || c == '_')
+                if (c == '%' || c == '_')
                 {
-                    if (i == str.Length - 1) hasMore = false;
-
                     break;
                 }
 
-                sb.Append(c);
+                i++;
             }
 
-            return sb.ToString();
+            hasMore = !(i == len || i == len - 1);
+
+            return str.Substring(0, i);
         }
     }
 }
