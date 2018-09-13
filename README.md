@@ -1,6 +1,6 @@
 # LiteDB v5
 
-> What can be expected in v5? Lot of changes...
+> What's new in v5?
 
 - New Storage Engine
     - New WAL (Write-Ahead Logging) for fast durability
@@ -10,18 +10,18 @@
     - No lock for reader
     - Up to 32 indexes per collection
     - Atomic multi-document transactions
-    - NET45 and NETStandard 2 support only (drop NET35/40)
-    - Single process only - optimazed for multi thread
+    - NET45 and NETStandard 2 support only
 
 - New BsonExpression
     - New super-fast tokenizer parser
     - Clean syntax with optional use of `$`
     - Input/Output parameter support: `@name`
     - Simplified document notation `{ _id, name, year }`
+    - Support partial BSON document: read/deserialize only used data in query
     
 - System Collections
     - Support query over internal collection 
-    - `$transactions`, `$open_cursors`, `$cache`, `$dump`
+    - `$transactions`, `$database`, `$dump`
 
 - New QueryBuilder
     - Fluent API for write queries
@@ -29,6 +29,7 @@
     - Support OrderBy/GroupBy expressions
     - Query optimization with Explain Plan
     - Aggregate functions
+    - LINQ to `BsonExpression` query support
     
 - New SQL-Like syntax
     - Simple SQL syntax for any command
@@ -38,9 +39,9 @@
 ```SQL
  SELECT { _id, fullname: name.first + ' ' + name.last, age: 2018 - YEAR(birthday) }
    FROM customers
+INCLUDE orders
   WHERE name LIKE 'John%'
     AND _id BETWEEN 1 AND 2000
-INCLUDE orders
   ORDER BY name
   LIMIT 10
 
@@ -54,23 +55,19 @@ SELECT { city, count: COUNT($), high_pop: MAX(pop) }
     - Based on SQL commands
     - Show results in grid or as text
     - Multi tabs, multi threads, multi transactions
+
+> What was droped?
+
+- Single process only - optimazed for multi thread (open file as exclusive mode)
+- Datafile Encryption (will be external plugin)
+- Drop .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
     
-    
-.. but still...    
+.. but still...   
+ 
 - Embedded support
 - Single database file 
 - Single DLL, no dependency and 100% C#
 - 100% free open source
-
-### Very first performance test
-- 4 concurrent threads
-- 4 collections
-- 50,000 insert each thread/collection
-
-|              |   v4    |    v5   |
-|--------------|---------|---------|
-|SSD disk      | 3,274ms | 1,612ms |
-|HDD 7200 disk | 7,253ms | 1,659ms |
     
 > Roadmap: late in 2018 :smile:
     
