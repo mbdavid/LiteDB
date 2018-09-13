@@ -10,7 +10,7 @@
     - No lock for reader
     - Up to 32 indexes per collection
     - Atomic multi-document transactions
-    - NET45 and NETStandard 2 support only
+    - PageSize: 8KB
 
 - New BsonExpression
     - New super-fast tokenizer parser
@@ -61,6 +61,7 @@ SELECT { city, count: COUNT($), high_pop: MAX(pop) }
 - Single process only - optimazed for multi thread (open file as exclusive mode)
 - Datafile Encryption (will be external plugin)
 - Drop .NET 3.5/4.0 - works only in .NET 4.5+ and .NETStandard 2.0
+- Shell commands (use SQL commands)
     
 .. but still...   
  
