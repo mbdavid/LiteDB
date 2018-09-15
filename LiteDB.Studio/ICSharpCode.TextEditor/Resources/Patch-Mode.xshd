@@ -1,0 +1,37 @@
+﻿<?xml version="1.0"?>
+
+<SyntaxDefinition name = "Patch" extensions = ".patch;.diff">
+	<!--<Digits name = "Digits" bold = "false" italic = "false" color = "DarkBlue"/>-->
+	
+	<RuleSets>
+		<RuleSet ignorecase = "false">
+			<Delimiters>~!%^*()-+=|\#/{}[]:;"'&lt;&gt; , .?</Delimiters>
+			
+			<Span name = "IndexLine" bold="true" italic="false" color="Green" stopateol = "true">
+				<Begin>Index: </Begin>
+			</Span>
+			<Span name = "IndexUnderline" bold="false" italic="false" color="DarkRed" stopateol = "true">
+				<Begin>==</Begin>
+			</Span>
+			<Span name = "IndexOldFile" bold="false" italic="false" color="DarkRed" stopateol = "true">
+				<Begin>---</Begin>
+			</Span>
+			<Span name = "IndexNewFile" bold="false" italic="false" color="DarkRed" stopateol = "true">
+				<Begin>+++</Begin>
+			</Span>
+			<Span name = "LocationMarker" bold="false" italic="false" color="Purple" stopateol = "true">
+				<Begin>@@</Begin>
+			</Span>
+			<Span name = "RemovedLine" bold="false" italic="false" color="#339966" stopateol = "true">
+				<Begin>-</Begin>
+			</Span>
+			<Span name = "AddedLine" bold="false" italic="false" color="Navy" stopateol = "true" >
+				<Begin>+</Begin>
+			</Span>
+			<Span name = "NormalLine" bold="false" italic="false" color="SystemColors.WindowText" stopateol = "true" >
+				<Begin> </Begin>
+			</Span>
+		</RuleSet>
+	</RuleSets>
+</SyntaxDefinition>
+

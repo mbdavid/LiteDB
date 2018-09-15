@@ -11,7 +11,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WinFormsSyntaxHighlighter;
 
 namespace LiteDB.Studio
 {
@@ -139,7 +138,7 @@ namespace LiteDB.Studio
             cell.Tag = value;
         }
 
-        public static void BindBsonData(this TextBox txt, TaskData data)
+        public static void BindBsonData(this ICSharpCode.TextEditor.TextEditorControl txt, TaskData data)
         {
             var index = 0;
             var sb = new StringBuilder();
@@ -154,13 +153,6 @@ namespace LiteDB.Studio
                 {
                     sb.AppendLine($"[{index++ + 1}]:");
                     sb.AppendLine(JsonSerializer.Serialize(value, true, true));
-
-                    // limit in 300kb
-                    if (sb.Length > 300000)
-                    {
-                        data.LimitExceeded = true;
-                        break;
-                    }
                 }
 
                 if (data.LimitExceeded)
@@ -175,7 +167,6 @@ namespace LiteDB.Studio
             }
 
             txt.SuspendLayout();
-            txt.SetVScrollPos(0);
             txt.Text = sb.ToString();
             
             txt.ResumeLayout();
@@ -194,7 +185,7 @@ namespace LiteDB.Studio
             grd.DataSource = null;
         }
 
-        public static void BindErrorMessage(this TextBox txt, string sql, Exception ex)
+        public static void BindErrorMessage(this ICSharpCode.TextEditor.TextEditorControl txt, string sql, Exception ex)
         {
             var sb = new StringBuilder();
 
@@ -227,51 +218,6 @@ namespace LiteDB.Studio
 
             txt.ForeColor = Color.Red;
             txt.Text = sb.ToString();
-            txt.SetHScrollPos(0);
-        }
-
-        public static void DefineSyntaxHighlighter(RichTextBox textBox)
-        {
-            // SyntaxHighlighter source code from
-            // https://github.com/sinairv/WinFormsSyntaxHighlighter
-
-            var syntaxHighlighter = new SyntaxHighlighter(textBox, 1000);
-
-            // comment
-            syntaxHighlighter.AddPattern(new PatternDefinition(new Regex(@"--.*", RegexOptions.Compiled)),
-                new SyntaxStyle(Color.Green));
-
-            // double quote strings
-            syntaxHighlighter.AddPattern(
-                new PatternDefinition(@"\""([^""]|\""\"")+\"""),
-                new SyntaxStyle(Color.Red));
-
-            // single quote strings
-            syntaxHighlighter.AddPattern(
-                new PatternDefinition(@"\'([^']|\'\')+\'"),
-                new SyntaxStyle(Color.Red));
-
-            // parameter
-            syntaxHighlighter.AddPattern(new PatternDefinition(new Regex(@"@\w+", RegexOptions.Compiled)),
-                new SyntaxStyle(Color.Purple));
-
-            // numbers
-            //syntaxHighlighter.AddPattern(
-            //    new PatternDefinition(@"\d+\.\d+|\d+"),
-            //    new SyntaxStyle(Color.Purple));
-
-            syntaxHighlighter.AddPattern(
-                new PatternDefinition("+", "-", ">", "<", "&", "|", "="),
-                new SyntaxStyle(Color.Gray));
-
-            // sql keywords
-            syntaxHighlighter.AddPattern(
-                new PatternDefinition(SqlKeywords.Keywords),
-                new SyntaxStyle(Color.Blue));
-
-            // expression method names
-            syntaxHighlighter.AddPattern(new PatternDefinition(SqlKeywords.Methods),
-                new SyntaxStyle(color: Color.FromArgb(255, 0, 255), bold: false, italic: false));
         }
     }
 }

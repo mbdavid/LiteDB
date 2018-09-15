@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+
+<!-- syntaxdefinition for Java 2001 by Jonathan Pierce & Mike Krueger -->
+
+<SyntaxDefinition name = "Java" extensions = ".java">
+	
+	<Properties>
+		<Property name="LineComment" value="//"/>
+	</Properties>
+	
+	<Digits name = "Digits" bold = "false" italic = "false" color = "DarkBlue"/>
+	
+	<RuleSets>
+		<RuleSet ignorecase = "false">
+			<Delimiters>~!%^*()-+=|\#/{}[]:;"'&lt;&gt; , .?</Delimiters>
+		
+			<Span name = "LINECOMMENT" rule = "TestSet" bold = "false" italic = "true" color = "SlateGray" stopateol = "true">
+				<Begin>//</Begin>
+			</Span>
+		
+			<Span name = "BLOCKCOMMENT" rule = "TestSet" bold = "false" italic = "true" color = "SlateGray" stopateol = "false">
+				<Begin>/*</Begin>
+				<End>*/</End>
+			</Span>
+		
+			<Span name = "STRING" bold = "false" italic = "false" color = "Magenta" stopateol = "true" escapecharacter="\">
+				<Begin>"</Begin>
+				<End>"</End>
+			</Span>
+			
+			<Span name = "CHAR" bold = "false" italic = "false" color = "Magenta" stopateol = "true" escapecharacter="\">
+				<Begin>'</Begin>
+				<End>'</End>
+			</Span>
+		
+			<MarkPrevious bold = "true" italic = "false" color = "MidnightBlue">(</MarkPrevious>
+		
+			<KeyWords name = "Punctuation" bold = "false" italic = "false" color = "DarkGreen">
+				<Key word = "?" />
+				<Key word = "," />
+				<Key word = "." />
+				<Key word = "(" />
+				<Key word = ")" />
+				<Key word = "[" />
+				<Key word = "]" />
+				<Key word = "{" />
+				<Key word = "}" />
+				<Key word = "+" />
+				<Key word = "-" />
+				<Key word = "/" />
+				<Key word = "%" />
+				<Key word = "*" />
+				<Key word = "&lt;" />
+				<Key word = "&gt;" />
+				<Key word = "^" />
+				<Key word = "!" />
+				<Key word = "|" />
+			</KeyWords>
+		
+		
+		
+			<KeyWords name = "AccessKeywords" bold="true" italic="false" color="Black">
+				<Key word = "this" />
+				<Key word = "super" />
+			</KeyWords>
+		
+			<KeyWords name = "OperatorKeywords" bold="true" italic="false" color="DarkCyan">
+				<Key word = "new" />
+				<Key word = "instanceof" />
+				<Key word = "true" />
+				<Key word = "false" />
+			</KeyWords>
+		
+			<KeyWords name = "SelectionStatements" bold="true" italic="false" color="Blue">
+				<Key word = "else" />
+				<Key word = "if" />
+				<Key word = "switch" />
+				<Key word = "case" />
+			</KeyWords>
+		
+			<KeyWords name = "IterationStatements" bold="true" italic="false" color="Blue">
+				<Key word = "do" />
+				<Key word = "for" />
+				<Key word = "while" />
+			</KeyWords>
+		
+			<KeyWords name = "JumpStatements" bold="false" italic="false" color="Navy">
+				<Key word = "break" />
+				<Key word = "continue" />
+				<Key word = "default" />
+				<Key word = "goto" />
+				<Key word = "return" />
+			</KeyWords>
+		
+			<KeyWords name = "ExceptionHandlingStatements" bold="true" italic="false" color="Teal">
+				<Key word = "try" />
+				<Key word = "throw" />
+				<Key word = "catch" />
+				<Key word = "finally" />
+			</KeyWords>
+		
+		
+			<KeyWords name = "ValueTypes" bold="true" italic="false" color="Red">
+				<Key word = "boolean" />
+				<Key word = "double" />
+				<Key word = "int" />
+				<Key word = "short" />
+				<Key word = "long" />
+				<Key word = "float" />
+				<Key word = "byte" />
+				<Key word = "char" />
+			</KeyWords>
+		
+			<KeyWords name = "ReferenceTypes" bold="false" italic="false" color="Red">
+				<Key word = "class" />
+				<Key word = "interface" />
+				<Key word = "object" />
+			</KeyWords>
+		
+			<KeyWords name = "Void" bold="false" italic="false" color="Red">
+				<Key word = "void" />
+			</KeyWords>
+		
+			
+			<KeyWords name = "Modifiers" bold="false" italic="false" color="Brown">
+				<Key word = "abstract" />
+				<Key word = "const" />
+				<Key word = "static" />
+				<Key word = "final" />
+				<Key word = "native" />
+				<Key word = "extends" />
+				<Key word = "implements" />
+				<Key word = "volatile" />
+				<Key word = "transient" />
+				<Key word = "throws" />
+				<Key word = "strictfp" />
+				<Key word = "synchronized" />
+			</KeyWords>
+		
+			<KeyWords name = "AccessModifiers" bold="true" italic="false" color="Blue">
+				<Key word = "public" />
+				<Key word = "protected" />
+				<Key word = "private" />
+			</KeyWords>
+		
+			<KeyWords name = "NameSpaces" bold="true" italic="false" color="Green">
+				<Key word = "package" />
+				<Key word = "import" />
+			</KeyWords>
+		
+			<KeyWords name = "Literals" bold="true" italic="false" color="Black">
+			<Key word = "null" />
+			</KeyWords>
+		</RuleSet>
+		
+		<RuleSet name = "TestSet" ignorecase = "true">
+			<Delimiters>~!%^*()-+=|\#/{}[]:;"'&lt;&gt; , .?</Delimiters>
+			<KeyWords name = "Todoword" bold="true" italic="true" color="Red">
+				<Key word = "TODO" />
+			</KeyWords>
+			
+			<KeyWords name = "JAVADOC comments" bold="true" italic="true" color="DarkGray">
+				<Key word = "@author" />
+				<Key word = "@version" />
+				<Key word = "@param" />
+				<Key word = "@return" />
+				<Key word = "@exception" />
+				<Key word = "@throws" />
+				<Key word = "@see" />
+				<Key word = "@since" />
+				<Key word = "@serial" />
+				<Key word = "@serialField" />
+				<Key word = "@serialData" />
+				<Key word = "@deprecated" />
+			</KeyWords>
+			
+		</RuleSet>
+	</RuleSets>
+
+</SyntaxDefinition>

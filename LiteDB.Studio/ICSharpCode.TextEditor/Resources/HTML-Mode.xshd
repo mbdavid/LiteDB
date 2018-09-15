@@ -1,0 +1,385 @@
+<?xml version="1.0"?>
+
+<!-- syntaxdefinition for HTML 2000 by Mike Krueger -->
+
+<SyntaxDefinition name = "HTML" extensions = ".htm;.html">
+	
+	<Digits   name = "Digits"   bold = "false" italic = "false" color = "DarkBlue"/>
+
+	<RuleSets>
+		<RuleSet ignorecase = "true">
+			<!-- It is not necessary to define span-delimiting characters as delimiters -->
+			<Delimiters></Delimiters>
+		
+			<Span name="Comment" bold="false" italic="false" color="DarkSlateGray" stopateol="false">
+				<Begin>&lt;!--</Begin>
+				<End>--&gt;</End>
+			</Span>
+			<Span name="ScriptTag" rule="JavaScriptSet" bold="false" italic="false" color="SpringGreen" stopateol="false">
+				<Begin>&lt;script&gt;</Begin>
+				<End>&lt;/script&gt;</End>
+			</Span>
+			<Span name="JavaScriptTag" rule="JavaScriptSet" bold="false" italic="false" color="SpringGreen" stopateol="false">
+				<Begin>&lt;script lang="JavaScript"&gt;</Begin>
+				<End>&lt;/script&gt;</End>
+			</Span>
+			<Span name="JScriptTag" bold="false" italic="false" color="SpringGreen" stopateol="false">
+				<Begin>&lt;script lang="JScript"&gt;</Begin>
+				<End>&lt;/script&gt;</End>
+			</Span>
+			<Span name="VBScriptTag" bold="false" italic="false" color="SpringGreen" stopateol="false">
+				<Begin>&lt;script lang="VBScript"&gt;</Begin>
+				<End>&lt;/script&gt;</End>
+			</Span>
+			<Span name="UnknownScriptTag" bold="false" italic="false" color="SpringGreen" stopateol="false">
+				<Begin>&lt;script@C</Begin>
+				<End>&lt;/script&gt;</End>
+			</Span>
+			<Span name="HtmlTag" rule="HtmlTagSet" bold="false" italic="false" color="DarkMagenta" stopateol="false">
+				<Begin>&lt;</Begin>
+				<End>&gt;</End>
+			</Span>
+			
+			<Span name="EntityReference" rule="EntityReferenceSet" bold="false" italic="false" color="Blue" stopateol="true">
+				<Begin>&amp;</Begin>
+				<End>;</End>
+			</Span>
+
+		</RuleSet>
+		
+		<RuleSet name="JavaScriptSet" reference="JavaScript" />
+		
+		<RuleSet name="EntityReferenceSet" ignorecase="false">
+			<KeyWords name = "Entities" bold="false" italic="false" color="Green">
+			    <Key word = "aacute" />
+			    <Key word = "agrave" />
+			    <Key word = "acirc" />
+			    <Key word = "amp" />
+			    <Key word = "atilde" />
+			    <Key word = "aring" />
+			    <Key word = "auml" />
+			    <Key word = "aelig" />
+			    <Key word = "ccedil" />
+			    <Key word = "copy" />
+			    <Key word = "eacute" />
+			    <Key word = "egrave" />
+			    <Key word = "ecirc" />
+			    <Key word = "euml" />
+			    <Key word = "iacute" />
+			    <Key word = "igrave" />
+			    <Key word = "icirc" />
+			    <Key word = "iuml" />
+			    <Key word = "eth" />
+			    <Key word = "gt" />
+			    <Key word = "lt" />
+			    <Key word = "nbsp" />
+			    <Key word = "ntilde" />
+			    <Key word = "oacute" />
+			    <Key word = "ograve" />
+			    <Key word = "ocirc" />
+			    <Key word = "otilde" />
+			    <Key word = "ouml" />
+			    <Key word = "oslash" />
+			    <Key word = "quot" />
+			    <Key word = "reg" />
+			    <Key word = "szlig" />
+			    <Key word = "uacute" />
+			    <Key word = "ugrave" />
+			    <Key word = "ucirc" />
+			    <Key word = "uuml" />
+			    <Key word = "yacute" />
+			    <Key word = "thorn" />
+			    <Key word = "trade" />
+			    <Key word = "yuml" />
+			</KeyWords>		
+		</RuleSet>
+		
+		<RuleSet name="HtmlTagSet" ignorecase="false">
+			<Delimiters>/=</Delimiters>
+			
+			<Span name="String" bold="false" italic="false" color="Blue" stopateol="true">
+				<Begin>&quot;</Begin>
+				<End>&quot;</End>
+			</Span>
+			
+			<Span name="Char" bold="false" italic="false" color="Blue" stopateol="true">
+				<Begin>&apos;</Begin>
+				<End>&apos;</End>
+			</Span>
+			
+			<MarkPrevious bold="false" italic="false" color="Red">=</MarkPrevious>
+			
+			<KeyWords name="Slash" bold="false" italic="false" color="DarkMagenta">
+				<Key word="/" />
+			</KeyWords>
+			
+			<KeyWords name="Assignment" bold="false" italic="false" color="Blue">
+				<Key word="=" />
+			</KeyWords>
+			
+			<KeyWords name = "Tags" bold="false" italic="false" color="DarkMagenta">
+			    <Key word = "!DOCTYPE" />
+			    <Key word = "A" />
+			    <Key word = "ABBR" />
+			    <Key word = "ACRONYM" />
+			    <Key word = "ADDRESS" />
+			    <Key word = "APPLET" />
+			    <Key word = "AREA" />
+			    <Key word = "B" />
+			    <Key word = "BASE" />
+			    <Key word = "BASEFONT" />
+			    <Key word = "BGSOUND" />
+			    <Key word = "BDO" />
+			    <Key word = "BIG" />
+			    <Key word = "BLINK" />
+			    <Key word = "BLOCKQUOTE" />
+			    <Key word = "BODY" />
+			    <Key word = "BR" />
+			    <Key word = "BUTTON" />
+			    <Key word = "CAPTION" />
+			    <Key word = "CENTER" />
+			    <Key word = "CITE" />
+			    <Key word = "CODE" />
+			    <Key word = "COL" />
+			    <Key word = "COLGROUP" />
+			    <Key word = "COMMENT" />
+			    <Key word = "DD" />
+			    <Key word = "DEL" />
+			    <Key word = "DFN" />
+			    <Key word = "DIR" />
+			    <Key word = "DIV" />
+			    <Key word = "DL" />
+			    <Key word = "DT" />
+			    <Key word = "EM" />
+			    <Key word = "EMBED" />
+			    <Key word = "FIELDSET" />
+			    <Key word = "FONT" />
+			    <Key word = "FORM" />
+			    <Key word = "FRAME" />
+			    <Key word = "FRAMESET" />
+			    <Key word = "H" />
+			    <Key word = "H1" />
+			    <Key word = "H2" />
+			    <Key word = "H3" />
+			    <Key word = "H4" />
+			    <Key word = "H5" />
+			    <Key word = "H6" />
+			    <Key word = "HEAD" />
+			    <Key word = "HR" />
+			    <Key word = "HTA:APPLICATION" />
+			    <Key word = "HTML" />
+			    <Key word = "I" />
+			    <Key word = "IFRAME" />
+			    <Key word = "IMG" />
+			    <Key word = "INPUT" />
+			    <Key word = "INS" />
+			    <Key word = "ISINDEX" />
+			    <Key word = "KBD" />
+			    <Key word = "LABEL" />
+			    <Key word = "LEGEnd" />
+			    <Key word = "LI" />
+			    <Key word = "LINK" />
+			    <Key word = "LISTING" />
+			    <Key word = "MAP" />
+			    <Key word = "MARQUEE" />
+			    <Key word = "MENU" />
+			    <Key word = "META" />
+			    <Key word = "MULTICOL" />
+			    <Key word = "NEXTID" />
+			    <Key word = "NOBR" />
+			    <Key word = "NOFRAMES" />
+			    <Key word = "NOSCRIPT" />
+			    <Key word = "OBJECT" />
+			    <Key word = "OL" />
+			    <Key word = "OPTGROUP" />
+			    <Key word = "OPTION" />
+			    <Key word = "P" />
+			    <Key word = "PARAM" />
+			    <Key word = "PLAINTEXT" />
+			    <Key word = "PRE" />
+			    <Key word = "Q" />
+			    <Key word = "S" />
+			    <Key word = "SAMP" />
+			    <Key word = "SCRIPT" />
+			    <Key word = "SELECT" />
+			    <Key word = "SERVER" />
+			    <Key word = "SMALL" />
+			    <Key word = "SOUND" />
+			    <Key word = "SPACER" />
+			    <Key word = "Span" />
+			    <Key word = "STRONG" />
+			    <Key word = "STYLE" />
+			    <Key word = "SUB" />
+			    <Key word = "SUP" />
+			    <Key word = "TABLE" />
+			    <Key word = "TBODY" />
+			    <Key word = "TD" />
+			    <Key word = "TEXTAREA" />
+			    <Key word = "TEXTFLOW" />
+			    <Key word = "TFOOT" />
+			    <Key word = "TH" />
+			    <Key word = "THEAD" />
+			    <Key word = "TITLE" />
+			    <Key word = "TR" />
+			    <Key word = "TT" />
+			    <Key word = "U" />
+			    <Key word = "VAR" />
+			    <Key word = "WBR" />
+			    <Key word = "XMP" />
+			</KeyWords>
+			
+			<KeyWords name = "Attributes" bold="false" italic="false" color="Red">
+			    <Key word = "abbr" />
+			    <Key word = "accept-charset" />
+			    <Key word = "accept" />
+			    <Key word = "accesskey" />
+			    <Key word = "action" />
+			    <Key word = "align" />
+			    <Key word = "alink" />
+			    <Key word = "alt" />
+			    <Key word = "applicationname" />
+			    <Key word = "archive" />
+			    <Key word = "axis" />
+			    <Key word = "background" />
+			    <Key word = "behavior" />
+			    <Key word = "bgcolor" />
+			    <Key word = "bgproperties" />
+			    <Key word = "border" />
+			    <Key word = "bordercolor" />
+			    <Key word = "bordercolordark" />
+			    <Key word = "bordercolorligh" />
+			    <Key word = "borderstyle" />
+			    <Key word = "caption" />
+			    <Key word = "cellpadding" />
+			    <Key word = "cellspacing" />
+			    <Key word = "char" />
+			    <Key word = "charoff" />
+			    <Key word = "charset" />
+			    <Key word = "checked" />
+			    <Key word = "cite" />
+			    <Key word = "class" />
+			    <Key word = "classid" />
+			    <Key word = "clear" />
+			    <Key word = "code" />
+			    <Key word = "codetype" />
+			    <Key word = "color" />
+			    <Key word = "cols" />
+			    <Key word = "colspan" />
+			    <Key word = "compact" />
+			    <Key word = "content" />
+			    <Key word = "coords" />
+			    <Key word = "data" />
+			    <Key word = "datetime" />
+			    <Key word = "declare" />
+			    <Key word = "defer" />
+			    <Key word = "dir" />
+			    <Key word = "direction" />
+			    <Key word = "disabled" />
+			    <Key word = "dynsrc" />
+			    <Key word = "enctype" />
+			    <Key word = "face" />
+			    <Key word = "for" />
+			    <Key word = "frame" />
+			    <Key word = "frameborder" />
+			    <Key word = "framespacing" />
+			    <Key word = "gutter" />
+			    <Key word = "headers" />
+			    <Key word = "height" />
+			    <Key word = "href" />
+			    <Key word = "hreflang" />
+			    <Key word = "hspace" />
+			    <Key word = "http-equiv" />
+			    <Key word = "icon" />
+			    <Key word = "id" />
+			    <Key word = "ismap" />
+			    <Key word = "label" />
+			    <Key word = "language" />
+			    <Key word = "leftmargin" />
+			    <Key word = "link" />
+			    <Key word = "longdesc" />
+			    <Key word = "loop" />
+			    <Key word = "lowsrc" />
+			    <Key word = "marginheight" />
+			    <Key word = "marginwidth" />
+			    <Key word = "maximizebutton" />
+			    <Key word = "maxlength" />
+			    <Key word = "media" />
+			    <Key word = "method" />
+			    <Key word = "methods" />
+			    <Key word = "minimizebutton" />
+			    <Key word = "multiple" />
+			    <Key word = "name" />
+			    <Key word = "nohref" />
+			    <Key word = "noresize" />
+			    <Key word = "noshade" />
+			    <Key word = "nowrap" />
+			    <Key word = "object" />
+			    <Key word = "onabort" />
+			    <Key word = "onblur" />
+			    <Key word = "onchange" />
+			    <Key word = "onclick" />
+			    <Key word = "ondblclick" />
+			    <Key word = "onerror" />
+			    <Key word = "onfocus" />
+			    <Key word = "onkeydown" />
+			    <Key word = "onkeypress" />
+			    <Key word = "onkeyup" />
+			    <Key word = "onload" />
+			    <Key word = "onmousedown" />
+			    <Key word = "onmousemove" />
+			    <Key word = "onmouseout" />
+			    <Key word = "onmouseover" />
+			    <Key word = "onmouseup" />
+			    <Key word = "onreset" />
+			    <Key word = "onselect" />
+			    <Key word = "onsubmit" />
+			    <Key word = "onunload" />
+			    <Key word = "profile" />
+			    <Key word = "prompt" />
+			    <Key word = "readonly" />
+			    <Key word = "rel" />
+			    <Key word = "rev" />
+			    <Key word = "rows" />
+			    <Key word = "rowspan" />
+			    <Key word = "rules" />
+			    <Key word = "runat" />
+			    <Key word = "scheme" />
+			    <Key word = "scope" />
+			    <Key word = "scrollamount" />
+			    <Key word = "scrolldelay" />
+			    <Key word = "scrolling" />
+			    <Key word = "selected" />
+			    <Key word = "shape" />
+			    <Key word = "showintaskbar" />
+			    <Key word = "singleinstance" />
+			    <Key word = "size" />
+			    <Key word = "span" />
+			    <Key word = "src" />
+			    <Key word = "standby" />
+			    <Key word = "start" />
+			    <Key word = "style" />
+			    <Key word = "summary" />
+			    <Key word = "sysmenu" />
+			    <Key word = "tabindex" />
+			    <Key word = "target" />
+			    <Key word = "text" />
+			    <Key word = "title" />
+			    <Key word = "topmargin" />
+			    <Key word = "type" />
+			    <Key word = "urn" />
+			    <Key word = "usemap" />
+			    <Key word = "valign" />
+			    <Key word = "value" />
+			    <Key word = "valuetype" />
+			    <Key word = "version" />
+			    <Key word = "vlink" />
+			    <Key word = "vrml" />
+			    <Key word = "vspace" />
+			    <Key word = "width" />
+			    <Key word = "windowstate" />
+			    <Key word = "wrap" />
+			</KeyWords>
+		</RuleSet>
+
+	</RuleSets>
+</SyntaxDefinition>

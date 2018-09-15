@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<!-- syntaxdefinition for XML 2000 by Mike Krueger -->
+<SyntaxDefinition name="XML" extensions=".xml;.xsl;.xslt;.xsd;.xhtml;.manifest;.config;.addin;.xshd;.wxs;.wxi;.wxl;.proj;.csproj;.vbproj;.vcproj;.vcxproj;.ilproj;.booproj;.build;.xfrm;.targets;.xaml;.xpt;.xft;.map;.wsdl;.disco">
+	
+	<Properties>
+		<Property name="BlockCommentBegin" value="&lt;!--"/>
+		<Property name="BlockCommentEnd" value="--&gt;"/>
+	</Properties>
+	<Digits name="Digits" bold="false" italic="false" color="DarkBlue" />
+	<RuleSets>
+		<RuleSet ignorecase="false">
+			<!-- It is not necessary to define span-delimiting characters as delimiters -->
+			<Delimiters></Delimiters>
+
+			<Span name="Comment" bold="false" italic="false" color="Green" stopateol="false">
+				<Begin>&lt;!--</Begin>
+				<End>--&gt;</End>
+			</Span>
+			<Span name="CDataSection" bold="false" italic="false" color="Blue" stopateol="false">
+				<Begin>&lt;![CDATA[</Begin>
+				<End>]]&gt;</End>
+			</Span>
+			<Span name="DocTypeSection" bold="false" italic="false" color="Blue" stopateol="false">
+				<Begin>&lt;!DOCTYPE</Begin>
+				<End>&gt;</End>
+			</Span>
+			<Span name="XmlDecl" bold="false" italic="false" color="Blue" stopateol="false">
+				<Begin>&lt;?</Begin>
+				<End>?&gt;</End>
+			</Span>
+			<Span name="XmlTag" rule="XmlTagSet" bold="false" italic="false" color="DarkMagenta" stopateol="false">
+				<Begin>&lt;</Begin>
+				<End>&gt;</End>
+			</Span>
+			<Span name="EntityReference" bold="false" italic="false" color="Blue" stopateol="true">
+				<Begin>&amp;</Begin>
+				<End>;</End>
+			</Span>
+		</RuleSet>
+
+		<RuleSet name="XmlTagSet" ignorecase="false">
+			<Delimiters>/=</Delimiters>
+			<Span name="String" bold="false" italic="false" color="Blue" stopateol="true">
+				<Begin>&quot;</Begin>
+				<End>&quot;</End>
+			</Span>
+			<Span name="Char" bold="false" italic="false" color="Blue" stopateol="true">
+				<Begin>&apos;</Begin>
+				<End>&apos;</End>
+			</Span>
+			<MarkPrevious bold="false" italic="false" color="Red">=</MarkPrevious>
+			<KeyWords name="Slash" bold="false" italic="false" color="DarkMagenta">
+				<Key word="/" />
+			</KeyWords>
+			<KeyWords name="Assignment" bold="false" italic="false" color="Blue">
+				<Key word="=" />
+			</KeyWords>
+		</RuleSet>
+	</RuleSets>
+</SyntaxDefinition>

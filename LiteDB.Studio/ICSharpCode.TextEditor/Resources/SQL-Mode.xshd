@@ -1,0 +1,184 @@
+﻿<?xml version="1.0"?>
+<!-- 
+Copyright 2005-2009 Paul Kohler (http://pksoftware.net/MiniSqlQuery/). All rights reserved.
+This source code is made available under the terms of the Microsoft Public License (Ms-PL)
+http://minisqlquery.codeplex.com/license
+-->
+<SyntaxDefinition name = "SQL" extensions = ".sql">
+  <Environment>
+    <LineNumbers  color="Gray"/>
+  </Environment>
+  <Properties>
+    <Property name="LineComment" value="--"/>
+    <Property name="LineComment2" value="#"/>
+  </Properties>
+  <Digits name = "Digits" bold = "true" italic = "false" color = "Blue"/>
+  <RuleSets>
+    <RuleSet ignorecase = "true">
+      <Delimiters>&amp;&lt;&gt;~!%^*()-+=|\#/{}[]:;"' ,	.?</Delimiters>
+      <Span name="String" bold="false" italic="false" color="DarkRed" stopateol="false">
+        <Begin>'</Begin>
+        <End>'</End>
+      </Span>
+      <Span name="String2" bold="false" italic="false" color="Magenta" stopateol="false">
+        <Begin>`</Begin>
+        <End>`</End>
+      </Span>
+      <Span name="String3" bold="false" italic="false" color="Magenta" stopateol="false">
+        <Begin>[</Begin>
+        <End>]</End>
+      </Span>
+      <Span name = "LineComment" bold = "false" italic = "true" color = "Green" stopateol = "true">
+        <Begin>--</Begin>
+      </Span>
+      <Span name="LineComment2" stopateol="true" color="Gray" bold="false" italic="true">
+        <Begin>#</Begin>
+      </Span>
+      <Span name = "BlockComment" bold = "false" italic = "true" color = "Green" stopateol = "false">
+        <Begin>/*</Begin>
+        <End>*/</End>
+      </Span>
+      <KeyWords name="JoinKeywords" bold="true" italic="false" color="Purple">
+        <Key word="INNER" />
+        <Key word="JOIN" />
+        <Key word="LEFT" />
+        <Key word="RIGHT" />
+        <Key word="OUTER" />
+        <Key word="UNION" />
+      </KeyWords>
+      <KeyWords name="AliasKeywords" bold="false" italic="false" color="Maroon">
+        <Key word="AS" />
+      </KeyWords>
+      <KeyWords name="ComparisonKeywords" bold="true" italic="false" color="Navy">
+        <Key word="AND" />
+        <Key word="OR" />
+        <Key word="LIKE" />
+      </KeyWords>
+      <KeyWords name="SpecializedKeywords" bold="true" italic="false" color="Gray">
+        <Key word="TOP" />
+        <Key word="LIMIT" />
+        <Key word="OPENDATASOURCE" />
+        <Key word="GO" />
+      </KeyWords>
+      <KeyWords name="DestructiveKeywords" bold="true" italic="false" color="Red">
+        <Key word="DROP" />
+        <Key word="DELETE" />
+        <Key word="TRUNCATE" />
+      </KeyWords>
+      <KeyWords name="SqlKeywordsBold" bold="true" italic="false" color="Blue">
+        <Key word="BEGIN" />
+        <Key word="END" />
+        <Key word="EXEC" />
+        <Key word="CREATE" />
+        <Key word="COMMIT" />
+        <Key word="RAISERROR" />
+        <Key word="ROLLBACK" />
+        <Key word="TRAN" />
+        <Key word="TRANSACTION" />
+        <Key word="USE" />
+        <Key word="USER" />
+        <Key word="VIEW" />
+      </KeyWords>
+      <KeyWords name="SqlKeywordsNormal" bold="false" italic="false" color="Blue">
+        <Key word="ADD" />
+        <Key word="ALL" />
+        <Key word="ANY" />
+        <Key word="ASC" />
+        <Key word="BETWEEN" />
+        <Key word="BREAK" />
+        <Key word="BY" />
+        <Key word="CASCADE" />
+        <Key word="CASE" />
+        <Key word="CHECK" />
+        <Key word="CHECKPOINT" />
+        <Key word="CLOSE" />
+        <Key word="COALESCE" />
+        <Key word="COLLATE" />
+        <Key word="COLLATION" />
+        <Key word="COLLATIONS" />
+        <Key word="COLUMN" />
+        <Key word="COMPUTE" />
+        <Key word="CONSTRAINT" />
+        <Key word="CONTAINS" />
+        <Key word="CONTINUE" />
+        <Key word="CONVERT" />
+        <Key word="CROSS" />
+        <Key word="CURSOR" />
+        <Key word="DECLARE" />
+        <Key word="DEFAULT" />
+        <Key word="DESC" />
+        <Key word="DISTINCT" />
+        <Key word="DOUBLE" />
+        <Key word="ENGINES" />
+        <Key word="EVENTS" />
+        <Key word="ELSE" />
+        <Key word="ESCAPE" />
+        <Key word="EXCEPT" />
+        <Key word="EXECUTE" />
+        <Key word="EXISTS" />
+        <Key word="EXIT" />
+        <Key word="FETCH" />
+        <Key word="FOR" />
+        <Key word="FROM" />
+        <Key word="FULL" />
+        <Key word="FUNCTION" />
+        <Key word="GOTO" />
+        <Key word="GROUP" />
+        <Key word="HAVING" />
+        <Key word="IDENTITY" />
+        <Key word="IDENTITY_INSERT" />
+        <Key word="IDENTITYCOL" />
+        <Key word="IF" />
+        <Key word="IN" />
+        <Key word="INSERT" />
+        <Key word="INTO" />
+        <Key word="IS" />
+        <Key word="KEY" />
+        <Key word="NOCHECK" />
+        <Key word="NOT" />
+        <Key word="NULL" />
+        <Key word="NULLIF" />
+        <Key word="OF" />
+        <Key word="OFF" />
+        <Key word="OFFSETS" />
+        <Key word="ON" />
+        <Key word="OPEN" />
+        <Key word="ORDER" />
+        <Key word="OVER" />
+        <Key word="PRECISION" />
+        <Key word="PROC" />
+        <Key word="PROCEDURE" />
+        <Key word="PUBLIC" />
+        <Key word="READ" />
+        <Key word="READTEXT" />
+        <Key word="REFERENCES" />
+        <Key word="RESTORE" />
+        <Key word="RESTRICT" />
+        <Key word="RETURN" />
+        <Key word="ROWCOUNT" />
+        <Key word="RULE" />
+        <Key word="SAVE" />
+        <Key word="SELECT" />
+        <Key word="SET" />
+        <Key word="SETUSER" />
+        <Key word="SOME" />
+        <Key word="SHOW" />
+        <Key word="STATUS" />
+        <Key word="TABLE" />
+        <Key word="THEN" />
+        <Key word="TO" />
+        <Key word="TRIGGER" />
+        <Key word="TRIGGERS" />
+        <Key word="UNIQUE" />
+        <Key word="UPDATE" />
+        <Key word="VALUES" />
+        <Key word="VARYING" />
+        <Key word="WAITFOR" />
+        <Key word="WHEN" />
+        <Key word="WHERE" />
+        <Key word="WHILE" />
+        <Key word="WITH" />
+      </KeyWords>
+    </RuleSet>
+  </RuleSets>
+</SyntaxDefinition>

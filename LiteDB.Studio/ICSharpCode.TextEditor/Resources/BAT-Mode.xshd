@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<!-- syntaxdefinition for BAT 2000 by Mike Krueger -->
+<SyntaxDefinition name = "BAT" extensions = ".bat;.cmd">
+
+	<Environment> 
+		<Default      color = "Yellow" bgcolor = "Black"/>
+		<Selection    color = "White" bgcolor = "Purple"/>
+		<VRuler       color = "Green"/>
+		<InvalidLines color = "Red"/>
+		<CaretMarker  color = "Yellow"/>
+		
+		<LineNumbers  color = "Gray" bgcolor = "Black"/>
+		
+		<FoldLine     color = "Cyan" bgcolor = "Black"/>
+		<FoldMarker   color = "Cyan" bgcolor = "White"/>
+		<SelectedFoldLine color = "Green" bgcolor="Black"/>
+		
+		<EOLMarkers   color = "#E0E0E5"/>
+		<SpaceMarkers color = "#E0E0E5"/>
+		<TabMarkers   color = "#E0E0E5"/>
+	</Environment> 
+	
+	<Digits name = "Digits"   bold = "false" italic = "false" color = "Yellow"/>
+  
+  	<RuleSets>
+		<RuleSet ignorecase = "false">
+			<Delimiters> </Delimiters>
+		</RuleSet>
+	</RuleSets>
+
+</SyntaxDefinition>

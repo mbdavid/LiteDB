@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<!-- syntaxdefinition for JavaScript 2.0 by Svante Lidman -->
+
+<SyntaxDefinition name ="JavaScript" extensions = ".js">
+	
+	<Properties>
+		<Property name="LineComment" value="//"/>
+	</Properties>
+
+	<Digits name ="Digits" bold ="false" italic ="false" color ="DarkBlue"/>
+
+	<RuleSets>
+		<RuleSet ignorecase = "false">
+			<Delimiters>=!&gt;&lt;+-/*%&amp;|^~.}{,;][?:</Delimiters>
+			
+			<Span name ="LineComment" bold ="false" italic ="false" color ="DarkSlateGray" stopateol ="true">
+				<Begin>//</Begin>
+			</Span>
+					
+			<Span name ="BlockComment" bold ="false" italic ="false" color ="DarkSlateGray" stopateol ="false">
+				<Begin>/*</Begin>
+				<End>*/</End>
+			</Span>
+			
+			<Span name ="String" bold ="false" italic ="false" color ="Sienna" stopateol ="false" escapecharacter="\">
+				<Begin>&quot;</Begin>
+				<End>&quot;</End>
+			</Span>
+	
+			<Span name = "Character" bold = "false" italic = "false" color = "Sienna" stopateol = "true" escapecharacter="\">
+				<Begin>&apos;</Begin>
+				<End>&apos;</End>
+			</Span>
+	
+			<KeyWords name ="JavaScriptKeyWords" bold="false" italic = "false" color = "Blue">
+				<Key word =  "break" />
+				<Key word =  "continue" />
+				<Key word =  "delete" />
+				<Key word =  "else" />
+				<Key word =  "for" />
+				<Key word =  "function" />
+				<Key word =  "if" />
+				<Key word =  "in" />
+				<Key word =  "new" />
+				<Key word =  "return" />
+				<Key word =  "this" />
+				<Key word =  "typeof" />
+				<Key word =  "var" />
+				<Key word =  "void" />
+				<Key word =  "while" />
+				<Key word =  "with" />
+				<!--ECMAScript keywords-->
+				<!-- Reserved for future use 
+					(some are already used in some Javascript Engines) 
+				-->
+				<Key word =  "abstract" />
+				<Key word =  "boolean" />
+				<Key word =  "byte" />
+				<Key word =  "case" />
+				<Key word =  "catch" />
+				<Key word =  "char" />
+				<Key word =  "class" />
+				<Key word =  "const" />
+				<Key word =  "debugger" />
+				<Key word =  "default" />
+				<Key word =  "do" />
+				<Key word =  "double" />
+				<Key word =  "enum" />
+				<Key word =  "export" />
+				<Key word =  "extends" />
+				<Key word =  "final" />
+				<Key word =  "finally" />
+				<Key word =  "float" />
+				<Key word =  "goto" />
+				<Key word =  "implements" />
+				<Key word =  "import" />
+				<Key word =  "instanceof" />
+				<Key word =  "int" />
+				<Key word =  "interface" />
+				<Key word =  "long" />
+				<Key word =  "native" />
+				<Key word =  "package" />
+				<Key word =  "private" />
+				<Key word =  "protected" />
+				<Key word =  "public" />
+				<Key word =  "short" />
+				<Key word =  "static" />
+				<Key word =  "super" />
+				<Key word =  "switch" />
+				<Key word =  "synchronized" />
+				<Key word =  "throw" />
+				<Key word =  "throws" />
+				<Key word =  "transient" />
+				<Key word =  "try" />
+				<Key word =  "volatile" />
+			</KeyWords>
+	
+			<KeyWords name ="JavaScriptIntrinsics" bold="false" italic = "false" color = "Blue">
+				<Key word =  "Array" />
+				<Key word =  "Boolean" />
+				<Key word =  "Date" />
+				<Key word =  "Function" />
+				<Key word =  "Global" />
+				<Key word =  "Math" />
+				<Key word =  "Number" />
+				<Key word =  "Object" />
+				<Key word =  "RegExp" />
+				<Key word =  "String" />
+			</KeyWords>
+			
+			<KeyWords name ="JavaScriptLiterals" bold="false" italic = "false" color = "Blue">
+				<Key word =  "false" />
+				<Key word =  "null" />
+				<Key word =  "true" />
+				<Key word =  "NaN" />
+				<Key word =  "Infinity" />
+			</KeyWords>
+	
+			<KeyWords name ="JavaScriptLiterals" bold="false" italic = "false" color = "Blue">
+				<Key word =  "" />
+			</KeyWords>
+	
+			<KeyWords name ="JavaScriptGlobalFunctions" bold="false" italic = "false" color = "Blue">
+				<Key word =  "eval" />
+				<Key word =  "parseInt" />
+				<Key word =  "parseFloat" />
+				<Key word =  "escape" />
+				<Key word =  "unescape" />
+				<Key word =  "isNaN" />
+				<Key word =  "isFinite" />
+			</KeyWords>		
+		</RuleSet>
+	</RuleSets>
+	
+</SyntaxDefinition>
+

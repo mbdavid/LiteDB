@@ -43,8 +43,6 @@ namespace LiteDB.Studio
                 this.Disconnect();
             }
 
-            UIExtensions.DefineSyntaxHighlighter(txtSql);
-
             // stop all threads
             this.FormClosing += (s, e) =>
             {
@@ -154,7 +152,11 @@ namespace LiteDB.Studio
 
         private void BtnRun_Click(object sender, EventArgs e)
         {
-            this.ExecuteSql(txtSql.SelectedText.Length > 0 ? txtSql.SelectedText : txtSql.Text);
+            var sql = txtSql.ActiveTextAreaControl.SelectionManager.SelectedText.Length > 0 ?
+                txtSql.ActiveTextAreaControl.SelectionManager.SelectedText :
+                txtSql.Text;
+
+            this.ExecuteSql(sql);
         }
 
         private void ExecuteSql(string sql)
@@ -323,9 +325,9 @@ namespace LiteDB.Studio
             else
             {
                 txtSql.Text += "\n\n";
-                var start = txtSql.TextLength;
+                var start = txtSql.Text.Length;
                 txtSql.Text += sql.Replace("\\n", "\n");
-                txtSql.Select(start, sql.Length);
+                //txtSql.ActiveTextAreaControl.SelectionManager. .Select(start, sql.Length);
             }
         }
 
@@ -427,12 +429,6 @@ namespace LiteDB.Studio
             this.LoadTreeView();
         }
 
-        private void TxtSql_SelectionChanged(object sender, EventArgs e)
-        {
-            lblCursor.Text = "Position: " + (txtSql.SelectionStart + 1) +
-                (txtSql.SelectionLength > 0 ? $" (Selection: {txtSql.SelectionLength})" : "");
-        }
-
         private void CtxMenu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             var colname = tvwDatabase.SelectedNode.Text;
@@ -489,15 +485,6 @@ namespace LiteDB.Studio
         private void BtnRollback_Click(object sender, EventArgs e)
         {
             this.ExecuteSql("ROLLBACK");
-        }
-
-        private void TxtSql_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == (char)Keys.Tab)
-            {
-                e.Handled = true;
-                txtSql.SelectedText = new string(' ', 4);
-            }
         }
 
         private void BtnFileOpen_Click(object sender, EventArgs e)

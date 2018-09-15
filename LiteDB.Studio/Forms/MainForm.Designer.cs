@@ -35,7 +35,6 @@
             this.tvwDatabase = new System.Windows.Forms.TreeView();
             this.imgList = new System.Windows.Forms.ImageList(this.components);
             this.splitRight = new System.Windows.Forms.SplitContainer();
-            this.txtSql = new System.Windows.Forms.RichTextBox();
             this.tabResult = new System.Windows.Forms.TabControl();
             this.tabGrid = new System.Windows.Forms.TabPage();
             this.grdResult = new System.Windows.Forms.DataGridView();
@@ -78,7 +77,8 @@
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
             this.diaOpen = new System.Windows.Forms.OpenFileDialog();
             this.btnFileOpen = new System.Windows.Forms.Button();
-            this.txtResult = new System.Windows.Forms.TextBox();
+            this.txtSql = new ICSharpCode.TextEditor.TextEditorControl();
+            this.txtResult = new ICSharpCode.TextEditor.TextEditorControl();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -174,23 +174,6 @@
             this.splitRight.SplitterDistance = 164;
             this.splitRight.TabIndex = 8;
             // 
-            // txtSql
-            // 
-            this.txtSql.AcceptsTab = true;
-            this.txtSql.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtSql.HideSelection = false;
-            this.txtSql.Location = new System.Drawing.Point(3, 3);
-            this.txtSql.Name = "txtSql";
-            this.txtSql.Size = new System.Drawing.Size(816, 158);
-            this.txtSql.TabIndex = 2;
-            this.txtSql.Text = "";
-            this.txtSql.SelectionChanged += new System.EventHandler(this.TxtSql_SelectionChanged);
-            this.txtSql.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TxtSql_KeyPress);
-            // 
             // tabResult
             // 
             this.tabResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -227,7 +210,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(796, 314);
+            this.grdResult.Size = new System.Drawing.Size(796, 312);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -578,6 +561,22 @@
             this.btnFileOpen.UseVisualStyleBackColor = true;
             this.btnFileOpen.Click += new System.EventHandler(this.BtnFileOpen_Click);
             // 
+            // txtSql
+            // 
+            this.txtSql.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSql.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtSql.ConvertTabsToSpaces = true;
+            this.txtSql.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtSql.Highlighting = "SQL";
+            this.txtSql.Location = new System.Drawing.Point(3, 3);
+            this.txtSql.Name = "txtSql";
+            this.txtSql.ShowLineNumbers = false;
+            this.txtSql.ShowVRuler = false;
+            this.txtSql.Size = new System.Drawing.Size(816, 158);
+            this.txtSql.TabIndex = 2;
+            // 
             // txtResult
             // 
             this.txtResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -585,11 +584,12 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtResult.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtResult.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtResult.Highlighting = "JavaScript";
             this.txtResult.Location = new System.Drawing.Point(5, 4);
-            this.txtResult.Multiline = true;
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
-            this.txtResult.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtResult.ShowLineNumbers = false;
+            this.txtResult.ShowVRuler = false;
             this.txtResult.Size = new System.Drawing.Size(797, 322);
             this.txtResult.TabIndex = 1;
             // 
@@ -622,7 +622,6 @@
             this.tabGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.grdResult)).EndInit();
             this.tabText.ResumeLayout(false);
-            this.tabText.PerformLayout();
             this.tabParameters.ResumeLayout(false);
             this.tabParameters.PerformLayout();
             this.stbStatus.ResumeLayout(false);
@@ -660,7 +659,7 @@
         private System.Windows.Forms.ImageList imgList;
         private System.Windows.Forms.ContextMenuStrip ctxMenu;
         private System.Windows.Forms.ToolStripMenuItem mnuIndexes;
-        private System.Windows.Forms.RichTextBox txtSql;
+        private ICSharpCode.TextEditor.TextEditorControl txtSql;
         private System.Windows.Forms.TabControl tabSql;
         private System.Windows.Forms.ToolStripMenuItem mnuDropCollection;
         private System.Windows.Forms.ToolStripMenuItem mnuAnalyze;
@@ -686,7 +685,7 @@
         private System.Windows.Forms.ToolStripMenuItem mnuQueryCount;
         private System.Windows.Forms.ToolStripMenuItem mnuImport;
         private System.Windows.Forms.TextBox txtParameters;
-        private System.Windows.Forms.TextBox txtResult;
+        private ICSharpCode.TextEditor.TextEditorControl txtResult;
     }
 }
 

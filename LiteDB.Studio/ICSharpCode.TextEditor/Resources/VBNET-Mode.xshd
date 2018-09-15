@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+
+<!-- Syntaxdefinition for VB.NET, v0.1 Rev 1 by Christian Holm -->
+<!-- Updated 2005 by Daniel Grunwald for VB.NET 2.0 -->
+
+<SyntaxDefinition name = "VBNET" extensions = ".vb;.bas;.vbs">
+	
+	<Properties>
+		<Property name="LineComment" value="'"/>
+	</Properties>
+	
+	<Digits name = "Digits"   bold = "false" italic = "false" color = "Black"/>
+	
+	<RuleSets>
+		<RuleSet ignorecase = "true">
+		
+			<Delimiters>~!@%^*()-+=|\#/{}[]:;"'&lt;&gt;,.?</Delimiters>
+			
+			<Span name = "STRING" bold = "false" italic = "false" color = "Black" stopateol = "true" escapecharacter='"'>
+				<Begin>"</Begin>
+				<End>"</End>
+			</Span>
+<!--
+		    <Span name = "LINECOMMENT" rule = "DocumentSet" bold = "false" italic = "false" color = "Green" stopateol = "true">
+		        <Begin>'</Begin>
+		    </Span>
+		
+		    <Span name = "LINECOMMENT" rule = "DocumentSet" bold = "false" italic = "false" color = "Green" stopateol = "true">
+		        <Begin>REM</Begin>
+		    </Span>
+-->
+			<Span name = "PREPROCESSORDIRECTIVE" rule = "PreprocessorSet" bold = "false" italic = "false" color = "Maroon" stopateol = "true">
+				<Begin startofline="true">#</Begin>
+			</Span>
+			
+			<Span name = "DATELITERAL" bold = "false" italic = "false" color = "Blue" stopateol = "true">
+				<Begin startofline="false">#</Begin>
+				<End>#</End>
+			</Span>
+			
+			<Span name = "LINECOMMENT" bold = "false" italic = "false" color = "Green" stopateol = "true">
+				<Begin>'</Begin>
+			</Span>
+			
+			<Span name = "LINECOMMENT" bold = "false" italic = "false" color = "Green" stopateol = "true">
+				<Begin singleword="true">REM@C</Begin>
+			</Span>
+			
+			<KeyWords name = "DataTypes" bold="false" italic="false" color="#6F002F">
+				<Key word = "Boolean" />
+				<Key word = "Byte" />
+				<Key word = "Char" />
+				<Key word = "Date" />
+				<Key word = "Decimal" />
+				<Key word = "Double" />
+				<Key word = "Integer" />
+				<Key word = "Long" />
+				<Key word = "Object" />
+				<Key word = "SByte" />
+				<Key word = "Short" />
+				<Key word = "Single" />
+				<Key word = "String" />
+				<Key word = "UInteger" />
+				<Key word = "ULong" />
+				<Key word = "UShort" />
+				<Key word = "Variant" />
+			</KeyWords>
+			
+			<KeyWords name = "Operators" bold="false" italic="false" color="#8515EA">
+				<Key word = "AddressOf" />
+				<Key word = "And" />
+				<Key word = "AndAlso" />
+				<Key word = "Is" />
+				<Key word = "IsNot" />
+				<Key word = "Like" />
+				<Key word = "Mod" />
+				<Key word = "New" />
+				<Key word = "Not" />
+				<Key word = "Or" />
+				<Key word = "OrElse" />
+				<Key word = "Xor" />
+			</KeyWords>
+			
+			<KeyWords name = "Constants" bold="false" italic="false" color="Blue">
+				<Key word = "False" />
+				<Key word = "Me" />
+				<Key word = "MyBase" />
+				<Key word = "MyClass" />
+				<Key word = "Nothing" />
+				<Key word = "True" />
+			</KeyWords>
+			
+			<KeyWords name = "CommonKeywords" bold="false" italic="false" color="Blue">
+				<Key word = "As" />
+				<Key word = "Of" />
+				<Key word = "New" />
+				<Key word = "End" />
+			</KeyWords>
+			
+			<KeyWords name = "FunctionKeywords" bold="false" italic="false" color="Blue">
+				<Key word = "CBool" />
+				<Key word = "CByte" />
+				<Key word = "CChar" />
+				<Key word = "CDate" />
+				<Key word = "CDec" />
+				<Key word = "CDbl" />
+				<Key word = "CInt" />
+				<Key word = "CLng" />
+				<Key word = "CObj" />
+				<Key word = "CSByte" />
+				<Key word = "CShort" />
+				<Key word = "CSng" />
+				<Key word = "CStr" />
+				<Key word = "CType" />
+				<Key word = "CUInt" />
+				<Key word = "CULng" />
+				<Key word = "CUShort" />
+				<Key word = "DirectCast" />
+				<Key word = "GetType" />
+				<Key word = "TryCast" />
+				<Key word = "TypeOf" />
+			</KeyWords>
+			
+			<KeyWords name = "ParamModifiers" bold="false" italic="false" color="Blue">
+				<Key word = "ByRef" />
+				<Key word = "ByVal" />
+				<Key word = "Optional" />
+				<Key word = "ParamArray" />
+			</KeyWords>
+			
+			<KeyWords name = "AccessModifiers" bold="false" italic="false" color="Blue">
+				<Key word = "Friend" />
+				<Key word = "Private" />
+				<Key word = "Protected" />
+				<Key word = "Public" />
+			</KeyWords>
+			
+			<KeyWords name = "OtherModifiers" bold="false" italic="false" color="Blue">
+				<Key word = "Const" />
+				<Key word = "Custom" />
+				<Key word = "Default" />
+				<Key word = "Global" />
+				<Key word = "MustInherit" />
+				<Key word = "MustOverride" />
+				<Key word = "Narrowing" />
+				<Key word = "NotInheritable" />
+				<Key word = "NotOverridable" />
+				<Key word = "Overloads" />
+				<Key word = "Overridable" />
+				<Key word = "Overrides" />
+				<Key word = "Partial" />
+				<Key word = "ReadOnly" />
+				<Key word = "Shadows" />
+				<Key word = "Shared" />
+				<Key word = "Static" />
+				<Key word = "Widening" />
+				<Key word = "WithEvents" />
+				<Key word = "WriteOnly" />
+			</KeyWords>
+			
+			<KeyWords name = "Statements" bold="false" italic="false" color="Blue">
+				<Key word = "Throw" />
+				<Key word = "Stop" />
+				<Key word = "Return" />
+				<Key word = "Resume" />
+				<Key word = "AddHandler" />
+				<Key word = "RemoveHandler" />
+				<Key word = "RaiseEvent" />
+				<Key word = "Option" />
+				<Key word = "Let" />
+				<Key word = "GoTo" />
+				<Key word = "GoSub" />
+				<Key word = "Call" />
+				<Key word = "Continue" />
+				<Key word = "Dim" />
+				<Key word = "ReDim" />
+				<Key word = "Erase" />
+				<Key word = "On" />
+				<Key word = "Error" />
+				<Key word = "Exit" />
+			</KeyWords>
+			
+			<KeyWords name = "GlobalConstructs" bold="false" italic="false" color="Blue">
+				<Key word = "Namespace" />
+				<Key word = "Class" />
+				<Key word = "Imports" />
+				<Key word = "Implements" />
+				<Key word = "Inherits" />
+				<Key word = "Interface" />
+				<Key word = "Delegate" />
+				<Key word = "Module" />
+				<Key word = "Structure" />
+				<Key word = "Enum" />
+			</KeyWords>
+			
+			<KeyWords name = "TypeLevelConstructs" bold="false" italic="false" color="Blue">
+				<Key word = "Sub" />
+				<Key word = "Function" />
+				<Key word = "Handles" />
+				<Key word = "Declare" />
+				<Key word = "Lib" />
+				<Key word = "Alias" />
+				<Key word = "Get" />
+				<Key word = "Set" />
+				<Key word = "Property" />
+				<Key word = "Operator" />
+				<Key word = "Event" />
+			</KeyWords>
+			
+			<KeyWords name = "Constructs" bold="false" italic="false" color="Blue">
+				<Key word = "SyncLock" />
+				<Key word = "Using" />
+				<Key word = "With" />
+				<Key word = "Do" />
+				<Key word = "While" />
+				<Key word = "Loop" />
+				<Key word = "Wend" />
+				
+				<Key word = "Try" />
+				<Key word = "Catch" />
+				<Key word = "When" />
+				<Key word = "Finally" />
+				
+				<Key word = "If" />
+				<Key word = "Then" />
+				<Key word = "Else" />
+				<Key word = "ElseIf" />
+				<Key word = "EndIf" />
+				
+				<Key word = "For" />
+				<Key word = "To" />
+				<Key word = "Step" />
+				<Key word = "Each" />
+				<Key word = "In" />
+				<Key word = "Next" />
+				
+				<Key word = "Select" />
+				<Key word = "Case" />
+			</KeyWords>
+			
+			<KeyWords name = "ContextKeywords" bold="false" italic="false" color="Blue">
+				<Key word = "Ansi" />
+				<Key word = "Auto" />
+				<Key word = "Unicode" />
+				<Key word = "Preserve" />
+				<Key word = "Until" />
+			</KeyWords>
+		</RuleSet>
+		
+		<RuleSet name = "PreprocessorSet" ignorecase = "true">
+			<Delimiters>~!@%^*()-+=|\#/{}[]:;"'&lt;&gt;,.?</Delimiters>
+			
+			<KeyWords name = "PreProcessor" bold="true" italic="false" color="Maroon">
+				<Key word = "Const" />
+				<Key word = "If" />
+				<Key word = "ElseIf" /> 
+				<Key word = "Else" />
+				<Key word = "End" />
+				<Key word = "ExternalSource" />
+				<Key word = "Region" />
+				<Key word = "ExternalChecksum" />
+			</KeyWords>
+		</RuleSet>
+	</RuleSets>
+</SyntaxDefinition>

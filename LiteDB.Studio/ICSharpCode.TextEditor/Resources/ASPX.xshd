@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name = "ASP/XHTML" extensions = ".asp;.aspx;.asax;.asmx" extends = "HTML">
+	<RuleSets>
+		<RuleSet ignorecase = "true">
+			<Span name = "ASPCode" rule = "ASP"  bold = "false" italic = "false" color = "Black" bgcolor = "#F7F2E3" stopateol = "false">
+				<Begin color="Black" bgcolor="Yellow">&lt;%</Begin>
+				<End color="Black" bgcolor="Yellow">%&gt;</End>
+			</Span>
+		</RuleSet>
+		
+		<RuleSet name="ASP" ignorecase = "false">
+			<Span name = "COMMENT" bold = "false" italic = "false" color = "Green" bgcolor = "#F7F2E3" stopateol = "true">
+				<Begin>//</Begin>
+			</Span>
+		</RuleSet>
+	</RuleSets>
+</SyntaxDefinition>

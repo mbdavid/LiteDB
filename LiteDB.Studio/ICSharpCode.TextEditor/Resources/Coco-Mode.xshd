@@ -1,0 +1,97 @@
+<?xml version="1.0" ?>
+<!-- syntaxdefinition for Coco/R 2003 by Mike Krueger -->
+<SyntaxDefinition name="Coco" extensions=".atg">
+	
+	<Digits name="Digits" bold="false" italic="false" color="DarkBlue" />
+	
+	<RuleSets>
+		<RuleSet ignorecase="false">
+			<Delimiters>&amp;&lt;&gt;~!@%^*()-+=|\#/{}[]:;"' ,	.?</Delimiters>
+			
+			<Span name = "LINECOMMENT" bold = "false" italic = "true" color = "Gray" stopateol = "true">
+			   	<Begin>//</Begin>
+			</Span>
+			
+			<Span name = "BLOCKCOMMENT" bold = "false" italic = "true" color = "Gray" stopateol = "false">
+				<Begin>/*</Begin>
+				<End>*/</End>
+			</Span>
+
+			
+			<Span name="CSharpCode2" rule="CSharp" bold="false" italic="false" color="Black" stopateol="false">
+				<Begin bold = "true" color = "Blue">COMPILER</Begin>
+				<End bold = "true" color = "Blue">TOKENNAMES</End>
+			</Span>
+			
+			<Span name = "STRING" bold = "false" italic = "false" color = "DarkGreen" stopateol = "true">
+				<Begin>"</Begin>
+				<End>"</End>
+			</Span>
+			
+			<Span name = "CHAR" bold = "false" italic = "false" color = "DarkGreen" stopateol = "true">
+				<Begin>'</Begin>
+				<End>'</End>
+			</Span>
+			
+			<Span name = "paramlist" rule="ParamList" bold = "false" italic = "false" color = "Black" stopateol = "true">
+				<Begin bold="true" color = "Black" >&lt;</Begin>
+				<End bold="true" color = "Black" >&gt;</End>
+			</Span>
+			
+			<Span name="CSharpCode" rule="CSharp" bold="false" italic="false" color="DarkSlateGray" stopateol="false">
+				<Begin bold = "true" italic="true" color = "Green">(.</Begin>
+				<End   bold = "true" italic="true" color = "Green">.)</End>
+			</Span>
+			
+			
+			<KeyWords name = "Punctuation" bold = "true" italic = "false" color = "Black">
+				<Key word = "{"/>
+				<Key word = "}"/>
+				<Key word = "("/>
+				<Key word = ")"/>
+				<Key word = "["/>
+				<Key word = "]"/>
+				<Key word = "|"/>
+				<Key word = "+"/>
+				<Key word = "-"/>
+				<Key word = "="/>
+				<Key word = "."/>
+			</KeyWords>
+			
+			<KeyWords name = "KeyWords" bold = "true" italic = "false" color = "Blue">
+				<Key word = "ANY"/>
+				<Key word = "CHARACTERS"/>
+				<Key word = "COMMENTS"/>
+				<Key word = "COMPILER"/>
+				<Key word = "CONTEXT"/>
+				<Key word = "END"/>
+				<Key word = "FROM"/>
+				<Key word = "IF"/>
+				<Key word = "IGNORE"/>
+				<Key word = "NAMESPACE"/>
+				<Key word = "NESTED"/>
+				<Key word = "PRAGMAS"/>
+				<Key word = "PRODUCTIONS"/>
+				<Key word = "SYNC"/>
+				<Key word = "TO"/>
+				<Key word = "TOKENS"/>
+				<Key word = "TOKENNAMES"/>
+				<Key word = "WEAK"/>
+				<Key word = "using"/>
+			</KeyWords>
+			
+		</RuleSet>
+
+		<RuleSet name="CSharp" reference = "C#" ignorecase="false">
+		</RuleSet>
+		
+		<RuleSet name="ParamList" reference = "C#" ignorecase="false">
+		</RuleSet>
+		
+		<RuleSet name="RuleDefinition" ignorecase="false">
+			
+		</RuleSet>
+
+	</RuleSets>
+</SyntaxDefinition>
+		
