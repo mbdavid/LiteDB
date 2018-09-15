@@ -569,6 +569,10 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> LONG(IEnumerable<BsonValue> values) => INT64(values);
 
+        /// <summary>
+        /// Alias to BOOLEAN(values)
+        /// </summary>
+        public static IEnumerable<BsonValue> BOOL(IEnumerable<BsonValue> values) => BOOLEAN(values);
 
         /// <summary>
         /// Alias to DATETIME(values) and DATETIME_UTC(values)

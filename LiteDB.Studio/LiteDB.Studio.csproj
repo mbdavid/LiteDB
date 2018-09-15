@@ -215,26 +215,11 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\ASPX.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\BAT-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Boo.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Coco-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\CPP-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\CSharp-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\HTML-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\ICSharpCode.TextEditor.snk" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Java-Mode.xshd" />
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\JavaScript-Mode.xshd" />
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Mode.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Patch-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\PHP-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Python-Mode.xshd" />
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\SQL-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Tex-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\VBNET-Mode.xshd" />
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\XML-Mode.xshd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
