@@ -34,6 +34,8 @@ namespace LiteDB.Studio
 
             _synchronizationContext = SynchronizationContext.Current;
 
+            var cc = new SqlCodeCompletion(txtSql, imgList);
+
             if (txtFilename.Text.Length > 0)
             {
                 this.Connect();

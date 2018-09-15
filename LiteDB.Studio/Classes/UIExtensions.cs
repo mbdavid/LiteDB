@@ -1,4 +1,5 @@
-﻿using LiteDB.Engine;
+﻿using ICSharpCode.TextEditor.Gui.CompletionWindow;
+using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
 using System.Data;
