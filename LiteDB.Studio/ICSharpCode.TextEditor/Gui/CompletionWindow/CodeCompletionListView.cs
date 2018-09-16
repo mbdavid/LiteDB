@@ -240,9 +240,9 @@ namespace ICSharpCode.TextEditor.Gui.CompletionWindow
 					
 					// draw text
 					if (curItem == selectedItem) {
-						g.DrawString(completionData[curItem].Text, Font, SystemBrushes.HighlightText, xPos, yPos);
+						g.DrawString(completionData[curItem].Text, Font, SystemBrushes.HighlightText, xPos + 3, yPos + 3);
 					} else {
-						g.DrawString(completionData[curItem].Text, Font, SystemBrushes.WindowText, xPos, yPos);
+						g.DrawString(completionData[curItem].Text, Font, SystemBrushes.WindowText, xPos + 3, yPos + 3);
 					}
 				}
 				

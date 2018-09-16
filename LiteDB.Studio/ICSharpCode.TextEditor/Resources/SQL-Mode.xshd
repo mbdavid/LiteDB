@@ -130,6 +130,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="ARRAY" />
         <Key word="BINARY" />
         <Key word="BOOLEAN" />
+        <Key word="BOOL" />
         <Key word="DATETIME" />
         <Key word="DATETIME_UTC" />
         <Key word="DATE" />

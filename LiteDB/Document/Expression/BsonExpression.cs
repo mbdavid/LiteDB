@@ -309,6 +309,11 @@ namespace LiteDB
         #region MethodCall quick access
 
         /// <summary>
+        /// Get all registered methods for BsonExpressions
+        /// </summary>
+        public static IEnumerable<MethodInfo> Methods => _methods.Values;
+
+        /// <summary>
         /// Load all static methods from BsonExpressionMethods class. Use a dictionary using name + parameter count
         /// </summary>
         private static Dictionary<string, MethodInfo> _methods =

@@ -22,6 +22,7 @@ namespace LiteDB.Studio
         private string _filename;
         private TaskData _active = null;
         private bool _running = true;
+        private SqlCodeCompletion _codeCompletion;
 
         public MainForm(string filename)
         {
@@ -34,7 +35,7 @@ namespace LiteDB.Studio
 
             _synchronizationContext = SynchronizationContext.Current;
 
-            var cc = new SqlCodeCompletion(txtSql, imgList);
+            _codeCompletion = new SqlCodeCompletion(txtSql, imgCodeCompletion);
 
             if (txtFilename.Text.Length > 0)
             {
@@ -77,6 +78,8 @@ namespace LiteDB.Studio
 
             _db = new LiteDatabase(cn);
             _filename = cn.Filename;
+
+            _codeCompletion.UpdateCodeCompletion(_db);
 
             _running = true;
             btnConnect.Text = "Disconnect";
