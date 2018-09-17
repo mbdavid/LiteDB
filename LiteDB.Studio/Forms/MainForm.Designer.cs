@@ -236,10 +236,10 @@
             // tabText
             // 
             this.tabText.Controls.Add(this.txtResult);
-            this.tabText.Location = new System.Drawing.Point(4, 22);
+            this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(808, 335);
+            this.tabText.Size = new System.Drawing.Size(808, 333);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -257,7 +257,7 @@
             this.txtResult.ReadOnly = true;
             this.txtResult.ShowLineNumbers = false;
             this.txtResult.ShowVRuler = false;
-            this.txtResult.Size = new System.Drawing.Size(797, 322);
+            this.txtResult.Size = new System.Drawing.Size(797, 320);
             this.txtResult.TabIndex = 1;
             // 
             // tabParameters

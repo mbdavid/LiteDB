@@ -15,7 +15,10 @@ namespace LiteDB.Studio
 
         public int Id { get; set; }
         public bool Running { get; set; } = false;
+
         public string Sql { get; set; } = "";
+        public string SelectedTab { get; set; } = "";
+
         public string Collection { get; set; } = "";
         public List<BsonValue> Result { get; set; } = null;
         public string ExplainPlan { get; set; } = null;

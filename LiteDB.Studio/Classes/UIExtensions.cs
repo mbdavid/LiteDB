@@ -144,10 +144,6 @@ namespace LiteDB.Studio
             var index = 0;
             var sb = new StringBuilder();
 
-            txt.ForeColor = Color.Black;
-            txt.Text = "<loading>";
-            txt.Update();
-
             if (data.Result?.Count > 0)
             {
                 foreach (var value in data.Result)
@@ -168,8 +164,9 @@ namespace LiteDB.Studio
             }
 
             txt.SuspendLayout();
+            txt.Clear();
+            txt.SetHighlighting("JavaScript");
             txt.Text = sb.ToString();
-            
             txt.ResumeLayout();
         }
 
@@ -184,6 +181,14 @@ namespace LiteDB.Studio
         {
             grd.Columns.Clear();
             grd.DataSource = null;
+        }
+
+        public static void BindErrorMessage(this DataGridView grid, string sql, Exception ex)
+        {
+            grid.Clear();
+            grid.Columns.Add("err", "Error");
+            grid.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            grid.Rows.Add(ex.Message);
         }
 
         public static void BindErrorMessage(this ICSharpCode.TextEditor.TextEditorControl txt, string sql, Exception ex)
@@ -217,8 +222,18 @@ namespace LiteDB.Studio
                 }
             }
 
-            txt.ForeColor = Color.Red;
+            txt.Highlighting = null;
+            txt.Clear();
             txt.Text = sb.ToString();
+        }
+
+        public static void BindParameter(this ICSharpCode.TextEditor.TextEditorControl txt, TaskData data)
+        {
+            txt.SuspendLayout();
+            txt.Clear();
+            txt.SetHighlighting("JavaScript");
+            txt.Text = JsonSerializer.Serialize(data.Parameters, true);
+            txt.ResumeLayout();
         }
     }
 }

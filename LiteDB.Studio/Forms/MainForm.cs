@@ -126,21 +126,35 @@ namespace LiteDB.Studio
             tab.Text = tab.Name = task.Id.ToString();
             tab.Tag = task;
 
-            txtSql.Text = "";
-
             // adding new + tab at end
             tabSql.TabPages.Add("+", "+");
 
             _active = task;
 
-            this.LoadResult(task);
+            tabResult.SelectTab("tabGrid");
         }
 
         private void TabSql_Selected(object sender, TabControlEventArgs e)
         {
             if (e.TabPage == null) return;
 
-            if (_active != null) _active.Sql = txtSql.Text;
+            if (_active != null)
+            {
+                _active.Sql = txtSql.Text;
+                _active.SelectedTab = tabResult.SelectedTab.Name;
+            }
+
+            txtSql.Clear();
+            grdResult.Clear();
+            txtResult.Clear();
+            txtParameters.Clear();
+
+            lblResultCount.Visible = false;
+            lblElapsed.Text = "";
+            prgRunning.Style = ProgressBarStyle.Blocks;
+            lblResultCount.Text = "";
+
+            Application.DoEvents();
 
             if (e.TabPage.Name == "+")
             {
@@ -149,9 +163,18 @@ namespace LiteDB.Studio
             else
             {
                 _active = e.TabPage.Tag as TaskData;
+
                 txtSql.Text = _active.Sql;
-                Application.DoEvents();
-                this.LoadResult(_active);
+                txtSql.Focus();
+
+                if (tabResult.SelectedTab.Name != _active.SelectedTab)
+                {
+                    tabResult.SelectTab(_active.SelectedTab); // fire LoadResult from TabResult_IndexChanged
+                }
+                else
+                {
+                    this.LoadResult(_active);
+                }
             }
         }
 
@@ -279,15 +302,17 @@ namespace LiteDB.Studio
         private void LoadResult(TaskData data)
         {
             btnRun.Enabled = !data.Running;
-            txtParameters.Text = JsonSerializer.Serialize(data.Parameters, true);
 
             if (data.Running)
             {
                 grdResult.Clear();
                 txtResult.Clear();
+                txtParameters.Clear();
+
                 lblResultCount.Visible = false;
                 lblElapsed.Text = "Running";
                 prgRunning.Style = ProgressBarStyle.Marquee;
+                txtParameters.Clear();
             }
             else
             {
@@ -303,19 +328,22 @@ namespace LiteDB.Studio
                 if (data.Exception != null)
                 {
                     txtResult.BindErrorMessage(data.Sql, data.Exception);
-                    grdResult.Clear();
+                    txtParameters.BindErrorMessage(data.Sql, data.Exception);
+                    grdResult.BindErrorMessage(data.Sql, data.Exception);
                 }
                 else
                 {
                     if (tabResult.SelectedTab.Text == "Grid")
                     {
                         grdResult.BindBsonData(data);
-                        txtResult.Text = "";
+                    }
+                    else if(tabResult.SelectedTab.Text == "Text")
+                    {
+                        txtResult.BindBsonData(data);
                     }
                     else
                     {
-                        txtResult.BindBsonData(data);
-                        grdResult.Clear();
+                        txtParameters.BindParameter(data);
                     }
                 }
             }
