@@ -349,6 +349,36 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Visit :: x => `new MyClass { Id = 10 }`
+        /// </summary>
+        protected override Expression VisitMemberInit(MemberInitExpression node)
+        {
+            // works only for empty ctor
+            if (node.NewExpression.Constructor.GetParameters().Length > 0)
+            {
+                throw new NotSupportedException($"New instance of {node.Type} are not supported because contains ctor with parameter. Try use only property initializers: `new {node.Type.Name} {{ PropA = 1, PropB == \"John\" }}`.");
+            }
+
+            _builder.Append("{");
+
+            for (var i = 0; i < node.Bindings.Count; i++)
+            {
+                var bind = node.Bindings[i] as MemberAssignment;
+                var member = this.ResolveMember(bind.Member);
+
+                _builder.Append(i > 0 ? ", " : "");
+                _builder.Append(member.Substring(1));
+                _builder.Append(":");
+
+                this.Visit(bind.Expression);
+            }
+
+            _builder.Append("}");
+
+            return node;
+        }
+
+        /// <summary>
         /// Visit :: x => `new int[] { 1, 2, 3 }`
         /// </summary>
         protected override Expression VisitNewArray(NewArrayExpression node)

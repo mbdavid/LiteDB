@@ -282,6 +282,24 @@ namespace LiteDB.Tests.Mapper
 
             TestExpr(x => new Guid("1A3B944E-3632-467B-A53A-206305310BAC"), "GUID(@p0)", "1A3B944E-3632-467B-A53A-206305310BAC");
 
+            // new instances with initializers
+            TestExpr<User>(x => new User { Id = 1, Active = false }, "{ _id: @p0, Active: @p1 }", 1, false);
+
+            // used in UpdateMany extend document
+            TestExpr<User>(x => new User { Name = x.Name.ToUpper(), Salary = x.Salary * 2 }, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
+
+
+        }
+
+        [TestMethod]
+        public void Linq_Composite_Key()
+        {
+            // using composite key new class initializer
+            TestExpr<User>(x => x.Address == new Address { Number = 555 }, "(Address = { Number: @p0 })", 555);
+
+            // using 2 levels
+            TestExpr<User>(x => x.Address == new Address { Number = 1, City = new City { Country = "BR", CityName = "POA" } },
+                "(Address = { Number: @p0, City: { Country: @p1, CityName: @p2 } })", 1, "BR", "POA");
         }
 
         [TestMethod]
