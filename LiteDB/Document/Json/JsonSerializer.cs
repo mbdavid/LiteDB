@@ -15,14 +15,11 @@ namespace LiteDB
         /// <summary>
         /// Json serialize a BsonValue into a String
         /// </summary>
-        public static string Serialize(BsonValue value, bool pretty = false, bool writeBinary = true)
+        public static string Serialize(BsonValue value)
         {
             var sb = new StringBuilder();
 
-            using (var w = new StringWriter(sb))
-            {
-                Serialize(value ?? BsonValue.Null, w, pretty, writeBinary);
-            }
+            Serialize(value, sb);
 
             return sb.ToString();
         }
@@ -30,25 +27,23 @@ namespace LiteDB
         /// <summary>
         /// Json serialize a BsonValue into a TextWriter
         /// </summary>
-        public static void Serialize(BsonValue value, TextWriter writer, bool pretty = false, bool writeBinary = true)
+        public static void Serialize(BsonValue value, TextWriter writer)
         {
-            var w = new JsonWriter(writer)
-            {
-                Pretty = pretty,
-                WriteBinary = writeBinary
-            };
+            var json = new JsonWriter(writer);
 
-            w.Serialize(value ?? BsonValue.Null);
+            json.Serialize(value ?? BsonValue.Null);
         }
 
         /// <summary>
         /// Json serialize a BsonValue into a StringBuilder
         /// </summary>
-        public static void Serialize(BsonValue value, StringBuilder sb, bool pretty = false, bool writeBinary = true)
+        public static void Serialize(BsonValue value, StringBuilder sb)
         {
             using (var writer = new StringWriter(sb))
             {
-                Serialize(value, writer, pretty, writeBinary);
+                var w = new JsonWriter(writer);
+
+                w.Serialize(value ?? BsonValue.Null);
             }
         }
 

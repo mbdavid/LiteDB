@@ -6,22 +6,40 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal class JsonWriter
+    public class JsonWriter
     {
-        private const int INDENT_SIZE = 4;
-
         private TextWriter _writer;
         private int _indent;
         private string _spacer = "";
 
-        public bool Pretty { get; set; }
-        public bool WriteBinary { get; set; }
+        /// <summary>
+        /// Get/Set indent size
+        /// </summary>
+        public int Indent { get; set; } = 4;
+
+        /// <summary>
+        /// Get/Set if writer must print pretty (with new line/indent)
+        /// </summary>
+        public bool Pretty { get; set; } = false;
+
+        /// <summary>
+        /// Get/Set if binary data must be converted into base64
+        /// </summary>
+        public bool WriteBinary { get; set; } = true;
+
+        /// <summary>
+        /// Get/Set if string must be encoding as utf \u00000
+        /// </summary>
+        public bool Encode { get; set; } = true;
 
         public JsonWriter(TextWriter writer)
         {
             _writer = writer;
         }
 
+        /// <summary>
+        /// Serialize value into text writer
+        /// </summary>
         public void Serialize(BsonValue value)
         {
             _indent = 0;
@@ -185,7 +203,7 @@ namespace LiteDB
 
                     default:
                         int i = (int)c;
-                        if (i < 32 || i > 127)
+                        if (this.Encode && (i < 32 || i > 127))
                         {
                             _writer.Write("\\u");
                             _writer.Write(i.ToString("x04"));
@@ -283,7 +301,7 @@ namespace LiteDB
         {
             if (this.Pretty)
             {
-                _writer.Write("".PadRight(_indent * INDENT_SIZE, ' '));
+                _writer.Write("".PadRight(_indent * this.Indent, ' '));
             }
         }
     }

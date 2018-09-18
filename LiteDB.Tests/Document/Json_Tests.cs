@@ -38,7 +38,7 @@ namespace LiteDB.Tests.Document
         {
             var o = CreateDoc();
 
-            var json = JsonSerializer.Serialize(o, true);
+            var json = JsonSerializer.Serialize(o);
 
             var doc = JsonSerializer.Deserialize(json).AsDocument;
 

@@ -8,7 +8,7 @@ namespace LiteDB
     /// <summary>
     /// A class that read a json string using a tokenizer (without regex)
     /// </summary>
-    internal class JsonReader
+    public class JsonReader
     {
         private Tokenizer _tokenizer = null;
 

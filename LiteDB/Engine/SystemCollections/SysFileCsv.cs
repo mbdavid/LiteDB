@@ -7,9 +7,9 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    internal class SysFileJson : SystemCollection
+    internal class SysFileCsv : SystemCollection
     {
-        public SysFileJson() : base("$file_json")
+        public SysFileCsv() : base("$file_csv")
         {
         }
 
@@ -17,26 +17,7 @@ namespace LiteDB.Engine
 
         public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
         {
-            if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, $"Collection ${this.Name} requires a string/object parameter");
-
-            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
-
-            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (var reader = new StreamReader(fs))
-                {
-                    var json = new JsonReader(reader);
-
-                    var source = json.DeserializeArray()
-                        .Select(x => x.AsDocument);
-
-                    // read documents inside file and return one-by-one
-                    foreach (var doc in source)
-                    {
-                        yield return doc;
-                    }
-                }
-            }
+            throw new NotImplementedException();
         }
 
         public override int Output(IEnumerable<BsonValue> source, BsonValue options)
@@ -44,14 +25,13 @@ namespace LiteDB.Engine
             if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
 
             var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
-            var pretty = GetOption<bool>(options, false, "pretty", false);
-            var indent = GetOption<int>(options, false, "indent", 4);
-            var encode = GetOption<bool>(options, false, "encode", true);
             var overwritten = GetOption<bool>(options, false, "overwritten", false);
 
             var index = 0;
+
             FileStream fs = null;
             StreamWriter writer = null;
+            JsonWriter json = null;
 
             try
             {
@@ -61,27 +41,37 @@ namespace LiteDB.Engine
                     {
                         fs = new FileStream(filename, overwritten ? FileMode.OpenOrCreate : FileMode.CreateNew);
                         writer = new StreamWriter(fs);
-                        writer.WriteLine("[");
+                        json = new JsonWriter(writer)
+                        {
+                            Encode = false
+                        };
                     }
                     else
                     {
-                        writer.WriteLine(",");
+                        writer.WriteLine();
                     }
 
-                    var json = new JsonWriter(writer)
+                    if (value.IsDocument)
                     {
-                        Pretty = pretty,
-                        Indent = indent,
-                        Encode = encode
-                    };
+                        var doc = value.AsDocument;
+                        var idx = 0;
 
-                    json.Serialize(value);
+                        foreach (var elem in doc)
+                        {
+                            if (idx++ > 0) writer.Write(";");
+
+                            json.Serialize(elem.Value);
+                        }
+                    }
+                    else
+                    {
+                        json.Serialize(value);
+                    }
                 }
 
                 if (index > 0)
                 {
                     writer.WriteLine();
-                    writer.Write("]");
                     writer.Flush();
                 }
             }
