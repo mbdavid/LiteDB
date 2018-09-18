@@ -65,10 +65,10 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Update many document based on merge current document with extend expression (must return a new document). This merge will be applied in all predicate results
-        /// Eg: col.UpdateMany("{Name: UPPER(Name)}", "_id > 0")
+        /// Update many document based on merge current document with extend expression. Use your class with initializers. 
+        /// Eg: col.UpdateMany(x => new Customer { Name = Name.ToUpper(), Salary: 100 }, x => x.Name == "John")
         /// </summary>
-        public int UpdateMany<K>(Expression<Func<T, K>> extend, Expression<Func<T, bool>> predicate)
+        public int UpdateMany(Expression<Func<T, T>> extend, Expression<Func<T, bool>> predicate)
         {
             if (extend == null) throw new ArgumentNullException(nameof(extend));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));

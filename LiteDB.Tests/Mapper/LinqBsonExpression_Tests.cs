@@ -285,6 +285,10 @@ namespace LiteDB.Tests.Mapper
             // new instances with initializers
             TestExpr<User>(x => new User { Id = 1, Active = false }, "{ _id: @p0, Active: @p1 }", 1, false);
 
+            // used in UpdateMany extend document
+            TestExpr<User>(x => new User { Name = x.Name.ToUpper(), Salary = x.Salary * 2 }, "{ Name: UPPER($.Name), Salary: ($.Salary * @p0) }", 2);
+
+
         }
 
         [TestMethod]
