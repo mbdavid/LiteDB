@@ -8,6 +8,8 @@ namespace LiteDB
 {
     public class JsonWriter
     {
+        private readonly static IFormatProvider _numberFormat = CultureInfo.InvariantCulture.NumberFormat;
+
         private TextWriter _writer;
         private int _indent;
         private string _spacer = "";
@@ -64,11 +66,11 @@ namespace LiteDB
                     break;
 
                 case BsonType.Int32:
-                    _writer.Write((Int32)value.RawValue);
+                    _writer.Write(((Int32)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Double:
-                    _writer.Write(((Double)value.RawValue).ToString("0.0########", NumberFormatInfo.InvariantInfo));
+                    _writer.Write(((Double)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Binary:
@@ -89,11 +91,11 @@ namespace LiteDB
                     break;
 
                 case BsonType.Int64:
-                    this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString());
+                    this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Decimal:
-                    this.WriteExtendDataType("$numberDecimal", ((Decimal)value.RawValue).ToString());
+                    this.WriteExtendDataType("$numberDecimal", ((Decimal)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.MinValue:

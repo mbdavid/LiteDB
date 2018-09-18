@@ -10,6 +10,8 @@ namespace LiteDB.Engine
 {
     internal class SysFileCsv : SystemCollection
     {
+        private readonly static IFormatProvider _numberFormat = CultureInfo.InvariantCulture.NumberFormat;
+
         public SysFileCsv() : base("$file_csv")
         {
         }
@@ -29,6 +31,7 @@ namespace LiteDB.Engine
             var overwritten = GetOption<bool>(options, false, "overwritten", false);
             var encoding = GetOption<string>(options, false, "encoding", "utf-8");
             var delimiter = GetOption<string>(options, false, "delimiter", ",");
+            var header = GetOption<bool>(options, false, "header", true);
 
             var index = 0;
 
@@ -43,6 +46,21 @@ namespace LiteDB.Engine
                     {
                         fs = new FileStream(filename, overwritten ? FileMode.OpenOrCreate : FileMode.CreateNew);
                         writer = new StreamWriter(fs, Encoding.GetEncoding(encoding));
+
+                        // print file header
+                        if (header && value.IsDocument)
+                        {
+                            var doc = value.AsDocument;
+                            var idx = 0;
+
+                            foreach (var elem in doc)
+                            {
+                                if (idx++ > 0) writer.Write(delimiter);
+                                writer.Write(elem.Key);
+                            }
+
+                            writer.WriteLine();
+                        }
                     }
                     else
                     {
@@ -93,32 +111,28 @@ namespace LiteDB.Engine
                     break;
 
                 case BsonType.Int32:
-                    writer.Write((Int32)value.RawValue);
+                    writer.Write(((Int32)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Int64:
-                    writer.Write((Int64)value.RawValue);
+                    writer.Write(((Int64)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Double:
-                    writer.Write(((Double)value.RawValue).ToString("0.0########", NumberFormatInfo.InvariantInfo));
+                    writer.Write(((Double)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Decimal:
-                    writer.Write(((Decimal)value.RawValue).ToString("0.0########", NumberFormatInfo.InvariantInfo));
+                    writer.Write(((Decimal)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.DateTime:
-                    writer.Write("\"");
                     writer.Write(((DateTime)value.RawValue).ToUniversalTime().ToString("o"));
-                    writer.Write("\"");
                     break;
 
                 case BsonType.Binary:
                     var bytes = (byte[])value.RawValue;
-                    writer.Write("\"");
                     writer.Write(Convert.ToBase64String(bytes, 0, bytes.Length));
-                    writer.Write("\"");
                     break;
 
                 default:
