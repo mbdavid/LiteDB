@@ -22,16 +22,6 @@ namespace LiteDB
         /// </summary>
         public bool Pretty { get; set; } = false;
 
-        /// <summary>
-        /// Get/Set if binary data must be converted into base64
-        /// </summary>
-        public bool WriteBinary { get; set; } = true;
-
-        /// <summary>
-        /// Get/Set if string must be encoding as utf \u00000
-        /// </summary>
-        public bool Encode { get; set; } = true;
-
         public JsonWriter(TextWriter writer)
         {
             _writer = writer;
@@ -83,7 +73,7 @@ namespace LiteDB
 
                 case BsonType.Binary:
                     var bytes = (byte[])value.RawValue;
-                    this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(bytes, 0, bytes.Length) : "-- " + bytes.Length + " bytes --");
+                    this.WriteExtendDataType("$binary", Convert.ToBase64String(bytes, 0, bytes.Length));
                     break;
 
                 case BsonType.ObjectId:
@@ -203,7 +193,7 @@ namespace LiteDB
 
                     default:
                         int i = (int)c;
-                        if (this.Encode && (i < 32 || i > 127))
+                        if (i < 32 || i > 127)
                         {
                             _writer.Write("\\u");
                             _writer.Write(i.ToString("x04"));

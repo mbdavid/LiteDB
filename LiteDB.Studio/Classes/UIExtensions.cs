@@ -150,7 +150,6 @@ namespace LiteDB.Studio
                 var json = new JsonWriter(writer)
                 {
                     Pretty = true,
-                    Encode = false,
                     Indent = 2
                 };
 
@@ -160,6 +159,7 @@ namespace LiteDB.Studio
                     {
                         sb.AppendLine($"[{index++ + 1}]:");
                         json.Serialize(value);
+                        sb.AppendLine();
                     }
 
                     if (data.LimitExceeded)
@@ -251,7 +251,6 @@ namespace LiteDB.Studio
                 var w = new JsonWriter(writer)
                 {
                     Pretty = true,
-                    Encode = false,
                     Indent = 2
                 };
 
