@@ -70,7 +70,7 @@ namespace LiteDB
                     break;
 
                 case BsonType.Double:
-                    _writer.Write(((Double)value.RawValue).ToString(_numberFormat));
+                    _writer.Write(((Double)value.RawValue).ToString("0.0########", _numberFormat));
                     break;
 
                 case BsonType.Binary:
