@@ -212,7 +212,7 @@ namespace LiteDB
         /// <summary>
         /// Project each document of resultset into a new document/value based on selector expression
         /// </summary>
-        public LiteQueryable<K> Select<K>(Expression<Func<T, K>> selector)
+        public LiteQueryable<K> Select<K>(Expression<Func<T, K>> selector) where K : class
         {
             _query.Select = _mapper.GetExpression(selector);
 
@@ -288,22 +288,6 @@ namespace LiteDB
         #region Execute Result
 
         /// <summary>
-        /// Return query and result only values (not only documents)
-        /// </summary>
-        public IEnumerable<BsonValue> ToValues()
-        {
-            _query.ExplainPlan = false;
-
-            using (var reader = _engine.Query(_collection, _query))
-            {
-                while(reader.Read())
-                {
-                    yield return reader.Current;
-                }
-            }
-        }
-
-        /// <summary>
         /// Execute query and returns resultset as generic BsonDataReader
         /// </summary>
         public IBsonDataReader ExecuteReader()
@@ -314,11 +298,25 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Run reader and resulta IEnumerable of documents
+        /// </summary>
+        public IEnumerable<BsonDocument> ToDocuments()
+        {
+            using (var reader = this.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    yield return reader.Current.AsDocument;
+                }
+            }
+        }
+
+        /// <summary>
         /// Execute query and return single value
         /// </summary>
         public T ExecuteScalar()
         {
-            var value = this.ToValues().FirstOrDefault();
+            var value = this.ToDocuments().FirstOrDefault();
 
             if (value == null) return default(T);
 
@@ -343,7 +341,7 @@ namespace LiteDB
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
-            return this.ToValues().Select(x => (T)_mapper.Deserialize(typeof(T), x));
+            return this.ToDocuments().Select(x => (T)_mapper.Deserialize(typeof(T), x));
         }
 
         /// <summary>
@@ -409,7 +407,7 @@ namespace LiteDB
         {
             this.SelectAll($"COUNT({_uniqueField})");
 
-            return this.ToValues().Single().AsInt32;
+            return this.ToDocuments().Single().AsInt32;
         }
 
         /// <summary>
@@ -419,7 +417,7 @@ namespace LiteDB
         {
             this.SelectAll($"COUNT({_uniqueField})");
 
-            return this.ToValues().Single().AsInt64;
+            return this.ToDocuments().Single().AsInt64;
         }
 
         /// <summary>
@@ -429,7 +427,7 @@ namespace LiteDB
         {
             this.SelectAll($"ANY({_uniqueField} != null)");
 
-            return this.ToValues().Single().AsBoolean;
+            return this.ToDocuments().Single().AsBoolean;
         }
 
         #endregion
@@ -441,7 +439,7 @@ namespace LiteDB
             _query.Into = newCollection;
             _query.IntoAutoId = autoId;
 
-            return this.ToValues().Single().AsInt32;
+            return this.ToDocuments().Single().AsInt32;
         }
 
         #endregion

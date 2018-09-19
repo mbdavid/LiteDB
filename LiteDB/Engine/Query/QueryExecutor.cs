@@ -55,7 +55,7 @@ namespace LiteDB.Engine
                 throw;
             }
 
-            IEnumerable<BsonValue> RunQuery()
+            IEnumerable<BsonDocument> RunQuery()
             {
                 var snapshot = transaction.CreateSnapshot(_queryDefinition.ForUpdate ? LockMode.Write : LockMode.Read, _collection, false);
                 var cursor = _engine.NewCursor(transaction, snapshot);
@@ -85,6 +85,10 @@ namespace LiteDB.Engine
 
                 // execute optimization before run query (will fill missing _query properties instance)
                 var optimizer = new QueryOptimization(snapshot, _queryDefinition, _source);
+
+                // check if query definition rules are ok
+                optimizer.Validate();
+
                 var queryPlan = optimizer.ProcessQuery();
 
                 // if execution is just to get explan plan, return as single document result
@@ -138,13 +142,13 @@ namespace LiteDB.Engine
                     };
 
                     // call safepoint just before return each document
-                    foreach (var value in pipe.Pipe(nodes, queryPlan))
+                    foreach (var doc in pipe.Pipe(nodes, queryPlan))
                     {
                         // stop timer and increase counter
                         cursor.Timer.Stop();
                         cursor.DocumentCount++;
 
-                        yield return value;
+                        yield return doc;
 
                         // start timer again
                         cursor.Timer.Start();

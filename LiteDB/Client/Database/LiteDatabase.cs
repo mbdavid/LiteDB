@@ -196,9 +196,8 @@ namespace LiteDB
             var cols = this.GetCollection("$cols")
                 .Query()
                 .Where("type = 'user'")
-                .Select("name")
-                .ToValues()
-                .Select(x => x.AsString)
+                .ToDocuments()
+                .Select(x => x["name"].AsString)
                 .ToArray();
 
             return cols;

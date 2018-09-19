@@ -145,6 +145,14 @@ namespace LiteDB.Engine
                     ["select"] = this.GroupBy.Select?.Source
                 };
             }
+            else
+            {
+                doc["select"] = new BsonDocument
+                {
+                    ["expr"] = this.Select.Expression.Source,
+                    ["all"] = this.Select.All
+                };
+            }
 
             doc["orderBy"] = this.OrderBy == null ?
                 BsonValue.Null :
@@ -156,15 +164,6 @@ namespace LiteDB.Engine
 
             doc["limit"] = this.Limit;
             doc["offset"] = this.Offset;
-
-            if (this.Select != null)
-            {
-                doc["select"] = new BsonDocument
-                {
-                    ["expr"] = this.Select.Expression.Source,
-                    ["all"] = this.Select.All
-                };
-            }
 
             return doc;
         }

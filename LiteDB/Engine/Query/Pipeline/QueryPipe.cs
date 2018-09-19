@@ -14,7 +14,18 @@ namespace LiteDB.Engine
         {
         }
 
-        public override IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
+        /// <summary>
+        /// Query Pipe order
+        /// - LoadDocument
+        /// - IncludeBefore
+        /// - Filter
+        /// - IncludeAfter
+        /// - Select
+        /// - OrderBy
+        /// - OffSet
+        /// - Limit
+        /// </summary>
+        public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
             var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
@@ -37,6 +48,17 @@ namespace LiteDB.Engine
                 source = this.Include(source, path);
             }
 
+            // if is an aggregate query, run select transform over all resultset - will return a single value
+            if (query.Select.All)
+            {
+                source = this.SelectAll(source, query.Select.Expression);
+            }
+            // run select transform in each document and return a new document or value
+            else if (query.Select.Expression != null)
+            {
+                source = this.Select(source, query.Select.Expression);
+            }
+
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
@@ -51,20 +73,13 @@ namespace LiteDB.Engine
                 if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
             }
 
-            // if is an aggregate query, run select transform over all resultset - will return a single value
-            if (query.Select?.All ?? false)
-            {
-                return query.Select.Expression.Execute(source, true);
-            }
-
-            // run select transform in each document result (if select == null, return source)
-            return this.Select(source, query.Select?.Expression);
+            return source;
         }
 
         /// <summary>
         /// Pipe: Transaform final result appling expressin transform. Can return document or simple values
         /// </summary>
-        private IEnumerable<BsonValue> Select(IEnumerable<BsonDocument> source, BsonExpression select)
+        private IEnumerable<BsonDocument> Select(IEnumerable<BsonDocument> source, BsonExpression select)
         {
             if (select == null)
             {
@@ -75,14 +90,44 @@ namespace LiteDB.Engine
             }
             else
             {
+                var defaultName = select.DefaultFieldName();
+
                 foreach (var doc in source)
                 {
                     var result = select.Execute(doc, true);
 
                     foreach (var value in result)
                     {
-                        yield return value;
+                        if (value.IsDocument)
+                        {
+                            yield return value.AsDocument;
+                        }
+                        else
+                        {
+                            yield return new BsonDocument { [defaultName] = value };
+                        }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pipe: Run select expression over all recordset
+        /// </summary>
+        private IEnumerable<BsonDocument> SelectAll(IEnumerable<BsonDocument> source, BsonExpression select)
+        {
+            var defaultName = select.DefaultFieldName();
+            var result = select.Execute(source, true);
+
+            foreach (var value in result)
+            {
+                if (value.IsDocument)
+                {
+                    yield return value.AsDocument;
+                }
+                else
+                {
+                    yield return new BsonDocument { [defaultName] = value };
                 }
             }
         }

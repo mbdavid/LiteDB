@@ -14,7 +14,21 @@ namespace LiteDB.Engine
         {
         }
 
-        public override IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
+        /// <summary>
+        /// GroupBy Pipe Order
+        /// - LoadDocument
+        /// - IncludeBefore
+        /// - Filter
+        /// - IncludeAfter
+        /// - OrderBy to GroupBy
+        /// - GroupBy
+        /// - SelectGroupBy
+        /// - Having
+        /// - OrderBy
+        /// - OffSet
+        /// - Limit
+        /// </summary>
+        public override IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query)
         {
             // starts pipe loading document
             var source = this.LoadDocument(nodes, query.IsIndexKeyOnly, query.Fields.FirstOrDefault());
@@ -118,6 +132,8 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
         {
+            var defaultName = select?.DefaultFieldName();
+
             foreach (DocumentEnumerable group in groups)
             {
                 // transfom group result if contains select expression
@@ -125,6 +141,7 @@ namespace LiteDB.Engine
                 {
                     var result = select.Execute(group, true);
 
+                    // each group result must return a single value after run expression
                     var value = result.First();
 
                     if (value.IsDocument)
@@ -133,12 +150,12 @@ namespace LiteDB.Engine
                     }
                     else
                     {
-                        yield return new BsonDocument { ["expr"] = value };
+                        yield return new BsonDocument { [defaultName] = value };
                     }
                 }
                 else
                 {
-                    // get first document BUT with full source scan
+                    // get first document BUT with full source scan (get from DocumentEnumerable)
                     var doc = group.FirstOrDefault();
 
                     yield return doc;

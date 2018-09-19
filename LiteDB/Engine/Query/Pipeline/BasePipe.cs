@@ -30,7 +30,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Abstract method to be implement according pipe workflow
         /// </summary>
-        public abstract IEnumerable<BsonValue> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
+        public abstract IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
 
         // load documents from disk or make a "fake" document using index key only (useful for COUNT/EXISTS)
         protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool indexKeyOnly, string field)

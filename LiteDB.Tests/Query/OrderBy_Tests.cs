@@ -75,12 +75,12 @@ namespace LiteDB.Tests.Query
         {
             var r0 = local
                 .OrderBy(x => x.Date.Day)
-                .Select(x => x.Date.Day)
+                .Select(x => new { d = x.Date.Day })
                 .ToArray();
 
             var r1 = collection.Query()
                 .OrderBy(x => x.Date.Day)
-                .Select(x => x.Date.Day)
+                .Select(x => new { d = x.Date.Day })
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));
@@ -93,14 +93,14 @@ namespace LiteDB.Tests.Query
                 .OrderBy(x => x.Date.Day)
                 .Skip(5)
                 .Take(10)
-                .Select(x => x.Date.Day)
+                .Select(x => new { d = x.Date.Day })
                 .ToArray();
 
             var r1 = collection.Query()
                 .OrderBy(x => x.Date.Day)
                 .Offset(5)
                 .Limit(10)
-                .Select(x => x.Date.Day)
+                .Select(x => new { d = x.Date.Day })
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));

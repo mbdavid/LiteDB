@@ -212,13 +212,12 @@ namespace LiteDB.Studio
                 .Query()
                 .Where("type = 'system'")
                 .OrderBy("name")
-                .Select("name")
-                .ToValues();
+                .ToDocuments();
 
-            foreach (var key in sc)
+            foreach (var doc in sc)
             {
-                var col = system.Nodes.Add(key.AsString);
-                col.Tag = $"SELECT $ FROM {key.AsString}";
+                var col = system.Nodes.Add(doc["name"].AsString);
+                col.Tag = $"SELECT $ FROM {doc["name"].AsString}";
                 col.ImageKey = col.SelectedImageKey = "table_gear";
             }
 

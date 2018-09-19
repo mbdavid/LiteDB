@@ -92,6 +92,16 @@ namespace LiteDB
         private Func<IEnumerable<BsonDocument>, IEnumerable<BsonValue>, BsonDocument, IEnumerable<BsonValue>> _func;
 
         /// <summary>
+        /// Get default field name when need convert simple BsonValue into BsonDocument
+        /// </summary>
+        internal string DefaultFieldName()
+        {
+            if (this.Fields.Count == 0) return "expr";
+
+            return string.Join("_", this.Fields);
+        }
+
+        /// <summary>
         /// Only internal ctor (from BsonParserExpression)
         /// </summary>
         internal BsonExpression()

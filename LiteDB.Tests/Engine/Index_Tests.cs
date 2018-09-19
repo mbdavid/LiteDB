@@ -57,13 +57,13 @@ namespace LiteDB.Tests.Engine
                 var asc = string.Join("", col.Query()
                     .OrderBy("text")
                     .Select("text")
-                    .ToValues()
+                    .ToDocuments()
                     .Select(x => x.AsString));
 
                 var desc = string.Join("", col.Query()
                     .OrderByDescending("text")
                     .Select("text")
-                    .ToValues()
+                    .ToDocuments()
                     .Select(x => x.AsString));
 
                 Assert.AreEqual("ABCDE", asc);

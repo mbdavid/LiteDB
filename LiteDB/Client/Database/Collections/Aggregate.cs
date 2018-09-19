@@ -122,7 +122,7 @@ namespace LiteDB
             return this.Query()
                 .OrderBy(keySelector)
                 .Select(keySelector)
-                .ToValues()
+                .ToDocuments()
                 .First();
         }
 
@@ -155,7 +155,7 @@ namespace LiteDB
             return this.Query()
                 .OrderByDescending(keySelector)
                 .Select(keySelector)
-                .ToValues()
+                .ToDocuments()
                 .First();
         }
 

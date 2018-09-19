@@ -32,6 +32,37 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Check some rules if query contains concise rules
+        /// </summary>
+        public void Validate()
+        {
+            if (_queryDefinition.SelectAll && _queryDefinition.Limit != int.MaxValue)
+            {
+                throw new LiteException(0, "Select ALL return a single value and can't be used with LIMIT parameter");
+            }
+            if (_queryDefinition.SelectAll && _queryDefinition.Offset != 0)
+            {
+                throw new LiteException(0, "Select ALL return a single value and can't be used with OFFSET parameter");
+            }
+            if (_queryDefinition.SelectAll && _queryDefinition.OrderBy != null)
+            {
+                throw new LiteException(0, "Select ALL return a single value and can't be used with ORDER BY expression");
+            }
+            if (_queryDefinition.SelectAll && _queryDefinition.Select == null)
+            {
+                throw new LiteException(0, "Select ALL require SELECT expression");
+            }
+            if (_queryDefinition.SelectAll && _queryDefinition.GroupBy != null)
+            {
+                throw new LiteException(0, "Select ALL has no support for GROUP BY expression");
+            }
+            if (_queryDefinition.Having != null && _queryDefinition.GroupBy == null)
+            {
+                throw new LiteException(0, "HAVING require GROUP BY expression");
+            }
+        }
+
+        /// <summary>
         /// Build QueryPlan instance based on QueryBuilder fields
         /// - Load used fields in all expressions
         /// - Select best index option
