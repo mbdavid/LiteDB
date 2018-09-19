@@ -6,22 +6,32 @@ using System.Linq;
 
 namespace LiteDB
 {
-    internal class JsonWriter
+    public class JsonWriter
     {
-        private const int INDENT_SIZE = 4;
+        private readonly static IFormatProvider _numberFormat = CultureInfo.InvariantCulture.NumberFormat;
 
         private TextWriter _writer;
         private int _indent;
         private string _spacer = "";
 
-        public bool Pretty { get; set; }
-        public bool WriteBinary { get; set; }
+        /// <summary>
+        /// Get/Set indent size
+        /// </summary>
+        public int Indent { get; set; } = 4;
+
+        /// <summary>
+        /// Get/Set if writer must print pretty (with new line/indent)
+        /// </summary>
+        public bool Pretty { get; set; } = false;
 
         public JsonWriter(TextWriter writer)
         {
             _writer = writer;
         }
 
+        /// <summary>
+        /// Serialize value into text writer
+        /// </summary>
         public void Serialize(BsonValue value)
         {
             _indent = 0;
@@ -56,16 +66,16 @@ namespace LiteDB
                     break;
 
                 case BsonType.Int32:
-                    _writer.Write((Int32)value.RawValue);
+                    _writer.Write(((Int32)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Double:
-                    _writer.Write(((Double)value.RawValue).ToString("0.0########", NumberFormatInfo.InvariantInfo));
+                    _writer.Write(((Double)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Binary:
                     var bytes = (byte[])value.RawValue;
-                    this.WriteExtendDataType("$binary", this.WriteBinary ? Convert.ToBase64String(bytes, 0, bytes.Length) : "-- " + bytes.Length + " bytes --");
+                    this.WriteExtendDataType("$binary", Convert.ToBase64String(bytes, 0, bytes.Length));
                     break;
 
                 case BsonType.ObjectId:
@@ -81,11 +91,11 @@ namespace LiteDB
                     break;
 
                 case BsonType.Int64:
-                    this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString());
+                    this.WriteExtendDataType("$numberLong", ((Int64)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.Decimal:
-                    this.WriteExtendDataType("$numberDecimal", ((Decimal)value.RawValue).ToString());
+                    this.WriteExtendDataType("$numberDecimal", ((Decimal)value.RawValue).ToString(_numberFormat));
                     break;
 
                 case BsonType.MinValue:
@@ -283,7 +293,7 @@ namespace LiteDB
         {
             if (this.Pretty)
             {
-                _writer.Write("".PadRight(_indent * INDENT_SIZE, ' '));
+                _writer.Write("".PadRight(_indent * this.Indent, ' '));
             }
         }
     }

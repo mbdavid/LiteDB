@@ -29,7 +29,7 @@ namespace LiteDB.Tests.Document
 
             var doc = new BsonValue(obj);
 
-            var json = JsonSerializer.Serialize(doc, false, true);
+            var json = JsonSerializer.Serialize(doc);
 
             Assert.AreEqual("{\"int\":123,\"arr\":[3.0,2,1,\"zero\",false],\"doc\":{\"a\":\"a\",\"b\":[0]}}", json);
         }

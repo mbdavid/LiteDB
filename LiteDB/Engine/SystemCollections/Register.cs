@@ -27,6 +27,8 @@ namespace LiteDB.Engine
 
             // external collections
             this.RegisterSystemCollection(new SysFileJson());
+            this.RegisterSystemCollection(new SysFileCsv());
+
             this.RegisterSystemCollection(new SysQuery());
         }
     }

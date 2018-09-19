@@ -45,11 +45,14 @@ namespace LiteDB.Engine
 
             var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
             var pretty = GetOption<bool>(options, false, "pretty", false);
+            var indent = GetOption<int>(options, false, "indent", 4);
+            var encoding = GetOption<string>(options, false, "encoding", "utf-8");
             var overwritten = GetOption<bool>(options, false, "overwritten", false);
 
             var index = 0;
             FileStream fs = null;
             StreamWriter writer = null;
+            JsonWriter json = null;
 
             try
             {
@@ -58,7 +61,13 @@ namespace LiteDB.Engine
                     if (index++ == 0)
                     {
                         fs = new FileStream(filename, overwritten ? FileMode.OpenOrCreate : FileMode.CreateNew);
-                        writer = new StreamWriter(fs);
+                        writer = new StreamWriter(fs, Encoding.GetEncoding(encoding));
+                        json = new JsonWriter(writer)
+                        {
+                            Pretty = pretty,
+                            Indent = indent
+                        };
+
                         writer.WriteLine("[");
                     }
                     else
@@ -66,7 +75,7 @@ namespace LiteDB.Engine
                         writer.WriteLine(",");
                     }
 
-                    JsonSerializer.Serialize(value, writer, pretty, true);
+                    json.Serialize(value);
                 }
 
                 if (index > 0)

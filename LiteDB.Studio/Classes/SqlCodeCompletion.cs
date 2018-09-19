@@ -146,7 +146,9 @@ namespace LiteDB.Studio
             // collections
             var cols = db.GetCollection("$cols").Query().ToArray();
 
-            _codeCompletionData.AddRange(cols.Select(x => new DefaultCompletionData(x["name"].AsString, x["name"].AsString, 1)));
+            _codeCompletionData.AddRange(cols.Select(x => new DefaultCompletionData(x["name"].AsString, x["name"].AsString, 
+                x["type"] == "user" ? 1 :
+                x["type"] == "system" ? 5 : 4)));
 
         }
 

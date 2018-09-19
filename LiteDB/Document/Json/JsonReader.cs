@@ -8,8 +8,10 @@ namespace LiteDB
     /// <summary>
     /// A class that read a json string using a tokenizer (without regex)
     /// </summary>
-    internal class JsonReader
+    public class JsonReader
     {
+        private readonly static IFormatProvider _numberFormat = CultureInfo.InvariantCulture.NumberFormat;
+
         private Tokenizer _tokenizer = null;
 
         public long Position { get { return _tokenizer.Position; } }
@@ -75,10 +77,10 @@ namespace LiteDB
                     // read next token (must be a number)
                     var number = _tokenizer.ReadToken(false).Expect(TokenType.Int, TokenType.Double);
                     return number.Type == TokenType.Double ?
-                        new BsonValue(-Convert.ToDouble(number.Value, CultureInfo.InvariantCulture.NumberFormat)) :
-                        new BsonValue(-Convert.ToInt32(number.Value));
-                case TokenType.Int: return new BsonValue(Convert.ToInt32(token.Value));
-                case TokenType.Double: return new BsonValue(Convert.ToDouble(token.Value, CultureInfo.InvariantCulture.NumberFormat));
+                        new BsonValue(-Convert.ToDouble(number.Value, _numberFormat)) :
+                        new BsonValue(-Convert.ToInt32(number.Value, _numberFormat));
+                case TokenType.Int: return new BsonValue(Convert.ToInt32(token.Value, _numberFormat));
+                case TokenType.Double: return new BsonValue(Convert.ToDouble(token.Value, _numberFormat));
                 case TokenType.Word:
                     switch (token.Value.ToLower())
                     {
@@ -165,8 +167,8 @@ namespace LiteDB
                 case "$oid": val = new BsonValue(new ObjectId(value)); break;
                 case "$guid": val = new BsonValue(new Guid(value)); break;
                 case "$date": val = new BsonValue(DateTime.Parse(value).ToLocalTime()); break;
-                case "$numberLong": val = new BsonValue(Convert.ToInt64(value)); break;
-                case "$numberDecimal": val = new BsonValue(Convert.ToDecimal(value)); break;
+                case "$numberLong": val = new BsonValue(Convert.ToInt64(value, _numberFormat)); break;
+                case "$numberDecimal": val = new BsonValue(Convert.ToDecimal(value, _numberFormat)); break;
                 case "$minValue": val = BsonValue.MinValue; break;
                 case "$maxValue": val = BsonValue.MaxValue; break;
 

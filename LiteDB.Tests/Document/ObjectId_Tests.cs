@@ -26,7 +26,7 @@ namespace LiteDB.Tests.Document
             Assert.AreEqual(c2.CompareTo(c3), -1); // 2 < 3
 
             // serializations
-            var joid = JsonSerializer.Serialize(c1, true);
+            var joid = JsonSerializer.Serialize(c1);
             var jc1 = JsonSerializer.Deserialize(joid).AsObjectId;
 
             Assert.AreEqual(c1, jc1);

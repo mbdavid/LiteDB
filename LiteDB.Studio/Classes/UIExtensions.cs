@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -131,7 +132,7 @@ namespace LiteDB.Studio
                     cell.Value = value.RawValue.ToString();
                     break;
                 default:
-                    cell.Value = JsonSerializer.Serialize(value, false, false);
+                    cell.Value = JsonSerializer.Serialize(value);
                     break;
             }
 
@@ -144,23 +145,33 @@ namespace LiteDB.Studio
             var index = 0;
             var sb = new StringBuilder();
 
-            if (data.Result?.Count > 0)
+            using (var writer = new StringWriter(sb))
             {
-                foreach (var value in data.Result)
+                var json = new JsonWriter(writer)
                 {
-                    sb.AppendLine($"[{index++ + 1}]:");
-                    sb.AppendLine(JsonSerializer.Serialize(value, true, true));
-                }
+                    Pretty = true,
+                    Indent = 2
+                };
 
-                if (data.LimitExceeded)
+                if (data.Result?.Count > 0)
                 {
-                    sb.AppendLine("...");
-                    sb.AppendLine("Limit exceeded");
+                    foreach (var value in data.Result)
+                    {
+                        sb.AppendLine($"[{index++ + 1}]:");
+                        json.Serialize(value);
+                        sb.AppendLine();
+                    }
+
+                    if (data.LimitExceeded)
+                    {
+                        sb.AppendLine("...");
+                        sb.AppendLine("Limit exceeded");
+                    }
                 }
-            }
-            else
-            {
-                sb.AppendLine("no resultset");
+                else
+                {
+                    sb.AppendLine("no resultset");
+                }
             }
 
             txt.SuspendLayout();
@@ -232,7 +243,21 @@ namespace LiteDB.Studio
             txt.SuspendLayout();
             txt.Clear();
             txt.SetHighlighting("JavaScript");
-            txt.Text = JsonSerializer.Serialize(data.Parameters, true);
+
+            var sb = new StringBuilder();
+
+            using (var writer = new StringWriter(sb))
+            {
+                var w = new JsonWriter(writer)
+                {
+                    Pretty = true,
+                    Indent = 2
+                };
+
+                w.Serialize(data.Parameters ?? BsonValue.Null);
+            }
+
+            txt.Text = sb.ToString();
             txt.ResumeLayout();
         }
     }

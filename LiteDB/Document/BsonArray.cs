@@ -175,7 +175,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return JsonSerializer.Serialize(this, false, true);
+            return JsonSerializer.Serialize(this);
         }
     }
 }
