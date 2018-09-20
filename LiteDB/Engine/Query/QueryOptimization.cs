@@ -60,7 +60,7 @@ namespace LiteDB.Engine
         /// </summary>
         public QueryPlan ProcessQuery()
         {
-            // split where expressions into TERMs (splited by AND type)
+            // split where expressions into TERMs (splited by AND operator)
             this.SplitWherePredicateInTerms();
 
             // define Fields
@@ -154,13 +154,13 @@ namespace LiteDB.Engine
 
         private void DefineIndex()
         {
-            // selected expression to be used as index
+            // selected expression to be used as index (from _terms)
             BsonExpression selected = null;
 
             // if index are not defined yet, get index
             if (_query.Index == null)
             {
-                // try select best index (or any index)
+                // try select best index (if return null, there is no good choice)
                 var indexCost = this.ChooseIndex(_query.Fields);
 
                 // if found an index, use-it
@@ -197,15 +197,21 @@ namespace LiteDB.Engine
             // if is only 1 field to deserialize and this field are same as index, use IndexKeyOnly = rue
             if (_query.Fields.Count == 1 && _query.IndexExpression == "$." + _query.Fields.First())
             {
+                // best choice - no need lookup for document (use only index)
                 _query.IsIndexKeyOnly = true;
             }
 
-            // fill filter using all expressions
+            // fill filter using all expressions (remove selected term used in Index)
             _query.Filters.AddRange(_terms.Where(x => x != selected));
         }
 
         /// <summary>
-        /// Try select best index (lowest cost) to this list of where expressions
+        /// Try select index based on lowest cost or GroupBy/OrderBy reuse - use this priority order:
+        /// - Get lowest index cost used in WHERE expressions (will filter data)
+        /// - If there is no candidate, try get:
+        ///     - Same of GroupBy
+        ///     - Same of OrderBy
+        ///     - Prefered single-field (when no lookup neeed)
         /// </summary>
         private IndexCost ChooseIndex(HashSet<string> fields)
         {
@@ -245,9 +251,9 @@ namespace LiteDB.Engine
             // if no index found, try use same index in orderby/groupby/preferred
             if (lowest == null && (_queryDefinition.OrderBy != null || _queryDefinition.GroupBy != null || preferred != null))
             {
-                var index = 
-                    indexes.FirstOrDefault(x => x.Expression == _queryDefinition.OrderBy?.Source) ??
+                var index =
                     indexes.FirstOrDefault(x => x.Expression == _queryDefinition.GroupBy?.Source) ??
+                    indexes.FirstOrDefault(x => x.Expression == _queryDefinition.OrderBy?.Source) ??
                     indexes.FirstOrDefault(x => x.Expression == preferred);
 
                 if (index != null)
@@ -276,16 +282,23 @@ namespace LiteDB.Engine
             // if index expression are same as orderBy, use index to sort - just update index order
             if (orderBy.Expression.Source == _query.IndexExpression)
             {
+                // TODO: analyze SELECT expression to avoid wrong re-use of index
+                // here, optimization need detect if there any SELECT that transform data
+                // remember: order by runs AFTER select, so same field in SELECT transform could be not same
+                // as in original collection
+                // eg: SELECT { _id: name } FROM zip ORDER BY _id;
+                // in this example, "OrderBy _id" need order "by name" because _id was override
+
                 // re-use index order and no not run OrderBy
+                // update index order to be same as required in OrderBy
                 _query.Index.Order = orderBy.Order;
 
                 // in this case "query.OrderBy" will be null
+                orderBy = null;
             }
-            else
-            {
-                // otherwise, query.OrderBy will be setted according user defined
-                _query.OrderBy = orderBy;
-            }
+
+            // otherwise, query.OrderBy will be setted according user defined
+            _query.OrderBy = orderBy;
         }
 
         /// <summary>
@@ -300,8 +313,10 @@ namespace LiteDB.Engine
             // if groupBy use same expression in index, set group by order to MaxValue to not run
             if (groupBy.Expression.Source == _query.IndexExpression)
             {
+                // here there is no problem as in OrderBy because GroupBy order occurs BEFORE select transform
+
                 // do not sort when run groupBy (already sorted by index)
-                groupBy.Order = 0;
+                groupBy.Order = 0; // 0 means "none"
             }
             else
             {

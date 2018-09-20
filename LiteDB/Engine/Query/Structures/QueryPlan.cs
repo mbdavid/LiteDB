@@ -112,7 +112,7 @@ namespace LiteDB.Engine
                 ["expr"] = this.IndexExpression,
                 ["order"] = this.Index.Order,
                 ["mode"] = this.Index.ToString(),
-                ["cost"] = (int)this.IndexCost
+                ["cost"] = (int)this.IndexCost // uint.MaxValue (-1) mean not analyzed
             };
 
             doc["lookup"] = new BsonDocument
@@ -140,7 +140,7 @@ namespace LiteDB.Engine
                 doc["groupBy"] = new BsonDocument
                 {
                     ["expr"] = this.GroupBy.Expression.Source,
-                    ["order"] = this.GroupBy.Order,
+                    ["order"] = this.GroupBy.Order, // order = 0 means no sorted by GroupBy (used from index order)
                     ["having"] = this.GroupBy.Having?.Source,
                     ["select"] = this.GroupBy.Select?.Source
                 };
