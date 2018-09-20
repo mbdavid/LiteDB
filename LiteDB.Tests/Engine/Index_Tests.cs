@@ -55,14 +55,14 @@ namespace LiteDB.Tests.Engine
                 col.EnsureIndex("text");
 
                 var asc = string.Join("", col.Query()
-                    .OrderBy("text")
                     .Select("text")
+                    .OrderBy("text")
                     .ToDocuments()
                     .Select(x => x["text"].AsString));
 
                 var desc = string.Join("", col.Query()
-                    .OrderByDescending("text")
                     .Select("text")
+                    .OrderByDescending("text")
                     .ToDocuments()
                     .Select(x => x["text"].AsString));
 

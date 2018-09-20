@@ -49,8 +49,8 @@ namespace LiteDB.Tests.Query
 
             // this query will not deserialize document, using only index key
             var r1 = collection.Query()
-                .OrderBy(x => x.City)
                 .Select(x => x.City)
+                .OrderBy(x => x)
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));

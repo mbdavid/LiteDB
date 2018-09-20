@@ -87,7 +87,7 @@ namespace LiteDB.Engine
                         {
                             while (reader.Read())
                             {
-                                yield return reader.Current;
+                                yield return reader.Current.AsDocument["_id"];
                             }
                         }
                     }

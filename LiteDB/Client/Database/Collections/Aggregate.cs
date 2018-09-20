@@ -119,11 +119,14 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
-            return this.Query()
-                .OrderBy(keySelector)
+            var doc = this.Query()
                 .Select(keySelector)
+                .OrderBy(keySelector)
                 .ToDocuments()
                 .First();
+
+            // return first field of first document
+            return doc[doc.Keys.First()];
         }
 
         /// <summary>
@@ -152,11 +155,14 @@ namespace LiteDB
         {
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
-            return this.Query()
-                .OrderByDescending(keySelector)
+            var doc = this.Query()
                 .Select(keySelector)
+                .OrderByDescending(keySelector)
                 .ToDocuments()
                 .First();
+
+            // return first field of first document
+            return doc[doc.Keys.First()];
         }
 
         /// <summary>

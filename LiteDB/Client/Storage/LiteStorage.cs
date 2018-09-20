@@ -48,7 +48,7 @@ namespace LiteDB
         public IEnumerable<LiteFileInfo<TFileId>> Find(BsonExpression predicate)
         {
             var files = _files.Query()
-                .Where(predicate != null, predicate)
+                .Where(predicate)
                 .ToEnumerable();
 
             foreach (var file in files)

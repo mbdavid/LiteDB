@@ -155,7 +155,7 @@ namespace LiteDB
         /// <summary>
         /// Returns new instance of LiteQueryable that provides all method to query any entity inside collection. Use fluent API to apply filter/includes an than run any execute command, like ToList() or First()
         /// </summary>
-        public LiteQueryable<T> Query<T>(string collectionName = null)
+        public ILiteQueryableWithIncludes<T> Query<T>(string collectionName = null)
         {
             return _db.GetCollection<T>(collectionName).Query();
         }
@@ -177,10 +177,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(predicate).ToList();
         /// </summary>
-        public List<T> Fetch<T>(BsonExpression predicate = null, string collectionName = null)
+        public List<T> Fetch<T>(BsonExpression predicate, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(predicate != null, predicate)
+                .Where(predicate)
                 .ToList();
         }
 
@@ -197,10 +197,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(predicate).First();
         /// </summary>
-        public T First<T>(BsonExpression predicate = null, string collectionName = null)
+        public T First<T>(BsonExpression predicate, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(predicate != null, predicate)
+                .Where(predicate)
                 .First();
         }
 
@@ -217,10 +217,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(predicate).FirstOrDefault();
         /// </summary>
-        public T FirstOrDefault<T>(BsonExpression predicate = null, string collectionName = null)
+        public T FirstOrDefault<T>(BsonExpression predicate, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(predicate != null, predicate)
+                .Where(predicate)
                 .FirstOrDefault();
         }
 
@@ -237,10 +237,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(predicate).Single();
         /// </summary>
-        public T Single<T>(BsonExpression predicate = null, string collectionName = null)
+        public T Single<T>(BsonExpression predicate, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(predicate != null, predicate)
+                .Where(predicate)
                 .Single();
         }
 
@@ -257,10 +257,10 @@ namespace LiteDB
         /// <summary>
         /// Execute Query[T].Where(predicate).SingleOrDefault();
         /// </summary>
-        public T SingleOrDefault<T>(BsonExpression predicate = null, string collectionName = null)
+        public T SingleOrDefault<T>(BsonExpression predicate, string collectionName = null)
         {
             return this.Query<T>(collectionName)
-                .Where(predicate != null, predicate)
+                .Where(predicate)
                 .SingleOrDefault();
         }
 

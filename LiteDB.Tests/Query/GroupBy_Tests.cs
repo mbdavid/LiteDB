@@ -64,15 +64,15 @@ namespace LiteDB.Tests.Query
         public void Query_GroupBy_State_With_Sum_Age()
         {
             var r0 = local
-                .OrderBy(x => x.State)
                 .GroupBy(x => x.State)
                 .Select(x => new { State = x.Key, Sum = x.Sum(q => q.Age) })
+                .OrderBy(x => x.State)
                 .ToArray();
 
             var r1 = collection.Query()
-                .OrderBy(x => x.State)
                 .GroupBy(x => x.State)
                 .Select(x => new { x.State, Sum = Sql.Sum(x.Age) })
+                .OrderBy(x => x.State)
                 .ToArray();
 
             foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
@@ -86,15 +86,15 @@ namespace LiteDB.Tests.Query
         public void Query_GroupBy_Func()
         {
             var r0 = local
-                .OrderBy(x => x.Date)
                 .GroupBy(x => x.Date.Year)
                 .Select(x => new { Year = x.Key, Count = x.Count() })
+                .OrderBy(x => x.Year)
                 .ToArray();
 
             var r1 = collection.Query()
-                .OrderBy(x => x.Date)
                 .GroupBy(x => x.Date.Year)
                 .Select(x => new { x.Date.Year, Count = Sql.Count(x) })
+                .OrderBy(x => x.Year)
                 .ToArray();
 
             foreach (var r in r0.Zip(r1, (l, r) => new { left = l, right = r }))
