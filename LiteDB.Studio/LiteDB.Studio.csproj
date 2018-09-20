@@ -216,7 +216,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\JavaScript-Mode.xshd" />
+    <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\JSON-Mode.xshd" />
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\Mode.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>

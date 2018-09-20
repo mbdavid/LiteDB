@@ -42,13 +42,13 @@ namespace LiteDB.Tests.Query
         public void Query_OrderBy_Using_Index()
         {
             var r0 = local
+                .Select(x => new { x.Name })
                 .OrderBy(x => x.Name)
-                .Select(x => x.Name)
                 .ToArray();
 
             var r1 = collection.Query()
+                .Select(x => new { x.Name })
                 .OrderBy(x => x.Name)
-                .Select(x => x.Name)
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));
@@ -58,13 +58,13 @@ namespace LiteDB.Tests.Query
         public void Query_OrderBy_Using_Index_Desc()
         {
             var r0 = local
+                .Select(x => new { x.Name })
                 .OrderByDescending(x => x.Name)
-                .Select(x => x.Name)
                 .ToArray();
 
             var r1 = collection.Query()
+                .Select(x => new { x.Name })
                 .OrderByDescending(x => x.Name)
-                .Select(x => x.Name)
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));
@@ -74,13 +74,13 @@ namespace LiteDB.Tests.Query
         public void Query_OrderBy_With_Func()
         {
             var r0 = local
-                .OrderBy(x => x.Date.Day)
                 .Select(x => new { d = x.Date.Day })
+                .OrderBy(x => x.d)
                 .ToArray();
 
             var r1 = collection.Query()
-                .OrderBy(x => x.Date.Day)
                 .Select(x => new { d = x.Date.Day })
+                .OrderBy(x => x.d)
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));
@@ -90,17 +90,17 @@ namespace LiteDB.Tests.Query
         public void Query_OrderBy_With_Offset_Limit()
         {
             var r0 = local
-                .OrderBy(x => x.Date.Day)
+                .Select(x => new { d = x.Date.Day })
+                .OrderBy(x => x.d)
                 .Skip(5)
                 .Take(10)
-                .Select(x => new { d = x.Date.Day })
                 .ToArray();
 
             var r1 = collection.Query()
-                .OrderBy(x => x.Date.Day)
+                .Select(x => new { d = x.Date.Day })
+                .OrderBy(x => x.d)
                 .Offset(5)
                 .Limit(10)
-                .Select(x => new { d = x.Date.Day })
                 .ToArray();
 
             Assert.IsTrue(r0.SequenceEqual(r1));

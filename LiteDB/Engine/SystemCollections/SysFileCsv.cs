@@ -23,7 +23,7 @@ namespace LiteDB.Engine
             throw new NotImplementedException();
         }
 
-        public override int Output(IEnumerable<BsonValue> source, BsonValue options)
+        public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
         {
             if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
 
@@ -40,7 +40,7 @@ namespace LiteDB.Engine
 
             try
             {
-                foreach (var value in source)
+                foreach (var doc in source)
                 {
                     if (index++ == 0)
                     {
@@ -48,14 +48,13 @@ namespace LiteDB.Engine
                         writer = new StreamWriter(fs, Encoding.GetEncoding(encoding));
 
                         // print file header
-                        if (header && value.IsDocument)
+                        if (header)
                         {
-                            var doc = value.AsDocument;
-                            var idx = 0;
+                            var idxHeader = 0;
 
                             foreach (var elem in doc)
                             {
-                                if (idx++ > 0) writer.Write(delimiter);
+                                if (idxHeader++ > 0) writer.Write(delimiter);
                                 writer.Write(elem.Key);
                             }
 
@@ -67,21 +66,13 @@ namespace LiteDB.Engine
                         writer.WriteLine();
                     }
 
-                    if (value.IsDocument)
-                    {
-                        var doc = value.AsDocument;
-                        var idx = 0;
+                    var idxValue = 0;
 
-                        foreach (var elem in doc)
-                        {
-                            if (idx++ > 0) writer.Write(delimiter);
-
-                            this.WriteValue(elem.Value, writer);
-                        }
-                    }
-                    else
+                    foreach (var elem in doc)
                     {
-                        this.WriteValue(value, writer);
+                        if (idxValue++ > 0) writer.Write(delimiter);
+
+                        this.WriteValue(elem.Value, writer);
                     }
                 }
 

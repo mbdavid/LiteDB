@@ -44,7 +44,9 @@ namespace LiteDB.Engine
                 // select with no FROM - just run expression (avoid DUAL table, Mr. Oracle)
                 var result = query.Select.Execute(true);
 
-                return new BsonDataReader(result, null);
+                var defaultName = query.Select.DefaultFieldName();
+
+                return new BsonDataReader(result.Select(x => x.IsDocument ? x.AsDocument : new BsonDocument { [defaultName] = x }), null);
             }
             else if (from.Is("INTO"))
             {

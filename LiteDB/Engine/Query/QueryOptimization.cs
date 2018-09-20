@@ -36,18 +36,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void Validate()
         {
-            if (_queryDefinition.SelectAll && _queryDefinition.Limit != int.MaxValue)
-            {
-                throw new LiteException(0, "Select ALL return a single value and can't be used with LIMIT parameter");
-            }
-            if (_queryDefinition.SelectAll && _queryDefinition.Offset != 0)
-            {
-                throw new LiteException(0, "Select ALL return a single value and can't be used with OFFSET parameter");
-            }
-            if (_queryDefinition.SelectAll && _queryDefinition.OrderBy != null)
-            {
-                throw new LiteException(0, "Select ALL return a single value and can't be used with ORDER BY expression");
-            }
             if (_queryDefinition.SelectAll && _queryDefinition.Select == null)
             {
                 throw new LiteException(0, "Select ALL require SELECT expression");

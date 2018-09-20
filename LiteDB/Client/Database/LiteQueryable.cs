@@ -405,9 +405,9 @@ namespace LiteDB
         /// </summary>
         public int Count()
         {
-            this.SelectAll($"COUNT({_uniqueField})");
+            this.SelectAll($"{{ count: COUNT({_uniqueField}) }}");
 
-            return this.ToDocuments().Single().AsInt32;
+            return this.ToDocuments().Single()["count"].AsInt32;
         }
 
         /// <summary>
@@ -415,9 +415,9 @@ namespace LiteDB
         /// </summary>
         public long LongCount()
         {
-            this.SelectAll($"COUNT({_uniqueField})");
+            this.SelectAll($"{{ count: COUNT({_uniqueField}) }}");
 
-            return this.ToDocuments().Single().AsInt64;
+            return this.ToDocuments().Single()["count"].AsInt64;
         }
 
         /// <summary>
@@ -425,9 +425,9 @@ namespace LiteDB
         /// </summary>
         public bool Exists()
         {
-            this.SelectAll($"ANY({_uniqueField} != null)");
+            this.SelectAll($"{{ exists: ANY({_uniqueField} != null) }}");
 
-            return this.ToDocuments().Single().AsBoolean;
+            return this.ToDocuments().Single()["exists"].AsBoolean;
         }
 
         #endregion
@@ -439,7 +439,10 @@ namespace LiteDB
             _query.Into = newCollection;
             _query.IntoAutoId = autoId;
 
-            return this.ToDocuments().Single().AsInt32;
+            using (var reader = this.ExecuteReader())
+            {
+                return reader.Current.AsInt32;
+            }
         }
 
         #endregion

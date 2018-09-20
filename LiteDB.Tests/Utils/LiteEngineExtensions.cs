@@ -20,7 +20,10 @@ namespace LiteDB.Tests
             {
                 while(r.Read())
                 {
-                    values.Add(mapper.Deserialize<T>(r.Current));
+                    var doc = r.Current.AsDocument;
+                    var key = doc.Keys.First();
+
+                    values.Add(mapper.Deserialize<T>(doc[key]));
                 }
             }
 

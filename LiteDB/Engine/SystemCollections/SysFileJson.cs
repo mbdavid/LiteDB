@@ -39,7 +39,7 @@ namespace LiteDB.Engine
             }
         }
 
-        public override int Output(IEnumerable<BsonValue> source, BsonValue options)
+        public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
         {
             if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, "Collection $file_json requires a string/object parameter");
 
@@ -56,7 +56,7 @@ namespace LiteDB.Engine
 
             try
             {
-                foreach (var value in source)
+                foreach (var doc in source)
                 {
                     if (index++ == 0)
                     {
@@ -75,7 +75,7 @@ namespace LiteDB.Engine
                         writer.WriteLine(",");
                     }
 
-                    json.Serialize(value);
+                    json.Serialize(doc);
                 }
 
                 if (index > 0)

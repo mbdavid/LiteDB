@@ -582,7 +582,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtResult.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtResult.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtResult.Highlighting = "JavaScript";
+            this.txtResult.Highlighting = "JSON";
             this.txtResult.Location = new System.Drawing.Point(5, 4);
             this.txtResult.Name = "txtResult";
             this.txtResult.ReadOnly = true;
@@ -598,7 +598,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtParameters.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtParameters.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtParameters.Highlighting = "JavaScript";
+            this.txtParameters.Highlighting = "JSON";
             this.txtParameters.Location = new System.Drawing.Point(6, 5);
             this.txtParameters.Name = "txtParameters";
             this.txtParameters.ReadOnly = true;

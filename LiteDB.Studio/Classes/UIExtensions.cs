@@ -157,7 +157,11 @@ namespace LiteDB.Studio
                 {
                     foreach (var value in data.Result)
                     {
-                        sb.AppendLine($"[{index++ + 1}]:");
+                        if (data.Result?.Count > 1)
+                        {
+                            sb.AppendLine($"/* {index++ + 1} */");
+                        }
+
                         json.Serialize(value);
                         sb.AppendLine();
                     }
@@ -176,7 +180,7 @@ namespace LiteDB.Studio
 
             txt.SuspendLayout();
             txt.Clear();
-            txt.SetHighlighting("JavaScript");
+            txt.SetHighlighting("JSON");
             txt.Text = sb.ToString();
             txt.ResumeLayout();
         }
@@ -242,7 +246,7 @@ namespace LiteDB.Studio
         {
             txt.SuspendLayout();
             txt.Clear();
-            txt.SetHighlighting("JavaScript");
+            txt.SetHighlighting("JSON");
 
             var sb = new StringBuilder();
 

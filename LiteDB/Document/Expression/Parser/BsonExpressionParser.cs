@@ -556,7 +556,7 @@ namespace LiteDB
 
             var method = BsonExpression.GetMethod(token.Value, pars.Count);
 
-            if (method == null) throw LiteException.UnexpectedToken("Method '" + token.Value.ToUpper() + "' not exist or invalid parameter count", token);
+            if (method == null) throw LiteException.UnexpectedToken($"Method '{token.Value.ToUpper()}' does not exist or contains invalid parameters", token);
 
             // test if method are decorated with "Variable" (immutable = false)
             if (method.GetCustomAttribute<VolatileAttribute>() != null)

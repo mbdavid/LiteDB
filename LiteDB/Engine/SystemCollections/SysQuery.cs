@@ -33,6 +33,6 @@ namespace LiteDB.Engine
             }
         }
 
-        public override int Output(IEnumerable<BsonValue> source, BsonValue options) => throw new NotSupportedException("$query do not support as output function");
+        public override int Output(IEnumerable<BsonDocument> source, BsonValue options) => throw new NotSupportedException("$query do not support as output function");
     }
 }
