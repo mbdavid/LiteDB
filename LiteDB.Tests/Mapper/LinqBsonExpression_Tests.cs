@@ -303,6 +303,15 @@ namespace LiteDB.Tests.Mapper
         }
 
         [TestMethod]
+        public void Linq_Coalesce()
+        {
+            TestExpr<User>(x => x.DomainName ?? x.Name, "COALESCE(USER_DOMAIN_NAME, Name)");
+
+            TestExpr<City>(x => (x.CityName ?? x.Country) == DateTime.Now.Year.ToString(), 
+                "(COALESCE(CityName, Country) = STRING(YEAR(NOW())))");
+        }
+
+        [TestMethod]
         public void Linq_Complex_Expressions()
         {
             // 'CityName': $.Address.City.CityName, 

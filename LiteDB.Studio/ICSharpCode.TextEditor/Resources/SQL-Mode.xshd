@@ -178,6 +178,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="ITEMS" />
         <Key word="KEYS" />
         <Key word="IIF" />
+        <Key word="COALESCE" />
         <Key word="LENGTH" />
 
         <!-- String.cs -->

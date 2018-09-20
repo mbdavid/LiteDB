@@ -236,10 +236,10 @@ namespace LiteDB
 
             _builder.AppendFormat("@" + parameter);
 
-            var type = value.GetType();
+            var type = value?.GetType();
 
             // if type is string, use direct BsonValue(string) to avoid rules like TrimWhitespace/EmptyStringToNull in mapper
-            var arg = value == null ? BsonValue.Null : 
+            var arg = type == null ? BsonValue.Null : 
                 type == typeof(string) ? new BsonValue((string)value) :
                 _mapper.Serialize(value.GetType(), value);
 
@@ -404,6 +404,9 @@ namespace LiteDB
             var op = this.GetOperator(node.NodeType);
             var andOr = node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse;
 
+            // special visitor Coalesce
+            if (op == "??") return this.VisitCoalesce(node);
+
             _builder.Append("(");
 
             this.VisitAsPredicate(node.Left, andOr);
@@ -439,6 +442,20 @@ namespace LiteDB
             this.Visit(node.IfTrue);
             _builder.Append(", ");
             this.Visit(node.IfFalse);
+            _builder.Append(")");
+
+            return node;
+        }
+
+        /// <summary>
+        /// Visit :: x => `x.FirstName ?? x.LastName`
+        /// </summary>
+        private Expression VisitCoalesce(BinaryExpression node)
+        {
+            _builder.Append("COALESCE(");
+            this.Visit(node.Left);
+            _builder.Append(", ");
+            this.Visit(node.Right);
             _builder.Append(")");
 
             return node;
@@ -524,6 +541,7 @@ namespace LiteDB
                 case ExpressionType.GreaterThanOrEqual: return " >= ";
                 case ExpressionType.LessThan: return " < ";
                 case ExpressionType.LessThanOrEqual: return " <= ";
+                case ExpressionType.Coalesce: return "??";
                 case ExpressionType.AndAlso: return " AND ";
                 case ExpressionType.OrElse: return " OR ";
                 case ExpressionType.ArrayIndex: return "[";

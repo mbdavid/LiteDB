@@ -94,6 +94,17 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return first values if not null. If null, returns second value.
+        /// </summary>
+        public static IEnumerable<BsonValue> COALESCE(IEnumerable<BsonValue> left, IEnumerable<BsonValue> right)
+        {
+            foreach (var value in ZipValues(left, right))
+            {
+                yield return value.First.IsNull ? value.Second : value.First;
+            }
+        }
+
+        /// <summary>
         /// Return length of variant value (valid only for String, Binary, Array or Document [keys])
         /// </summary>
         public static IEnumerable<BsonValue> LENGTH(IEnumerable<BsonValue> values)
