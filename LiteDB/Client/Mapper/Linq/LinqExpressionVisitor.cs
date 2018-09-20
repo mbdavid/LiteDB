@@ -165,7 +165,7 @@ namespace LiteDB
             {
                 this.Visit(obj);
 
-                var index = this.Evaluate(idx);
+                var index = this.Evaluate(idx, typeof(string), typeof(int));
 
                 if (index is string)
                 {
@@ -401,11 +401,13 @@ namespace LiteDB
         /// </summary>
         protected override Expression VisitBinary(BinaryExpression node)
         {
-            var op = this.GetOperator(node.NodeType);
             var andOr = node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse;
 
-            // special visitor Coalesce
-            if (op == "??") return this.VisitCoalesce(node);
+            // special visitors
+            if (node.NodeType == ExpressionType.Coalesce) return this.VisitCoalesce(node);
+            if (node.NodeType == ExpressionType.ArrayIndex) return this.VisitArrayIndex(node);
+
+            var op = this.GetOperator(node.NodeType);
 
             _builder.Append("(");
 
@@ -413,18 +415,7 @@ namespace LiteDB
 
             _builder.Append(op);
 
-            // when object is native array, access child using [n] is an Binary expression
-            if (op == "[")
-            {
-                // on array (native) index, eval value
-                var index = this.Evaluate(node.Right);
-                _builder.Append(index);
-                _builder.Append("]");
-            }
-            else
-            {
-                this.VisitAsPredicate(node.Right, andOr);
-            }
+            this.VisitAsPredicate(node.Right, andOr);
 
             _builder.Append(")");
 
@@ -457,6 +448,21 @@ namespace LiteDB
             _builder.Append(", ");
             this.Visit(node.Right);
             _builder.Append(")");
+
+            return node;
+        }
+
+        /// <summary>
+        /// Visit :: x => `x.Items[5]`
+        /// </summary>
+        private Expression VisitArrayIndex(BinaryExpression node)
+        {
+            this.Visit(node.Left);
+            _builder.Append("[");
+            // index must be evaluated (must returns a constant)
+            var index = this.Evaluate(node.Right, typeof(int));
+            _builder.Append(index);
+            _builder.Append("]");
 
             return node;
         }
@@ -541,13 +547,11 @@ namespace LiteDB
                 case ExpressionType.GreaterThanOrEqual: return " >= ";
                 case ExpressionType.LessThan: return " < ";
                 case ExpressionType.LessThanOrEqual: return " <= ";
-                case ExpressionType.Coalesce: return "??";
                 case ExpressionType.AndAlso: return " AND ";
                 case ExpressionType.OrElse: return " OR ";
-                case ExpressionType.ArrayIndex: return "[";
             }
 
-            throw new NotSupportedException("Operator not supported: " + nodeType.ToString());
+            throw new NotSupportedException($"Operator not supported {nodeType}");
         }
 
         /// <summary>
@@ -624,21 +628,35 @@ namespace LiteDB
         /// <summary>
         /// Compile and execute expression (can be cached)
         /// </summary>
-        private object Evaluate(Expression expr)
+        private object Evaluate(Expression expr, params Type[] validTypes)
         {
+            object value = null;
+
             if (expr.NodeType == ExpressionType.Constant)
             {
                 var constant = (ConstantExpression)expr;
 
-                return constant.Value;
+                value = constant.Value;
             }
             else
             {
                 var func = Expression.Lambda(expr).Compile();
-                var value = func.DynamicInvoke();
 
-                return value;
+                value = func.DynamicInvoke();
             }
+
+            // do some type validation to be ease to debug
+            if (validTypes.Length > 0 && value == null)
+            {
+                throw new NotSupportedException($"Expression {expr} can't return null value");
+            }
+
+            if (validTypes.Length > 0 && validTypes.Any(x => x == value.GetType()) == false)
+            {
+                throw new NotSupportedException($"Expression {expr} must return on of this types: {string.Join(", ", validTypes.Select(x => $"`{x.Name}`"))}");
+            }
+
+            return value;
         }
     }
 }
