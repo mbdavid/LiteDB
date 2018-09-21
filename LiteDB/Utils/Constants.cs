@@ -75,7 +75,7 @@ namespace LiteDB
         /// <summary>
         /// DocumentLoader max cache size
         /// </summary>
-        public const int MAX_CACHE_SIZE = 1000;
+        public const int MAX_CACHE_DOCUMENT_LOADER_SIZE = 1000;
 
         /// <summary>
         /// Max cursor info history

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -113,9 +114,10 @@ namespace LiteDB.Engine
                     {
                         loader = new IndexKeyLoader(indexer, queryPlan.Fields.Single());
                     }
-
-                    loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor, 1000);
-                    //loader = new DocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
+                    else
+                    {
+                        loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor, MAX_CACHE_DOCUMENT_LOADER_SIZE);
+                    }
                 }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)

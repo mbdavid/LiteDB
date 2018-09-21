@@ -26,22 +26,31 @@ namespace LiteDB.Engine
             var encoding = GetOption<string>(options, false, "encoding", "utf-8");
             var delimiter = GetOption<string>(options, false, "delimiter", ",")[0];
 
+            // read header (or first line as header
+            var header = new List<string>();
+
+            if (options.IsDocument && options.AsDocument["header"].IsArray)
+            {
+                header.AddRange(options.AsDocument["header"].AsArray.Select(x => x.AsString));
+            }
+
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 using (var reader = new StreamReader(fs))
                 {
-                    // read header (or first line as header
-                    var header = new List<string>();
- 
-                    while(true)
+                    // if not header declared, use first line as header fields
+                    if (header.Count == 0)
                     {
-                        var key = this.ReadString(reader, delimiter, out var newLine);
+                        while (true)
+                        {
+                            var key = this.ReadString(reader, delimiter, out var newLine);
 
-                        if (key == null) break;
+                            if (key == null) break;
 
-                        header.Add(key);
+                            header.Add(key);
 
-                        if (newLine) break;
+                            if (newLine) break;
+                        }
                     }
 
                     // read all results
