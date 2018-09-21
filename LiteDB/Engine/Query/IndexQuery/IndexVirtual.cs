@@ -12,6 +12,7 @@ namespace LiteDB.Engine
     {
         private readonly IEnumerable<BsonDocument> _source;
         private readonly Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
+        private BsonDocument _current = null;
         private uint _counter = 0;
 
         public IndexVirtual(IEnumerable<BsonDocument> source)
@@ -40,8 +41,16 @@ namespace LiteDB.Engine
                 // create an fake page address for this document
                 doc.RawId = new PageAddress(_counter, 1);
 
-                // and add this document into cache to be used on Load method
-                _cache[_counter] = doc;
+                // if cache reach max count, clear cache and use only single value (with no support from random access - group by)
+                if (_counter > MAX_CACHE_DOCUMENT_LOADER_SIZE)
+                {
+                    _current = doc;
+                }
+                else
+                {
+                    // and add this document into cache to be used on Load method
+                    _cache[_counter] = doc;
+                }
 
                 // return an fake indexNode
                 yield return new IndexNode(0)
@@ -54,7 +63,16 @@ namespace LiteDB.Engine
 
         public BsonDocument Load(PageAddress dataBlock)
         {
-            return _cache[dataBlock.PageID];
+            if (_current != null)
+            {
+                if (_current.RawId.PageID != dataBlock.PageID) throw new LiteException(0, $"When system collection reach {MAX_CACHE_DOCUMENT_LOADER_SIZE} documents there is no more support for random access (like in group by operations)");
+
+                return _current;
+            }
+            else
+            {
+                return _cache[dataBlock.PageID];
+            }
         }
 
         public override string ToString()
