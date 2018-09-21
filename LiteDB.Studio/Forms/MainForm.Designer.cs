@@ -188,6 +188,7 @@
             this.tabResult.SelectedIndex = 0;
             this.tabResult.Size = new System.Drawing.Size(816, 361);
             this.tabResult.TabIndex = 0;
+            this.tabResult.TabStop = false;
             this.tabResult.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabResult_Selected);
             // 
             // tabGrid
@@ -211,7 +212,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(796, 320);
+            this.grdResult.Size = new System.Drawing.Size(796, 322);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -248,6 +249,8 @@
             this.tabSql.SelectedIndex = 0;
             this.tabSql.Size = new System.Drawing.Size(833, 566);
             this.tabSql.TabIndex = 9;
+            this.tabSql.TabStop = false;
+            this.tabSql.SelectedIndexChanged += new System.EventHandler(this.TabSql_SelectedIndexChanged);
             this.tabSql.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabSql_Selected);
             this.tabSql.MouseClick += new System.Windows.Forms.MouseEventHandler(this.TabSql_MouseClick);
             // 
@@ -552,12 +555,12 @@
             // 
             this.imgCodeCompletion.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgCodeCompletion.ImageStream")));
             this.imgCodeCompletion.TransparentColor = System.Drawing.Color.Transparent;
-            this.imgCodeCompletion.Images.SetKeyName(0, "method.png");
-            this.imgCodeCompletion.Images.SetKeyName(1, "collection.png");
-            this.imgCodeCompletion.Images.SetKeyName(2, "field.png");
-            this.imgCodeCompletion.Images.SetKeyName(3, "cmd.png");
-            this.imgCodeCompletion.Images.SetKeyName(4, "function.png");
-            this.imgCodeCompletion.Images.SetKeyName(5, "system.png");
+            this.imgCodeCompletion.Images.SetKeyName(0, "METHOD");
+            this.imgCodeCompletion.Images.SetKeyName(1, "COLLECTION");
+            this.imgCodeCompletion.Images.SetKeyName(2, "FIELD");
+            this.imgCodeCompletion.Images.SetKeyName(3, "KEYWORD");
+            this.imgCodeCompletion.Images.SetKeyName(4, "SYSTEM");
+            this.imgCodeCompletion.Images.SetKeyName(5, "SYSTEM_FN");
             // 
             // txtSql
             // 

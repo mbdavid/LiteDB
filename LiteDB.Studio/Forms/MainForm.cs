@@ -46,6 +46,14 @@ namespace LiteDB.Studio
                 this.Disconnect();
             }
 
+
+            txtSql.ActiveTextAreaControl.TextArea.Caret.PositionChanged += (s, e) =>
+            {
+                lblCursor.Text =
+                    "Line: " + (txtSql.ActiveTextAreaControl.Caret.Line + 1) +
+                    " - Column: " + (txtSql.ActiveTextAreaControl.Caret.Column + 1);
+            };
+
             // stop all threads
             this.FormClosing += (s, e) =>
             {
@@ -142,6 +150,7 @@ namespace LiteDB.Studio
             {
                 _active.Sql = txtSql.Text;
                 _active.SelectedTab = tabResult.SelectedTab.Name;
+                _active.Position = new Tuple<int, int>(txtSql.ActiveTextAreaControl.TextArea.Caret.Line, txtSql.ActiveTextAreaControl.TextArea.Caret.Column);
             }
 
             txtSql.Clear();
@@ -165,7 +174,12 @@ namespace LiteDB.Studio
                 _active = e.TabPage.Tag as TaskData;
 
                 txtSql.Text = _active.Sql;
-                txtSql.Focus();
+
+                if (_active.Position != null)
+                {
+                    txtSql.ActiveTextAreaControl.TextArea.Caret.Line = _active.Position.Item1;
+                    txtSql.ActiveTextAreaControl.TextArea.Caret.Column = _active.Position.Item2;
+                }
 
                 if (tabResult.SelectedTab.Name != _active.SelectedTab)
                 {
@@ -529,6 +543,12 @@ namespace LiteDB.Studio
 
                 BtnConnect_Click(null, null);
             }
+        }
+
+        private void TabSql_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Application.DoEvents();
+            txtSql.ActiveTextAreaControl.TextArea.Focus();
         }
     }
 }

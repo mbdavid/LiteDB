@@ -18,6 +18,7 @@ namespace LiteDB.Studio
 
         public string Sql { get; set; } = "";
         public string SelectedTab { get; set; } = "";
+        public Tuple<int, int> Position { get; set; }
 
         public string Collection { get; set; } = "";
         public List<BsonValue> Result { get; set; } = null;

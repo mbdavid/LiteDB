@@ -16,7 +16,7 @@ namespace LiteDB.Studio
 {
     public class SqlCodeCompletion : ICompletionDataProvider
     {
-        private readonly TextEditorControl _control;
+        private readonly TextEditorControl _editor;
         private readonly ImageList _imageList;
 
         private ICompletionDataProvider _completionDataProvider { get; set; }
@@ -25,7 +25,7 @@ namespace LiteDB.Studio
 
         public SqlCodeCompletion(TextEditorControl control, ImageList imageList)
         {
-            _control = control;
+            _editor = control;
             _imageList = imageList;
 
             control.ActiveTextAreaControl.TextArea.KeyDown += (o, s) =>
@@ -66,8 +66,8 @@ namespace LiteDB.Studio
                 _completionDataProvider = this;
 
                 _codeCompletionWindow = CodeCompletionWindow.ShowCompletionWindow(
-                    _control.ParentForm,
-                    _control,
+                    _editor.ParentForm,
+                    _editor,
                     "file.sql",
                     _completionDataProvider,
                     key
@@ -95,7 +95,7 @@ namespace LiteDB.Studio
         
         private string FindExpression()
         {
-            var textArea = _control.ActiveTextAreaControl.TextArea;
+            var textArea = _editor.ActiveTextAreaControl.TextArea;
 
             try
             {
@@ -114,15 +114,23 @@ namespace LiteDB.Studio
         {
             _codeCompletionData = new List<ICompletionData>();
 
-            foreach (var m in BsonExpression.Methods)
+            var item = new DefaultCompletionData(DateTime.Now.Second.ToString(), "segundos", 4);
+            item.Priority = double.MaxValue;
+
+            _codeCompletionData.Add(item);
+
+
+            // getting all BsonExpression methods
+            foreach (var m in BsonExpression.Methods.OrderBy(x => x.Name))
             {
-                _codeCompletionData.Add(new DefaultCompletionData(m.Name.ToUpper(),
-                    m.Name.ToUpper() + "(" +
-                    string.Join(", ", m.GetParameters().Select(x => x.Name)) +
-                    ")",
-                    0));
+                var text = m.Name;
+                var description = $"Method:\n-   {text}({string.Join(", ", m.GetParameters().Select(x => x.Name))})";
+                var icon = 0; // METHOD
+
+                _codeCompletionData.Add(new DefaultCompletionData(text, description, icon));
             }
 
+            // get all keywords
             var words = new List<string>();
 
             using (var stream = typeof(SqlCodeCompletion).Assembly.GetManifestResourceStream("LiteDB.Studio.ICSharpCode.TextEditor.Resources.SQL-Mode.xshd"))
@@ -139,14 +147,16 @@ namespace LiteDB.Studio
                 }
             }
 
-            _codeCompletionData.AddRange(words.Select(x => new DefaultCompletionData(x, x, 3)));
+            _codeCompletionData.AddRange(words.OrderBy(x => x).Select(x => new DefaultCompletionData(x, null, 3)));
 
             if (db == null) return;
 
             // collections
             var cols = db.GetCollection("$cols").Query().ToArray();
 
-            _codeCompletionData.AddRange(cols.Select(x => new DefaultCompletionData(x["name"].AsString, x["name"].AsString, 
+            _codeCompletionData.AddRange(cols.Select(x => new DefaultCompletionData(x["name"].AsString, 
+                (x["type"] == "user" ? "User collection:\n-   " : "System collection:\n-   ") +
+                x["name"].AsString, 
                 x["type"] == "user" ? 1 :
                 x["type"] == "system" ? 5 : 4)));
 
