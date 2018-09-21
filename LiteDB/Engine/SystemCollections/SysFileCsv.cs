@@ -20,7 +20,58 @@ namespace LiteDB.Engine
 
         public override IEnumerable<BsonDocument> Input(LiteEngine engine, BsonValue options)
         {
-            throw new NotImplementedException();
+            if (options == null || (!options.IsString && !options.IsDocument)) throw new LiteException(0, $"Collection ${this.Name} requires a string/object parameter");
+
+            var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, $"Collection ${this.Name} requires string as 'filename' or a document field 'filename'");
+            var encoding = GetOption<string>(options, false, "encoding", "utf-8");
+            var delimiter = GetOption<string>(options, false, "delimiter", ",")[0];
+
+            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var reader = new StreamReader(fs))
+                {
+                    // read header (or first line as header
+                    var header = new List<string>();
+ 
+                    while(true)
+                    {
+                        var key = this.ReadString(reader, delimiter, out var newLine);
+
+                        if (key == null) break;
+
+                        header.Add(key);
+
+                        if (newLine) break;
+                    }
+
+                    // read all results
+                    var index = 0;
+                    var doc = new BsonDocument();
+
+                    while(true)
+                    {
+                        var value = this.ReadString(reader, delimiter, out var newLine);
+
+                        if (value == null) yield break;
+
+                        if (index < header.Count)
+                        {
+                            var key = header[index++];
+                            doc[key] = value;
+                        }
+
+                        if (newLine)
+                        {
+                            yield return doc;
+
+                            doc = new BsonDocument();
+                            index = 0;
+                        }
+                    }
+
+                }
+            }
+
         }
 
         public override int Output(IEnumerable<BsonDocument> source, BsonValue options)
@@ -30,7 +81,7 @@ namespace LiteDB.Engine
             var filename = GetOption<string>(options, true, "filename", null) ?? throw new LiteException(0, "Collection $file_json requires string as 'filename' or a document field 'filename'");
             var overwritten = GetOption<bool>(options, false, "overwritten", false);
             var encoding = GetOption<string>(options, false, "encoding", "utf-8");
-            var delimiter = GetOption<string>(options, false, "delimiter", ",");
+            var delimiter = GetOption<string>(options, false, "delimiter", ",")[0];
             var header = GetOption<bool>(options, false, "header", true);
 
             var index = 0;
@@ -72,7 +123,10 @@ namespace LiteDB.Engine
                     {
                         if (idxValue++ > 0) writer.Write(delimiter);
 
-                        this.WriteValue(elem.Value, writer);
+                        if (elem.Value.IsNull == false)
+                        {
+                            this.WriteString(elem.Value.AsString, writer);
+                        }
                     }
                 }
 
@@ -88,48 +142,6 @@ namespace LiteDB.Engine
             }
 
             return index;
-        }
-
-        private void WriteValue(BsonValue value, StreamWriter writer)
-        {
-            switch(value.Type)
-            {
-                case BsonType.Null:
-                    break;
-
-                case BsonType.Boolean:
-                    writer.Write(((Boolean)value.RawValue).ToString().ToLower());
-                    break;
-
-                case BsonType.Int32:
-                    writer.Write(((Int32)value.RawValue).ToString(_numberFormat));
-                    break;
-
-                case BsonType.Int64:
-                    writer.Write(((Int64)value.RawValue).ToString(_numberFormat));
-                    break;
-
-                case BsonType.Double:
-                    writer.Write(((Double)value.RawValue).ToString(_numberFormat));
-                    break;
-
-                case BsonType.Decimal:
-                    writer.Write(((Decimal)value.RawValue).ToString(_numberFormat));
-                    break;
-
-                case BsonType.DateTime:
-                    writer.Write(((DateTime)value.RawValue).ToUniversalTime().ToString("o"));
-                    break;
-
-                case BsonType.Binary:
-                    var bytes = (byte[])value.RawValue;
-                    writer.Write(Convert.ToBase64String(bytes, 0, bytes.Length));
-                    break;
-
-                default:
-                    this.WriteString(value.AsString, writer);
-                    break;
-            }
         }
 
         /// <summary>
@@ -159,6 +171,66 @@ namespace LiteDB.Engine
             }
 
             writer.Write('\"');
+        }
+
+        private string ReadString(TextReader reader, char delimiter, out bool newLine)
+        {
+            var sb = new StringBuilder();
+            var c = reader.Read();
+
+            // eat possible new line before read string
+            while(c == '\n' || c == '\r')
+            {
+                c = reader.Read();
+            }
+
+            if (c == -1)
+            {
+                newLine = true;
+                return null;
+            }
+
+            // read " string
+            if(c == '"')
+            {
+                var last = c;
+
+                while(c != -1)
+                {
+                    c = reader.Read();
+
+                    if (c == '"')
+                    {
+                        var next = reader.Read();
+
+                        if (next == '"')
+                        {
+                            sb.Append('"');
+                            continue;
+                        }
+                        else
+                        {
+                            c = next;
+                            break;
+                        }
+                    }
+
+                    sb.Append((char)c);
+                    last = c;
+                }
+            }
+            else
+            {
+                while(!(c == '\n' || c == '\r' || c == delimiter || c == -1))
+                {
+                    sb.Append((char)c);
+                    c = reader.Read();
+                }
+            }
+
+            newLine = (c == '\n' || c == '\r');
+
+            return sb.ToString();
         }
     }
 }
