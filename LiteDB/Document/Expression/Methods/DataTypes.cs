@@ -145,6 +145,29 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Convert values into DOUBLE. Returns empty if not possible to convert
+        /// </summary>
+        public static IEnumerable<BsonValue> DOUBLE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        {
+            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+
+            foreach (var value in values)
+            {
+                if (value.IsNumber)
+                {
+                    yield return value.AsDouble;
+                }
+                else
+                {
+                    if (Double.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
+                    {
+                        yield return val;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Convert values into DECIMAL. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> DECIMAL(IEnumerable<BsonValue> values)
@@ -158,6 +181,29 @@ namespace LiteDB
                 else
                 {
                     if (Decimal.TryParse(value.AsString, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat, out var val))
+                    {
+                        yield return val;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Convert values into DECIMAL. Returns empty if not possible to convert
+        /// </summary>
+        public static IEnumerable<BsonValue> DECIMAL(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        {
+            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+
+            foreach (var value in values)
+            {
+                if (value.IsNumber)
+                {
+                    yield return value.AsDecimal;
+                }
+                else
+                {
+                    if (Decimal.TryParse(value.AsString, NumberStyles.Any, c.NumberFormat, out var val))
                     {
                         yield return val;
                     }
@@ -328,6 +374,29 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Convert values into DATETIME. Returns empty if not possible to convert. Support custom culture info
+        /// </summary>
+        public static IEnumerable<BsonValue> DATETIME(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        {
+            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+
+            foreach (var value in values)
+            {
+                if (value.IsDateTime)
+                {
+                    yield return value.AsDateTime;
+                }
+                else
+                {
+                    if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.None, out var val))
+                    {
+                        yield return val;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Convert values into DATETIME. Returns empty if not possible to convert
         /// </summary>
         public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> values)
@@ -347,6 +416,30 @@ namespace LiteDB
                 }
             }
         }
+
+        /// <summary>
+        /// Convert values into DATETIME. Returns empty if not possible to convert
+        /// </summary>
+        public static IEnumerable<BsonValue> DATETIME_UTC(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture)
+        {
+            var c = CultureInfo.GetCultureInfo(culture.FirstOrDefault()?.AsString ?? "en-US");
+
+            foreach (var value in values)
+            {
+                if (value.IsDateTime)
+                {
+                    yield return value.AsDateTime;
+                }
+                else
+                {
+                    if (DateTime.TryParse(value.AsString, c.DateTimeFormat, DateTimeStyles.AssumeUniversal, out var val))
+                    {
+                        yield return val;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Create a new instance of DATETIME based on year, month, day (local time)
         /// </summary>
@@ -578,7 +671,9 @@ namespace LiteDB
         /// Alias to DATETIME(values) and DATETIME_UTC(values)
         /// </summary>
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values) => DATETIME(values);
+        public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture) => DATETIME(values, culture);
         public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> values) => DATETIME_UTC(values);
+        public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> values, IEnumerable<BsonValue> culture) => DATETIME_UTC(values, culture);
 
         public static IEnumerable<BsonValue> DATE(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME(year, month, day);
         public static IEnumerable<BsonValue> DATE_UTC(IEnumerable<BsonValue> year, IEnumerable<BsonValue> month, IEnumerable<BsonValue> day) => DATETIME_UTC(year, month, day);
