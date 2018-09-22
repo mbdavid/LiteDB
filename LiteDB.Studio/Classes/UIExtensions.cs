@@ -20,9 +20,8 @@ namespace LiteDB.Studio
     {
         public static void BindBsonData(this DataGridView grd, TaskData data)
         {
+            grd.Visible = false;
             grd.Clear();
-
-            if (data.Result == null) return;
 
             foreach (var value in data.Result)
             {
@@ -90,6 +89,7 @@ namespace LiteDB.Studio
             }
 
             grd.ReadOnly = grd.Columns["_id"] == null;
+            grd.Visible = true;
         }
 
         public static void SetBsonValue(this DataGridViewCell cell, BsonValue value)
@@ -140,6 +140,19 @@ namespace LiteDB.Studio
             cell.Tag = value;
         }
 
+        public static void DoubleBuffered(this DataGridView dgv, bool setting)
+        {
+            var dgvType = dgv.GetType();
+            var pi = dgvType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
+            pi.SetValue(dgv, setting, null);
+        }
+
+        public static void Clear(this DataGridView grd)
+        {
+            grd.Columns.Clear();
+            grd.DataSource = null;
+        }
+
         public static void BindBsonData(this ICSharpCode.TextEditor.TextEditorControl txt, TaskData data)
         {
             var index = 0;
@@ -153,7 +166,7 @@ namespace LiteDB.Studio
                     Indent = 2
                 };
 
-                if (data.Result?.Count > 0)
+                if (data.Result.Count > 0)
                 {
                     foreach (var value in data.Result)
                     {
@@ -168,34 +181,18 @@ namespace LiteDB.Studio
 
                     if (data.LimitExceeded)
                     {
-                        sb.AppendLine("...");
-                        sb.AppendLine("Limit exceeded");
+                        sb.AppendLine();
+                        sb.AppendLine("/* Limit exceeded */");
                     }
                 }
                 else
                 {
-                    sb.AppendLine("no resultset");
+                    sb.AppendLine("no result");
                 }
             }
 
-            txt.SuspendLayout();
-            txt.Clear();
             txt.SetHighlighting("JSON");
             txt.Text = sb.ToString();
-            txt.ResumeLayout();
-        }
-
-        public static void DoubleBuffered(this DataGridView dgv, bool setting)
-        {
-            var dgvType = dgv.GetType();
-            var pi = dgvType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
-            pi.SetValue(dgv, setting, null);
-        }
-
-        public static void Clear(this DataGridView grd)
-        {
-            grd.Columns.Clear();
-            grd.DataSource = null;
         }
 
         public static void BindErrorMessage(this DataGridView grid, string sql, Exception ex)
