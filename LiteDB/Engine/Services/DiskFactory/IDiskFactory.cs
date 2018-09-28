@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Interface factory to provider new Stream instances for datafile/walfile resources. It's useful to multiple threads can read same datafile
     /// </summary>
-    public interface IDiskFactory
+    internal interface IDiskFactory
     {
         /// <summary>
         /// Get filename

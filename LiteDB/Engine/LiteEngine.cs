@@ -95,7 +95,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Initialize LiteEngine using initial engine settings
         /// </summary>
-        public LiteEngine(IEngineSettings settings)
+        public LiteEngine(EngineSettings settings)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 

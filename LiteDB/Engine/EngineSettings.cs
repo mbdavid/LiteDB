@@ -13,7 +13,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// All engine settings used to starts new engine
     /// </summary>
-    public class EngineSettings : IEngineSettings
+    public class EngineSettings
     {
         /// <summary>
         /// Get/Set custom stream to be used as datafile (can be MemoryStrem or TempStream). Do not use FileStream - to use physical file, use "filename" attribute (and keep DataStrem/WalStream null)
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get datafile factory
         /// </summary>
-        public IDiskFactory GetDiskFactory()
+        internal IDiskFactory GetDiskFactory()
         {
             if (this.Filename == ":memory:")
             {

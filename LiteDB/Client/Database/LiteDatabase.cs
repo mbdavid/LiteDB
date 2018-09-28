@@ -79,17 +79,6 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Starts LiteDB database using custom LiteEngine settings
-        /// </summary>
-        public LiteDatabase(IEngineSettings settings, BsonMapper mapper = null)
-        {
-            if (settings == null) throw new ArgumentNullException(nameof(settings));
-
-            _engine = new Lazy<ILiteEngine>(() => new LiteEngine(settings));
-            _mapper = mapper ?? BsonMapper.Global;
-        }
-
-        /// <summary>
         /// Starts LiteDB database using custom ILiteEngine implementation
         /// </summary>
         public LiteDatabase(ILiteEngine engine, BsonMapper mapper = null)
