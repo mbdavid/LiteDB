@@ -20,7 +20,7 @@ namespace LiteDB.Engine
             _equals = _pattern == _startsWith;
         }
 
-        internal override uint GetCost(CollectionIndex index)
+        public override uint GetCost(CollectionIndex index)
         {
             if (index.KeyCount == 0) return uint.MaxValue;
 
@@ -36,7 +36,7 @@ namespace LiteDB.Engine
             }
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // if contains startsWith string, search using index Find
             // otherwise, use index full scan and test results

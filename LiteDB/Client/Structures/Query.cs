@@ -23,16 +23,6 @@ namespace LiteDB
         /// <summary>
         /// Returns all documents that value are equals to value (=)
         /// </summary>
-        public static Index All(string name, int order = Query.Ascending)
-        {
-            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
-
-            return Index.All(order);
-        }
-
-        /// <summary>
-        /// Returns all documents that value are equals to value (=)
-        /// </summary>
         public static BsonExpression EQ(string field, BsonValue value)
         {
             if (field.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(field));

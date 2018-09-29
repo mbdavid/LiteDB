@@ -9,13 +9,11 @@ namespace LiteDB.Engine
     internal class CachedDocumentLoader : DocumentLoader
     {
         private readonly Dictionary<PageAddress, BsonDocument> _cache;
-        private readonly int _limit;
 
-        public CachedDocumentLoader(DataService data, bool utcDate, HashSet<string> fields, CursorInfo cursor, int cacheLimit)
+        public CachedDocumentLoader(DataService data, bool utcDate, HashSet<string> fields, CursorInfo cursor)
             : base (data, utcDate, fields, cursor)
         {
-            _cache = new Dictionary<PageAddress, BsonDocument>(cacheLimit);
-            _limit = cacheLimit;
+            _cache = new Dictionary<PageAddress, BsonDocument>();
         }
 
         public override BsonDocument Load(PageAddress rawId)
@@ -24,7 +22,7 @@ namespace LiteDB.Engine
             {
                 return doc;
             }
-            else if (_cache.Count > _limit)
+            else if (_cache.Count > MAX_CACHE_DOCUMENT_LOADER_SIZE)
             {
                 // do full cache clear if reach size limit
                 _cache.Clear();

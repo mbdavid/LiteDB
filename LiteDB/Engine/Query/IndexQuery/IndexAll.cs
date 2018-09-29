@@ -14,7 +14,7 @@ namespace LiteDB.Engine
         {
         }
 
-        internal override uint GetCost(CollectionIndex index)
+        public override uint GetCost(CollectionIndex index)
         {
             // no analyzed index
             if (index.KeyCount == 0) return uint.MaxValue;
@@ -23,7 +23,7 @@ namespace LiteDB.Engine
             return index.KeyCount;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             return indexer.FindAll(index, this.Order);
         }

@@ -156,79 +156,67 @@ namespace LiteDB.Engine
             }
 
             // create snapshot from temp transaction
-            var snapshot = _tempTransaction.CreateSnapshot(LockMode.Read, Guid.NewGuid().ToString("n"), false);
+            var snapshot = _tempTransaction.CreateSnapshot(LockMode.Write, Guid.NewGuid().ToString("n"), false);
+            var indexer = new IndexService(snapshot);
 
-            return DoOrderBy();
+            // create new page as collection page (with no CollectionListPage reference)
+            var col = snapshot.NewPage<CollectionPage>();
+            var index = indexer.CreateIndex(col);
 
-            IEnumerable<BsonDocument> DoOrderBy()
+            // get head/tail index node
+            var head = indexer.GetNode(index.HeadNode);
+            var tail = indexer.GetNode(index.TailNode);
+
+            var last = order == Query.Ascending ? BsonValue.MaxValue : BsonValue.MinValue;
+            var total = limit == int.MaxValue ? int.MaxValue : offset + limit;
+            var indexCounter = 0;
+
+            foreach (var doc in source)
             {
-                var indexer = new IndexService(snapshot);
+                // get key to be sorted
+                var key = expr.Execute(doc, true).First();
+                var diff = key.CompareTo(last);
 
-                // create new page as collection page (with no CollectionListPage reference)
-                var col = snapshot.NewPage<CollectionPage>();
-                var index = indexer.CreateIndex(col);
-
-                // get head/tail index node
-                var head = indexer.GetNode(index.HeadNode);
-                var tail = indexer.GetNode(index.TailNode);
-
-                var last = order == Query.Ascending ? BsonValue.MaxValue : BsonValue.MinValue;
-                var total = limit == int.MaxValue ? int.MaxValue : offset + limit;
-                var indexCounter = 0;
-
-                foreach (var doc in source)
+                // add to list only if lower than last space
+                if ((order == Query.Ascending && diff < 1) ||
+                    (order == Query.Descending && diff > -1))
                 {
-                    // get key to be sorted
-                    var key = expr.Execute(doc, true).First();
-                    var diff = key.CompareTo(last);
+                    var tmpNode = indexer.AddNode(index, key, null);
 
-                    // add to list only if lower than last space
-                    if ((order == Query.Ascending && diff < 1) ||
-                        (order == Query.Descending && diff > -1))
+                    // use rawId (position of document inside datafile)
+                    tmpNode.DataBlock = doc.RawId;
+
+                    indexCounter++;
+
+                    // exceeded limit
+                    if (indexCounter > total)
                     {
-                        var tmpNode = indexer.AddNode(index, key, null);
+                        var exceeded = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
 
-                        // use rawId (position of document inside datafile)
-                        tmpNode.DataBlock = doc.RawId;
-                        tmpNode.CacheDocument = doc;
+                        indexer.Delete(index, exceeded);
 
-                        indexCounter++;
+                        var lnode = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
 
-                        // exceeded limit
-                        if (indexCounter > total)
-                        {
-                            var exceeded = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
+                        last = indexer.GetNode(lnode).Key;
 
-                            indexer.Delete(index, exceeded);
-
-                            var lnode = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
-
-                            last = indexer.GetNode(lnode).Key;
-
-                            indexCounter--;
-                        }
-
-                        // if memory pages excedded limit size, flush to temp disk
-                        _tempTransaction.Safepoint();
-                    }
-                }
-
-                var find = indexer.FindAll(index, order).Skip(offset).Take(limit);
-
-                foreach (var node in find)
-                {
-                    // if document are in cache, use it. if not, get from disk again
-                    var doc = node.CacheDocument;
-
-                    if (doc == null)
-                    {
-                        doc = _loader.Load(node.DataBlock);
+                        indexCounter--;
                     }
 
-                    yield return doc;
-
+                    // if memory pages excedded limit size, flush to temp disk
                     _tempTransaction.Safepoint();
                 }
+            }
+
+            var find = indexer.FindAll(index, order).Skip(offset).Take(limit);
+
+            foreach (var node in find)
+            {
+                // if document are in cache, use it. if not, get from disk again
+                var doc = _loader.Load(node.DataBlock);
+
+                yield return doc;
+
+                _tempTransaction.Safepoint();
             }
         }
 

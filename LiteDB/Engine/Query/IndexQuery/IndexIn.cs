@@ -17,7 +17,7 @@ namespace LiteDB.Engine
             _values = values;
         }
 
-        internal override uint GetCost(CollectionIndex index)
+        public override uint GetCost(CollectionIndex index)
         {
             var count = (uint)_values.Count;
 
@@ -40,7 +40,7 @@ namespace LiteDB.Engine
             }
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             foreach (var value in _values.Distinct())
             {

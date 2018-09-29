@@ -7,7 +7,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Class that implement higher level of index search operations (equals, greater, less, ...)
     /// </summary>
-    public abstract class Index
+    internal abstract class Index
     {
         /// <summary>
         /// Index name
@@ -174,17 +174,17 @@ namespace LiteDB.Engine
         /// <summary>
         /// Calculate cost based on type/value/collection - From 1 (best) to Collection.KeyCount (worst)
         /// </summary>
-        internal abstract uint GetCost(CollectionIndex index);
+        public abstract uint GetCost(CollectionIndex index);
 
         /// <summary>
         /// Abstract method that must be implement for index seek/scan - Returns IndexNodes that match with index
         /// </summary>
-        internal abstract IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index);
+        public abstract IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index);
 
         /// <summary>
         /// Find witch index will be used and run Execute method
         /// </summary>
-        internal virtual IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        public virtual IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
             // get index for this query
             var index = col.GetIndex(this.Name);

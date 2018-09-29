@@ -24,7 +24,6 @@ namespace LiteDB.Engine
         /// - GroupBy
         /// - SelectGroupBy
         /// - Having
-        /// - OrderBy
         /// - OffSet
         /// - Limit
         /// </summary>
@@ -69,20 +68,11 @@ namespace LiteDB.Engine
                 source = this.Having(source, query.GroupBy.Having);
             }
 
-            // if contains OrderBy, must be run on end (after groupby select)
-            if (query.OrderBy != null)
-            {
-                // pipe: orderby with offset+limit
-                source = this.OrderBy(source, query.OrderBy.Expression, query.OrderBy.Order, query.Offset, query.Limit);
-            }
-            else
-            {
-                // pipe: apply offset (no orderby)
-                if (query.Offset > 0) source = source.Skip(query.Offset);
+            // pipe: apply offset (no orderby)
+            if (query.Offset > 0) source = source.Skip(query.Offset);
 
-                // pipe: apply limit (no orderby)
-                if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-            }
+            // pipe: apply limit (no orderby)
+            if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
 
             // return document pipe
             return source;

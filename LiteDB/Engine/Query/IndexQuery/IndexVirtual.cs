@@ -21,18 +21,18 @@ namespace LiteDB.Engine
             _source = source;
         }
 
-        internal override uint GetCost(CollectionIndex index)
+        public override uint GetCost(CollectionIndex index)
         {
             // there is no way to determine how many document are inside _source without run Count() this
             return uint.MaxValue;
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             throw new NotImplementedException();
         }
 
-        internal override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
+        public override IEnumerable<IndexNode> Run(CollectionPage col, IndexService indexer)
         {
             foreach(var doc in _source)
             {

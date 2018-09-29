@@ -96,11 +96,6 @@ namespace LiteDB.Engine
             }
         }
 
-        /// <summary>
-        /// Cached document - if null, use DataBlock
-        /// </summary>
-        public BsonDocument CacheDocument { get; set; }
-
         private IndexNode()
         {
         }

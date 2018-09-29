@@ -116,13 +116,12 @@ namespace LiteDB.Engine
                     }
                     else
                     {
-                        loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor, MAX_CACHE_DOCUMENT_LOADER_SIZE);
+                        loader = new CachedDocumentLoader(data, _engine.UtcDate, queryPlan.Fields, cursor);
                     }
                 }
 
                 // get node list from query - distinct by dataBlock (avoid duplicate)
-                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, indexer)
-                        .DistinctBy(x => x.DataBlock, null);
+                var nodes = queryPlan.Index.Run(snapshot.CollectionPage, indexer);
 
                 // get current query pipe: normal or groupby pipe
                 using (var pipe = queryPlan.GroupBy != null ?

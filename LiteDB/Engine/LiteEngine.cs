@@ -163,7 +163,6 @@ namespace LiteDB.Engine
         private void Shutdown()
         {
             // here all private instances are loaded
-
             if (_shutdown) return;
 
             // start shutdown operation

@@ -105,7 +105,7 @@ namespace LiteDB
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public ILiteQueryableSelect<T> GroupBy(BsonExpression keySelector)
+        public ILiteQueryableGrouped<T> GroupBy(BsonExpression keySelector)
         {
             _query.GroupBy = keySelector;
             return this;
@@ -114,11 +114,65 @@ namespace LiteDB
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public ILiteQueryableSelect<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
+        public ILiteQueryableGrouped<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
         {
             _query.GroupBy = _mapper.GetExpression(keySelector);
             return this;
         }
+
+        #endregion
+
+        #region Having
+
+        /// <summary>
+        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
+        /// </summary>
+        public ILiteQueryableOrdered<T> Having(BsonExpression predicate)
+        {
+            _query.Having = predicate;
+            return this;
+        }
+
+        /// <summary>
+        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
+        /// </summary>
+        public ILiteQueryableOrdered<T> Having(Expression<Func<T, bool>> predicate)
+        {
+            _query.Having = _mapper.GetExpression(predicate);
+            return this;
+        }
+
+        #endregion
+
+        #region OrderBy
+
+        /// <summary>
+        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
+        /// </summary>
+        public ILiteQueryableOrdered<T> OrderBy(BsonExpression keySelector, int order = Query.Ascending)
+        {
+            _query.OrderBy = keySelector;
+            _query.Order = order;
+            return this;
+        }
+
+        /// <summary>
+        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
+        /// </summary>
+        public ILiteQueryableOrdered<T> OrderBy<K>(Expression<Func<T, K>> keySelector, int order = Query.Ascending)
+        {
+            return this.OrderBy(_mapper.GetExpression(keySelector), order);
+        }
+
+        /// <summary>
+        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
+        /// </summary>
+        public ILiteQueryableOrdered<T> OrderByDescending(BsonExpression keySelector) => this.OrderBy(keySelector, Query.Descending);
+
+        /// <summary>
+        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
+        /// </summary>
+        public ILiteQueryableOrdered<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector) => this.OrderBy(keySelector, Query.Descending);
 
         #endregion
 
@@ -170,66 +224,12 @@ namespace LiteDB
 
         #endregion
 
-        #region Having
-
-        /// <summary>
-        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
-        /// </summary>
-        public ILiteQueryableSelected<T> Having(BsonExpression predicate)
-        {
-            _query.Having = predicate;
-            return this;
-        }
-
-        /// <summary>
-        /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
-        /// </summary>
-        public ILiteQueryableSelected<T> Having(Expression<Func<T, bool>> predicate)
-        {
-            _query.Having = _mapper.GetExpression(predicate);
-            return this;
-        }
-
-        #endregion
-
-        #region OrderBy
-
-        /// <summary>
-        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
-        /// </summary>
-        public ILiteQueryableOrdered<T> OrderBy(BsonExpression keySelector, int order = Query.Ascending)
-        {
-            _query.OrderBy = keySelector;
-            _query.Order = order;
-            return this;
-        }
-
-        /// <summary>
-        /// Sort the documents of resultset in ascending (or descending) order according to a key (support only one OrderBy)
-        /// </summary>
-        public ILiteQueryableOrdered<T> OrderBy<K>(Expression<Func<T, K>> keySelector, int order = Query.Ascending)
-        {
-            return this.OrderBy(_mapper.GetExpression(keySelector), order);
-        }
-
-        /// <summary>
-        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
-        /// </summary>
-        public ILiteQueryableOrdered<T> OrderByDescending(BsonExpression keySelector) => this.OrderBy(keySelector, Query.Descending);
-
-        /// <summary>
-        /// Sort the documents of resultset in descending order according to a key (support only one OrderBy)
-        /// </summary>
-        public ILiteQueryableOrdered<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector) => this.OrderBy(keySelector, Query.Descending);
-
-        #endregion
-
         #region Offset/Limit/ForUpdate
 
         /// <summary>
         /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends
         /// </summary>
-        public ILiteQueryableOrdered<T> ForUpdate()
+        public ILiteQueryableSelected<T> ForUpdate()
         {
             _query.ForUpdate = true;
             return this;
@@ -238,7 +238,7 @@ namespace LiteDB
         /// <summary>
         /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Skip)
         /// </summary>
-        public ILiteQueryableOrdered<T> Offset(int offset)
+        public ILiteQueryableSelected<T> Offset(int offset)
         {
             _query.Offset = offset;
             return this;
@@ -247,12 +247,12 @@ namespace LiteDB
         /// <summary>
         /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Offset)
         /// </summary>
-        public ILiteQueryableOrdered<T> Skip(int offset) => this.Offset(offset);
+        public ILiteQueryableSelected<T> Skip(int offset) => this.Offset(offset);
 
         /// <summary>
         /// Return a specified number of contiguous documents from start of resultset
         /// </summary>
-        public ILiteQueryableOrdered<T> Limit(int limit)
+        public ILiteQueryableSelected<T> Limit(int limit)
         {
             _query.Limit = limit;
             return this;

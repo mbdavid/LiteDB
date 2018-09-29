@@ -25,7 +25,7 @@ namespace LiteDB.Engine
             _endEquals = endEquals;
         }
 
-        internal override uint GetCost(CollectionIndex index)
+        public override uint GetCost(CollectionIndex index)
         {
             // no analyzed index
             if (index.KeyCount == 0) return uint.MaxValue;
@@ -34,7 +34,7 @@ namespace LiteDB.Engine
             return (uint)(index.KeyCount * (0.2));
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             // if order are desc, swap start/end values
             var start = this.Order == Query.Ascending ? _start : _end;

@@ -17,7 +17,7 @@ namespace LiteDB.Engine
             _value = value;
         }
 
-        internal override uint GetCost(CollectionIndex index)
+        public override uint GetCost(CollectionIndex index)
         {
             if (index.Unique)
             {
@@ -37,7 +37,7 @@ namespace LiteDB.Engine
             }
         }
 
-        internal override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
+        public override IEnumerable<IndexNode> Execute(IndexService indexer, CollectionIndex index)
         {
             var node = indexer.Find(index, _value, false, Query.Ascending);
 
