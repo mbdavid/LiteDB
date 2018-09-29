@@ -68,7 +68,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Indicate that engine will do a checkpoint on dispose database
         /// </summary>
-        public bool CheckpointOnShutdown { get; set; } = true;
+        public bool CheckpointOnShutdown { get; set; } = false;
+
+        /// <summary>
+        /// Indicate that engine instance will works only with read only and datafiles will be open as read only
+        /// </summary>
+        public bool ReadOnly { get; set; } = false;
 
         /// <summary>
         /// Define max pages a trasaction must keep in-memory before flush to WAL file. Must be larger than 100 (default 1000)
@@ -82,15 +87,15 @@ namespace LiteDB.Engine
         {
             if (this.Filename == ":memory:")
             {
-                return new StreamDiskFactory(new MemoryStream(), this.WalStream ?? new MemoryStream());
+                return new StreamDiskFactory(new MemoryStream(), new MemoryStream());
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamDiskFactory(new TempStream(), this.WalStream ?? new TempStream());
+                return new StreamDiskFactory(new TempStream(), new TempStream());
             }
             else if(!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamDiskFactory(this.Filename);
+                return new FileStreamDiskFactory(this.Filename, this.ReadOnly);
             }
             else
             {

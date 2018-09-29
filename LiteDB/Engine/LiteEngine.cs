@@ -30,6 +30,7 @@ namespace LiteDB.Engine
 
         // immutable settings
         private readonly IDiskFactory _factory;
+        private readonly bool _readonly;
         private readonly bool _utcDate;
         private readonly bool _checkpointOnShutdown;
         private readonly int _maxMemoryTransactionSize;
@@ -106,6 +107,7 @@ namespace LiteDB.Engine
 
                 // copy settings into class variables (turn values in immutable values)
                 _factory = settings.GetDiskFactory();
+                _readonly = settings.ReadOnly;
                 _utcDate = settings.UtcDate;
                 _checkpointOnShutdown = settings.CheckpointOnShutdown;
                 _maxMemoryTransactionSize = settings.MaxMemoryTransactionSize;
@@ -122,14 +124,14 @@ namespace LiteDB.Engine
 
                 _dataFile = new DataFileService(factory, settings.InitialSize, settings.UtcDate, _log);
 
+                // load header page (single instance)
+                _header = _dataFile.ReadPage(0) as HeaderPage;
+
                 // initialize wal service
                 _wal = new WalService(_locker, _dataFile, factory, settings.LimitSize, settings.UtcDate, _log);
 
-                // if WAL file have content, must run checkpoint
-                _wal.Checkpoint(false, null, false);
-
-                // load header page
-                _header = _dataFile.ReadPage(0) as HeaderPage;
+                // if exists WAL file, restore wal index references (can update full _header instance)
+                _wal.RestoreWalIndex(ref _header);
 
                 // register system collections
                 this.InitializeSystemCollections();

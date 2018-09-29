@@ -16,11 +16,11 @@ namespace LiteDB.Engine
     /// </summary>
     internal class DataFileService : IDisposable
     {
-        private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
-        private IDiskFactory _factory;
+        private readonly ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
+        private readonly IDiskFactory _factory;
 
-        private Logger _log;
-        private bool _utcDate;
+        private readonly Logger _log;
+        private readonly bool _utcDate;
 
         private BinaryWriter _writer;
 
@@ -31,7 +31,7 @@ namespace LiteDB.Engine
             _log = log;
 
             // get first stream (will be used as single writer)
-            var stream = factory.GetDataFileStream(true);
+            var stream = factory.GetDataFileStream();
 
             try
             {
@@ -67,7 +67,7 @@ namespace LiteDB.Engine
         public BasePage ReadPage(long position)
         {
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetDataFileStream(false));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetDataFileStream());
 
             try
             {

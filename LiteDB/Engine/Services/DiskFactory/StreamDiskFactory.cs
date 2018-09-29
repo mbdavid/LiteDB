@@ -11,8 +11,8 @@ namespace LiteDB.Engine
     /// </summary>
     internal class StreamDiskFactory : IDiskFactory
     {
-        private Stream _data;
-        private Stream _wal;
+        private readonly Stream _data;
+        private readonly Stream _wal;
 
         public StreamDiskFactory(Stream data, Stream wal)
         {
@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetDataFileStream(bool write) => new ConcurrentStream(_data);
+        public Stream GetDataFileStream() => new ConcurrentStream(_data);
 
-        public Stream GetWalFileStream(bool write) => new ConcurrentStream(_wal);
+        public Stream GetWalFileStream(bool writeMode) => new ConcurrentStream(_wal);
 
         public bool IsWalFileExists() => _wal.Length > 0;
 

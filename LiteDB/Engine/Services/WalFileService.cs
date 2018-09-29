@@ -169,6 +169,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Define writer position
+        /// </summary>
+        public void SetPosition(long position)
+        {
+            _writer.Value.BaseStream.Position = position;
+        }
+
+        /// <summary>
         /// Delete WAL file (check before if is empty) and re-initialize writer for new file
         /// </summary>
         public void Delete()

@@ -15,8 +15,8 @@ namespace LiteDB.Engine
         private readonly WalFileService _walFile;
         private readonly Logger _log;
 
-        private HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
-        private ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
+        private readonly HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
+        private readonly ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
@@ -31,8 +31,6 @@ namespace LiteDB.Engine
             _log = log;
 
             _walFile = new WalFileService(factory, sizeLimit, utcDate, log);
-
-            this.LoadConfirmedTransactions();
         }
 
         /// <summary>
@@ -193,16 +191,47 @@ namespace LiteDB.Engine
         /// <summary>
         /// Load all confirmed transactions from WAL file (used only when open datafile)
         /// </summary>
-        private void LoadConfirmedTransactions()
+        public void RestoreWalIndex(ref HeaderPage header)
         {
             if (_walFile.HasPages() == false) return;
 
-            // read all pages to get confirmed transactions (do not read page content, only page header)
-            var items = _walFile.ReadPages(false)
-                .Where(x => x.IsConfirmed)
-                .Select(x => x.TransactionID);
+            // there is no need of locks because runs when initialize engine only
 
-            _confirmedTransactions.AddRange(items);
+            // get all page positions
+            var positions = new Dictionary<Guid, List<PagePosition>>();
+            var current = 0L;
+
+            // read all pages to get confirmed transactions (do not read page content, only page header)
+            foreach(var page in _walFile.ReadPages(false))
+            {
+                var position = new PagePosition(page.PageID, current);
+
+                if (positions.TryGetValue(page.TransactionID, out var list))
+                {
+                    list.Add(position);
+                }
+                else
+                {
+                    positions[page.TransactionID] = new List<PagePosition> { position };
+                }
+
+                if (page.IsConfirmed)
+                {
+                    this.ConfirmTransaction(page.TransactionID, positions[page.TransactionID]);
+
+                    if (page.PageType == PageType.Header)
+                    {
+                        // if confirmed page is header need realod full page from WAL (current page contains only header data)
+                        header = _walFile.ReadPage(current) as HeaderPage;
+                        header.TransactionID = Guid.Empty;
+                        header.IsConfirmed = false;
+                    }
+                }
+
+                current += PAGE_SIZE;
+            }
+
+            _walFile.SetPosition(current);
         }
 
         public void Dispose()

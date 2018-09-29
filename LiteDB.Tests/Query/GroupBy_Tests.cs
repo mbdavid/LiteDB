@@ -120,7 +120,6 @@ namespace LiteDB.Tests.Query
                         x.Age
                     })
                 })
-                .OrderByDescending(x => x.Users.Length)
                 .Limit(10)
                 .ToArray();
 

@@ -19,12 +19,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get new datafile stream instance
         /// </summary>
-        Stream GetDataFileStream(bool write);
+        Stream GetDataFileStream();
 
         /// <summary>
         /// Get new WAL file stream instance
         /// </summary>
-        Stream GetWalFileStream(bool write);
+        Stream GetWalFileStream(bool writeMode);
 
         /// <summary>
         /// Return if wal file exist

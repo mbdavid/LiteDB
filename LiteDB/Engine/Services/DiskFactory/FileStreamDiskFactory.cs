@@ -14,11 +14,16 @@ namespace LiteDB.Engine
     {
         private readonly string _dataFilename;
         private readonly string _walFilename;
+        private readonly Lazy<string> _tempFilename;
+        private readonly bool _readonly;
 
-        public FileStreamDiskFactory(string filename)
+        public FileStreamDiskFactory(string filename, bool readOnly)
         {
             _dataFilename = filename;
-            _walFilename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + "-wal" + Path.GetExtension(filename));
+            _walFilename = FileHelper.GetTempFile(filename, "-wal", false);
+            _tempFilename = new Lazy<string>(() => FileHelper.GetTempFile(filename, "-temp", true));
+
+            _readonly = readOnly;
         }
 
         /// <summary>
@@ -29,31 +34,29 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetDataFileStream(bool write)
+        public Stream GetDataFileStream()
         {
-            return this.GetStreamInternal(_dataFilename, write, FileOptions.RandomAccess);
+            return this.GetStreamInternal(_dataFilename, FileOptions.RandomAccess);
         }
 
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetWalFileStream(bool write)
+        public Stream GetWalFileStream(bool writeMode)
         {
-            var options = write ? FileOptions.SequentialScan : FileOptions.RandomAccess;
-
-            return GetStreamInternal(_walFilename, write, options);
+            return this.GetStreamInternal(_walFilename, writeMode ? FileOptions.SequentialScan : FileOptions.RandomAccess);
         }
 
         /// <summary>
         /// Open (or create) new FileStream based on filename. Can be sequencial (for WAL writer)
         /// Will be only 1 single writer, so I will open write mode with no more support for writer (will do file lock)
         /// </summary>
-        private Stream GetStreamInternal(string filename, bool write, FileOptions options)
+        private Stream GetStreamInternal(string filename, FileOptions options)
         {
             return new FileStream(filename,
-                write == false ? FileMode.Open : FileMode.OpenOrCreate,
-                write == false ? FileAccess.Read : FileAccess.ReadWrite,
-                write ? FileShare.Read : FileShare.ReadWrite, // TODO: tenho duvia se nao precisa ser somente Write 
+                _readonly ? FileMode.Open : FileMode.OpenOrCreate,
+                _readonly ? FileAccess.Read : FileAccess.ReadWrite,
+                _readonly ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,
                 options);
         }
