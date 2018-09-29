@@ -19,7 +19,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get transaction ID
         /// </summary>
-        public Guid TransactionID { get; set; }
+        public ObjectId TransactionID { get; set; }
 
         /// <summary>
         /// Get snapshot read version

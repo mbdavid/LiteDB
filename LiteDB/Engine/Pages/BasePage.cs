@@ -55,7 +55,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Represent transaction page ID that was stored [16 bytes]
         /// </summary>
-        public Guid TransactionID { get; set; }
+        public ObjectId TransactionID { get; set; }
 
         /// <summary>
         /// Used in WAL, define this page is last transaction page and are confirmed on disk [1 byte]
@@ -79,7 +79,7 @@ namespace LiteDB.Engine
             this.ItemCount = 0;
             this.FreeBytes = PAGE_AVAILABLE_BYTES;
             this.ColID = uint.MaxValue;
-            this.TransactionID = Guid.Empty;
+            this.TransactionID = ObjectId.Empty;
             this.IsConfirmed = false;
             this.IsDirty = false;
         }
@@ -120,10 +120,10 @@ namespace LiteDB.Engine
             this.ItemCount = reader.ReadUInt16(); // 2 bytes
             this.FreeBytes = reader.ReadUInt16(); // 2 bytes
             this.ColID = reader.ReadUInt32(); // 4 bytes
-            this.TransactionID = reader.ReadGuid(); // 16 bytes
+            this.TransactionID = reader.ReadObjectId(); // 12 bytes
             this.IsConfirmed = reader.ReadBoolean(); // 1 byte
 
-            reader.BaseStream.Seek(26, SeekOrigin.Current);  // reserved 26 bytes
+            reader.BaseStream.Seek(30, SeekOrigin.Current);  // reserved 30 bytes
                                                              // total header: 64 bytes
         }
 
@@ -137,10 +137,10 @@ namespace LiteDB.Engine
             writer.Write((UInt16)this.ItemCount); // 2 bytes
             writer.Write((UInt16)this.FreeBytes); // 2 bytes
             writer.Write(this.ColID); // 4 bytes
-            writer.Write(this.TransactionID); // 16 bytes
+            writer.Write(this.TransactionID); // 12 bytes
             writer.Write(this.IsConfirmed); // 1 bytes
 
-            writer.Write(_zeroBuffer, 0, 26); // 26 bytes
+            writer.Write(_zeroBuffer, 0, 30); // 30 bytes
                                               // total header: 64 bytes
         }
 

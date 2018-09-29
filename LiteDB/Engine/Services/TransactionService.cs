@@ -23,19 +23,18 @@ namespace LiteDB.Engine
         // transaction controls
         private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly TransactionPages _transPages = new TransactionPages();
-        private readonly Action<Guid> _done;
+        private readonly Action<ObjectId> _done;
         private readonly int _maxTransactionSize;
         private bool _shutdown = false;
 
         // transaction info
         public int ThreadID { get; private set; } = Thread.CurrentThread.ManagedThreadId;
-        public Guid TransactionID { get; private set; } = Guid.NewGuid();
+        public ObjectId TransactionID { get; private set; } = ObjectId.NewObjectId();
         public TransactionState State { get; private set; } = TransactionState.New;
-        public DateTime StartTime { get; private set; } = DateTime.Now;
         public Dictionary<string, Snapshot> Snapshots => _snapshots;
         public TransactionPages Pages => _transPages;
 
-        public TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<Guid> done)
+        public TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<ObjectId> done)
         {
             _wal = wal;
             _log = log;
@@ -295,7 +294,7 @@ namespace LiteDB.Engine
             var pages = new List<EmptyPage>();
 
             // create new transaction ID
-            var transactionID = Guid.NewGuid();
+            var transactionID = ObjectId.NewObjectId();
 
             // create list of empty pages with forward link pointer
             for (var i = 0; i < _transPages.NewPages.Count; i++)

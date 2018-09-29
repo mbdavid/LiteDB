@@ -132,7 +132,7 @@ namespace LiteDB.Engine
                 foreach (var page in pages)
                 {
                     DEBUG(page.IsDirty == false, "page always must be dirty when be write on disk");
-                    DEBUG(page.TransactionID == Guid.Empty, "to write on wal, page must have a transactionID");
+                    DEBUG(page.TransactionID == ObjectId.Empty, "to write on wal, page must have a transactionID");
 
                     var pos = stream.Position;
 

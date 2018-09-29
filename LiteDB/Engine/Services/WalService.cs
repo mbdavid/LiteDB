@@ -15,14 +15,14 @@ namespace LiteDB.Engine
         private readonly WalFileService _walFile;
         private readonly Logger _log;
 
-        private readonly HashSet<Guid> _confirmedTransactions = new HashSet<Guid>();
+        private readonly HashSet<ObjectId> _confirmedTransactions = new HashSet<ObjectId>();
         private readonly ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
         public WalFileService WalFile => _walFile;
         public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
-        public HashSet<Guid> ConfirmedTransactions => _confirmedTransactions;
+        public HashSet<ObjectId> ConfirmedTransactions => _confirmedTransactions;
 
         public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
         {
@@ -72,7 +72,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write last confirmation page into all and update all indexes
         /// </summary>
-        public void ConfirmTransaction(Guid transactionID, ICollection<PagePosition> pagePositions)
+        public void ConfirmTransaction(ObjectId transactionID, ICollection<PagePosition> pagePositions)
         {
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Add(transactionID);
@@ -135,7 +135,7 @@ namespace LiteDB.Engine
                     .ForEach((i, x) =>
                     {
                         count++;
-                        x.TransactionID = Guid.Empty;
+                        x.TransactionID = ObjectId.Empty;
                         x.IsConfirmed = false;
 
                         if (x.PageType == PageType.Header)
@@ -198,7 +198,7 @@ namespace LiteDB.Engine
             // there is no need of locks because runs when initialize engine only
 
             // get all page positions
-            var positions = new Dictionary<Guid, List<PagePosition>>();
+            var positions = new Dictionary<ObjectId, List<PagePosition>>();
             var current = 0L;
 
             // read all pages to get confirmed transactions (do not read page content, only page header)
@@ -223,7 +223,7 @@ namespace LiteDB.Engine
                     {
                         // if confirmed page is header need realod full page from WAL (current page contains only header data)
                         header = _walFile.ReadPage(current) as HeaderPage;
-                        header.TransactionID = Guid.Empty;
+                        header.TransactionID = ObjectId.Empty;
                         header.IsConfirmed = false;
                     }
                 }

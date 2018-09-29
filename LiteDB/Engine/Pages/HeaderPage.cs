@@ -126,7 +126,7 @@ namespace LiteDB.Engine
         protected override void ReadContent(BinaryReader reader, bool utcDate)
         {
             // this will check for v7 datafile structure
-            if (this.TransactionID == V7_TRANSID)
+            if (this.TransactionID.ToByteArray().BinaryCompareTo(V7_TRANSID) == 0)
             {
                 // must stop read now because this page structure is not compatible with old v7
                 this.FileVersion = 7;

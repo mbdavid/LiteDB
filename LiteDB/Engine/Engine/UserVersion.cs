@@ -31,7 +31,7 @@ namespace LiteDB.Engine
                 var header = _header.Clone();
 
                 header.UserVersion = value;
-                header.TransactionID = Guid.NewGuid();
+                header.TransactionID = ObjectId.NewObjectId();
                 header.IsConfirmed = true;
                 header.IsDirty = true;
 

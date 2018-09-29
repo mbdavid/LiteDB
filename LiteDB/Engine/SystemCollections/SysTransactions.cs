@@ -20,7 +20,7 @@ namespace LiteDB.Engine
                     ["threadID"] = transaction.ThreadID,
                     ["transactionID"] = transaction.TransactionID,
                     ["transactionState"] = transaction.State.ToString(),
-                    ["startTime"] = transaction.StartTime,
+                    ["startTime"] = transaction.TransactionID.CreationTime,
                     ["mode"] = write ? "Write" : "Read",
                     ["memoryTransactionSize"] = transaction.Pages.TransactionSize,
                     ["walIndexSize"] = transaction.Pages.DirtyPagesWal.Count,

@@ -19,7 +19,7 @@ namespace LiteDB.Engine
                         ["threadID"] = transaction.ThreadID,
                         ["transactionID"] = transaction.TransactionID,
                         ["transactionState"] = transaction.State.ToString(),
-                        ["startTime"] = transaction.StartTime,
+                        ["startTime"] = transaction.TransactionID.CreationTime,
                         ["collection"] = snapshot.CollectionPage?.CollectionName,
                         ["mode"] = snapshot.Mode.ToString(),
                         ["readVersion"] = snapshot.ReadVersion,

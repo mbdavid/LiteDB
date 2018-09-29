@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         {
             var length = _wal.WalFile.Length;
             var position = 0;
-            var versions = new Dictionary<Guid, int>();
+            var versions = new Dictionary<ObjectId, int>();
             var collections = _header.Collections.ToDictionary(x => x.Value, x => x.Key);
 
             while (position < length)
