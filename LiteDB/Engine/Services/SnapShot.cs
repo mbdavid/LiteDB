@@ -26,14 +26,13 @@ namespace LiteDB.Engine
         private LockMode _mode = LockMode.None;
         private CollectionPage _collectionPage;
         private int _readVersion;
-        private List<CursorInfo> _cursors = new List<CursorInfo>();
+        private readonly List<CursorInfo> _cursors = new List<CursorInfo>();
 
         private Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
 
         // expose services
         public int ReadVersion => _readVersion;
         public LockMode Mode => _mode;
-        public List<CursorInfo> Cursors => _cursors;
 
         public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, DataFileService dataFile, WalService wal)
         {

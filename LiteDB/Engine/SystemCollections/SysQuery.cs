@@ -22,7 +22,9 @@ namespace LiteDB.Engine
         {
             var query = options.AsString;
 
-            using (var reader = engine.Execute(query, null))
+            var sql = new SqlParser(engine, new Tokenizer(query), null);
+
+            using (var reader = sql.Execute())
             {
                 while(reader.Read())
                 {

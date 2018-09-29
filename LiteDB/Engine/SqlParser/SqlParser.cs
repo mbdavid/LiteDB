@@ -9,11 +9,11 @@ namespace LiteDB.Engine
     /// </summary>
     internal partial class SqlParser
     {
-        private readonly LiteEngine _engine;
+        private readonly ILiteEngine _engine;
         private readonly Tokenizer _tokenizer;
         private readonly BsonDocument _parameters;
 
-        public SqlParser(LiteEngine engine, Tokenizer tokenizer, BsonDocument parameters)
+        public SqlParser(ILiteEngine engine, Tokenizer tokenizer, BsonDocument parameters)
         {
             _engine = engine;
             _tokenizer = tokenizer;

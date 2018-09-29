@@ -27,8 +27,6 @@ namespace LiteDB.Engine
         bool DropCollection(string collection);
         bool DropIndex(string collection, string name);
 
-        IBsonDataReader Execute(string command, BsonDocument args);
-
         bool RenameCollection(string collection, string newName);
 
         int GetUserVersion();

@@ -232,7 +232,29 @@ namespace LiteDB
         /// </summary>
         public IBsonDataReader Execute(string command, BsonDocument parameters = null)
         {
-            return _engine.Value.Execute(command, parameters);
+            var tokenizer = new Tokenizer(command);
+            var sql = new SqlParser(_engine.Value, tokenizer, parameters);
+            var reader = sql.Execute();
+
+            // when request .NextResult() run another SqlParser
+            reader.FetchNextResult += () =>
+            {
+                // checks if has more tokens
+                if (tokenizer.Current.Type == TokenType.EOF) return null;
+
+                if (tokenizer.Current.Type == TokenType.SemiColon)
+                {
+                    var ahead = tokenizer.LookAhead();
+
+                    if (ahead.Type == TokenType.EOF) return null;
+                }
+
+                var next = new SqlParser(_engine.Value, tokenizer, parameters);
+
+                return next.Execute();
+            };
+
+            return reader;
         }
 
         /// <summary>
@@ -249,7 +271,7 @@ namespace LiteDB
                 index++;
             }
 
-            return _engine.Value.Execute(command, p);
+            return this.Execute(command, p);
         }
 
         #endregion
