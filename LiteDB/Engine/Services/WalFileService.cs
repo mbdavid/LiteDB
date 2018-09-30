@@ -177,36 +177,19 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Delete WAL file (check before if is empty) and re-initialize writer for new file
-        /// </summary>
-        public void Delete()
-        {
-            if (_factory.IsWalFileExists() == false) return;
-
-            if (_writer.Value.BaseStream.Length == 0)
-            {
-                this.Dispose();
-
-                _factory.DeleteWalFile();
-
-                this.InitializeWriter();
-            }
-            else
-            {
-                throw new InvalidOperationException("WAL file must be empty before delete");
-            }
-        }
-
-        /// <summary>
         /// Dispose all stream in pool and async writer
         /// </summary>
         public void Dispose()
         {
             _log.Info($"dispose wal file writer + {_pool.Count} readers)");
 
+            var length = -1L;
+
             // first dispose writer
             if (_writer?.IsValueCreated ?? false)
             {
+                length = _writer.Value.BaseStream.Length;
+
                 _writer.Value.BaseStream.FlushToDisk();
                 _writer.Value.BaseStream.Dispose();
             }
@@ -215,6 +198,14 @@ namespace LiteDB.Engine
             while (_pool.TryTake(out var reader))
             {
                 reader.BaseStream.Dispose();
+            }
+
+            // delete wal file only if is complete empty
+            if (length == 0)
+            {
+                _log.Info("deleting wal file because it's empty");
+
+                _factory.DeleteWalFile();
             }
         }
     }

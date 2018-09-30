@@ -70,7 +70,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write last confirmation page into all and update all indexes
+        /// Add transactionID in confirmed list and update WAL index with all pages positions
         /// </summary>
         public void ConfirmTransaction(ObjectId transactionID, ICollection<PagePosition> pagePositions)
         {
@@ -99,10 +99,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Do WAL checkpoint coping confirmed pages from WAL file to datafile. 
+        /// Do WAL checkpoint coping confirmed pages from WAL file to datafile.
+        /// This first version works only doing full checkpoint with reserved lock
         /// Return how many pages was copied from WAL file to data file
         /// </summary>
-        public int Checkpoint(bool deleteWalFile, HeaderPage header, bool lockReserved)
+        public int Checkpoint(HeaderPage header, bool lockReserved)
         {
             // checkpoint can run only without any open transaction in current thread
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.Active);
@@ -116,14 +117,10 @@ namespace LiteDB.Engine
 
             try
             {
-                if (_walFile.HasPages() == false)
-                {
-                    if (deleteWalFile) _walFile.Delete();
+                // if wal already clean (or not exists)
+                if (_walFile.HasPages() == false) return 0;
 
-                    return 0;
-                }
-
-                _log.Info("checkpoint" + (deleteWalFile ? " with delete WAL file" : ""));
+                _log.Info("checkpoint");
 
                 var count = 0;
 
@@ -169,9 +166,6 @@ namespace LiteDB.Engine
                 // now, all wal pages are saved in data disk - can clear walfile
                 _walFile.Clear();
 
-                // delete wal file if requested
-                if (deleteWalFile) _walFile.Delete();
-
                 // clear indexes/confirmed transactions
                 _index.Clear();
                 _confirmedTransactions.Clear();
@@ -190,12 +184,11 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Load all confirmed transactions from WAL file (used only when open datafile)
+        /// Don't need lock because it's called on ctor of LiteEngine
         /// </summary>
         public void RestoreWalIndex(ref HeaderPage header)
         {
             if (_walFile.HasPages() == false) return;
-
-            // there is no need of locks because runs when initialize engine only
 
             // get all page positions
             var positions = new Dictionary<ObjectId, List<PagePosition>>();

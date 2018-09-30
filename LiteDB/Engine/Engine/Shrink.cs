@@ -37,7 +37,7 @@ namespace LiteDB.Engine
             try
             {
                 // first do checkpoint with WAL delete
-                _wal.Checkpoint(true, _header, false);
+                _wal.Checkpoint(_header, false);
 
                 using (var walStream = _factory.GetWalFileStream(true))
                 {
@@ -111,7 +111,7 @@ namespace LiteDB.Engine
                 }
 
                 // this checkpoint will use WAL file from temp database and will override all datafile pages
-                _wal.Checkpoint(true, _header, false);
+                _wal.Checkpoint(_header, false);
 
                 // must reload header page because current _header has complete different pageIDs for collections
                 _header = _dataFile.ReadPage(0) as HeaderPage;

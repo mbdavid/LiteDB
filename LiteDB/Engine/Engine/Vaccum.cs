@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             try
             {
                 // do checkpoint with no lock (already locked)
-                _wal.Checkpoint(true, _header, false);
+                _wal.Checkpoint(_header, false);
 
                 _log.Info("vaccum datafile");
 

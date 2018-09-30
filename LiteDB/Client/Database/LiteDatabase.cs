@@ -291,7 +291,7 @@ namespace LiteDB
         /// </summary>
         public int Checkpoint()
         {
-            return _engine.Value.Checkpoint(false);
+            return _engine.Value.Checkpoint();
         }
 
         /// <summary>

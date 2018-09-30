@@ -157,7 +157,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Request a WAL checkpoint
         /// </summary>
-        public int Checkpoint(bool delete) => _wal.Checkpoint(delete, _header, true);
+        public int Checkpoint() => _wal.Checkpoint(_header, true);
 
         /// <summary>
         /// Shutdown database and do not accept any other access. Wait finish all transactions
@@ -180,8 +180,8 @@ namespace LiteDB.Engine
 
             if (_checkpointOnShutdown)
             {
-                // do checkpoint (with no-lock check) and delete wal file
-                _wal.Checkpoint(true, null, false);
+                // do checkpoint (with no-lock check)
+                _wal.Checkpoint(null, false);
             }
         }
 
