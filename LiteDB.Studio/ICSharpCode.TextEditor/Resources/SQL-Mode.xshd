@@ -176,6 +176,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="JSON" />
         <Key word="EXTEND" />
         <Key word="ITEMS" />
+        <Key word="RAW_ID" />
         <Key word="KEYS" />
         <Key word="IIF" />
         <Key word="COALESCE" />

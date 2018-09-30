@@ -42,14 +42,12 @@ namespace LiteDB
         {
             foreach (var value in ZipValues(source, extend))
             {
-                if (!value.First.IsDocument) continue;
-                if (!value.Second.IsDocument) continue;
+                if (value.First is BsonDocument first && value.Second is BsonDocument second)
+                {
+                    second.AsDocument.CopyTo(first);
 
-                var dest = value.First.AsDocument;
-
-                value.Second.AsDocument.CopyTo(dest);
-
-                yield return dest;
+                    yield return first;
+                }
             }
         }
 
@@ -59,7 +57,7 @@ namespace LiteDB
         /// </summary>
         public static IEnumerable<BsonValue> ITEMS(IEnumerable<BsonValue> array)
         {
-            foreach (var arr in array.Where(x => x.IsArray).Select(x => x.AsArray))
+            foreach (var arr in array.Where(x => x.IsArray).Select(x => x as BsonArray))
             {
                 foreach (var value in arr)
                 {
@@ -69,13 +67,24 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Return document raw id (position in datapage). Works only for root document 
+        /// </summary>
+        public static IEnumerable<BsonValue> RAW_ID(IEnumerable<BsonValue> documents)
+        {
+            foreach (var doc in documents.Where(x => x.IsDocument).Select(x => x as BsonDocument))
+            {
+                yield return doc.RawId.IsEmpty ? null : doc.RawId.ToString();
+            }
+        }
+
+        /// <summary>
         /// Get all KEYS names from a document. Support multiple values (document only)
         /// </summary>
         public static IEnumerable<BsonValue> KEYS(IEnumerable<BsonValue> values)
         {
-            foreach (var value in values.Where(x => x.IsDocument))
+            foreach (var value in values.Where(x => x.IsDocument).Select(x => x as BsonDocument))
             {
-                foreach(var key in value.AsDocument.Keys)
+                foreach(var key in value.Keys)
                 {
                     yield return key;
                 }
