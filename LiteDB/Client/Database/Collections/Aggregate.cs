@@ -120,8 +120,8 @@ namespace LiteDB
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
             var doc = this.Query()
-                .OrderBy(keySelector)
                 .Select(keySelector)
+                .OrderBy(keySelector)
                 .ToDocuments()
                 .First();
 
@@ -156,8 +156,8 @@ namespace LiteDB
             if (string.IsNullOrEmpty(keySelector)) throw new ArgumentNullException(nameof(keySelector));
 
             var doc = this.Query()
-                .OrderByDescending(keySelector)
                 .Select(keySelector)
+                .OrderByDescending(keySelector)
                 .ToDocuments()
                 .First();
 

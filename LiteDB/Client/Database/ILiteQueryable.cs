@@ -13,31 +13,18 @@ namespace LiteDB
     }
 
     public interface ILiteQueryable<T> :
-        ILiteQueryableOrdered<T>,
-        ILiteQueryableGrouped<T>
+        ILiteQueryableFiltered<T>
     {
         ILiteQueryable<T> Where(BsonExpression predicate);
         ILiteQueryable<T> Where(string predicate, BsonDocument parameters);
         ILiteQueryable<T> Where(string predicate, params BsonValue[] args);
         ILiteQueryable<T> Where(Expression<Func<T, bool>> predicate);
 
-        ILiteQueryableGrouped<T> GroupBy(BsonExpression keySelector);
-        ILiteQueryableGrouped<T> GroupBy<K>(Expression<Func<T, K>> keySelector);
-
-        ILiteQueryableOrdered<T> OrderBy(BsonExpression keySelector, int order = 1);
-        ILiteQueryableOrdered<T> OrderBy<K>(Expression<Func<T, K>> keySelector, int order = 1);
-        ILiteQueryableOrdered<T> OrderByDescending(BsonExpression keySelector);
-        ILiteQueryableOrdered<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector);
+        ILiteQueryableFiltered<T> GroupBy(BsonExpression keySelector);
+        ILiteQueryableFiltered<T> GroupBy<K>(Expression<Func<T, K>> keySelector);
     }
 
-    public interface ILiteQueryableGrouped<T> : 
-        ILiteQueryableOrdered<T>
-    {
-        ILiteQueryableOrdered<T> Having(BsonExpression predicate);
-        ILiteQueryableOrdered<T> Having(Expression<Func<T, bool>> predicate);
-    }
-
-    public interface ILiteQueryableOrdered<T> :
+    public interface ILiteQueryableFiltered<T> :
         ILiteQueryableSelected<T>
     {
         ILiteQueryableSelected<BsonDocument> Select(BsonExpression selector);
@@ -47,12 +34,24 @@ namespace LiteDB
     }
 
     public interface ILiteQueryableSelected<T> :
+        ILiteQueryableOrdered<T>
+    {
+        ILiteQueryableSelected<T> Having(BsonExpression predicate);
+        ILiteQueryableSelected<T> Having(Expression<Func<T, bool>> predicate);
+
+        ILiteQueryableOrdered<T> OrderBy(BsonExpression keySelector, int order = 1);
+        ILiteQueryableOrdered<T> OrderBy<K>(Expression<Func<T, K>> keySelector, int order = 1);
+        ILiteQueryableOrdered<T> OrderByDescending(BsonExpression keySelector);
+        ILiteQueryableOrdered<T> OrderByDescending<K>(Expression<Func<T, K>> keySelector);
+    }
+
+    public interface ILiteQueryableOrdered<T> :
         ILiteQueryableResult<T>
     {
-        ILiteQueryableSelected<T> Limit(int limit);
-        ILiteQueryableSelected<T> Skip(int offset);
-        ILiteQueryableSelected<T> Offset(int offset);
-        ILiteQueryableSelected<T> ForUpdate();
+        ILiteQueryableOrdered<T> Limit(int limit);
+        ILiteQueryableOrdered<T> Skip(int offset);
+        ILiteQueryableOrdered<T> Offset(int offset);
+        ILiteQueryableOrdered<T> ForUpdate();
     }
 
     public interface ILiteQueryableResult<T>

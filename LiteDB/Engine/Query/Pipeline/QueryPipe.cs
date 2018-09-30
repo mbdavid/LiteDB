@@ -48,6 +48,17 @@ namespace LiteDB.Engine
                 source = this.Include(source, path);
             }
 
+            // if is an aggregate query, run select transform over all resultset - will return a single value
+            if (query.Select.All)
+            {
+                source = this.SelectAll(source, query.Select.Expression);
+            }
+            // run select transform in each document and return a new document or value
+            else
+            {
+                source = this.Select(source, query.Select.Expression);
+            }
+
             if (query.OrderBy != null)
             {
                 // pipe: orderby with offset+limit
@@ -60,17 +71,6 @@ namespace LiteDB.Engine
 
                 // pipe: apply limit (no orderby)
                 if (query.Limit < int.MaxValue) source = source.Take(query.Limit);
-            }
-
-            // if is an aggregate query, run select transform over all resultset - will return a single value
-            if (query.Select.All)
-            {
-                source = this.SelectAll(source, query.Select.Expression);
-            }
-            // run select transform in each document and return a new document or value
-            else
-            {
-                source = this.Select(source, query.Select.Expression);
             }
 
             return source;

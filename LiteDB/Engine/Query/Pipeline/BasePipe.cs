@@ -17,8 +17,6 @@ namespace LiteDB.Engine
         protected readonly IDocumentLoader _loader;
         protected readonly CursorInfo _cursor;
 
-        private TransactionService _tempTransaction = null;
-
         public BasePipe(LiteEngine engine, TransactionService transaction, IDocumentLoader loader, CursorInfo cursor)
         {
             _engine = engine;
@@ -149,82 +147,27 @@ namespace LiteDB.Engine
         /// </summary>
         protected IEnumerable<BsonDocument> OrderBy(IEnumerable<BsonDocument> source, BsonExpression expr, int order, int offset, int limit)
         {
-            // using tempdb for store sort data
-            if (_tempTransaction == null)
+            //TODO: temp in-memory orderby implementation
+            var query = source
+                .Select(x => new { order = expr.Execute(x).First(), doc = x });
+
+            if (order == Query.Ascending)
             {
-                _tempTransaction = _engine.TempDB.GetTransaction(true, out var isNew);
+                query = query.OrderBy(x => x.order);
+            }
+            else if(order == Query.Descending)
+            {
+                query = query.OrderByDescending(x => x.order);
             }
 
-            // create snapshot from temp transaction
-            var snapshot = _tempTransaction.CreateSnapshot(LockMode.Write, Guid.NewGuid().ToString("n"), false);
-            var indexer = new IndexService(snapshot);
-
-            // create new page as collection page (with no CollectionListPage reference)
-            var col = snapshot.NewPage<CollectionPage>();
-            var index = indexer.CreateIndex(col);
-
-            // get head/tail index node
-            var head = indexer.GetNode(index.HeadNode);
-            var tail = indexer.GetNode(index.TailNode);
-
-            var last = order == Query.Ascending ? BsonValue.MaxValue : BsonValue.MinValue;
-            var total = limit == int.MaxValue ? int.MaxValue : offset + limit;
-            var indexCounter = 0;
-
-            foreach (var doc in source)
-            {
-                // get key to be sorted
-                var key = expr.Execute(doc, true).First();
-                var diff = key.CompareTo(last);
-
-                // add to list only if lower than last space
-                if ((order == Query.Ascending && diff < 1) ||
-                    (order == Query.Descending && diff > -1))
-                {
-                    var tmpNode = indexer.AddNode(index, key, null);
-
-                    // use rawId (position of document inside datafile)
-                    tmpNode.DataBlock = doc.RawId;
-
-                    indexCounter++;
-
-                    // exceeded limit
-                    if (indexCounter > total)
-                    {
-                        var exceeded = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
-
-                        indexer.Delete(index, exceeded);
-
-                        var lnode = (order == Query.Ascending) ? tail.Prev[0] : head.Next[0];
-
-                        last = indexer.GetNode(lnode).Key;
-
-                        indexCounter--;
-                    }
-
-                    // if memory pages excedded limit size, flush to temp disk
-                    _tempTransaction.Safepoint();
-                }
-            }
-
-            var find = indexer.FindAll(index, order).Skip(offset).Take(limit);
-
-            foreach (var node in find)
-            {
-                // if document are in cache, use it. if not, get from disk again
-                var doc = _loader.Load(node.DataBlock);
-
-                yield return doc;
-
-                _tempTransaction.Safepoint();
-            }
+            return query
+                .Select(x => x.doc)
+                .Skip(offset)
+                .Take(limit);
         }
 
         public void Dispose()
         {
-            // if temp transaction was used, release (no not save) here
-            _tempTransaction?.Release();
-
             // call disposing event
             this.Disposing?.Invoke(this, EventArgs.Empty);
         }

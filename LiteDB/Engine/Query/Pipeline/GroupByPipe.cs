@@ -24,6 +24,7 @@ namespace LiteDB.Engine
         /// - GroupBy
         /// - SelectGroupBy
         /// - Having
+        /// - OrderBy
         /// - OffSet
         /// - Limit
         /// </summary>
@@ -66,6 +67,12 @@ namespace LiteDB.Engine
             if (query.GroupBy.Having != null)
             {
                 source = this.Having(source, query.GroupBy.Having);
+            }
+
+            // pipe: if groupBy order is 0, do not need sort (already sorted by index)
+            if (query.OrderBy.Order != 0)
+            {
+                source = this.OrderBy(source, query.GroupBy.Expression, query.GroupBy.Order, 0, int.MaxValue);
             }
 
             // pipe: apply offset (no orderby)
@@ -122,8 +129,6 @@ namespace LiteDB.Engine
         /// </summary>
         private IEnumerable<BsonDocument> SelectGroupBy(IEnumerable<IEnumerable<BsonDocument>> groups, BsonExpression select)
         {
-            var defaultName = select?.DefaultFieldName();
-
             foreach (DocumentEnumerable group in groups)
             {
                 // transfom group result if contains select expression
@@ -140,7 +145,7 @@ namespace LiteDB.Engine
                     }
                     else
                     {
-                        yield return new BsonDocument { [defaultName] = value };
+                        yield return new BsonDocument { ["expr"] = value };
                     }
                 }
                 else

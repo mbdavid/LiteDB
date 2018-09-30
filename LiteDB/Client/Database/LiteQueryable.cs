@@ -105,7 +105,7 @@ namespace LiteDB
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public ILiteQueryableGrouped<T> GroupBy(BsonExpression keySelector)
+        public ILiteQueryableFiltered<T> GroupBy(BsonExpression keySelector)
         {
             _query.GroupBy = keySelector;
             return this;
@@ -114,7 +114,7 @@ namespace LiteDB
         /// <summary>
         /// Groups the documents of resultset according to a specified key selector expression (support only one GroupBy)
         /// </summary>
-        public ILiteQueryableGrouped<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
+        public ILiteQueryableFiltered<T> GroupBy<K>(Expression<Func<T, K>> keySelector)
         {
             _query.GroupBy = _mapper.GetExpression(keySelector);
             return this;
@@ -127,7 +127,7 @@ namespace LiteDB
         /// <summary>
         /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
         /// </summary>
-        public ILiteQueryableOrdered<T> Having(BsonExpression predicate)
+        public ILiteQueryableSelected<T> Having(BsonExpression predicate)
         {
             _query.Having = predicate;
             return this;
@@ -136,7 +136,7 @@ namespace LiteDB
         /// <summary>
         /// Filter documents after group by pipe according to predicate expression (requires GroupBy and support only one Having)
         /// </summary>
-        public ILiteQueryableOrdered<T> Having(Expression<Func<T, bool>> predicate)
+        public ILiteQueryableSelected<T> Having(Expression<Func<T, bool>> predicate)
         {
             _query.Having = _mapper.GetExpression(predicate);
             return this;
@@ -229,7 +229,7 @@ namespace LiteDB
         /// <summary>
         /// Execute query locking collection in write mode. This is avoid any other thread change results after read document and before transaction ends
         /// </summary>
-        public ILiteQueryableSelected<T> ForUpdate()
+        public ILiteQueryableOrdered<T> ForUpdate()
         {
             _query.ForUpdate = true;
             return this;
@@ -238,7 +238,7 @@ namespace LiteDB
         /// <summary>
         /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Skip)
         /// </summary>
-        public ILiteQueryableSelected<T> Offset(int offset)
+        public ILiteQueryableOrdered<T> Offset(int offset)
         {
             _query.Offset = offset;
             return this;
@@ -247,12 +247,12 @@ namespace LiteDB
         /// <summary>
         /// Bypasses a specified number of documents in resultset and retun the remaining documents (same as Offset)
         /// </summary>
-        public ILiteQueryableSelected<T> Skip(int offset) => this.Offset(offset);
+        public ILiteQueryableOrdered<T> Skip(int offset) => this.Offset(offset);
 
         /// <summary>
         /// Return a specified number of contiguous documents from start of resultset
         /// </summary>
-        public ILiteQueryableSelected<T> Limit(int limit)
+        public ILiteQueryableOrdered<T> Limit(int limit)
         {
             _query.Limit = limit;
             return this;
