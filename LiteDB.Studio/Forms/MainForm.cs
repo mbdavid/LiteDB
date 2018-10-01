@@ -99,7 +99,13 @@ namespace LiteDB.Studio
                 task.Thread.Abort();
             }
 
+            // clear all tabs and controls
             tabSql.TabPages.Clear();
+
+            txtSql.Clear();
+            grdResult.Clear();
+            txtResult.Clear();
+            txtParameters.Clear();
 
             tvwDatabase.Nodes.Clear();
         }
@@ -199,7 +205,7 @@ namespace LiteDB.Studio
                 try
                 {
                     task.Running = true;
-                    task.IsGridLoaded = task.IsGridLoaded = task.IsParametersLoaded = false;
+                    task.IsGridLoaded = task.IsTextLoaded = task.IsParametersLoaded = false;
 
                     _synchronizationContext.Post(new SendOrPostCallback(o =>
                     {

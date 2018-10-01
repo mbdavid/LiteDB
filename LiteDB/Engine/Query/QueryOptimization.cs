@@ -44,10 +44,6 @@ namespace LiteDB.Engine
             {
                 throw new LiteException(0, "Select ALL has no support for GROUP BY expression");
             }
-            if (_queryDefinition.GroupBy != null && _queryDefinition.OrderBy != null)
-            {
-                throw new LiteException(0, "GROUP BY has no support for ORDER BY");
-            }
             if (_queryDefinition.Having != null && _queryDefinition.GroupBy == null)
             {
                 throw new LiteException(0, "HAVING require GROUP BY expression");

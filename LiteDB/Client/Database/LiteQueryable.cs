@@ -273,7 +273,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Run reader and resulta IEnumerable of documents
+        /// Execute query and return resultset as IEnumerable of documents
         /// </summary>
         public IEnumerable<BsonDocument> ToDocuments()
         {
@@ -281,36 +281,13 @@ namespace LiteDB
             {
                 while (reader.Read())
                 {
-                    yield return reader.Current.AsDocument;
+                    yield return reader.Current as BsonDocument;
                 }
             }
         }
 
         /// <summary>
-        /// Execute query and return single value
-        /// </summary>
-        public T ExecuteScalar()
-        {
-            using (var reader = this.ExecuteReader())
-            {
-                if (reader.Current == null) return default(T);
-
-                var value = this.ToDocuments().FirstOrDefault();
-
-                // for simple T type, get from first field (Query always return a document)
-                if (_isSimpleType)
-                {
-                    var val = value[value.Keys.First()];
-
-                    return (T)_mapper.Deserialize(typeof(T), val);
-                }
-
-                return (T)_mapper.Deserialize(typeof(T), value);
-            }
-        }
-
-        /// <summary>
-        /// Execute query returning IEnumerable results
+        /// Execute query and return resultset as IEnumerable of T. If T is a ValueType or String, return values only (not documents)
         /// </summary>
         public IEnumerable<T> ToEnumerable()
         {
@@ -322,7 +299,8 @@ namespace LiteDB
             }
             else
             {
-                return this.ToDocuments().Select(x => (T)_mapper.Deserialize(typeof(T), x));
+                return this.ToDocuments()
+                    .Select(x => (T)_mapper.Deserialize(typeof(T), x));
             }
         }
 

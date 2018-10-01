@@ -58,7 +58,6 @@ namespace LiteDB
     {
         BsonDocument GetPlan();
         IBsonDataReader ExecuteReader();
-        T ExecuteScalar();
         IEnumerable<BsonDocument> ToDocuments();
         IEnumerable<T> ToEnumerable();
         List<T> ToList();
