@@ -37,26 +37,22 @@ namespace LiteDB.Studio
 
         public void ReadResult(IBsonDataReader reader)
         {
-            do
+            this.Result = new List<BsonValue>();
+            this.LimitExceeded = false;
+            this.Collection = reader.Collection;
+
+            var index = 0;
+
+            while (reader.Read())
             {
-                this.Result = new List<BsonValue>();
-                this.LimitExceeded = false;
-                this.Collection = reader.Collection;
-
-                var index = 0;
-
-                while (reader.Read())
+                if (index++ >= RESULT_LIMIT)
                 {
-                    if (index++ >= RESULT_LIMIT)
-                    {
-                        this.LimitExceeded = true;
-                        break;
-                    }
-
-                    this.Result.Add(reader.Current);
+                    this.LimitExceeded = true;
+                    break;
                 }
+
+                this.Result.Add(reader.Current);
             }
-            while (reader.NextResult());
         }
     }
 }

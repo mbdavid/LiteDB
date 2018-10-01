@@ -83,6 +83,11 @@ namespace LiteDB
         public const int MAX_CURSOR_HISTORY = 1000;
 
         /// <summary>
+        /// Max pages in a transaction before persist on disk and clear transaction cache
+        /// </summary>
+        public const int MAX_TRANSACTION_SIZE = 1000;
+
+        /// <summary>
         /// This variable are used to identify that current datafile are v7 version and must be upgrade
         /// v7 has small page header so is not possible check using FILE_VERSION position
         /// </summary>

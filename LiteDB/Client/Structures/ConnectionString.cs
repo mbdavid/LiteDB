@@ -42,6 +42,11 @@ namespace LiteDB
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
+        /// "mode": Return how engine will be open (default: Exclusive)
+        /// </summary>
+        public FileMode Mode { get; set; } = FileMode.Exclusive;
+
+        /// <summary>
         /// Initialize empty connection string
         /// </summary>
         public ConnectionString()
@@ -74,6 +79,7 @@ namespace LiteDB
             this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
             this.Log = _values.GetValue("log", this.Log);
             this.UtcDate = _values.GetValue("utc", this.UtcDate);
+            this.Mode = _values.GetValue("mode", this.Mode);
         }
 
         /// <summary>

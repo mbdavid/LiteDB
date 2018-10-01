@@ -51,10 +51,12 @@ namespace LiteDB
                     LimitSize = connectionString.LimitSize,
                     UtcDate = connectionString.UtcDate,
                     Timeout = connectionString.Timeout,
-                    LogLevel = connectionString.Log
+                    LogLevel = connectionString.Log,
+                    ReadOnly = connectionString.Mode == FileMode.ReadOnly
                 };
 
-                return new LiteEngine(settings);
+                return connectionString.Mode == FileMode.Shared ?
+                    (ILiteEngine)new SharedEngine(settings) : new LiteEngine(settings);
             });
         }
 
@@ -235,24 +237,6 @@ namespace LiteDB
             var tokenizer = new Tokenizer(command);
             var sql = new SqlParser(_engine.Value, tokenizer, parameters);
             var reader = sql.Execute();
-
-            // when request .NextResult() run another SqlParser
-            reader.FetchNextResult += () =>
-            {
-                // checks if has more tokens
-                if (tokenizer.Current.Type == TokenType.EOF) return null;
-
-                if (tokenizer.Current.Type == TokenType.SemiColon)
-                {
-                    var ahead = tokenizer.LookAhead();
-
-                    if (ahead.Type == TokenType.EOF) return null;
-                }
-
-                var next = new SqlParser(_engine.Value, tokenizer, parameters);
-
-                return next.Execute();
-            };
 
             return reader;
         }

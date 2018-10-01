@@ -36,7 +36,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetDataFileStream()
         {
-            return this.GetStreamInternal(_dataFilename, FileOptions.RandomAccess);
+            return this.GetStreamInternal(_dataFilename, System.IO.FileOptions.RandomAccess);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetWalFileStream(bool writeMode)
         {
-            return this.GetStreamInternal(_walFilename, writeMode ? FileOptions.SequentialScan : FileOptions.RandomAccess);
+            return this.GetStreamInternal(_walFilename, writeMode ? FileOptions.SequentialScan : System.IO.FileOptions.RandomAccess);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace LiteDB.Engine
         private Stream GetStreamInternal(string filename, FileOptions options)
         {
             return new FileStream(filename,
-                _readonly ? FileMode.Open : FileMode.OpenOrCreate,
+                _readonly ? System.IO.FileMode.Open : System.IO.FileMode.OpenOrCreate,
                 _readonly ? FileAccess.Read : FileAccess.ReadWrite,
                 _readonly ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,

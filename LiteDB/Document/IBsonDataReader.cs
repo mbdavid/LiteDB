@@ -10,9 +10,6 @@ namespace LiteDB
         BsonValue Current { get; }
         bool HasValues { get; }
 
-        event Func<IBsonDataReader> FetchNextResult;
-
-        bool NextResult();
         bool Read();
     }
 }

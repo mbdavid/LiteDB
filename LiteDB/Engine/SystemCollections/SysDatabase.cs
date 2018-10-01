@@ -16,7 +16,6 @@ namespace LiteDB.Engine
             doc["limitSize"] = _wal.WalFile.LimitSize;
             doc["timeout"] = _locker.Timeout.ToString();
             doc["utcDate"] = _utcDate;
-            doc["maxMemoryTransactionSize"] = _maxMemoryTransactionSize;
 
             doc["lastPageID"] = (int)_header.LastPageID;
             doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;

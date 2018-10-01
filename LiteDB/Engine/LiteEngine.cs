@@ -33,7 +33,6 @@ namespace LiteDB.Engine
         private readonly bool _readonly;
         private readonly bool _utcDate;
         private readonly bool _checkpointOnShutdown;
-        private readonly int _maxMemoryTransactionSize;
 
         private bool _shutdown = false;
         private bool _disposed = false;
@@ -110,7 +109,6 @@ namespace LiteDB.Engine
                 _readonly = settings.ReadOnly;
                 _utcDate = settings.UtcDate;
                 _checkpointOnShutdown = settings.CheckpointOnShutdown;
-                _maxMemoryTransactionSize = settings.MaxMemoryTransactionSize;
 
                 _log.Info($"initializing database '{_factory.Filename}'");
 
@@ -185,7 +183,7 @@ namespace LiteDB.Engine
             }
         }
 
-        private void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             // this method can be called from Ctor, so many 
             // of this members can be null yet (even if are readonly). 

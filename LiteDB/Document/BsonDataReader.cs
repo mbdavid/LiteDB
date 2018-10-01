@@ -11,16 +11,13 @@ namespace LiteDB
     /// </summary>
     public class BsonDataReader : IBsonDataReader
     {
-        private BsonValue _current = null;
-        private IEnumerator<BsonValue> _source = null;
-        private string _collection = null;
-        private bool _isFirst;
-        private bool _hasValues;
+        private readonly IEnumerator<BsonValue> _source = null;
+        private readonly string _collection = null;
+        private readonly bool _hasValues;
 
-        /// <summary>
-        /// Handler function when NextResult() called - return null if no more data
-        /// </summary>
-        public event Func<IBsonDataReader> FetchNextResult = null;
+        private BsonValue _current = null;
+        private bool _isFirst;
+        private bool _disposed = false;
 
         /// <summary>
         /// Initialize with no value
@@ -53,25 +50,6 @@ namespace LiteDB
                 _hasValues = _isFirst = true;
                 _current = _source.Current;
             }
-        }
-
-        /// <summary>
-        /// Advances the data reader to the next result
-        /// </summary>
-        public bool NextResult()
-        {
-            // execute func to request next data reader
-            var next = (BsonDataReader)this.FetchNextResult?.Invoke();
-
-            if (next == null) return false;
-
-            _current = next._current;
-            _source = next._source;
-            _collection = next._collection;
-            _isFirst = next._isFirst;
-            _hasValues = next._hasValues;
-
-            return true;
         }
 
         /// <summary>
@@ -124,9 +102,27 @@ namespace LiteDB
             }
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            //if (disposing)
+            {
+                _source?.Dispose();
+            }
+
+            _disposed = true;
+        }
+
         public void Dispose()
         {
-            _source?.Dispose();
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~BsonDataReader()
+        {
+            this.Dispose(false);
         }
     }
 }

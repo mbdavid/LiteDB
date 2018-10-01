@@ -66,7 +66,7 @@ namespace LiteDB.Engine
                 // create new filename if not passed on ctor (must be unique
                 _filename = _filename ?? Path.Combine(Path.GetTempPath(), "litedb_" + Guid.NewGuid() + ".db");
 
-                var file = new FileStream(_filename, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, PAGE_SIZE, FileOptions.RandomAccess);
+                var file = new FileStream(_filename, System.IO.FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, PAGE_SIZE, FileOptions.RandomAccess);
 
                 // copy data from memory to disk
                 _stream.Position = 0;

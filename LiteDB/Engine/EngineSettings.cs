@@ -61,11 +61,6 @@ namespace LiteDB.Engine
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// When wal file get this checkpoint limit, write over data disk
-        /// </summary>
-        public int Checkpoint { get; set; } = 1000;
-
-        /// <summary>
         /// Indicate that engine will do a checkpoint on dispose database
         /// </summary>
         public bool CheckpointOnShutdown { get; set; } = false;
@@ -74,11 +69,6 @@ namespace LiteDB.Engine
         /// Indicate that engine instance will works only with read only and datafiles will be open as read only
         /// </summary>
         public bool ReadOnly { get; set; } = false;
-
-        /// <summary>
-        /// Define max pages a trasaction must keep in-memory before flush to WAL file. Must be larger than 100 (default 1000)
-        /// </summary>
-        public int MaxMemoryTransactionSize { get; set; } = 1000;
 
         /// <summary>
         /// Get datafile factory

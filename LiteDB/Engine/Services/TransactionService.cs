@@ -24,7 +24,6 @@ namespace LiteDB.Engine
         private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly TransactionPages _transPages = new TransactionPages();
         private readonly Action<ObjectId> _done;
-        private readonly int _maxTransactionSize;
         private bool _shutdown = false;
 
         // transaction info
@@ -34,12 +33,11 @@ namespace LiteDB.Engine
         public Dictionary<string, Snapshot> Snapshots => _snapshots;
         public TransactionPages Pages => _transPages;
 
-        public TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, int maxTransactionSize, Logger log, Action<ObjectId> done)
+        public TransactionService(HeaderPage header, LockService locker, DataFileService datafile, WalService wal, Logger log, Action<ObjectId> done)
         {
             _wal = wal;
             _log = log;
             _done = done;
-            _maxTransactionSize = maxTransactionSize;
 
             // retain instances
             _header = header;
@@ -85,7 +83,7 @@ namespace LiteDB.Engine
             // Safepoint are valid only during transaction execution
             DEBUG(this.State != TransactionState.Active, "Safepoint() are called during an invalid transaction state");
 
-            if (_transPages.TransactionSize >= _maxTransactionSize)
+            if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
                 this.PersistDirtyPages(false, false);
             }
