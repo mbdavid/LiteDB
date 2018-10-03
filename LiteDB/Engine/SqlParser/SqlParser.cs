@@ -24,7 +24,7 @@ namespace LiteDB.Engine
         {
             var first = _tokenizer.ReadToken().Expect(TokenType.Word);
 
-            switch(first.Value.ToUpper())
+            switch(first.Value)
             {
                 case "SELECT": return this.ParseSelect(false);
                 case "EXPLAIN":
@@ -45,8 +45,6 @@ namespace LiteDB.Engine
                 case "BEGIN": return this.ParseBegin();
                 case "ROLLBACK": return this.ParseRollback();
                 case "COMMIT": return this.ParseCommit();
-
-                case "SET": return this.ParseSet();
 
                 default:  throw LiteException.UnexpectedToken(first);
             }

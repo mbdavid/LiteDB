@@ -8,6 +8,7 @@ namespace LiteDB.Engine
     internal partial class SqlParser
     {
         /// <summary>
+        /// [ EXPLAIN ]
         ///    SELECT [ ALL ] {selectExpr}
         ///    [ INTO {newcollection|FILE} [ : {autoId} ] ]
         ///    [ FROM {collection|FILE} ]
