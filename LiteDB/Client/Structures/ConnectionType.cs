@@ -5,10 +5,9 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public enum FileMode
+    public enum ConnectionType
     {
         Shared,
-        Exclusive,
-        ReadOnly
+        Local
     }
 }

@@ -66,11 +66,6 @@ namespace LiteDB.Engine
         public bool CheckpointOnShutdown { get; set; } = false;
 
         /// <summary>
-        /// Indicate that engine instance will works only with read only and datafiles will be open as read only
-        /// </summary>
-        public bool ReadOnly { get; set; } = false;
-
-        /// <summary>
         /// Get datafile factory
         /// </summary>
         internal IDiskFactory GetDiskFactory()
@@ -85,7 +80,7 @@ namespace LiteDB.Engine
             }
             else if(!string.IsNullOrEmpty(this.Filename))
             {
-                return new FileStreamDiskFactory(this.Filename, this.ReadOnly);
+                return new FileStreamDiskFactory(this.Filename);
             }
             else
             {

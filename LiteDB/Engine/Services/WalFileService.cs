@@ -44,7 +44,7 @@ namespace LiteDB.Engine
             // initialize lazy writer
             _writer = new Lazy<BinaryWriter>(() =>
             {
-                var stream = _factory.GetWalFileStream(true);
+                var stream = _factory.GetWalFileStream(false);
 
                 return new BinaryWriter(stream);
             });
@@ -60,7 +60,7 @@ namespace LiteDB.Engine
         public BasePage ReadPage(long position)
         {
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(false));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(true));
 
             try
             {
@@ -94,7 +94,7 @@ namespace LiteDB.Engine
         public IEnumerable<BasePage> ReadPages(bool readContent)
         {
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(false));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(true));
 
             lock(_writer)
             {

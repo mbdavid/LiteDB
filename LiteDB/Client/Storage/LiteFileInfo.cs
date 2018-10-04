@@ -78,7 +78,7 @@ namespace LiteDB
         {
             if (filename.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(filename));
 
-            using (var file = File.Open(filename, overwritten ? System.IO.FileMode.Create : System.IO.FileMode.CreateNew))
+            using (var file = File.Open(filename, overwritten ? FileMode.Create : FileMode.CreateNew))
             {
                 using (var stream = this.OpenRead())
                 {

@@ -24,7 +24,7 @@ namespace LiteDB.Engine
         {
             var first = _tokenizer.ReadToken().Expect(TokenType.Word);
 
-            switch(first.Value)
+            switch(first.Value.ToUpper())
             {
                 case "SELECT": return this.ParseSelect(false);
                 case "EXPLAIN":

@@ -51,11 +51,10 @@ namespace LiteDB
                     LimitSize = connectionString.LimitSize,
                     UtcDate = connectionString.UtcDate,
                     Timeout = connectionString.Timeout,
-                    LogLevel = connectionString.Log,
-                    ReadOnly = connectionString.Mode == FileMode.ReadOnly
+                    LogLevel = connectionString.Log
                 };
 
-                return connectionString.Mode == FileMode.Shared ?
+                return connectionString.Type == ConnectionType.Shared ?
                     (ILiteEngine)new SharedEngine(settings) : new LiteEngine(settings);
             });
         }

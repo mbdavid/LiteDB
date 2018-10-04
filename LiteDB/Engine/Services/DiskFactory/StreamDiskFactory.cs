@@ -28,7 +28,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetDataFileStream() => new ConcurrentStream(_data);
+        public Stream GetDataFileStream(bool writeMode) => new ConcurrentStream(_data);
 
         public Stream GetWalFileStream(bool writeMode) => new ConcurrentStream(_wal);
 

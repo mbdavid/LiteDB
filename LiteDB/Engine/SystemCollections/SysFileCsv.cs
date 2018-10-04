@@ -34,7 +34,7 @@ namespace LiteDB.Engine
                 header.AddRange(options.AsDocument["header"].AsArray.Select(x => x.AsString));
             }
 
-            using (var fs = new FileStream(filename, System.IO.FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 using (var reader = new StreamReader(fs))
                 {
@@ -104,7 +104,7 @@ namespace LiteDB.Engine
                 {
                     if (index++ == 0)
                     {
-                        fs = new FileStream(filename, overwritten ? System.IO.FileMode.OpenOrCreate : System.IO.FileMode.CreateNew);
+                        fs = new FileStream(filename, overwritten ? FileMode.OpenOrCreate : FileMode.CreateNew);
                         writer = new StreamWriter(fs, Encoding.GetEncoding(encoding));
 
                         // print file header

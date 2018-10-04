@@ -30,7 +30,6 @@ namespace LiteDB.Engine
 
         // immutable settings
         private readonly IDiskFactory _factory;
-        private readonly bool _readonly;
         private readonly bool _utcDate;
         private readonly bool _checkpointOnShutdown;
 
@@ -106,7 +105,6 @@ namespace LiteDB.Engine
 
                 // copy settings into class variables (turn values in immutable values)
                 _factory = settings.GetDiskFactory();
-                _readonly = settings.ReadOnly;
                 _utcDate = settings.UtcDate;
                 _checkpointOnShutdown = settings.CheckpointOnShutdown;
 
