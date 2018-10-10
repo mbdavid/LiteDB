@@ -16,6 +16,7 @@ namespace LiteDB.Engine
     {
         private readonly TimeSpan _timeout;
         private readonly Logger _log;
+        private readonly bool _readonly;
 
         private ReaderWriterLockSlim _transaction = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
@@ -26,9 +27,10 @@ namespace LiteDB.Engine
         /// </summary>
         public TimeSpan Timeout => _timeout;
 
-        internal LockService(TimeSpan timeout, Logger log)
+        internal LockService(TimeSpan timeout, bool @readonly, Logger log)
         {
             _timeout = timeout;
+            _readonly = @readonly;
             _log = log;
         }
 
@@ -97,6 +99,9 @@ namespace LiteDB.Engine
         {
             DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterReserved(name)");
 
+            // checks if engine was open in readonly mode
+            if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
+
             // if thread are in full reserved, don't try lock
             if (_reserved.IsWriteLockHeld) return;
 
@@ -140,6 +145,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterReserved(bool exclusive)
         {
+            // checks if engine was open in readonly mode
+            if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");
+
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
 

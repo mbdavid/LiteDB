@@ -32,7 +32,6 @@ namespace LiteDB.Engine
         private readonly IDiskFactory _factory;
         private readonly bool _utcDate;
         private readonly bool _checkpointOnShutdown;
-        private readonly bool _readonly;
 
         private bool _shutdown = false;
         private bool _disposed = false;
@@ -107,15 +106,14 @@ namespace LiteDB.Engine
                 // copy settings into class variables (turn values in immutable values)
                 _factory = settings.GetDiskFactory();
                 _utcDate = settings.UtcDate;
-                _checkpointOnShutdown = settings.CheckpointOnShutdown;
-                _readonly = settings.ReadOnly;
+                _checkpointOnShutdown = settings.CheckpointOnShutdown && settings.ReadOnly == false;
 
                 _log.Info($"initializing database '{_factory.Filename}'");
 
                 _bsonReader = new BsonReader(settings.UtcDate);
                 _bsonWriter = new BsonWriter();
 
-                _locker = new LockService(settings.Timeout, _log);
+                _locker = new LockService(settings.Timeout, settings.ReadOnly, _log);
 
                 // get disk factory from engine settings and open/create datafile/walfile
                 var factory = settings.GetDiskFactory();

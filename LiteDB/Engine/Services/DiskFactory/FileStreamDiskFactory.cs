@@ -48,10 +48,15 @@ namespace LiteDB.Engine
 
         private Stream GetInternalStream(string filename, bool writeMode, FileOptions options)
         {
+            //TODO: atualmente não posso abrir o arquivo como somente leitura pq o BinaryWriter obriga que o Stream suporte escrita
+            // preciso alterar a regra do negocio
+
+            var write = writeMode; // && _readonly == false;
+
             return new FileStream(filename,
-                writeMode ? FileMode.OpenOrCreate : FileMode.Open,
-                writeMode ? FileAccess.ReadWrite : FileAccess.Read,
-                writeMode ? FileShare.Read : FileShare.ReadWrite,
+                write ? FileMode.OpenOrCreate : FileMode.Open,
+                write ? FileAccess.ReadWrite : FileAccess.Read,
+                write ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,
                 options);
         }

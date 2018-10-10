@@ -66,6 +66,8 @@ namespace LiteDB.Studio
         {
             var cn = new ConnectionString(txtFilename.Text);
 
+            cn.ReadOnly = true;
+
             _db = new LiteDatabase(cn);
             _filename = cn.Filename;
 
