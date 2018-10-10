@@ -667,7 +667,7 @@ namespace LiteDB
 
         public override string ToString()
         {
-            return this.Current?.ToString() + " [ahred: " + _ahead?.ToString() + "] - position: " + this.Position;
+            return this.Current?.ToString() + " [ahead: " + _ahead?.ToString() + "] - position: " + this.Position;
         }
     }
 }

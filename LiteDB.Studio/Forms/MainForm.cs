@@ -52,9 +52,7 @@ namespace LiteDB.Studio
                 this.ActiveTask.SelectedTab = tabResult.SelectedTab.Name;
                 this.ActiveTask.Position = new Tuple<int, int>(txtSql.ActiveTextAreaControl.TextArea.Caret.Line, txtSql.ActiveTextAreaControl.TextArea.Caret.Column);
 
-                lblCursor.Text =
-                    "Line: " + (txtSql.ActiveTextAreaControl.Caret.Line + 1) +
-                    " - Column: " + (txtSql.ActiveTextAreaControl.Caret.Column + 1);
+                lblCursor.Text = $"Line: {(txtSql.ActiveTextAreaControl.Caret.Line + 1)} - Column: {(txtSql.ActiveTextAreaControl.Caret.Column + 1)}";
             };
 
             // stop all threads
@@ -214,9 +212,14 @@ namespace LiteDB.Studio
 
                     task.Parameters = new BsonDocument();
 
-                    using (var reader = _db.Execute(task.Sql, task.Parameters))
+                    var sql = new StringReader(task.Sql.Trim());
+
+                    while(sql.Peek() >= 0)
                     {
-                        task.ReadResult(reader);
+                        using (var reader = _db.Execute(sql, task.Parameters))
+                        {
+                            task.ReadResult(reader);
+                        }
                     }
 
                     task.Elapsed = sw.Elapsed;

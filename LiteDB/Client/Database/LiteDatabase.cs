@@ -229,10 +229,26 @@ namespace LiteDB
         #region Execute SQL
 
         /// <summary>
+        /// Execute SQL commands and return as data reader.
+        /// </summary>
+        public IBsonDataReader Execute(TextReader commandReader, BsonDocument parameters = null)
+        {
+            if (commandReader == null) throw new ArgumentNullException(nameof(commandReader));
+
+            var tokenizer = new Tokenizer(commandReader);
+            var sql = new SqlParser(_engine.Value, tokenizer, parameters);
+            var reader = sql.Execute();
+
+            return reader;
+        }
+
+        /// <summary>
         /// Execute SQL commands and return as data reader
         /// </summary>
         public IBsonDataReader Execute(string command, BsonDocument parameters = null)
         {
+            if (command == null) throw new ArgumentNullException(nameof(command));
+
             var tokenizer = new Tokenizer(command);
             var sql = new SqlParser(_engine.Value, tokenizer, parameters);
             var reader = sql.Execute();
