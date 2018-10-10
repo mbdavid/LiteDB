@@ -22,7 +22,8 @@ namespace LiteDB.Engine
         private readonly Logger _log;
         private readonly bool _utcDate;
 
-        private BinaryWriter _writer;
+        private readonly Stream _stream;
+        private readonly BinaryWriter _writer;
 
         public DataFileService(IDiskFactory factory, long initialSize, bool utcDate, Logger log)
         {
@@ -31,22 +32,29 @@ namespace LiteDB.Engine
             _log = log;
 
             // get first stream (will be used as single writer)
-            var stream = factory.GetDataFileStream(true);
+            _stream = factory.GetDataFileStream(true);
 
             try
             {
-                _writer = new BinaryWriter(stream);
+                // create _writer only if 
+                if (_stream.CanWrite)
+                {
+                    _writer = new BinaryWriter(_stream);
+                }
 
                 // if empty datafile, create database here
-                if (stream.Length == 0)
+                if (_stream.Length == 0)
                 {
-                    this.CreateDatafile(stream, initialSize);
+                    // can create readonly database
+                    if (_writer == null) throw new LiteException(0, $"Readonly only database can't create file {factory.Filename}");
+
+                    this.CreateDatafile(initialSize);
                 }
             }
             catch
             {
                 // close stream if any error occurs
-                stream.Dispose();
+                _stream.Dispose();
                 throw;
             }
         }
@@ -54,12 +62,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get data file stream length
         /// </summary>
-        public long Length { get => _writer.BaseStream.Length; }
+        public long Length { get => _stream.Length; }
 
         /// <summary>
         /// Set datafile with new length
         /// </summary>
-        public void SetLength(long length) => _writer.BaseStream.SetLength(length);
+        public void SetLength(long length) => _stream.SetLength(length);
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
@@ -90,13 +98,12 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<uint> ReadZeroPages()
         {
-            lock (_writer)
+            lock (_stream)
             {
-                var stream = _writer.BaseStream;
-                var reader = new BinaryReader(_writer.BaseStream);
+                var reader = new BinaryReader(_stream);
 
-                var position = stream.Position = 0;
-                var length = stream.Length;
+                var position = _stream.Position = 0;
+                var length = _stream.Length;
 
                 while (position < length)
                 {
@@ -120,28 +127,26 @@ namespace LiteDB.Engine
         /// </summary>
         public void WritePages(IEnumerable<BasePage> pages)
         {
-            lock(_writer)
+            lock(_stream)
             {
                 foreach(var page in pages)
                 {
                     var position = BasePage.GetPagePosition(page.PageID);
 
-                    _writer.BaseStream.Position = position;
+                    _stream.Position = position;
 
                     page.WritePage(_writer);
                 }
 
-                _writer.BaseStream.FlushToDisk();
+                _stream.FlushToDisk();
             }
         }
 
         /// <summary>
         /// Create new datafile based in empty Stream
         /// </summary>
-        private void CreateDatafile(Stream stream, long initialSize)
+        private void CreateDatafile(long initialSize)
         {
-            _writer = new BinaryWriter(stream);
-
             var header = new HeaderPage(0);
 
             header.WritePage(_writer);
@@ -149,10 +154,10 @@ namespace LiteDB.Engine
             // if has initial size alocate disk space now
             if (initialSize > PAGE_SIZE)
             {
-                _writer.BaseStream.SetLength(initialSize);
+                _stream.SetLength(initialSize);
             }
 
-            _writer.BaseStream.FlushToDisk();
+            _stream.FlushToDisk();
         }
 
         /// <summary>
@@ -165,7 +170,7 @@ namespace LiteDB.Engine
                 _log.Info($"dispose data file (1 writer + {_pool.Count} readers)");
 
                 // dispose writer
-                _writer.BaseStream.Dispose();
+                _stream.Dispose();
 
                 // after, dispose all readers
                 while (_pool.TryTake(out var reader))

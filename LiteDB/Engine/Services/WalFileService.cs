@@ -22,6 +22,7 @@ namespace LiteDB.Engine
         private readonly Logger _log;
         private readonly bool _utcDate;
 
+        private Lazy<Stream> _stream;
         private Lazy<BinaryWriter> _writer;
 
         /// <summary>
@@ -41,18 +42,17 @@ namespace LiteDB.Engine
 
         private void InitializeWriter()
         {
-            // initialize lazy writer
-            _writer = new Lazy<BinaryWriter>(() =>
-            {
-                var stream = _factory.GetWalFileStream(true);
+            // initialize lazy stream
+            _stream = new Lazy<Stream>(() => _factory.GetWalFileStream(true));
 
-                return new BinaryWriter(stream);
-            });
+            // inicialize lazy writer
+            _writer = new Lazy<BinaryWriter>(() => new BinaryWriter(_stream.Value));
         }
+
         /// <summary>
         /// Get virtual file length
         /// </summary>
-        public long Length => _factory.IsWalFileExists() ? _writer.Value.BaseStream.Length : 0;
+        public long Length => _factory.IsWalFileExists() ? _stream.Value.Length : 0;
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
@@ -85,7 +85,7 @@ namespace LiteDB.Engine
         {
             if (_factory.IsWalFileExists() == false) return false;
 
-            return _writer.Value.BaseStream.Length > 0;
+            return _stream.Value.Length > 0;
         }
 
         /// <summary>
@@ -96,11 +96,11 @@ namespace LiteDB.Engine
             // try get reader from pool (if not exists, create new stream from factory)
             if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(false));
 
-            lock(_writer)
+            lock(_stream)
             {
                 try
                 {
-                    var stream = reader.BaseStream;
+                    var stream = _stream.Value;
 
                     stream.Position = 0;
 
@@ -125,9 +125,9 @@ namespace LiteDB.Engine
         public void WritePages(IEnumerable<BasePage> pages, IDictionary<uint, PagePosition> pagePositions)
         {
             // lock writer but don't use writer here (will be used only in async writer task)
-            lock (_writer)
+            lock (_stream)
             {
-                var stream = _writer.Value.BaseStream;
+                var stream = _stream.Value;
 
                 foreach (var page in pages)
                 {
@@ -150,21 +150,19 @@ namespace LiteDB.Engine
         /// <summary>
         /// Do a full flush do disk
         /// </summary>
-        public void Flush() => _writer.Value.BaseStream.FlushToDisk();
+        public void Flush() => _stream.Value.FlushToDisk();
 
         /// <summary>
         /// Clear WAL file content and reset writer position
         /// </summary>
         public void Clear()
         {
-            lock(_writer)
+            lock(_stream)
             {
                 // just shrink wal to 0 bytes (is faster than delete and can be re-used)
-                var stream = _writer.Value.BaseStream;
+                _stream.Value.SetLength(0);
 
-                stream.SetLength(0);
-
-                stream.Position = 0;
+                _stream.Value.Position = 0;
             }
         }
 
@@ -173,7 +171,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetPosition(long position)
         {
-            _writer.Value.BaseStream.Position = position;
+            _stream.Value.Position = position;
         }
 
         /// <summary>
@@ -186,12 +184,12 @@ namespace LiteDB.Engine
             var length = -1L;
 
             // first dispose writer
-            if (_writer?.IsValueCreated ?? false)
+            if (_stream?.IsValueCreated ?? false)
             {
-                length = _writer.Value.BaseStream.Length;
+                length = _stream.Value.Length;
 
-                _writer.Value.BaseStream.FlushToDisk();
-                _writer.Value.BaseStream.Dispose();
+                _stream.Value.FlushToDisk();
+                _stream.Value.Dispose();
             }
 
             // after, dispose all readers

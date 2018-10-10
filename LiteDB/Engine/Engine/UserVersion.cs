@@ -25,7 +25,10 @@ namespace LiteDB.Engine
 
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("UserVersion", TransactionState.Active);
 
-            lock (_header)
+            // simle "lock (_header)" was modified to enter all database in reserved lock to check database readonly mode
+            _locker.EnterReserved(false);
+
+            try
             {
                 // clone header to use in writer
                 var header = _header.Clone();
@@ -42,6 +45,11 @@ namespace LiteDB.Engine
 
                 // update header instance
                 _header.UserVersion = value;
+
+            }
+            finally
+            {
+                _locker.ExitReserved(false);
             }
         }
     }
