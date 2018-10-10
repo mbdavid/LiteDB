@@ -31,7 +31,7 @@ namespace LiteDB.Engine
             _log = log;
 
             // get first stream (will be used as single writer)
-            var stream = factory.GetDataFileStream(false);
+            var stream = factory.GetDataFileStream(true);
 
             try
             {
@@ -67,7 +67,7 @@ namespace LiteDB.Engine
         public BasePage ReadPage(long position)
         {
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetDataFileStream(true));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetDataFileStream(false));
 
             try
             {

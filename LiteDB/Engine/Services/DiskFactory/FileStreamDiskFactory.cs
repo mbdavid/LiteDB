@@ -15,12 +15,14 @@ namespace LiteDB.Engine
         private readonly string _dataFilename;
         private readonly string _walFilename;
         private readonly Lazy<string> _tempFilename;
+        private readonly bool _readonly;
 
-        public FileStreamDiskFactory(string filename)
+        public FileStreamDiskFactory(string filename, bool @readonly)
         {
             _dataFilename = filename;
             _walFilename = FileHelper.GetTempFile(filename, "-wal", false);
             _tempFilename = new Lazy<string>(() => FileHelper.GetTempFile(filename, "-temp", true));
+            _readonly = @readonly;
         }
 
         /// <summary>
@@ -31,31 +33,25 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetDataFileStream(bool readOnly)
+        public Stream GetDataFileStream(bool writeMode)
         {
-            return this.GetStreamInternal(_dataFilename, FileOptions.RandomAccess, readOnly);
+            return this.GetInternalStream(_dataFilename, writeMode, FileOptions.SequentialScan);
         }
 
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetWalFileStream(bool readOnly)
+        public Stream GetWalFileStream(bool writeMode)
         {
-            var options = readOnly ? FileOptions.RandomAccess : FileOptions.SequentialScan;
-
-            return this.GetStreamInternal(_walFilename, options, readOnly);
+            return this.GetInternalStream(_walFilename, writeMode, FileOptions.SequentialScan);
         }
 
-        /// <summary>
-        /// Open (or create) new FileStream based on filename. Can be sequencial (for WAL writer)
-        /// Will be only 1 single writer, so I will open write mode with no more support for writer (will do file lock)
-        /// </summary>
-        private Stream GetStreamInternal(string filename, FileOptions options, bool readOnly)
+        private Stream GetInternalStream(string filename, bool writeMode, FileOptions options)
         {
             return new FileStream(filename,
-                readOnly ? FileMode.Open : FileMode.OpenOrCreate,
-                readOnly ? FileAccess.Read : FileAccess.ReadWrite,
-                FileShare.ReadWrite,
+                writeMode ? FileMode.OpenOrCreate : FileMode.Open,
+                writeMode ? FileAccess.ReadWrite : FileAccess.Read,
+                writeMode ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,
                 options);
         }
