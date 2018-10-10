@@ -42,25 +42,12 @@ namespace LiteDB
 
             _mapper = mapper ?? BsonMapper.Global;
 
-            _engine = new Lazy<ILiteEngine>(() =>
-            {
-                var settings = new EngineSettings
-                {
-                    Filename = connectionString.Filename,
-                    InitialSize = connectionString.InitialSize,
-                    LimitSize = connectionString.LimitSize,
-                    UtcDate = connectionString.UtcDate,
-                    Timeout = connectionString.Timeout,
-                    LogLevel = connectionString.Log
-                };
-
-                return connectionString.Type == ConnectionType.Shared ?
-                    (ILiteEngine)new SharedEngine(settings) : new LiteEngine(settings);
-            });
+            _engine = new Lazy<ILiteEngine>(connectionString.CreateEngine);
         }
 
         /// <summary>
-        /// Starts LiteDB database using a Stream disk
+        /// Starts LiteDB database using a generic Stream implementation (mostly MemoryStrem).
+        /// Use another MemoryStrem as WAL file.
         /// </summary>
         public LiteDatabase(Stream stream, BsonMapper mapper = null)
         {
@@ -72,7 +59,9 @@ namespace LiteDB
             {
                 var settings = new EngineSettings
                 {
-                    DataStream = stream
+                    DataStream = stream,
+                    WalStream = new MemoryStream(),
+                    CheckpointOnShutdown = true
                 };
 
                 return new LiteEngine(settings);

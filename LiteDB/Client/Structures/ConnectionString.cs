@@ -12,39 +12,57 @@ namespace LiteDB
         private readonly Dictionary<string, string> _values;
 
         /// <summary>
+        /// "type": Return how engine will be open (default: Local)
+        /// </summary>
+        public ConnectionType Type { get; set; } = ConnectionType.Local;
+
+        /// <summary>
         /// "filename": Full path or relative path from DLL directory
+        /// Supported in [Local, Shared] connection type
         /// </summary>
         public string Filename { get; set; } = "";
 
         /// <summary>
         /// "timeout": Timeout for waiting unlock operations (default: 1 minute)
+        /// Supported in [Local, Shared] connection type
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// "initial size": If database is new, initialize with allocated space - support KB, MB, GB (default: 0 bytes)
+        /// Supported in [Local, Shared] connection type
         /// </summary>
         public long InitialSize { get; set; } = 0;
 
         /// <summary>
         /// "limit size": Max limit of datafile - support KB, MB, GB (default: long.MaxValue - no limit)
+        /// Supported in [Local, Shared] connection type
         /// </summary>
         public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
-        /// "log": Debug messages from database - use `LiteDatabase.Log` (default: Logger.NONE)
+        /// "log": Debug messages from engine - (default: Logger.NONE)
+        /// Supported in [Local, Shared] connection type
         /// </summary>
         public byte Log { get; set; } = Logger.NONE;
 
         /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
+        /// Supported in [Local, Shared] connection type
         /// </summary>
         public bool UtcDate { get; set; } = false;
 
         /// <summary>
-        /// "type": Return how engine will be open (default: Local)
+        /// "checkpoint": Indicate that engine will do a checkpoint on dispose database (default: true)
+        /// Supported in [Local, Shared] connection type
         /// </summary>
-        public ConnectionType Type { get; set; } = ConnectionType.Local;
+        public bool CheckpointOnShutdown { get; set; } = true;
+
+        /// <summary>
+        /// "readonly": Open datafile in readonly mode (default: false)
+        /// Supported in [Local, Shared] connection type
+        /// </summary>
+        public bool ReadOnly { get; set; } = false;
 
         /// <summary>
         /// Initialize empty connection string
@@ -73,18 +91,49 @@ namespace LiteDB
             }
 
             // setting values to properties
+            this.Type = _values.GetValue("type", this.Type);
             this.Filename = _values.GetValue("filename", this.Filename);
+
             this.Timeout = _values.GetValue("timeout", this.Timeout);
             this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
             this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
             this.Log = _values.GetValue("log", this.Log);
             this.UtcDate = _values.GetValue("utc", this.UtcDate);
-            this.Type = _values.GetValue("type", this.Type);
+            this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
+            this.CheckpointOnShutdown = _values.GetValue("checkpoint", this.CheckpointOnShutdown);
         }
 
         /// <summary>
         /// Get value from parsed connection string. Returns null if not found
         /// </summary>
         public string this[string key] => _values.GetOrDefault(key);
+
+        /// <summary>
+        /// Create ILiteEngine instance according string connection parameters. For now, only Local/Shared are supported
+        /// </summary>
+        internal ILiteEngine CreateEngine()
+        {
+            var settings = new EngineSettings
+            {
+                Filename = this.Filename,
+                InitialSize = this.InitialSize,
+                LimitSize = this.LimitSize,
+                UtcDate = this.UtcDate,
+                Timeout = this.Timeout,
+                LogLevel = this.Log,
+                CheckpointOnShutdown = this.CheckpointOnShutdown,
+                ReadOnly = this.ReadOnly
+            };
+
+            // create engine implementation as Connection Type
+            if (this.Type == ConnectionType.Local)
+            {
+                return new LiteEngine(settings);
+            }
+            else
+            {
+                return new SharedEngine(settings);
+            }
+        }
     }
 }
