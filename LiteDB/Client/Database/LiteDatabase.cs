@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LiteDB.Engine;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -303,8 +304,8 @@ namespace LiteDB
         /// </summary>
         public int UserVersion
         {
-            get => _engine.Value.GetUserVersion();
-            set => _engine.Value.SetUserVersion(value);
+            get => _engine.Value.DbParam(DB_PARAM_USERVERSION);
+            set => _engine.Value.DbParam(DB_PARAM_USERVERSION, value);
         }
 
         #endregion

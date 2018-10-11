@@ -9,21 +9,26 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Get database user version. If set new value, requires no current transaction
+        /// Get database header parameter value
         /// </summary>
-        public int GetUserVersion()
+        public BsonValue DbParam(string parameterName)
         {
-            return _header.UserVersion;
+            switch(parameterName.ToUpper())
+            {
+                case DB_PARAM_USERVERSION: return _header.UserVersion;
+                default: throw new LiteException(0, $"Unknow parameter name: {parameterName}");
+            }
         }
 
         /// <summary>
-        /// Set new database user version. Requires no transaction at this time
+        /// Set new database parameter value. Requires no transaction at this time
         /// </summary>
-        public void SetUserVersion(int value)
+        public bool DbParam(string parameterName, BsonValue value)
         {
-            if (value == _header.UserVersion || _shutdown) return;
+            // check if same value or database are in shutdown mode
+            if (this.DbParam(parameterName) == value || _shutdown) return false;
 
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("UserVersion", TransactionState.Active);
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DbParam", TransactionState.Active);
 
             // simle "lock (_header)" was modified to enter all database in reserved lock to check database readonly mode
             _locker.EnterReserved(false);
@@ -33,7 +38,15 @@ namespace LiteDB.Engine
                 // clone header to use in writer
                 var header = _header.Clone();
 
-                header.UserVersion = value;
+                // set parameter value
+                switch (parameterName.ToUpper())
+                {
+                    case DB_PARAM_USERVERSION:
+                        header.UserVersion = value;
+                        break;
+                    default: throw new LiteException(0, $"Unknow parameter name: {parameterName}");
+                }
+
                 header.TransactionID = ObjectId.NewObjectId();
                 header.IsConfirmed = true;
                 header.IsDirty = true;
@@ -46,6 +59,7 @@ namespace LiteDB.Engine
                 // update header instance
                 _header.UserVersion = value;
 
+                return true;
             }
             finally
             {

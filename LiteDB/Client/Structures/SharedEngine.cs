@@ -117,7 +117,12 @@ namespace LiteDB
             throw new NotImplementedException();
         }
 
-        public int GetUserVersion()
+        public BsonValue DbParam(string parameterName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DbParam(string parameterName, BsonValue value)
         {
             throw new NotImplementedException();
         }
@@ -127,13 +132,7 @@ namespace LiteDB
             throw new NotImplementedException();
         }
 
-
         public bool RenameCollection(string collection, string newName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetUserVersion(int value)
         {
             throw new NotImplementedException();
         }

@@ -165,18 +165,17 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            if (_factory.CloseOnDispose)
+            if (_factory.CloseOnDispose == false) return;
+
+            _log.Info($"dispose data file (1 writer + {_pool.Count} readers)");
+
+            // dispose writer
+            _stream.Dispose();
+
+            // after, dispose all readers
+            while (_pool.TryTake(out var reader))
             {
-                _log.Info($"dispose data file (1 writer + {_pool.Count} readers)");
-
-                // dispose writer
-                _stream.Dispose();
-
-                // after, dispose all readers
-                while (_pool.TryTake(out var reader))
-                {
-                    reader.BaseStream.Dispose();
-                }
+                reader.BaseStream.Dispose();
             }
         }
     }

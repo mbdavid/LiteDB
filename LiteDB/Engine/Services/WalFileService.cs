@@ -22,13 +22,18 @@ namespace LiteDB.Engine
         private readonly Logger _log;
         private readonly bool _utcDate;
 
-        private Lazy<Stream> _stream;
-        private Lazy<BinaryWriter> _writer;
+        private readonly Lazy<Stream> _stream;
+        private readonly Lazy<BinaryWriter> _writer;
 
         /// <summary>
         /// Get limit of datafile in bytes (not WAL file size)
         /// </summary>
         public long LimitSize => _limitSize;
+
+        /// <summary>
+        /// Expose writer stream
+        /// </summary>
+        public Stream Stream => _stream.Value;
 
         public WalFileService(IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
         {
@@ -37,22 +42,24 @@ namespace LiteDB.Engine
             _utcDate = utcDate;
             _log = log;
 
-            this.InitializeWriter();
-        }
+            // initialize lazy stream (and set position at end of file)
+            _stream = new Lazy<Stream>(() =>
+            {
+                var s = _factory.GetWalFileStream(true);
 
-        private void InitializeWriter()
-        {
-            // initialize lazy stream
-            _stream = new Lazy<Stream>(() => _factory.GetWalFileStream(true));
+                s.Seek(0, SeekOrigin.End);
+
+                return s;
+            });
 
             // inicialize lazy writer
             _writer = new Lazy<BinaryWriter>(() => new BinaryWriter(_stream.Value));
         }
 
         /// <summary>
-        /// Get virtual file length
+        /// Get virtual file length (based on writer position)
         /// </summary>
-        public long Length => _factory.IsWalFileExists() ? _stream.Value.Length : 0;
+        public long Length => _factory.IsWalFileExists() ? _stream.Value.Position : 0;
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
@@ -79,16 +86,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Return if WAL file contains pages
-        /// </summary>
-        public bool HasPages()
-        {
-            if (_factory.IsWalFileExists() == false) return false;
-
-            return _stream.Value.Length > 0;
-        }
-
-        /// <summary>
         /// Read all pages inside wal file in order. Locking writer to avoid writing durting my disk read. Read direct from disk with no cache
         /// </summary>
         public IEnumerable<BasePage> ReadPages(bool readContent)
@@ -100,7 +97,7 @@ namespace LiteDB.Engine
             {
                 try
                 {
-                    var stream = _stream.Value;
+                    var stream = reader.BaseStream;
 
                     stream.Position = 0;
 
@@ -163,15 +160,9 @@ namespace LiteDB.Engine
                 _stream.Value.SetLength(0);
 
                 _stream.Value.Position = 0;
-            }
-        }
 
-        /// <summary>
-        /// Define writer position
-        /// </summary>
-        public void SetPosition(long position)
-        {
-            _stream.Value.Position = position;
+                _stream.Value.FlushToDisk();
+            }
         }
 
         /// <summary>
@@ -179,6 +170,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            // dispose only if disk factory require
+            if (_factory.CloseOnDispose == false) return;
+
             _log.Info($"dispose wal file writer + {_pool.Count} readers)");
 
             var length = -1L;

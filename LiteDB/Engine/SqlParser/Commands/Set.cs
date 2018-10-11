@@ -16,7 +16,7 @@ namespace LiteDB.Engine
 
             if (token.Type == TokenType.Word)
             {
-                this.ParseSetValue(token);
+                return new BsonDataReader(this.ParseSetValue(token));
             }
             else
             {
@@ -75,21 +75,8 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read key=value to update database settings
         /// </summary>
-        private void ParseSetValue(Token key)
+        private bool ParseSetValue(Token key)
         {
-            // set value factory
-            Action<BsonValue> setFactory;
-
-            switch (key.Value.ToLower())
-            {
-                case "userversion":
-                    setFactory = v => _engine.SetUserVersion(v.AsInt32);
-                    break;
-
-                default:
-                    throw LiteException.UnexpectedToken("Unkown key or missing @ prefix", key);
-            }
-
             // read `=`
             _tokenizer.ReadToken().Expect(TokenType.Equals);
 
@@ -99,7 +86,7 @@ namespace LiteDB.Engine
             // read eof or ;
             _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
 
-            setFactory(value);
+            return _engine.DbParam(key.Value, value);
         }
     }
 }

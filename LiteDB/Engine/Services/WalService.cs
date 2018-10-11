@@ -118,7 +118,7 @@ namespace LiteDB.Engine
             try
             {
                 // if wal already clean (or not exists)
-                if (_walFile.HasPages() == false) return 0;
+                if (_walFile.Length == 0) return 0;
 
                 _log.Info("checkpoint");
 
@@ -188,7 +188,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void RestoreWalIndex(ref HeaderPage header)
         {
-            if (_walFile.HasPages() == false) return;
+            if (_walFile.Length == 0) return;
 
             // get all page positions
             var positions = new Dictionary<ObjectId, List<PagePosition>>();
@@ -223,8 +223,6 @@ namespace LiteDB.Engine
 
                 current += PAGE_SIZE;
             }
-
-            _walFile.SetPosition(current);
         }
 
         public void Dispose()

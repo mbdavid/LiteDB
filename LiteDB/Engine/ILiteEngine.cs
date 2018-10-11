@@ -29,7 +29,7 @@ namespace LiteDB.Engine
 
         bool RenameCollection(string collection, string newName);
 
-        int GetUserVersion();
-        void SetUserVersion(int value);
+        BsonValue DbParam(string parameterName);
+        bool DbParam(string parameterName, BsonValue value);
     }
 }

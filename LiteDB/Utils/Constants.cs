@@ -94,6 +94,11 @@ namespace LiteDB
         public static byte[] V7_TRANSID = new byte[] { 1 };
 
         /// <summary>
+        /// Database header parameter: USERVERSION
+        /// </summary>
+        public const string DB_PARAM_USERVERSION = "USERVERSION";
+
+        /// <summary>
         /// Stop VisualStudio if condition are true and we are running over #DEBUG - great for testing unexpected flow
         /// </summary>
         [DebuggerHidden]

@@ -31,9 +31,9 @@ namespace LiteDB.Engine
         public Logger Log { get; set; } = null;
 
         /// <summary>
-        /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: ':memory:')
+        /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: null)
         /// </summary>
-        public string Filename { get; set; } = ":memory:";
+        public string Filename { get; set; }
 
         /// <summary>
         /// Timeout for waiting unlock operations (default: 1 minute)
