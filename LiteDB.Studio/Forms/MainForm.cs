@@ -74,6 +74,8 @@ namespace LiteDB.Studio
 
             this.LoadTreeView();
             this.AddNewTab("");
+
+            txtSql.Focus();
         }
 
         private void Disconnect()
@@ -102,6 +104,7 @@ namespace LiteDB.Studio
             txtParameters.Clear();
 
             tvwDatabase.Nodes.Clear();
+            tvwDatabase.Focus();
         }
 
         private void UIState(bool enabled)
