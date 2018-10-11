@@ -26,7 +26,7 @@ namespace LiteDB.Engine
 
             File.Copy(_factory.Filename, backup);
 
-            using (var stream = _factory.GetDataFileStream(true))
+            using (var stream = _factory.GetDataFileStream(false))
             {
                 var reader = new FileReaderV7(stream);
 
