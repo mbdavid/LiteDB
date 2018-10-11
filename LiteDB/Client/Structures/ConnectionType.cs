@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace LiteDB
 {
-    public enum ConnectionType
+    public enum ConnectionMode
     {
-        Shared,
-        Local
+        Exclusive,
+        Shared
     }
 }

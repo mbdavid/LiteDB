@@ -47,6 +47,12 @@
   <ItemGroup>
     <Compile Include="Classes\SqlCodeCompletion.cs" />
     <Compile Include="Classes\UIExtensions.cs" />
+    <Compile Include="Forms\ConnectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ConnectionForm.Designer.cs">
+      <DependentUpon>ConnectionForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -199,6 +205,9 @@
     <Compile Include="ICSharpCode.TextEditor\Util\WeakCollection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Forms\ConnectionForm.resx">
+      <DependentUpon>ConnectionForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -316,6 +325,9 @@
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\RightArrow.cur" />
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\SyntaxModes.xml" />
     <EmbeddedResource Include="ICSharpCode.TextEditor\Resources\TextEditorControl.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\disk.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.TextEditor;
 using LiteDB.Engine;
+using LiteDB.Studio.Forms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,8 +20,8 @@ namespace LiteDB.Studio
     {
         private readonly SynchronizationContext _synchronizationContext;
 
-        private LiteDatabase _db;
-        private string _filename;
+        private LiteDatabase _db = null;
+        private ConnectionString _connectionString = null;
         private bool _running = true;
         private SqlCodeCompletion _codeCompletion;
 
@@ -31,19 +32,13 @@ namespace LiteDB.Studio
             // For performance https://stackoverflow.com/questions/4255148/how-to-improve-painting-performance-of-datagridview
             grdResult.DoubleBuffered(true);
 
-            txtFilename.Text = filename ?? "";
-
             _synchronizationContext = SynchronizationContext.Current;
 
             _codeCompletion = new SqlCodeCompletion(txtSql, imgCodeCompletion);
 
-            if (txtFilename.Text.Length > 0)
+            if (!string.IsNullOrWhiteSpace(filename))
             {
-                this.Connect();
-            }
-            else
-            {
-                this.Disconnect();
+                this.Connect(new ConnectionString { Filename = filename });
             }
 
             txtSql.ActiveTextAreaControl.TextArea.Caret.PositionChanged += (s, e) =>
@@ -62,21 +57,18 @@ namespace LiteDB.Studio
             };
         }
 
-        private void Connect()
+        public void Connect(ConnectionString connectionString)
         {
-            var cn = new ConnectionString(txtFilename.Text);
+            _db = new LiteDatabase(connectionString);
 
-            cn.ReadOnly = true;
-
-            _db = new LiteDatabase(cn);
-            _filename = cn.Filename;
+            _connectionString = connectionString;
 
             _codeCompletion.UpdateCodeCompletion(_db);
 
             _running = true;
             btnConnect.Text = "Disconnect";
-            txtFilename.Enabled = btnFileOpen.Enabled = false;
-            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = btnCheckpoint.Enabled = true;
+
+            this.UIState(true);
 
             tabSql.TabPages.Add("+", "+");
 
@@ -87,11 +79,13 @@ namespace LiteDB.Studio
         private void Disconnect()
         {
             _db?.Dispose();
-            _running = false;
-            btnConnect.Text = "Connect";
-            txtFilename.Enabled = btnFileOpen.Enabled = true;
+            _db = null;
 
-            splitRight.Visible = btnRefresh.Enabled = tabSql.Enabled = btnRun.Enabled = btnBegin.Enabled = btnCommit.Enabled = btnRollback.Enabled = btnCheckpoint.Enabled = false;
+            _running = false;
+
+            btnConnect.Text = "Connect";
+
+            this.UIState(false);
 
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {
@@ -108,6 +102,21 @@ namespace LiteDB.Studio
             txtParameters.Clear();
 
             tvwDatabase.Nodes.Clear();
+        }
+
+        private void UIState(bool enabled)
+        {
+            splitRight.Visible = enabled;
+            tabSql.Visible = enabled;
+
+            btnRefresh.Enabled = enabled;
+            tabSql.Enabled = enabled;
+            btnRun.Enabled = enabled;
+
+            btnBegin.Enabled = enabled;
+            btnCommit.Enabled = enabled;
+            btnRollback.Enabled = enabled;
+            btnCheckpoint.Enabled = enabled;
         }
 
         private TaskData ActiveTask => tabSql.SelectedTab.Tag as TaskData;
@@ -152,7 +161,7 @@ namespace LiteDB.Studio
         {
             tvwDatabase.Nodes.Clear();
 
-            var root = tvwDatabase.Nodes.Add(Path.GetFileNameWithoutExtension(_filename));
+            var root = tvwDatabase.Nodes.Add(Path.GetFileName(_connectionString.Filename));
             var system = root.Nodes.Add("System");
 
             root.ImageKey = "database";
@@ -444,25 +453,20 @@ namespace LiteDB.Studio
             this.ExecuteSql("CHECKPOINT");
         }
 
-        private void BtnFileOpen_Click(object sender, EventArgs e)
-        {
-            diaOpen.FileName = txtFilename.Text;
-
-            if (diaOpen.ShowDialog() == DialogResult.OK)
-            {
-                txtFilename.Text = diaOpen.FileName;
-
-                BtnConnect_Click(null, null);
-            }
-        }
-
         private void BtnConnect_Click(object sender, EventArgs e)
         {
             try
             {
-                if (txtFilename.Enabled)
+                if (_db == null)
                 {
-                    this.Connect();
+                    var dialog = new ConnectionForm(_connectionString);
+
+                    dialog.ShowDialog();
+
+                    if (dialog.DialogResult == DialogResult.OK)
+                    {
+                        this.Connect(dialog.ConnectionString);
+                    }
                 }
                 else
                 {

@@ -14,7 +14,7 @@ namespace LiteDB
         /// <summary>
         /// "type": Return how engine will be open (default: Local)
         /// </summary>
-        public ConnectionType Type { get; set; } = ConnectionType.Local;
+        public ConnectionMode Mode { get; set; } = ConnectionMode.Exclusive;
 
         /// <summary>
         /// "filename": Full path or relative path from DLL directory
@@ -91,7 +91,7 @@ namespace LiteDB
             }
 
             // setting values to properties
-            this.Type = _values.GetValue("type", this.Type);
+            this.Mode = _values.GetValue("mode", this.Mode);
             this.Filename = _values.GetValue("filename", this.Filename);
 
             this.Timeout = _values.GetValue("timeout", this.Timeout);
@@ -126,7 +126,7 @@ namespace LiteDB
             };
 
             // create engine implementation as Connection Type
-            if (this.Type == ConnectionType.Local)
+            if (this.Mode == ConnectionMode.Exclusive)
             {
                 return new LiteEngine(settings);
             }

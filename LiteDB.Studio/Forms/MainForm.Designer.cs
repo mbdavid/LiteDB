@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.txtFilename = new System.Windows.Forms.TextBox();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.tvwDatabase = new System.Windows.Forms.TreeView();
             this.imgList = new System.Windows.Forms.ImageList(this.components);
@@ -79,8 +78,6 @@
             this.mnuCheckpoint = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuVaccum = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuShrink = new System.Windows.Forms.ToolStripMenuItem();
-            this.diaOpen = new System.Windows.Forms.OpenFileDialog();
-            this.btnFileOpen = new System.Windows.Forms.Button();
             this.imgCodeCompletion = new System.Windows.Forms.ImageList(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
@@ -101,23 +98,12 @@
             this.ctxMenuRoot.SuspendLayout();
             this.SuspendLayout();
             // 
-            // txtFilename
-            // 
-            this.txtFilename.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtFilename.Location = new System.Drawing.Point(5, 37);
-            this.txtFilename.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.txtFilename.Name = "txtFilename";
-            this.txtFilename.Size = new System.Drawing.Size(1034, 23);
-            this.txtFilename.TabIndex = 0;
-            this.txtFilename.Text = ":memory:";
-            // 
             // splitMain
             // 
             this.splitMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitMain.Location = new System.Drawing.Point(5, 69);
+            this.splitMain.Location = new System.Drawing.Point(5, 36);
             this.splitMain.Name = "splitMain";
             // 
             // splitMain.Panel1
@@ -128,8 +114,8 @@
             // 
             this.splitMain.Panel2.Controls.Add(this.splitRight);
             this.splitMain.Panel2.Controls.Add(this.tabSql);
-            this.splitMain.Size = new System.Drawing.Size(1080, 566);
-            this.splitMain.SplitterDistance = 235;
+            this.splitMain.Size = new System.Drawing.Size(1080, 599);
+            this.splitMain.SplitterDistance = 234;
             this.splitMain.TabIndex = 10;
             this.splitMain.TabStop = false;
             // 
@@ -144,7 +130,7 @@
             this.tvwDatabase.Margin = new System.Windows.Forms.Padding(0);
             this.tvwDatabase.Name = "tvwDatabase";
             this.tvwDatabase.SelectedImageIndex = 0;
-            this.tvwDatabase.Size = new System.Drawing.Size(235, 563);
+            this.tvwDatabase.Size = new System.Drawing.Size(234, 596);
             this.tvwDatabase.TabIndex = 9;
             this.tvwDatabase.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TvwCols_NodeMouseDoubleClick);
             this.tvwDatabase.MouseUp += new System.Windows.Forms.MouseEventHandler(this.TvwCols_MouseUp);
@@ -175,8 +161,8 @@
             // splitRight.Panel2
             // 
             this.splitRight.Panel2.Controls.Add(this.tabResult);
-            this.splitRight.Size = new System.Drawing.Size(831, 537);
-            this.splitRight.SplitterDistance = 164;
+            this.splitRight.Size = new System.Drawing.Size(832, 570);
+            this.splitRight.SplitterDistance = 174;
             this.splitRight.TabIndex = 8;
             // 
             // txtSql
@@ -192,7 +178,7 @@
             this.txtSql.Name = "txtSql";
             this.txtSql.ShowLineNumbers = false;
             this.txtSql.ShowVRuler = false;
-            this.txtSql.Size = new System.Drawing.Size(827, 161);
+            this.txtSql.Size = new System.Drawing.Size(828, 171);
             this.txtSql.TabIndex = 2;
             // 
             // tabResult
@@ -206,7 +192,7 @@
             this.tabResult.Location = new System.Drawing.Point(0, 3);
             this.tabResult.Name = "tabResult";
             this.tabResult.SelectedIndex = 0;
-            this.tabResult.Size = new System.Drawing.Size(831, 366);
+            this.tabResult.Size = new System.Drawing.Size(832, 389);
             this.tabResult.TabIndex = 0;
             this.tabResult.TabStop = false;
             this.tabResult.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabResult_Selected);
@@ -217,7 +203,7 @@
             this.tabGrid.Location = new System.Drawing.Point(4, 24);
             this.tabGrid.Name = "tabGrid";
             this.tabGrid.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGrid.Size = new System.Drawing.Size(815, 338);
+            this.tabGrid.Size = new System.Drawing.Size(824, 361);
             this.tabGrid.TabIndex = 0;
             this.tabGrid.Text = "Grid";
             this.tabGrid.UseVisualStyleBackColor = true;
@@ -232,7 +218,7 @@
             this.grdResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResult.Location = new System.Drawing.Point(6, 5);
             this.grdResult.Name = "grdResult";
-            this.grdResult.Size = new System.Drawing.Size(803, 327);
+            this.grdResult.Size = new System.Drawing.Size(811, 350);
             this.grdResult.TabIndex = 0;
             this.grdResult.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.GrdResult_CellBeginEdit);
             this.grdResult.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_CellEndEdit);
@@ -244,7 +230,7 @@
             this.tabText.Location = new System.Drawing.Point(4, 24);
             this.tabText.Name = "tabText";
             this.tabText.Padding = new System.Windows.Forms.Padding(3);
-            this.tabText.Size = new System.Drawing.Size(815, 338);
+            this.tabText.Size = new System.Drawing.Size(824, 361);
             this.tabText.TabIndex = 3;
             this.tabText.Text = "Text";
             this.tabText.UseVisualStyleBackColor = true;
@@ -262,7 +248,7 @@
             this.txtResult.ReadOnly = true;
             this.txtResult.ShowLineNumbers = false;
             this.txtResult.ShowVRuler = false;
-            this.txtResult.Size = new System.Drawing.Size(804, 328);
+            this.txtResult.Size = new System.Drawing.Size(812, 351);
             this.txtResult.TabIndex = 1;
             // 
             // tabParameters
@@ -271,7 +257,7 @@
             this.tabParameters.Location = new System.Drawing.Point(4, 24);
             this.tabParameters.Name = "tabParameters";
             this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
-            this.tabParameters.Size = new System.Drawing.Size(823, 338);
+            this.tabParameters.Size = new System.Drawing.Size(824, 361);
             this.tabParameters.TabIndex = 5;
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
@@ -289,7 +275,7 @@
             this.txtParameters.ReadOnly = true;
             this.txtParameters.ShowLineNumbers = false;
             this.txtParameters.ShowVRuler = false;
-            this.txtParameters.Size = new System.Drawing.Size(811, 327);
+            this.txtParameters.Size = new System.Drawing.Size(811, 350);
             this.txtParameters.TabIndex = 2;
             // 
             // tabSql
@@ -321,7 +307,7 @@
             // lblCursor
             // 
             this.lblCursor.Name = "lblCursor";
-            this.lblCursor.Size = new System.Drawing.Size(703, 17);
+            this.lblCursor.Size = new System.Drawing.Size(713, 17);
             this.lblCursor.Spring = true;
             this.lblCursor.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -603,21 +589,6 @@
             this.mnuShrink.Tag = "SHRINK;";
             this.mnuShrink.Text = "Shrink";
             // 
-            // diaOpen
-            // 
-            this.diaOpen.FileName = "openFileDialog1";
-            // 
-            // btnFileOpen
-            // 
-            this.btnFileOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFileOpen.Image = global::LiteDB.Studio.Properties.Resources.folder_explore;
-            this.btnFileOpen.Location = new System.Drawing.Point(1045, 36);
-            this.btnFileOpen.Name = "btnFileOpen";
-            this.btnFileOpen.Size = new System.Drawing.Size(37, 25);
-            this.btnFileOpen.TabIndex = 13;
-            this.btnFileOpen.UseVisualStyleBackColor = true;
-            this.btnFileOpen.Click += new System.EventHandler(this.BtnFileOpen_Click);
-            // 
             // imgCodeCompletion
             // 
             this.imgCodeCompletion.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgCodeCompletion.ImageStream")));
@@ -634,11 +605,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1090, 660);
-            this.Controls.Add(this.btnFileOpen);
             this.Controls.Add(this.tlbMain);
             this.Controls.Add(this.stbStatus);
             this.Controls.Add(this.splitMain);
-            this.Controls.Add(this.txtFilename);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -671,8 +640,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox txtFilename;
         private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.TreeView tvwDatabase;
         private System.Windows.Forms.StatusStrip stbStatus;
@@ -715,8 +682,6 @@
         private System.Windows.Forms.ToolStripMenuItem mnuRename;
         private System.Windows.Forms.ToolStripMenuItem mnuCheckpoint;
         private System.Windows.Forms.ToolStripMenuItem mnuExport;
-        private System.Windows.Forms.Button btnFileOpen;
-        private System.Windows.Forms.OpenFileDialog diaOpen;
         private System.Windows.Forms.ToolStripMenuItem mnuQueryCount;
         private System.Windows.Forms.ToolStripMenuItem mnuImport;
         private ICSharpCode.TextEditor.TextEditorControl txtResult;
