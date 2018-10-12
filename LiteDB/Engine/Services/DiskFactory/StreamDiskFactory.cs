@@ -12,12 +12,12 @@ namespace LiteDB.Engine
     internal class StreamDiskFactory : IDiskFactory
     {
         private readonly Stream _data;
-        private readonly Stream _wal;
+        private readonly Stream _log;
 
-        public StreamDiskFactory(Stream data, Stream wal)
+        public StreamDiskFactory(Stream data, Stream log)
         {
             _data = data;
-            _wal = wal;
+            _log = log;
         }
 
         /// <summary>
@@ -30,11 +30,11 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetDataFileStream(bool writeMode) => new ConcurrentStream(_data);
 
-        public Stream GetWalFileStream(bool writeMode) => new ConcurrentStream(_wal);
+        public Stream GetLogFileStream(bool writeMode) => new ConcurrentStream(_log);
 
-        public bool IsWalFileExists() => _wal.Length > 0;
+        public bool IsLogFileExists() => _log.Length > 0;
 
-        public void DeleteWalFile()
+        public void DeleteLogFile()
         {
             // stream factory do not delete wal file
         }

@@ -13,12 +13,11 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// </summary>
-    internal class WalFileService : IDisposable
+    internal class LogFileService : IDisposable
     {
         private ConcurrentBag<BinaryReader> _pool = new ConcurrentBag<BinaryReader>();
         private readonly IDiskFactory _factory;
 
-        private readonly long _limitSize;
         private readonly Logger _log;
         private readonly bool _utcDate;
 
@@ -26,26 +25,20 @@ namespace LiteDB.Engine
         private readonly Lazy<BinaryWriter> _writer;
 
         /// <summary>
-        /// Get limit of datafile in bytes (not WAL file size)
-        /// </summary>
-        public long LimitSize => _limitSize;
-
-        /// <summary>
         /// Expose writer stream
         /// </summary>
         public Stream Stream => _stream.Value;
 
-        public WalFileService(IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
+        public LogFileService(IDiskFactory factory, bool utcDate, Logger log)
         {
             _factory = factory;
-            _limitSize = sizeLimit;
             _utcDate = utcDate;
             _log = log;
 
             // initialize lazy stream (and set position at end of file)
             _stream = new Lazy<Stream>(() =>
             {
-                var s = _factory.GetWalFileStream(true);
+                var s = _factory.GetLogFileStream(true);
 
                 s.Seek(0, SeekOrigin.End);
 
@@ -59,7 +52,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get virtual file length (based on writer position)
         /// </summary>
-        public long Length => _factory.IsWalFileExists() ? _stream.Value.Position : 0;
+        public long Length => _factory.IsLogFileExists() ? _stream.Value.Position : 0;
 
         /// <summary>
         /// Read page bytes from disk (use stream pool) - Always return a fresh (never used) page instance.
@@ -67,7 +60,7 @@ namespace LiteDB.Engine
         public BasePage ReadPage(long position)
         {
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(false));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetLogFileStream(false));
 
             try
             {
@@ -91,7 +84,7 @@ namespace LiteDB.Engine
         public IEnumerable<BasePage> ReadPages(bool readContent)
         {
             // try get reader from pool (if not exists, create new stream from factory)
-            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetWalFileStream(false));
+            if (!_pool.TryTake(out var reader)) reader = new BinaryReader(_factory.GetLogFileStream(false));
 
             lock(_stream)
             {
@@ -150,7 +143,7 @@ namespace LiteDB.Engine
         public void Flush() => _stream.Value.FlushToDisk();
 
         /// <summary>
-        /// Clear WAL file content and reset writer position
+        /// Clear log file content and reset writer position
         /// </summary>
         public void Clear()
         {
@@ -197,7 +190,7 @@ namespace LiteDB.Engine
             {
                 _log.Info("deleting wal file because it's empty");
 
-                _factory.DeleteWalFile();
+                _factory.DeleteLogFile();
             }
         }
     }

@@ -126,7 +126,7 @@ namespace LiteDB.Engine
             var dirtyPages = _();
 
             // write all pages, in sequence on wal-file and store references into wal pages on transPages
-            _wal.WalFile.WritePages(dirtyPages, _transPages.DirtyPagesWal);
+            _wal.LogFile.WritePages(dirtyPages, _transPages.DirtyPagesWal);
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
@@ -183,7 +183,7 @@ namespace LiteDB.Engine
                                     };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _wal.WalFile.WritePages(new [] { lastDeletedPage }, null);
+                                    _wal.LogFile.WritePages(new [] { lastDeletedPage }, null);
                                 }
                             }
 
@@ -195,15 +195,15 @@ namespace LiteDB.Engine
                             header.FreeEmptyPageID = newEmptyPageID;
                             header.TransactionID = this.TransactionID;
 
-                            // this header page will be masked as confirmed page in WAL file
+                            // this header page will be masked as confirmed page in log file
                             header.IsConfirmed = true;
                             header.IsDirty = true;
 
-                            // persist header in WAL file
-                            _wal.WalFile.WritePages(new[] { header }, _transPages.DirtyPagesWal);
+                            // persist header in log file
+                            _wal.LogFile.WritePages(new[] { header }, _transPages.DirtyPagesWal);
 
                             // flush wal file (inside _header lock)
-                            _wal.WalFile.Flush();
+                            _wal.LogFile.Flush();
 
                             // and update wal-index (before release _header lock)
                             _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
@@ -216,7 +216,7 @@ namespace LiteDB.Engine
                     else if (_transPages.DirtyPagesWal.Count > 0)
                     {
                         // flush wal file
-                        _wal.WalFile.Flush();
+                        _wal.LogFile.Flush();
 
                         // and update wal-index 
                         _wal.ConfirmTransaction(this.TransactionID, _transPages.DirtyPagesWal.Values);
@@ -285,7 +285,7 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Return added pages when occurs an rollback transaction (run this only in rollback). Create new transactionID and add into
-        /// WAL file all new pages as EmptyPage in a linked order - also, update SharedPage before store
+        /// Log file all new pages as EmptyPage in a linked order - also, update SharedPage before store
         /// </summary>
         public void ReturnNewPages()
         {
@@ -317,7 +317,7 @@ namespace LiteDB.Engine
                 // persist all empty pages into wal-file
                 var pagePositions = new Dictionary<uint, PagePosition>();
 
-                _wal.WalFile.WritePages(pages, pagePositions);
+                _wal.LogFile.WritePages(pages, pagePositions);
 
                 // create copy of header page to send to wal file
                 var header = _header.Clone();
@@ -329,7 +329,7 @@ namespace LiteDB.Engine
                 header.IsDirty = true;
 
                 // write last page (is a header page with confirm checked)
-                _wal.WalFile.WritePages(new[] { header }, pagePositions);
+                _wal.LogFile.WritePages(new[] { header }, pagePositions);
 
                 // now confirm this transaction to wal
                 _wal.ConfirmTransaction(transactionID, pagePositions.Values);

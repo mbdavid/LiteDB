@@ -18,7 +18,7 @@ namespace LiteDB.Engine
             this.RegisterSystemCollection("$indexes", () => this.SysIndexes());
 
             this.RegisterSystemCollection("$dump", () => this.SysDumpData());
-            this.RegisterSystemCollection("$dump_wal", () => this.SysDumpWal());
+            this.RegisterSystemCollection("$dump_log", () => this.SysDumpLog());
 
             this.RegisterSystemCollection("$sequences", () => this.SysSequences());
 

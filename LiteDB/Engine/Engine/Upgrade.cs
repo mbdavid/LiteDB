@@ -9,7 +9,7 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Upgrade datafile from old versions - use same process as Shrink: use new engine with same WAL filename and checkpoint over same datafile
+        /// Upgrade datafile from old versions - use same process as Shrink
         /// </summary>
         private void Upgrade()
         {

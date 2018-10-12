@@ -24,7 +24,7 @@ namespace LiteDB.Engine
                     ["mode"] = write ? "Write" : "Read",
                     ["snapshots"] = transaction.Snapshots.Count(),
                     ["pagesInMemory"] = transaction.Snapshots.Values.Select(x => x.LocalPagesCount).Sum(),
-                    ["pagesInWAL"] = transaction.Pages.DirtyPagesWal.Count,
+                    ["pagesInLogFile"] = transaction.Pages.DirtyPagesWal.Count,
                     ["newPages"] = transaction.Pages.NewPages.Count,
                     ["deletedPages"] = transaction.Pages.DeletedPages,
                     ["newCollections"] = transaction.Pages.NewCollections.Count

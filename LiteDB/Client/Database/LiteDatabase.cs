@@ -48,7 +48,7 @@ namespace LiteDB
 
         /// <summary>
         /// Starts LiteDB database using a generic Stream implementation (mostly MemoryStrem).
-        /// Use another MemoryStrem as WAL file.
+        /// Use another MemoryStrem as LOG file.
         /// </summary>
         public LiteDatabase(Stream stream, BsonMapper mapper = null)
         {
@@ -61,7 +61,7 @@ namespace LiteDB
                 var settings = new EngineSettings
                 {
                     DataStream = stream,
-                    WalStream = new MemoryStream(),
+                    LogStream = new MemoryStream(),
                     CheckpointOnShutdown = true
                 };
 
@@ -276,7 +276,7 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Do datafile WAL checkpoint. Copy all commited transaction in log file into datafile.
+        /// Do database checkpoint. Copy all commited transaction from log file into datafile.
         /// </summary>
         public int Checkpoint()
         {

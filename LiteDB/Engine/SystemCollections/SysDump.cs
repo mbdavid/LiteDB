@@ -24,16 +24,16 @@ namespace LiteDB.Engine
             }
         }
 
-        private IEnumerable<BsonDocument> SysDumpWal()
+        private IEnumerable<BsonDocument> SysDumpLog()
         {
-            var length = _wal.WalFile.Length;
+            var length = _wal.LogFile.Length;
             var position = 0;
             var versions = new Dictionary<ObjectId, int>();
             var collections = _header.Collections.ToDictionary(x => x.Value, x => x.Key);
 
             while (position < length)
             {
-                var page = _wal.WalFile.ReadPage(position);
+                var page = _wal.LogFile.ReadPage(position);
 
                 // add versions into an dict grouping al by transactionID
                 if (!versions.TryGetValue(page.TransactionID, out var version))

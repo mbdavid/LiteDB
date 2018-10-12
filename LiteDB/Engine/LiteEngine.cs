@@ -30,8 +30,7 @@ namespace LiteDB.Engine
 
         // immutable settings
         private readonly IDiskFactory _factory;
-        private readonly bool _utcDate;
-        private readonly bool _checkpointOnShutdown;
+        private readonly EngineSettings _settings;
 
         private bool _shutdown = false;
         private bool _disposed = false;
@@ -69,7 +68,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get if date must be read from Bson as UTC date 
         /// </summary>
-        internal bool UtcDate => _utcDate;
+        internal bool UtcDate => _settings.UtcDate;
 
         #endregion
 
@@ -103,10 +102,8 @@ namespace LiteDB.Engine
                 // create factory based on connection string if there is no factory
                 _log = settings.Log ?? new Logger(settings.LogLevel);
 
-                // copy settings into class variables (turn values in immutable values)
+                _settings = settings;
                 _factory = settings.GetDiskFactory();
-                _utcDate = settings.UtcDate;
-                _checkpointOnShutdown = settings.CheckpointOnShutdown && settings.ReadOnly == false;
 
                 _log.Info($"initializing database '{_factory.Filename}'");
 
@@ -124,9 +121,9 @@ namespace LiteDB.Engine
                 _header = _dataFile.ReadPage(0) as HeaderPage;
 
                 // initialize wal service
-                _wal = new WalService(_locker, _dataFile, factory, settings.LimitSize, settings.UtcDate, _log);
+                _wal = new WalService(_locker, _dataFile, factory, settings.UtcDate, _log);
 
-                // if exists WAL file, restore wal index references (can update full _header instance)
+                // if exists log file, restore wal index references (can update full _header instance)
                 _wal.RestoreIndex(ref _header);
 
                 // register system collections
@@ -151,7 +148,7 @@ namespace LiteDB.Engine
         #endregion
 
         /// <summary>
-        /// Request a WAL checkpoint
+        /// Request a database checkpoint
         /// </summary>
         public int Checkpoint() => _wal.Checkpoint(_header, true);
 
@@ -174,7 +171,7 @@ namespace LiteDB.Engine
                 trans.Shutdown();
             }
 
-            if (_checkpointOnShutdown)
+            if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
             {
                 // do checkpoint (with no-lock check)
                 _wal.Checkpoint(null, false);

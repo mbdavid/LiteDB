@@ -12,7 +12,7 @@ namespace LiteDB.Engine
     {
         private readonly LockService _locker;
         private readonly DataFileService _dataFile;
-        private readonly WalFileService _walFile;
+        private readonly LogFileService _logFile;
         private readonly Logger _log;
 
         private readonly List<ObjectId> _confirmedTransactions = new List<ObjectId>();
@@ -20,17 +20,17 @@ namespace LiteDB.Engine
 
         private int _currentReadVersion = 0;
 
-        public WalFileService WalFile => _walFile;
+        public LogFileService LogFile => _logFile;
         public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
         public List<ObjectId> ConfirmedTransactions => _confirmedTransactions;
 
-        public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
+        public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, bool utcDate, Logger log)
         {
             _locker = locker;
             _dataFile = dataFile;
             _log = log;
 
-            _walFile = new WalFileService(factory, sizeLimit, utcDate, log);
+            _logFile = new LogFileService(factory, utcDate, log);
         }
 
         /// <summary>
@@ -99,9 +99,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Do WAL checkpoint coping confirmed pages from WAL file to datafile.
+        /// Do WAL checkpoint coping confirmed pages from log file to datafile.
         /// This first version works only doing full checkpoint with reserved lock
-        /// Return how many pages was copied from WAL file to data file
+        /// Return how many pages was copied from log file to data file
         /// </summary>
         public int Checkpoint(HeaderPage header, bool lockReserved)
         {
@@ -117,8 +117,8 @@ namespace LiteDB.Engine
 
             try
             {
-                // if wal already clean (or not exists)
-                if (_walFile.Length == 0) return 0;
+                // if log already clean (or not exists)
+                if (_logFile.Length == 0) return 0;
 
                 _log.Info("checkpoint");
 
@@ -128,8 +128,8 @@ namespace LiteDB.Engine
 
                 var sortedConfirmTransactions = new HashSet<ObjectId>(_confirmedTransactions);
 
-                // get all pages inside WAL file and contains valid confirmed pages
-                var pages = _walFile.ReadPages(true)
+                // get all pages inside log file and contains valid confirmed pages
+                var pages = _logFile.ReadPages(true)
                     .Where(x => sortedConfirmTransactions.Contains(x.TransactionID))
                     .ForEach((i, x) =>
                     {
@@ -166,7 +166,7 @@ namespace LiteDB.Engine
                 }
 
                 // now, all wal pages are saved in data disk - can clear walfile
-                _walFile.Clear();
+                _logFile.Clear();
 
                 // clear indexes/confirmed transactions
                 _index.Clear();
@@ -185,19 +185,19 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Load all confirmed transactions from WAL file (used only when open datafile)
+        /// Load all confirmed transactions from log file (used only when open datafile)
         /// Don't need lock because it's called on ctor of LiteEngine
         /// </summary>
         public void RestoreIndex(ref HeaderPage header)
         {
-            if (_walFile.Length == 0) return;
+            if (_logFile.Length == 0) return;
 
             // get all page positions
             var positions = new Dictionary<ObjectId, List<PagePosition>>();
             var current = 0L;
 
             // read all pages to get confirmed transactions (do not read page content, only page header)
-            foreach(var page in _walFile.ReadPages(false))
+            foreach(var page in _logFile.ReadPages(false))
             {
                 var position = new PagePosition(page.PageID, current);
 
@@ -217,7 +217,7 @@ namespace LiteDB.Engine
                     if (page.PageType == PageType.Header)
                     {
                         // if confirmed page is header need realod full page from WAL (current page contains only header data)
-                        header = _walFile.ReadPage(current) as HeaderPage;
+                        header = _logFile.ReadPage(current) as HeaderPage;
                         header.TransactionID = ObjectId.Empty;
                         header.IsConfirmed = false;
                     }
@@ -229,7 +229,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _walFile.Dispose();
+            _logFile.Dispose();
         }
     }
 }

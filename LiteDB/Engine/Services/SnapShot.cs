@@ -201,7 +201,7 @@ namespace LiteDB.Engine
             // if not inside local pages, can be a dirty page already saved in wal file
             if (_transPages.DirtyPagesWal.TryGetValue(pageID, out var position))
             {
-                var dirty = (T)_wal.WalFile.ReadPage(position.Position);
+                var dirty = (T)_wal.LogFile.ReadPage(position.Position);
 
                 // do not store ExtendPage when snapshot are read only
                 if (dirty.PageType != PageType.Extend || _mode == LockMode.Write)
@@ -223,7 +223,7 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var walpage = (T)_wal.WalFile.ReadPage(pos);
+                var walpage = (T)_wal.LogFile.ReadPage(pos);
 
                 // mark page as unconfirmed (at this point can be confirmed in wal disk)
                 walpage.IsConfirmed = false;

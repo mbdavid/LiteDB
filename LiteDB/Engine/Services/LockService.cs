@@ -22,11 +22,6 @@ namespace LiteDB.Engine
         private ConcurrentDictionary<string, ReaderWriterLockSlim> _collections = new ConcurrentDictionary<string, ReaderWriterLockSlim>(StringComparer.OrdinalIgnoreCase);
         private ReaderWriterLockSlim _reserved = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
-        /// <summary>
-        /// Get lock timeout
-        /// </summary>
-        public TimeSpan Timeout => _timeout;
-
         internal LockService(TimeSpan timeout, bool @readonly, Logger log)
         {
             _timeout = timeout;

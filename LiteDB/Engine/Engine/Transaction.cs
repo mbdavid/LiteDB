@@ -53,7 +53,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Persist all dirty pages into WAL file using async task. 
+        /// Persist all dirty pages into LOG file
         /// </summary>
         public bool Commit()
         {

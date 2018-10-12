@@ -21,9 +21,9 @@ namespace LiteDB.Engine
         public Stream DataStream { get; set; } = null;
 
         /// <summary>
-        /// Get/Set custom stream to be used as walfile. If is null, use a new TempStream (for TempStrem datafile) or MemoryStrema (for MemoryStream datafile)
+        /// Get/Set custom stream to be used as log file. If is null, use a new TempStream (for TempStrem datafile) or MemoryStrema (for MemoryStream datafile)
         /// </summary>
-        public Stream WalStream { get; set; } = null;
+        public Stream LogStream { get; set; } = null;
 
         /// <summary>
         /// Get/Set custom instance for Logger
@@ -91,7 +91,7 @@ namespace LiteDB.Engine
             {
                 if (this.DataStream == null) throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
 
-                return new StreamDiskFactory(this.DataStream, this.WalStream ?? new TempStream());
+                return new StreamDiskFactory(this.DataStream, this.LogStream ?? new TempStream());
             }
         }
     }

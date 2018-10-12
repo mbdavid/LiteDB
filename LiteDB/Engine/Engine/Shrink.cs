@@ -28,8 +28,8 @@ namespace LiteDB.Engine
             // shrink can only run with no transaction
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Shrink", TransactionState.Active);
 
-            // shrink works with a temp engine that will use same wal file
-            // after copy all data from current datafile to temp datafile (all data will be in WAL)
+            // shrink works with a temp engine that will use same log file
+            // after copy all data from current datafile to temp datafile (all data will be in log)
             // run checkpoint in current database
 
             _locker.EnterReserved(true);
@@ -42,11 +42,11 @@ namespace LiteDB.Engine
                 var s = new EngineSettings
                 {
                     DataStream = new MemoryStream(),
-                    WalStream = _wal.WalFile.Stream,
+                    LogStream = _wal.LogFile.Stream,
                     CheckpointOnShutdown = false
                 };
 
-                DEBUG(s.WalStream.Length > 0, "WAL must be an empty stream here");
+                DEBUG(s.LogStream.Length > 0, "LOG file must be an empty stream here");
 
                 // temp datafile
                 using (var temp = new LiteEngine(s))
@@ -88,7 +88,7 @@ namespace LiteDB.Engine
                             temp._header.TransactionID = transaction.TransactionID;
                             temp._header.IsConfirmed = true;
                             temp._header.IsDirty = true;
-                            temp._wal.WalFile.WritePages(new[] { temp._header }, null);
+                            temp._wal.LogFile.WritePages(new[] { temp._header }, null);
 
                             temp._wal.ConfirmTransaction(transaction.TransactionID, new PagePosition[0]);
                         }
@@ -107,7 +107,7 @@ namespace LiteDB.Engine
                     }
                 }
 
-                // this checkpoint will use WAL file from temp database and will override all datafile pages
+                // this checkpoint will use log file from temp database and will override all datafile pages
                 _wal.Checkpoint(_header, false);
 
                 // must reload header page because current _header has complete different pageIDs for collections

@@ -22,19 +22,19 @@ namespace LiteDB.Engine
         Stream GetDataFileStream(bool writeMode);
 
         /// <summary>
-        /// Get new WAL file stream instance
+        /// Get new log file stream instance
         /// </summary>
-        Stream GetWalFileStream(bool writeMode);
+        Stream GetLogFileStream(bool writeMode);
 
         /// <summary>
-        /// Return if wal file exist
+        /// Return if log file exist
         /// </summary>
-        bool IsWalFileExists();
+        bool IsLogFileExists();
 
         /// <summary>
-        /// Delete physical wal file
+        /// Delete physical log file
         /// </summary>
-        void DeleteWalFile();
+        void DeleteLogFile();
 
         /// <summary>
         /// Indicate that factory must be dispose on finish

@@ -13,9 +13,11 @@ namespace LiteDB.Engine
             var doc = new BsonDocument();
 
             doc["filename"] = _factory.Filename;
-            doc["limitSize"] = _wal.WalFile.LimitSize;
-            doc["timeout"] = _locker.Timeout.ToString();
-            doc["utcDate"] = _utcDate;
+            doc["limitSize"] = (int)_settings.LimitSize;
+            doc["timeout"] = _settings.Timeout.TotalSeconds;
+            doc["utcDate"] = _settings.UtcDate;
+            doc["readOnly"] = _settings.ReadOnly;
+            doc["checkpointOnShutdown"] = _settings.CheckpointOnShutdown;
 
             doc["lastPageID"] = (int)_header.LastPageID;
             doc["freeEmptyPageID"] = (int)_header.FreeEmptyPageID;
@@ -23,14 +25,8 @@ namespace LiteDB.Engine
             doc["creationTime"] = _header.CreationTime;
             doc["lastCheckpoint"] = _header.LastCheckpoint;
 
-            doc["fileSize"] = _dataFile.Length;
-            doc["filePageCount"] = _dataFile.Length / PAGE_SIZE;
-
-            doc["walFileSize"] = _wal.WalFile.Length;
-            doc["walFilePageCount"] = _wal.WalFile.Length / PAGE_SIZE;
-            doc["walTransactionsCount"] = _wal.ConfirmedTransactions.Count;
-
-            doc["currentReadVersion"] = _wal.CurrentReadVersion;
+            doc["dataFileSize"] = (int)_dataFile.Length;
+            doc["logFileSize"] = (int)_wal.LogFile.Length;
 
             doc["userVersion"] = _header.UserVersion;
 

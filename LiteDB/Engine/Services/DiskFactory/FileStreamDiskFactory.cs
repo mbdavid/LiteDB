@@ -13,14 +13,14 @@ namespace LiteDB.Engine
     internal class FileStreamDiskFactory : IDiskFactory
     {
         private readonly string _dataFilename;
-        private readonly string _walFilename;
+        private readonly string _logFilename;
         private readonly Lazy<string> _tempFilename;
         private readonly bool _readonly;
 
         public FileStreamDiskFactory(string filename, bool @readonly)
         {
             _dataFilename = filename;
-            _walFilename = FileHelper.GetTempFile(filename, "-wal", false);
+            _logFilename = FileHelper.GetTempFile(filename, "-log", false);
             _tempFilename = new Lazy<string>(() => FileHelper.GetTempFile(filename, "-temp", true));
             _readonly = @readonly;
         }
@@ -41,9 +41,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetWalFileStream(bool writeMode)
+        public Stream GetLogFileStream(bool writeMode)
         {
-            return this.GetInternalStream(_walFilename, writeMode, FileOptions.SequentialScan);
+            return this.GetInternalStream(_logFilename, writeMode, FileOptions.SequentialScan);
         }
 
         private Stream GetInternalStream(string filename, bool writeMode, FileOptions options)
@@ -61,17 +61,17 @@ namespace LiteDB.Engine
         /// <summary>
         /// Check if wal file exists
         /// </summary>
-        public bool IsWalFileExists()
+        public bool IsLogFileExists()
         {
-            return File.Exists(_walFilename);
+            return File.Exists(_logFilename);
         }
 
         /// <summary>
         /// Delete wal file
         /// </summary>
-        public void DeleteWalFile()
+        public void DeleteLogFile()
         {
-            File.Delete(_walFilename);
+            File.Delete(_logFilename);
         }
 
         /// <summary>

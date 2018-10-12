@@ -53,7 +53,7 @@ namespace LiteDB.Engine
 
                 var positions = new Dictionary<uint, PagePosition>();
 
-                _wal.WalFile.WritePages(new[] { header }, positions);
+                _wal.LogFile.WritePages(new[] { header }, positions);
 
                 // create fake transaction with no pages to update (only confirm page)
                 _wal.ConfirmTransaction(header.TransactionID, positions.Values);
