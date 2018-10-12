@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB
 {
@@ -9,22 +11,37 @@ namespace LiteDB
     {
         private readonly EngineSettings _settings;
         private LiteEngine _engine = null;
+        private int _counter = 0;
 
         public SharedEngine(EngineSettings settings)
         {
             _settings = settings;
         }
 
-        private void OpenShared()
+        #region Open/Close Engine
+
+        internal void OpenShared()
         {
-            _engine = new LiteEngine(_settings);
+            if (Interlocked.Increment(ref _counter) == 1)
+            {
+                DEBUG(_engine != null, "engine here must be null");
+
+                _engine = new LiteEngine(_settings);
+            }
         }
 
         internal void CloseShared()
         {
-            _engine.Dispose();
-            _engine = null;
+            if (Interlocked.Decrement(ref _counter) == 0)
+            {
+                _engine.Dispose();
+                _engine = null;
+            }
         }
+
+        #endregion
+
+        #region Analyze/Checkpoint/Shrink/Vaccum
 
         public int Analyze(string[] collections)
         {
@@ -40,38 +57,70 @@ namespace LiteDB
             }
         }
 
-        public bool BeginTrans()
+        public int Checkpoint()
         {
             this.OpenShared();
 
             try
             {
-                return _engine.BeginTrans();
+                return _engine.Checkpoint();
             }
-            catch
+            finally
             {
                 this.CloseShared();
-                throw;
             }
+        }
+
+        public long Shrink()
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.Shrink();
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public int Vaccum()
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.Vaccum();
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        #endregion
+
+        #region Begin/Commit/Rollback
+
+        public bool BeginTrans()
+        {
+            throw new NotSupportedException();
         }
 
         public bool Commit()
         {
-            if (_engine == null) return false;
-
-            var result = _engine.Commit();
-
-            this.CloseShared();
-
-            return result;
+            throw new NotSupportedException();
         }
 
         public bool Rollback()
         {
-            if (_engine == null) return false;
-
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
+
+        #endregion
+
+        #region Query
 
         public IBsonDataReader Query(string collection, QueryDefinition query)
         {
@@ -82,84 +131,192 @@ namespace LiteDB
             return new SharedBsonDataReader(reader, this);
         }
 
-        public int Checkpoint()
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
 
-        public int Delete(string collection, IEnumerable<BsonValue> ids)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int DeleteMany(string collection, BsonExpression predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            this.CloseShared();
-        }
-
-        public bool DropCollection(string collection)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DropIndex(string collection, string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
-        {
-            throw new NotImplementedException();
-        }
-
-        public BsonValue DbParam(string parameterName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DbParam(string parameterName, BsonValue value)
-        {
-            throw new NotImplementedException();
-        }
+        #region Insert/Update/Delete
 
         public int Insert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
-            throw new NotImplementedException();
-        }
+            this.OpenShared();
 
-        public bool RenameCollection(string collection, string newName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long Shrink()
-        {
-            throw new NotImplementedException();
+            try
+            {
+                return _engine.Insert(collection, docs, autoId);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
         }
 
         public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
-            throw new NotImplementedException();
+            this.OpenShared();
+
+            try
+            {
+                return _engine.Update(collection, docs);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
         }
 
         public int UpdateMany(string collection, BsonExpression extend, BsonExpression predicate)
         {
-            throw new NotImplementedException();
+            this.OpenShared();
+
+            try
+            {
+                return _engine.UpdateMany(collection, extend, predicate);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
         }
 
         public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
-            throw new NotImplementedException();
+            this.OpenShared();
+
+            try
+            {
+                return _engine.Upsert(collection, docs, autoId);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
         }
 
-        public int Vaccum()
+        public int Delete(string collection, IEnumerable<BsonValue> ids)
         {
-            throw new NotImplementedException();
+            this.OpenShared();
+
+            try
+            {
+                return _engine.Delete(collection, ids);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public int DeleteMany(string collection, BsonExpression predicate)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DeleteMany(collection, predicate);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        #endregion
+
+        #region EnsureIndex/DropIndex/Drop/Rename
+
+        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.EnsureIndex(collection, name, expression, unique);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool DropIndex(string collection, string name)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DropIndex(collection, name);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool DropCollection(string collection)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DropCollection(collection);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool RenameCollection(string collection, string newName)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.RenameCollection(collection, newName);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        #endregion
+
+        #region DbParam
+
+        public BsonValue DbParam(string parameterName)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DbParam(parameterName);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool DbParam(string parameterName, BsonValue value)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DbParam(parameterName, value);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            _engine?.Dispose();
+            _engine = null;
         }
     }
 }

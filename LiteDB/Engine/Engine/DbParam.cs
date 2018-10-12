@@ -51,10 +51,12 @@ namespace LiteDB.Engine
                 header.IsConfirmed = true;
                 header.IsDirty = true;
 
-                _wal.WalFile.WritePages(new[] { header }, null);
+                var positions = new Dictionary<uint, PagePosition>();
+
+                _wal.WalFile.WritePages(new[] { header }, positions);
 
                 // create fake transaction with no pages to update (only confirm page)
-                _wal.ConfirmTransaction(header.TransactionID, new PagePosition[0]);
+                _wal.ConfirmTransaction(header.TransactionID, positions.Values);
 
                 // update header instance
                 _header.UserVersion = value;

@@ -15,14 +15,14 @@ namespace LiteDB.Engine
         private readonly WalFileService _walFile;
         private readonly Logger _log;
 
-        private readonly HashSet<ObjectId> _confirmedTransactions = new HashSet<ObjectId>();
+        private readonly List<ObjectId> _confirmedTransactions = new List<ObjectId>();
         private readonly ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
         public WalFileService WalFile => _walFile;
         public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
-        public HashSet<ObjectId> ConfirmedTransactions => _confirmedTransactions;
+        public List<ObjectId> ConfirmedTransactions => _confirmedTransactions;
 
         public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, long sizeLimit, bool utcDate, Logger log)
         {
@@ -126,9 +126,11 @@ namespace LiteDB.Engine
 
                 HeaderPage last = null;
 
+                var sortedConfirmTransactions = new HashSet<ObjectId>(_confirmedTransactions);
+
                 // get all pages inside WAL file and contains valid confirmed pages
                 var pages = _walFile.ReadPages(true)
-                    .Where(x => _confirmedTransactions.Contains(x.TransactionID))
+                    .Where(x => sortedConfirmTransactions.Contains(x.TransactionID))
                     .ForEach((i, x) =>
                     {
                         count++;
@@ -186,7 +188,7 @@ namespace LiteDB.Engine
         /// Load all confirmed transactions from WAL file (used only when open datafile)
         /// Don't need lock because it's called on ctor of LiteEngine
         /// </summary>
-        public void RestoreWalIndex(ref HeaderPage header)
+        public void RestoreIndex(ref HeaderPage header)
         {
             if (_walFile.Length == 0) return;
 

@@ -28,6 +28,7 @@ namespace LiteDB.Engine
 
             using (var stream = _factory.GetDataFileStream(false))
             {
+                // there is only v7 upgrade version
                 var reader = new FileReaderV7(stream);
 
                 // upgrade is same operation than Shrink, but use custom file reader

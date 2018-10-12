@@ -22,8 +22,9 @@ namespace LiteDB.Engine
                     ["transactionState"] = transaction.State.ToString(),
                     ["startTime"] = transaction.TransactionID.CreationTime,
                     ["mode"] = write ? "Write" : "Read",
-                    ["memoryTransactionSize"] = transaction.Pages.TransactionSize,
-                    ["walIndexSize"] = transaction.Pages.DirtyPagesWal.Count,
+                    ["snapshots"] = transaction.Snapshots.Count(),
+                    ["pagesInMemory"] = transaction.Snapshots.Values.Select(x => x.LocalPagesCount).Sum(),
+                    ["pagesInWAL"] = transaction.Pages.DirtyPagesWal.Count,
                     ["newPages"] = transaction.Pages.NewPages.Count,
                     ["deletedPages"] = transaction.Pages.DeletedPages,
                     ["newCollections"] = transaction.Pages.NewCollections.Count

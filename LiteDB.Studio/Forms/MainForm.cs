@@ -38,7 +38,7 @@ namespace LiteDB.Studio
 
             if (!string.IsNullOrWhiteSpace(filename))
             {
-                this.Connect(new ConnectionString { Filename = filename });
+                this.Connect(new ConnectionString(filename));
             }
 
             txtSql.ActiveTextAreaControl.TextArea.Caret.PositionChanged += (s, e) =>

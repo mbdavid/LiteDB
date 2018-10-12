@@ -127,7 +127,7 @@ namespace LiteDB.Engine
                 _wal = new WalService(_locker, _dataFile, factory, settings.LimitSize, settings.UtcDate, _log);
 
                 // if exists WAL file, restore wal index references (can update full _header instance)
-                _wal.RestoreWalIndex(ref _header);
+                _wal.RestoreIndex(ref _header);
 
                 // register system collections
                 this.InitializeSystemCollections();

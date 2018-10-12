@@ -200,7 +200,7 @@ namespace LiteDB.Engine
                             header.IsDirty = true;
 
                             // persist header in WAL file
-                            _wal.WalFile.WritePages(new[] { header }, null);
+                            _wal.WalFile.WritePages(new[] { header }, _transPages.DirtyPagesWal);
 
                             // flush wal file (inside _header lock)
                             _wal.WalFile.Flush();
@@ -329,7 +329,7 @@ namespace LiteDB.Engine
                 header.IsDirty = true;
 
                 // write last page (is a header page with confirm checked)
-                _wal.WalFile.WritePages(new[] { header }, null);
+                _wal.WalFile.WritePages(new[] { header }, pagePositions);
 
                 // now confirm this transaction to wal
                 _wal.ConfirmTransaction(transactionID, pagePositions.Values);
