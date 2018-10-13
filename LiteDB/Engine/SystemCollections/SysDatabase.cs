@@ -12,7 +12,7 @@ namespace LiteDB.Engine
         {
             var doc = new BsonDocument();
 
-            doc["filename"] = _factory.Filename;
+            doc["filename"] = _factory.Filename;    
             doc["limitSize"] = (int)_settings.LimitSize;
             doc["timeout"] = _settings.Timeout.TotalSeconds;
             doc["utcDate"] = _settings.UtcDate;
