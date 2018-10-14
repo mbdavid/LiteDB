@@ -70,8 +70,9 @@ namespace ICSharpCode.TextEditor.Gui.CompletionWindow
 			codeCompletionListView.DoubleClick += new EventHandler(CodeCompletionListViewDoubleClick);
 			codeCompletionListView.Click  += new EventHandler(CodeCompletionListViewClick);
 			Controls.Add(codeCompletionListView);
-			
-			if (completionData.Length > MaxListLength) {
+
+            if (completionData.Length > MaxListLength) {
+                vScrollBar.Name = "scroll";
 				vScrollBar.Dock = DockStyle.Right;
 				vScrollBar.Minimum = 0;
 				vScrollBar.Maximum = completionData.Length - 1;
