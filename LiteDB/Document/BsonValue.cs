@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 
 namespace LiteDB
@@ -634,7 +633,10 @@ namespace LiteDB
                 case BsonType.Int64: return ((Int64)this.RawValue).CompareTo((Int64)other.RawValue);
                 case BsonType.Double: return ((Double)this.RawValue).CompareTo((Double)other.RawValue);
                 case BsonType.Decimal: return ((Decimal)this.RawValue).CompareTo((Decimal)other.RawValue);
+                    
                 case BsonType.String: return string.Compare((String)this.RawValue, (String)other.RawValue, StringComparison.InvariantCulture);
+
+
                 case BsonType.Document: return this.AsDocument.CompareTo(other);
                 case BsonType.Array: return this.AsArray.CompareTo(other);
 
