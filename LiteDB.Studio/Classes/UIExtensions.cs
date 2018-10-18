@@ -20,7 +20,8 @@ namespace LiteDB.Studio
     {
         public static void BindBsonData(this DataGridView grd, TaskData data)
         {
-            grd.Visible = false;
+            // hide grid if has more than 100 rows
+            grd.Visible = data.Result.Count < 100;
             grd.Clear();
 
             foreach (var value in data.Result)

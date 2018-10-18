@@ -156,7 +156,7 @@ namespace LiteDB.Studio
             if (this.ActiveTask.Running == false)
             {
                 this.ActiveTask.Sql = sql;
-                this.ActiveTask.Thread.Interrupt();
+                this.ActiveTask.WaitHandle.Set();
             }
         }
 
@@ -201,15 +201,13 @@ namespace LiteDB.Studio
         {
             while(_running)
             {
-                try
-                {
-                    Thread.Sleep(Timeout.Infinite);
-                }
-                catch (ThreadInterruptedException)
-                {
-                }
+                task.WaitHandle.WaitOne();
 
-                if (task.Sql.Trim() == "") continue;
+                if (task.Sql.Trim() == "")
+                {
+                    task.WaitHandle.Reset();
+                    continue;
+                }
 
                 var sw = new Stopwatch();
                 sw.Start();
@@ -271,6 +269,9 @@ namespace LiteDB.Studio
 
                     }), task);
                 }
+
+                // put thread in wait mode
+                task.WaitHandle.Reset();
             }
         }
 
