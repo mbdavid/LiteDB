@@ -44,6 +44,19 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Clone source buffer to another new array segment. Use Rent() method to get new segment (must use "Return")
+        /// </summary>
+        public ArraySegment<byte> Clone(ArraySegment<byte> source)
+        {
+            var dest = this.Rent();
+
+            // copy array bytes from source to dest using original array
+            Buffer.BlockCopy(source.Array, source.Offset, dest.Array, dest.Offset, PAGE_SIZE);
+
+            return dest;
+        }
+
+        /// <summary>
         /// Create new linar buffer (byte[]) in heap and get slices using ArraySegment. Each array segment contains one PAGE_SIZE
         /// </summary>
         private void Extend()
