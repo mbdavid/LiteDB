@@ -16,17 +16,11 @@ namespace LiteDB.Engine
     /// Represent page buffer to be read/write using FileMemory
     /// ThreadSafe (single instance can be shared across threads for read-only)
     /// </summary>
-    public struct PageBuffer : IDisposable
+    internal struct PageBuffer
     {
         public long Posistion;
-        public int ReadCounter;
-        public bool IsDirty;
+        public int ShareCounter;
 
-        ArraySegment<byte> Buffer;
-
-        public void Dispose()
-        {
-            Interlocked.Decrement(ref ReadCounter);
-        }
+        public ArraySegment<byte> Buffer;
     }
 }

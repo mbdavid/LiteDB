@@ -15,7 +15,7 @@ namespace LiteDB.Engine
     /// Manage linear memory segments to avoid re-create array buffer in heap memory
     /// ThreadSafe
     /// </summary>
-    public class MemoryStore
+    internal class MemoryStore
     {
         private ConcurrentBag<ArraySegment<byte>> _store = new ConcurrentBag<ArraySegment<byte>>();
 
@@ -24,17 +24,22 @@ namespace LiteDB.Engine
             this.Extend();
         }
 
-        public ArraySegment<byte> Rent()
+        public ArraySegment<byte> Rent(bool clear)
         {
             if (_store.TryTake(out var result))
             {
+                if (clear)
+                {
+                    Array.Clear(result.Array, result.Offset, PAGE_SIZE);
+                }
+
                 return result;
             }
             else
             {
                 this.Extend();
 
-                return this.Rent();
+                return this.Rent(clear);
             }
         }
 
@@ -45,10 +50,11 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Clone source buffer to another new array segment. Use Rent() method to get new segment (must use "Return")
+        /// This solution are faster than re-read data from disk
         /// </summary>
         public ArraySegment<byte> Clone(ArraySegment<byte> source)
         {
-            var dest = this.Rent();
+            var dest = this.Rent(false);
 
             // copy array bytes from source to dest using original array
             Buffer.BlockCopy(source.Array, source.Offset, dest.Array, dest.Offset, PAGE_SIZE);
