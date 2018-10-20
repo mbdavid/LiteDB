@@ -88,6 +88,11 @@ namespace LiteDB
         public const int MAX_TRANSACTION_SIZE = 1000;
 
         /// <summary>
+        /// Size, in PAGES, for each segment (used in MemoryStore)
+        /// </summary>
+        public const int MEMORY_SEGMENT_SIZE = 100;
+
+        /// <summary>
         /// This variable are used to identify that current datafile are v7 version and must be upgrade
         /// v7 has small page header so is not possible check using FILE_VERSION position
         /// </summary>
