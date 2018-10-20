@@ -16,14 +16,15 @@ namespace LiteDB.Demo
         static void Main(string[] args)
         {
             var sw = new Stopwatch();
+            var index = 0;
 
             sw.Start();
 
-            using (var db = new LiteDatabase("c:/temp/app.db"))
+            using (var db = new LiteDatabase("d:/1milion.db"))
             {
-                var r = db.Execute("SELECT { city, t: COUNT(_id) } FROM zip GROUP BY city");
+                var r = db.Execute("SELECT $ FROM datagen --GROUP BY city");
 
-                while(r.Read())
+                while(r.Read() && ++index < 100000)
                 {
                     var rr = r.Current;
                 }
