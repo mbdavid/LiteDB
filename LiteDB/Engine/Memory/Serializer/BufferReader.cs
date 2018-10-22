@@ -24,12 +24,19 @@ namespace LiteDB.Engine
         private int _currentPosition = 0; // position in _current
         private int _position = 0; // global position
 
-        private byte[] _tempBuffer = new byte[256]; // re-usable array
+        private bool _isEOF = false;
+
+        private byte[] _tempBuffer = new byte[16]; // re-usable array
 
         /// <summary>
         /// Current global cursor position
         /// </summary>
         public int Position => _position;
+
+        /// <summary>
+        /// Indicate position are at end of last source array segment
+        /// </summary>
+        public bool IsEOF => _isEOF;
 
         public BufferReader(IEnumerable<ArraySegment<byte>> source)
         {
@@ -37,6 +44,42 @@ namespace LiteDB.Engine
 
             _source.MoveNext();
             _current = _source.Current;
+        }
+
+        #region Basic Read
+
+        /// <summary>
+        /// Move fordward in current segment. If array segment finish, open next segment
+        /// Returns true if move to another segment - returns false if continue in same segment
+        /// </summary>
+        private bool MoveFordward(int count)
+        {
+            // do not move fordward if source finish
+            if (_isEOF) return false;
+
+            //DEBUG
+            if (_currentPosition + count > _current.Count) throw new InvalidOperationException("fordward are only for current segment");
+
+            _currentPosition += count;
+            _position += count;
+
+            // request new source array if _current all consumed
+            if (_currentPosition == _current.Count)
+            {
+                if (_source.MoveNext() == false)
+                {
+                    _isEOF = true;
+                }
+                else
+                {
+                    _current = _source.Current;
+                    _currentPosition = 0;
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -63,17 +106,11 @@ namespace LiteDB.Engine
                 }
 
                 bufferPosition += bytesToCopy;
-                _currentPosition += bytesToCopy;
-                _position += bytesToCopy;
 
-                // request new source array if _current all consumed
-                if (_currentPosition == _current.Count)
-                {
-                    if (_source.MoveNext() == false) break;
+                // move position in current segment (and go to next segment if finish)
+                this.MoveFordward(bytesToCopy);
 
-                    _current = _source.Current;
-                    _currentPosition = 0;
-                }
+                if (_isEOF == false) break;
             }
 
             return bufferPosition;
@@ -83,6 +120,10 @@ namespace LiteDB.Engine
         /// Skip bytes (same as Read but with no array copy)
         /// </summary>
         public int Skip(int count) => this.Read(null, 0, count);
+
+        #endregion
+
+        #region Read String
 
         /// <summary>
         /// Read string with fixed length
@@ -96,28 +137,18 @@ namespace LiteDB.Engine
             {
                 value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
 
-                _currentPosition += count;
-                _position += count;
+                this.MoveFordward(count);
             }
             else
             {
-                // try use local temp buffer - if not fit, use ArrayPool shared buffer
-                if (count < _tempBuffer.Length)
-                {
-                    this.Read(_tempBuffer, 0, count);
+                // rent a buffer to be re-usable
+                var buffer = ArrayPool<byte>.Shared.Rent(count);
 
-                    value = Encoding.UTF8.GetString(_tempBuffer, 0, count);
-                }
-                else
-                {
-                    var buffer = ArrayPool<byte>.Shared.Rent(count);
+                this.Read(buffer, 0, count);
 
-                    this.Read(buffer, 0, count);
+                value = Encoding.UTF8.GetString(buffer, 0, count);
 
-                    value = Encoding.UTF8.GetString(buffer, 0, count);
-
-                    ArrayPool<byte>.Shared.Return(buffer);
-                }
+                ArrayPool<byte>.Shared.Return(buffer);
             }
 
             return value;
@@ -141,32 +172,29 @@ namespace LiteDB.Engine
 
                     mem.Write(_current.Array, _current.Offset + _currentPosition, initialCount);
 
-                    byte c;
+                    this.MoveFordward(initialCount);
 
                     // and go to next segment
-                    if (_source.MoveNext())
+                    if (!_isEOF)
                     {
-                        _current = _source.Current;
-                        _currentPosition = 0;
-
-                        while ((c = _current[_currentPosition]) != 0x00)
+                        while (_current[_currentPosition] != 0x00)
                         {
-                            mem.WriteByte(c);
-
-                            _currentPosition += 1;
-                            _position += 1;
-
-                            if (_currentPosition == _current.Count)
+                            if (this.MoveFordward(1))
                             {
-                                if (_source.MoveNext() == false) break;
-
-                                _current = _source.Current;
-                                _currentPosition = 0;
+                                // write all segment into strem (did not found \0 yet)
+                                mem.Write(_current.Array, _current.Offset, _current.Count);
                             }
+
+                            if (_isEOF) break;
                         }
 
-                        _currentPosition += 1; // \0
-                        _position += 1;
+                        // add last segment (if eof already added in while)
+                        if (!_isEOF)
+                        {
+                            mem.Write(_current.Array, _current.Offset, _currentPosition);
+                        }
+
+                        this.MoveFordward(1); // +1 to '\0'
                     }
 
                     return Encoding.UTF8.GetString(mem.ToArray());
@@ -188,8 +216,7 @@ namespace LiteDB.Engine
                 {
                     value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
 
-                    _currentPosition += count + 1; // + 1 means '\0'
-                    _position += count + 1; // + 1 means '\0'
+                    this.MoveFordward(count + 1); // +1 means '\0'
 
                     return true;
                 }
@@ -205,6 +232,9 @@ namespace LiteDB.Engine
             return false;
         }
 
+        #endregion
+
+        #region Read Numbers
 
         /// <summary>
         /// Read next 4 bytes as Int32
@@ -218,8 +248,7 @@ namespace LiteDB.Engine
             {
                 value = BitConverter.ToInt32(_current.Array, _current.Offset + _currentPosition);
 
-                _currentPosition += 4;
-                _position += 4;
+                this.MoveFordward(4);
             }
             else
             {
@@ -231,6 +260,8 @@ namespace LiteDB.Engine
 
             return value;
         }
+
+        #endregion
 
         public void Dispose()
         {

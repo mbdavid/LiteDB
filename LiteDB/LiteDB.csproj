@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
     <FileVersion>5.0.0</FileVersion>
@@ -51,15 +51,23 @@
     <DefineConstants>NETSTANDARD20;HAVE_TYPE_INFO;HAVE_TASK_DELAY;</DefineConstants>
   </PropertyGroup>
 
+  <!-- Begin References -->
+
+  <ItemGroup>
+    <PackageReference Include="System.Buffers" Version="4.5.0" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
+  
+  <!-- End References -->
 
   <ItemGroup>
     <Compile Remove="Client\Repository\**" />
