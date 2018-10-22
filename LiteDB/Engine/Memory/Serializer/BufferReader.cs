@@ -87,7 +87,6 @@ namespace LiteDB.Engine
         /// </summary>
         public int Read(byte[] buffer, int offset, int count)
         {
-            var length = _current.Count;
             var bufferPosition = 0;
 
             while (bufferPosition < count)
@@ -110,7 +109,7 @@ namespace LiteDB.Engine
                 // move position in current segment (and go to next segment if finish)
                 this.MoveFordward(bytesToCopy);
 
-                if (_isEOF == false) break;
+                if (_isEOF) break;
             }
 
             return bufferPosition;

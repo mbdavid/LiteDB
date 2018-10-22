@@ -24,9 +24,19 @@ namespace LiteDB.Engine
         private int _currentPosition = 0; // position in _current
         private int _position = 0; // global position
 
-        private byte[] _tempBuffer = new byte[256]; // re-usable array
+        private bool _isEOF = false;
 
+        private byte[] _tempBuffer = new byte[16]; // re-usable array
+
+        /// <summary>
+        /// Current global cursor position
+        /// </summary>
         public int Position => _position;
+
+        /// <summary>
+        /// Indicate position are at end of last source array segment
+        /// </summary>
+        public bool IsEOF => _isEOF;
 
         public BufferWriter(IEnumerable<ArraySegment<byte>> source)
         {
@@ -36,14 +46,48 @@ namespace LiteDB.Engine
             _current = _source.Current;
         }
 
+        #region Basic Write
+
+
         /// <summary>
-        /// Read bytes from source and copy into buffer. Return how many bytes was read
+        /// Move fordward in current segment. If array segment finish, open next segment
+        /// Returns true if move to another segment - returns false if continue in same segment
+        /// </summary>
+        private bool MoveFordward(int count)
+        {
+            // do not move fordward if source finish
+            if (_isEOF) return false;
+
+            //DEBUG
+            if (_currentPosition + count > _current.Count) throw new InvalidOperationException("fordward are only for current segment");
+
+            _currentPosition += count;
+            _position += count;
+
+            // request new source array if _current all consumed
+            if (_currentPosition == _current.Count)
+            {
+                if (_source.MoveNext() == false)
+                {
+                    _isEOF = true;
+                }
+                else
+                {
+                    _current = _source.Current;
+                    _currentPosition = 0;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Write bytes from buffer into segmentsr. Return how many bytes was write
         /// </summary>
         public int Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
-            /*
-            var length = _current.Count;
             var bufferPosition = 0;
 
             while (bufferPosition < count)
@@ -62,20 +106,14 @@ namespace LiteDB.Engine
                 }
 
                 bufferPosition += bytesToCopy;
-                _currentPosition += bytesToCopy;
-                _position += bytesToCopy;
 
-                // request new source array if _current all consumed
-                if (_currentPosition == _current.Count)
-                {
-                    if (_source.MoveNext() == false) break;
+                // move position in current segment (and go to next segment if finish)
+                this.MoveFordward(bytesToCopy);
 
-                    _current = _source.Current;
-                    _currentPosition = 0;
-                }
+                if (_isEOF) break;
             }
 
-            return bufferPosition;*/
+            return bufferPosition;
         }
 
         /// <summary>
@@ -83,13 +121,17 @@ namespace LiteDB.Engine
         /// </summary>
         public int Skip(int count) => this.Write(null, 0, count);
 
+        #endregion
+
+        #region Write String
+
         /// <summary>
         /// Write CString with \0 at end
         /// </summary>
-        public void Write(string value)
+        public void WriteCString(string value)
         {
             var bytesCount = Encoding.UTF8.GetByteCount(value);
-            var available = _current.Count - _currentPosition;
+            var available = _current.Count - _currentPosition; // avaiable in current segment
 
             // can write direct in current segment (use < because need +1 \0)
             if (bytesCount < available)
@@ -98,29 +140,25 @@ namespace LiteDB.Engine
 
                 _current[_currentPosition + bytesCount] = 0x00;
 
-                _currentPosition += bytesCount + 1;
-                _position += bytesCount + 1;
+                this.MoveFordward(bytesCount + 1); // +1 to '\0'
             }
             else
             {
-                if (bytesCount < _tempBuffer.Length)
-                {
-                    Encoding.UTF8.GetBytes(value, 0, value.Length, _tempBuffer, 0);
+                var buffer = ArrayPool<byte>.Shared.Rent(bytesCount);
 
-                    this.Write(_tempBuffer, 0, bytesCount);
-                }
-                else
-                {
-                    var buffer = ArrayPool<byte>.Shared.Rent(bytesCount);
+                Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
 
-                    Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
+                this.Write(buffer, 0, bytesCount);
 
-                    this.Write(buffer, 0, bytesCount);
+                _current[_currentPosition] = 0x00;
 
-                    ArrayPool<byte>.Shared.Return(buffer);
-                }
+                this.MoveFordward(1);
+
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
+
+        #endregion
 
         public void Dispose()
         {
