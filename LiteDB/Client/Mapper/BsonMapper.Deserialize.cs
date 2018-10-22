@@ -165,7 +165,7 @@ namespace LiteDB
                 // test if value is object and has _type
                 if (doc.TryGetValue("_type", out var typeField) && typeField.IsString)
                 {
-                    type = Type.GetType(typeField.AsString);
+                    type = _typeNameBinder.GetType(typeField.AsString);
 
                     if (type == null) throw LiteException.InvalidTypedName(typeField.AsString);
                 }

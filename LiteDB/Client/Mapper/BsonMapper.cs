@@ -45,6 +45,11 @@ namespace LiteDB
         private readonly Func<Type, object> _typeInstantiator;
 
         /// <summary>
+        /// Type name binder to control how type names are serialized to BSON documents
+        /// </summary>
+        private readonly ITypeNameBinder _typeNameBinder;
+
+        /// <summary>
         /// Global instance used when no BsonMapper are passed in LiteDatabase ctor
         /// </summary>
         public static BsonMapper Global = new BsonMapper();
@@ -93,7 +98,7 @@ namespace LiteDB
 
         #endregion
 
-        public BsonMapper(Func<Type, object> customTypeInstantiator = null)
+        public BsonMapper(Func<Type, object> customTypeInstantiator = null, ITypeNameBinder typeNameBinder = null)
         {
             this.SerializeNullValues = false;
             this.TrimWhitespace = true;
@@ -104,6 +109,7 @@ namespace LiteDB
             this.IncludeFields = false;
 
             _typeInstantiator = customTypeInstantiator ?? ((Type t) => null);
+            _typeNameBinder = typeNameBinder ?? DefaultTypeNameBinder.Instance;
 
             #region Register CustomTypes
 
