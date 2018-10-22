@@ -19,64 +19,78 @@ namespace LiteDB.Engine
     internal class FileMemory : IDisposable
     {
         private readonly MemoryStore _memory = new MemoryStore();
+        private readonly FileMemoryCache _cache;
 
         private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
 
         private readonly IDiskFactory _factory;
+        private readonly bool _appendOnly;
 
         private readonly Lazy<FileMemoryWriter> _writer;
 
-        public FileMemory(IDiskFactory factory)
+        public FileMemory(IDiskFactory factory, bool appendOnly)
         {
             _factory = factory;
+            _appendOnly = appendOnly;
+
+            _cache = new FileMemoryCache(_memory);
+
+            // create lazy writer to avoid create file if not needed (no write)
+            _writer = new Lazy<FileMemoryWriter>(() => new FileMemoryWriter(_factory.GetStream(true, _appendOnly), _cache, _appendOnly));
         }
 
         /// <summary>
+        /// Get file length (return 0 if not exists or if empty)
+        /// </summary>
+        public long Length => _factory.Exists() ? _writer.Value.Length : 0;
+
+        /// <summary>
         /// Get reader from pool (or from new instance). Must be Dispose after use
+        /// Should be one request per thread
         /// </summary>
         public FileMemoryReader GetReader()
         {
             // checks if pool contains already opened stream
             if (!_pool.TryTake(out var stream))
             {
-                stream = _factory.GetDataFileStream(true);
+                stream = _factory.GetStream(false, false);
             }
-
-            // acho que a factory deveria 1 para cada arquivo (1 data e 1 log)
-            // settings.GetDatafileFactory() e GetLogfileFactory())
 
             // when reader dispose, return back stream to pool
             void disposing(Stream s) { _pool.Add(s); }
 
             // create new instance
-            return new FileMemoryReader(disposing);
+            return new FileMemoryReader(_memory, _cache, stream, disposing);
         }
 
         /// <summary>
-        /// Write page at end of file and update Position. Pending pages will be avaiable in reader
+        /// Write page on file in async task (another thread)
+        /// If file is AppendOnly (log file) page will be saved on end of file and will update Position. 
+        /// Pending pages will be avaiable in reader
         /// </summary>
-        public void AppendWriteAsync(IEnumerable<PageBuffer> pages)
+        public void WriteAsync(IEnumerable<PageBuffer> pages)
         {
             foreach(var page in pages)
             {
-                _writer.Value.QueuePage(page, true);
+                _writer.Value.QueuePage(page);
             }
 
             _writer.Value.RunQueue();
         }
 
         /// <summary>
-        /// Write page in original Position that was get from
+        /// Define new length to file stream in async queue
         /// </summary>
-        public void WriteAsync(PageBuffer page)
+        public void SetLengthAsync(long length)
         {
-            _writer.Value.QueuePage(page, false);
-        }
+            _writer.Value.QueueLength(length);
 
+            _writer.Value.RunQueue();
+        }
 
         public void Dispose()
         {
-            // dispose all stream
+            // dispose all reader stream
             foreach(var stream in _pool)
             {
                 stream.Dispose();
@@ -84,10 +98,11 @@ namespace LiteDB.Engine
 
             if (_writer.IsValueCreated)
             {
-                // do writer dispose (wait before all async writes)
+                // do writer dispose (wait async writer thread)
                 _writer.Value.Dispose();
             }
 
+            // stop cache async clean task
             _cache.Dispose();
         }
     }

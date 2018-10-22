@@ -17,24 +17,19 @@ namespace LiteDB.Engine
         string Filename { get; }
 
         /// <summary>
-        /// Get new datafile stream instance
+        /// Get new file stream instance
         /// </summary>
-        Stream GetDataFileStream(bool writeMode);
+        Stream GetStream(bool canWrite, bool sequencial);
 
         /// <summary>
-        /// Get new log file stream instance
+        /// Get if file exists
         /// </summary>
-        Stream GetLogFileStream(bool writeMode);
+        bool Exists();
 
         /// <summary>
-        /// Return if log file exist
+        /// Delete physical file on disk
         /// </summary>
-        bool IsLogFileExists();
-
-        /// <summary>
-        /// Delete physical log file
-        /// </summary>
-        void DeleteLogFile();
+        void Delete();
 
         /// <summary>
         /// Indicate that factory must be dispose on finish

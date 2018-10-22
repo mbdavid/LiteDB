@@ -23,12 +23,13 @@ namespace LiteDB.Engine
         private readonly Stream _stream;
         private readonly Action<Stream> _dispose;
 
-        private readonly List<PageBuffer> _pages;
+        private readonly List<PageBuffer> _pages = new List<PageBuffer>();
 
-        private readonly bool _utcDate;
-
-        public FileMemoryReader(Action<Stream> dispose)
+        public FileMemoryReader(MemoryStore memory, FileMemoryCache cache, Stream stream, Action<Stream> dispose)
         {
+            _memory = memory;
+            _cache = cache;
+            _stream = stream;
             _dispose = dispose;
         }
 
@@ -42,6 +43,8 @@ namespace LiteDB.Engine
         /// </summary>
         private PageBuffer GetReadablePage(long position)
         {
+            var isNew = false;
+
             // try get page from cache - otherwise read from disk
             var page = _cache.GetOrAddPage(position, (pos) =>
             {
@@ -53,17 +56,23 @@ namespace LiteDB.Engine
                 // read page from disk
                 _stream.Read(slot.Array, slot.Offset, PAGE_SIZE);
 
+                isNew = true;
+
                 // create new instance of page buffer with buffer slot
                 return new PageBuffer
                 {
                     Posistion = position,
-                    ShareCounter = 0,
+                    ShareCounter = 1,
                     Buffer = slot
                 };
             });
 
-            // increment page reader (will remove from cache only when get 0 again: no one are using anymore)
-            Interlocked.Increment(ref page.ShareCounter);
+            // if is not a new page, increment shared counter
+            if (isNew == false)
+            {
+                // increment page share counter (will be decremented when reader dispose)
+                Interlocked.Increment(ref page.ShareCounter);
+            }
 
             // add page in local thread list
             _pages.Add(page);
@@ -72,7 +81,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get a clear/no re-used page buffer ready to be writable. Ensure no one more will se same data
+        /// Get a clear/no re-used page buffer ready to be writable. Do not add into cache (can be changed)
         /// </summary>
         private PageBuffer GetWritablePage(long position)
         {
@@ -81,7 +90,7 @@ namespace LiteDB.Engine
             // if page is in cache, get (avoiding disk read) but clone bytes
             if (_cache.TryGetPage(position, out var clean))
             {
-                // get a buffer clone
+                // get a buffer clone from cache (no reference)
                 buffer = _memory.Clone(clean.Buffer);
             }
             else
@@ -129,6 +138,7 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Decrement share-counter for all pages used in this reader
+        /// All page that was write before reader dispose was incremented, so will note be clean after here
         /// </summary>
         public void Dispose()
         {

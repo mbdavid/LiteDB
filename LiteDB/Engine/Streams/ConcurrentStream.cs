@@ -9,19 +9,22 @@ namespace LiteDB.Engine
     /// </summary>
     public class ConcurrentStream : Stream
     {
-        private Stream _stream;
+        private readonly Stream _stream;
+        private readonly bool _canWrite;
+
         private long _position = 0;
 
-        public ConcurrentStream(Stream stream)
+        public ConcurrentStream(Stream stream, bool canWrite)
         {
             _stream = stream;
+            _canWrite = canWrite;
         }
 
         public override bool CanRead => _stream.CanRead;
 
-        public override bool CanSeek => _stream.CanWrite;
+        public override bool CanSeek => _stream.CanSeek;
 
-        public override bool CanWrite => _stream.CanWrite;
+        public override bool CanWrite => _canWrite;
 
         public override long Length => _stream.Length;
 
@@ -62,6 +65,8 @@ namespace LiteDB.Engine
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+            if (_canWrite == false) throw new NotSupportedException("Current stream are readonly");
+
             // lock internal stream and set position before write
             lock (_stream)
             {

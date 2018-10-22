@@ -75,6 +75,7 @@ namespace LiteDB.Engine
                 // create big linear array in heap
                 var buffer = new byte[PAGE_SIZE * MEMORY_SEGMENT_SIZE];
 
+                // slit linear array into many array segments
                 for (var i = 0; i < MEMORY_SEGMENT_SIZE; i++)
                 {
                     var segment = new ArraySegment<byte>(buffer, i * MEMORY_SEGMENT_SIZE, PAGE_SIZE);

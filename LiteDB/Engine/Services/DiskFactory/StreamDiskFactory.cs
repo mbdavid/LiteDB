@@ -11,30 +11,26 @@ namespace LiteDB.Engine
     /// </summary>
     internal class StreamDiskFactory : IDiskFactory
     {
-        private readonly Stream _data;
-        private readonly Stream _log;
+        private readonly Stream _stream;
 
-        public StreamDiskFactory(Stream data, Stream log)
+        public StreamDiskFactory(Stream stream)
         {
-            _data = data;
-            _log = log;
+            _stream = stream;
         }
 
         /// <summary>
         /// Stream has no name (use stream type)
         /// </summary>
-        public string Filename => _data is MemoryStream ? ":memory:" : _data is TempStream ? ":temp:" : ":stream:";
+        public string Filename => _stream is MemoryStream ? ":memory:" : _stream is TempStream ? ":temp:" : ":stream:";
 
         /// <summary>
         /// Use ConcurrentStream wrapper to support multi thread in same Stream (using lock control)
         /// </summary>
-        public Stream GetDataFileStream(bool writeMode) => new ConcurrentStream(_data);
+        public Stream GetStream(bool canWrite, bool sequencial) => new ConcurrentStream(_stream, canWrite);
 
-        public Stream GetLogFileStream(bool writeMode) => new ConcurrentStream(_log);
+        public bool Exists() => _stream.Length > 0;
 
-        public bool IsLogFileExists() => _log.Length > 0;
-
-        public void DeleteLogFile()
+        public void Delete()
         {
             // stream factory do not delete wal file
         }

@@ -20,7 +20,6 @@ namespace LiteDB.Engine
     {
         public long Posistion;
         public int ShareCounter;
-
         public ArraySegment<byte> Buffer;
     }
 }

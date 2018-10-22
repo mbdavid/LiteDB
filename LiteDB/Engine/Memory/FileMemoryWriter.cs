@@ -21,6 +21,7 @@ namespace LiteDB.Engine
         private readonly FileMemoryCache _cache;
 
         private readonly Stream _stream;
+        private bool _appendOnly;
         private long _appendPosition;
 
         // async thread controls
@@ -28,12 +29,13 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public FileMemoryWriter(Stream stream, FileMemoryCache cache)
+        public FileMemoryWriter(Stream stream, FileMemoryCache cache, bool appendOnly)
         {
             _stream = stream;
             _cache = cache;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
+            _appendOnly = appendOnly;
             _appendPosition = stream.Length - PAGE_SIZE;
 
             // prepare async thread writer
@@ -43,26 +45,41 @@ namespace LiteDB.Engine
             _thread.Start();
         }
 
-        public void QueuePage(PageBuffer page, bool append)
+        public long Length => _appendPosition + PAGE_SIZE;
+
+        public void QueuePage(PageBuffer page)
         {
-            // must increment page counter (will be decremented only when are real saved on disk) to avoid
+            // must increment share counter (will be decremented only when are real saved on disk) to avoid
             // be removed from cache during async writer time
             Interlocked.Increment(ref page.ShareCounter);
 
-            if (append)
+            if (_appendOnly)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
-
-                Interlocked.Add(ref _appendPosition, PAGE_SIZE);
-
-                page.Posistion = _appendPosition;
+                page.Posistion = Interlocked.Add(ref _appendPosition, PAGE_SIZE);
 
                 // must add this page in cache because now this page are part of file
                 _cache.AddPage(page);
             }
+            else
+            {
+                // get highest value between new page or last page 
+                // don't worry about concurrency becasue only 1 instance call this (Checkpoint)
+                _appendPosition = Math.Max(_appendPosition, page.Posistion - PAGE_SIZE);
+            }
 
             _queue.Enqueue(page);
+        }
+
+        /// <summary>
+        /// Create a fake page to be added in queue. When queue run this page, just set new stream length
+        /// </summary>
+        public void QueueLength(long length)
+        {
+            Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
+
+            _queue.Enqueue(new PageBuffer { Posistion = length, ShareCounter = -1 });
         }
 
         /// <summary>
@@ -85,13 +102,22 @@ namespace LiteDB.Engine
             {
                 while (_queue.TryDequeue(out var page))
                 {
-                    // set stream position according to page
-                    _stream.Position = page.Posistion;
+                    if (page.ShareCounter == -1)
+                    {
+                        // when share counter is -1 this is not a regular page, is a set length command
+                        _stream.SetLength(page.Posistion);
+                    }
+                    else
+                    {
+                        // set stream position according to page
+                        _stream.Position = page.Posistion;
 
-                    _stream.Write(page.Buffer.Array, page.Buffer.Offset, PAGE_SIZE);
+                        // write page on disk
+                        _stream.Write(page.Buffer.Array, page.Buffer.Offset, PAGE_SIZE);
 
-                    // now this page are safe to be decremented (and clear by cache if needed)
-                    Interlocked.Decrement(ref page.ShareCounter);
+                        // now this page are safe to be decremented (and clear by cache if needed)
+                        Interlocked.Decrement(ref page.ShareCounter);
+                    }
                 }
 
                 _stream.FlushToDisk();

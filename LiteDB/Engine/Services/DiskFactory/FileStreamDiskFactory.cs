@@ -12,66 +12,50 @@ namespace LiteDB.Engine
     /// </summary>
     internal class FileStreamDiskFactory : IDiskFactory
     {
-        private readonly string _dataFilename;
-        private readonly string _logFilename;
-        private readonly Lazy<string> _tempFilename;
+        private readonly string _filename;
         private readonly bool _readonly;
 
-        public FileStreamDiskFactory(string filename, bool @readonly)
+        public FileStreamDiskFactory(string filename, bool readOnly)
         {
-            _dataFilename = filename;
-            _logFilename = FileHelper.GetTempFile(filename, "-log", false);
-            _tempFilename = new Lazy<string>(() => FileHelper.GetTempFile(filename, "-temp", true));
-            _readonly = @readonly;
+            _filename = filename;
+            _readonly = readOnly;
         }
 
         /// <summary>
         /// Get data filename
         /// </summary>
-        public string Filename => _dataFilename;
+        public string Filename => _filename;
 
         /// <summary>
         /// Create new data file FileStream instance based on filename
         /// </summary>
-        public Stream GetDataFileStream(bool writeMode)
+        public Stream GetStream(bool canWrite, bool sequencial)
         {
-            return this.GetInternalStream(_dataFilename, writeMode, FileOptions.SequentialScan);
-        }
+            var write = canWrite && (_readonly == false);
 
-        /// <summary>
-        /// Create new data file FileStream instance based on filename
-        /// </summary>
-        public Stream GetLogFileStream(bool writeMode)
-        {
-            return this.GetInternalStream(_logFilename, writeMode, FileOptions.SequentialScan);
-        }
-
-        private Stream GetInternalStream(string filename, bool writeMode, FileOptions options)
-        {
-            var write = writeMode && (_readonly == false);
-
-            return new FileStream(filename,
+            return new FileStream(_filename,
                 write ? FileMode.OpenOrCreate : FileMode.Open,
                 write ? FileAccess.ReadWrite : FileAccess.Read,
                 write ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,
-                options);
+                sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess);
+        }
+
+
+        /// <summary>
+        /// Check if file exists (without open it)
+        /// </summary>
+        public bool Exists()
+        {
+            return File.Exists(_filename);
         }
 
         /// <summary>
-        /// Check if wal file exists
+        /// Delete file (must all stream be closed)
         /// </summary>
-        public bool IsLogFileExists()
+        public void Delete()
         {
-            return File.Exists(_logFilename);
-        }
-
-        /// <summary>
-        /// Delete wal file
-        /// </summary>
-        public void DeleteLogFile()
-        {
-            File.Delete(_logFilename);
+            File.Delete(_filename);
         }
 
         /// <summary>

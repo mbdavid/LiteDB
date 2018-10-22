@@ -93,6 +93,11 @@ namespace LiteDB
         public const int MEMORY_SEGMENT_SIZE = 100;
 
         /// <summary>
+        /// When memory file cache exceed this size (in pages) run clean up cache (removing unused pages)
+        /// </summary>
+        public const int MEMORY_FILE_CACHE_SIZE = 500;
+
+        /// <summary>
         /// This variable are used to identify that current datafile are v7 version and must be upgrade
         /// v7 has small page header so is not possible check using FILE_VERSION position
         /// </summary>

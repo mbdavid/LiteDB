@@ -73,26 +73,28 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get datafile factory
         /// </summary>
-        internal IDiskFactory GetDiskFactory()
+        internal IDiskFactory GetDataDiskFactory()
         {
-            if (this.Filename == ":memory:")
+            if (this.DataStream != null)
             {
-                return new StreamDiskFactory(new MemoryStream(), new MemoryStream());
+                return new StreamDiskFactory(this.DataStream);
+            }
+            else if (this.Filename == ":memory:")
+            {
+                return new StreamDiskFactory(new MemoryStream());
             }
             else if (this.Filename == ":temp:")
             {
-                return new StreamDiskFactory(new TempStream(), new TempStream());
+                return new StreamDiskFactory(new TempStream());
             }
-            else if(!string.IsNullOrEmpty(this.Filename))
+            else if (!string.IsNullOrEmpty(this.Filename))
             {
                 return new FileStreamDiskFactory(this.Filename, this.ReadOnly);
-            }
-            else
-            {
-                if (this.DataStream == null) throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
 
-                return new StreamDiskFactory(this.DataStream, this.LogStream ?? new TempStream());
             }
+
+            throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
         }
+
     }
 }
