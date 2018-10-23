@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard20</TargetFrameworks>
     <PackageId>LiteDB</PackageId>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
     <FileVersion>5.0.0</FileVersion>
@@ -59,9 +59,10 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
+    <Reference Include="System.Runtime" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard20'">
     <PackageReference Include="System.Reflection" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />

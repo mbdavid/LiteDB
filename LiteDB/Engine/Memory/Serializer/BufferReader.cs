@@ -125,10 +125,12 @@ namespace LiteDB.Engine
         #region Read String
 
         /// <summary>
-        /// Read string with fixed length
+        /// Read string with pre-fixed int32 length
         /// </summary>
-        public string ReadString(int count)
+        public string ReadString()
         {
+            var count = this.ReadInt32();
+
             string value;
 
             // if fits in current segment, use inner array - otherwise copy from multiples segments
@@ -176,7 +178,7 @@ namespace LiteDB.Engine
                     // and go to next segment
                     if (!_isEOF)
                     {
-                        while (_current[_currentPosition] != 0x00)
+                        while (_current.Get(_currentPosition) != 0x00)
                         {
                             if (this.MoveFordward(1))
                             {
@@ -211,7 +213,7 @@ namespace LiteDB.Engine
 
             while(pos < _current.Count)
             {
-                if (_current[pos] == 0x00)
+                if (_current.Get(pos) == 0x00)
                 {
                     value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
 
@@ -235,29 +237,43 @@ namespace LiteDB.Engine
 
         #region Read Numbers
 
-        /// <summary>
-        /// Read next 4 bytes as Int32
-        /// </summary>
-        public int ReadInt32()
+        private T ReadNumber<T>(Func<byte[], int, T> convert, int size)
         {
-            int value;
+            T value;
 
             // if fits in current segment, use inner array - otherwise copy from multiples segments
-            if (_currentPosition + 4 <= _current.Count)
+            if (_currentPosition + size <= _current.Count)
             {
-                value = BitConverter.ToInt32(_current.Array, _current.Offset + _currentPosition);
+                value = convert(_current.Array, _current.Offset + _currentPosition);
 
-                this.MoveFordward(4);
+                this.MoveFordward(size);
             }
             else
             {
-                // read 4 bytes from source
-                this.Read(_tempBuffer, 0, 4);
+                this.Read(_tempBuffer, 0, size);
 
-                value = BitConverter.ToInt32(_tempBuffer, 0);
+                value = convert(_tempBuffer, 0);
             }
 
             return value;
+        }
+
+        public Int16 ReadInt16() => this.ReadNumber(BitConverter.ToInt16, 2);
+        public Int32 ReadInt32() => this.ReadNumber(BitConverter.ToInt32, 4);
+        public Int64 ReadInt64() => this.ReadNumber(BitConverter.ToInt64, 8);
+        public UInt16 ReadUInt16() => this.ReadNumber(BitConverter.ToUInt16, 2);
+        public UInt32 ReadUInt32() => this.ReadNumber(BitConverter.ToUInt32, 4);
+        public UInt64 ReadUInt64() => this.ReadNumber(BitConverter.ToUInt64, 8);
+        public Single ReadSingle() => this.ReadNumber(BitConverter.ToSingle, 4);
+        public Double ReadDouble() => this.ReadNumber(BitConverter.ToDouble, 8);
+
+        public Decimal ReadDecimal()
+        {
+            var a = this.ReadInt32();
+            var b = this.ReadInt32();
+            var c = this.ReadInt32();
+            var d = this.ReadInt32();
+            return new Decimal(new int[] { a, b, c, d });
         }
 
         #endregion

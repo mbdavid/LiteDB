@@ -98,10 +98,10 @@ namespace LiteDB.Engine
                 // fill buffer
                 if (buffer != null)
                 {
-                    Buffer.BlockCopy(_current.Array, 
+                    Buffer.BlockCopy(buffer, 
+                        offset + bufferPosition,
+                        _current.Array,
                         _current.Offset + _currentPosition, 
-                        buffer, 
-                        offset + bufferPosition, 
                         bytesToCopy);
                 }
 
@@ -138,7 +138,7 @@ namespace LiteDB.Engine
             {
                 Encoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
 
-                _current[_currentPosition + bytesCount] = 0x00;
+                _current.Set(_currentPosition + bytesCount, 0x00);
 
                 this.MoveFordward(bytesCount + 1); // +1 to '\0'
             }
@@ -150,12 +150,78 @@ namespace LiteDB.Engine
 
                 this.Write(buffer, 0, bytesCount);
 
-                _current[_currentPosition] = 0x00;
+                _current.Set(_currentPosition, 0x00);
 
                 this.MoveFordward(1);
 
                 ArrayPool<byte>.Shared.Return(buffer);
             }
+        }
+
+        /// <summary>
+        /// Write string pre-fixed with int32 bytes length
+        /// </summary>
+        public void WriteString(string value)
+        {
+            var count = Encoding.UTF8.GetByteCount(value);
+
+            this.Write(count);
+
+            if (count <= _current.Count)
+            {
+                Encoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
+
+                this.MoveFordward(count);
+            }
+            else
+            {
+                // rent a buffer to be re-usable
+                var buffer = ArrayPool<byte>.Shared.Rent(count);
+
+                Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, 0);
+
+                this.Write(buffer, 0, count);
+
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+
+        #endregion
+
+        #region Numbers
+
+        private void WriteNumber<T>(T value, Action<T, ArraySegment<byte>, int> toBytes, int size)
+        {
+            if (_currentPosition + size <= _current.Count)
+            {
+                toBytes(value, _current, _currentPosition);
+
+                this.MoveFordward(size);
+            }
+            else
+            {
+                toBytes(value, _tempBuffer, 0);
+
+                this.Write(_tempBuffer, 0, size);
+            }
+        }
+
+        public void Write(Int16 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 2);
+        public void Write(Int32 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 4);
+        public void Write(Int64 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 8);
+        public void Write(UInt16 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 2);
+        public void Write(UInt32 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 4);
+        public void Write(UInt64 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 8);
+        public void Write(Single value) => this.WriteNumber(value, BufferExtensions.ToBytes, 4);
+        public void Write(Double value) => this.WriteNumber(value, BufferExtensions.ToBytes, 8);
+
+        public void Write(Decimal value)
+        {
+            var bits = Decimal.GetBits(value);
+            this.Write(bits[0]);
+            this.Write(bits[1]);
+            this.Write(bits[2]);
+            this.Write(bits[3]);
         }
 
         #endregion
