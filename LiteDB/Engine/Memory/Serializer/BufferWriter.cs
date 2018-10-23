@@ -166,7 +166,7 @@ namespace LiteDB.Engine
         /// Write string into output buffer. 
         /// Support direct string (with no length information) or BSON specs (with Legnth + 1 before and \0 at end)
         /// </summary>
-        public void WriteFixedString(string value, bool specs)
+        public void WriteString(string value, bool specs)
         {
             var count = Encoding.UTF8.GetByteCount(value);
 
@@ -332,7 +332,7 @@ namespace LiteDB.Engine
                 case BsonType.Double: this.Write((Double)value.RawValue); break;
                 case BsonType.Decimal: this.Write((Decimal)value.RawValue); break;
 
-                case BsonType.String: this.WriteFixedString((String)value.RawValue, false); break;
+                case BsonType.String: this.WriteString((String)value.RawValue, false); break;
 
                 case BsonType.Document: this.WriteDocument(value.AsDocument); break;
                 case BsonType.Array: this.WriteArray(value.AsArray); break;
@@ -396,7 +396,7 @@ namespace LiteDB.Engine
                 case BsonType.String:
                     this.Write((byte)0x02);
                     this.WriteCString(key);
-                    this.WriteFixedString((String)value.RawValue, true); // true = BSON Specs (add LENGTH at begin + \0 at end)
+                    this.WriteString((String)value.RawValue, true); // true = BSON Specs (add LENGTH at begin + \0 at end)
                     break;
 
                 case BsonType.Document:
