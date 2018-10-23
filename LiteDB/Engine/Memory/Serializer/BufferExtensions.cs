@@ -55,14 +55,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Copy Int16 bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this Int16 value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
-        }
-
-        /// <summary>
         /// Copy Int32 bytes direct into buffer
         /// </summary>
         public unsafe static void ToBytes(this Int32 value, byte[] array, int startIndex)
@@ -71,14 +63,6 @@ namespace LiteDB.Engine
             {
                 *(Int32*)ptr = value;
             }
-        }
-
-        /// <summary>
-        /// Copy Int32 bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this Int32 value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
         }
 
         /// <summary>
@@ -93,14 +77,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Copy Int64 bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this Int64 value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
-        }
-
-        /// <summary>
         /// Copy UInt16 bytes direct into buffer
         /// </summary>
         public unsafe static void ToBytes(this UInt16 value, byte[] array, int startIndex)
@@ -109,14 +85,6 @@ namespace LiteDB.Engine
             {
                 *(UInt16*)ptr = value;
             }
-        }
-
-        /// <summary>
-        /// Copy UInt16 bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this UInt16 value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
         }
 
         /// <summary>
@@ -131,14 +99,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Copy UInt32 bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this UInt32 value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
-        }
-
-        /// <summary>
         /// Copy Int64 bytes direct into buffer
         /// </summary>
         public unsafe static void ToBytes(this UInt64 value, byte[] array, int startIndex)
@@ -147,14 +107,6 @@ namespace LiteDB.Engine
             {
                 *(UInt64*)ptr = value;
             }
-        }
-
-        /// <summary>
-        /// Copy UInt64 bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this UInt64 value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
         }
 
         /// <summary>
@@ -169,14 +121,6 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Copy Single bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this Single value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
-        }
-
-        /// <summary>
         /// Copy Double bytes direct into buffer
         /// </summary>
         public unsafe static void ToBytes(this Double value, byte[] array, int startIndex)
@@ -185,14 +129,6 @@ namespace LiteDB.Engine
             {
                 *(Double*)ptr = value;
             }
-        }
-
-        /// <summary>
-        /// Copy Double bytes direct into buffer
-        /// </summary>
-        public static void ToBytes(this Double value, ArraySegment<byte> arraySegment, int startIndex)
-        {
-            ToBytes(value, arraySegment.Array, arraySegment.Offset + startIndex);
         }
 
         #endregion

@@ -94,29 +94,29 @@ namespace LiteDB
         /// <summary>
         /// Initializes a new instance of the ObjectId class from byte array.
         /// </summary>
-        public ObjectId(byte[] bytes, int offset = 0)
+        public ObjectId(byte[] bytes, int startIndex = 0)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
             this.Timestamp = 
-                (bytes[offset + 0] << 24) + 
-                (bytes[offset + 1] << 16) + 
-                (bytes[offset + 2] << 8) + 
-                bytes[offset + 3];
+                (bytes[startIndex + 0] << 24) + 
+                (bytes[startIndex + 1] << 16) + 
+                (bytes[startIndex + 2] << 8) + 
+                bytes[startIndex + 3];
 
             this.Machine = 
-                (bytes[offset + 4] << 16) + 
-                (bytes[offset + 5] << 8) + 
-                bytes[offset + 6];
+                (bytes[startIndex + 4] << 16) + 
+                (bytes[startIndex + 5] << 8) + 
+                bytes[startIndex + 6];
 
             this.Pid = (short)
-                ((bytes[offset + 7] << 8) + 
-                bytes[offset + 8]);
+                ((bytes[startIndex + 7] << 8) + 
+                bytes[startIndex + 8]);
 
             this.Increment = 
-                (bytes[offset + 9] << 16) + 
-                (bytes[offset + 10] << 8) + 
-                bytes[offset + 11];
+                (bytes[startIndex + 9] << 16) + 
+                (bytes[startIndex + 10] << 8) + 
+                bytes[startIndex + 11];
         }
 
         /// <summary>
@@ -196,22 +196,27 @@ namespace LiteDB
         /// <summary>
         /// Represent ObjectId as 12 bytes array
         /// </summary>
+        public void ToByteArray(byte[] bytes, int startIndex)
+        {
+            bytes[startIndex + 0] = (byte)(this.Timestamp >> 24);
+            bytes[startIndex + 1] = (byte)(this.Timestamp >> 16);
+            bytes[startIndex + 2] = (byte)(this.Timestamp >> 8);
+            bytes[startIndex + 3] = (byte)(this.Timestamp);
+            bytes[startIndex + 4] = (byte)(this.Machine >> 16);
+            bytes[startIndex + 5] = (byte)(this.Machine >> 8);
+            bytes[startIndex + 6] = (byte)(this.Machine);
+            bytes[startIndex + 7] = (byte)(this.Pid >> 8);
+            bytes[startIndex + 8] = (byte)(this.Pid);
+            bytes[startIndex + 9] = (byte)(this.Increment >> 16);
+            bytes[startIndex + 10] = (byte)(this.Increment >> 8);
+            bytes[startIndex + 11] = (byte)(this.Increment);
+        }
+
         public byte[] ToByteArray()
         {
             var bytes = new byte[12];
 
-            bytes[0] = (byte)(this.Timestamp >> 24);
-            bytes[1] = (byte)(this.Timestamp >> 16);
-            bytes[2] = (byte)(this.Timestamp >> 8);
-            bytes[3] = (byte)(this.Timestamp);
-            bytes[4] = (byte)(this.Machine >> 16);
-            bytes[5] = (byte)(this.Machine >> 8);
-            bytes[6] = (byte)(this.Machine);
-            bytes[7] = (byte)(this.Pid >> 8);
-            bytes[8] = (byte)(this.Pid);
-            bytes[9] = (byte)(this.Increment >> 16);
-            bytes[10] = (byte)(this.Increment >> 8);
-            bytes[11] = (byte)(this.Increment);
+            this.ToByteArray(bytes, 0);
 
             return bytes;
         }

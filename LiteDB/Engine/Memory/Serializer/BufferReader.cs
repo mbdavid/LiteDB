@@ -19,6 +19,7 @@ namespace LiteDB.Engine
     public class BufferReader : IDisposable
     {
         private readonly IEnumerator<ArraySegment<byte>> _source;
+        private readonly bool _utcDate;
 
         private ArraySegment<byte> _current;
         private int _currentPosition = 0; // position in _current
@@ -38,9 +39,10 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsEOF => _isEOF;
 
-        public BufferReader(IEnumerable<ArraySegment<byte>> source)
+        public BufferReader(IEnumerable<ArraySegment<byte>> source, bool utcDate = false)
         {
             _source = source.GetEnumerator();
+            _utcDate = utcDate;
 
             _source.MoveNext();
             _current = _source.Current;
