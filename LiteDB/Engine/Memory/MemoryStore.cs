@@ -72,7 +72,7 @@ namespace LiteDB.Engine
             {
                 if (_store.Count > 0) return;
 
-                // create big linear array in heap
+                // create big linear array in heap (G2 - > 85Kb)
                 var buffer = new byte[PAGE_SIZE * MEMORY_SEGMENT_SIZE];
 
                 // slit linear array into many array segments

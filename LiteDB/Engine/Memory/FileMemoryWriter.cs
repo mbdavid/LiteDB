@@ -47,7 +47,7 @@ namespace LiteDB.Engine
 
         public long Length => _appendPosition + PAGE_SIZE;
 
-        public long QueuePage(ref PageBuffer page)
+        public long QueuePage(PageBuffer page)
         {
             // must increment share counter (will be decremented only when are real saved on disk) to avoid
             // be removed from cache during async writer time
@@ -126,6 +126,9 @@ namespace LiteDB.Engine
 
                 // suspend thread and wait another signal
                 _waiter.Reset();
+
+                if (!_running) return;
+
                 _waiter.Wait();
             }
         }

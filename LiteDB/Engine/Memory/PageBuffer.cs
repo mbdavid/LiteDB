@@ -14,9 +14,8 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent page buffer to be read/write using FileMemory
-    /// ThreadSafe (single instance can be shared across threads for read-only)
     /// </summary>
-    internal struct PageBuffer
+    internal class PageBuffer
     {
         public long Position;
         public int ShareCounter;

@@ -139,6 +139,9 @@ namespace LiteDB.Engine
 
                 // suspend thread and wait another signal
                 _waiter.Reset();
+
+                if (!_running) return;
+
                 _waiter.Wait();
             }
         }
@@ -154,7 +157,7 @@ namespace LiteDB.Engine
             }
 
             // wait thread
-            _thread.Join();
+            _thread?.Join();
             _locker.Dispose();
         }
     }

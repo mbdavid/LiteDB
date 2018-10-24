@@ -76,10 +76,9 @@ namespace LiteDB.Engine
                 {
                     var page = reader.Current;
 
-                    _writer.Value.QueuePage(ref page);
+                    _writer.Value.QueuePage(page);
                 }
             }
-
 
             _writer.Value.RunQueue();
         }
