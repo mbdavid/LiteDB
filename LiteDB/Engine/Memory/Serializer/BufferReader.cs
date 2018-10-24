@@ -496,7 +496,7 @@ namespace LiteDB.Engine
             else if (type == 0x02) // String
             {
                 var length = this.ReadInt32();
-                var value = this.ReadString(length);
+                var value = this.ReadString(length - 1);
                 this.MoveFordward(1); // read '\0'
                 return value;
             }

@@ -18,7 +18,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal struct PageBuffer
     {
-        public long Posistion;
+        public long Position;
         public int ShareCounter;
         public ArraySegment<byte> Buffer;
     }

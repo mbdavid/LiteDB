@@ -34,7 +34,7 @@ namespace LiteDB.Engine
             var write = canWrite && (_readonly == false);
 
             return new FileStream(_filename,
-                write ? FileMode.OpenOrCreate : FileMode.Open,
+                _readonly ? FileMode.Open : FileMode.OpenOrCreate,
                 write ? FileAccess.ReadWrite : FileAccess.Read,
                 write ? FileShare.Read : FileShare.ReadWrite,
                 PAGE_SIZE,

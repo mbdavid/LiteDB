@@ -47,7 +47,7 @@ namespace LiteDB.Engine
 
         public long Length => _appendPosition + PAGE_SIZE;
 
-        public void QueuePage(PageBuffer page)
+        public long QueuePage(ref PageBuffer page)
         {
             // must increment share counter (will be decremented only when are real saved on disk) to avoid
             // be removed from cache during async writer time
@@ -57,7 +57,7 @@ namespace LiteDB.Engine
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
-                page.Posistion = Interlocked.Add(ref _appendPosition, PAGE_SIZE);
+                page.Position = Interlocked.Add(ref _appendPosition, PAGE_SIZE);
 
                 // must add this page in cache because now this page are part of file
                 _cache.AddPage(page);
@@ -66,10 +66,12 @@ namespace LiteDB.Engine
             {
                 // get highest value between new page or last page 
                 // don't worry about concurrency becasue only 1 instance call this (Checkpoint)
-                _appendPosition = Math.Max(_appendPosition, page.Posistion - PAGE_SIZE);
+                _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);
             }
 
             _queue.Enqueue(page);
+
+            return page.Position;
         }
 
         /// <summary>
@@ -79,7 +81,7 @@ namespace LiteDB.Engine
         {
             Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
 
-            _queue.Enqueue(new PageBuffer { Posistion = length, ShareCounter = -1 });
+            _queue.Enqueue(new PageBuffer { Position = length, ShareCounter = -1 });
         }
 
         /// <summary>
@@ -105,12 +107,12 @@ namespace LiteDB.Engine
                     if (page.ShareCounter == -1)
                     {
                         // when share counter is -1 this is not a regular page, is a set length command
-                        _stream.SetLength(page.Posistion);
+                        _stream.SetLength(page.Position);
                     }
                     else
                     {
                         // set stream position according to page
-                        _stream.Position = page.Posistion;
+                        _stream.Position = page.Position;
 
                         // write page on disk
                         _stream.Write(page.Buffer.Array, page.Buffer.Offset, PAGE_SIZE);

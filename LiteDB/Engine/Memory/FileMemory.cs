@@ -70,10 +70,16 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteAsync(IEnumerable<PageBuffer> pages)
         {
-            foreach(var page in pages)
+            using (var reader = pages.GetEnumerator())
             {
-                _writer.Value.QueuePage(page);
+                while(reader.MoveNext())
+                {
+                    var page = reader.Current;
+
+                    _writer.Value.QueuePage(ref page);
+                }
             }
+
 
             _writer.Value.RunQueue();
         }

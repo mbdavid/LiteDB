@@ -49,21 +49,21 @@ namespace LiteDB.Engine
             var page = _cache.GetOrAddPage(position, (pos) =>
             {
                 // rent 8k array buffer
-                var slot = _memory.Rent(false);
+                var buffer = _memory.Rent(false);
 
                 _stream.Position = pos;
 
                 // read page from disk
-                _stream.Read(slot.Array, slot.Offset, PAGE_SIZE);
+                _stream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
 
                 isNew = true;
 
                 // create new instance of page buffer with buffer slot
                 return new PageBuffer
                 {
-                    Posistion = position,
+                    Position = position,
                     ShareCounter = 1,
-                    Buffer = slot
+                    Buffer = buffer
                 };
             });
 
@@ -106,7 +106,7 @@ namespace LiteDB.Engine
             // create new PageBuffer - so ShareCount must be 1
             var page = new PageBuffer
             {
-                Posistion = position,
+                Position = position,
                 ShareCounter = 1,
                 Buffer = buffer
             };
@@ -126,7 +126,7 @@ namespace LiteDB.Engine
 
             var page = new PageBuffer
             {
-                Posistion = long.MaxValue, // must be write only using "Append"
+                Position = long.MaxValue, // must be write only using "Append"
                 ShareCounter = 1,
                 Buffer = buffer
             };
@@ -137,10 +137,10 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Decrement share-counter for all pages used in this reader
-        /// All page that was write before reader dispose was incremented, so will note be clean after here
+        /// Release all loaded pages that was loaded by this reader. Decrement page share counter
+        /// If page get 0 share counter will be cleaner in next cleanup thread
         /// </summary>
-        public void Dispose()
+        public void ReleasePages()
         {
             for (var i = 0; i < _pages.Count; i++)
             {
@@ -148,6 +148,17 @@ namespace LiteDB.Engine
 
                 Interlocked.Decrement(ref page.ShareCounter);
             }
+
+            _pages.Clear();
+        }
+
+        /// <summary>
+        /// Decrement share-counter for all pages used in this reader
+        /// All page that was write before reader dispose was incremented, so will note be clean after here
+        /// </summary>
+        public void Dispose()
+        {
+            this.ReleasePages();
 
             // return stream back to pool
             _dispose(_stream);

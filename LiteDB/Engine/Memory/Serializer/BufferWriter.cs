@@ -175,7 +175,7 @@ namespace LiteDB.Engine
                 this.Write(count + 1); // write Length + 1 (for \0)
             }
 
-            if (count <= _current.Count)
+            if (count <= _current.Count - _currentPosition)
             {
                 Encoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
 

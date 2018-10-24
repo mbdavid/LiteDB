@@ -21,7 +21,7 @@ namespace LiteDB.Engine
         private readonly ConcurrentDictionary<long, PageBuffer> _cache = new ConcurrentDictionary<long, PageBuffer>();
         private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
 
-        private readonly ManualResetEventSlim _waiter = new ManualResetEventSlim(true);
+        private readonly ManualResetEventSlim _waiter = new ManualResetEventSlim(false);
         private Thread _thread = null;
         private bool _running = true;
         private int _checkLimitSize = MEMORY_FILE_CACHE_SIZE;
@@ -69,7 +69,7 @@ namespace LiteDB.Engine
 
             try
             {
-                _cache.AddOrUpdate(page.Posistion, page, (pos, old) =>
+                _cache.AddOrUpdate(page.Position, page, (pos, old) =>
                 {
                     this.RunCleanup();
                     return page;
@@ -118,12 +118,15 @@ namespace LiteDB.Engine
                     // get all pages that are not been shared
                     var toDelete = _cache.Values
                         .Where(x => x.ShareCounter == 0)
-                        .Select(x => x.Posistion)
+                        .Select(x => x.Position)
                         .ToArray();
 
                     foreach (var position in toDelete)
                     {
-                        _cache.TryRemove(position, out var page);
+                        if(_cache.TryRemove(position, out var page))
+                        {
+                            _memory.Return(ref page.Buffer);
+                        }
                     }
 
                     // define new check limit based on how many items contains in cache + fixed size

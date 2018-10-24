@@ -43,7 +43,7 @@ namespace LiteDB.Engine
             }
         }
 
-        public void Return(ArraySegment<byte> buffer)
+        public void Return(ref ArraySegment<byte> buffer)
         {
             _store.Add(buffer);
         }
