@@ -57,14 +57,14 @@
     <Compile Include="..\LiteDB\Document\Json\JsonWriter.cs" Link="Document\Json\JsonWriter.cs" />
     <Compile Include="..\LiteDB\Document\ObjectId.cs" Link="Document\ObjectId.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\FileMemory.cs" Link="MemoryFile\FileMemory.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\FileMemoryCache.cs" Link="MemoryFile\FileMemoryCache.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\FileMemoryReader.cs" Link="MemoryFile\FileMemoryReader.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\FileMemoryWriter.cs" Link="MemoryFile\FileMemoryWriter.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\MemoryStore.cs" Link="MemoryFile\MemoryStore.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\PageBuffer.cs" Link="MemoryFile\PageBuffer.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferExtensions.cs" Link="MemoryFile\Serializer\BufferExtensions.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferReader.cs" Link="MemoryFile\Serializer\BufferReader.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferWriter.cs" Link="MemoryFile\Serializer\BufferWriter.cs" />
+    <Compile Include="..\LiteDB\Engine\Memory\Structures\ArraySlice.cs" Link="MemoryFile\Structures\ArraySlice.cs" />
+    <Compile Include="..\LiteDB\Engine\Memory\Structures\PageBuffer.cs" Link="MemoryFile\Structures\PageBuffer.cs" />
     <Compile Include="..\LiteDB\Engine\Services\DiskFactory\FileStreamDiskFactory.cs" Link="MemoryFile\Disk\FileStreamDiskFactory.cs" />
     <Compile Include="..\LiteDB\Engine\Services\DiskFactory\IDiskFactory.cs" Link="MemoryFile\Disk\IDiskFactory.cs" />
     <Compile Include="..\LiteDB\Engine\Services\DiskFactory\StreamDiskFactory.cs" Link="MemoryFile\Disk\StreamDiskFactory.cs" />
@@ -101,6 +101,7 @@
     <Folder Include="Document\Json\" />
     <Folder Include="Document\Bson\" />
     <Folder Include="MemoryFile\Disk\" />
+    <Folder Include="MemoryFile\Structures\" />
     <Folder Include="MemoryFile\Serializer\" />
   </ItemGroup>
 

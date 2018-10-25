@@ -15,10 +15,18 @@ namespace LiteDB.Engine
     /// <summary>
     /// Represent page buffer to be read/write using FileMemory
     /// </summary>
-    internal class PageBuffer
+    internal class PageBuffer : ArraySlice<byte>
     {
         public long Position;
         public int ShareCounter;
-        public ArraySegment<byte> Buffer;
+
+        public bool IsWritable;
+
+        public PageBuffer(byte[] buffer, int offset)
+            : base(buffer, offset, PAGE_SIZE)
+        {
+            this.Position = long.MaxValue;
+            this.ShareCounter = 0;
+        }
     }
 }

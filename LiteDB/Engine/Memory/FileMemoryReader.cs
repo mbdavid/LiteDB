@@ -18,103 +18,41 @@ namespace LiteDB.Engine
     /// </summary>
     internal class FileMemoryReader : IDisposable
     {
-        private readonly MemoryStore _memory;
-        private readonly FileMemoryCache _cache;
+        private readonly MemoryStore _store;
         private readonly Stream _stream;
+        private readonly bool _writable;
         private readonly Action<Stream> _dispose;
 
         private readonly List<PageBuffer> _pages = new List<PageBuffer>();
 
-        public FileMemoryReader(MemoryStore memory, FileMemoryCache cache, Stream stream, Action<Stream> dispose)
+        public FileMemoryReader(MemoryStore store, Stream stream, bool writable, Action<Stream> dispose)
         {
-            _memory = memory;
-            _cache = cache;
+            _store = store;
             _stream = stream;
+            _writable = writable;
             _dispose = dispose;
         }
 
-        public PageBuffer GetPage(long position, bool readOnly)
+        public PageBuffer GetPage(long position)
         {
-            return readOnly ? this.GetReadablePage(position) : this.GetWritablePage(position);
-        }
+            DEBUG(_pages.Any(x => x.Position == position), "only 1 page buffer instance per reader");
 
-        /// <summary>
-        /// Get a PageBuffer from disk or cache. Ensure that page will be in cache during all use.
-        /// </summary>
-        private PageBuffer GetReadablePage(long position)
-        {
-            var isNew = false;
+            var page = _writable ?
+                _store.GetWritablePage(position, this.ReadStream) :
+                _store.GetReadablePage(position, this.ReadStream);
 
-            // try get page from cache - otherwise read from disk
-            var page = _cache.GetOrAddPage(position, (pos) =>
-            {
-                // rent 8k array buffer
-                var buffer = _memory.Rent(false);
-
-                _stream.Position = pos;
-
-                // read page from disk
-                _stream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
-
-                isNew = true;
-
-                // create new instance of page buffer with buffer slot
-                return new PageBuffer
-                {
-                    Position = position,
-                    ShareCounter = 1,
-                    Buffer = buffer
-                };
-            });
-
-            // if is not a new page, increment shared counter
-            if (isNew == false)
-            {
-                // increment page share counter (will be decremented when reader dispose)
-                Interlocked.Increment(ref page.ShareCounter);
-            }
-
-            // add page in local thread list
             _pages.Add(page);
 
             return page;
         }
 
         /// <summary>
-        /// Get a clear/no re-used page buffer ready to be writable. Do not add into cache (can be changed)
+        /// Read bytes from stream into buffer slice
         /// </summary>
-        private PageBuffer GetWritablePage(long position)
+        private void ReadStream(long position, ArraySlice<byte> buffer)
         {
-            ArraySegment<byte> buffer;
-
-            // if page is in cache, get (avoiding disk read) but clone bytes
-            if (_cache.TryGetPage(position, out var clean))
-            {
-                // get a buffer clone from cache (no reference)
-                buffer = _memory.Clone(clean.Buffer);
-            }
-            else
-            {
-                // get buffer from memory store and read from stream
-                buffer = _memory.Rent(false);
-
-                _stream.Position = position;
-
-                _stream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
-            }
-
-            // create new PageBuffer - so ShareCount must be 1
-            var page = new PageBuffer
-            {
-                Position = position,
-                ShareCounter = 1,
-                Buffer = buffer
-            };
-
-            // adding new page into local list to be decremented when dispose
-            _pages.Add(page);
-
-            return page;
+            _stream.Position = position;
+            _stream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
         }
 
         /// <summary>
@@ -122,14 +60,9 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer NewPage()
         {
-            var buffer = _memory.Rent(true);
+            DEBUG(_writable == false, "only writable readers can create new pages");
 
-            var page = new PageBuffer
-            {
-                Position = long.MaxValue, // must be write only using "Append"
-                ShareCounter = 1,
-                Buffer = buffer
-            };
+            var page = _store.NewPage();
 
             _pages.Add(page);
 
@@ -142,11 +75,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void ReleasePages()
         {
-            for (var i = 0; i < _pages.Count; i++)
+            foreach(var page in _pages)
             {
-                var page = _pages[i];
-
-                Interlocked.Decrement(ref page.ShareCounter);
+                _store.ReturnPage(page);
             }
 
             _pages.Clear();

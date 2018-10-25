@@ -19,10 +19,10 @@ namespace LiteDB.Engine
     /// </summary>
     public class BufferReader : IDisposable
     {
-        private readonly IEnumerator<ArraySegment<byte>> _source;
+        private readonly IEnumerator<ArraySlice<byte>> _source;
         private readonly bool _utcDate;
 
-        private ArraySegment<byte> _current;
+        private ArraySlice<byte> _current;
         private int _currentPosition = 0; // position in _current
         private int _position = 0; // global position
 
@@ -40,7 +40,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsEOF => _isEOF;
 
-        public BufferReader(IEnumerable<ArraySegment<byte>> source, bool utcDate = false)
+        public BufferReader(IEnumerable<ArraySlice<byte>> source, bool utcDate = false)
         {
             _source = source.GetEnumerator();
             _utcDate = utcDate;
@@ -179,7 +179,7 @@ namespace LiteDB.Engine
                     // and go to next segment
                     if (!_isEOF)
                     {
-                        while (_current.Get(_currentPosition) != 0x00)
+                        while (_current[_currentPosition] != 0x00)
                         {
                             if (this.MoveFordward(1))
                             {
@@ -214,7 +214,7 @@ namespace LiteDB.Engine
 
             while(pos < _current.Count)
             {
-                if (_current.Get(pos) == 0x00)
+                if (_current[pos] == 0x00)
                 {
                     value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
 
@@ -327,7 +327,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ReadBoolean()
         {
-            var value = _current.Get(_currentPosition) == 1;
+            var value = _current[_currentPosition] == 1;
             this.MoveFordward(1);
             return value;
         }
@@ -337,7 +337,7 @@ namespace LiteDB.Engine
         /// </summary>
         public byte ReadByte()
         {
-            var value = _current.Get(_currentPosition);
+            var value = _current[_currentPosition];
             this.MoveFordward(1);
             return value;
         }

@@ -18,10 +18,10 @@ namespace LiteDB.Engine
     internal class FileMemoryWriter : IDisposable
     {
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
-        private readonly FileMemoryCache _cache;
+        private readonly MemoryStore _store;
 
         private readonly Stream _stream;
-        private bool _appendOnly;
+        private readonly bool _appendOnly;
         private long _appendPosition;
 
         // async thread controls
@@ -29,10 +29,10 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public FileMemoryWriter(Stream stream, FileMemoryCache cache, bool appendOnly)
+        public FileMemoryWriter(Stream stream, MemoryStore store, bool appendOnly)
         {
             _stream = stream;
-            _cache = cache;
+            _store = store;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
             _appendOnly = appendOnly;
@@ -49,9 +49,7 @@ namespace LiteDB.Engine
 
         public long QueuePage(PageBuffer page)
         {
-            // must increment share counter (will be decremented only when are real saved on disk) to avoid
-            // be removed from cache during async writer time
-            Interlocked.Increment(ref page.ShareCounter);
+            DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
 
             if (_appendOnly)
             {
@@ -59,8 +57,6 @@ namespace LiteDB.Engine
                 // must add into cache to be sure that new readers can see this page
                 page.Position = Interlocked.Add(ref _appendPosition, PAGE_SIZE);
 
-                // must add this page in cache because now this page are part of file
-                _cache.AddPage(page);
             }
             else
             {
@@ -68,6 +64,8 @@ namespace LiteDB.Engine
                 // don't worry about concurrency becasue only 1 instance call this (Checkpoint)
                 _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);
             }
+
+            _store.MarkAsClean(page);
 
             _queue.Enqueue(page);
 
@@ -81,7 +79,7 @@ namespace LiteDB.Engine
         {
             Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
 
-            _queue.Enqueue(new PageBuffer { Position = length, ShareCounter = -1 });
+            _queue.Enqueue(new PageBuffer(null, 0) { Position = length });
         }
 
         /// <summary>
@@ -102,12 +100,14 @@ namespace LiteDB.Engine
 
             while(_running)
             {
+                var saved = new List<PageBuffer>();
+
                 while (_queue.TryDequeue(out var page))
                 {
-                    if (page.ShareCounter == -1)
+                    // if page position are < 0 it's only datafile resize (use this position as new file length)
+                    if (page.Position < 0)
                     {
-                        // when share counter is -1 this is not a regular page, is a set length command
-                        _stream.SetLength(page.Position);
+                        _stream.SetLength(Math.Abs(page.Position));
                     }
                     else
                     {
@@ -115,13 +115,16 @@ namespace LiteDB.Engine
                         _stream.Position = page.Position;
 
                         // write page on disk
-                        _stream.Write(page.Buffer.Array, page.Buffer.Offset, PAGE_SIZE);
+                        _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
-                        // now this page are safe to be decremented (and clear by cache if needed)
-                        Interlocked.Decrement(ref page.ShareCounter);
+                        // now I can assume page are already in disk 
+                        // (even not 100% sure, but Strem.Read method will read new data)
+                        // I can release page to be re-used by another thread
+                        _store.ReturnPage(page);
                     }
                 }
 
+                // after this I will have 100% sure data are safe
                 _stream.FlushToDisk();
 
                 // suspend thread and wait another signal

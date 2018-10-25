@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -18,9 +19,9 @@ namespace LiteDB.Engine
     /// </summary>
     public class BufferWriter : IDisposable
     {
-        private readonly IEnumerator<ArraySegment<byte>> _source;
+        private readonly IEnumerator<ArraySlice<byte>> _source;
 
-        private ArraySegment<byte> _current;
+        private ArraySlice<byte> _current;
         private int _currentPosition = 0; // position in _current
         private int _position = 0; // global position
 
@@ -38,7 +39,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsEOF => _isEOF;
 
-        public BufferWriter(IEnumerable<ArraySegment<byte>> source)
+        public BufferWriter(IEnumerable<ArraySlice<byte>> source)
         {
             _source = source.GetEnumerator();
 
@@ -58,7 +59,7 @@ namespace LiteDB.Engine
             if (_isEOF) return false;
 
             //DEBUG
-            if (_currentPosition + count > _current.Count) throw new InvalidOperationException("fordward are only for current segment");
+            DEBUG(_currentPosition + count > _current.Count, "fordward are only for current segment");
 
             _currentPosition += count;
             _position += count;
@@ -142,7 +143,7 @@ namespace LiteDB.Engine
             {
                 Encoding.UTF8.GetBytes(value, 0, value.Length, _current.Array, _current.Offset + _currentPosition);
 
-                _current.Set(_currentPosition + bytesCount, 0x00);
+                _current[_currentPosition + bytesCount] = 0x00;
 
                 this.MoveFordward(bytesCount + 1); // +1 to '\0'
             }
@@ -154,7 +155,7 @@ namespace LiteDB.Engine
 
                 this.Write(buffer, 0, bytesCount);
 
-                _current.Set(_currentPosition, 0x00);
+                _current[_currentPosition] = 0x00;
 
                 this.MoveFordward(1);
 
@@ -284,7 +285,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(bool value)
         {
-            _current.Set(_currentPosition, value ? (byte)0x00 : (byte)0x01);
+            _current[_currentPosition] = value ? (byte)0x00 : (byte)0x01;
             this.MoveFordward(1);
         }
 
@@ -293,7 +294,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(byte value)
         {
-            _current.Set(_currentPosition, value);
+            _current[_currentPosition] = value;
             this.MoveFordward(1);
         }
 

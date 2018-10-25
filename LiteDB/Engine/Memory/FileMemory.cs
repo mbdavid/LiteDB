@@ -18,8 +18,7 @@ namespace LiteDB.Engine
     /// </summary>
     internal class FileMemory : IDisposable
     {
-        private readonly MemoryStore _memory = new MemoryStore();
-        private readonly FileMemoryCache _cache;
+        private readonly MemoryStore _store = new MemoryStore();
 
         private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
 
@@ -33,10 +32,10 @@ namespace LiteDB.Engine
             _factory = factory;
             _appendOnly = appendOnly;
 
-            _cache = new FileMemoryCache(_memory);
+            _store = new MemoryStore();
 
-            // create lazy writer to avoid create file if not needed (no write)
-            _writer = new Lazy<FileMemoryWriter>(() => new FileMemoryWriter(_factory.GetStream(true, _appendOnly), _cache, _appendOnly));
+            // create lazy writer to avoid create file if not needed (readonly file access)
+            _writer = new Lazy<FileMemoryWriter>(() => new FileMemoryWriter(_factory.GetStream(true, _appendOnly), _store, _appendOnly));
         }
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace LiteDB.Engine
         /// Get reader from pool (or from new instance). Must be Dispose after use
         /// Should be one request per thread
         /// </summary>
-        public FileMemoryReader GetReader()
+        public FileMemoryReader GetReader(bool writable)
         {
             // checks if pool contains already opened stream
             if (!_pool.TryTake(out var stream))
@@ -60,7 +59,7 @@ namespace LiteDB.Engine
             void disposing(Stream s) { _pool.Add(s); }
 
             // create new instance
-            return new FileMemoryReader(_memory, _cache, stream, disposing);
+            return new FileMemoryReader(_store, stream, writable, disposing);
         }
 
         /// <summary>
@@ -108,7 +107,7 @@ namespace LiteDB.Engine
             }
 
             // stop cache async clean task
-            _cache.Dispose();
+            _store.Dispose();
         }
     }
 }

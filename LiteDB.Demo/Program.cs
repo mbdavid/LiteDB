@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LiteDB.Demo
@@ -14,114 +15,116 @@ namespace LiteDB.Demo
     class Program
     {
         static string PATH = @"c:\temp\memory-file.db";
+        static int N = 1000000;
+        static BsonDocument doc = new BsonDocument
+        {
+            ["_id"] = 1,
+            ["name"] = "NoSQL Database",
+            ["birthday"] = new DateTime(1977, 10, 30),
+            ["phones"] = new BsonArray { "000000", "12345678" },
+            ["active"] = true
+        }; // 109b
 
         static void Main(string[] args)
         {
-            var sw = new Stopwatch(); sw.Start();
-
-            /*
-            var l = new List<PageBuffer>();
-            var p0 = new PageBuffer { Position = 1, Buffer = new ArraySegment<byte>(new byte[] { 25 }) };
-            var p1 = p0;
-            p1.Position = 25;
-            */
-
-
-            WriteFile();
-
-            sw.Stop();
-
-            Console.WriteLine(sw.ElapsedMilliseconds);
-            Console.ReadKey();
-        }
-
-        static void ReadFile()
-        {
-            var factory = new FileStreamDiskFactory(PATH, false);
-            var file = new FileMemory(factory, false);
-
-            IEnumerable<ArraySegment<byte>> source()
-            {
-                using (var fileReader = file.GetReader())
-                {
-                    var pos = 0;
-
-                    while (pos < file.Length)
-                    {
-                        var page = fileReader.GetPage(pos, true);
-
-                        pos += 8192;
-
-                        yield return page.Buffer;
-                    }
-                }
-            };
-
-            for (var j = 0; j < 1; j++)
-            {
-                var bufferReader = new BufferReader(source());
-
-                for (var i = 0; i < 1000000; i++)
-                {
-                    var d = bufferReader.ReadDocument();
-                }
-
-                bufferReader.Dispose();
-            }
-
-            file.Dispose();
-        }
-
-        static void WriteFile()
-        {
             File.Delete(PATH);
-
-            var doc = new BsonDocument
-            {
-                ["_id"] = 1,
-                ["name"] = "NoSQL Database",
-                ["birthday"] = new DateTime(1977, 10, 30),
-                ["phones"] = new BsonArray { "000000", "12345678" },
-                ["active"] = true
-            };
 
             var factory = new FileStreamDiskFactory(PATH, false);
             var file = new FileMemory(factory, true);
 
-            var dirtyPages = new List<PageBuffer>();
+            Console.WriteLine("Processing... " + N);
 
-            IEnumerable<ArraySegment<byte>> source()
+            var sw = new Stopwatch();
+            sw.Start();
+
+            // Write documents inside data file (append)
+            WriteFile(file);
+
+            Console.WriteLine("Write: " + sw.ElapsedMilliseconds);
+            Thread.Sleep(2000);
+            sw.Restart();
+
+            // Read document inside data file
+            ReadFile(file);
+
+            file.Dispose();
+
+            sw.Stop();
+
+            Console.WriteLine("Read: " + sw.ElapsedMilliseconds);
+            Console.ReadKey();
+        }
+
+        static void ReadFile(FileMemory file)
+        {
+            var fileReader = file.GetReader(false);
+
+            IEnumerable<ArraySlice<byte>> source()
             {
-                using (var fileReader = file.GetReader())
+                var pos = 0;
+
+                while (pos < file.Length)
                 {
-                    while (true)
-                    {
-                        var page = fileReader.NewPage();
+                    var page = fileReader.GetPage(pos);
 
-                        dirtyPages.Add(page);
+                    pos += 8192;
 
-                        yield return page.Buffer;
-                    }
+                    yield return page;
                 }
             };
 
             for (var j = 0; j < 1; j++)
             {
-                var bufferWriter = new BufferWriter(source());
-
-                for (var i = 0; i < 1000000; i++)
+                using (var bufferReader = new BufferReader(source()))
                 {
-                    bufferWriter.WriteDocument(doc);
+                    for (var i = 0; i < N; i++)
+                    {
+                        var d = bufferReader.ReadDocument();
+                    }
+                }
+            }
+
+            fileReader.Dispose();
+        }
+
+        static void WriteFile(FileMemory file)
+        {
+            var fileReader = file.GetReader(true);
+
+            var dirtyPages = new List<PageBuffer>();
+
+            IEnumerable<ArraySlice<byte>> source()
+            {
+                while (true)
+                {
+                    var page = fileReader.NewPage();
+
+                    dirtyPages.Add(page);
+
+                    yield return page;
+                }
+            };
+
+            for (var j = 0; j < 1; j++)
+            {
+                using (var bufferWriter = new BufferWriter(source()))
+                {
+                    for (var i = 0; i < N; i++)
+                    {
+                        doc["_id"] = i;
+
+                        bufferWriter.WriteDocument(doc);
+                    }
                 }
 
-                bufferWriter.Dispose();
 
                 file.WriteAsync(dirtyPages);
 
                 dirtyPages.Clear();
             }
 
-            file.Dispose();
+            // só posso fechar o reader apos ter enviado tudo para salvar (no caso as sujas)
+            fileReader.Dispose();
         }
     }
 
