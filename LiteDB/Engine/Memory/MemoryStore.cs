@@ -18,9 +18,19 @@ namespace LiteDB.Engine
     /// </summary>
     internal class MemoryStore : IDisposable
     {
-        private readonly Dictionary<long, PageBuffer> _cleanPages = new Dictionary<long, PageBuffer>();
+        /// <summary>
+        /// Contains only clean-readonly pages indexed by position. Inside this collection pages can be in-use (SharedCounter > 0) or
+        /// ready to be re-used.
+        /// </summary>
+        private readonly ConcurrentDictionary<long, PageBuffer> _cleanPages = new ConcurrentDictionary<long, PageBuffer>();
 
-        private readonly List<PageBuffer> _writablePages = new List<PageBuffer>();
+//        /// <summary>
+//        /// Contains a temp list of all writable pages - this pages can be dirty (in change mode) or maybe clean - but pages
+//        /// here are no sharable (ShareCounter must be 1). Only when mark as clean page will be remove from this list
+//        /// </summary>
+//        private readonly List<PageBuffer> _writablePages = new List<PageBuffer>();
+
+        private readonly object _locker = new object();
 
         /// <summary>
         /// Empty pages in store. If request page and has no more in store, do extend to create more memory allocation
@@ -38,21 +48,28 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetReadablePage(long position, Action<long, ArraySlice<byte>> factory)
         {
-            DEBUG(_writablePages.Any(x => x.Position == position), "this page already in writable list");
+            //            DEBUG(_writablePages.Any(x => x.Position == position), "this page already in writable list");
+            var needIncrement = true;
 
-            if (_cleanPages.TryGetValue(position, out var page))
-            {
-                Interlocked.Increment(ref page.ShareCounter);
-            }
-            else
+            var page = _cleanPages.GetOrAdd(position, (pos) =>
             {
                 // get a clean page from store and read data from stream
-                page = this.GetPageFromStore();
+                var newPage = this.GetPageFromStore();
 
-                page.Position = position;
-                page.ShareCounter = 1;
+                newPage.Position = position;
+                newPage.ShareCounter = 1;
 
-                factory(position, page);
+                needIncrement = false;
+
+                factory(position, newPage);
+
+                return newPage;
+            });
+
+            // increment only if page was already in _clean collection
+            if (needIncrement)
+            {
+                Interlocked.Increment(ref page.ShareCounter);
             }
 
             return page;
@@ -64,10 +81,12 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetWritablePage(long position, Action<long, ArraySlice<byte>> factory)
         {
-            DEBUG(_writablePages.Any(x => x.Position == position), "this page already in dirty list");
+//            DEBUG(_writablePages.Any(x => x.Position == position), "this page already in dirty list");
 
-            // write pages always contains a new buffe
-            var page = this.NewPage();
+            // write pages always contains a new buffer array
+            var page = this.NewPage(position, false);
+
+            // ALERT !! mesmo pegando a pagina da colecao pode ser alterada entre o if e o buffer-copy
 
             // if request page already in clean list, just copy buffer and avoid load from stream
             if (_cleanPages.TryGetValue(position, out var clean))
@@ -82,14 +101,24 @@ namespace LiteDB.Engine
             return page;
         }
 
-        public PageBuffer NewPage()
+        /// <summary>
+        /// Create new page using an empty buffer block. Mark this page as writable
+        /// </summary>
+        public PageBuffer NewPage(long position, bool clear)
         {
             var page = this.GetPageFromStore();
 
-            _writablePages.Add(page);
-
+            // clear page buffer
+            page.Position = position;
             page.IsWritable = true;
             page.ShareCounter = 1;
+
+            if (clear)
+            {
+                Array.Clear(page.Array, page.Offset, page.Count);
+            }
+
+//            _writablePages.Add(page);
 
             return page;
         }
@@ -106,10 +135,9 @@ namespace LiteDB.Engine
             // add (or update) page in clean list
             _cleanPages[page.Position] = page;
 
-            // remove from writable pages and mark page as not writable anymore
-            _writablePages.Remove(page);
+//            _writablePages.Remove(page);
 
-            page.ShareCounter++;
+            Interlocked.Increment(ref page.ShareCounter);
         }
 
         /// <summary>
@@ -119,12 +147,22 @@ namespace LiteDB.Engine
         {
             DEBUG(page.ShareCounter <= 0, "pages must contains share counter when return to store");
 
-            Interlocked.Decrement(ref page.ShareCounter);
-
-            if (page.ShareCounter == 0)
+            // if on decrement share count this share will be zero, this page can be re-used
+            if (Interlocked.Decrement(ref page.ShareCounter) == 0)
             {
-                // posso nesse momento decidir se esta pagina volta pra store ou fica disponivel
-                // para novas leituras - ver conforme tamanho da store + memoria usada
+                // must mark page as not writable (at this point, page already writed in disk)
+                page.IsWritable = false;
+
+
+                //
+                // CLEAN-UP !! Must be in a sepate thread to run only when I want (memory usage)
+                // 
+                if (_cleanPages.TryRemove(page.Position, out var dummy))
+                {
+                    DEBUG(!Object.ReferenceEquals(page, dummy), "page instance must be same on clean collection");
+                }
+
+                _store.Enqueue(page);
             }
         }
 
@@ -132,6 +170,8 @@ namespace LiteDB.Engine
         {
             if (_store.TryDequeue(out var page))
             {
+                DEBUG(page.IsWritable, "in memory store, page must be masked as non-writable");
+
                 return page;
             }
             else
@@ -149,7 +189,7 @@ namespace LiteDB.Engine
         private void Extend()
         {
             // lock store to ensure only 1 extend per time
-            lock(_store)
+            lock(_locker)
             {
                 if (_store.Count > 0) return;
 

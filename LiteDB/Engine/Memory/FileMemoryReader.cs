@@ -62,7 +62,7 @@ namespace LiteDB.Engine
         {
             DEBUG(_writable == false, "only writable readers can create new pages");
 
-            var page = _store.NewPage();
+            var page = _store.NewPage(long.MaxValue, true);
 
             _pages.Add(page);
 
@@ -71,6 +71,7 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Release all loaded pages that was loaded by this reader. Decrement page share counter
+        /// Release a page doesn't mean clear page - I'm only saing that this reader will not use this page anymore
         /// If page get 0 share counter will be cleaner in next cleanup thread
         /// </summary>
         public void ReleasePages()

@@ -15,7 +15,8 @@ namespace LiteDB.Demo
     class Program
     {
         static string PATH = @"c:\temp\memory-file.db";
-        static int N = 1000000;
+        static int N0 = 5;
+        static int N1 = 200000;
         static BsonDocument doc = new BsonDocument
         {
             ["_id"] = 1,
@@ -32,7 +33,7 @@ namespace LiteDB.Demo
             var factory = new FileStreamDiskFactory(PATH, false);
             var file = new FileMemory(factory, true);
 
-            Console.WriteLine("Processing... " + N);
+            Console.WriteLine("Processing... " + (N0 * N1));
 
             var sw = new Stopwatch();
             sw.Start();
@@ -73,15 +74,17 @@ namespace LiteDB.Demo
                 }
             };
 
-            for (var j = 0; j < 1; j++)
+            for (var j = 0; j < N0; j++)
             {
                 using (var bufferReader = new BufferReader(source()))
                 {
-                    for (var i = 0; i < N; i++)
+                    for (var i = 0; i < N1; i++)
                     {
                         var d = bufferReader.ReadDocument();
                     }
                 }
+
+                fileReader.ReleasePages();
             }
 
             fileReader.Dispose();
@@ -105,11 +108,11 @@ namespace LiteDB.Demo
                 }
             };
 
-            for (var j = 0; j < 1; j++)
+            for (var j = 0; j < N0; j++)
             {
                 using (var bufferWriter = new BufferWriter(source()))
                 {
-                    for (var i = 0; i < N; i++)
+                    for (var i = 0; i < N1; i++)
                     {
                         doc["_id"] = i;
 
@@ -117,10 +120,11 @@ namespace LiteDB.Demo
                     }
                 }
 
-
                 file.WriteAsync(dirtyPages);
+                fileReader.ReleasePages();
 
                 dirtyPages.Clear();
+
             }
 
             // só posso fechar o reader apos ter enviado tudo para salvar (no caso as sujas)
