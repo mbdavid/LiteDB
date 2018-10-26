@@ -62,7 +62,7 @@ namespace LiteDB.Engine
         {
             DEBUG(_writable == false, "only writable readers can create new pages");
 
-            var page = _store.NewPage(long.MaxValue, true);
+            var page = _store.NewPage();
 
             _pages.Add(page);
 

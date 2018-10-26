@@ -14,9 +14,9 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        static string PATH = @"c:\temp\memory-file.db";
-        static int N0 = 5;
-        static int N1 = 200000;
+        static string PATH = @"d:\memory-file.db";
+        static int N0 = 100;
+        static int N1 = 10000;
         static BsonDocument doc = new BsonDocument
         {
             ["_id"] = 1,
@@ -53,6 +53,7 @@ namespace LiteDB.Demo
             sw.Stop();
 
             Console.WriteLine("Read: " + sw.ElapsedMilliseconds);
+            Console.WriteLine("--------\nMemory: " + file.MemoryBuffer);
             Console.ReadKey();
         }
 

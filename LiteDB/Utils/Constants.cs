@@ -90,7 +90,7 @@ namespace LiteDB
         /// <summary>
         /// Size, in PAGES, for each segment (used in MemoryStore)
         /// </summary>
-        public const int MEMORY_SEGMENT_SIZE = 100;
+        public const int MEMORY_SEGMENT_SIZE = 1000;
 
         /// <summary>
         /// When memory file cache exceed this size (in pages) run clean up cache (removing unused pages)

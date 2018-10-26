@@ -44,6 +44,11 @@ namespace LiteDB.Engine
         public long Length => _factory.Exists() ? _writer.Value.Length : 0;
 
         /// <summary>
+        /// Get how many page buffer this file extends
+        /// </summary>
+        public int MemoryBuffer => _store.ExtendSegments * MEMORY_SEGMENT_SIZE;
+
+        /// <summary>
         /// Get reader from pool (or from new instance). Must be Dispose after use
         /// Should be one request per thread
         /// </summary>
