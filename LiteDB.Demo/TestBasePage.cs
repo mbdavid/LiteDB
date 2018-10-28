@@ -33,33 +33,37 @@ namespace LiteDB.Demo
 
             page.NewPage(25, PageType.Data);
 
-            WriteDoc(page, doc, 0); // 0
-            WriteDoc(page, doc, 1); // 1
-            //WriteDoc(page, doc, 2); // 2
-            //WriteDoc(page, doc, 3); // 3
-            //WriteDoc(page, doc, 4); // 4 
-            //WriteDoc(page, doc, 5); // 5
+            InsertDoc(page, doc, 0); // 0
+            InsertDoc(page, doc, 1); // 1
+            //InsertDoc(page, doc, 2); // 2
+            //InsertDoc(page, doc, 3); // 3
+            //InsertDoc(page, doc, 4); // 4 
+            //InsertDoc(page, doc, 5); // 5
 
-            page.Delete(0);
+            doc["name"] = "NoSQL 2018-NoSQL 2018-NoSQL 2018-NoSQL 2018-NoSQL 2018-NoSQL 2018-NoSQL 2018-NoSQL 2018";
+
+            UpdateDoc(page, 0, doc, 25);
+
+            //page.Delete(0);
             //page.Delete(1);
             //page.Delete(2);
             //
-            //WriteDoc(page, doc, 6); // 0
-            //WriteDoc(page, doc, 7); // 1
+            //InsertDoc(page, doc, 6); // 0
+            //InsertDoc(page, doc, 7); // 1
 
-            var d0 = ReadDoc(page, 1);
+            var d0 = ReadDoc(page, 0);
 
             page.Defrag();
 
             var d1 = ReadDoc(page, 1);
 
-            page.UpdateHeaderBuffer();
+            page.WriteHeader();
 
             ;
 
         }
 
-        static void WriteDoc(BasePage2 page, BsonDocument doc, int id)
+        static void InsertDoc(BasePage2 page, BsonDocument doc, int id)
         {
             doc["_id"] = id;
 
@@ -68,6 +72,22 @@ namespace LiteDB.Demo
             Console.WriteLine($"Doc Id: {id} - Length: {len}");
 
             var segment = page.Insert(len);
+
+            using (var writer = new BufferWriter(new[] { segment.Buffer }))
+            {
+                writer.WriteDocument(doc);
+            }
+        }
+
+        static void UpdateDoc(BasePage2 page, byte index, BsonDocument doc, int id)
+        {
+            doc["_id"] = id;
+
+            var len = doc.GetBytesCount(true);
+
+            Console.WriteLine($"Doc Id: {id} - Length: {len}");
+
+            var segment = page.Update(index, len);
 
             using (var writer = new BufferWriter(new[] { segment.Buffer }))
             {

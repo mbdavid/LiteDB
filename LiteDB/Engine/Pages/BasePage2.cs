@@ -119,7 +119,10 @@ namespace LiteDB.Engine
             this.IsDirty = false;
         }
 
-        public virtual void ReadHeaderBuffer()
+        /// <summary>
+        /// Read header data from byte[] buffer into local variables
+        /// </summary>
+        public virtual void ReadHeader()
         {
             // page information
             this.PageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 0); // 00-03
@@ -140,7 +143,10 @@ namespace LiteDB.Engine
             this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + 35); // 35
         }
 
-        public virtual void UpdateHeaderBuffer()
+        /// <summary>
+        /// Write header data from variable into byte[] buffer
+        /// </summary>
+        public virtual void WriteHeader()
         {
             // page information
             this.PageID.ToBytes(_buffer.Array, _buffer.Offset + 0); // 00-03
@@ -178,6 +184,14 @@ namespace LiteDB.Engine
         /// </summary>
         public PageSegment Insert(int bytesLength)
         {
+            return this.Insert(this.GetFreeSlot(), bytesLength);
+        }
+
+        /// <summary>
+        /// Internal implementation with index as parameter (used also in Update)
+        /// </summary>
+        private PageSegment Insert(byte index, int bytesLength)
+        {
             DEBUG(this.FreeBytes < bytesLength, "length must be always lower than current free space");
 
             // calculate how many continuous bytes are avaiable in this page
@@ -190,7 +204,6 @@ namespace LiteDB.Engine
             }
 
             // get a free index slot
-            var index = this.GetFreeSlot();
             var length = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks
             var block = this.NextFreeBlock;
 
@@ -217,15 +230,15 @@ namespace LiteDB.Engine
         /// </summary>
         public void Delete(byte index)
         {
-            // read position on page that this index are linking
-            var slot = _buffer[PAGE_SIZE - index - 1];
+            // read block on index slot
+            var block = _buffer[PAGE_SIZE - index - 1];
 
-            DEBUG(slot < 3, "existing page item must contains a valid block position (after header)");
+            DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
 
-            var block = slot * PAGE_BLOCK_SIZE;
+            var position = block * PAGE_BLOCK_SIZE;
 
             // read how many blocks this block use
-            var length = _buffer[block];
+            var length = _buffer[position];
 
             // clean slot index
             _buffer[PAGE_SIZE - index - 1] = (byte)0x00;
@@ -249,11 +262,79 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Defrag method re-organize all byte data removing all fragmented data. This will move all page blocks
-        /// to create a single continuous area
+        /// Update segment block with new data
+        /// </summary>
+        public PageSegment Update(byte index, int bytesLength)
+        {
+            // read position on page that this index are linking
+            var block = _buffer[PAGE_SIZE - index - 1];
+
+            DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
+
+            var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
+            var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks
+            var isLast = index == this.HighestIndex;
+
+            // best situation: same block count
+            if (newLength == originalLength)
+            {
+                return new PageSegment(_buffer, index, block);
+            }
+            // when new length are less than original length (will fit in current segment)
+            else if (newLength < originalLength)
+            {
+                var diff = (byte)(originalLength - newLength); // blocks removed
+
+                // is this segment are not at end, must add this fragment
+                if (isLast == false)
+                {
+                    this.FragmentedBlocks += diff;
+                }
+
+                // less blocks will be used
+                this.UsedBlocks -= diff;
+
+                return new PageSegment(_buffer, index, newLength);
+            }
+            // when new length are large than current segment
+            else
+            {
+                var diff = (byte)(newLength - originalLength); // blocks added
+
+                // if segment are last on page, just add more space
+                if (isLast)
+                {
+                    this.UsedBlocks += diff; // diff is negative, will add value
+                    this.NextFreeBlock += newLength; // need fix next free block 
+
+                    return new PageSegment(_buffer, index, newLength);
+                }
+                // ok, worst case: do not fit in current block, move new segment area
+                else
+                {
+#if DEBUG
+                    // clear segment (for debug propose only) - there is no need on release
+                    Array.Fill<byte>(_buffer.Array, 99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
+#endif
+
+                    // more fragmented blocks and less used blocks (because I will run insert command soon)
+                    this.FragmentedBlocks += originalLength;
+                    this.UsedBlocks -= originalLength;
+
+                    // run insert command but use same index
+                    return this.Insert(index, bytesLength);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Defrag method re-organize all byte data content removing all fragmented data. This will move all page blocks
+        /// to create a single continuous area at first block (3) - after this method there is no more fragments and 
         /// </summary>
         public void Defrag()
         {
+            DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
+
             // first get all segments inside this page
             var segments = new List<PageSegment>();
 
@@ -292,10 +373,10 @@ namespace LiteDB.Engine
             }
 
 #if DEBUG
-            // clear free segment (for debug propose only)
-            Array.Clear(_buffer.Array, 
-                next * PAGE_BLOCK_SIZE, 
-                PAGE_SIZE - this.HighestIndex - (next * PAGE_BLOCK_SIZE) - 1);
+            // clear free segment (for debug propose only) - there is no need on release
+            var len = PAGE_SIZE - (next * PAGE_BLOCK_SIZE) - this.HighestIndex - 1;
+            // Array.Clear(_buffer.Array, next * PAGE_BLOCK_SIZE, len);
+            Array.Fill<byte>(_buffer.Array, 77, next * PAGE_BLOCK_SIZE, len);
 #endif
 
             // clear fragment blocks (page are in a continuous segment)
