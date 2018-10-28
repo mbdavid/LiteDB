@@ -31,80 +31,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\LiteDB\Document\BsonArray.cs" Link="Document\BsonArray.cs" />
-    <Compile Include="..\LiteDB\Document\BsonAutoId.cs" Link="Document\BsonAutoId.cs" />
-    <Compile Include="..\LiteDB\Document\BsonDataReader.cs" Link="Document\BsonDataReader.cs" />
-    <Compile Include="..\LiteDB\Document\BsonDocument.cs" Link="Document\BsonDocument.cs" />
-    <Compile Include="..\LiteDB\Document\BsonType.cs" Link="Document\BsonType.cs" />
-    <Compile Include="..\LiteDB\Document\BsonValue.cs" Link="Document\BsonValue.cs" />
-    <Compile Include="..\LiteDB\Document\Bson\BsonReader.cs" Link="Document\Bson\BsonReader.cs" />
-    <Compile Include="..\LiteDB\Document\Bson\BsonSerializer.cs" Link="Document\Bson\BsonSerializer.cs" />
-    <Compile Include="..\LiteDB\Document\Bson\BsonWriter.cs" Link="Document\Bson\BsonWriter.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\BsonExpression.cs" Link="Document\Expression\BsonExpression.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\Aggregate.cs" Link="Document\Expression\Aggregate.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\DataTypes.cs" Link="Document\Expression\DataTypes.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\Date.cs" Link="Document\Expression\Date.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\Math.cs" Link="Document\Expression\Math.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\Misc.cs" Link="Document\Expression\Misc.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\String.cs" Link="Document\Expression\String.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Methods\VolatileAttribute.cs" Link="Document\Expression\VolatileAttribute.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Parser\BsonExpressionOperators.cs" Link="Document\Expression\BsonExpressionOperators.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Parser\BsonExpressionParser.cs" Link="Document\Expression\BsonExpressionParser.cs" />
-    <Compile Include="..\LiteDB\Document\Expression\Parser\BsonExpressionType.cs" Link="Document\Expression\BsonExpressionType.cs" />
-    <Compile Include="..\LiteDB\Document\IBsonDataReader.cs" Link="Document\IBsonDataReader.cs" />
-    <Compile Include="..\LiteDB\Document\Json\JsonReader.cs" Link="Document\Json\JsonReader.cs" />
-    <Compile Include="..\LiteDB\Document\Json\JsonSerializer.cs" Link="Document\Json\JsonSerializer.cs" />
-    <Compile Include="..\LiteDB\Document\Json\JsonWriter.cs" Link="Document\Json\JsonWriter.cs" />
-    <Compile Include="..\LiteDB\Document\ObjectId.cs" Link="Document\ObjectId.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\FileMemory.cs" Link="MemoryFile\FileMemory.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\FileMemoryReader.cs" Link="MemoryFile\FileMemoryReader.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\FileMemoryWriter.cs" Link="MemoryFile\FileMemoryWriter.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\MemoryStore.cs" Link="MemoryFile\MemoryStore.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferExtensions.cs" Link="MemoryFile\Serializer\BufferExtensions.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferReader.cs" Link="MemoryFile\Serializer\BufferReader.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferWriter.cs" Link="MemoryFile\Serializer\BufferWriter.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\Structures\ArraySlice.cs" Link="MemoryFile\Structures\ArraySlice.cs" />
-    <Compile Include="..\LiteDB\Engine\Memory\Structures\PageBuffer.cs" Link="MemoryFile\Structures\PageBuffer.cs" />
-    <Compile Include="..\LiteDB\Engine\Pages\BasePage2.cs" Link="BasePage2.cs" />
-    <Compile Include="..\LiteDB\Engine\Services\DiskFactory\FileStreamDiskFactory.cs" Link="MemoryFile\Disk\FileStreamDiskFactory.cs" />
-    <Compile Include="..\LiteDB\Engine\Services\DiskFactory\IDiskFactory.cs" Link="MemoryFile\Disk\IDiskFactory.cs" />
-    <Compile Include="..\LiteDB\Engine\Services\DiskFactory\StreamDiskFactory.cs" Link="MemoryFile\Disk\StreamDiskFactory.cs" />
-    <Compile Include="..\LiteDB\Engine\Streams\ChunkStream.cs" Link="LiteDB\ChunkStream.cs" />
-    <Compile Include="..\LiteDB\Engine\Streams\ConcurrentStream.cs" Link="LiteDB\ConcurrentStream.cs" />
-    <Compile Include="..\LiteDB\Engine\Streams\TempStream.cs" Link="LiteDB\TempStream.cs" />
-    <Compile Include="..\LiteDB\Engine\Structures\PageAddress.cs" Link="LiteDB\PageAddress.cs" />
-    <Compile Include="..\LiteDB\Engine\Structures\PageSegment.cs" Link="PageSegment.cs" />
-    <Compile Include="..\LiteDB\Engine\Structures\TransactionState.cs" Link="LiteDB\TransactionState.cs" />
-    <Compile Include="..\LiteDB\Utils\Constants.cs" Link="LiteDB\Constants.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\BinaryExtensions.cs" Link="LiteDB\BinaryExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\BinaryReaderExtensions.cs" Link="LiteDB\BinaryReaderExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\BinaryWriterExtensions.cs" Link="LiteDB\BinaryWriterExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\ByteArrayExtensions.cs" Link="LiteDB\ByteArrayExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\DateExtensions.cs" Link="LiteDB\DateExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\DictionaryExtensions.cs" Link="LiteDB\DictionaryExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\ExpressionExtensions.cs" Link="LiteDB\ExpressionExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\HashSetExtensions.cs" Link="LiteDB\HashSetExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\IOExceptionExtensions.cs" Link="LiteDB\IOExceptionExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\LinqExtensions.cs" Link="LiteDB\LinqExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\StreamExtensions.cs" Link="LiteDB\StreamExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\StringExtensions.cs" Link="LiteDB\StringExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\TypeInfoExtensions.cs" Link="LiteDB\TypeInfoExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\Extensions\ZipExtensions.cs" Link="LiteDB\ZipExtensions.cs" />
-    <Compile Include="..\LiteDB\Utils\FileHelper.cs" Link="LiteDB\FileHelper.cs" />
-    <Compile Include="..\LiteDB\Utils\LiteException.cs" Link="LiteDB\LiteException.cs" />
-    <Compile Include="..\LiteDB\Utils\Logger.cs" Link="LiteDB\Logger.cs" />
-    <Compile Include="..\LiteDB\Utils\MimeTypeConverter.cs" Link="LiteDB\MimeTypeConverter.cs" />
-    <Compile Include="..\LiteDB\Utils\StorageUnitHelper.cs" Link="LiteDB\StorageUnitHelper.cs" />
-    <Compile Include="..\LiteDB\Utils\Tokenizer.cs" Link="LiteDB\Tokenizer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Document\Expression\" />
-    <Folder Include="Document\Json\" />
-    <Folder Include="Document\Bson\" />
-    <Folder Include="MemoryFile\Disk\" />
-    <Folder Include="MemoryFile\Structures\" />
-    <Folder Include="MemoryFile\Serializer\" />
+    <Compile Remove="Document\**" />
+    <Compile Remove="MemoryFile\**" />
+    <EmbeddedResource Remove="Document\**" />
+    <EmbeddedResource Remove="MemoryFile\**" />
+    <None Remove="Document\**" />
+    <None Remove="MemoryFile\**" />
   </ItemGroup>
 
   <ItemGroup>

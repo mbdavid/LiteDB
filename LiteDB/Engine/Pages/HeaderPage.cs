@@ -10,11 +10,6 @@ namespace LiteDB.Engine
     internal class HeaderPage : BasePage
     {
         /// <summary>
-        /// Page type = Header
-        /// </summary>
-        public override PageType PageType { get { return PageType.Header; } }
-
-        /// <summary>
         /// Header info the validate that datafile is a LiteDB file (27 bytes)
         /// </summary>
         private const string HEADER_INFO = "** This is a LiteDB file **";
@@ -59,7 +54,8 @@ namespace LiteDB.Engine
         /// </summary>
         public ConcurrentDictionary<string, uint> Collections { get; set; }
 
-        private HeaderPage()
+        public HeaderPage(PageBuffer buffer)
+            : base(buffer)
         {
         }
 

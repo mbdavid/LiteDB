@@ -67,5 +67,10 @@ namespace LiteDB.Engine
                 page.Offset + (block * PAGE_BLOCK_SIZE) + 1,
                 (_length * PAGE_BLOCK_SIZE) - 1);
         }
+
+        public override string ToString()
+        {
+            return $"[{_index}] B:{_block} L:{_length}";
+        }
     }
 }
