@@ -104,8 +104,8 @@ namespace LiteDB.Engine
 
                 while (_queue.TryDequeue(out var page))
                 {
-                    // if page position are < 0 it's only datafile resize (use this position as new file length)
-                    if (page.Position < 0)
+                    // if buffer is null, is a file length change
+                    if (page.Array == null)
                     {
                         _stream.SetLength(Math.Abs(page.Position));
                     }

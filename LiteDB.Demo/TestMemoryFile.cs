@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    class Program
+    class TestMemoryFile
     {
         static string PATH = @"d:\memory-file.db";
         static int N0 = 100;
@@ -26,7 +26,7 @@ namespace LiteDB.Demo
             ["active"] = true
         }; // 109b
 
-        static void Main(string[] args)
+        static void Main0(string[] args)
         {
             File.Delete(PATH);
 
@@ -42,6 +42,16 @@ namespace LiteDB.Demo
             WriteFile(file);
 
             Console.WriteLine("Write: " + sw.ElapsedMilliseconds);
+            Thread.Sleep(2000);
+            sw.Restart();
+
+            file.SetLengthAsync(0);
+
+            // Write documents inside data file (append)
+            Thread.Sleep(2000);
+            WriteFile(file);
+
+            Console.WriteLine("Write2: " + sw.ElapsedMilliseconds);
             Thread.Sleep(2000);
             sw.Restart();
 
@@ -111,7 +121,7 @@ namespace LiteDB.Demo
 
             for (var j = 0; j < N0; j++)
             {
-                using (var bufferWriter = new BufferWriter(source()))
+                var bufferWriter = new BufferWriter(source());
                 {
                     for (var i = 0; i < N1; i++)
                     {

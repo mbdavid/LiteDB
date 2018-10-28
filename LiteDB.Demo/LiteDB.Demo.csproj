@@ -65,6 +65,7 @@
     <Compile Include="..\LiteDB\Engine\Memory\Serializer\BufferWriter.cs" Link="MemoryFile\Serializer\BufferWriter.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\Structures\ArraySlice.cs" Link="MemoryFile\Structures\ArraySlice.cs" />
     <Compile Include="..\LiteDB\Engine\Memory\Structures\PageBuffer.cs" Link="MemoryFile\Structures\PageBuffer.cs" />
+    <Compile Include="..\LiteDB\Engine\Pages\BasePage2.cs" Link="BasePage2.cs" />
     <Compile Include="..\LiteDB\Engine\Services\DiskFactory\FileStreamDiskFactory.cs" Link="MemoryFile\Disk\FileStreamDiskFactory.cs" />
     <Compile Include="..\LiteDB\Engine\Services\DiskFactory\IDiskFactory.cs" Link="MemoryFile\Disk\IDiskFactory.cs" />
     <Compile Include="..\LiteDB\Engine\Services\DiskFactory\StreamDiskFactory.cs" Link="MemoryFile\Disk\StreamDiskFactory.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="..\LiteDB\Engine\Streams\ConcurrentStream.cs" Link="LiteDB\ConcurrentStream.cs" />
     <Compile Include="..\LiteDB\Engine\Streams\TempStream.cs" Link="LiteDB\TempStream.cs" />
     <Compile Include="..\LiteDB\Engine\Structures\PageAddress.cs" Link="LiteDB\PageAddress.cs" />
+    <Compile Include="..\LiteDB\Engine\Structures\PageSegment.cs" Link="PageSegment.cs" />
     <Compile Include="..\LiteDB\Engine\Structures\TransactionState.cs" Link="LiteDB\TransactionState.cs" />
     <Compile Include="..\LiteDB\Utils\Constants.cs" Link="LiteDB\Constants.cs" />
     <Compile Include="..\LiteDB\Utils\Extensions\BinaryExtensions.cs" Link="LiteDB\BinaryExtensions.cs" />

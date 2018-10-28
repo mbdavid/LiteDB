@@ -14,9 +14,14 @@ namespace LiteDB
         public const int PAGE_SIZE = 8192;
 
         /// <summary>
-        /// This size is used bytes in header pages 33 bytes (+31 reserved to future use) = 64 bytes
+        /// Header page size (uses 3 page block)
         /// </summary>
-        public const int PAGE_HEADER_SIZE = 64;
+        public const int PAGE_HEADER_SIZE = 96;
+
+        /// <summary>
+        /// Page are build over 256 page blocks of 32 bytes each
+        /// </summary>
+        public const int PAGE_BLOCK_SIZE = 32;
 
         /// <summary>
         /// Bytes available to store data removing page header size - 8128 bytes
@@ -24,14 +29,14 @@ namespace LiteDB
         public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
 
         /// <summary>
-        /// If a Data Page has less that free space, it's considered full page for new items. Can be used only for update (DataPage)
+        /// If a Data Page has less that free space (in blocks), it's considered full page for new items. Can be used only for update (DataPage)
         /// </summary>
-        public const int DATA_RESERVED_BYTES = 1000;
+        public const int DATA_RESERVED_BLOCKS = 32;
 
         /// <summary>
-        /// If a Index Page has less that this free space, it's considered full page for new items.
+        /// If a Index Page has less that this free space (in blocks), it's considered full page for new items.
         /// </summary>
-        public const int INDEX_RESERVED_BYTES = 500;
+        public const int INDEX_RESERVED_BLOCKS = 8;
 
         /// <summary>
         /// Define max length to be used in a single collection name
@@ -83,19 +88,14 @@ namespace LiteDB
         public const int MAX_CURSOR_HISTORY = 1000;
 
         /// <summary>
-        /// Max pages in a transaction before persist on disk and clear transaction cache
+        /// Max pages in a transaction before persist on disk and clear transaction local pages
         /// </summary>
         public const int MAX_TRANSACTION_SIZE = 1000;
 
         /// <summary>
-        /// Size, in PAGES, for each segment (used in MemoryStore)
+        /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
         /// </summary>
         public const int MEMORY_SEGMENT_SIZE = 1000;
-
-        /// <summary>
-        /// When memory file cache exceed this size (in pages) run clean up cache (removing unused pages)
-        /// </summary>
-        public const int MEMORY_FILE_CACHE_SIZE = 500;
 
         /// <summary>
         /// This variable are used to identify that current datafile are v7 version and must be upgrade

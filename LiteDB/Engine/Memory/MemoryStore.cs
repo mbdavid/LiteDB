@@ -245,9 +245,9 @@ namespace LiteDB.Engine
             try
             {
                 if (_store.Count > 0) return;
-
+                
                 // if cleanPages contains more than 1 segment size of non shared counter, use this pages into store
-                if (_emptyShareCounter > MEMORY_SEGMENT_SIZE)
+                if (_emptyShareCounter > MEMORY_SEGMENT_SIZE * 5)
                 {
                     var pages = _cleanPages
                         .Values
