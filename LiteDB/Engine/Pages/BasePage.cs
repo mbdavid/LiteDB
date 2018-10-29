@@ -10,7 +10,7 @@ namespace LiteDB.Engine
 
     internal class BasePage
     {
-        private readonly PageBuffer _buffer;
+        protected readonly PageBuffer _buffer;
 
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
@@ -73,9 +73,9 @@ namespace LiteDB.Engine
         public uint ColID { get; set; }
 
         /// <summary>
-        /// Represent transaction page ID that was stored [12 bytes]
+        /// Represent transaction ID that was stored [8 bytes]
         /// </summary>
-        public ObjectId TransactionID { get; set; }
+        public long TransactionID { get; set; }
 
         /// <summary>
         /// Used in WAL, define this page is last transaction page and are confirmed on disk [1 byte]
@@ -114,7 +114,7 @@ namespace LiteDB.Engine
 
             // default data
             this.ColID = uint.MaxValue;
-            this.TransactionID = ObjectId.Empty;
+            this.TransactionID = long.MaxValue;
             this.IsConfirmed = false;
             this.IsDirty = false;
         }
@@ -124,6 +124,8 @@ namespace LiteDB.Engine
         /// </summary>
         public virtual void ReadHeader()
         {
+            // using fixed position be be faster than use BufferReader
+
             // page information
             this.PageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 0); // 00-03
             this.PageType = (PageType)_buffer[4]; // 04-04
@@ -139,8 +141,8 @@ namespace LiteDB.Engine
 
             // transaction information
             this.ColID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 18); // 18-21
-            this.TransactionID = new ObjectId(_buffer.Array, _buffer.Offset + 22); // 22-34 
-            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + 35); // 35
+            this.TransactionID = BitConverter.ToInt64(_buffer.Array, _buffer.Offset + 22); // 22-29 
+            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + 30); // 30
         }
 
         /// <summary>
@@ -148,6 +150,8 @@ namespace LiteDB.Engine
         /// </summary>
         public virtual void WriteHeader()
         {
+            // using fixed position to be faster than BufferWriter
+
             // page information
             this.PageID.ToBytes(_buffer.Array, _buffer.Offset + 0); // 00-03
             _buffer[4] = (byte)this.PageType; // 04-04
@@ -163,8 +167,8 @@ namespace LiteDB.Engine
 
             // transaction information
             this.ColID.ToBytes(_buffer.Array, _buffer.Offset + 18); // 18-22
-            this.TransactionID.ToByteArray(_buffer.Array, _buffer.Offset + 22);
-            _buffer[35] = this.IsConfirmed ? (byte)1 : (byte)0;
+            this.TransactionID.ToBytes(_buffer.Array, _buffer.Offset + 22);
+            _buffer[30] = this.IsConfirmed ? (byte)1 : (byte)0;
         }
 
         #endregion
@@ -198,6 +202,7 @@ namespace LiteDB.Engine
             if (index > this.HighestIndex) this.HighestIndex = index;
 
             DEBUG(this.FreeBytes < bytesLength, "length must be always lower than current free space");
+            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
 
             // calculate how many continuous bytes are avaiable in this page
             var continuosBytes = this.FreeBytes - (this.FragmentedBlocks * PAGE_BLOCK_SIZE);
@@ -236,6 +241,7 @@ namespace LiteDB.Engine
             var block = _buffer[PAGE_SIZE - index - 1];
 
             DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
+            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
 
             var position = block * PAGE_BLOCK_SIZE;
 
@@ -272,6 +278,7 @@ namespace LiteDB.Engine
             var block = _buffer[PAGE_SIZE - index - 1];
 
             DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
+            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
 
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
             var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks
@@ -336,6 +343,7 @@ namespace LiteDB.Engine
         public void Defrag()
         {
             DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
+            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
 
             // first get all segments inside this page
             var segments = new List<PageSegment>();

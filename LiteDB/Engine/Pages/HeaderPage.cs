@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
@@ -10,9 +11,9 @@ namespace LiteDB.Engine
     internal class HeaderPage : BasePage
     {
         /// <summary>
-        /// Header info the validate that datafile is a LiteDB file (27 bytes)
+        /// Header info the validate that datafile is a LiteDB file (6 bytes)
         /// </summary>
-        private const string HEADER_INFO = "** This is a LiteDB file **";
+        private const string HEADER_INFO = "LiteDB";
 
         /// <summary>
         /// Datafile specification version
@@ -35,19 +36,9 @@ namespace LiteDB.Engine
         public DateTime CreationTime { get; set; }
 
         /// <summary>
-        /// DateTime when database run checkpoint [8 bytes]
-        /// </summary>
-        public DateTime LastCheckpoint { get; set; }
-
-        /// <summary>
         /// UserVersion int - for user get/set database version changes
         /// </summary>
         public int UserVersion { get; set; }
-
-        /// <summary>
-        /// Get data strcuture file version. If not equals to FILE_VERSION const (8) must be upgrade 
-        /// </summary>
-        public byte FileVersion { get; set; }
 
         /// <summary>
         /// Contains all collection in database using PageID to direct access
@@ -57,20 +48,48 @@ namespace LiteDB.Engine
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
+            this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public HeaderPage(uint pageID)
-            : base(pageID)
+        public override void NewPage(uint pageID, PageType pageType)
         {
-            this.ItemCount = 0; // used to store collection names
-            this.FreeBytes = 0; // no free bytes on header
+            base.NewPage(pageID, pageType);
+
+            // initialize page version
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
             this.CreationTime = DateTime.Now;
-            this.LastCheckpoint = DateTime.MinValue;
             this.UserVersion = 0;
-            this.FileVersion = FILE_VERSION;
-            this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+
+            // writing direct into byte[] values about version (write once only)
+            Encoding.UTF8.GetBytes(HEADER_INFO, 0, HEADER_INFO.Length, _buffer.Array, _buffer.Offset + 32); // 32-35
+            _buffer[36] = FILE_VERSION;
+            this.CreationTime.ToUniversalTime().Ticks.ToBytes(_buffer.Array, _buffer.Offset + 37); // 37-44
+        }
+
+        public override void ReadHeader()
+        {
+            base.ReadHeader();
+
+            // header page use "header area" after 31 (second block)
+            var info = Encoding.UTF8.GetString(_buffer.Array, _buffer.Offset + 32, HEADER_INFO.Length); // 32-35
+            var ver = _buffer[36]; // 36
+
+            if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
+            if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
+
+            this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + 37), DateTimeKind.Utc).ToLocalTime(); // 37-44
+            this.FreeEmptyPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 37); // 44-47
+            this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 48); // 48-51
+            this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + 52); // 52-55
+        }
+
+        public override void WriteHeader()
+        {
+            base.WriteHeader();
+
+            this.FreeEmptyPageID.ToBytes(_buffer.Array, _buffer.Offset + 37);
+            this.LastPageID.ToBytes(_buffer.Array, _buffer.Offset + 41);
         }
 
         /// <summary>
@@ -186,26 +205,6 @@ namespace LiteDB.Engine
 
         public HeaderPage Clone()
         {
-            return new HeaderPage
-            {
-                // base page
-                PageID = this.PageID,
-                PrevPageID = this.PrevPageID,
-                NextPageID = this.NextPageID,
-                ItemCount = this.ItemCount,
-                FreeBytes = this.FreeBytes,
-                ColID = this.ColID,
-                TransactionID = this.TransactionID,
-                IsConfirmed = this.IsConfirmed,
-                // header page
-                FreeEmptyPageID = this.FreeEmptyPageID,
-                LastPageID = this.LastPageID,
-                CreationTime = this.CreationTime,
-                LastCheckpoint = this.LastCheckpoint,
-                UserVersion = this.UserVersion,
-                FileVersion = this.FileVersion,
-                Collections = new ConcurrentDictionary<string, uint>(this.Collections)
-            };
         }
 
         #endregion

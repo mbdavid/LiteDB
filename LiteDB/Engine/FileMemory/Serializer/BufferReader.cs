@@ -40,6 +40,11 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsEOF => _isEOF;
 
+        public BufferReader(byte[] buffer, bool utcDate = false)
+            : this(new[] { new ArraySlice<byte>(buffer, 0, buffer.Length) })
+        {
+        }
+
         public BufferReader(IEnumerable<ArraySlice<byte>> source, bool utcDate = false)
         {
             _source = source.GetEnumerator();
@@ -161,7 +166,10 @@ namespace LiteDB.Engine
         /// </summary>
         public string ReadCString()
         {
-            if (this.TryReadCStringCurrentSegment(out var value))
+            // first try read CString in current segment
+            var value = _current.Array.ReadCString(_current.Offset + _currentPosition);
+
+            if (value != null)
             {
                 return value;
             }
@@ -202,36 +210,6 @@ namespace LiteDB.Engine
                     return Encoding.UTF8.GetString(mem.ToArray());
                 }
             }
-        }
-
-        /// <summary>
-        /// Try read CString in current segment avoind read byte-to-byte over segments
-        /// </summary>
-        private bool TryReadCStringCurrentSegment(out string value)
-        {
-            var pos = _currentPosition;
-            var count = 0;
-
-            while(pos < _current.Count)
-            {
-                if (_current[pos] == 0x00)
-                {
-                    value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
-
-                    this.MoveFordward(count + 1); // +1 means '\0'
-
-                    return true;
-                }
-                else
-                {
-                    count++;
-                    pos++;
-                }
-            }
-
-            value = null;
-
-            return false;
         }
 
         #endregion
@@ -347,7 +325,7 @@ namespace LiteDB.Engine
         /// </summary>
         internal PageAddress ReadPageAddress()
         {
-            return new PageAddress(this.ReadUInt32(), this.ReadUInt16());
+            return new PageAddress(this.ReadUInt32(), this.ReadByte());
         }
 
         /// <summary>

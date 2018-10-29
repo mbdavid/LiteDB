@@ -14,7 +14,8 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Manage linear memory segments to avoid re-create array buffer in heap memory
-    /// ThreadSafe
+    /// Do not share same memory store with diferent files
+    /// [ThreadSafe]
     /// </summary>
     internal class MemoryStore : IDisposable
     {
@@ -247,7 +248,7 @@ namespace LiteDB.Engine
                 if (_store.Count > 0) return;
                 
                 // if cleanPages contains more than 1 segment size of non shared counter, use this pages into store
-                if (_emptyShareCounter > MEMORY_SEGMENT_SIZE * 5)
+                if (_emptyShareCounter > MEMORY_SEGMENT_SIZE)
                 {
                     var pages = _cleanPages
                         .Values
@@ -290,6 +291,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
+            //GC.SuppressFinalize(false);
         }
     }
 }

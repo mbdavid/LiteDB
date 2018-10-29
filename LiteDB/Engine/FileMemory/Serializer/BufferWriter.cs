@@ -39,6 +39,11 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsEOF => _isEOF;
 
+        public BufferWriter(byte[] buffer)
+            : this(new [] { new ArraySlice<byte>(buffer, 0, buffer.Length) })
+        {
+        }
+
         public BufferWriter(IEnumerable<ArraySlice<byte>> source)
         {
             _source = source.GetEnumerator();

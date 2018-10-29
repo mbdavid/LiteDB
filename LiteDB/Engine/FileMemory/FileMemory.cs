@@ -13,8 +13,9 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Represent a file in memory. Can be used for datafile, logfile or tempfile. Will have a single instance per engine instance
-    /// ThreadSafe
+    /// Represent a file in memory. Can be used for datafile, logfile or tempfile. Will have a single instance per engine instance/file
+    /// Has an own instance of memory store (large byte[] in memory)
+    /// [ThreadSafe]
     /// </summary>
     internal class FileMemory : IDisposable
     {
@@ -44,13 +45,13 @@ namespace LiteDB.Engine
         public long Length => _factory.Exists() ? _writer.Value.Length : 0;
 
         /// <summary>
-        /// Get how many page buffer this file extends
+        /// Get how many bytes this file allocate inside heap memory
         /// </summary>
-        public int MemoryBuffer => _store.ExtendSegments * MEMORY_SEGMENT_SIZE;
+        public int MemoryBufferSize => _store.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE;
 
         /// <summary>
-        /// Get reader from pool (or from new instance). Must be Dispose after use
-        /// Should be one request per thread
+        /// Get reader from pool (or from new instance). Must be Dispose after use to return to pool
+        /// Should be one reader per thread (do not share same reader across many threads)
         /// </summary>
         public FileMemoryReader GetReader(bool writable)
         {
@@ -71,6 +72,7 @@ namespace LiteDB.Engine
         /// Write page on file in async task (another thread)
         /// If file is AppendOnly (log file) page will be saved on end of file and will update Position. 
         /// Pending pages will be avaiable in reader
+        /// To write any page you must get this page from Reader and dispose reader only after ready write all of them
         /// </summary>
         public void WriteAsync(IEnumerable<PageBuffer> pages)
         {

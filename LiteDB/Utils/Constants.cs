@@ -98,12 +98,6 @@ namespace LiteDB
         public const int MEMORY_SEGMENT_SIZE = 1000;
 
         /// <summary>
-        /// This variable are used to identify that current datafile are v7 version and must be upgrade
-        /// v7 has small page header so is not possible check using FILE_VERSION position
-        /// </summary>
-        public static byte[] V7_TRANSID = new byte[] { 0, 0, 0, 0, 42, 42, 32, 84, 104, 105, 115, 32 };
-
-        /// <summary>
         /// Database header parameter: USERVERSION
         /// </summary>
         public const string DB_PARAM_USERVERSION = "USERVERSION";
