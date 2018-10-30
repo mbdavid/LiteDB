@@ -47,6 +47,10 @@ namespace LiteDB.Engine
 
         public long Length => _appendPosition + PAGE_SIZE;
 
+        /// <summary>
+        /// Add page into writer queue and will be saved in disk by another thread. If appendOnly will recive last position in stream
+        /// After this method, this page will be available into reader as a clean page
+        /// </summary>
         public long QueuePage(PageBuffer page)
         {
             DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
@@ -60,6 +64,8 @@ namespace LiteDB.Engine
             }
             else
             {
+                DEBUG(page.Position != long.MaxValue, "if writer are not appendOnly must contains disk position");
+
                 // get highest value between new page or last page 
                 // don't worry about concurrency becasue only 1 instance call this (Checkpoint)
                 _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);

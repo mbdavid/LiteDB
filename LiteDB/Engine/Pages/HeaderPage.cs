@@ -43,57 +43,84 @@ namespace LiteDB.Engine
         /// <summary>
         /// Contains all collection in database using PageID to direct access
         /// </summary>
-        public ConcurrentDictionary<string, uint> Collections { get; set; }
+        public ConcurrentDictionary<string, uint> Collections { get; set; } = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Track if collections was changes (insert/delete/renamed)
+        /// </summary>
+        private bool _isDirtyCollections = false;
+
+        public HeaderPage(PageBuffer buffer, uint pageID)
+            : base (buffer, pageID, PageType.Header)
+        {
+            // initialize page version
+            this.CreationTime = DateTime.Now;
+            this.FreeEmptyPageID = uint.MaxValue;
+            this.LastPageID = 0;
+            this.UserVersion = 0;
+
+            // writing direct into buffer in Ctor() because there is no change later (write once)
+            Encoding.UTF8.GetBytes(HEADER_INFO, 0, 6, _buffer.Array, _buffer.Offset + 32); // 32-37
+            _buffer[38] = FILE_VERSION;
+            this.CreationTime.ToUniversalTime().Ticks.ToBytes(_buffer.Array, _buffer.Offset + 39); // 39-46
+        }
 
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
-            this.Collections = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
-        }
-
-        public override void NewPage(uint pageID, PageType pageType)
-        {
-            base.NewPage(pageID, pageType);
-
-            // initialize page version
-            this.FreeEmptyPageID = uint.MaxValue;
-            this.LastPageID = 0;
-            this.CreationTime = DateTime.Now;
-            this.UserVersion = 0;
-
-            // writing direct into byte[] values about version (write once only)
-            Encoding.UTF8.GetBytes(HEADER_INFO, 0, HEADER_INFO.Length, _buffer.Array, _buffer.Offset + 32); // 32-35
-            _buffer[36] = FILE_VERSION;
-            this.CreationTime.ToUniversalTime().Ticks.ToBytes(_buffer.Array, _buffer.Offset + 37); // 37-44
-        }
-
-        public override void ReadHeader()
-        {
-            base.ReadHeader();
+            DEBUG(this.PageType != PageType.Header, $"page {this.PageID} should be 'Header' but is {this.PageType}.");
 
             // header page use "header area" after 31 (second block)
-            var info = Encoding.UTF8.GetString(_buffer.Array, _buffer.Offset + 32, HEADER_INFO.Length); // 32-35
-            var ver = _buffer[36]; // 36
+            var info = Encoding.UTF8.GetString(_buffer.Array, _buffer.Offset + 32, 6); // 32-37
+            var ver = _buffer[38]; // 38
 
             if (info != HEADER_INFO) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + 37), DateTimeKind.Utc).ToLocalTime(); // 37-44
-            this.FreeEmptyPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 37); // 44-47
-            this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 48); // 48-51
-            this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + 52); // 52-55
+            this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + 39), DateTimeKind.Utc).ToLocalTime(); // 39-46
+            this.FreeEmptyPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 37); // 46-49
+            this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 50); // 50-53
+            this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + 54); // 54-57
+
+            // for header page, I will ignore block pages and will read all collections here, at page load
+            // I will track if this collection changed and will override all items
+
+            var position = 200;
+
+            for (var i = 0; i < this.ItemsCount; i++)
+            {
+                // read collection name
+                var name = buffer.Array.ReadCString(_buffer.Offset + position, out var length);
+
+                position += length;
+
+                // read collection pageID
+                var pageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + position);
+
+                position += 4;
+
+                // add into my local collection
+                this.Collections.TryAdd(name, pageID);
+            }
         }
 
-        public override void WriteHeader()
+        public override void UpdateBuffer()
         {
-            base.WriteHeader();
+            base.UpdateBuffer();
 
-            this.FreeEmptyPageID.ToBytes(_buffer.Array, _buffer.Offset + 37);
-            this.LastPageID.ToBytes(_buffer.Array, _buffer.Offset + 41);
+            this.FreeEmptyPageID.ToBytes(_buffer.Array, _buffer.Offset + 46); // 46-49
+            this.LastPageID.ToBytes(_buffer.Array, _buffer.Offset + 50); // 50-53
+            this.UserVersion.ToBytes(_buffer.Array, _buffer.Offset + 54); // 54-57
+
+            if (_isDirtyCollections)
+            {
+
+                _isDirtyCollections = false;
+            }
         }
 
         /// <summary>
-        /// Update header page with new/drop collections
+        /// Update header page with new/drop collections. If any collection change, track this to update on UpdateBuffer()
         /// </summary>
         public void UpdateCollections(TransactionPages transPages)
         {
@@ -104,6 +131,8 @@ namespace LiteDB.Engine
                 {
                     throw LiteException.CollectionNotFound(transPages.DeletedCollection);
                 }
+
+                _isDirtyCollections = true;
             }
 
             // add all new collections
@@ -113,12 +142,14 @@ namespace LiteDB.Engine
                 {
                     throw LiteException.CollectionAlreadyExist(p.Key);
                 }
+
+                _isDirtyCollections = true;
             }
 
             // update header collection count
-            this.ItemCount = this.ItemCount 
+            this.ItemsCount = (byte)(this.ItemsCount 
                 + transPages.NewCollections.Count
-                - (transPages.DeletedCollection == null ? 0 : 1);
+                - (transPages.DeletedCollection == null ? 0 : 1));
         }
 
         /// <summary>
@@ -169,11 +200,6 @@ namespace LiteDB.Engine
             reader.ReadBytes(reserved);
 
             DEBUG(reserved != 200, "For current version, reserved space must return 200 bytes");
-
-            for (var i = 0; i < this.ItemCount; i++)
-            {
-                this.Collections.TryAdd(reader.ReadString(), reader.ReadUInt32());
-            }
         }
 
         protected override void WriteContent(BinaryWriter writer)
@@ -203,8 +229,16 @@ namespace LiteDB.Engine
             }
         }
 
-        public HeaderPage Clone()
+        public HeaderPage Clone(PageBuffer clone)
         {
+            System.Buffer.BlockCopy(
+                _buffer.Array,
+                _buffer.Offset, 
+                clone.Array, 
+                clone.Offset, 
+                PAGE_SIZE);
+
+            return new HeaderPage(clone);
         }
 
         #endregion

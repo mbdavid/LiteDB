@@ -87,18 +87,17 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsDirty { get; set; }
 
-        public BasePage(PageBuffer buffer)
+        /// <summary>
+        /// Get internal buffer for this page
+        /// </summary>
+        public PageBuffer Buffer => _buffer;
+
+        #region Initialize/Update buffer
+
+        public BasePage(PageBuffer buffer, uint pageID, PageType pageType)
         {
             _buffer = buffer;
-        }
 
-        #region New/Read/Write
-
-        /// <summary>
-        /// Set this page instance with new (default) values
-        /// </summary>
-        public virtual void NewPage(uint pageID, PageType pageType)
-        {
             // page information
             this.PageID = pageID;
             this.PageType = pageType;
@@ -109,7 +108,7 @@ namespace LiteDB.Engine
             this.ItemsCount = 0;
             this.UsedBlocks = 0;
             this.FragmentedBlocks = 0;
-            this.NextFreeBlock = 3; // first block index should be 3 (0, 1, 2 are header position)
+            this.NextFreeBlock = 3; // first block index should be 3 (blocks 0, 1, 2 are reserved to header)
             this.HighestIndex = 0;
 
             // default data
@@ -117,14 +116,20 @@ namespace LiteDB.Engine
             this.TransactionID = long.MaxValue;
             this.IsConfirmed = false;
             this.IsDirty = false;
+
+            // writing direct into buffer in Ctor() because there is no change later (write once)
+            this.PageID.ToBytes(_buffer.Array, _buffer.Offset + 0); // 00-03
+            _buffer[4] = (byte)this.PageType; // 04-04
+
         }
 
         /// <summary>
         /// Read header data from byte[] buffer into local variables
+        /// using fixed position be be faster than use BufferReader
         /// </summary>
-        public virtual void ReadHeader()
+        public BasePage(PageBuffer buffer)
         {
-            // using fixed position be be faster than use BufferReader
+            _buffer = buffer;
 
             // page information
             this.PageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 0); // 00-03
@@ -148,13 +153,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write header data from variable into byte[] buffer
         /// </summary>
-        public virtual void WriteHeader()
+        public virtual void UpdateBuffer()
         {
             // using fixed position to be faster than BufferWriter
 
             // page information
-            this.PageID.ToBytes(_buffer.Array, _buffer.Offset + 0); // 00-03
-            _buffer[4] = (byte)this.PageType; // 04-04
+            // PageID   [00-03] - never change!
+            // PageType [04-04] - never change!
             this.PrevPageID.ToBytes(_buffer.Array, _buffer.Offset + 5); // 05-08
             this.NextPageID.ToBytes(_buffer.Array, _buffer.Offset + 9); // 09-12
 
@@ -188,7 +193,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a new page item and return PageItem as reference to be buffer fill outside
         /// </summary>
-        public PageSegment Insert(int bytesLength)
+        protected PageSegment Insert(int bytesLength)
         {
             return this.Insert(this.GetFreeIndex(), bytesLength);
         }
@@ -235,7 +240,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Remove index slot about this page item (will not clean page item data space)
         /// </summary>
-        public void Delete(byte index)
+        protected void Delete(byte index)
         {
             // read block on index slot
             var block = _buffer[PAGE_SIZE - index - 1];
@@ -270,9 +275,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Update segment block with new data
+        /// Update segment block with new data. Current page must have bytes enougth for this new size
         /// </summary>
-        public PageSegment Update(byte index, int bytesLength)
+        protected PageSegment Update(byte index, int bytesLength)
         {
             // read position on page that this index are linking
             var block = _buffer[PAGE_SIZE - index - 1];
@@ -340,7 +345,7 @@ namespace LiteDB.Engine
         /// Defrag method re-organize all byte data content removing all fragmented data. This will move all page blocks
         /// to create a single continuous area at first block (3) - after this method there is no more fragments and 
         /// </summary>
-        public void Defrag()
+        private void Defrag()
         {
             DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
             DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
@@ -368,7 +373,7 @@ namespace LiteDB.Engine
                 if (segment.Block != next)
                 {
                     // copy from original position into new (correct) position
-                    Buffer.BlockCopy(_buffer.Array,
+                    System.Buffer.BlockCopy(_buffer.Array,
                         _buffer.Offset + (segment.Block * PAGE_BLOCK_SIZE),
                         _buffer.Array,
                         _buffer.Offset + (next * PAGE_BLOCK_SIZE),

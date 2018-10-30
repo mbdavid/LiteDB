@@ -57,6 +57,7 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Create new page in memory to be used when engine need add page into datafile (log file first)
+        /// This page has position yet - will be appended on file only when WriteAsync
         /// </summary>
         public PageBuffer NewPage()
         {

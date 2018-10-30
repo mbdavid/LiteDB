@@ -167,10 +167,12 @@ namespace LiteDB.Engine
         public string ReadCString()
         {
             // first try read CString in current segment
-            var value = _current.Array.ReadCString(_current.Offset + _currentPosition);
+            var value = _current.Array.ReadCString(_current.Offset + _currentPosition, out var length);
 
             if (value != null)
             {
+                this.MoveFordward(length);
+
                 return value;
             }
             else
