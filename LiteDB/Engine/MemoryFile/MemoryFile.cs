@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     /// Has an own instance of memory store (large byte[] in memory)
     /// [ThreadSafe]
     /// </summary>
-    internal class FileMemory : IDisposable
+    internal class MemoryFile : IDisposable
     {
         private readonly MemoryStore _store = new MemoryStore();
 
@@ -26,9 +26,9 @@ namespace LiteDB.Engine
         private readonly IDiskFactory _factory;
         private readonly bool _appendOnly;
 
-        private readonly Lazy<FileMemoryWriter> _writer;
+        private readonly Lazy<MemoryFileWriter> _writer;
 
-        public FileMemory(IDiskFactory factory, bool appendOnly)
+        public MemoryFile(IDiskFactory factory, bool appendOnly)
         {
             _factory = factory;
             _appendOnly = appendOnly;
@@ -36,7 +36,7 @@ namespace LiteDB.Engine
             _store = new MemoryStore();
 
             // create lazy writer to avoid create file if not needed (readonly file access)
-            _writer = new Lazy<FileMemoryWriter>(() => new FileMemoryWriter(_factory.GetStream(true, _appendOnly), _store, _appendOnly));
+            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_factory.GetStream(true, _appendOnly), _store, _appendOnly));
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace LiteDB.Engine
         /// Get reader from pool (or from new instance). Must be Dispose after use to return to pool
         /// Should be one reader per thread (do not share same reader across many threads)
         /// </summary>
-        public FileMemoryReader GetReader(bool writable)
+        public MemoryFileReader GetReader(bool writable)
         {
             // checks if pool contains already opened stream
             if (!_pool.TryTake(out var stream))
@@ -65,7 +65,7 @@ namespace LiteDB.Engine
             void disposing(Stream s) { _pool.Add(s); }
 
             // create new instance
-            return new FileMemoryReader(_store, stream, writable, disposing);
+            return new MemoryFileReader(_store, stream, writable, disposing);
         }
 
         /// <summary>

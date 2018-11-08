@@ -16,7 +16,7 @@ namespace LiteDB.Engine
     /// Memory file reader - must call Dipose after use to return reader into pool
     /// 1 instance per thread - (NO thread safe)
     /// </summary>
-    internal class FileMemoryReader : IDisposable
+    internal class MemoryFileReader : IDisposable
     {
         private readonly MemoryStore _store;
         private readonly Stream _stream;
@@ -25,7 +25,7 @@ namespace LiteDB.Engine
 
         private readonly List<PageBuffer> _pages = new List<PageBuffer>();
 
-        public FileMemoryReader(MemoryStore store, Stream stream, bool writable, Action<Stream> dispose)
+        public MemoryFileReader(MemoryStore store, Stream stream, bool writable, Action<Stream> dispose)
         {
             _store = store;
             _stream = stream;

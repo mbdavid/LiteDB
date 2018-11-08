@@ -12,10 +12,8 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    class TestBasePage
+    public class TestBasePage
     {
-        static string PATH = @"d:\memory-file.db";
-
         static BsonDocument doc = new BsonDocument
         {
             ["_id"] = 1,
@@ -25,13 +23,13 @@ namespace LiteDB.Demo
             ["active"] = true
         }; // 109b
 
-        static void Main(string[] args)
+        public static void Run(Stopwatch sw)
         {
             var pageBuffer = new PageBuffer(new byte[8192], 0);
-            var page = new BasePage2(pageBuffer);
+            var page = new BasePage(pageBuffer);
             var docLength = doc.GetBytesCount(true);
 
-            page.NewPage(25, PageType.Data);
+            //page.NewPage(25, PageType.Data);
 
             InsertDoc(page, doc, 0); // 0
             InsertDoc(page, doc, 1); // 1
@@ -57,13 +55,13 @@ namespace LiteDB.Demo
 
             var d1 = ReadDoc(page, 1);
 
-            page.WriteHeader();
+            //page.WriteHeader();
 
             ;
 
         }
 
-        static void InsertDoc(BasePage2 page, BsonDocument doc, int id)
+        static void InsertDoc(BasePage page, BsonDocument doc, int id)
         {
             doc["_id"] = id;
 
@@ -79,7 +77,7 @@ namespace LiteDB.Demo
             }
         }
 
-        static void UpdateDoc(BasePage2 page, byte index, BsonDocument doc, int id)
+        static void UpdateDoc(BasePage page, byte index, BsonDocument doc, int id)
         {
             doc["_id"] = id;
 
@@ -95,7 +93,7 @@ namespace LiteDB.Demo
             }
         }
 
-        static BsonDocument ReadDoc(BasePage2 page, byte index)
+        static BsonDocument ReadDoc(BasePage page, byte index)
         {
             var segment = page.Get(index);
 

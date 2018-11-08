@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="LiteDB\" />
+    <ProjectReference Include="..\LiteDB\LiteDB.csproj" />
   </ItemGroup>
   
 </Project>

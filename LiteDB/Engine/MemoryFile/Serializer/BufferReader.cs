@@ -167,12 +167,8 @@ namespace LiteDB.Engine
         public string ReadCString()
         {
             // first try read CString in current segment
-            var value = _current.Array.ReadCString(_current.Offset + _currentPosition, out var length);
-
-            if (value != null)
+            if (this.TryReadCStringCurrentSegment(out var value))
             {
-                this.MoveFordward(length);
-
                 return value;
             }
             else
@@ -212,6 +208,31 @@ namespace LiteDB.Engine
                     return Encoding.UTF8.GetString(mem.ToArray());
                 }
             }
+        }
+
+        /// <summary>	
+        /// Try read CString in current segment avoind read byte-to-byte over segments	
+        /// </summary>	
+        private bool TryReadCStringCurrentSegment(out string value)
+        {
+            var pos = _currentPosition;
+            var count = 0;
+            while (pos < _current.Count)
+            {
+                if (_current[pos] == 0x00)
+                {
+                    value = Encoding.UTF8.GetString(_current.Array, _current.Offset + _currentPosition, count);
+                    this.MoveFordward(count + 1); // +1 means '\0'	
+                    return true;
+                }
+                else
+                {
+                    count++;
+                    pos++;
+                }
+            }
+            value = null;
+            return false;
         }
 
         #endregion

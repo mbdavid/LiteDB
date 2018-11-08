@@ -15,7 +15,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// ThreadSafe
     /// </summary>
-    internal class FileMemoryWriter : IDisposable
+    internal class MemoryFileWriter : IDisposable
     {
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
         private readonly MemoryStore _store;
@@ -29,7 +29,7 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public FileMemoryWriter(Stream stream, MemoryStore store, bool appendOnly)
+        public MemoryFileWriter(Stream stream, MemoryStore store, bool appendOnly)
         {
             _stream = stream;
             _store = store;

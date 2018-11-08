@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    class TestMemoryFile
+    public class TestMemoryFile
     {
-        static string PATH = @"d:\memory-file.db";
+        static string PATH = @"D:\memory-file.db";
         static int N0 = 100;
         static int N1 = 10000;
         static BsonDocument doc = new BsonDocument
@@ -26,48 +26,34 @@ namespace LiteDB.Demo
             ["active"] = true
         }; // 109b
 
-        static void Main0(string[] args)
+        public static void Run(Stopwatch sw)
         {
             File.Delete(PATH);
 
             var factory = new FileStreamDiskFactory(PATH, false);
-            var file = new FileMemory(factory, true);
+            var file = new MemoryFile(factory, true);
 
             Console.WriteLine("Processing... " + (N0 * N1));
 
-            var sw = new Stopwatch();
             sw.Start();
 
             // Write documents inside data file (append)
             WriteFile(file);
 
             Console.WriteLine("Write: " + sw.ElapsedMilliseconds);
-            Thread.Sleep(2000);
-            sw.Restart();
 
-            file.SetLengthAsync(0);
-
-            // Write documents inside data file (append)
-            Thread.Sleep(2000);
-            WriteFile(file);
-
-            Console.WriteLine("Write2: " + sw.ElapsedMilliseconds);
             Thread.Sleep(2000);
             sw.Restart();
 
             // Read document inside data file
             ReadFile(file);
 
-            file.Dispose();
-
-            sw.Stop();
-
             Console.WriteLine("Read: " + sw.ElapsedMilliseconds);
-            Console.WriteLine("--------\nMemory: " + file.MemoryBuffer);
-            Console.ReadKey();
+
+            file.Dispose();
         }
 
-        static void ReadFile(FileMemory file)
+        static void ReadFile(MemoryFile file)
         {
             var fileReader = file.GetReader(false);
 
@@ -101,7 +87,7 @@ namespace LiteDB.Demo
             fileReader.Dispose();
         }
 
-        static void WriteFile(FileMemory file)
+        static void WriteFile(MemoryFile file)
         {
             var fileReader = file.GetReader(true);
 
@@ -142,5 +128,4 @@ namespace LiteDB.Demo
             fileReader.Dispose();
         }
     }
-
 }

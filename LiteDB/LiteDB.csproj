@@ -25,7 +25,7 @@
     <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.3' ">1.6.1</NetStandardImplicitPackageVersion>
     <NoWarn>1701;1702;1705;1591;0618</NoWarn>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LiteDB.xml</DocumentationFile>
-    <SignAssembly Condition="'$(OS)'=='Windows_NT'">true</SignAssembly>
+    <SignAssembly Condition="'$(OS)'=='Windows_NT'">false</SignAssembly>
     <AssemblyOriginatorKeyFile>LiteDB.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -71,24 +71,48 @@
   <!-- End References -->
 
   <ItemGroup>
-    <Compile Remove="Client\Repository\**" />
+    <Compile Remove="Client\**" />
     <Compile Remove="Database\**" />
+    <Compile Remove="Engine\Engine\**" />
+    <Compile Remove="Engine\FileReader\**" />
+    <Compile Remove="Engine\Query\**" />
+    <Compile Remove="Engine\Services\**" />
+    <Compile Remove="Engine\SqlParser\**" />
+    <Compile Remove="Engine\SystemCollections\**" />
     <Compile Remove="Mapper\**" />
     <Compile Remove="Repository\**" />
     <Compile Remove="Shell\**" />
     <Compile Remove="Storage\**" />
-    <EmbeddedResource Remove="Client\Repository\**" />
+    <EmbeddedResource Remove="Client\**" />
     <EmbeddedResource Remove="Database\**" />
+    <EmbeddedResource Remove="Engine\Engine\**" />
+    <EmbeddedResource Remove="Engine\FileReader\**" />
+    <EmbeddedResource Remove="Engine\Query\**" />
+    <EmbeddedResource Remove="Engine\Services\**" />
+    <EmbeddedResource Remove="Engine\SqlParser\**" />
+    <EmbeddedResource Remove="Engine\SystemCollections\**" />
     <EmbeddedResource Remove="Mapper\**" />
     <EmbeddedResource Remove="Repository\**" />
     <EmbeddedResource Remove="Shell\**" />
     <EmbeddedResource Remove="Storage\**" />
-    <None Remove="Client\Repository\**" />
+    <None Remove="Client\**" />
     <None Remove="Database\**" />
+    <None Remove="Engine\Engine\**" />
+    <None Remove="Engine\FileReader\**" />
+    <None Remove="Engine\Query\**" />
+    <None Remove="Engine\Services\**" />
+    <None Remove="Engine\SqlParser\**" />
+    <None Remove="Engine\SystemCollections\**" />
     <None Remove="Mapper\**" />
     <None Remove="Repository\**" />
     <None Remove="Shell\**" />
     <None Remove="Storage\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Engine\EngineSettings.cs" />
+    <Compile Remove="Engine\ILiteEngine.cs" />
+    <Compile Remove="Engine\LiteEngine.cs" />
   </ItemGroup>
 
 </Project>

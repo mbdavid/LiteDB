@@ -57,22 +57,20 @@ namespace LiteDB
         /// <summary>
         /// Read UTF8 string until found \0
         /// </summary>
-        public static string ReadCString(this byte[] bytes, int startIndex, out int length)
+        public static string ReadCString(this byte[] bytes, int startIndex, out int bytesCount)
         {
-            DEBUG(true, "need test first");
-
             var position = Array.IndexOf(bytes, (byte)0x00, startIndex);
 
             if (position > 0)
             {
-                length = position - startIndex;
+                bytesCount = position - startIndex;
 
-                var str = Encoding.UTF8.GetString(bytes, startIndex, count);
+                var str = Encoding.UTF8.GetString(bytes, startIndex, bytesCount);
 
                 return str;
             }
 
-            length = 0;
+            bytesCount = 0;
             return null;
         }
 

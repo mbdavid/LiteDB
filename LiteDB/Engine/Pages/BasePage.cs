@@ -193,7 +193,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create a new page item and return PageItem as reference to be buffer fill outside
         /// </summary>
-        protected PageSegment Insert(int bytesLength)
+        public PageSegment Insert(int bytesLength)
         {
             return this.Insert(this.GetFreeIndex(), bytesLength);
         }
@@ -240,7 +240,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Remove index slot about this page item (will not clean page item data space)
         /// </summary>
-        protected void Delete(byte index)
+        public void Delete(byte index)
         {
             // read block on index slot
             var block = _buffer[PAGE_SIZE - index - 1];
@@ -277,7 +277,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Update segment block with new data. Current page must have bytes enougth for this new size
         /// </summary>
-        protected PageSegment Update(byte index, int bytesLength)
+        public PageSegment Update(byte index, int bytesLength)
         {
             // read position on page that this index are linking
             var block = _buffer[PAGE_SIZE - index - 1];
@@ -345,7 +345,7 @@ namespace LiteDB.Engine
         /// Defrag method re-organize all byte data content removing all fragmented data. This will move all page blocks
         /// to create a single continuous area at first block (3) - after this method there is no more fragments and 
         /// </summary>
-        private void Defrag()
+        public void Defrag()
         {
             DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
             DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");

@@ -1,119 +1,119 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿//using System.Collections.Generic;
+//using System.IO;
+//using System.Linq;
 
-namespace LiteDB.Engine
-{
-    internal class IndexPage : BasePage
-    {
-        /// <summary>
-        /// Page type = Index
-        /// </summary>
-        public override PageType PageType { get { return PageType.Index; } }
+//namespace LiteDB.Engine
+//{
+//    internal class IndexPage : BasePage
+//    {
+//        /// <summary>
+//        /// Page type = Index
+//        /// </summary>
+//        public override PageType PageType { get { return PageType.Index; } }
 
-        private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
+//        private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
 
-        private IndexPage()
-        {
-        }
+//        private IndexPage()
+//        {
+//        }
 
-        public IndexPage(uint pageID)
-            : base(pageID)
-        {
-        }
+//        public IndexPage(uint pageID)
+//            : base(pageID)
+//        {
+//        }
 
-        /// <summary>
-        /// Get an index node from this page
-        /// </summary>
-        public IndexNode GetNode(ushort index)
-        {
-            return _nodes[index];
-        }
+//        /// <summary>
+//        /// Get an index node from this page
+//        /// </summary>
+//        public IndexNode GetNode(ushort index)
+//        {
+//            return _nodes[index];
+//        }
 
-        /// <summary>
-        /// Add new index node into this page. Update counters and free space
-        /// </summary>
-        public void AddNode(IndexNode node)
-        {
-            var index = _nodes.NextIndex();
+//        /// <summary>
+//        /// Add new index node into this page. Update counters and free space
+//        /// </summary>
+//        public void AddNode(IndexNode node)
+//        {
+//            var index = _nodes.NextIndex();
 
-            node.Position = new PageAddress(this.PageID, index);
+//            node.Position = new PageAddress(this.PageID, index);
 
-            this.ItemCount++;
-            this.FreeBytes -= node.Length;
+//            this.ItemCount++;
+//            this.FreeBytes -= node.Length;
 
-            _nodes.Add(index, node);
-        }
+//            _nodes.Add(index, node);
+//        }
 
-        /// <summary>
-        /// Delete node from this page and update counter and free space
-        /// </summary>
-        public void DeleteNode(IndexNode node)
-        {
-            this.ItemCount--;
-            this.FreeBytes += node.Length;
+//        /// <summary>
+//        /// Delete node from this page and update counter and free space
+//        /// </summary>
+//        public void DeleteNode(IndexNode node)
+//        {
+//            this.ItemCount--;
+//            this.FreeBytes += node.Length;
 
-            _nodes.Remove(node.Position.Index);
-        }
+//            _nodes.Remove(node.Position.Index);
+//        }
 
-        /// <summary>
-        /// Get node counter
-        /// </summary>
-        public int NodesCount => _nodes.Count;
+//        /// <summary>
+//        /// Get node counter
+//        /// </summary>
+//        public int NodesCount => _nodes.Count;
 
-        #region Read/Write pages
+//        #region Read/Write pages
 
-        protected override void ReadContent(BinaryReader reader, bool utcDate)
-        {
-            _nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
+//        protected override void ReadContent(BinaryReader reader, bool utcDate)
+//        {
+//            _nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
 
-            for (var i = 0; i < this.ItemCount; i++)
-            {
-                var index = reader.ReadUInt16();
-                var levels = reader.ReadByte();
+//            for (var i = 0; i < this.ItemCount; i++)
+//            {
+//                var index = reader.ReadUInt16();
+//                var levels = reader.ReadByte();
 
-                var node = new IndexNode(levels);
+//                var node = new IndexNode(levels);
 
-                node.Page = this;
-                node.Position = new PageAddress(this.PageID, index);
-                node.Slot = reader.ReadByte();
-                node.PrevNode = reader.ReadPageAddress();
-                node.NextNode = reader.ReadPageAddress();
-                node.KeyLength = reader.ReadUInt16();
-                node.Key = reader.ReadBsonValue(node.KeyLength, utcDate);
-                node.DataBlock = reader.ReadPageAddress();
+//                node.Page = this;
+//                node.Position = new PageAddress(this.PageID, index);
+//                node.Slot = reader.ReadByte();
+//                node.PrevNode = reader.ReadPageAddress();
+//                node.NextNode = reader.ReadPageAddress();
+//                node.KeyLength = reader.ReadUInt16();
+//                node.Key = reader.ReadBsonValue(node.KeyLength, utcDate);
+//                node.DataBlock = reader.ReadPageAddress();
 
-                for (var j = 0; j < node.Prev.Length; j++)
-                {
-                    node.Prev[j] = reader.ReadPageAddress();
-                    node.Next[j] = reader.ReadPageAddress();
-                }
+//                for (var j = 0; j < node.Prev.Length; j++)
+//                {
+//                    node.Prev[j] = reader.ReadPageAddress();
+//                    node.Next[j] = reader.ReadPageAddress();
+//                }
 
-                _nodes.Add(node.Position.Index, node);
-            }
-        }
+//                _nodes.Add(node.Position.Index, node);
+//            }
+//        }
 
-        protected override void WriteContent(BinaryWriter writer)
-        {
-            foreach (var node in _nodes.Values)
-            {
-                writer.Write(node.Position.Index); // node Index on this page
-                writer.Write((byte)node.Prev.Length); // level length
-                writer.Write(node.Slot); // index slot
-                writer.Write(node.PrevNode); // prev node list
-                writer.Write(node.NextNode); // next node list
-                writer.Write(node.KeyLength);
-                writer.WriteBsonValue(node.Key); // value
-                writer.Write(node.DataBlock); // data block reference
+//        protected override void WriteContent(BinaryWriter writer)
+//        {
+//            foreach (var node in _nodes.Values)
+//            {
+//                writer.Write(node.Position.Index); // node Index on this page
+//                writer.Write((byte)node.Prev.Length); // level length
+//                writer.Write(node.Slot); // index slot
+//                writer.Write(node.PrevNode); // prev node list
+//                writer.Write(node.NextNode); // next node list
+//                writer.Write(node.KeyLength);
+//                writer.WriteBsonValue(node.Key); // value
+//                writer.Write(node.DataBlock); // data block reference
 
-                for (var j = 0; j < node.Prev.Length; j++)
-                {
-                    writer.Write(node.Prev[j]);
-                    writer.Write(node.Next[j]);
-                }
-            }
-        }
+//                for (var j = 0; j < node.Prev.Length; j++)
+//                {
+//                    writer.Write(node.Prev[j]);
+//                    writer.Write(node.Next[j]);
+//                }
+//            }
+//        }
 
-        #endregion
-    }
-}
+//        #endregion
+//    }
+//}
