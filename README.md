@@ -143,6 +143,7 @@ using(var db = new LiteDatabase("MyOrderDatafile.db"))
 
 - A GUI viewer tool: https://github.com/falahati/LiteDBViewer
 - A GUI editor tool: https://github.com/JosefNemec/LiteDbExplorer 
+- LiteDB Manager tool : https://darwich.mx/downloads/
 - Lucene.NET directory: https://github.com/sheryever/LiteDBDirectory
 - LINQPad support: https://github.com/adospace/litedbpad
 - F# support: https://github.com/Zaid-Ajaj/LiteDB.FSharp
