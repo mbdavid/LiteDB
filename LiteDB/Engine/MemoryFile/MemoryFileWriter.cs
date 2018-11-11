@@ -53,14 +53,13 @@ namespace LiteDB.Engine
         /// </summary>
         public long QueuePage(PageBuffer page)
         {
-            DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
+            //DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
 
             if (_appendOnly)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
                 page.Position = Interlocked.Add(ref _appendPosition, PAGE_SIZE);
-
             }
             else
             {
@@ -71,9 +70,12 @@ namespace LiteDB.Engine
                 _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);
             }
 
-            _store.MarkAsClean(page);
+            // mark this page as read-only and get cached paged to enqueue to write
+            var cached = _store.MarkAsReadOnly(page, true);
 
-            _queue.Enqueue(page);
+            DEBUG(!(page.ShareCounter >= 2), "cached page must be shared at least twice (becasue this method must be called before release pages)");
+
+            _queue.Enqueue(cached);
 
             return page.Position;
         }
@@ -106,26 +108,25 @@ namespace LiteDB.Engine
 
             while(_running)
             {
-                var saved = new List<PageBuffer>();
-
                 while (_queue.TryDequeue(out var page))
                 {
                     // if buffer is null, is a file length change
                     if (page.Array == null)
                     {
-                        _stream.SetLength(Math.Abs(page.Position));
+                        _stream.SetLength(page.Position);
                     }
                     else
                     {
+                        DEBUG(page.ShareCounter <= 0, "page must be shared at least 1");
+                        DEBUG(_store.InCache(page) == false, "page (instance+position) must be cache inside");
+
                         // set stream position according to page
                         _stream.Position = page.Position;
 
                         // write page on disk
                         _stream.Write(page.Array, page.Offset, PAGE_SIZE);
 
-                        // now I can assume page are already in disk 
-                        // (even not 100% sure, but Strem.Read method will read new data)
-                        // I can release page to be re-used by another thread
+                        // decreasing share counter only after page is in disk
                         _store.ReturnPage(page);
                     }
                 }

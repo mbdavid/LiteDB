@@ -29,7 +29,7 @@ namespace LiteDB
         /// <summary>
         /// Bytes available to store data removing page header size - 8128 bytes
         /// </summary>
-        public const int PAGE_AVAILABLE_BYTES = PAGE_SIZE - PAGE_HEADER_SIZE;
+        public const int PAGE_AVAILABLE_BLOCKS = (PAGE_SIZE - PAGE_HEADER_SIZE) / PAGE_SIZE;
 
         /// <summary>
         /// If a Data Page has less that free space (in blocks), it's considered full page for new items. Can be used only for update (DataPage)

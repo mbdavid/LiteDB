@@ -17,19 +17,17 @@ namespace LiteDB.Demo
         static BsonDocument doc = new BsonDocument
         {
             ["_id"] = 1,
-            ["name"] = "NoSQL Database",
+            ["name"] = "NoSQL",
             ["birthday"] = new DateTime(1977, 10, 30),
             ["phones"] = new BsonArray { "000000", "12345678" },
             ["active"] = true
-        }; // 109b
+        }; // 100b
 
         public static void Run(Stopwatch sw)
         {
-            var pageBuffer = new PageBuffer(new byte[8192], 0);
-            var page = new BasePage(pageBuffer);
-            var docLength = doc.GetBytesCount(true);
-
-            //page.NewPage(25, PageType.Data);
+            var buffer = new byte[8192];
+            var pageBuffer = new PageBuffer(buffer, 0) { ShareCounter = -1 };
+            var page = new BasePage(pageBuffer, 0, PageType.Data);
 
             InsertDoc(page, doc, 0); // 0
             InsertDoc(page, doc, 1); // 1

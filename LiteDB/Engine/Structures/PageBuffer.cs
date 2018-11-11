@@ -17,15 +17,26 @@ namespace LiteDB.Engine
     /// </summary>
     internal class PageBuffer : ArraySlice<byte>
     {
+        /// <summary>
+        /// Get/Set page position. If page are writable, this postion CAN be MaxValue (has not defined position yet)
+        /// </summary>
         public long Position;
+
+        /// <summary>
+        /// Get/Set how many read-share threads are using this page. -1 means 1 thread are using as writable
+        /// </summary>
         public int ShareCounter;
 
-        public bool IsWritable;
+        /// <summary>
+        /// Get/Set timestamp from last request
+        /// </summary>
+        public long Timestamp;
 
         public PageBuffer(byte[] buffer, int offset)
             : base(buffer, offset, PAGE_SIZE)
         {
             this.Position = long.MaxValue;
+            this.Timestamp = 0;
             this.ShareCounter = 0;
         }
     }

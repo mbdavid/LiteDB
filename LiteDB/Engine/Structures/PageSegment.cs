@@ -36,41 +36,41 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new page segment inside page
         /// </summary>
-        public PageSegment(PageBuffer page, byte index, byte block, byte length)
+        public PageSegment(PageBuffer buffer, byte index, byte block, byte length)
         {
             _index = index;
             _block = block;
             _length = length;
 
             // store block length at initial first byte
-            page[block * PAGE_BLOCK_SIZE] = length;
+            buffer[block * PAGE_BLOCK_SIZE] = length;
 
             // slice original buffer removing this first byte
-            _buffer = new ArraySlice<byte>(page.Array,
-                page.Offset + (block * PAGE_BLOCK_SIZE) + 1,
+            _buffer = new ArraySlice<byte>(buffer.Array,
+                buffer.Offset + (block * PAGE_BLOCK_SIZE) + 1,
                 (_length * PAGE_BLOCK_SIZE) - 1);
         }
 
         /// <summary>
         /// Load a segment that was already inside page
         /// </summary>
-        public PageSegment(PageBuffer page, byte index, byte block)
+        public PageSegment(PageBuffer buffer, byte index, byte block)
         {
             _index = index;
             _block = block;
 
             // read block length
-            _length = page[block * PAGE_BLOCK_SIZE];
+            _length = buffer[block * PAGE_BLOCK_SIZE];
 
             // slice original buffer removing this first byte
-            _buffer = new ArraySlice<byte>(page.Array,
-                page.Offset + (block * PAGE_BLOCK_SIZE) + 1,
+            _buffer = new ArraySlice<byte>(buffer.Array,
+                buffer.Offset + (block * PAGE_BLOCK_SIZE) + 1,
                 (_length * PAGE_BLOCK_SIZE) - 1);
         }
 
         public override string ToString()
         {
-            return $"[{_index}] B:{_block} L:{_length}";
+            return $"Slot: {_index} - Block:{_block} - Len:{_length}";
         }
     }
 }

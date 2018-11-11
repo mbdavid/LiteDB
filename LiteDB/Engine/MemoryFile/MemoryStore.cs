@@ -19,11 +19,13 @@ namespace LiteDB.Engine
     /// </summary>
     internal class MemoryStore : IDisposable
     {
+        private const int WRITABLE = -1;
+
         /// <summary>
-        /// Contains only clean-readonly pages indexed by position. Inside this collection pages can be in-use (SharedCounter > 0) or
+        /// Cached pages contains only clean/readonly pages indexed by position. Inside this collection pages can be in-use (SharedCounter > 0) or
         /// ready to be re-used.
         /// </summary>
-        private readonly ConcurrentDictionary<long, PageBuffer> _cleanPages = new ConcurrentDictionary<long, PageBuffer>();
+        private readonly ConcurrentDictionary<long, PageBuffer> _cache = new ConcurrentDictionary<long, PageBuffer>();
 
         /// <summary>
         /// Empty pages in store. If request page and has no more in store, do extend to create more memory allocation
@@ -36,11 +38,6 @@ namespace LiteDB.Engine
         public int ExtendSegments { get; private set; } = 0;
 
         /// <summary>
-        /// Count how many pages are avaiable to be reused inside _cleanPages
-        /// </summary>
-        private int _emptyShareCounter = 0;
-
-        /// <summary>
         /// Control read/write store access locker
         /// </summary>
         private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
@@ -51,36 +48,44 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Checks if some page are in cache (same instance) - DEBUG PROPROSE ONLY
+        /// </summary>
+        public bool InCache(PageBuffer page)
+        {
+            if (_cache.TryGetValue(page.Position, out var cached))
+            {
+                return page == cached;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Request a readonly page - this page can be shared with all only for read (will never be dirty)
         /// Each request increase share counter
         /// </summary>
         public PageBuffer GetReadablePage(long position, Action<long, ArraySlice<byte>> factory)
         {
-            var needIncrement = true;
-
             _locker.EnterReadLock();
 
             try
             {
-                var page = _cleanPages.GetOrAdd(position, (pos) =>
+                var page = _cache.GetOrAdd(position, (pos) =>
                 {
                     // get a clean page from store and read data from stream
                     var newPage = this.GetPageFromStore();
 
                     newPage.Position = position;
 
-                    needIncrement = false;
-
                     factory(position, newPage);
 
                     return newPage;
                 });
 
-                // increment only if page was already in _clean collection
-                if (needIncrement)
-                {
-                    Interlocked.Increment(ref page.ShareCounter);
-                }
+                // update LRU
+                page.Timestamp = DateTime.UtcNow.Ticks;
+
+                // increment share counter
+                Interlocked.Increment(ref page.ShareCounter);
 
                 return page;
             }
@@ -93,6 +98,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Request for a writable page - no other can read this page and this page has no reference
         /// Writable pages can be write or just released (with no write)
+        /// Before release, a writable page must be marked as clean
         /// </summary>
         public PageBuffer GetWritablePage(long position, Action<long, ArraySlice<byte>> factory)
         {
@@ -103,8 +109,8 @@ namespace LiteDB.Engine
                 // write pages always contains a new buffer array
                 var page = this.NewPage(position, false);
 
-                // if request page already in clean list, just copy buffer and avoid load from stream
-                if (_cleanPages.TryGetValue(position, out var clean))
+                // if requested page already in cache, just copy buffer and avoid load from stream
+                if (_cache.TryGetValue(position, out var clean))
                 {
                     Buffer.BlockCopy(clean.Array, clean.Offset, page.Array, page.Offset, PAGE_SIZE);
                 }
@@ -145,11 +151,14 @@ namespace LiteDB.Engine
         {
             var page = this.GetPageFromStore();
 
-            // clear page buffer
+            // set page position and page as writable
             page.Position = position;
-            page.IsWritable = true;
 
-            if (clear)
+            // define as writable
+            page.ShareCounter = WRITABLE;
+
+            // Timestamp = 0 means this page was never used (do not clear)
+            if (clear && page.Timestamp > 0)
             {
                 Array.Clear(page.Array, page.Offset, page.Count);
             }
@@ -158,23 +167,52 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// When page was requested as Writable and now changes are done
-        /// Now, this page are clean and are considerd clean to be reused in _cleanPages
+        /// Mark a writable page as read only page after made changes.
+        /// If page is duplicated (already in clean list) update clean list and return page
         /// </summary>
-        public void MarkAsClean(PageBuffer page)
+        public PageBuffer MarkAsReadOnly(PageBuffer page, bool pageChanged)
         {
-            DEBUG(page.IsWritable == false, "only writable pages can be marked as clean");
-            DEBUG(page.Position == long.MaxValue, "page position must be defined");
-            DEBUG((_cleanPages.GetOrDefault(page.Position)?.ShareCounter ?? 1) == 0, "if page already in clean list MUST are not in use by any other thread to read");
+            DEBUG(page.ShareCounter != WRITABLE, "only writable pages can be marked as clean");
+            DEBUG(page.Position == long.MaxValue, "to clean a page, position must be defined");
 
             _locker.EnterReadLock();
 
             try
             {
-                // add (or update) page in clean list
-                _cleanPages[page.Position] = page;
+                // when I set shareCounter != -1 means this page are now clean page (no writes anymore)
+                // (page instance as no concurrency)
+                // if page will be added into writer queue (pageChaged) shared counter must be 1
+                page.ShareCounter = pageChanged ? 1 : 0;
 
-                Interlocked.Increment(ref page.ShareCounter);
+                // add in cache (return page inside collection)
+                var result = _cache.AddOrUpdate(page.Position, page, (pos, current) =>
+                {
+                    DEBUG(current.ShareCounter != 0, "user must ensure this page are not in use when mark as read only");
+
+                    // if page already in cache, this is a duplicate page in memory
+                    // must update cached page with new page content
+                    if (pageChanged)
+                    {
+                        Buffer.BlockCopy(page.Array, page.Offset, current.Array, current.Offset, PAGE_SIZE);
+                    }
+
+                    // and duplicated page now can return to store list
+                    page.ShareCounter = 0;
+                    page.Timestamp = 0;
+                    page.Position = long.MaxValue;
+                    _store.Enqueue(page);
+
+                    // same current page will be inside page
+                    return current;
+                });
+
+                // update LRU
+                result.Timestamp = DateTime.UtcNow.Ticks;
+
+                // result page must increment shared count - i can't just set to 1 because result page is concurrency page
+                Interlocked.Increment(ref result.ShareCounter);
+
+                return result;
             }
             finally
             {
@@ -187,45 +225,40 @@ namespace LiteDB.Engine
         /// </summary>
         public void ReturnPage(PageBuffer page)
         {
-            DEBUG(page.ShareCounter <= 0, "pages must contains share counter when return to store");
+            DEBUG(page.ShareCounter == 0, "page must be shared OR writable before return");
 
-            _locker.EnterReadLock();
-
-            try
+            // if page is writable it's mean that this page was requested to write BUT was not saved (was discard)
+            if (page.ShareCounter == WRITABLE)
             {
-                // add or update 
-                _cleanPages[page.Position] = page;
+                // update page instance with result page
+                page = this.MarkAsReadOnly(page, false);
 
-                // if on decrement share count this share will be zero, this page can be re-used
-                if (Interlocked.Decrement(ref page.ShareCounter) == 0)
-                {
-                    // increment counter to know how many pages are unsued inside _cleanPages
-                    Interlocked.Increment(ref _emptyShareCounter);
+                DEBUG(page.ShareCounter >= 1, "after mark page as read only, share counter must return >= 1");
+            }
 
-                    // must mark page as not writable (at this point, page already writed in disk)
-                    page.IsWritable = false;
-                }
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            // now, decrement shareCounter
+            Interlocked.Decrement(ref page.ShareCounter);
         }
 
+        /// <summary>
+        /// Get a clean, re-usable page from store. If store are empty, can extend buffer segments
+        /// </summary>
         private PageBuffer GetPageFromStore()
         {
             if (_store.TryDequeue(out var page))
             {
-                page.ShareCounter = 1;
-
-                DEBUG(page.IsWritable, "in memory store, page must be masked as non-writable");
+                DEBUG(page.Position != long.MaxValue, "pages in memory store must have no position defined");
+                DEBUG(page.ShareCounter != 0, "pages in memory store must be non-shared");
 
                 return page;
             }
+            // if no more page inside memory store - extend store/reuse non-shared pages
             else
             {
+                DEBUG(_locker.IsReadLockHeld == false, "GetPageFromStore must be called inside read lock");
+
                 _locker.ExitReadLock();
-                
+
                 this.Extend();
 
                 _locker.EnterReadLock();
@@ -240,34 +273,35 @@ namespace LiteDB.Engine
         /// </summary>
         private void Extend()
         {
-            // lock store to ensure only 1 extend per time
             _locker.EnterWriteLock();
 
             try
             {
-                if (_store.Count > 0) return;
-                
-                // if cleanPages contains more than 1 segment size of non shared counter, use this pages into store
-                if (_emptyShareCounter > MEMORY_SEGMENT_SIZE)
+                // count how many pages in cache are avaiable to be re-used
+                var emptyShareCounter = _cache.Values
+                    .Count(x => x.ShareCounter == 0);
+
+                // if this count are larger than MEMORY_SEGMENT_SIZE, re-use all this pages
+                if (emptyShareCounter > MEMORY_SEGMENT_SIZE)
                 {
-                    var pages = _cleanPages
+                    var pages = _cache
                         .Values
                         .Where(x => x.ShareCounter == 0)
+                        .OrderBy(x => x.Timestamp) // sort by timestamp to re-use oldest pages first
                         .Select(x => x.Position)
+                        .Take(MEMORY_SEGMENT_SIZE)
                         .ToArray();
 
-                    DEBUG(pages.Length != _emptyShareCounter, "my counter must be same as ordinal count");
-
                     // remove pages from clean list and insert into store
-                    foreach(var position in pages)
+                    foreach (var position in pages)
                     {
-                        if (_cleanPages.TryRemove(position, out var page))
+                        if (_cache.TryRemove(position, out var page))
                         {
+                            page.Position = long.MaxValue;
+
                             _store.Enqueue(page);
                         }
                     }
-
-                    _emptyShareCounter = 0;
                 }
                 else
                 {

@@ -12,15 +12,33 @@ namespace LiteDB.Engine
     {
         protected readonly PageBuffer _buffer;
 
+        #region Buffer Field Positions
+
+        private const int P_PAGE_ID = 0;  // 00-03
+        private const int P_PAGE_TYPE = 4; // 04
+        private const int P_PREV_PAGE_ID = 5; // 05-08
+        private const int P_NEXT_PAGE_ID = 9; // 09-12
+        private const int P_CRC = 13;
+        private const int P_ITEMS_COUNT = 14;
+        private const int P_USED_CONTENT_BLOCKS = 15;
+        private const int P_FRAGMENTED_BLOCKS = 16;
+        private const int P_NEXT_FREE_BLOCK = 17;
+        private const int P_HIGHEST_INDEX = 18;
+        private const int P_COL_ID = 19; // 19-22
+        private const int P_TRANSACTION_ID = 23; // 23-30
+        private const int P_IS_CONFIRMED = 31;
+
+        #endregion
+
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
         /// </summary>
-        public uint PageID { get; set; }
+        public uint PageID { get; private set; }
 
         /// <summary>
         /// Indicate the page type [1 byte]
         /// </summary>
-        public PageType PageType { get; set; }
+        public PageType PageType { get; private set; }
 
         /// <summary>
         /// Represent the previous page. Used for page-sequences - MaxValue represent that has NO previous page [4 bytes]
@@ -33,34 +51,39 @@ namespace LiteDB.Engine
         public uint NextPageID { get; set; }
 
         /// <summary>
-        /// Indicate how many items are used inside this page [1 byte]
+        /// Page CRC8 - page CRC are calculated from byte 14 to 8191
         /// </summary>
-        public byte ItemsCount { get; set; }
+        public byte CRC { get; private set; }
 
         /// <summary>
-        /// Get how many blocks are used on content area (no header and no footer) [1 byte]
+        /// Indicate how many items are used inside this page [1 byte]
         /// </summary>
-        public byte UsedBlocks { get; set; }
+        public byte ItemsCount { get; private set; }
+
+        /// <summary>
+        /// Get how many blocks are used on content area (exclude header and footer blocks) [1 byte]
+        /// </summary>
+        public byte UsedContentBlocks { get; private set; }
 
         /// <summary>
         /// Get how many blocks are fragmented (free blocks inside used blocks) [1 byte]
         /// </summary>
-        public byte FragmentedBlocks { get; set; }
+        public byte FragmentedBlocks { get; private set; }
 
         /// <summary>
         /// Get next free block. Starts with block 3 (first after header) - It always at end of last block - there is no fragmentation after this [1 byte]
         /// </summary>
-        public byte NextFreeBlock { get; set; }
+        public byte NextFreeBlock { get; private set; }
 
         /// <summary>
         /// Get last (highest) used index slot [1 byte]
         /// </summary>
-        public byte HighestIndex { get; set; }
+        public byte HighestIndex { get; private set; }
 
         /// <summary>
-        /// Get how many bytes are available in this page (content area)
+        /// Get how many blocks are available in this page (content area) - consider footer blocks too
         /// </summary>
-        public int FreeBytes => PAGE_AVAILABLE_BYTES - ((this.UsedBlocks + this.FooterBlocks) * PAGE_BLOCK_SIZE);
+        public byte FreeBlocks => (byte)(PAGE_AVAILABLE_BLOCKS - this.UsedContentBlocks - this.FooterBlocks);
 
         /// <summary>
         /// Get calculated how many blocks footer (index space) are used
@@ -92,8 +115,25 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer Buffer => _buffer;
 
+        /// <summary>
+        /// Get free block from original buffer array
+        /// </summary>
+        public byte OriginalFreeBlocks()
+        {
+            var usedBlocks = _buffer[P_USED_CONTENT_BLOCKS];
+            var highestIndex = _buffer[P_HIGHEST_INDEX]; // 17
+            var footerBlocks = (byte)((highestIndex / PAGE_BLOCK_SIZE) + 1);
+
+            var freeBlocks = PAGE_AVAILABLE_BLOCKS - this.UsedContentBlocks - this.FooterBlocks;
+
+            return (byte)freeBlocks;
+        }
+
         #region Initialize/Update buffer
 
+        /// <summary>
+        /// Create new Page based on pre-defined PageID and PageType
+        /// </summary>
         public BasePage(PageBuffer buffer, uint pageID, PageType pageType)
         {
             _buffer = buffer;
@@ -103,18 +143,20 @@ namespace LiteDB.Engine
             this.PageType = pageType;
             this.PrevPageID = uint.MaxValue;
             this.NextPageID = uint.MaxValue;
+            this.CRC = 0;
 
             // block information
             this.ItemsCount = 0;
-            this.UsedBlocks = 0;
+            this.UsedContentBlocks = 0;
             this.FragmentedBlocks = 0;
-            this.NextFreeBlock = 3; // first block index should be 3 (blocks 0, 1, 2 are reserved to header)
+            this.NextFreeBlock = PAGE_HEADER_SIZE / PAGE_BLOCK_SIZE; // first block index should be 3 (blocks 0, 1, 2 are reserved to header)
             this.HighestIndex = 0;
 
             // default data
             this.ColID = uint.MaxValue;
             this.TransactionID = long.MaxValue;
             this.IsConfirmed = false;
+
             this.IsDirty = false;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
@@ -132,48 +174,52 @@ namespace LiteDB.Engine
             _buffer = buffer;
 
             // page information
-            this.PageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 0); // 00-03
-            this.PageType = (PageType)_buffer[4]; // 04-04
-            this.PrevPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 5); // 05-08
-            this.NextPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 9); // 09-12
+            this.PageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_PAGE_ID);
+            this.PageType = (PageType)_buffer[P_PAGE_TYPE];
+            this.PrevPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_PREV_PAGE_ID);
+            this.NextPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_NEXT_PAGE_ID);
+            this.CRC = _buffer[P_CRC];
 
             // blocks information
-            this.ItemsCount = _buffer[13]; // 13-13
-            this.UsedBlocks = _buffer[14]; // 14-14
-            this.FragmentedBlocks = _buffer[15]; // 15-15
-            this.NextFreeBlock = _buffer[16]; // 16-16
-            this.HighestIndex = _buffer[17]; // 17-17
+            this.ItemsCount = _buffer[P_ITEMS_COUNT];
+            this.UsedContentBlocks = _buffer[P_USED_CONTENT_BLOCKS];
+            this.FragmentedBlocks = _buffer[P_FRAGMENTED_BLOCKS];
+            this.NextFreeBlock = _buffer[P_NEXT_FREE_BLOCK];
+            this.HighestIndex = _buffer[P_HIGHEST_INDEX];
 
             // transaction information
-            this.ColID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + 18); // 18-21
-            this.TransactionID = BitConverter.ToInt64(_buffer.Array, _buffer.Offset + 22); // 22-29 
-            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + 30); // 30
+            this.ColID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_COL_ID);
+            this.TransactionID = BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
+            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + P_IS_CONFIRMED);
         }
 
         /// <summary>
-        /// Write header data from variable into byte[] buffer
+        /// Write header data from variable into byte[] buffer. When override, call base.UpdateBuffer() after write your code
         /// </summary>
         public virtual void UpdateBuffer()
         {
             // using fixed position to be faster than BufferWriter
 
             // page information
-            // PageID   [00-03] - never change!
-            // PageType [04-04] - never change!
-            this.PrevPageID.ToBytes(_buffer.Array, _buffer.Offset + 5); // 05-08
-            this.NextPageID.ToBytes(_buffer.Array, _buffer.Offset + 9); // 09-12
+            // PageID   - never change!
+            // PageType - never change!
+            this.PrevPageID.ToBytes(_buffer.Array, _buffer.Offset + P_PREV_PAGE_ID);
+            this.NextPageID.ToBytes(_buffer.Array, _buffer.Offset + P_NEXT_PAGE_ID);
 
             // block information
-            _buffer[13] = this.ItemsCount; // 13-13
-            _buffer[14] = this.UsedBlocks; // 14-14
-            _buffer[15] = this.FragmentedBlocks; // 15-15
-            _buffer[16] = this.NextFreeBlock; // 16-16
-            _buffer[17] = this.HighestIndex; // 17-17
+            _buffer[P_ITEMS_COUNT] = this.ItemsCount;
+            _buffer[P_USED_CONTENT_BLOCKS] = this.UsedContentBlocks;
+            _buffer[P_FRAGMENTED_BLOCKS] = this.FragmentedBlocks;
+            _buffer[P_NEXT_FREE_BLOCK] = this.NextFreeBlock;
+            _buffer[P_HIGHEST_INDEX] = this.HighestIndex;
 
             // transaction information
-            this.ColID.ToBytes(_buffer.Array, _buffer.Offset + 18); // 18-22
-            this.TransactionID.ToBytes(_buffer.Array, _buffer.Offset + 22);
-            _buffer[30] = this.IsConfirmed ? (byte)1 : (byte)0;
+            this.ColID.ToBytes(_buffer.Array, _buffer.Offset + P_COL_ID);
+            this.TransactionID.ToBytes(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
+            _buffer[P_IS_CONFIRMED] = this.IsConfirmed ? (byte)1 : (byte)0;
+
+            // last serialize must be CRC checksum
+            _buffer[P_CRC] = this.ComputeChecksum();
         }
 
         #endregion
@@ -195,43 +241,48 @@ namespace LiteDB.Engine
         /// </summary>
         public PageSegment Insert(int bytesLength)
         {
-            return this.Insert(this.GetFreeIndex(), bytesLength);
+            // length in blocks (+1 to consider store length inside page segment)
+            var length = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1);
+
+            return this.Insert(this.GetFreeIndex(), length);
         }
 
         /// <summary>
         /// Internal implementation with index as parameter (used also in Update)
         /// </summary>
-        private PageSegment Insert(byte index, int bytesLength)
+        private PageSegment Insert(byte index, byte length)
         {
+            DEBUG(this.FreeBlocks < length, "length must be always lower than current free space");
+            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
+
             // update highest slot if this slot are new highest
             if (index > this.HighestIndex) this.HighestIndex = index;
 
-            DEBUG(this.FreeBytes < bytesLength, "length must be always lower than current free space");
-            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
+            // calculate how many continuous blocks are avaiable in this page
+            var continuosBlocks = this.FreeBlocks - this.FragmentedBlocks;
 
-            // calculate how many continuous bytes are avaiable in this page
-            var continuosBytes = this.FreeBytes - (this.FragmentedBlocks * PAGE_BLOCK_SIZE);
-
-            // if continuous bytes are not big enouth for this data, must run page defrag
-            if (bytesLength > continuosBytes)
+            // if continuous blocks are not big enouth for this data, must run page defrag
+            if (length > continuosBlocks)
             {
                 this.Defrag();
+
+                DEBUG(length > (this.FreeBlocks - this.FragmentedBlocks), "after defrag length must fit in page");
             }
 
             // get a free index slot
-            var length = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks
             var block = this.NextFreeBlock;
+
+            DEBUG(_buffer[PAGE_SIZE - index - 1] != 0, "slot must be empty before use");
 
             // update index slot with this block position
             _buffer[PAGE_SIZE - index - 1] = block;
 
             // and update for next insert
-            //TODO: should test page full
             this.NextFreeBlock += length;
 
             // update counters
             this.ItemsCount++;
-            this.UsedBlocks += length;
+            this.UsedContentBlocks += length;
 
             // create page item (will set length in first byte block)
             return new PageSegment(_buffer, index, block, length);
@@ -242,28 +293,29 @@ namespace LiteDB.Engine
         /// </summary>
         public void Delete(byte index)
         {
-            // read block on index slot
-            var block = _buffer[PAGE_SIZE - index - 1];
+            // read block position on index slot
+            var slot = PAGE_SIZE - index - 1;
+            var block = _buffer[slot];
 
             DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
-            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
+            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
 
             var position = block * PAGE_BLOCK_SIZE;
 
-            // read how many blocks this block use
-            var length = _buffer[position];
+            // read how many blocks this segment use
+            var blocks = _buffer[position];
 
-            // clean slot index
-            _buffer[PAGE_SIZE - index - 1] = (byte)0x00;
+            // clear slot index
+            _buffer[slot] = (byte)0x00;
 
             // add as free blocks
             this.ItemsCount--;
-            this.UsedBlocks -= length;
+            this.UsedContentBlocks -= blocks;
 
             if (this.HighestIndex != index)
             {
                 // if segment is in middle, add this blocks as fragment block
-                this.FragmentedBlocks += length;
+                this.FragmentedBlocks += blocks;
             }
             else
             {
@@ -283,10 +335,10 @@ namespace LiteDB.Engine
             var block = _buffer[PAGE_SIZE - index - 1];
 
             DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
-            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
+            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
 
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
-            var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks
+            var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks (+1 for store segment length)
             var isLast = index == this.HighestIndex;
 
             // best situation: same block count
@@ -299,14 +351,14 @@ namespace LiteDB.Engine
             {
                 var diff = (byte)(originalLength - newLength); // blocks removed
 
-                // is this segment are not at end, must add this fragment
+                // is this segment are not at end, must add this as fragment
                 if (isLast == false)
                 {
                     this.FragmentedBlocks += diff;
                 }
 
                 // less blocks will be used
-                this.UsedBlocks -= diff;
+                this.UsedContentBlocks -= diff;
 
                 return new PageSegment(_buffer, index, newLength);
             }
@@ -315,28 +367,28 @@ namespace LiteDB.Engine
             {
                 var diff = (byte)(newLength - originalLength); // blocks added
 
-                // if segment are last on page, just add more space
+                // if segment finish is last used block, just use this free blocks
                 if (isLast)
                 {
-                    this.UsedBlocks += diff; // diff is negative, will add value
+                    this.UsedContentBlocks += diff; // diff is negative, will add value
                     this.NextFreeBlock += newLength; // need fix next free block 
 
                     return new PageSegment(_buffer, index, newLength);
                 }
-                // ok, worst case: do not fit in current block, move new segment area
+                // ok, worst case: do not fit in current segment, move new segment area
                 else
                 {
 #if DEBUG
-//                    // clear segment (for debug propose only) - there is no need on release
-//                    Array.Fill<byte>(_buffer.Array, 99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
+                    // clear segment (for debug propose only) - there is no need on release
+                    // Array.Fill<byte>(_buffer.Array, 99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
 #endif
 
                     // more fragmented blocks and less used blocks (because I will run insert command soon)
                     this.FragmentedBlocks += originalLength;
-                    this.UsedBlocks -= originalLength;
+                    this.UsedContentBlocks -= originalLength;
 
                     // run insert command but use same index
-                    return this.Insert(index, bytesLength);
+                    return this.Insert(index, newLength);
                 }
             }
         }
@@ -348,7 +400,7 @@ namespace LiteDB.Engine
         public void Defrag()
         {
             DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
-            DEBUG(_buffer.IsWritable == false, "page must be writable to support changes");
+            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
 
             // first get all segments inside this page
             var segments = new List<PageSegment>();
@@ -367,7 +419,7 @@ namespace LiteDB.Engine
             var next = (byte)3;
 
             // now, list all segment in block position
-            foreach(var segment in segments.OrderBy(x => x.Block))
+            foreach (var segment in segments.OrderBy(x => x.Block))
             {
                 // if current segment are not as excpect, copy buffer to right position (excluding empty space)
                 if (segment.Block != next)
@@ -387,10 +439,10 @@ namespace LiteDB.Engine
             }
 
 #if DEBUG
-//            // clear free segment (for debug propose only) - there is no need on release
-//            var len = PAGE_SIZE - (next * PAGE_BLOCK_SIZE) - this.HighestIndex - 1;
-//            // Array.Clear(_buffer.Array, next * PAGE_BLOCK_SIZE, len);
-//            Array.Fill<byte>(_buffer.Array, 77, next * PAGE_BLOCK_SIZE, len);
+            //            // clear free segment (for debug propose only) - there is no need on release
+            //            var len = PAGE_SIZE - (next * PAGE_BLOCK_SIZE) - this.HighestIndex - 1;
+            //            // Array.Clear(_buffer.Array, next * PAGE_BLOCK_SIZE, len);
+            //            Array.Fill<byte>(_buffer.Array, 77, next * PAGE_BLOCK_SIZE, len);
 #endif
 
             // clear fragment blocks (page are in a continuous segment)
@@ -436,7 +488,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void UpdateHighestIndex()
         {
-            for(byte i = (byte)(this.HighestIndex - 1); i <= 0; i--)
+            for (byte i = (byte)(this.HighestIndex - 1); i <= 0; i--)
             {
                 var block = _buffer[PAGE_SIZE - i - 1];
 
@@ -447,7 +499,15 @@ namespace LiteDB.Engine
                 }
             }
 
-            this.HighestIndex  = 0;
+            this.HighestIndex = 0;
+        }
+
+        /// <summary>
+        /// Computed checksum using CRC-8 from current page (only after CRC field)
+        /// </summary>
+        public byte ComputeChecksum()
+        {
+            return Crc8.ComputeChecksum(_buffer.Array, _buffer.Offset + P_CRC + 1, PAGE_SIZE - P_CRC - 1);
         }
 
         #endregion
