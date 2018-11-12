@@ -11,9 +11,9 @@ namespace LiteDB.Engine
     internal class HeaderPage : BasePage
     {
         /// <summary>
-        /// Header info the validate that datafile is a LiteDB file (6 bytes)
+        /// Header info the validate that datafile is a LiteDB file (27 bytes)
         /// </summary>
-        private const string HEADER_INFO = "LiteDB";
+        private const string HEADER_INFO = "** This is a LiteDB file **";
 
         /// <summary>
         /// Datafile specification version
@@ -28,6 +28,10 @@ namespace LiteDB.Engine
         private const int P_LAST_PAGE_ID = 43; // 43-46
         private const int P_CREATION_TIME = 47; // 47-54
         private const int P_USER_VERSION = 55; // 55-58
+        // reserving 59-63
+        private const int P_COLLECTIONS = 64; // 64-8128
+        private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS - (2 * PAGE_BLOCK_SIZE); // 8064
+        // reserving 64 bytes at end of header page
 
         #endregion
 
@@ -52,9 +56,14 @@ namespace LiteDB.Engine
         public int UserVersion { get; set; }
 
         /// <summary>
-        /// Contains all collection in database using PageID to direct access
+        /// All collections names/link ponter are stored inside this document
         /// </summary>
-        public ConcurrentDictionary<string, uint> Collections { get; set; } = new ConcurrentDictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+        private readonly BsonDocument _collections;
+
+        /// <summary>
+        /// Check if collections are changed
+        /// </summary>
+        private bool _isCollectionsChanged = false;
 
         public HeaderPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Header)
@@ -66,9 +75,12 @@ namespace LiteDB.Engine
             this.UserVersion = 0;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
-            Encoding.UTF8.GetBytes(HEADER_INFO, 0, 6, _buffer.Array, _buffer.Offset + P_HEADER_INFO);
+            Encoding.UTF8.GetBytes(HEADER_INFO, 0, 27, _buffer.Array, _buffer.Offset + P_HEADER_INFO);
             _buffer[P_FILE_VERSION] = FILE_VERSION;
             this.CreationTime.ToUniversalTime().Ticks.ToBytes(_buffer.Array, _buffer.Offset + P_CREATION_TIME);
+
+            // initialize collections
+            _collections = new BsonDocument();
         }
 
         public HeaderPage(PageBuffer buffer)
@@ -87,6 +99,14 @@ namespace LiteDB.Engine
             this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
             this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_CREATION_TIME), DateTimeKind.Utc).ToLocalTime();
             this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + P_USER_VERSION);
+
+            // create new buffer area to store BsonDocument collections
+            var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_COLLECTIONS, P_COLLECTIONS_COUNT);
+
+            using (var r = new BufferReader(new[] { area }, false))
+            {
+                _collections = r.ReadDocument(null);
+            }
         }
 
         public override void UpdateBuffer()
@@ -94,6 +114,17 @@ namespace LiteDB.Engine
             this.FreeEmptyPageID.ToBytes(_buffer.Array, _buffer.Offset + P_FREE_EMPTY_PAGE_ID);
             this.LastPageID.ToBytes(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
             this.UserVersion.ToBytes(_buffer.Array, _buffer.Offset + P_USER_VERSION);
+
+            // update collection only if needed
+            if (_isCollectionsChanged)
+            {
+                var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_COLLECTIONS, P_COLLECTIONS_COUNT);
+
+                using (var w = new BufferWriter(new[] { area }))
+                {
+                    w.WriteDocument(_collections);
+                }
+            }
 
             base.UpdateBuffer();
         }
@@ -106,43 +137,18 @@ namespace LiteDB.Engine
             // remove/add collections based on transPages
             if (transPages.DeletedCollection != null)
             {
-                if (this.Collections.TryRemove(transPages.DeletedCollection, out var x) == false)
-                {
-                    throw LiteException.CollectionNotFound(transPages.DeletedCollection);
-                }
+                _collections.Remove(transPages.DeletedCollection);
 
-                _isDirtyCollections = true;
+                _isCollectionsChanged = true;
             }
 
             // add all new collections
             foreach (var p in transPages.NewCollections)
             {
-                if (this.Collections.TryAdd(p.Key, p.Value) == false)
-                {
-                    throw LiteException.CollectionAlreadyExist(p.Key);
-                }
+                _collections[p.Key] = (int)p.Value;
 
-                _isDirtyCollections = true;
+                _isCollectionsChanged = true;
             }
-
-            // update header collection count
-            this.ItemsCount = (byte)(this.ItemsCount
-                + transPages.NewCollections.Count
-                - (transPages.DeletedCollection == null ? 0 : 1));
-        }
-
-        public HeaderPage Clone(PageBuffer clone)
-        {
-            this.UpdateBuffer();
-
-            System.Buffer.BlockCopy(
-                _buffer.Array,
-                _buffer.Offset,
-                clone.Array,
-                clone.Offset,
-                PAGE_SIZE);
-
-            return new HeaderPage(clone);
         }
     }
 }

@@ -17,9 +17,9 @@ namespace LiteDB
         public const int PAGE_SIZE = 8192;
 
         /// <summary>
-        /// Header page size (uses 3 page block)
+        /// Header page size (use first page block - 32 bytes)
         /// </summary>
-        public const int PAGE_HEADER_SIZE = 96;
+        public const int PAGE_HEADER_SIZE = 32;
 
         /// <summary>
         /// Page are build over 256 page blocks of 32 bytes each
@@ -30,35 +30,6 @@ namespace LiteDB
         /// Bytes available to store data removing page header size - 8128 bytes
         /// </summary>
         public const int PAGE_AVAILABLE_BLOCKS = (PAGE_SIZE - PAGE_HEADER_SIZE) / PAGE_SIZE;
-
-        /// <summary>
-        /// If a Data Page has less that free space (in blocks), it's considered full page for new items. Can be used only for update (DataPage)
-        /// </summary>
-        public const int DATA_RESERVED_BLOCKS = 32;
-
-        /// <summary>
-        /// If a Index Page has less that this free space (in blocks), it's considered full page for new items.
-        /// </summary>
-        public const int INDEX_RESERVED_BLOCKS = 8;
-
-        /// <summary>
-        /// Define max length to be used in a single collection name
-        /// </summary>
-        public const int COLLECTION_NAME_MAX_LENGTH = 60;
-
-        /// <summary>
-        /// Define (and reserve) bytes do be fixed in header page (are not considering collection name/id list)
-        /// </summary>
-        public const int HEADER_PAGE_FIXED_DATA_SIZE = 256;
-
-        /// <summary>
-        /// Represent maximum bytes that all collections names can be used in collection list page (must fit inside a single header page)
-        /// Do not change - it's calculated 
-        /// </summary>
-        public const ushort MAX_COLLECTIONS_NAME_SIZE =
-            PAGE_SIZE -
-            PAGE_HEADER_SIZE -
-            HEADER_PAGE_FIXED_DATA_SIZE;
 
         /// <summary>
         /// Define index name max length

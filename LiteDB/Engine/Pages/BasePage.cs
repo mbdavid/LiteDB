@@ -115,20 +115,6 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer Buffer => _buffer;
 
-        /// <summary>
-        /// Get free block from original buffer array
-        /// </summary>
-        public byte OriginalFreeBlocks()
-        {
-            var usedBlocks = _buffer[P_USED_CONTENT_BLOCKS];
-            var highestIndex = _buffer[P_HIGHEST_INDEX]; // 17
-            var footerBlocks = (byte)((highestIndex / PAGE_BLOCK_SIZE) + 1);
-
-            var freeBlocks = PAGE_AVAILABLE_BLOCKS - this.UsedContentBlocks - this.FooterBlocks;
-
-            return (byte)freeBlocks;
-        }
-
         #region Initialize/Update buffer
 
         /// <summary>
@@ -218,7 +204,7 @@ namespace LiteDB.Engine
             this.TransactionID.ToBytes(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
             _buffer[P_IS_CONFIRMED] = this.IsConfirmed ? (byte)1 : (byte)0;
 
-            // last serialize must be CRC checksum
+            // last serialize field must be CRC checksum
             _buffer[P_CRC] = this.ComputeChecksum();
         }
 
@@ -237,7 +223,8 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Create a new page item and return PageItem as reference to be buffer fill outside
+        /// Create a new page item and return PageItem as reference to be buffer fill outside.
+        /// Do not add 1 extra byte in "bytesLength" for store segment length (will be added inside this method)
         /// </summary>
         public PageSegment Insert(int bytesLength)
         {
@@ -327,11 +314,13 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Update segment block with new data. Current page must have bytes enougth for this new size
+        /// Update segment bytes with new data. Current page must have bytes enougth for this new size. Index will not be changed
+        /// Update will try use same segment to store. If not possible, write on end of page (with possible Defrag operation)
+        /// Do not add 1 extra byte in "bytesLength" for store segment length (will be added inside this method)
         /// </summary>
         public PageSegment Update(byte index, int bytesLength)
         {
-            // read position on page that this index are linking
+            // read position on page where index are linking to
             var slot = PAGE_SIZE - index - 1;
             var block = _buffer[slot];
 
