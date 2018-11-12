@@ -70,7 +70,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return $"Slot: {_index} - Block:{_block} - Len:{_length}";
+            return $"Slot: {_index} - Block: {_block} - Len: {_length}";
         }
     }
 }

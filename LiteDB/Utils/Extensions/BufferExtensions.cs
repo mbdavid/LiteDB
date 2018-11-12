@@ -55,6 +55,17 @@ namespace LiteDB
         }
 
         /// <summary>
+        /// Fill all array with defined value
+        /// </summary>
+        public static void Fill(this byte[] bytes, byte value, int offset, int count)
+        {
+            for(var i = 0; i < count; i++)
+            {
+                bytes[i + offset] = value;
+            }
+        }
+
+        /// <summary>
         /// Read UTF8 string until found \0
         /// </summary>
         public static string ReadCString(this byte[] bytes, int startIndex, out int bytesCount)

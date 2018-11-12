@@ -332,7 +332,8 @@ namespace LiteDB.Engine
         public PageSegment Update(byte index, int bytesLength)
         {
             // read position on page that this index are linking
-            var block = _buffer[PAGE_SIZE - index - 1];
+            var slot = PAGE_SIZE - index - 1;
+            var block = _buffer[slot];
 
             DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
             DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
@@ -379,13 +380,16 @@ namespace LiteDB.Engine
                 else
                 {
 #if DEBUG
-                    // clear segment (for debug propose only) - there is no need on release
-                    // Array.Fill<byte>(_buffer.Array, 99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
+                    // fill segment with 99 value (for debug propose only) - there is no need on release
+                    _buffer.Array.Fill(99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
 #endif
 
                     // more fragmented blocks and less used blocks (because I will run insert command soon)
                     this.FragmentedBlocks += originalLength;
                     this.UsedContentBlocks -= originalLength;
+
+                    // clean slot position (to better debug)
+                    _buffer[slot] = 0;
 
                     // run insert command but use same index
                     return this.Insert(index, newLength);
@@ -418,7 +422,7 @@ namespace LiteDB.Engine
             // here first block position
             var next = (byte)3;
 
-            // now, list all segment in block position
+            // now, list all segment in block position order
             foreach (var segment in segments.OrderBy(x => x.Block))
             {
                 // if current segment are not as excpect, copy buffer to right position (excluding empty space)
@@ -439,10 +443,9 @@ namespace LiteDB.Engine
             }
 
 #if DEBUG
-            //            // clear free segment (for debug propose only) - there is no need on release
-            //            var len = PAGE_SIZE - (next * PAGE_BLOCK_SIZE) - this.HighestIndex - 1;
-            //            // Array.Clear(_buffer.Array, next * PAGE_BLOCK_SIZE, len);
-            //            Array.Fill<byte>(_buffer.Array, 77, next * PAGE_BLOCK_SIZE, len);
+            // fill all non-used content area with 77 (for debug propose only) - there is no need on release
+            var len = PAGE_SIZE - (next * PAGE_BLOCK_SIZE) - this.HighestIndex - 1;
+            _buffer.Array.Fill(77, next * PAGE_BLOCK_SIZE, len);
 #endif
 
             // clear fragment blocks (page are in a continuous segment)
