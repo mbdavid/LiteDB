@@ -19,14 +19,16 @@ namespace LiteDB.Engine
         private const int P_PREV_PAGE_ID = 5; // 05-08
         private const int P_NEXT_PAGE_ID = 9; // 09-12
         private const int P_CRC = 13;
-        private const int P_ITEMS_COUNT = 14;
-        private const int P_USED_CONTENT_BLOCKS = 15;
-        private const int P_FRAGMENTED_BLOCKS = 16;
-        private const int P_NEXT_FREE_BLOCK = 17;
-        private const int P_HIGHEST_INDEX = 18;
-        private const int P_COL_ID = 19; // 19-22
-        private const int P_TRANSACTION_ID = 23; // 23-30
-        private const int P_IS_CONFIRMED = 31;
+
+        private const int P_TRANSACTION_ID = 14; // 14-21
+        private const int P_IS_CONFIRMED = 22;
+        private const int P_COL_ID = 23; // 23-26
+
+        private const int P_ITEMS_COUNT = 27;
+        private const int P_USED_CONTENT_BLOCKS = 28;
+        private const int P_FRAGMENTED_BLOCKS = 29;
+        private const int P_NEXT_FREE_BLOCK = 30;
+        private const int P_HIGHEST_INDEX = 31;
 
         #endregion
 
@@ -166,6 +168,11 @@ namespace LiteDB.Engine
             this.NextPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_NEXT_PAGE_ID);
             this.CRC = _buffer[P_CRC];
 
+            // transaction information
+            this.ColID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_COL_ID);
+            this.TransactionID = BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
+            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + P_IS_CONFIRMED);
+
             // blocks information
             this.ItemsCount = _buffer[P_ITEMS_COUNT];
             this.UsedContentBlocks = _buffer[P_USED_CONTENT_BLOCKS];
@@ -173,10 +180,6 @@ namespace LiteDB.Engine
             this.NextFreeBlock = _buffer[P_NEXT_FREE_BLOCK];
             this.HighestIndex = _buffer[P_HIGHEST_INDEX];
 
-            // transaction information
-            this.ColID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_COL_ID);
-            this.TransactionID = BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
-            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + P_IS_CONFIRMED);
         }
 
         /// <summary>

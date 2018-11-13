@@ -32,14 +32,19 @@ namespace LiteDB
         public const int PAGE_AVAILABLE_BLOCKS = (PAGE_SIZE - PAGE_HEADER_SIZE) / PAGE_SIZE;
 
         /// <summary>
+        /// Bytes used in encryption salt
+        /// </summary>
+        public const int ENCRYPTION_SALT_SIZE = 16;
+
+        /// <summary>
+        /// Position, in file (header page) that contains SALT encryption
+        /// </summary>
+        public const int P_HEADER_SALT = PAGE_SIZE - ENCRYPTION_SALT_SIZE;
+
+        /// <summary>
         /// Define index name max length
         /// </summary>
         public static int INDEX_NAME_MAX_LENGTH = 32;
-
-        /// <summary>
-        /// Total indexes per collection - it's fixed because I will used fixed arrays allocations
-        /// </summary>
-        public const int INDEX_PER_COLLECTION = 32;
 
         /// <summary>
         /// Max level used on skip list (index).

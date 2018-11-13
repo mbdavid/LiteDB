@@ -30,5 +30,19 @@ namespace LiteDB.Engine
             get => this.Array[this.Offset + index];
             set => this.Array[this.Offset + index] = value;
         }
+
+        public void Fill(T value)
+        {
+            this.Array.Fill(value, this.Offset, this.Count);
+        }
+
+        public T[] ToArray()
+        {
+            var buffer = new T[this.Count];
+
+            Buffer.BlockCopy(this.Array, this.Offset, buffer, 0, this.Count);
+
+            return buffer;
+        }
     }
 }
