@@ -58,16 +58,6 @@ namespace LiteDB.Engine
         public int UserVersion { get; set; }
 
         /// <summary>
-        /// Get encryption salt
-        /// </summary>
-        public ArraySlice<byte> Salt { get; private set; }
-
-        /// <summary>
-        /// Checks if database are encrypted (contains Salt information)
-        /// </summary>
-        private bool IsEncrypted => this.Salt.ToArray().IsFullZero();
-
-        /// <summary>
         /// All collections names/link ponter are stored inside this document
         /// </summary>
         private readonly BsonDocument _collections;
@@ -77,7 +67,7 @@ namespace LiteDB.Engine
         /// </summary>
         private bool _isCollectionsChanged = false;
 
-        public HeaderPage(PageBuffer buffer, uint pageID, bool encrypted)
+        public HeaderPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Header)
         {
             // initialize page version
@@ -86,22 +76,10 @@ namespace LiteDB.Engine
             this.LastPageID = 0;
             this.UserVersion = 0;
 
-            this.Salt = new ArraySlice<byte>(buffer.Array, buffer.Offset + P_HEADER_SALT, ENCRYPTION_SALT_SIZE);
-
-            if (encrypted)
-            {
-                AesEncryption.Salt(this.Salt);
-            }
-            else
-            {
-                this.Salt.Fill(0);
-            }
-
             // writing direct into buffer in Ctor() because there is no change later (write once)
             Encoding.UTF8.GetBytes(HEADER_INFO, 0, 27, _buffer.Array, _buffer.Offset + P_HEADER_INFO);
             _buffer[P_FILE_VERSION] = FILE_VERSION;
             this.CreationTime.ToUniversalTime().Ticks.ToBytes(_buffer.Array, _buffer.Offset + P_CREATION_TIME);
-            // salt already saved direct on _buffer
 
             // initialize collections
             _collections = new BsonDocument();
@@ -122,8 +100,6 @@ namespace LiteDB.Engine
             this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
             this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_CREATION_TIME), DateTimeKind.Utc).ToLocalTime();
             this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + P_USER_VERSION);
-
-            this.Salt = new ArraySlice<byte>(buffer.Array, buffer.Offset + P_HEADER_SALT, ENCRYPTION_SALT_SIZE);
 
             // create new buffer area to store BsonDocument collections
             var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_COLLECTIONS, P_COLLECTIONS_COUNT);

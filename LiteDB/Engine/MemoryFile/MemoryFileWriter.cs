@@ -21,7 +21,8 @@ namespace LiteDB.Engine
         private readonly MemoryStore _store;
 
         private readonly Stream _stream;
-        private readonly bool _appendOnly;
+        private readonly AesEncryption _aes;
+        private readonly DbFileMode _mode;
         private long _appendPosition;
 
         // async thread controls
@@ -29,13 +30,14 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public MemoryFileWriter(Stream stream, MemoryStore store, bool appendOnly)
+        public MemoryFileWriter(Stream stream, MemoryStore store, AesEncryption aes, DbFileMode mode)
         {
             _stream = stream;
             _store = store;
+            _aes = aes;
+            _mode = mode;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
-            _appendOnly = appendOnly;
             _appendPosition = stream.Length - PAGE_SIZE;
 
             // prepare async thread writer
@@ -55,7 +57,7 @@ namespace LiteDB.Engine
         {
             //DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
 
-            if (_appendOnly)
+            if (_mode == DbFileMode.Walfile)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
@@ -123,8 +125,22 @@ namespace LiteDB.Engine
                         // set stream position according to page
                         _stream.Position = page.Position;
 
-                        // write page on disk
-                        _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                        // write plain or encrypted data into strea
+                        if (_aes != null)
+                        {
+                            _aes.Encrypt(page, _stream);
+
+                            // in datafile, header page will store plain SALT encryption
+                            if (page.Position == 0 && _mode == DbFileMode.Datafile)
+                            {
+                                _stream.Position = P_HEADER_SALT;
+                                _stream.Write(_aes.Salt, 0, ENCRYPTION_SALT_SIZE);
+                            }
+                        }
+                        else
+                        {
+                            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                        }
 
                         // decreasing share counter only after page is in disk
                         _store.ReturnPage(page);

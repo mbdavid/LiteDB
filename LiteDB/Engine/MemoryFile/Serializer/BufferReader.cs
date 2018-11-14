@@ -120,6 +120,8 @@ namespace LiteDB.Engine
                 if (_isEOF) break;
             }
 
+            DEBUG(count != bufferPosition, "current value must fit inside defined buffer");
+
             return bufferPosition;
         }
 

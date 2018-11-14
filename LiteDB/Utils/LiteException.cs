@@ -20,7 +20,6 @@ namespace LiteDB
         public const int FILE_SIZE_EXCEEDED = 105;
         public const int COLLECTION_LIMIT_EXCEEDED = 106;
         public const int INDEX_DROP_ID = 108;
-        public const int INDEX_LIMIT_EXCEEDED = 109;
         public const int INDEX_DUPLICATE_KEY = 110;
         public const int INVALID_INDEX_KEY = 111;
         public const int INDEX_NOT_FOUND = 112;
@@ -161,11 +160,6 @@ namespace LiteDB
         internal static LiteException InvalidUpdateField(string field)
         {
             return new LiteException(INVALID_UPDATE_FIELD, "'{0}' can't be modified in UPDATE command.", field);
-        }
-
-        internal static LiteException IndexLimitExceeded(string collection)
-        {
-            return new LiteException(INDEX_LIMIT_EXCEEDED, "Collection '{0}' exceeded the maximum limit of indices: {1}", collection, INDEX_PER_COLLECTION);
         }
 
         internal static LiteException IndexDuplicateKey(string field, BsonValue key)

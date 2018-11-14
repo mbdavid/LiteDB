@@ -373,7 +373,7 @@ namespace LiteDB.Engine
                 {
 #if DEBUG
                     // fill segment with 99 value (for debug propose only) - there is no need on release
-                    _buffer.Array.Fill(99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
+                    _buffer.Array.Fill((byte)99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
 #endif
 
                     // more fragmented blocks and less used blocks (because I will run insert command soon)
@@ -437,7 +437,7 @@ namespace LiteDB.Engine
 #if DEBUG
             // fill all non-used content area with 77 (for debug propose only) - there is no need on release
             var len = PAGE_SIZE - (next * PAGE_BLOCK_SIZE) - this.HighestIndex - 1;
-            _buffer.Array.Fill(77, next * PAGE_BLOCK_SIZE, len);
+            _buffer.Array.Fill((byte)77, next * PAGE_BLOCK_SIZE, len);
 #endif
 
             // clear fragment blocks (page are in a continuous segment)

@@ -20,15 +20,17 @@ namespace LiteDB.Engine
     {
         private readonly MemoryStore _store;
         private readonly Stream _stream;
+        private readonly AesEncryption _aes;
         private readonly bool _writable;
         private readonly Action<Stream> _dispose;
 
         private readonly List<PageBuffer> _pages = new List<PageBuffer>();
 
-        public MemoryFileReader(MemoryStore store, Stream stream, bool writable, Action<Stream> dispose)
+        public MemoryFileReader(MemoryStore store, Stream stream, AesEncryption aes, bool writable, Action<Stream> dispose)
         {
             _store = store;
             _stream = stream;
+            _aes = aes;
             _writable = writable;
             _dispose = dispose;
         }
@@ -52,7 +54,16 @@ namespace LiteDB.Engine
         private void ReadStream(long position, ArraySlice<byte> buffer)
         {
             _stream.Position = position;
-            _stream.Read(buffer.Array, buffer.Offset, PAGE_SIZE);
+
+            // read encrypted or plain data from Stream into buffer
+            if (_aes != null)
+            {
+                _aes.Decrypt(_stream, buffer);
+            }
+            else
+            {
+                _stream.Read(buffer.Array, buffer.Offset, buffer.Count);
+            }
         }
 
         /// <summary>

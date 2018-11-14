@@ -24,19 +24,21 @@ namespace LiteDB.Engine
         private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
 
         private readonly IDiskFactory _factory;
-        private readonly bool _appendOnly;
+        private readonly AesEncryption _aes;
+        private readonly DbFileMode _mode;
 
         private readonly Lazy<MemoryFileWriter> _writer;
 
-        public MemoryFile(IDiskFactory factory, bool appendOnly)
+        public MemoryFile(IDiskFactory factory, AesEncryption aes, DbFileMode mode)
         {
             _factory = factory;
-            _appendOnly = appendOnly;
+            _aes = aes;
+            _mode = mode;
 
             _store = new MemoryStore();
 
             // create lazy writer to avoid create file if not needed (readonly file access)
-            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_factory.GetStream(true, _appendOnly), _store, _appendOnly));
+            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_factory.GetStream(true, _mode == DbFileMode.Walfile), _store, _aes, _mode));
         }
 
         /// <summary>
@@ -65,7 +67,7 @@ namespace LiteDB.Engine
             void disposing(Stream s) { _pool.Add(s); }
 
             // create new instance
-            return new MemoryFileReader(_store, stream, writable, disposing);
+            return new MemoryFileReader(_store, stream, _aes, writable, disposing);
         }
 
         /// <summary>

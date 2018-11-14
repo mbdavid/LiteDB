@@ -37,7 +37,7 @@ namespace LiteDB
         public const int ENCRYPTION_SALT_SIZE = 16;
 
         /// <summary>
-        /// Position, in file (header page) that contains SALT encryption
+        /// Position, in file (header page) that contains SALT encryption (position 8176)
         /// </summary>
         public const int P_HEADER_SALT = PAGE_SIZE - ENCRYPTION_SALT_SIZE;
 
