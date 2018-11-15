@@ -21,6 +21,7 @@ namespace LiteDB.Demo
 
         private uint _lastPageID = 0;
         private List<DataPage> _dirty = new List<DataPage>();
+        private Dictionary<uint, DataPage> _local = new Dictionary<uint, DataPage>();
 
         public DataService(string path)
         {
@@ -30,7 +31,7 @@ namespace LiteDB.Demo
             _reader = _file.GetReader(true);
         }
 
-        private DataPage GetPage(int minBytes)
+        private DataPage GetDirtyPage(int minBytes)
         {
             var freeBlocks = (byte)((minBytes / 32) + 1);
 
@@ -45,6 +46,18 @@ namespace LiteDB.Demo
             }
 
             return p;
+        }
+
+        private DataPage GetCleanPage(uint pageID)
+        {
+            if(_local.TryGetValue(pageID, out var page))
+            {
+                return page;
+            }
+
+            page = new DataPage(_reader.GetPage(pageID * 8192));
+            _local[pageID] = page;
+            return page;
         }
 
         public DataBlock Insert(BsonDocument doc)
@@ -63,7 +76,7 @@ namespace LiteDB.Demo
                 while (bytesLeft > 0)
                 {
                     var bytesToCopy = Math.Min(bytesLeft, 8000);
-                    var dataPage = this.GetPage(bytesToCopy);
+                    var dataPage = this.GetDirtyPage(bytesToCopy);
                     var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
 
                     dataIndex++;
@@ -90,6 +103,28 @@ namespace LiteDB.Demo
 
             return first;
 
+        }
+
+        public BsonDocument Read(PageAddress dataBlock)
+        {
+            IEnumerable<ArraySlice<byte>> source()
+            {
+                while(dataBlock != PageAddress.Empty)
+                {
+                    var dataPage = this.GetCleanPage(dataBlock.PageID);
+
+                    var block = dataPage.ReadBlock(dataBlock.Index);
+
+                    yield return block.Buffer;
+
+                    dataBlock = block.NextBlock;
+                }
+            }
+
+            using (var r = new BufferReader(source(), true))
+            {
+                return r.ReadDocument();
+            }
         }
 
         public void Dispose()

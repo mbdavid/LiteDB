@@ -30,19 +30,26 @@ namespace LiteDB.Demo
 
             using (var s = new DataService(PATH))
             {
-                // save on PageID: 0001:0
+                // save on PageID: 0000:0
                 var b0 = s.Insert(doc);
 
                 doc["novo"] = new byte[100];
 
-                // save on PageID: 0001:1
+                // save on PageID: 0000:1
                 var b1 = s.Insert(doc);
 
                 doc["novo"] = new byte[22000];
 
-                // save on PageID: 0002:0, 0003:0, 0001:3
+                // save on PageID: 0001:0, 0002:0, 0000:3
                 var b2 = s.Insert(doc);
 
+            }
+
+            using (var s = new DataService(PATH))
+            {
+                var doc0 = s.Read(new PageAddress(0, 0));
+                var doc1 = s.Read(new PageAddress(0, 1));
+                var doc2 = s.Read(new PageAddress(1, 0));
             }
 
 
