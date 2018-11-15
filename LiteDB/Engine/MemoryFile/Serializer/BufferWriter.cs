@@ -133,6 +133,16 @@ namespace LiteDB.Engine
         /// </summary>
         public int Skip(int count) => this.Write(null, 0, count);
 
+        /// <summary>
+        /// Consume all data source until finish
+        /// </summary>
+        public void Consume()
+        {
+            while (_source.MoveNext())
+            {
+            }
+        }
+
         #endregion
 
         #region String

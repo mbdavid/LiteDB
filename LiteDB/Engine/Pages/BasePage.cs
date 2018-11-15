@@ -283,7 +283,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Remove index slot about this page item (will not clean page item data space)
         /// </summary>
-        protected void Delete(byte index)
+        protected PageSegment Delete(byte index)
         {
             // read block position on index slot
             var slot = PAGE_SIZE - index - 1;
@@ -316,6 +316,9 @@ namespace LiteDB.Engine
 
             // set page as dirty
             this.IsDirty = true;
+
+            // get deleted page segment
+            return new PageSegment(_buffer, index, block, blocks);
         }
 
         /// <summary>

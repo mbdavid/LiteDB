@@ -39,14 +39,18 @@ namespace LiteDB.Engine
             return new DataBlock(this, segment);
         }
 
-        public void UpdateBlock()
+        public DataBlock UpdateBlock(byte index, int bytesLength, byte dataIndex)
         {
+            var segment = base.Update(index, bytesLength);
 
+            return new DataBlock(this, segment, dataIndex);
         }
 
-        public void DeleteBlock(byte index)
+        public DataBlock DeleteBlock(byte index)
         {
-            base.Delete(index);
+            var segment = base.Delete(index);
+
+            return new DataBlock(this, segment);
         }
     }
 }
