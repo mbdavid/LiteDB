@@ -37,9 +37,9 @@ namespace LiteDB
         public const int ENCRYPTION_SALT_SIZE = 16;
 
         /// <summary>
-        /// Position, in file (header page) that contains SALT encryption (position 8176)
+        /// Position, in file (first page page) that contains SALT encryption (position 8176)
         /// </summary>
-        public const int P_HEADER_SALT = PAGE_SIZE - ENCRYPTION_SALT_SIZE;
+        public const int P_ENCRYPTION_SALT = PAGE_SIZE - ENCRYPTION_SALT_SIZE;
 
         /// <summary>
         /// Define index name max length

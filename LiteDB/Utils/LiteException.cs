@@ -89,7 +89,7 @@ namespace LiteDB
 
         internal static LiteException InvalidDatabase()
         {
-            return new LiteException(INVALID_DATABASE, "Datafile is not a LiteDB database.");
+            return new LiteException(INVALID_DATABASE, "File is not a valid LiteDB database or invalid password.");
         }
 
         internal static LiteException InvalidDatabaseVersion(int version)

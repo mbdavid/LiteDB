@@ -9,11 +9,11 @@ namespace LiteDB.Engine
     /// <summary>
     /// Simple stream disk implementation of disk factory - used for Memory/Temp database
     /// </summary>
-    internal class StreamDiskFactory : IDiskFactory
+    internal class StreamFactory : IStreamFactory
     {
         private readonly Stream _stream;
 
-        public StreamDiskFactory(Stream stream)
+        public StreamFactory(Stream stream)
         {
             _stream = stream;
         }

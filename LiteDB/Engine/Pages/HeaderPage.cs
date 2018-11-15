@@ -12,7 +12,6 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// Header info the validate that datafile is a LiteDB file (27 bytes)
-        /// This data still at same position as v4 (FILE_VERSION=7)
         /// </summary>
         private const string HEADER_INFO = "** This is a LiteDB file **";
 
@@ -24,13 +23,13 @@ namespace LiteDB.Engine
 
         #region Buffer Field Positions
 
-        private const int P_HEADER_INFO = 25;  // 25-51 -> will override BasePage (it's ok - will override only not used data)
-        private const int P_FILE_VERSION = 52;
-        private const int P_FREE_EMPTY_PAGE_ID = 53; // 53-56
-        private const int P_LAST_PAGE_ID = 57; // 57-60
-        private const int P_CREATION_TIME = 61; // 61-64
-        private const int P_USER_VERSION = 65; // 65-68
-        // reserved 69-96
+        private const int P_HEADER_INFO = 32;  // 32-58
+        private const int P_FILE_VERSION = 59;
+        private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63
+        private const int P_LAST_PAGE_ID = 64; // 64-67
+        private const int P_CREATION_TIME = 68; // 68-75
+        private const int P_USER_VERSION = 76; // 76-79
+        // reserved 80-95
         private const int P_COLLECTIONS = 96; // 96-8128
         private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS - PAGE_BLOCK_SIZE; // 8064
         // reserved 32 bytes at end of header page (for encryption SALT)
@@ -100,6 +99,9 @@ namespace LiteDB.Engine
             this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
             this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_CREATION_TIME), DateTimeKind.Utc).ToLocalTime();
             this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + P_USER_VERSION);
+
+            // clear SALT area in buffer to work CRC
+            _buffer.Array.Fill((byte)0, _buffer.Offset + P_ENCRYPTION_SALT, ENCRYPTION_SALT_SIZE);
 
             // create new buffer area to store BsonDocument collections
             var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_COLLECTIONS, P_COLLECTIONS_COUNT);

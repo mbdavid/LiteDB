@@ -19,20 +19,21 @@ namespace LiteDB.Engine
     internal class MemoryFileReader : IDisposable
     {
         private readonly MemoryStore _store;
+        private readonly StreamPool _pool;
         private readonly Stream _stream;
         private readonly AesEncryption _aes;
         private readonly bool _writable;
-        private readonly Action<Stream> _dispose;
 
         private readonly List<PageBuffer> _pages = new List<PageBuffer>();
 
-        public MemoryFileReader(MemoryStore store, Stream stream, AesEncryption aes, bool writable, Action<Stream> dispose)
+        public MemoryFileReader(MemoryStore store, StreamPool pool, AesEncryption aes, bool writable)
         {
             _store = store;
-            _stream = stream;
+            _pool = pool;
             _aes = aes;
             _writable = writable;
-            _dispose = dispose;
+
+            _stream = _pool.Rent();
         }
 
         public PageBuffer GetPage(long position)
@@ -105,7 +106,7 @@ namespace LiteDB.Engine
             this.ReleasePages();
 
             // return stream back to pool
-            _dispose(_stream);
+            _pool.Return(_stream);
         }
     }
 }

@@ -9,6 +9,6 @@ namespace LiteDB.Engine
     internal enum DbFileMode : byte
     {
         Datafile = 0,
-        Walfile = 1
+        Logfile = 1
     }
 }

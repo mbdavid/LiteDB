@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using static LiteDB.Constants;
 
@@ -52,6 +53,19 @@ namespace LiteDB
 
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Check if array segment is zero only
+        /// </summary>
+        public static bool IsFullValue(this byte[] data, byte value, int offset, int count)
+        {
+            for(var i = 0; i < count; i++)
+            {
+                if (data[offset + i] != value) return false;
+            }
+
+            return true;
         }
 
         /// <summary>

@@ -14,9 +14,11 @@ namespace LiteDB.Demo
 {
     public class TestAesEncryption
     {
+        static string PATH = @"D:\memory-file.db";
+
         public static void Run(Stopwatch sw)
         {
-            var salt = AesEncryption.Salt(null);
+            var salt = AesEncryption.NewSalt();
             var buffer0 = new byte[8192];
             var buffer1 = new byte[8192];
             var orig = new byte[8192];
@@ -56,6 +58,60 @@ namespace LiteDB.Demo
             Console.WriteLine("CompareTo: " + slice1.Array.BinaryCompareTo(orig)); // 0 = equals
 
         }
+
+        public static void CreateEncryptedFile(Stopwatch sw)
+        {
+            File.Delete(PATH);
+
+            var factory = new FileStreamFactory(PATH, false);
+            var pool = new StreamPool(factory, DbFileMode.Datafile);
+            var aes = AesEncryption.CreateAes(pool, "abc");
+            var file = new MemoryFile(pool, aes);
+            var reader = file.GetReader(true);
+
+            var p0 = new HeaderPage(reader.NewPage(), 0);
+
+            p0.UserVersion = 99;
+            p0.NextPageID = 25;
+            p0.PrevPageID = 26;
+            p0.UpdateCollections(new TransactionPages { NewCollections = new Dictionary<string, uint>() { ["myCol1"] = 1234 } });
+
+            p0.UpdateBuffer();
+
+            var p1 = reader.NewPage();
+            p1.Array.Fill((byte)25, p1.Offset, p1.Count);
+
+
+            file.WriteAsync(new[] { p0.Buffer, p1 });
+
+            reader.Dispose();
+
+            file.Dispose();
+            pool.Dispose();
+        }
+
+        public static void ReadEncryptedFile(Stopwatch sw)
+        {
+            var factory = new FileStreamFactory(PATH, false);
+            var pool = new StreamPool(factory, DbFileMode.Datafile);
+            var aes = AesEncryption.CreateAes(pool, "abc");
+            var file = new MemoryFile(pool, aes);
+            var reader = file.GetReader(true);
+
+            var p0 = reader.GetPage(0);
+            var p1 = reader.GetPage(8192);
+
+            var h = new HeaderPage(p0);
+
+
+
+            reader.Dispose();
+
+            file.Dispose();
+            pool.Dispose();
+        }
+
+
     }
 
 }

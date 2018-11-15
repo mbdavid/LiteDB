@@ -19,7 +19,8 @@ namespace LiteDB.Demo
             var sw = new Stopwatch();
 
             //TestMemoryFile.Run(sw);
-            TestAesEncryption.Run(sw);
+            TestAesEncryption.CreateEncryptedFile(sw);
+            TestAesEncryption.ReadEncryptedFile(sw);
 
             Console.WriteLine("===============================");
             Console.WriteLine("Elapsed: " + sw.ElapsedMilliseconds);

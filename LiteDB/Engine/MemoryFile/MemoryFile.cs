@@ -20,31 +20,26 @@ namespace LiteDB.Engine
     internal class MemoryFile : IDisposable
     {
         private readonly MemoryStore _store = new MemoryStore();
-
-        private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
-
-        private readonly IDiskFactory _factory;
+        private readonly StreamPool _pool;
         private readonly AesEncryption _aes;
-        private readonly DbFileMode _mode;
 
         private readonly Lazy<MemoryFileWriter> _writer;
 
-        public MemoryFile(IDiskFactory factory, AesEncryption aes, DbFileMode mode)
+        public MemoryFile(StreamPool pool, AesEncryption aes)
         {
-            _factory = factory;
+            _pool = pool;
             _aes = aes;
-            _mode = mode;
 
             _store = new MemoryStore();
 
             // create lazy writer to avoid create file if not needed (readonly file access)
-            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_factory.GetStream(true, _mode == DbFileMode.Walfile), _store, _aes, _mode));
+            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_store, _pool, _aes));
         }
 
         /// <summary>
         /// Get file length (return 0 if not exists or if empty)
         /// </summary>
-        public long Length => _factory.Exists() ? _writer.Value.Length : 0;
+        public long Length => _pool.Factory.Exists() ? _writer.Value.Length : 0;
 
         /// <summary>
         /// Get how many bytes this file allocate inside heap memory
@@ -57,17 +52,8 @@ namespace LiteDB.Engine
         /// </summary>
         public MemoryFileReader GetReader(bool writable)
         {
-            // checks if pool contains already opened stream
-            if (!_pool.TryTake(out var stream))
-            {
-                stream = _factory.GetStream(false, false);
-            }
-
-            // when reader dispose, return back stream to pool
-            void disposing(Stream s) { _pool.Add(s); }
-
             // create new instance
-            return new MemoryFileReader(_store, stream, _aes, writable, disposing);
+            return new MemoryFileReader(_store, _pool, _aes, writable);
         }
 
         /// <summary>
@@ -103,19 +89,12 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            // dispose all reader stream
-            foreach(var stream in _pool)
-            {
-                stream.Dispose();
-            }
-
+            // wait async writer task finish
             if (_writer.IsValueCreated)
             {
-                // do writer dispose (wait async writer thread)
                 _writer.Value.Dispose();
             }
 
-            // stop cache async clean task
             _store.Dispose();
         }
     }

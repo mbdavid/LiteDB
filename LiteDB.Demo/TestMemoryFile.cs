@@ -32,8 +32,9 @@ namespace LiteDB.Demo
         {
             File.Delete(PATH);
            
-            var factory = new FileStreamDiskFactory(PATH, false);
-            var file = new MemoryFile(factory, null, true);
+            var factory = new FileStreamFactory(PATH, false);
+            var pool = new StreamPool(factory, DbFileMode.Logfile);
+            var file = new MemoryFile(pool, null);
             
             Console.WriteLine("Processing... " + (N0 * N1));
             
@@ -46,7 +47,7 @@ namespace LiteDB.Demo
 
             // dispose - re-open test with no memory cache
             file.Dispose();
-            file = new MemoryFile(factory, null, false);
+            file = new MemoryFile(pool, null);
             
             Thread.Sleep(2000);
             sw.Restart();
@@ -56,6 +57,7 @@ namespace LiteDB.Demo
             Console.WriteLine("Read: " + sw.ElapsedMilliseconds);
             
             file.Dispose();
+            pool.Dispose();
 
         }
 

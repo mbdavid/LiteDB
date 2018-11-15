@@ -30,15 +30,15 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public MemoryFileWriter(Stream stream, MemoryStore store, AesEncryption aes, DbFileMode mode)
+        public MemoryFileWriter(MemoryStore store, StreamPool pool, AesEncryption aes)
         {
-            _stream = stream;
+            _stream = pool.Writer;
             _store = store;
             _aes = aes;
-            _mode = mode;
+            _mode = pool.Mode;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
-            _appendPosition = stream.Length - PAGE_SIZE;
+            _appendPosition = _stream.Length - PAGE_SIZE;
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
@@ -50,14 +50,14 @@ namespace LiteDB.Engine
         public long Length => _appendPosition + PAGE_SIZE;
 
         /// <summary>
-        /// Add page into writer queue and will be saved in disk by another thread. If appendOnly will recive last position in stream
+        /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
         public long QueuePage(PageBuffer page)
         {
             //DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
 
-            if (_mode == DbFileMode.Walfile)
+            if (page.Position == long.MaxValue)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
@@ -133,7 +133,7 @@ namespace LiteDB.Engine
                             // in datafile, header page will store plain SALT encryption
                             if (page.Position == 0 && _mode == DbFileMode.Datafile)
                             {
-                                _stream.Position = P_HEADER_SALT;
+                                _stream.Position = P_ENCRYPTION_SALT;
                                 _stream.Write(_aes.Salt, 0, ENCRYPTION_SALT_SIZE);
                             }
                         }
@@ -173,7 +173,6 @@ namespace LiteDB.Engine
             _thread.Join();
 
             _waiter.Dispose();
-            _stream.Dispose();
         }
     }
 }

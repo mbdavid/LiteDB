@@ -10,12 +10,12 @@ namespace LiteDB.Engine
     /// <summary>
     /// FileStream disk implementation of disk factory
     /// </summary>
-    internal class FileStreamDiskFactory : IDiskFactory
+    internal class FileStreamFactory : IStreamFactory
     {
         private readonly string _filename;
         private readonly bool _readonly;
 
-        public FileStreamDiskFactory(string filename, bool readOnly)
+        public FileStreamFactory(string filename, bool readOnly)
         {
             _filename = filename;
             _readonly = readOnly;

@@ -46,27 +46,33 @@ namespace LiteDB
             using (var stream = new MemoryStream(input.Array, input.Offset, input.Count))
             using (var crypto = new CryptoStream(stream, _encryptor, CryptoStreamMode.Read))
             {
-                var arr = ArrayPool<byte>.Shared.Rent(input.Count);
+                var buffer = ArrayPool<byte>.Shared.Rent(input.Count);
 
-                crypto.Read(arr, 0, input.Count);
-                crypto.FlushFinalBlock();
+                crypto.Read(buffer, 0, input.Count);
+                //crypto.FlushFinalBlock();
 
-                output.Write(arr, 0, input.Count);
+                output.Write(buffer, 0, input.Count);
 
-                ArrayPool<byte>.Shared.Return(arr);
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
         /// <summary>
         /// Read encrypted input and write plain data into buffer array slice
         /// </summary>
-        public void Decrypt(Stream input, ArraySlice<byte> buffer)
+        public void Decrypt(Stream input, ArraySlice<byte> output)
         {
-            using (var crypto = new CryptoStream(input, _decryptor, CryptoStreamMode.Write))
+            var buffer = ArrayPool<byte>.Shared.Rent(output.Count);
+
+            input.Read(buffer, 0, output.Count);
+
+            using (var stream = new MemoryStream(buffer))
+            using (var crypto = new CryptoStream(stream, _decryptor, CryptoStreamMode.Read))
             {
-                crypto.Write(buffer.Array, buffer.Offset, buffer.Count);
-                crypto.FlushFinalBlock();
+                crypto.Read(output.Array, output.Offset, output.Count);
             }
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         /// <summary>
@@ -85,30 +91,26 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Get new AesEncryption based on disk factory
+        /// Get new AesEncryption instance. Use Stream to read SALT (at end of first page) and checks if password are correct
         /// </summary>
-        public static AesEncryption CreateAes(string password, IDiskFactory factory)
+        public static AesEncryption CreateAes(StreamPool pool, string password)
         {
-            if (factory.Exists() == false) return new AesEncryption(password, NewSalt());
+            if (pool.Factory.Exists() == false) return new AesEncryption(password, NewSalt());
 
-            var stream = factory.GetStream(false, false);
+            var stream = pool.Rent();
 
             try
             {
                 var salt = new byte[ENCRYPTION_SALT_SIZE];
 
-                stream.Position = P_HEADER_SALT;
+                stream.Position = P_ENCRYPTION_SALT;
                 stream.Read(salt, 0, ENCRYPTION_SALT_SIZE);
-                //TODO: testar a senha aqui?
 
                 return new AesEncryption(password, salt);
             }
             finally
             {
-                if (factory.CloseOnDispose)
-                {
-                    stream.Dispose();
-                }
+                pool.Return(stream);
             }
         }
 
