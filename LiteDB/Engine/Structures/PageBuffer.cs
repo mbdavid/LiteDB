@@ -15,7 +15,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Represent page buffer to be read/write using FileMemory
     /// </summary>
-    internal class PageBuffer : ArraySlice<byte>
+    internal class PageBuffer : BufferSlice
     {
         /// <summary>
         /// Get/Set page position. If page are writable, this postion CAN be MaxValue (has not defined position yet)

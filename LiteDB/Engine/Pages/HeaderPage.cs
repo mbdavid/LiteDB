@@ -70,15 +70,16 @@ namespace LiteDB.Engine
             : base(buffer, pageID, PageType.Header)
         {
             // initialize page version
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
             this.UserVersion = 0;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
-            Encoding.UTF8.GetBytes(HEADER_INFO, 0, 27, _buffer.Array, _buffer.Offset + P_HEADER_INFO);
+            _buffer.Write(HEADER_INFO, P_HEADER_INFO, HEADER_INFO.Length);
             _buffer[P_FILE_VERSION] = FILE_VERSION;
-            this.CreationTime.ToUniversalTime().Ticks.ToBytes(_buffer.Array, _buffer.Offset + P_CREATION_TIME);
+
+            _buffer.Write(this.CreationTime, P_CREATION_TIME);
 
             // initialize collections
             _collections = new BsonDocument();
@@ -89,22 +90,22 @@ namespace LiteDB.Engine
         {
             DEBUG(this.PageType != PageType.Header, $"page {this.PageID} should be 'Header' but is {this.PageType}.");
 
-            var info = Encoding.UTF8.GetString(_buffer.Array, _buffer.Offset + P_HEADER_INFO, HEADER_INFO.Length);
+            var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
             var ver = _buffer[P_FILE_VERSION];
 
             if (string.CompareOrdinal(info, HEADER_INFO) != 0) throw LiteException.InvalidDatabase();
             if (ver != FILE_VERSION) throw LiteException.InvalidDatabaseVersion(ver);
 
-            this.FreeEmptyPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_FREE_EMPTY_PAGE_ID);
-            this.LastPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
-            this.CreationTime = new DateTime(BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_CREATION_TIME), DateTimeKind.Utc).ToLocalTime();
-            this.UserVersion = BitConverter.ToInt32(_buffer.Array, _buffer.Offset + P_USER_VERSION);
+            this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
+            this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
+            this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
+            this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
             // clear SALT area in buffer to work CRC
             _buffer.Array.Fill((byte)0, _buffer.Offset + P_ENCRYPTION_SALT, ENCRYPTION_SALT_SIZE);
 
             // create new buffer area to store BsonDocument collections
-            var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_COLLECTIONS, P_COLLECTIONS_COUNT);
+            var area = _buffer.Slice(P_COLLECTIONS, P_COLLECTIONS_COUNT);
 
             using (var r = new BufferReader(new[] { area }, false))
             {
@@ -114,16 +115,16 @@ namespace LiteDB.Engine
 
         public override PageBuffer UpdateBuffer()
         {
-            this.FreeEmptyPageID.ToBytes(_buffer.Array, _buffer.Offset + P_FREE_EMPTY_PAGE_ID);
-            this.LastPageID.ToBytes(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
-            this.UserVersion.ToBytes(_buffer.Array, _buffer.Offset + P_USER_VERSION);
+            _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
+            _buffer.ReadUInt32(P_LAST_PAGE_ID);
+            _buffer.ReadInt32(P_USER_VERSION);
 
             // CreationTime - never change - no need to override buffer
 
             // update collection only if needed
             if (_isCollectionsChanged)
             {
-                var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_COLLECTIONS, P_COLLECTIONS_COUNT);
+                var area = _buffer.Slice(P_COLLECTIONS, P_COLLECTIONS_COUNT);
 
                 using (var w = new BufferWriter(new[] { area }))
                 {

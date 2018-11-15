@@ -19,9 +19,9 @@ namespace LiteDB.Engine
     /// </summary>
     public class BufferWriter : IDisposable
     {
-        private readonly IEnumerator<ArraySlice<byte>> _source;
+        private readonly IEnumerator<BufferSlice> _source;
 
-        private ArraySlice<byte> _current;
+        private BufferSlice _current;
         private int _currentPosition = 0; // position in _current
         private int _position = 0; // global position
 
@@ -40,11 +40,11 @@ namespace LiteDB.Engine
         public bool IsEOF => _isEOF;
 
         public BufferWriter(byte[] buffer)
-            : this(new [] { new ArraySlice<byte>(buffer, 0, buffer.Length) })
+            : this(new [] { new BufferSlice(buffer, 0, buffer.Length) })
         {
         }
 
-        public BufferWriter(IEnumerable<ArraySlice<byte>> source)
+        public BufferWriter(IEnumerable<BufferSlice> source)
         {
             _source = source.GetEnumerator();
 

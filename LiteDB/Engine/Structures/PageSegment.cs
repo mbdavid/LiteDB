@@ -8,47 +8,40 @@ namespace LiteDB.Engine
     /// </summary>
     internal struct PageSegment
     {
-        private readonly byte _index;
-        private readonly byte _length;
-        private readonly byte _block;
-        private readonly ArraySlice<byte> _buffer;
-
         /// <summary>
         /// Get segment index on footer of page
         /// </summary>
-        public byte Index => _index;
+        public readonly byte Index;
 
         /// <summary>
         /// Get block position on page (in blocks)
         /// </summary>
-        public byte Block => _block;
+        public readonly byte Length;
 
         /// <summary>
         /// Get page item size (in blocks)
         /// </summary>
-        public byte Length => _length;
+        public readonly byte Block;
 
         /// <summary>
         /// Get buffer data of this page item (contains 1 byte less because was used to store length)
         /// </summary>
-        public ArraySlice<byte> Buffer => _buffer;
+        public readonly BufferSlice Buffer;
 
         /// <summary>
         /// Create new page segment inside page
         /// </summary>
         public PageSegment(PageBuffer buffer, byte index, byte block, byte length)
         {
-            _index = index;
-            _block = block;
-            _length = length;
+            this.Index = index;
+            this.Block = block;
+            this.Length = length;
 
             // store block length at initial first byte
             buffer[block * PAGE_BLOCK_SIZE] = length;
 
             // slice original buffer removing this first byte
-            _buffer = new ArraySlice<byte>(buffer.Array,
-                buffer.Offset + (block * PAGE_BLOCK_SIZE) + 1,
-                (_length * PAGE_BLOCK_SIZE) - 1);
+            this.Buffer = buffer.Slice((block * PAGE_BLOCK_SIZE) + 1, (this.Length * PAGE_BLOCK_SIZE) - 1);
         }
 
         /// <summary>
@@ -56,21 +49,19 @@ namespace LiteDB.Engine
         /// </summary>
         public PageSegment(PageBuffer buffer, byte index, byte block)
         {
-            _index = index;
-            _block = block;
+            this.Index = index;
+            this.Block = block;
 
             // read block length
-            _length = buffer[block * PAGE_BLOCK_SIZE];
+            this.Length = buffer[block * PAGE_BLOCK_SIZE];
 
             // slice original buffer removing this first byte
-            _buffer = new ArraySlice<byte>(buffer.Array,
-                buffer.Offset + (block * PAGE_BLOCK_SIZE) + 1,
-                (_length * PAGE_BLOCK_SIZE) - 1);
+            this.Buffer = buffer.Slice((block * PAGE_BLOCK_SIZE) + 1, (this.Length * PAGE_BLOCK_SIZE) - 1);
         }
 
         public override string ToString()
         {
-            return $"Slot: {_index} - Block: {_block} - Len: {_length}";
+            return $"Slot: {this.Index} - Block: {this.Block} - Len: {this.Length}";
         }
     }
 }

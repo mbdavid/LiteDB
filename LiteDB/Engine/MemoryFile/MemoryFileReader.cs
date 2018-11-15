@@ -52,7 +52,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read bytes from stream into buffer slice
         /// </summary>
-        private void ReadStream(long position, ArraySlice<byte> buffer)
+        private void ReadStream(long position, BufferSlice buffer)
         {
             _stream.Position = position;
 

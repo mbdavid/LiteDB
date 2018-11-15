@@ -31,8 +31,8 @@ namespace LiteDB.Demo
                     orig[(j * 256) + i] = (byte)i;
                 }
 
-            var slice0 = new ArraySlice<byte>(buffer0, 0, 8192);
-            var slice1 = new ArraySlice<byte>(buffer0, 0, 8192);
+            var slice0 = new BufferSlice(buffer0, 0, 8192);
+            var slice1 = new BufferSlice(buffer0, 0, 8192);
 
             var mem = new MemoryStream();
 

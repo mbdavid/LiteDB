@@ -63,7 +63,7 @@ namespace LiteDB.Engine
         /// Request a readonly page - this page can be shared with all only for read (will never be dirty)
         /// Each request increase share counter
         /// </summary>
-        public PageBuffer GetReadablePage(long position, Action<long, ArraySlice<byte>> factory)
+        public PageBuffer GetReadablePage(long position, Action<long, BufferSlice> factory)
         {
             _locker.EnterReadLock();
 
@@ -100,7 +100,7 @@ namespace LiteDB.Engine
         /// Writable pages can be write or just released (with no write)
         /// Before release, a writable page must be marked as clean
         /// </summary>
-        public PageBuffer GetWritablePage(long position, Action<long, ArraySlice<byte>> factory)
+        public PageBuffer GetWritablePage(long position, Action<long, BufferSlice> factory)
         {
             _locker.EnterReadLock();
 

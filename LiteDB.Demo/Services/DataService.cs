@@ -68,7 +68,7 @@ namespace LiteDB.Demo
 
             DataBlock first = null;
 
-            IEnumerable<ArraySlice<byte>> source()
+            IEnumerable<BufferSlice> source()
             {
                 byte dataIndex = 0;
                 DataBlock last = null;
@@ -107,7 +107,7 @@ namespace LiteDB.Demo
 
         public BsonDocument Read(PageAddress dataBlock)
         {
-            IEnumerable<ArraySlice<byte>> source()
+            IEnumerable<BufferSlice> source()
             {
                 while(dataBlock != PageAddress.Empty)
                 {

@@ -65,7 +65,7 @@ namespace LiteDB.Demo
         {
             var fileReader = file.GetReader(false);
 
-            IEnumerable<ArraySlice<byte>> source()
+            IEnumerable<BufferSlice> source()
             {
                 var pos = 0;
 
@@ -101,7 +101,7 @@ namespace LiteDB.Demo
 
             var dirtyPages = new List<PageBuffer>();
 
-            IEnumerable<ArraySlice<byte>> source()
+            IEnumerable<BufferSlice> source()
             {
                 while (true)
                 {

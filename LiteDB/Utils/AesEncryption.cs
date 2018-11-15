@@ -41,7 +41,7 @@ namespace LiteDB
         /// <summary>
         /// Read buffer array writing encrypted data into output Stream
         /// </summary>
-        public void Encrypt(ArraySlice<byte> input, Stream output)
+        public void Encrypt(BufferSlice input, Stream output)
         {
             using (var stream = new MemoryStream(input.Array, input.Offset, input.Count))
             using (var crypto = new CryptoStream(stream, _encryptor, CryptoStreamMode.Read))
@@ -60,7 +60,7 @@ namespace LiteDB
         /// <summary>
         /// Read encrypted input and write plain data into buffer array slice
         /// </summary>
-        public void Decrypt(Stream input, ArraySlice<byte> output)
+        public void Decrypt(Stream input, BufferSlice output)
         {
             var buffer = ArrayPool<byte>.Shared.Rent(output.Count);
 

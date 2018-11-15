@@ -61,7 +61,7 @@ namespace LiteDB.Engine
             DEBUG(this.PageType != PageType.Collection, $"page {this.PageID} should be 'Collection' but is {this.PageType}.");
 
             // create new buffer area to store BsonDocument indexes
-            var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_INDEXES, P_INDEXES_COUNT);
+            var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
 
             using (var r = new BufferReader(new[] { area }, false))
             {
@@ -106,9 +106,9 @@ namespace LiteDB.Engine
 
         public override PageBuffer UpdateBuffer()
         {
-            var buffer = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
+            var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
 
-            using (var w = new BufferWriter(new[] { buffer }))
+            using (var w = new BufferWriter(new[] { area }))
             {
                 // write 5 position of FreeDataPage (20 bytes)
                 w.Write(this.FreeDataPageID[0]);

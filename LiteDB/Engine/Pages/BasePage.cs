@@ -162,16 +162,16 @@ namespace LiteDB.Engine
             _buffer = buffer;
 
             // page information
-            this.PageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_PAGE_ID);
+            this.PageID = _buffer.ReadUInt32(P_PAGE_ID);
             this.PageType = (PageType)_buffer[P_PAGE_TYPE];
-            this.PrevPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_PREV_PAGE_ID);
-            this.NextPageID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_NEXT_PAGE_ID);
+            this.PrevPageID = _buffer.ReadUInt32(P_PREV_PAGE_ID);
+            this.NextPageID = _buffer.ReadUInt32(P_NEXT_PAGE_ID);
             this.CRC = _buffer[P_CRC];
 
             // transaction information
-            this.ColID = BitConverter.ToUInt32(_buffer.Array, _buffer.Offset + P_COL_ID);
-            this.TransactionID = BitConverter.ToInt64(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
-            this.IsConfirmed = BitConverter.ToBoolean(_buffer.Array, _buffer.Offset + P_IS_CONFIRMED);
+            this.ColID = _buffer.ReadUInt32(P_COL_ID);
+            this.TransactionID = _buffer.ReadInt64(P_TRANSACTION_ID);
+            this.IsConfirmed = _buffer[P_IS_CONFIRMED] != 0;
 
             // blocks information
             this.ItemsCount = _buffer[P_ITEMS_COUNT];
@@ -192,8 +192,8 @@ namespace LiteDB.Engine
             // page information
             // PageID   - never change!
             // PageType - never change!
-            this.PrevPageID.ToBytes(_buffer.Array, _buffer.Offset + P_PREV_PAGE_ID);
-            this.NextPageID.ToBytes(_buffer.Array, _buffer.Offset + P_NEXT_PAGE_ID);
+            _buffer.Write(this.PrevPageID, P_PREV_PAGE_ID);
+            _buffer.Write(this.NextPageID, P_NEXT_PAGE_ID);
 
             // block information
             _buffer[P_ITEMS_COUNT] = this.ItemsCount;
@@ -203,8 +203,8 @@ namespace LiteDB.Engine
             _buffer[P_HIGHEST_INDEX] = this.HighestIndex;
 
             // transaction information
-            this.ColID.ToBytes(_buffer.Array, _buffer.Offset + P_COL_ID);
-            this.TransactionID.ToBytes(_buffer.Array, _buffer.Offset + P_TRANSACTION_ID);
+            _buffer.Write(this.ColID, P_COL_ID);
+            _buffer.Write(this.TransactionID, P_TRANSACTION_ID);
             _buffer[P_IS_CONFIRMED] = this.IsConfirmed ? (byte)1 : (byte)0;
 
             // last serialize field must be CRC checksum
