@@ -12,6 +12,10 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+
+    /// <summary>
+    /// Internal class that implement same idea from ArraySegment but use a class (not a struct).
+    /// </summary>
     public class ArraySlice<T>
     {
         public readonly int Offset;

@@ -1,53 +1,72 @@
-﻿//using System;
+﻿using System;
+using static LiteDB.Constants;
 
-//namespace LiteDB.Engine
-//{
-//    internal class DataBlock
-//    {
-//        public const int DATA_BLOCK_FIXED_SIZE = 2 + // Position.Index (ushort)
-//                                                  4 + // ExtendedPageID (uint)
-//                                                  4 + // DocumentLength (int)
-//                                                  2;  // block.Data.Length (ushort)
+namespace LiteDB.Engine
+{
+    internal class DataBlock
+    {
+        private readonly PageSegment _pageSegment;
+        private readonly PageAddress _position;
+        private readonly byte _dataIndex;
+        private PageAddress _nextBlock;
+        private readonly ArraySlice<byte> _buffer;
 
-//        /// <summary>
-//        /// Position of this dataBlock inside a page (store only Position.Index)
-//        /// </summary>
-//        public PageAddress Position { get; set; }
+        public PageAddress Position => _position;
+        public byte DataIndex => _dataIndex;
+        public PageAddress NextBlock => _nextBlock;
+        public ArraySlice<byte> Buffer => _buffer;
 
-//        /// <summary>
-//        /// If object is bigger than this page - use a ExtendPage (and do not use Data array)
-//        /// </summary>
-//        public uint ExtendPageID { get; set; }
+        /// <summary>
+        /// Read new DataBlock from filled pageSegment
+        /// </summary>
+        public DataBlock(DataPage page, PageSegment pageSegment)
+        {
+            _pageSegment = pageSegment;
+            _position = new PageAddress(page.PageID, pageSegment.Index);
 
-//        /// <summary>
-//        /// Get document length (from Data array or from ExtendPages)
-//        /// </summary>
-//        public int DocumentLength { get; set; }
+            // byte 00: DataIndex
+            _dataIndex = _pageSegment.Buffer[0];
 
-//        /// <summary>
-//        /// Data of a record - could be empty if is used in ExtedPage
-//        /// </summary>
-//        public byte[] Data { get; set; }
+            // byte 01-04: NextBlock (PageID, Index)
+            _nextBlock = new PageAddress(
+                BitConverter.ToUInt32(_pageSegment.Buffer.Array, _pageSegment.Buffer.Offset + 1),
+                _pageSegment.Buffer[5]);
 
-//        /// <summary>
-//        /// Get a reference for page
-//        /// </summary>
-//        public DataPage Page { get; set; }
+            // byte 06-EOF: Buffer
+            _buffer = new ArraySlice<byte>(
+                _pageSegment.Buffer.Array,
+                _pageSegment.Buffer.Offset + 6,
+                (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6);
+        }
 
-//        /// <summary>
-//        /// Get length of this dataBlock (persist as ushort 2 bytes)
-//        /// </summary>
-//        public int BlockLength
-//        {
-//            get { return DATA_BLOCK_FIXED_SIZE + this.Data.Length; }
-//        }
+        /// <summary>
+        /// Read new DataBlock from filled pageSegment
+        /// </summary>
+        public DataBlock(DataPage page, PageSegment pageSegment, byte dataIndex)
+        {
+            _pageSegment = pageSegment;
+            _position = new PageAddress(page.PageID, pageSegment.Index);
 
-//        public DataBlock()
-//        {
-//            this.Position = PageAddress.Empty;
-//            this.ExtendPageID = uint.MaxValue;
-//            this.Data = new byte[0];
-//            this.DocumentLength = 0;
-//        }
-//    }
-//}
+            // byte 00: Data Index
+            _pageSegment.Buffer[0] = dataIndex;
+
+            // byte 01-04 (will be updated in "UpdateNextBlock")
+            _nextBlock = PageAddress.Empty;
+
+            // byte 06-EOF: Buffer
+            _buffer = new ArraySlice<byte>(
+                _pageSegment.Buffer.Array,
+                _pageSegment.Buffer.Offset + 6,
+                (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6);
+        }
+
+        public void UpdateNextBlock(PageAddress nextBlock)
+        {
+            _nextBlock = nextBlock;
+
+            // update segment buffer with NextBlock (uint + byte)
+            nextBlock.PageID.ToBytes(_pageSegment.Buffer.Array, _pageSegment.Buffer.Offset + 1); // 01-04
+            _pageSegment.Buffer[5] = nextBlock.Index; // 05
+        }
+    }
+}

@@ -1,208 +1,206 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.IO;
-//using System.Linq;
-//using System.Text.RegularExpressions;
-//using static LiteDB.Constants;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using static LiteDB.Constants;
 
-//namespace LiteDB.Engine
-//{
-//    /// <summary>
-//    /// Represents the collection page AND a collection item, because CollectionPage represent a Collection (1 page = 1 collection). All collections pages are linked with Prev/Next links
-//    /// </summary>
-//    internal class CollectionPage : BasePage
-//    {
-//        /// <summary>
-//        /// Define reserved bytes for data structure
-//        /// </summary>
-//        private const int INDEX_PAGE_FIXED_HEADER = 200;
+namespace LiteDB.Engine
+{
+    internal class CollectionPage : BasePage
+    {
+        #region Buffer Field Positions
 
-//        /// <summary>
-//        /// Max length of all indexes names (including string expressions)
-//        /// </summary>
-//        private const int MAX_INDEX_NAME_SIZE = PAGE_AVAILABLE_BYTES - INDEX_PAGE_FIXED_HEADER;
+        private const int P_INDEXES = 96; // 96-8192
+        private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES; // 8096
 
-//        /// <summary>
-//        /// Each index fixed size
-//        /// </summary>
-//        private const int FIXED_INDEX_SIZE = 4 + // Name (length)
-//                                             4 + // Expression (length)
-//                                             1 + // Unique
-//                                             6 + // HeadNode
-//                                             6 + // TailNode
-//                                             4 + // FreeIndexPageID
-//                                             1 + // MaxLevel
-//                                             4 + // KeyCount
-//                                             4;  // UniqueKeyCount
+        #endregion
 
-//        /// <summary>
-//        /// Page type = Collection
-//        /// </summary>
-//        public override PageType PageType { get { return PageType.Collection; } }
+        /// <summary>
+        /// Free data page linked-list (5 lists for different range of FreeBlocks)
+        /// </summary>
+        public uint[] FreeDataPageID = new uint[5];
 
-//        /// <summary>
-//        /// Name of collection
-//        /// </summary>
-//        public string CollectionName { get; set; }
+        /// <summary>
+        /// Free index page linked-list (5 lists for different range of FreeBlocks)
+        /// </summary>
+        public uint[] FreeIndexPageID = new uint[5];
 
-//        /// <summary>
-//        /// Get a reference for the free list data page - its private list per collection - each DataPage contains only data for 1 collection (no mixing)
-//        /// Must to be a Field to be used as parameter reference
-//        /// </summary>
-//        public uint FreeDataPageID;
+        /// <summary>
+        /// DateTime when collection was created
+        /// </summary>
+        public DateTime CreationTime { get; private set; }
 
-//        /// <summary>
-//        /// DateTime when collection was created
-//        /// </summary>
-//        public DateTime CreationTime { get; set; }
+        /// <summary>
+        /// DateTime from last index counter
+        /// </summary>
+        public DateTime LastAnalyzed { get; set; }
 
-//        /// <summary>
-//        /// DateTime from last index counter
-//        /// </summary>
-//        public DateTime LastAnalyzed { get; set; }
+        /// <summary>
+        /// All indexes references for this collection
+        /// </summary>
+        private readonly Dictionary<string, CollectionIndex> _indexes = new Dictionary<string, CollectionIndex>();
 
-//        /// <summary>
-//        /// Get all indexes from this collection - includes non-used indexes
-//        /// </summary>
-//        private CollectionIndex[] _indexes;
+        /// <summary>
+        /// Check if indexes was changed
+        /// </summary>
+        private bool _isIndexesChanged = false;
 
-//        private CollectionPage()
-//        {
-//        }
+        public CollectionPage(PageBuffer buffer, uint pageID)
+            : base(buffer, pageID, PageType.Collection)
+        {
+            // initialize page version
+            this.CreationTime = DateTime.Now;
+            this.LastAnalyzed = DateTime.MinValue;
+        }
 
-//        public CollectionPage(uint pageID)
-//            : base(pageID)
-//        {
-//            this.FreeDataPageID = uint.MaxValue;
-//            this.ItemCount = 1; // fixed for CollectionPage
-//            this.FreeBytes = 0; // no free bytes on collection-page - only one collection per page
-//            this.CreationTime = DateTime.Now;
-//            this.LastAnalyzed = DateTime.MinValue;
+        public CollectionPage(PageBuffer buffer)
+            : base(buffer)
+        {
+            DEBUG(this.PageType != PageType.Collection, $"page {this.PageID} should be 'Collection' but is {this.PageType}.");
 
-//            _indexes = new CollectionIndex[INDEX_PER_COLLECTION];
+            // create new buffer area to store BsonDocument indexes
+            var area = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + P_INDEXES, P_INDEXES_COUNT);
 
-//            for (var i = 0; i < _indexes.Length; i++)
-//            {
-//                _indexes[i] = new CollectionIndex { Page = this, Slot = i };
-//            }
-//        }
+            using (var r = new BufferReader(new[] { area }, false))
+            {
+                // read 5 position of FreeDataPage (20 bytes)
+                this.FreeDataPageID[0] = r.ReadUInt32();
+                this.FreeDataPageID[1] = r.ReadUInt32();
+                this.FreeDataPageID[2] = r.ReadUInt32();
+                this.FreeDataPageID[3] = r.ReadUInt32();
+                this.FreeDataPageID[4] = r.ReadUInt32();
 
-//        #region Read/Write pages
+                // read 5 position of FreeIndexPage (20 bytes)
+                this.FreeIndexPageID[0] = r.ReadUInt32();
+                this.FreeIndexPageID[1] = r.ReadUInt32();
+                this.FreeIndexPageID[2] = r.ReadUInt32();
+                this.FreeIndexPageID[3] = r.ReadUInt32();
+                this.FreeIndexPageID[4] = r.ReadUInt32();
 
-//        protected override void ReadContent(BinaryReader reader, bool utcDate)
-//        {
-//            var start = reader.BaseStream.Position;
+                // read create/last analyzed (16 bytes)
+                this.CreationTime = r.ReadDateTime();
+                this.LastAnalyzed = r.ReadDateTime();
 
-//            this.CollectionName = reader.ReadString();
-//            this.FreeDataPageID = reader.ReadUInt32();
-//            this.CreationTime = reader.ReadDateTime(utcDate);
-//            this.LastAnalyzed = reader.ReadDateTime(utcDate);
+                // read indexes count (max 256 indexes per collection)
+                var count = r.ReadByte(); // 1 byte
 
-//            // keep 200 bytes in page before starts write indexes
-//            var skip = INDEX_PAGE_FIXED_HEADER - (reader.BaseStream.Position - start);
+                for(var i = 0; i < count; i++)
+                {
+                    var name = r.ReadCString();
 
-//            reader.BaseStream.Seek(skip, SeekOrigin.Current);
+                    _indexes[name] = new CollectionIndex
+                    {
+                        Name = name, // .Length + 1 
+                        Expression = r.ReadCString(), // .Length + 1 
+                        Unique = r.ReadBoolean(), // 1
+                        HeadNode = r.ReadPageAddress(), // 5
+                        TailNode = r.ReadPageAddress(), // 5
+                        KeyCount = r.ReadUInt32(), // 4
+                        UniqueKeyCount = r.ReadUInt32() // 4
+                    };
+                }
+            }
+        }
 
-//            foreach (var index in _indexes)
-//            {
-//                index.Name = reader.ReadString();
-//                index.Expression = reader.ReadString();
+        public override PageBuffer UpdateBuffer()
+        {
+            var buffer = new ArraySlice<byte>(_buffer.Array, _buffer.Offset + PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
 
-//                index.Unique = reader.ReadBoolean();
-//                index.HeadNode = reader.ReadPageAddress();
-//                index.TailNode = reader.ReadPageAddress();
-//                index.FreeIndexPageID = reader.ReadUInt32();
-//                index.MaxLevel = reader.ReadByte();
-//                index.KeyCount = reader.ReadUInt32();
-//                index.UniqueKeyCount = reader.ReadUInt32();
-//            }
-//        }
+            using (var w = new BufferWriter(new[] { buffer }))
+            {
+                // write 5 position of FreeDataPage (20 bytes)
+                w.Write(this.FreeDataPageID[0]);
+                w.Write(this.FreeDataPageID[1]);
+                w.Write(this.FreeDataPageID[2]);
+                w.Write(this.FreeDataPageID[3]);
+                w.Write(this.FreeDataPageID[4]);
 
-//        protected override void WriteContent(BinaryWriter writer)
-//        {
-//            var start = writer.BaseStream.Position;
+                // write 5 position of FreeIndexPage (20 bytes)
+                w.Write(this.FreeIndexPageID[0]);
+                w.Write(this.FreeIndexPageID[1]);
+                w.Write(this.FreeIndexPageID[2]);
+                w.Write(this.FreeIndexPageID[3]);
+                w.Write(this.FreeIndexPageID[4]);
 
-//            writer.Write(this.CollectionName);
-//            writer.Write(this.FreeDataPageID);
-//            writer.Write(this.CreationTime);
-//            writer.Write(this.LastAnalyzed);
+                // write creation/last analyzed (16 bytes)
+                w.Write(this.CreationTime);
+                w.Write(this.LastAnalyzed);
 
-//            var skip = INDEX_PAGE_FIXED_HEADER - (writer.BaseStream.Position - start);
+                // update collection only if needed
+                if (_isIndexesChanged)
+                {
+                    w.Write((byte)_indexes.Count); // 1 byte
 
-//            DEBUG(skip < 0 || skip > INDEX_PAGE_FIXED_HEADER, "reserved area must be between 0 and 200");
+                    foreach (var index in _indexes.Values)
+                    {
+                        w.WriteCString(index.Name);
+                        w.WriteCString(index.Expression);
+                        w.Write(index.Unique);
+                        w.Write(index.HeadNode);
+                        w.Write(index.TailNode);
+                        w.Write(index.KeyCount);
+                        w.Write(index.UniqueKeyCount);
+                    }
+                }
+            }
 
-//            writer.BaseStream.Seek(skip, SeekOrigin.Current);
+            return base.UpdateBuffer();
+        }
 
-//            foreach (var index in _indexes)
-//            {
-//                writer.Write(index.Name);
-//                writer.Write(index.Expression);
-//                writer.Write(index.Unique);
-//                writer.Write(index.HeadNode);
-//                writer.Write(index.TailNode);
-//                writer.Write(index.FreeIndexPageID);
-//                writer.Write(index.MaxLevel);
-//                writer.Write(index.KeyCount);
-//                writer.Write(index.UniqueKeyCount);
-//            }
-//        }
+        /// <summary>
+        /// Get PK index
+        /// </summary>
+        public CollectionIndex PK { get { return _indexes["_id"]; } }
 
-//        #endregion
+        /// <summary>
+        /// Get index from index name (index name is case sensitive) - returns null if not found
+        /// </summary>
+        public CollectionIndex GetIndex(string name)
+        {
+            if (_indexes.TryGetValue(name, out var index))
+            {
+                return index;
+            }
 
-//        #region Methods to work with index array
+            return null;
+        }
 
-//        /// <summary>
-//        /// Returns first free index slot to be used
-//        /// </summary>
-//        public CollectionIndex GetFreeIndex()
-//        {
-//            for (byte i = 0; i < _indexes.Length; i++)
-//            {
-//                if (_indexes[i].IsEmpty) return this._indexes[i];
-//            }
+        /// <summary>
+        /// Get all indexes in this collection page
+        /// </summary>
+        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
+        {
+            return _indexes.Values;
+        }
 
-//            throw LiteException.IndexLimitExceeded(this.CollectionName);
-//        }
+        /// <summary>
+        /// Create new index inside this collection page
+        /// </summary>
+        public CollectionIndex CreateNewIndex(string name, string expr)
+        {
+            //TODO: verifica se cabe
 
-//        /// <summary>
-//        /// Get index from index name (index name is case sensitive) - returns null if not found
-//        /// </summary>
-//        public CollectionIndex GetIndex(string name)
-//        {
-//            return _indexes.FirstOrDefault(x => x.Name == name);
-//        }
+            _isIndexesChanged = true;
 
-//        /// <summary>
-//        /// Get index from index slot
-//        /// </summary>
-//        public CollectionIndex GetIndex(int slot)
-//        {
-//            return _indexes[slot];
-//        }
+            return null;
+        }
 
-//        /// <summary>
-//        /// Get primary key index (_id index)
-//        /// </summary>
-//        public CollectionIndex PK { get { return this._indexes[0]; } }
+        /// <summary>
+        /// Remove index from page
+        /// </summary>
+        public void DeleteIndex(string name)
+        {
+            _isIndexesChanged = true;
+        }
 
-//        /// <summary>
-//        /// Returns all used indexes
-//        /// </summary>
-//        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
-//        {
-//            return _indexes.Where(x => x.IsEmpty == false && x.Slot >= (includePK ? 0 : 1));
-//        }
-
-//        /// <summary>
-//        /// Calculate if all indexes names and expressions fit on this page
-//        /// </summary>
-//        public void CalculateNameSize()
-//        {
-//            var sum = _indexes.Sum(x => x.Name.Length + x.Expression.Length + FIXED_INDEX_SIZE);
-
-//            if (sum > MAX_INDEX_NAME_SIZE) throw LiteException.IndexNameLimitExceeded(MAX_INDEX_NAME_SIZE);
-//        }
-
-//        #endregion
-//    }
-//}
+        /// <summary>
+        /// Get how many bytes are avaiable in page to store new indexes
+        /// </summary>
+        public int GetAvaiableIndexSpace()
+        {
+            return 0;
+        }
+    }
+}

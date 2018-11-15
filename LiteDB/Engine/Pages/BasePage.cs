@@ -6,7 +6,7 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4, Extend = 5 }
+    public enum PageType { Empty = 0, Header = 1, Collection = 2, Index = 3, Data = 4 }
 
     internal class BasePage
     {
@@ -185,7 +185,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write header data from variable into byte[] buffer. When override, call base.UpdateBuffer() after write your code
         /// </summary>
-        public virtual void UpdateBuffer()
+        public virtual PageBuffer UpdateBuffer()
         {
             // using fixed position to be faster than BufferWriter
 
@@ -209,6 +209,8 @@ namespace LiteDB.Engine
 
             // last serialize field must be CRC checksum
             _buffer[P_CRC] = this.ComputeChecksum();
+
+            return _buffer;
         }
 
         #endregion
@@ -229,7 +231,7 @@ namespace LiteDB.Engine
         /// Create a new page item and return PageItem as reference to be buffer fill outside.
         /// Do not add 1 extra byte in "bytesLength" for store segment length (will be added inside this method)
         /// </summary>
-        public PageSegment Insert(int bytesLength)
+        protected PageSegment Insert(int bytesLength)
         {
             // length in blocks (+1 to consider store length inside page segment)
             var length = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1);
@@ -281,7 +283,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Remove index slot about this page item (will not clean page item data space)
         /// </summary>
-        public void Delete(byte index)
+        protected void Delete(byte index)
         {
             // read block position on index slot
             var slot = PAGE_SIZE - index - 1;
@@ -321,7 +323,7 @@ namespace LiteDB.Engine
         /// Update will try use same segment to store. If not possible, write on end of page (with possible Defrag operation)
         /// Do not add 1 extra byte in "bytesLength" for store segment length (will be added inside this method)
         /// </summary>
-        public PageSegment Update(byte index, int bytesLength)
+        protected PageSegment Update(byte index, int bytesLength)
         {
             // read position on page where index are linking to
             var slot = PAGE_SIZE - index - 1;
@@ -393,7 +395,7 @@ namespace LiteDB.Engine
         /// Defrag method re-organize all byte data content removing all fragmented data. This will move all page blocks
         /// to create a single continuous area at first block (3) - after this method there is no more fragments and 
         /// </summary>
-        public void Defrag()
+        protected void Defrag()
         {
             DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
             DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
@@ -465,7 +467,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all used indexes in this page
         /// </summary>
-        public IEnumerable<byte> GetIndexes()
+        protected IEnumerable<byte> GetIndexes()
         {
             for (byte i = 0; i <= this.HighestIndex; i++)
             {
@@ -531,7 +533,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return this.PageID.ToString().PadLeft(4, '0') + " : " + this.PageType + " (" + this.ItemsCount + ")";
+            return "PageID: " + this.PageID.ToString().PadLeft(4, '0') + " : " + this.PageType + " (" + this.ItemsCount + " Items)";
         }
     }
 }

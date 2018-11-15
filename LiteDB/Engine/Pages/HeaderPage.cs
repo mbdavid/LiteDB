@@ -49,7 +49,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// DateTime when database was created [8 bytes]
         /// </summary>
-        public DateTime CreationTime { get; set; }
+        public DateTime CreationTime { get; private set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -62,7 +62,7 @@ namespace LiteDB.Engine
         private readonly BsonDocument _collections;
 
         /// <summary>
-        /// Check if collections are changed
+        /// Check if collections was changed
         /// </summary>
         private bool _isCollectionsChanged = false;
 
@@ -112,13 +112,13 @@ namespace LiteDB.Engine
             }
         }
 
-        public override void UpdateBuffer()
+        public override PageBuffer UpdateBuffer()
         {
             this.FreeEmptyPageID.ToBytes(_buffer.Array, _buffer.Offset + P_FREE_EMPTY_PAGE_ID);
             this.LastPageID.ToBytes(_buffer.Array, _buffer.Offset + P_LAST_PAGE_ID);
             this.UserVersion.ToBytes(_buffer.Array, _buffer.Offset + P_USER_VERSION);
 
-            // CreationTime and Salt - never change - no need to override buffer
+            // CreationTime - never change - no need to override buffer
 
             // update collection only if needed
             if (_isCollectionsChanged)
@@ -131,7 +131,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            base.UpdateBuffer();
+            return base.UpdateBuffer();
         }
 
         /// <summary>

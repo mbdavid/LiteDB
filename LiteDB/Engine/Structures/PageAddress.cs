@@ -10,17 +10,17 @@ namespace LiteDB.Engine
     {
         public const int SIZE = 5;
 
-        public static PageAddress Empty => new PageAddress(uint.MaxValue, byte.MaxValue);
+        public static PageAddress Empty = new PageAddress(uint.MaxValue, byte.MaxValue);
 
         /// <summary>
         /// PageID (4 bytes)
         /// </summary>
-        public uint PageID;
+        public readonly uint PageID;
 
         /// <summary>
         /// Page Segment index inside page (1 bytes)
         /// </summary>
-        public byte Index;
+        public readonly byte Index;
 
         /// <summary>
         /// Returns true if this PageAdress is empty value
