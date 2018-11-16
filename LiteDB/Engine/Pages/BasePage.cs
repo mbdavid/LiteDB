@@ -88,7 +88,7 @@ namespace LiteDB.Engine
         public byte FreeBlocks => (byte)(PAGE_AVAILABLE_BLOCKS - this.UsedContentBlocks - this.FooterBlocks);
 
         /// <summary>
-        /// Get calculated how many blocks footer (index space) are used
+        /// Get calculated how many blocks footer (index space) are used. Always add 1 to ensure new item will not need more footer
         /// </summary>
         public byte FooterBlocks => (byte)((this.HighestIndex / PAGE_BLOCK_SIZE) + 1);
 
@@ -113,9 +113,22 @@ namespace LiteDB.Engine
         public bool IsDirty { get; set; }
 
         /// <summary>
-        /// Get internal buffer for this page
+        /// Get index slot on FreeDataPageID/FreeIndexPageID - Get based on "FreeBlocks"
+        /// 228 - 254 blocks => slot 0 (great than 90% free)
+        /// 190 - 227 blocks => slot 1 (between 75% and 90% free)
+        /// 127 - 189 blocks => slot 2 (between 50% and 75% free)
+        ///  76 - 126 blocks => slot 3 (between 30% and 50% free)
+        ///   0 -  75 blocks => slot 4 (less than 30% free)
         /// </summary>
-        public PageBuffer Buffer => _buffer;
+        public byte FreeIndexSlot()
+        {
+            var free = this.FreeBlocks;
+            if (free >= 228) return 0;
+            if (free >= 190) return 1;
+            if (free >= 127) return 2;
+            if (free >= 76) return 3;
+            return 4;
+        }
 
         #region Initialize/Update buffer
 
@@ -220,9 +233,10 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get a page item based on index slot
         /// </summary>
-        public PageSegment Get(byte index)
+        protected PageSegment Get(byte index)
         {
-            var block = _buffer[PAGE_SIZE - index - 1];
+            var slot = PAGE_SIZE - index - 1;
+            var block = _buffer[slot];
 
             return new PageSegment(_buffer, index, block);
         }
@@ -246,12 +260,15 @@ namespace LiteDB.Engine
         {
             DEBUG(this.FreeBlocks < length, "length must be always lower than current free space");
             DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
+            DEBUG((int)this.NextFreeBlock + (int)this.FooterBlocks >= 256, "next free block + footer can't be larger than 1 page");
 
-            // update highest slot if this slot are new highest
+            // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (index > this.HighestIndex) this.HighestIndex = index;
 
             // calculate how many continuous blocks are avaiable in this page
             var continuosBlocks = this.FreeBlocks - this.FragmentedBlocks;
+
+            DEBUG(continuosBlocks != 256 - this.NextFreeBlock - this.FooterBlocks, "invalid next free block");
 
             // if continuous blocks are not big enouth for this data, must run page defrag
             if (length > continuosBlocks)
@@ -263,11 +280,12 @@ namespace LiteDB.Engine
 
             // get a free index slot
             var block = this.NextFreeBlock;
+            var slot = PAGE_SIZE - index - 1;
 
-            DEBUG(_buffer[PAGE_SIZE - index - 1] != 0, "slot must be empty before use");
+            DEBUG(_buffer[slot] != 0, "slot must be empty before use");
 
             // update index slot with this block position
-            _buffer[PAGE_SIZE - index - 1] = block;
+            _buffer[slot] = block;
 
             // and update for next insert
             this.NextFreeBlock += length;
@@ -289,7 +307,7 @@ namespace LiteDB.Engine
             var slot = PAGE_SIZE - index - 1;
             var block = _buffer[slot];
 
-            DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
+            DEBUG(block < 1, "existing page segment must contains a valid block position (after header)");
             DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
 
             var position = block * PAGE_BLOCK_SIZE;
@@ -298,7 +316,7 @@ namespace LiteDB.Engine
             var blocks = _buffer[position];
 
             // clear slot index
-            _buffer[slot] = (byte)0x00;
+            _buffer[slot] = (byte)0;
 
             // add as free blocks
             this.ItemsCount--;
@@ -306,11 +324,13 @@ namespace LiteDB.Engine
 
             if (this.HighestIndex != index)
             {
-                // if segment is in middle, add this blocks as fragment block
+                // if segment is in middle of the page, add this blocks as fragment block
                 this.FragmentedBlocks += blocks;
             }
             else
             {
+                // if is last segment, must update next free block and discover new highst new index
+                this.NextFreeBlock = block;
                 this.UpdateHighestIndex();
             }
 
@@ -332,65 +352,68 @@ namespace LiteDB.Engine
             var slot = PAGE_SIZE - index - 1;
             var block = _buffer[slot];
 
-            DEBUG(block < 3, "existing page segment must contains a valid block position (after header)");
+            DEBUG(block < 1, "existing page segment must contains a valid block position (after header)");
             DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
 
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
             var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks (+1 for store segment length)
-            var isLast = index == this.HighestIndex;
+            var isLastSegment = index == this.HighestIndex;
 
             // best situation: same block count
             if (newLength == originalLength)
             {
-                return new PageSegment(_buffer, index, block);
+                return new PageSegment(_buffer, index, block, newLength);
             }
             // when new length are less than original length (will fit in current segment)
             else if (newLength < originalLength)
             {
                 var diff = (byte)(originalLength - newLength); // blocks removed
 
-                // is this segment are not at end, must add this as fragment
-                if (isLast == false)
+                if (isLastSegment)
                 {
+                    // if is at end of segment, must get back unused blocks 
+                    this.NextFreeBlock -= diff;
+                }
+                else
+                {
+                    // is this segment are not at end, must add this as fragment
                     this.FragmentedBlocks += diff;
                 }
 
                 // less blocks will be used
                 this.UsedContentBlocks -= diff;
 
-                return new PageSegment(_buffer, index, newLength);
+                return new PageSegment(_buffer, index, block, newLength);
             }
             // when new length are large than current segment
             else
             {
-                var diff = (byte)(newLength - originalLength); // blocks added
-
-                // if segment finish is last used block, just use this free blocks
-                if (isLast)
-                {
-                    this.UsedContentBlocks += diff; // diff is negative, will add value
-                    this.NextFreeBlock += newLength; // need fix next free block 
-
-                    return new PageSegment(_buffer, index, newLength);
-                }
-                // ok, worst case: do not fit in current segment, move new segment area
-                else
-                {
 #if DEBUG
-                    // fill segment with 99 value (for debug propose only) - there is no need on release
-                    _buffer.Array.Fill((byte)99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
+                // fill segment with 99 value (for debug propose only) - there is no need on release
+                var diff = (byte)(newLength - originalLength); // blocks added
+                _buffer.Array.Fill(99, block * PAGE_BLOCK_SIZE, originalLength * PAGE_BLOCK_SIZE);
 #endif
 
-                    // more fragmented blocks and less used blocks (because I will run insert command soon)
-                    this.FragmentedBlocks += originalLength;
-                    this.UsedContentBlocks -= originalLength;
+                // release used content blocks with original length and decrease counter
+                this.UsedContentBlocks -= originalLength;
+                this.ItemsCount--;
 
-                    // clean slot position (to better debug)
-                    _buffer[slot] = 0;
-
-                    // run insert command but use same index
-                    return this.Insert(index, newLength);
+                if (isLastSegment)
+                {
+                    // if segment is end of page, must update next free block as current block
+                    this.NextFreeBlock = block;
                 }
+                else
+                {
+                    // if segment is on middle of page, add content as fragment blocks
+                    this.FragmentedBlocks += originalLength;
+                }
+
+                // clean slot position (to better debug - will be checked in Insert)
+                _buffer[slot] = 0;
+
+                // run insert command but use same index
+                return this.Insert(index, newLength);
             }
         }
 
@@ -457,7 +480,9 @@ namespace LiteDB.Engine
         /// </summary>
         private byte GetFreeIndex()
         {
-            for (byte index = 0; index < byte.MaxValue; index++)
+            var maxIndex = PAGE_AVAILABLE_BLOCKS;
+
+            for (byte index = 0; index <= maxIndex; index++) // 256 - 1 - 1
             {
                 var block = _buffer[PAGE_SIZE - index - 1];
 

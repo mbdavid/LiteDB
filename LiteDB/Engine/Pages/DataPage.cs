@@ -26,7 +26,7 @@ namespace LiteDB.Engine
         {
             var segment = base.Insert(bytesLength + 6);
 
-            return new DataBlock(this, segment, dataIndex);
+            return new DataBlock(this, segment, dataIndex, PageAddress.Empty);
         }
 
         /// <summary>
@@ -39,11 +39,11 @@ namespace LiteDB.Engine
             return new DataBlock(this, segment);
         }
 
-        public DataBlock UpdateBlock(byte index, int bytesLength, byte dataIndex)
+        public DataBlock UpdateBlock(DataBlock currentBlock, int bytesLength)
         {
-            var segment = base.Update(index, bytesLength);
+            var segment = base.Update(currentBlock.Position.Index, bytesLength + 6);
 
-            return new DataBlock(this, segment, dataIndex);
+            return new DataBlock(this, segment, currentBlock.DataIndex, currentBlock.NextBlock);
         }
 
         public DataBlock DeleteBlock(byte index)

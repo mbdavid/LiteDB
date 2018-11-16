@@ -20,7 +20,6 @@ namespace LiteDB.Demo
         private MemoryFileReader _reader;
 
         private uint _lastPageID = 0;
-        private List<DataPage> _dirty = new List<DataPage>();
         private Dictionary<uint, DataPage> _local = new Dictionary<uint, DataPage>();
 
         public DataService(string path)
@@ -31,32 +30,37 @@ namespace LiteDB.Demo
             _reader = _file.GetReader(true);
         }
 
-        private DataPage GetDirtyPage(int minBytes)
+        private DataPage GetNewPage(int minBytes)
         {
             var freeBlocks = (byte)((minBytes / 32) + 1);
 
             // check if there is pages in my dirty list
-            var p = _dirty.FirstOrDefault(x => x.FreeBlocks >= freeBlocks);
+            var p = _local.Values.FirstOrDefault(x => x.FreeBlocks >= freeBlocks);
 
             if (p == null)
             {
                 p = new DataPage(_reader.NewPage(), _lastPageID++);
 
-                _dirty.Add(p);
+                _local[p.PageID] = p;
             }
+
+            p.IsDirty = true;
 
             return p;
         }
 
-        private DataPage GetCleanPage(uint pageID)
+        private DataPage GetPage(uint pageID, bool markAsDirty)
         {
             if(_local.TryGetValue(pageID, out var page))
             {
+                if (markAsDirty) page.IsDirty = true;
+
                 return page;
             }
 
             page = new DataPage(_reader.GetPage(pageID * 8192));
             _local[pageID] = page;
+            if (markAsDirty) page.IsDirty = true;
             return page;
         }
 
@@ -66,31 +70,31 @@ namespace LiteDB.Demo
 
             if (bytesLeft > 2 * 1024 * 1024) throw new Exception("too big - 2mb max");
 
-            DataBlock first = null;
+            DataBlock firstBlock = null;
 
             IEnumerable<BufferSlice> source()
             {
                 byte dataIndex = 0;
-                DataBlock last = null;
+                DataBlock lastBlock = null;
 
                 while (bytesLeft > 0)
                 {
-                    var bytesToCopy = Math.Min(bytesLeft, 8000);
-                    var dataPage = this.GetDirtyPage(bytesToCopy);
+                    var bytesToCopy = Math.Min(bytesLeft, (254 * 32) - 7); // 254 blocos - 6 blockHeader - 1 segmentHeader
+                    var dataPage = this.GetNewPage(bytesToCopy);
                     var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
 
                     dataIndex++;
 
-                    if (last != null)
+                    if (lastBlock != null)
                     {
-                        last.UpdateNextBlock(dataBlock.Position);
+                        lastBlock.UpdateNextBlock(dataBlock.Position);
                     }
 
-                    if (first == null) first = dataBlock;
+                    if (firstBlock == null) firstBlock = dataBlock;
 
                     yield return dataBlock.Buffer;
 
-                    last = dataBlock;
+                    lastBlock = dataBlock;
 
                     bytesLeft -= bytesToCopy;
                 }
@@ -101,23 +105,22 @@ namespace LiteDB.Demo
                 w.WriteDocument(doc);
             }
 
-            return first;
-
+            return firstBlock;
         }
 
-        public BsonDocument Read(PageAddress dataBlock)
+        public BsonDocument Read(PageAddress address)
         {
             IEnumerable<BufferSlice> source()
             {
-                while(dataBlock != PageAddress.Empty)
+                while(address != PageAddress.Empty)
                 {
-                    var dataPage = this.GetCleanPage(dataBlock.PageID);
+                    var dataPage = this.GetPage(address.PageID, false);
 
-                    var block = dataPage.ReadBlock(dataBlock.Index);
+                    var block = dataPage.ReadBlock(address.Index);
 
                     yield return block.Buffer;
 
-                    dataBlock = block.NextBlock;
+                    address = block.NextBlock;
                 }
             }
 
@@ -127,9 +130,87 @@ namespace LiteDB.Demo
             }
         }
 
+        public void Delete(PageAddress address)
+        {
+            while (address != PageAddress.Empty)
+            {
+                var dataPage = this.GetPage(address.PageID, true);
+                var block = dataPage.DeleteBlock(address.Index);
+
+                address = block.NextBlock;
+            }
+        }
+
+        public void Update(PageAddress address, BsonDocument doc)
+        {
+            var bytesLeft = doc.GetBytesCount(true);
+
+            if (bytesLeft > 2 * 1024 * 1024) throw new Exception("too big - 2mb max");
+
+            IEnumerable<BufferSlice> source()
+            {
+                byte dataIndex = 0;
+                DataBlock lastBlock = null;
+
+                while (bytesLeft > 0)
+                {
+                    var bytesToCopy = 0;
+                    DataBlock dataBlock;
+
+                    // new page
+                    if (address == PageAddress.Empty)
+                    {
+                        bytesToCopy = Math.Min(bytesLeft, (254 * 32) - 7); // 254 blocos - 6 blockHeader - 1 segmentHeader
+                        var dataPage = this.GetNewPage(bytesToCopy);
+
+                        dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
+                    }
+                    // update current page
+                    else
+                    {
+                        var dataPage = this.GetPage(address.PageID, true);
+                        var currentBlock = dataPage.ReadBlock(address.Index);
+                        var spaceInPage = (dataPage.FreeBlocks * 32) + currentBlock.Buffer.Count;
+
+                        bytesToCopy = Math.Min(bytesLeft, spaceInPage);
+                        dataBlock = dataPage.UpdateBlock(currentBlock, bytesToCopy);
+                    }
+
+                    dataIndex++;
+
+                    if (lastBlock != null)
+                    {
+                        lastBlock.UpdateNextBlock(dataBlock.Position);
+                    }
+
+                    yield return dataBlock.Buffer;
+
+                    lastBlock = dataBlock;
+
+                    address = dataBlock.NextBlock;
+
+                    bytesLeft -= bytesToCopy;
+                }
+
+                // update last block with no next block
+                lastBlock.UpdateNextBlock(PageAddress.Empty);
+
+                // delete extra datablock
+                this.Delete(address);
+            }
+
+            using (var w = new BufferWriter(source()))
+            {
+                w.WriteDocument(doc);
+
+                // force consume all source enumerable
+                w.Consume();
+            }
+        }
+
         public void Dispose()
         {
-            _file.WriteAsync(_dirty.Select(x => x.UpdateBuffer()));
+            _file.WriteAsync(_local.Values.Where(x => x.IsDirty).Select(x => x.UpdateBuffer()));
             _reader.Dispose();
             _file.Dispose();
         }

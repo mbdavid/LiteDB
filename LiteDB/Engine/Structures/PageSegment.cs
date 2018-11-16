@@ -14,14 +14,14 @@ namespace LiteDB.Engine
         public readonly byte Index;
 
         /// <summary>
+        /// Get page start block position
+        /// </summary>
+        public readonly byte Block;
+
+        /// <summary>
         /// Get block position on page (in blocks)
         /// </summary>
         public readonly byte Length;
-
-        /// <summary>
-        /// Get page item size (in blocks)
-        /// </summary>
-        public readonly byte Block;
 
         /// <summary>
         /// Get buffer data of this page item (contains 1 byte less because was used to store length)

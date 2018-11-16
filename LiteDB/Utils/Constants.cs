@@ -17,7 +17,7 @@ namespace LiteDB
         public const int PAGE_SIZE = 8192;
 
         /// <summary>
-        /// Header page size (use first page block - 32 bytes)
+        /// Header page size (only 1 page block - 32 bytes)
         /// </summary>
         public const int PAGE_HEADER_SIZE = 32;
 
@@ -27,9 +27,9 @@ namespace LiteDB
         public const int PAGE_BLOCK_SIZE = 32;
 
         /// <summary>
-        /// Bytes available to store data removing page header size - 8128 bytes
+        /// Bytes available to store data removing page header size - 8160 bytes (255 page blocks)
         /// </summary>
-        public const int PAGE_AVAILABLE_BLOCKS = (PAGE_SIZE - PAGE_HEADER_SIZE) / PAGE_SIZE;
+        public const int PAGE_AVAILABLE_BLOCKS = (PAGE_SIZE - PAGE_HEADER_SIZE) / PAGE_BLOCK_SIZE;
 
         /// <summary>
         /// Bytes used in encryption salt

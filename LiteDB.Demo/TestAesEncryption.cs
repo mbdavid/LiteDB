@@ -69,7 +69,8 @@ namespace LiteDB.Demo
             var file = new MemoryFile(pool, aes);
             var reader = file.GetReader(true);
 
-            var p0 = new HeaderPage(reader.NewPage(), 0);
+            var buffer0 = reader.NewPage();
+            var p0 = new HeaderPage(buffer0, 0);
 
             p0.UserVersion = 99;
             p0.NextPageID = 25;
@@ -82,7 +83,7 @@ namespace LiteDB.Demo
             p1.Array.Fill((byte)25, p1.Offset, p1.Count);
 
 
-            file.WriteAsync(new[] { p0.Buffer, p1 });
+            file.WriteAsync(new[] { buffer0, p1 });
 
             reader.Dispose();
 

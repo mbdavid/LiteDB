@@ -59,6 +59,11 @@ namespace LiteDB.Engine
             return buffer;
         }
 
+        public override string ToString()
+        {
+            return $"Count: {this.Count} - Offset: {this.Offset}";
+        }
+
         #region Read/Write Shortcuts
 
         public void Write(Int32 value, int offset)

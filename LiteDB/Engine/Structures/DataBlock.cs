@@ -27,29 +27,33 @@ namespace LiteDB.Engine
             // byte 00: DataIndex
             _dataIndex = _pageSegment.Buffer[0];
 
-            // byte 01-04: NextBlock (PageID, Index)
+            // byte 01-05: NextBlock (PageID, Index)
             _nextBlock = new PageAddress(_pageSegment.Buffer.ReadUInt32(1), _pageSegment.Buffer[5]);
 
             // byte 06-EOL: Buffer
-            _buffer = _pageSegment.Buffer.Slice(6, (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6);
+            _buffer = _pageSegment.Buffer.Slice(6, (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6 - 1);
         }
 
         /// <summary>
         /// Read new DataBlock from filled pageSegment
         /// </summary>
-        public DataBlock(DataPage page, PageSegment pageSegment, byte dataIndex)
+        public DataBlock(DataPage page, PageSegment pageSegment, byte dataIndex, PageAddress nextBlock)
         {
             _pageSegment = pageSegment;
             _position = new PageAddress(page.PageID, pageSegment.Index);
+
+            _nextBlock = nextBlock;
+            _dataIndex = dataIndex;
 
             // byte 00: Data Index
             _pageSegment.Buffer[0] = dataIndex;
 
             // byte 01-04 (can be updated in "UpdateNextBlock")
-            _nextBlock = PageAddress.Empty;
+            _pageSegment.Buffer.Write(nextBlock.PageID, 1); // 01-04
+            _pageSegment.Buffer[5] = nextBlock.Index; // 05
 
             // byte 06-EOL: Buffer
-            _buffer = _pageSegment.Buffer.Slice(6, (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6);
+            _buffer = _pageSegment.Buffer.Slice(6, (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6 - 1);
         }
 
         public void UpdateNextBlock(PageAddress nextBlock)
@@ -59,6 +63,11 @@ namespace LiteDB.Engine
             // update segment buffer with NextBlock (uint + byte)
             _pageSegment.Buffer.Write(nextBlock.PageID, 1); // 01-04
             _pageSegment.Buffer[5] = nextBlock.Index; // 05
+        }
+
+        public override string ToString()
+        {
+            return $"Pos: [{_position}] - Seq: [{_dataIndex}] - Next: [{_nextBlock}] - Buffer: [{_buffer}]";
         }
     }
 }

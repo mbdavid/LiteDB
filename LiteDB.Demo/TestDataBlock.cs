@@ -43,6 +43,11 @@ namespace LiteDB.Demo
                 // save on PageID: 0001:0, 0002:0, 0000:3
                 var b2 = s.Insert(doc);
 
+                // update b
+                doc["novo"] = new byte[33000];
+
+                s.Update(b2.Position, doc);
+
             }
 
             using (var s = new DataService(PATH))

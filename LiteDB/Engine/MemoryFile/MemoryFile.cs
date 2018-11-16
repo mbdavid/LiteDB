@@ -64,6 +64,8 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteAsync(IEnumerable<PageBuffer> pages)
         {
+            var counter = 0;
+
             using (var reader = pages.GetEnumerator())
             {
                 while(reader.MoveNext())
@@ -71,10 +73,15 @@ namespace LiteDB.Engine
                     var page = reader.Current;
 
                     _writer.Value.QueuePage(page);
+
+                    counter++;
                 }
             }
 
-            _writer.Value.RunQueue();
+            if(counter > 0)
+            {
+                _writer.Value.RunQueue();
+            }
         }
 
         /// <summary>
