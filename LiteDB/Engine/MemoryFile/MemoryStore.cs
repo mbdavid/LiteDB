@@ -23,12 +23,13 @@ namespace LiteDB.Engine
 
         /// <summary>
         /// Cached pages contains only clean/readonly pages indexed by position. Inside this collection pages can be in-use (SharedCounter > 0) or
-        /// ready to be re-used.
+        /// ready to be moved to cache (ShareCounter = 0).
         /// </summary>
         private readonly ConcurrentDictionary<long, PageBuffer> _cache = new ConcurrentDictionary<long, PageBuffer>();
 
         /// <summary>
         /// Empty pages in store. If request page and has no more in store, do extend to create more memory allocation
+        /// All pages must be ShareCounter = 0 and has no Position (MaxValue)
         /// </summary>
         private readonly ConcurrentQueue<PageBuffer> _store = new ConcurrentQueue<PageBuffer>();
 
@@ -82,7 +83,7 @@ namespace LiteDB.Engine
                 });
 
                 // update LRU
-                page.Timestamp = DateTime.UtcNow.Ticks;
+                Interlocked.Exchange(ref page.Timestamp, DateTime.UtcNow.Ticks);
 
                 // increment share counter
                 Interlocked.Increment(ref page.ShareCounter);
@@ -112,6 +113,8 @@ namespace LiteDB.Engine
                 // if requested page already in cache, just copy buffer and avoid load from stream
                 if (_cache.TryGetValue(position, out var clean))
                 {
+                    DEBUG(clean.ShareCounter != 0, "ensure this request writable page are not been used as readonly for another thread");
+
                     Buffer.BlockCopy(clean.Array, clean.Offset, page.Array, page.Offset, PAGE_SIZE);
                 }
                 else
@@ -196,10 +199,10 @@ namespace LiteDB.Engine
                         Buffer.BlockCopy(page.Array, page.Offset, current.Array, current.Offset, PAGE_SIZE);
                     }
 
-                    // and duplicated page now can return to store list
+                    // and duplicated page now can return to store list (contains non-zero data - Timestamp must be > 0)
                     page.ShareCounter = 0;
-                    page.Timestamp = 0;
                     page.Position = long.MaxValue;
+                    page.Timestamp = 1; // this will ensure "clear" when request NewPage()
                     _store.Enqueue(page);
 
                     // same current page will be inside page
@@ -207,7 +210,7 @@ namespace LiteDB.Engine
                 });
 
                 // update LRU
-                result.Timestamp = DateTime.UtcNow.Ticks;
+                Interlocked.Exchange(ref result.Timestamp, DateTime.UtcNow.Ticks);
 
                 // result page must increment shared count - i can't just set to 1 because result page is concurrency page
                 Interlocked.Increment(ref result.ShareCounter);
@@ -228,6 +231,7 @@ namespace LiteDB.Engine
             DEBUG(page.ShareCounter == 0, "page must be shared OR writable before return");
 
             // if page is writable it's mean that this page was requested to write BUT was not saved (was discard)
+            // all pages that are queue to write are not in WRITABLE share counter state
             if (page.ShareCounter == WRITABLE)
             {
                 // update page instance with result page

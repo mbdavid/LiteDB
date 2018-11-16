@@ -55,7 +55,7 @@ namespace LiteDB.Engine
         /// </summary>
         public long QueuePage(PageBuffer page)
         {
-            //DEBUG(page.IsWritable == false, "to queue page to write, page must be writable");
+            DEBUG(page.ShareCounter != -1, "to queue page to write, page must be writable");
 
             if (page.Position == long.MaxValue)
             {
@@ -65,8 +65,6 @@ namespace LiteDB.Engine
             }
             else
             {
-                DEBUG(page.Position != long.MaxValue, "if writer are not appendOnly must contains disk position");
-
                 // get highest value between new page or last page 
                 // don't worry about concurrency becasue only 1 instance call this (Checkpoint)
                 _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);
@@ -76,6 +74,7 @@ namespace LiteDB.Engine
             var cached = _store.MarkAsReadOnly(page, true);
 
             DEBUG(!(page.ShareCounter >= 2), "cached page must be shared at least twice (becasue this method must be called before release pages)");
+            DEBUG(page.Position != cached.Position, "cached and page position must be equals (are same updated page)");
 
             _queue.Enqueue(cached);
 

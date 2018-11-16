@@ -48,7 +48,6 @@ namespace LiteDB.Engine
                 sequencial ? FileOptions.SequentialScan : FileOptions.RandomAccess);
         }
 
-
         /// <summary>
         /// Check if file exists (without open it)
         /// </summary>

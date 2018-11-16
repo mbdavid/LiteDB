@@ -13,7 +13,7 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Internal class that implement same idea from ArraySegment but use a class (not a struct). Works for byte[] only
+    /// Internal class that implement same idea from ArraySegment[byte] but use a class (not a struct). Works for byte[] only
     /// </summary>
     public class BufferSlice
     {
