@@ -108,7 +108,7 @@ namespace LiteDB.Engine
         {
             var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
 
-            using (var w = new BufferWriter(new[] { area }))
+            using (var w = new BufferWriter(area))
             {
                 // write 5 position of FreeDataPage (20 bytes)
                 w.Write(this.FreeDataPageID[0]);

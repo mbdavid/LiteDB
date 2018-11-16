@@ -1,119 +1,99 @@
-﻿//using System.Collections.Generic;
-//using System.IO;
-//using System.Linq;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-//namespace LiteDB.Engine
-//{
-//    internal class IndexPage : BasePage
-//    {
-//        /// <summary>
-//        /// Page type = Index
-//        /// </summary>
-//        public override PageType PageType { get { return PageType.Index; } }
+namespace LiteDB.Engine
+{
+    /// <summary>
+    /// The IndexPage thats stores object data.
+    /// </summary>
+    internal class IndexPage : BasePage
+    {
+        public IndexPage(PageBuffer buffer)
+            : base(buffer)
+        {
+        }
 
-//        private Dictionary<ushort, IndexNode> _nodes = new Dictionary<ushort, IndexNode>();
+        public IndexPage(PageBuffer buffer, uint pageID)
+            : base(buffer, pageID, PageType.Data)
+        {
+        }
 
-//        private IndexPage()
-//        {
-//        }
+        /// <summary>
+        /// Read single IndexNode
+        /// </summary>
+        public IndexNode ReadNode(byte index)
+        {
+            var segment = base.Get(index);
 
-//        public IndexPage(uint pageID)
-//            : base(pageID)
-//        {
-//        }
+            using (var r = new BufferReader(segment.Buffer))
+            {
+                var levels = r.ReadByte();
 
-//        /// <summary>
-//        /// Get an index node from this page
-//        /// </summary>
-//        public IndexNode GetNode(ushort index)
-//        {
-//            return _nodes[index];
-//        }
+                var node = new IndexNode(levels);
 
-//        /// <summary>
-//        /// Add new index node into this page. Update counters and free space
-//        /// </summary>
-//        public void AddNode(IndexNode node)
-//        {
-//            var index = _nodes.NextIndex();
+                node.PrevNode = r.ReadPageAddress();
+                node.NextNode = r.ReadPageAddress();
 
-//            node.Position = new PageAddress(this.PageID, index);
+                node.DataBlock = r.ReadPageAddress();
 
-//            this.ItemCount++;
-//            this.FreeBytes -= node.Length;
+                var keyLength = r.ReadUInt16();
+                r.ReadBsonValue(keyLength);
 
-//            _nodes.Add(index, node);
-//        }
+                for (var i = 0; i < levels; i++)
+                {
+                    node.Prev[i] = r.ReadPageAddress();
+                    node.Next[i] = r.ReadPageAddress();
+                }
 
-//        /// <summary>
-//        /// Delete node from this page and update counter and free space
-//        /// </summary>
-//        public void DeleteNode(IndexNode node)
-//        {
-//            this.ItemCount--;
-//            this.FreeBytes += node.Length;
+                return node;
+            }
+        }
 
-//            _nodes.Remove(node.Position.Index);
-//        }
+        /// <summary>
+        /// Insert new IndexNode. After call this, "node" instance can't be changed
+        /// </summary>
+        public PageAddress InsertNode(IndexNode node)
+        {
+            var segment = base.Insert(node.Length);
 
-//        /// <summary>
-//        /// Get node counter
-//        /// </summary>
-//        public int NodesCount => _nodes.Count;
+            using (var w = new BufferWriter(segment.Buffer))
+            {
+                var keyLength = node.Key.GetBytesCount(false);
 
-//        #region Read/Write pages
+                // store linked-list levels
+                w.Write((byte)node.Prev.Length);
 
-//        protected override void ReadContent(BinaryReader reader, bool utcDate)
-//        {
-//            _nodes = new Dictionary<ushort, IndexNode>(this.ItemCount);
+                // store inter-nodes liked-list
+                w.Write(node.PrevNode);
+                w.Write(node.NextNode);
 
-//            for (var i = 0; i < this.ItemCount; i++)
-//            {
-//                var index = reader.ReadUInt16();
-//                var levels = reader.ReadByte();
+                // data block position
+                w.Write(node.DataBlock);
 
-//                var node = new IndexNode(levels);
+                // store index key
+                w.Write((ushort)keyLength);
+                w.WriteBsonValue(node.Key);
 
-//                node.Page = this;
-//                node.Position = new PageAddress(this.PageID, index);
-//                node.Slot = reader.ReadByte();
-//                node.PrevNode = reader.ReadPageAddress();
-//                node.NextNode = reader.ReadPageAddress();
-//                node.KeyLength = reader.ReadUInt16();
-//                node.Key = reader.ReadBsonValue(node.KeyLength, utcDate);
-//                node.DataBlock = reader.ReadPageAddress();
+                // store levels linked-list
+                for (var i = 0; i < node.Prev.Length; i++)
+                {
+                    w.Write(node.Prev[i]);
+                    w.Write(node.Next[i]);
+                }
+            }
 
-//                for (var j = 0; j < node.Prev.Length; j++)
-//                {
-//                    node.Prev[j] = reader.ReadPageAddress();
-//                    node.Next[j] = reader.ReadPageAddress();
-//                }
+            node.Position = new PageAddress(this.PageID, segment.Index);
 
-//                _nodes.Add(node.Position.Index, node);
-//            }
-//        }
+            return node.Position;
+        }
 
-//        protected override void WriteContent(BinaryWriter writer)
-//        {
-//            foreach (var node in _nodes.Values)
-//            {
-//                writer.Write(node.Position.Index); // node Index on this page
-//                writer.Write((byte)node.Prev.Length); // level length
-//                writer.Write(node.Slot); // index slot
-//                writer.Write(node.PrevNode); // prev node list
-//                writer.Write(node.NextNode); // next node list
-//                writer.Write(node.KeyLength);
-//                writer.WriteBsonValue(node.Key); // value
-//                writer.Write(node.DataBlock); // data block reference
-
-//                for (var j = 0; j < node.Prev.Length; j++)
-//                {
-//                    writer.Write(node.Prev[j]);
-//                    writer.Write(node.Next[j]);
-//                }
-//            }
-//        }
-
-//        #endregion
-//    }
-//}
+        /// <summary>
+        /// Delete index node based on page index
+        /// </summary>
+        public void DeleteNode(byte index)
+        {
+            base.Delete(index);
+        }
+    }
+}

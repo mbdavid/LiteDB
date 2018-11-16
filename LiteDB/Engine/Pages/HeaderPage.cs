@@ -66,6 +66,9 @@ namespace LiteDB.Engine
         /// </summary>
         private bool _isCollectionsChanged = false;
 
+        /// <summary>
+        /// Create new Header Page
+        /// </summary>
         public HeaderPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Header)
         {
@@ -85,6 +88,9 @@ namespace LiteDB.Engine
             _collections = new BsonDocument();
         }
 
+        /// <summary>
+        /// Load HeaderPage from buffer page
+        /// </summary>
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
@@ -126,7 +132,7 @@ namespace LiteDB.Engine
             {
                 var area = _buffer.Slice(P_COLLECTIONS, P_COLLECTIONS_COUNT);
 
-                using (var w = new BufferWriter(new[] { area }))
+                using (var w = new BufferWriter(area))
                 {
                     w.WriteDocument(_collections);
                 }

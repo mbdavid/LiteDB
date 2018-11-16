@@ -11,9 +11,24 @@ namespace LiteDB.Engine
         private PageAddress _nextBlock;
         private readonly BufferSlice _buffer;
 
+        /// <summary>
+        /// Position block inside page
+        /// </summary>
         public PageAddress Position => _position;
+
+        /// <summary>
+        /// Data index block (single document can use 0-255 index blocks)
+        /// </summary>
         public byte DataIndex => _dataIndex;
+
+        /// <summary>
+        /// If document need more than 1 block, use this link to next block
+        /// </summary>
         public PageAddress NextBlock => _nextBlock;
+
+        /// <summary>
+        /// Document buffer slice
+        /// </summary>
         public BufferSlice Buffer => _buffer;
 
         /// <summary>

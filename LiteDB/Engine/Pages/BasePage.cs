@@ -161,7 +161,7 @@ namespace LiteDB.Engine
             this.IsDirty = false;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
-            this.PageID.ToBytes(_buffer.Array, _buffer.Offset + 0); // 00-03
+            _buffer.Write(this.PageID, 0); // 00-03
             _buffer[4] = (byte)this.PageType; // 04-04
 
         }

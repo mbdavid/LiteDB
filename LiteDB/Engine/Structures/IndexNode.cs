@@ -9,36 +9,30 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexNode
     {
-        private const int INDEX_NODE_FIXED_SIZE = 2 + // Position.Index (ushort)
-                                                  1 + // Levels (byte)
-                                                  2 + // ValueLength (ushort)
-                                                  1 + // BsonType (byte)
-                                                  1 + // Slot (1 byte)
-                                                  (PageAddress.SIZE * 2) + // Prev/Next Node (6 bytes)
-                                                  PageAddress.SIZE; // DataBlock
+        private const int INDEX_NODE_FIXED_SIZE = 1 + // Levels (byte)
+                                                  (PageAddress.SIZE * 2) + // Prev/Next Node (5 bytes)
+                                                  2 + // KeyLength (ushort)
+                                                  PageAddress.SIZE + // DataBlock
+                                                  1; // BsonType (byte)
+                                                  
 
         /// <summary>
-        /// Position of this node inside a IndexPage - Store only Position.Index
+        /// Position of this node inside a IndexPage (not persist)
         /// </summary>
         public PageAddress Position { get; set; }
 
         /// <summary>
-        /// Slot position of index in data block
-        /// </summary>
-        public byte Slot { get; set; }
-
-        /// <summary>
-        /// Prev node in same document list index nodes
+        /// Prev node in same document list index nodes [5 bytes]
         /// </summary>
         public PageAddress PrevNode { get; set; }
 
         /// <summary>
-        /// Next node in same document list index nodes
+        /// Next node in same document list index nodes  [5 bytes]
         /// </summary>
         public PageAddress NextNode { get; set; }
 
         /// <summary>
-        /// Link to prev value (used in skip lists - Prev.Length = Next.Length)
+        /// Link to prev value (used in skip lists - Prev.Length = Next.Length) [5 bytes]
         /// </summary>
         public PageAddress[] Prev { get; set; }
 
@@ -46,11 +40,6 @@ namespace LiteDB.Engine
         /// Link to next value (used in skip lists - Prev.Length = Next.Length)
         /// </summary>
         public PageAddress[] Next { get; set; }
-
-        /// <summary>	
-        /// Length of key - used for calculate Node size	
-        /// </summary>	
-        public ushort KeyLength { get; set; }
 
         /// <summary>
         /// The object value that was indexed
@@ -61,6 +50,7 @@ namespace LiteDB.Engine
         /// Reference for a datablock - the value
         /// </summary>
         public PageAddress DataBlock { get; set; }
+
 /*
         /// <summary>
         /// Get page reference
@@ -92,7 +82,7 @@ namespace LiteDB.Engine
             {
                 return IndexNode.INDEX_NODE_FIXED_SIZE +
                     (this.Prev.Length * PageAddress.SIZE * 2) +  // Prev + Next
-                    this.KeyLength; // bytes count in BsonValue
+                    this.Key.GetBytesCount(false); // bytes count in BsonValue
             }
         }
 

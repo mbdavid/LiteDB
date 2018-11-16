@@ -41,8 +41,16 @@ namespace LiteDB.Engine
         public bool IsEOF => _isEOF;
 
         public BufferReader(byte[] buffer, bool utcDate = false)
-            : this(new[] { new BufferSlice(buffer, 0, buffer.Length) })
+            : this(new BufferSlice(buffer, 0, buffer.Length), utcDate)
         {
+        }
+
+        public BufferReader(BufferSlice buffer, bool utcDate = false)
+        {
+            _source = null;
+            _utcDate = utcDate;
+
+            _current = buffer;
         }
 
         public BufferReader(IEnumerable<BufferSlice> source, bool utcDate = false)
@@ -74,7 +82,7 @@ namespace LiteDB.Engine
             // request new source array if _current all consumed
             if (_currentPosition == _current.Count)
             {
-                if (_source.MoveNext() == false)
+                if (_source == null || _source.MoveNext() == false)
                 {
                     _isEOF = true;
                 }
@@ -135,8 +143,11 @@ namespace LiteDB.Engine
         /// </summary>
         public void Consume()
         {
-            while(_source.MoveNext())
+            if (_source != null)
             {
+                while (_source.MoveNext())
+                {
+                }
             }
         }
 
@@ -585,7 +596,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _source.Dispose();
+            _source?.Dispose();
         }
     }
 }

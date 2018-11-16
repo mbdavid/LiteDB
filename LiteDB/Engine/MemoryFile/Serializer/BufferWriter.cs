@@ -40,8 +40,15 @@ namespace LiteDB.Engine
         public bool IsEOF => _isEOF;
 
         public BufferWriter(byte[] buffer)
-            : this(new [] { new BufferSlice(buffer, 0, buffer.Length) })
+            : this(new BufferSlice(buffer, 0, buffer.Length))
         {
+        }
+
+        public BufferWriter(BufferSlice buffer)
+        {
+            _source = null;
+
+            _current = buffer;
         }
 
         public BufferWriter(IEnumerable<BufferSlice> source)
@@ -72,7 +79,7 @@ namespace LiteDB.Engine
             // request new source array if _current all consumed
             if (_currentPosition == _current.Count)
             {
-                if (_source.MoveNext() == false)
+                if (_source == null || _source.MoveNext() == false)
                 {
                     _isEOF = true;
                 }
@@ -138,8 +145,11 @@ namespace LiteDB.Engine
         /// </summary>
         public void Consume()
         {
-            while (_source.MoveNext())
+            if(_source != null)
             {
+                while (_source.MoveNext())
+                {
+                }
             }
         }
 
@@ -508,7 +518,7 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            _source.Dispose();
+            _source?.Dispose();
         }
     }
 }

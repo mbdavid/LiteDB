@@ -20,6 +20,16 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Read single DataBlock
+        /// </summary>
+        public DataBlock ReadBlock(byte index)
+        {
+            var segment = base.Get(index);
+
+            return new DataBlock(this, segment);
+        }
+
+        /// <summary>
         /// Insert new DataBlock. Use dataIndex as sequencial for large documents
         /// </summary>
         public DataBlock InsertBlock(int bytesLength, byte dataIndex)
@@ -30,15 +40,8 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read single DataBlock
+        /// Update current block returning data block to be fill
         /// </summary>
-        public DataBlock ReadBlock(byte index)
-        {
-            var segment = base.Get(index);
-
-            return new DataBlock(this, segment);
-        }
-
         public DataBlock UpdateBlock(DataBlock currentBlock, int bytesLength)
         {
             var segment = base.Update(currentBlock.Position.Index, bytesLength + 6);
@@ -46,6 +49,9 @@ namespace LiteDB.Engine
             return new DataBlock(this, segment, currentBlock.DataIndex, currentBlock.NextBlock);
         }
 
+        /// <summary>
+        /// Delete single data block inside this page
+        /// </summary>
         public DataBlock DeleteBlock(byte index)
         {
             var segment = base.Delete(index);
