@@ -32,8 +32,8 @@ namespace LiteDB.Demo
         {
             File.Delete(PATH);
            
-            var factory = new FileStreamFactory(PATH, false);
-            var pool = new StreamPool(factory, DbFileMode.Logfile);
+            var factory = new FileStreamFactory(PATH, DbFileMode.Logfile, false);
+            var pool = new StreamPool(factory);
             var file = new MemoryFile(pool, null);
             
             Console.WriteLine("Processing... " + (N0 * N1));

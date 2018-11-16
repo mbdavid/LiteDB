@@ -233,7 +233,7 @@ namespace LiteDB.Engine
                 // update page instance with result page
                 page = this.MarkAsReadOnly(page, false);
 
-                DEBUG(page.ShareCounter >= 1, "after mark page as read only, share counter must return >= 1");
+                DEBUG(page.ShareCounter < 1, "after mark page as read only, share counter must return >= 1");
             }
 
             // now, decrement shareCounter

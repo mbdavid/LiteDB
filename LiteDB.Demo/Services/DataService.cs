@@ -24,8 +24,8 @@ namespace LiteDB.Demo
 
         public DataService(string path)
         {
-            _factory = new FileStreamFactory(path, false);
-            _pool = new StreamPool(_factory, DbFileMode.Logfile);
+            _factory = new FileStreamFactory(path, DbFileMode.Logfile, false);
+            _pool = new StreamPool(_factory);
             _file = new MemoryFile(_pool, null);
             _reader = _file.GetReader(true);
         }

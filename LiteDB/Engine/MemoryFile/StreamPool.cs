@@ -12,20 +12,19 @@ namespace LiteDB.Engine
     {
         private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();
         private readonly Lazy<Stream> _writer;
-        private readonly DbFileMode _mode;
         private readonly IStreamFactory _factory;
 
-        public StreamPool(IStreamFactory factory, DbFileMode mode)
+        public StreamPool(IStreamFactory factory)
         {
             _factory = factory;
-            _mode = mode;
 
-            _writer = new Lazy<Stream>(() => _factory.GetStream(true, mode == DbFileMode.Logfile));
+            _writer = new Lazy<Stream>(() => _factory.GetStream(true, _factory.FileMode == DbFileMode.Logfile));
         }
 
+        /// <summary>
+        /// Get Stream factory
+        /// </summary>
         public IStreamFactory Factory => _factory;
-
-        public DbFileMode Mode => _mode;
 
         /// <summary>
         /// Get single Stream writer instance

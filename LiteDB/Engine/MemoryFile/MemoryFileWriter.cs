@@ -35,7 +35,7 @@ namespace LiteDB.Engine
             _stream = pool.Writer;
             _store = store;
             _aes = aes;
-            _mode = pool.Mode;
+            _mode = pool.Factory.FileMode;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
             _appendPosition = _stream.Length - PAGE_SIZE;

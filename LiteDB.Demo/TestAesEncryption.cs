@@ -63,8 +63,8 @@ namespace LiteDB.Demo
         {
             File.Delete(PATH);
 
-            var factory = new FileStreamFactory(PATH, false);
-            var pool = new StreamPool(factory, DbFileMode.Datafile);
+            var factory = new FileStreamFactory(PATH, DbFileMode.Datafile, false);
+            var pool = new StreamPool(factory);
             var aes = AesEncryption.CreateAes(pool, "abc");
             var file = new MemoryFile(pool, aes);
             var reader = file.GetReader(true);
@@ -93,8 +93,8 @@ namespace LiteDB.Demo
 
         public static void ReadEncryptedFile(Stopwatch sw)
         {
-            var factory = new FileStreamFactory(PATH, false);
-            var pool = new StreamPool(factory, DbFileMode.Datafile);
+            var factory = new FileStreamFactory(PATH, DbFileMode.Datafile, false);
+            var pool = new StreamPool(factory);
             var aes = AesEncryption.CreateAes(pool, "abc");
             var file = new MemoryFile(pool, aes);
             var reader = file.GetReader(true);

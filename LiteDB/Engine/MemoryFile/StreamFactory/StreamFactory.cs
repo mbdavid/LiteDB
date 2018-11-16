@@ -12,11 +12,18 @@ namespace LiteDB.Engine
     internal class StreamFactory : IStreamFactory
     {
         private readonly Stream _stream;
+        private readonly DbFileMode _filemode;
 
-        public StreamFactory(Stream stream)
+        public StreamFactory(Stream stream, DbFileMode filemode)
         {
             _stream = stream;
+            _filemode = filemode;
         }
+
+        /// <summary>
+        /// Get database file mode (data\log)
+        /// </summary>
+        public DbFileMode FileMode => _filemode;
 
         /// <summary>
         /// Stream has no name (use stream type)
@@ -28,11 +35,16 @@ namespace LiteDB.Engine
         /// </summary>
         public Stream GetStream(bool canWrite, bool sequencial) => new ConcurrentStream(_stream, canWrite);
 
+        /// <summary>
+        /// Check if file exists based on stream length
+        /// </summary>
         public bool Exists() => _stream.Length > 0;
 
+        /// <summary>
+        /// There is no delete method in Stream factory
+        /// </summary>
         public void Delete()
         {
-            // stream factory do not delete wal file
         }
 
         /// <summary>
