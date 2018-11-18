@@ -71,7 +71,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get a reference for page
         /// </summary>
-        public CollectionPage Page { get; set; }
+//**        public CollectionPage Page { get; set; }
 
         public CollectionIndex()
         {

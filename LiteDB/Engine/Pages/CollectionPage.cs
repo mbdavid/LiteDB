@@ -64,7 +64,7 @@ namespace LiteDB.Engine
         public CollectionPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Collection, $"page {this.PageID} should be 'Collection' but is {this.PageType}.");
+            ENSURE(this.PageType == PageType.Collection);
 
             // create new buffer area to store BsonDocument indexes
             var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
@@ -182,20 +182,33 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Create new index inside this collection page
+        /// Insert new index inside this collection page
         /// </summary>
-        public CollectionIndex CreateNewIndex(string name, string expr)
+        public CollectionIndex InsertIndex(string name, string expr, bool unique)
         {
+            //TODO: test page space for this new index
+
+            var index = new CollectionIndex
+            {
+                Name = name,
+                Expression = expr,
+                Unique = unique
+            };
+            
+            _indexes[index.Name] = index;
+
             _isIndexesChanged = true;
 
-            return null;
+            return index;
         }
 
         /// <summary>
-        /// Remove index from page
+        /// Remove index reference in this page
         /// </summary>
         public void DeleteIndex(string name)
         {
+            _indexes.Remove(name);
+
             _isIndexesChanged = true;
         }
 

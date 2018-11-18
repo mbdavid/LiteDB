@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -12,6 +13,7 @@ namespace LiteDB.Engine
         public DataPage(PageBuffer buffer)
             : base(buffer)
         {
+            ENSURE(this.PageType == PageType.Data);
         }
 
         public DataPage(PageBuffer buffer, uint pageID)
@@ -34,7 +36,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DataBlock InsertBlock(int bytesLength, byte dataIndex)
         {
-            var segment = base.Insert(bytesLength + 6);
+            var segment = base.Insert(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             return new DataBlock(this, segment, dataIndex, PageAddress.Empty);
         }
@@ -44,7 +46,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DataBlock UpdateBlock(DataBlock currentBlock, int bytesLength)
         {
-            var segment = base.Update(currentBlock.Position.Index, bytesLength + 6);
+            var segment = base.Update(currentBlock.Position.Index, bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
             return new DataBlock(this, segment, currentBlock.DataIndex, currentBlock.NextBlock);
         }

@@ -15,7 +15,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// Internal class that implement same idea from ArraySegment[byte] but use a class (not a struct). Works for byte[] only
     /// </summary>
-    public class BufferSlice
+    internal class BufferSlice
     {
         public readonly int Offset;
         public readonly int Count;
@@ -86,6 +86,12 @@ namespace LiteDB.Engine
             value.Ticks.ToBytes(this.Array, this.Offset + offset);
         }
 
+        public void Write(PageAddress value, int offset)
+        {
+            value.PageID.ToBytes(this.Array, this.Offset + offset);
+            this.Array[this.Offset + offset + 4] = value.Index;
+        }
+
         public void Write(string value, int offset, int count)
         {
             Encoding.UTF8.GetBytes(value, 0, count, this.Array, this.Offset + count);
@@ -109,6 +115,11 @@ namespace LiteDB.Engine
         public DateTime ReadDateTime(int offset)
         {
             return new DateTime(this.ReadInt64(offset), DateTimeKind.Utc).ToLocalTime();
+        }
+
+        public PageAddress ReadPageAddress(int offset)
+        {
+            return new PageAddress(this.ReadUInt32(offset), this.Array[this.Offset + offset + 4]);
         }
 
         public string ReadString(int offset, int count)

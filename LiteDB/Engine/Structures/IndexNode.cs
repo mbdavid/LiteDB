@@ -11,7 +11,7 @@ namespace LiteDB.Engine
     {
         private const int INDEX_NODE_FIXED_SIZE = 1 + // Levels (byte)
                                                   (PageAddress.SIZE * 2) + // Prev/Next Node (5 bytes)
-                                                  2 + // KeyLength (ushort)
+                                                  1 + // KeyLength (byte)
                                                   PageAddress.SIZE + // DataBlock
                                                   1; // BsonType (byte)
                                                   
@@ -51,11 +51,10 @@ namespace LiteDB.Engine
         /// </summary>
         public PageAddress DataBlock { get; set; }
 
-/*
         /// <summary>
         /// Get page reference
         /// </summary>
-        public IndexPage Page { get; set; }
+//**        public IndexPage Page { get; set; }
 
         /// <summary>
         /// Returns Next (order == 1) OR Prev (order == -1)
@@ -64,7 +63,7 @@ namespace LiteDB.Engine
         {
             return order == Query.Ascending ? this.Next[index] : this.Prev[index];
         }
-        */
+
         /// <summary>
         /// Returns if this node is header or tail from collection Index
         /// </summary>

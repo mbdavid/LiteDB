@@ -57,9 +57,9 @@ namespace LiteDB
         public const int MAX_LEVEL_LENGTH = 32;
 
         /// <summary>
-        /// Max size of a index entry - usde for string, binary, array and documents
+        /// Max size of a index entry - usde for string, binary, array and documents. Need fit in 1 byte length
         /// </summary>
-        public const int MAX_INDEX_KEY_LENGTH = 512;
+        public const int MAX_INDEX_KEY_LENGTH = 255;
 
         /// <summary>
         /// Document limit size - must use 250 pages (+2 begin/end non-full page blocks) = 2MiB

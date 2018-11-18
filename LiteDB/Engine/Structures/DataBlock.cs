@@ -10,6 +10,10 @@ namespace LiteDB.Engine
         /// </summary>
         public const int DATA_BLOCK_FIXED_SIZE = 6; // DataIndex[1] + NextBlock[5]
 
+        private const int P_DATA_INDEX = 0; // 00
+        private const int P_NEXT_BLOCK = 1; // 01-05
+        private const int P_BUFFER = 6; // 06-EOF
+
         private readonly PageSegment _pageSegment;
         private readonly PageAddress _position;
         private readonly byte _dataIndex;
@@ -45,13 +49,13 @@ namespace LiteDB.Engine
             _position = new PageAddress(page.PageID, pageSegment.Index);
 
             // byte 00: DataIndex
-            _dataIndex = _pageSegment.Buffer[0];
+            _dataIndex = _pageSegment.Buffer[P_DATA_INDEX];
 
             // byte 01-05: NextBlock (PageID, Index)
-            _nextBlock = new PageAddress(_pageSegment.Buffer.ReadUInt32(1), _pageSegment.Buffer[5]);
+            _nextBlock = _pageSegment.Buffer.ReadPageAddress(P_NEXT_BLOCK);
 
             // byte 06-EOL: Buffer
-            _buffer = _pageSegment.Buffer.Slice(6, (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6 - 1);
+            _buffer = _pageSegment.Buffer.Slice(P_BUFFER, (_pageSegment.Length * PAGE_BLOCK_SIZE) - P_BUFFER- 1);
         }
 
         /// <summary>
@@ -66,14 +70,13 @@ namespace LiteDB.Engine
             _dataIndex = dataIndex;
 
             // byte 00: Data Index
-            _pageSegment.Buffer[0] = dataIndex;
+            _pageSegment.Buffer[P_DATA_INDEX] = dataIndex;
 
             // byte 01-04 (can be updated in "UpdateNextBlock")
-            _pageSegment.Buffer.Write(nextBlock.PageID, 1); // 01-04
-            _pageSegment.Buffer[5] = nextBlock.Index; // 05
+            _pageSegment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
 
             // byte 06-EOL: Buffer
-            _buffer = _pageSegment.Buffer.Slice(6, (_pageSegment.Length * PAGE_BLOCK_SIZE) - 6 - 1);
+            _buffer = _pageSegment.Buffer.Slice(P_BUFFER, (_pageSegment.Length * PAGE_BLOCK_SIZE) - P_BUFFER - 1);
         }
 
         public void UpdateNextBlock(PageAddress nextBlock)
@@ -81,8 +84,7 @@ namespace LiteDB.Engine
             _nextBlock = nextBlock;
 
             // update segment buffer with NextBlock (uint + byte)
-            _pageSegment.Buffer.Write(nextBlock.PageID, 1); // 01-04
-            _pageSegment.Buffer[5] = nextBlock.Index; // 05
+            _pageSegment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
         }
 
         public override string ToString()

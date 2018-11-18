@@ -114,11 +114,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Client\Structures\Query.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
     <Compile Include="Engine\Engine\Insert.cs" />
     <Compile Include="Engine\Engine\Transaction.cs" />
     <Compile Include="Engine\Services\CollectionService.cs" />
     <Compile Include="Engine\Services\DataService.cs" />
+    <Compile Include="Engine\Services\IndexService.cs" />
     <Compile Include="Engine\Services\LockService.cs" />
     <Compile Include="Engine\Services\SnapShot.cs" />
     <Compile Include="Engine\Services\TransactionService.cs" />
