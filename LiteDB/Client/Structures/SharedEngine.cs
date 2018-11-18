@@ -223,27 +223,13 @@ namespace LiteDB
 
         #region EnsureIndex/DropIndex/Drop/Rename
 
-        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
+        public bool CreateCollection(string collection)
         {
             this.OpenShared();
 
             try
             {
-                return _engine.EnsureIndex(collection, name, expression, unique);
-            }
-            finally
-            {
-                this.CloseShared();
-            }
-        }
-
-        public bool DropIndex(string collection, string name)
-        {
-            this.OpenShared();
-
-            try
-            {
-                return _engine.DropIndex(collection, name);
+                return _engine.CreateCollection(collection);
             }
             finally
             {
@@ -272,6 +258,34 @@ namespace LiteDB
             try
             {
                 return _engine.RenameCollection(collection, newName);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.EnsureIndex(collection, name, expression, unique);
+            }
+            finally
+            {
+                this.CloseShared();
+            }
+        }
+
+        public bool DropIndex(string collection, string name)
+        {
+            this.OpenShared();
+
+            try
+            {
+                return _engine.DropIndex(collection, name);
             }
             finally
             {

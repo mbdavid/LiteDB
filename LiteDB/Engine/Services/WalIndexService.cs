@@ -8,29 +8,24 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
-    internal class WalService : IDisposable
+    internal class WalIndexService
     {
         private readonly LockService _locker;
-        private readonly DataFileService _dataFile;
-        private readonly LogFileService _logFile;
         private readonly Logger _log;
 
-        private readonly List<ObjectId> _confirmedTransactions = new List<ObjectId>();
+        private readonly List<long> _confirmedTransactions = new List<long>();
         private readonly ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
 
         private int _currentReadVersion = 0;
 
-        public LogFileService LogFile => _logFile;
-        public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
-        public List<ObjectId> ConfirmedTransactions => _confirmedTransactions;
+//**        public LogFileService LogFile => _logFile;
+//**        public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
+//**        public List<long> ConfirmedTransactions => _confirmedTransactions;
 
-        public WalService(LockService locker, DataFileService dataFile, IDiskFactory factory, bool utcDate, Logger log)
+        public WalIndexService(LockService locker, Logger log)
         {
             _locker = locker;
-            _dataFile = dataFile;
             _log = log;
-
-            _logFile = new LogFileService(factory, utcDate, log);
         }
 
         /// <summary>
@@ -72,7 +67,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Add transactionID in confirmed list and update WAL index with all pages positions
         /// </summary>
-        public void ConfirmTransaction(ObjectId transactionID, ICollection<PagePosition> pagePositions)
+        public void ConfirmTransaction(long transactionID, ICollection<PagePosition> pagePositions)
         {
             // add confirm page into confirmed-queue to be used in checkpoint
             _confirmedTransactions.Add(transactionID);
@@ -99,99 +94,18 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Do WAL checkpoint coping confirmed pages from log file to datafile.
-        /// This first version works only doing full checkpoint with reserved lock
-        /// Return how many pages was copied from log file to data file
-        /// </summary>
-        public int Checkpoint(HeaderPage header, bool lockReserved)
-        {
-            // checkpoint can run only without any open transaction in current thread
-            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Checkpoint", TransactionState.Active);
-
-            if (lockReserved)
-            {
-                // enter in special database reserved lock (wait all readers/writers)
-                // after this, everyone can read but no others can write
-                _locker.EnterReserved(false);
-            }
-
-            try
-            {
-                // if log already clean (or not exists)
-                if (_logFile.Length == 0) return 0;
-
-                _log.Info("checkpoint");
-
-                var count = 0;
-
-                HeaderPage last = null;
-
-                var sortedConfirmTransactions = new HashSet<ObjectId>(_confirmedTransactions);
-
-                // get all pages inside log file and contains valid confirmed pages
-                var pages = _logFile.ReadPages(true)
-                    .Where(x => sortedConfirmTransactions.Contains(x.TransactionID))
-                    .ForEach((i, x) =>
-                    {
-                        count++;
-                        x.TransactionID = ObjectId.Empty;
-                        x.IsConfirmed = false;
-
-                        if (x.PageType == PageType.Header)
-                        {
-                            last = x as HeaderPage;
-                            last.LastCheckpoint = DateTime.Now;
-                        }
-                    });
-
-                // write page on data disk
-                _dataFile.WritePages(pages);
-
-                // update single header instance with last confirmed header
-                if (last != null)
-                {
-                    // shrink datafile if length are large than needed
-                    var length = BasePage.GetPagePosition(last.LastPageID + 1);
-
-                    if (length < _dataFile.Length)
-                    {
-                        _dataFile.SetLength(length);
-                    }
-                }
-
-                // update header checkpoint datetime
-                if (header != null)
-                {
-                    header.LastCheckpoint = DateTime.Now;
-                }
-
-                // now, all wal pages are saved in data disk - can clear walfile
-                _logFile.Clear();
-
-                // clear indexes/confirmed transactions
-                _index.Clear();
-                _confirmedTransactions.Clear();
-                _currentReadVersion = 0;
-
-                return count;
-            }
-            finally
-            {
-                if (lockReserved)
-                {
-                    _locker.ExitReserved(false);
-                }
-            }
-        }
-
-        /// <summary>
         /// Load all confirmed transactions from log file (used only when open datafile)
         /// Don't need lock because it's called on ctor of LiteEngine
         /// </summary>
-        public void RestoreIndex(ref HeaderPage header)
+        public void RestoreIndex(StreamPool pool, ref HeaderPage header)
         {
-            if (_logFile.Length == 0) return;
+            // leio as paginas SEM o MemoryFile (é mais eficiente pois vou ver poucos dados)
+            // uso apenas 1 buffer[8k] de temp + 1 buffer[8k] ultima header
+            // a header deve ser sobregravada (o buffer) com uma mais recente
+            // sobregravar leia-se buffercopy na pagePage
 
+            throw new NotImplementedException();
+            /*
             // get all page positions
             var positions = new Dictionary<ObjectId, List<PagePosition>>();
             var current = 0L;
@@ -218,18 +132,14 @@ namespace LiteDB.Engine
                     {
                         // if confirmed page is header need realod full page from WAL (current page contains only header data)
                         header = _logFile.ReadPage(current) as HeaderPage;
-                        header.TransactionID = ObjectId.Empty;
+                        header.TransactionID = 0;
                         header.IsConfirmed = false;
                     }
                 }
 
                 current += PAGE_SIZE;
             }
-        }
-
-        public void Dispose()
-        {
-            _logFile.Dispose();
+            */
         }
     }
 }

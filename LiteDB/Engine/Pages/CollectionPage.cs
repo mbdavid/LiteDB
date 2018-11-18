@@ -53,12 +53,18 @@ namespace LiteDB.Engine
             // initialize page version
             this.CreationTime = DateTime.Now;
             this.LastAnalyzed = DateTime.MinValue;
+
+            for(var i = 0; i < 5; i++)
+            {
+                this.FreeDataPageID[i] = uint.MaxValue;
+                this.FreeIndexPageID[i] = uint.MaxValue;
+            }
         }
 
         public CollectionPage(PageBuffer buffer)
             : base(buffer)
         {
-            DEBUG(this.PageType != PageType.Collection, $"page {this.PageID} should be 'Collection' but is {this.PageType}.");
+            ENSURE(this.PageType == PageType.Collection, $"page {this.PageID} should be 'Collection' but is {this.PageType}.");
 
             // create new buffer area to store BsonDocument indexes
             var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
@@ -180,8 +186,6 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex CreateNewIndex(string name, string expr)
         {
-            //TODO: verifica se cabe
-
             _isIndexesChanged = true;
 
             return null;

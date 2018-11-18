@@ -70,8 +70,7 @@ namespace LiteDB.Engine
             // do not move fordward if source finish
             if (_isEOF) return false;
 
-            //DEBUG
-            DEBUG(_currentPosition + count > _current.Count, "fordward are only for current segment");
+            ENSURE(_currentPosition + count <= _current.Count, "fordward are only for current segment");
 
             _currentPosition += count;
             _position += count;
@@ -125,7 +124,7 @@ namespace LiteDB.Engine
                 if (_isEOF) break;
             }
 
-            DEBUG(count != bufferPosition, "current value must fit inside defined buffer");
+            ENSURE(count == bufferPosition, "current value must fit inside defined buffer");
 
             return bufferPosition;
         }

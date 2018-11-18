@@ -19,10 +19,11 @@ namespace LiteDB.Engine
     /// </summary>
     internal class MemoryFile : IDisposable
     {
-        private readonly MemoryStore _store = new MemoryStore();
+        private readonly MemoryStore _store;
         private readonly StreamPool _pool;
         private readonly AesEncryption _aes;
 
+        private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
         private readonly Lazy<MemoryFileWriter> _writer;
 
         public MemoryFile(StreamPool pool, AesEncryption aes)
@@ -30,10 +31,10 @@ namespace LiteDB.Engine
             _pool = pool;
             _aes = aes;
 
-            _store = new MemoryStore();
+            _store = new MemoryStore(_locker);
 
             // create lazy writer to avoid create file if not needed (readonly file access)
-            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_store, _pool, _aes));
+            _writer = new Lazy<MemoryFileWriter>(() => new MemoryFileWriter(_store, _locker, _pool, _aes));
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace LiteDB.Engine
         public MemoryFileReader GetReader(bool writable)
         {
             // create new instance
-            return new MemoryFileReader(_store, _pool, _aes, writable);
+            return new MemoryFileReader(_store, _locker, _pool, _aes, writable);
         }
 
         /// <summary>
@@ -66,16 +67,20 @@ namespace LiteDB.Engine
         {
             var counter = 0;
 
-            using (var reader = pages.GetEnumerator())
-            {
-                while(reader.MoveNext())
-                {
-                    var page = reader.Current;
+            _locker.EnterReadLock();
 
+            try
+            {
+                foreach (var page in pages)
+                {
                     _writer.Value.QueuePage(page);
 
                     counter++;
                 }
+            }
+            finally
+            {
+                _locker.ExitReadLock();
             }
 
             if(counter > 0)
@@ -103,6 +108,7 @@ namespace LiteDB.Engine
             }
 
             _store.Dispose();
+            _locker.Dispose();
         }
     }
 }

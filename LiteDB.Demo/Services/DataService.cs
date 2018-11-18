@@ -39,7 +39,7 @@ namespace LiteDB.Demo
 
             if (p == null)
             {
-                p = new DataPage(_reader.NewPage(), _lastPageID++);
+                p = new DataPage(_reader.NewPage(true), _lastPageID++);
 
                 _local[p.PageID] = p;
             }
@@ -58,7 +58,7 @@ namespace LiteDB.Demo
                 return page;
             }
 
-            page = new DataPage(_reader.GetPage(pageID * 8192));
+            page = new DataPage(_reader.GetPage(pageID * 8192, true));
             _local[pageID] = page;
             if (markAsDirty) page.IsDirty = true;
             return page;

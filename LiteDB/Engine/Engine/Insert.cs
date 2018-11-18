@@ -20,14 +20,15 @@ namespace LiteDB.Engine
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var col = snapshot.CollectionPage;
                 var count = 0;
-                var indexer = new IndexService(snapshot);
+                //var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
 
                 foreach (var doc in docs)
                 {
                     transaction.Safepoint();
 
-                    this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
+                    //this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
+                    this.InsertDocument(snapshot, col, doc, autoId, data);
 
                     count++;
                 }
@@ -39,7 +40,8 @@ namespace LiteDB.Engine
         /// <summary>
         /// Internal implementation of insert a document
         /// </summary>
-        private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
+        //private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
+        private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, DataService data)
         {
             // if no _id, use AutoId
             if (!doc.RawValue.TryGetValue("_id", out var id))
@@ -53,7 +55,7 @@ namespace LiteDB.Engine
             else if(id.IsNumber)
             {
                 // update memory sequence of numeric _id
-                this.SetSequence(col, snapshot, id);
+//**                this.SetSequence(col, snapshot, id);
             }
 
             // test if _id is a valid type
@@ -62,12 +64,10 @@ namespace LiteDB.Engine
                 throw LiteException.InvalidDataType("_id", id);
             }
 
-            // serialize object
-            var stream = _bsonWriter.Serialize(doc);
-
             // storage in data pages - returns dataBlock address
-            var dataBlock = data.Insert(col, stream);
+            var dataBlock = data.Insert(doc);
 
+            /*
             // store id in a PK index [0 array]
             var pk = indexer.AddNode(col.PK, id, null);
 
@@ -91,7 +91,7 @@ namespace LiteDB.Engine
                     // link my index node to data block address
                     node.DataBlock = dataBlock.Position;
                 }
-            }
+            }*/
         }
 
         /// <summary>
@@ -104,6 +104,8 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonValue GetSequence(CollectionPage col, Snapshot snapshot, BsonAutoId autoId)
         {
+            throw new NotImplementedException();
+            /*
             var next = _sequences.AddOrUpdate(col.CollectionName, (s) =>
             {
                 var lastId = this.GetLastId(col, snapshot);
@@ -128,7 +130,7 @@ namespace LiteDB.Engine
 
             return autoId == BsonAutoId.Int32 ?
                 new BsonValue((int)next) :
-                new BsonValue(next);
+                new BsonValue(next);*/
         }
 
         /// <summary>
@@ -137,6 +139,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void SetSequence(CollectionPage col, Snapshot snapshot, BsonValue newId)
         {
+            throw new NotImplementedException();
+            /*
             _sequences.AddOrUpdate(col.CollectionName, (s) =>
             {
                 var lastId = this.GetLastId(col, snapshot);
@@ -157,7 +161,7 @@ namespace LiteDB.Engine
             {
                 // return max value between current sequence value vs new inserted value
                 return Math.Max(value, newId.AsInt64);
-            });
+            });*/
         }
 
         /// <summary>
@@ -165,6 +169,8 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonValue GetLastId(CollectionPage col, Snapshot snapshot)
         {
+            throw new NotImplementedException();
+            /*
             // add method
             var tail = col.GetIndex(0).TailNode;
             var head = col.GetIndex(0).HeadNode;
@@ -186,7 +192,7 @@ namespace LiteDB.Engine
                 var lastKey = lastNode.Key;
 
                 return lastKey;
-            }
+            }*/
         }
     }
 }

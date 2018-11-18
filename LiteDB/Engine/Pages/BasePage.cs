@@ -40,7 +40,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Indicate the page type [1 byte]
         /// </summary>
-        public PageType PageType { get; private set; }
+        public PageType PageType { get; set; }
 
         /// <summary>
         /// Represent the previous page. Used for page-sequences - MaxValue represent that has NO previous page [4 bytes]
@@ -112,24 +112,6 @@ namespace LiteDB.Engine
         /// </summary>
         public bool IsDirty { get; set; }
 
-        /// <summary>
-        /// Get index slot on FreeDataPageID/FreeIndexPageID - Get based on "FreeBlocks"
-        /// 228 - 254 blocks => slot 0 (great than 90% free)
-        /// 190 - 227 blocks => slot 1 (between 75% and 90% free)
-        /// 127 - 189 blocks => slot 2 (between 50% and 75% free)
-        ///  76 - 126 blocks => slot 3 (between 30% and 50% free)
-        ///   0 -  75 blocks => slot 4 (less than 30% free)
-        /// </summary>
-        public byte FreeIndexSlot()
-        {
-            var free = this.FreeBlocks;
-            if (free >= 228) return 0;
-            if (free >= 190) return 1;
-            if (free >= 127) return 2;
-            if (free >= 76) return 3;
-            return 4;
-        }
-
         #region Initialize/Update buffer
 
         /// <summary>
@@ -161,9 +143,7 @@ namespace LiteDB.Engine
             this.IsDirty = false;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
-            _buffer.Write(this.PageID, 0); // 00-03
-            _buffer[4] = (byte)this.PageType; // 04-04
-
+            _buffer.Write(this.PageID, P_PAGE_ID);
         }
 
         /// <summary>
@@ -201,10 +181,11 @@ namespace LiteDB.Engine
         public virtual PageBuffer UpdateBuffer()
         {
             // using fixed position to be faster than BufferWriter
+            ENSURE(this.PageID == _buffer.ReadUInt32(P_PAGE_ID), "pageID can't be changed");
 
             // page information
             // PageID   - never change!
-            // PageType - never change!
+            _buffer[P_PAGE_TYPE] = (byte)this.PageType;
             _buffer.Write(this.PrevPageID, P_PREV_PAGE_ID);
             _buffer.Write(this.NextPageID, P_NEXT_PAGE_ID);
 
@@ -258,9 +239,9 @@ namespace LiteDB.Engine
         /// </summary>
         private PageSegment Insert(byte index, byte length)
         {
-            DEBUG(this.FreeBlocks < length, "length must be always lower than current free space");
-            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
-            DEBUG((int)this.NextFreeBlock + (int)this.FooterBlocks >= 256, "next free block + footer can't be larger than 1 page");
+            ENSURE(this.FreeBlocks >= length, "length must be always lower than current free space");
+            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
+            ENSURE((int)this.NextFreeBlock + (int)this.FooterBlocks < 256, "next free block + footer can't be larger than 1 page");
 
             // if index are bigger than HighestIndex, let's update this HighestIndex with my new index
             if (index > this.HighestIndex) this.HighestIndex = index;
@@ -268,21 +249,21 @@ namespace LiteDB.Engine
             // calculate how many continuous blocks are avaiable in this page
             var continuosBlocks = this.FreeBlocks - this.FragmentedBlocks;
 
-            DEBUG(continuosBlocks != 256 - this.NextFreeBlock - this.FooterBlocks, "invalid next free block");
+            ENSURE(continuosBlocks == 256 - this.NextFreeBlock - this.FooterBlocks, "invalid next free block");
 
             // if continuous blocks are not big enouth for this data, must run page defrag
             if (length > continuosBlocks)
             {
                 this.Defrag();
 
-                DEBUG(length > (this.FreeBlocks - this.FragmentedBlocks), "after defrag length must fit in page");
+                ENSURE(this.FreeBlocks - this.FragmentedBlocks >= length, "after defrag length must fit in page");
             }
 
             // get a free index slot
             var block = this.NextFreeBlock;
             var slot = PAGE_SIZE - index - 1;
 
-            DEBUG(_buffer[slot] != 0, "slot must be empty before use");
+            ENSURE(_buffer[slot] == 0, "slot must be empty before use");
 
             // update index slot with this block position
             _buffer[slot] = block;
@@ -307,8 +288,8 @@ namespace LiteDB.Engine
             var slot = PAGE_SIZE - index - 1;
             var block = _buffer[slot];
 
-            DEBUG(block < 1, "existing page segment must contains a valid block position (after header)");
-            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
+            ENSURE(block > 1, "existing page segment must contains a valid block position (after header)");
+            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
             var position = block * PAGE_BLOCK_SIZE;
 
@@ -352,8 +333,8 @@ namespace LiteDB.Engine
             var slot = PAGE_SIZE - index - 1;
             var block = _buffer[slot];
 
-            DEBUG(block < 1, "existing page segment must contains a valid block position (after header)");
-            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
+            ENSURE(block > 1, "existing page segment must contains a valid block position (after header)");
+            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
             var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks (+1 for store segment length)
@@ -423,8 +404,8 @@ namespace LiteDB.Engine
         /// </summary>
         protected void Defrag()
         {
-            DEBUG(this.FragmentedBlocks == 0, "do not call this when page has no fragmentation");
-            DEBUG(_buffer.ShareCounter != -1, "page must be writable to support changes");
+            ENSURE(this.FragmentedBlocks > 0, "do not call this when page has no fragmentation");
+            ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
             // first get all segments inside this page
             var segments = new List<PageSegment>();
@@ -552,9 +533,55 @@ namespace LiteDB.Engine
         /// </summary>
         public static long GetPagePosition(int pageID)
         {
-            DEBUG(pageID < 0, "page could not be less than 0.");
+            ENSURE(pageID >= 0, "page could not be less than 0.");
 
             return BasePage.GetPagePosition((uint)pageID);
+        }
+
+        /// <summary>
+        /// Create new page instance based on buffer (READ)
+        /// </summary>
+        public static T ReadPage<T>(PageBuffer buffer)
+            where T : BasePage
+        {
+            if (typeof(T) == typeof(BasePage)) return (T)(object)new BasePage(buffer);
+            if (typeof(T) == typeof(HeaderPage)) return (T)(object)new HeaderPage(buffer);
+            if (typeof(T) == typeof(CollectionPage)) return (T)(object)new CollectionPage(buffer);
+            if (typeof(T) == typeof(IndexPage)) return (T)(object)new IndexPage(buffer);
+            if (typeof(T) == typeof(DataPage)) return (T)(object)new DataPage(buffer);
+
+            throw new InvalidCastException();
+        }
+
+        /// <summary>
+        /// Create new page instance with new PageID and passed buffer (NEW)
+        /// </summary>
+        public static T CreatePage<T>(PageBuffer buffer, uint pageID)
+            where T : BasePage
+        {
+            if (typeof(T) == typeof(HeaderPage)) return (T)(object)new HeaderPage(buffer, pageID);
+            if (typeof(T) == typeof(CollectionPage)) return (T)(object)new CollectionPage(buffer, pageID);
+            if (typeof(T) == typeof(IndexPage)) return (T)(object)new IndexPage(buffer, pageID);
+            if (typeof(T) == typeof(DataPage)) return (T)(object)new DataPage(buffer, pageID);
+
+            throw new InvalidCastException();
+        }
+
+        /// <summary>
+        /// Get index slot on FreeDataPageID/FreeIndexPageID - Get based on "FreeBlocks"
+        /// 228 - 254 blocks => slot 0 (great than 90% free)
+        /// 190 - 227 blocks => slot 1 (between 75% and 90% free)
+        /// 127 - 189 blocks => slot 2 (between 50% and 75% free)
+        ///  76 - 126 blocks => slot 3 (between 30% and 50% free)
+        ///   0 -  75 blocks => slot 4 (less than 30% free)
+        /// </summary>
+        public static byte FreeIndexSlot(byte freeBlocks)
+        {
+            if (freeBlocks >= 228) return 0;
+            if (freeBlocks >= 190) return 1;
+            if (freeBlocks >= 127) return 2;
+            if (freeBlocks >= 76) return 3;
+            return 4;
         }
 
         #endregion

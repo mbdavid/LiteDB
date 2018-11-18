@@ -62,10 +62,10 @@ namespace LiteDB.Engine
                 var cursor = _engine.NewCursor(transaction, snapshot);
 
                 // if query will run over external data source, create fake collection page from virtual index
-                if (_source != null)
-                {
-                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
-                }
+//**                if (_source != null)
+//**                {
+//**                    snapshot.CollectionPage = IndexVirtual.CreateCollectionPage(_collection);
+//**                }
 
                 cursor.Start();
 

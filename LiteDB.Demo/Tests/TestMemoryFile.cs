@@ -71,7 +71,7 @@ namespace LiteDB.Demo
 
                 while (pos < file.Length)
                 {
-                    var page = fileReader.GetPage(pos);
+                    var page = fileReader.GetPage(pos, true);
 
                     pos += 8192;
 
@@ -105,7 +105,7 @@ namespace LiteDB.Demo
             {
                 while (true)
                 {
-                    var page = fileReader.NewPage();
+                    var page = fileReader.NewPage(true);
                     dirtyPages.Add(page);
                     yield return page;
                 }

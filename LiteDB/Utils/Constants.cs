@@ -42,6 +42,11 @@ namespace LiteDB
         public const int P_ENCRYPTION_SALT = PAGE_SIZE - ENCRYPTION_SALT_SIZE;
 
         /// <summary>
+        /// Define ShareCounter buffer as writable
+        /// </summary>
+        public static int BUFFER_WRITABLE = -1;
+
+        /// <summary>
         /// Define index name max length
         /// </summary>
         public static int INDEX_NAME_MAX_LENGTH = 32;
@@ -55,6 +60,11 @@ namespace LiteDB
         /// Max size of a index entry - usde for string, binary, array and documents
         /// </summary>
         public const int MAX_INDEX_KEY_LENGTH = 512;
+
+        /// <summary>
+        /// Document limit size - must use 250 pages (+2 begin/end non-full page blocks) = 2MiB
+        /// </summary>
+        public const int MAX_DOCUMENT_SIZE = 250 * (250 * PAGE_BLOCK_SIZE);
 
         /// <summary>
         /// DocumentLoader max cache size
@@ -89,6 +99,46 @@ namespace LiteDB
         public static void DEBUG(bool conditional, string message = null)
         {
             if(conditional)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+                else
+                {
+                    throw new SystemException(message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ensure conditional is true - if not stop VisualStudio when running over #DEBUG - great for testing unexpected flow
+        /// </summary>
+        [DebuggerHidden]
+        [Conditional("DEBUG")]
+        public static void ENSURE(bool testRule, string message = null)
+        {
+            if (testRule == false)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+                else
+                {
+                    throw new SystemException(message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ensure conditional is true - if not stop VisualStudio when running over #DEBUG - great for testing unexpected flow
+        /// </summary>
+        [DebuggerHidden]
+        [Conditional("DEBUG")]
+        public static void ENSURE(bool ifTrue, bool testRule, string message = null)
+        {
+            if (ifTrue && testRule == false)
             {
                 if (Debugger.IsAttached)
                 {

@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
     internal class CollectionService
     {
-        private HeaderPage _header;
-        private Snapshot _snapshot;
-        private TransactionPages _transPages;
+        private readonly HeaderPage _header;
+        private readonly Snapshot _snapshot;
+        private readonly TransactionPages _transPages;
 
-        public CollectionService(Snapshot snapshot, HeaderPage header, TransactionPages transPages)
+        public CollectionService(HeaderPage header, Snapshot snapshot, TransactionPages transPages)
         {
             _snapshot = snapshot;
             _header = header;
@@ -19,20 +20,27 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get a exist collection in header or in current transaction. Returns null if not exists
+        /// Get collection page instance (or create a new one)
         /// </summary>
-        public CollectionPage Get(string name)
+        public CollectionPage Get(string name, bool addIfNotExists)
         {
-            // first, check if this a new collection (in this transaction)
-            if (_transPages.NewCollections.TryGetValue(name, out var addedPageID))
+            // virtual collection
+            if (name.StartsWith("$"))
             {
-                return _snapshot.GetPage<CollectionPage>(addedPageID);
+                throw new NotImplementedException();
+                //return new CollectionPage()
             }
 
-            // otherwise, try get from header collection
-            if (_header.Collections.TryGetValue(name, out var pageID))
+            // get collection pageID from header
+            var pageID = _header.GetCollectionPageID(name);
+
+            if (pageID != uint.MaxValue)
             {
                 return _snapshot.GetPage<CollectionPage>(pageID);
+            }
+            else if (addIfNotExists)
+            {
+                return this.Add(name);
             }
 
             return null;
@@ -41,65 +49,31 @@ namespace LiteDB.Engine
         /// <summary>
         /// Add a new collection. Check if name the not exists. Create only in transaction page - will update header only in commit
         /// </summary>
-        public CollectionPage Add(string name)
+        private CollectionPage Add(string name)
         {
-            if (name.Length > COLLECTION_NAME_MAX_LENGTH) throw LiteException.InvalidCollectionName(name, "MaxLength = " + COLLECTION_NAME_MAX_LENGTH);
+            if (Encoding.UTF8.GetByteCount(name) > _header.GetAvaiableCollectionSpace()) throw LiteException.InvalidCollectionName(name, "There is no space in header for more collections");
             if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
             if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for system collections)");
 
-            // test if not exists (global or local)
-            if (_header.Collections.ContainsKey(name)) throw LiteException.AlreadyExistsCollectionName(name);
-            if (_transPages.NewCollections.ContainsKey(name)) throw LiteException.AlreadyExistsCollectionName(name);
-
-            // test if new collection name do not exceed max length (must re-checked on commit)
-            _header.CheckCollectionsSize(name);
-
             // create new collection page
-            var col = _snapshot.NewPage<CollectionPage>();
+            var collectionPage = _snapshot.NewPage<CollectionPage>();
+            var pageID = collectionPage.PageID;
 
-            // set name into collection page
-            col.CollectionName = name;
+            // update header page on commit
+            _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
-            // create PK index with _id key
-            var indexer = new IndexService(_snapshot);
-            var pk = indexer.CreateIndex(col);
-
-            pk.Name = "_id";
-            pk.Expression = "$._id";
-            pk.Unique = true;
-
-            // set collection page as dirty
-            _snapshot.SetDirty(col);
-
-            // add collection into transaction page
-            _transPages.NewCollections.Add(name, col.PageID);
-
-            return col;
-        }
-
-        /// <summary>
-        /// Get all collections pages
-        /// </summary>
-        public IEnumerable<CollectionPage> GetAll()
-        {
-            // first, return new collections (local)
-            foreach (var pageID in _transPages.NewCollections.Values)
-            {
-                yield return _snapshot.GetPage<CollectionPage>(pageID);
-            }
-
-            // get all pages (global)
-            foreach (var col in _header.Collections)
-            {
-                yield return _snapshot.GetPage<CollectionPage>(col.Value);
-            }
+            return collectionPage;
         }
 
         /// <summary>
         /// Drop a collection - remove all data pages + indexes pages
         /// </summary>
-        public void Drop(CollectionPage col, TransactionService transaction)
+        public void Drop(string name, TransactionService transaction)
         {
+            _transPages.Commit += (h) => h.DeleteCollection(name);
+
+            throw new NotImplementedException();
+            /*
             // add all pages to delete
             var pages = new HashSet<uint>();
             var indexer = new IndexService(_snapshot);
@@ -152,7 +126,7 @@ namespace LiteDB.Engine
             // otherwise, add into delete collection list
             _transPages.DeletedCollection = col.CollectionName;
 
-            col.IsDirty = false;
+            col.IsDirty = false;*/
         }
     }
 }

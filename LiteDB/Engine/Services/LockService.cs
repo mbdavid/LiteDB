@@ -68,7 +68,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterRead(string collectionName)
         {
-            DEBUG(_transaction.IsReadLockHeld == false && _transaction.IsWriteLockHeld == false, "Use EnterTransaction() before EnterRead(name)");
+            ENSURE(_transaction.IsReadLockHeld || _transaction.IsWriteLockHeld, "Use EnterTransaction() before EnterRead(name)");
 
             // get collection locker from dictionary (or create new if doesnt exists)
             var collection = _collections.GetOrAdd(collectionName, (s) => new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion));
@@ -92,7 +92,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnterReserved(string collectionName)
         {
-            DEBUG(_transaction.IsReadLockHeld == false, "Use EnterTransaction() before EnterReserved(name)");
+            ENSURE(_transaction.IsReadLockHeld, "Use EnterTransaction() before EnterReserved(name)");
 
             // checks if engine was open in readonly mode
             if (_readonly) throw new LiteException(0, "This operation are not support because engine was open in reaodnly mode");

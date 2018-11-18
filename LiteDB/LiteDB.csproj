@@ -110,9 +110,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Engine\EngineSettings.cs" />
     <Compile Remove="Engine\ILiteEngine.cs" />
-    <Compile Remove="Engine\LiteEngine.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Engine\Engine\Collection.cs" />
+    <Compile Include="Engine\Engine\Insert.cs" />
+    <Compile Include="Engine\Engine\Transaction.cs" />
+    <Compile Include="Engine\Services\CollectionService.cs" />
+    <Compile Include="Engine\Services\DataService.cs" />
+    <Compile Include="Engine\Services\LockService.cs" />
+    <Compile Include="Engine\Services\SnapShot.cs" />
+    <Compile Include="Engine\Services\TransactionService.cs" />
+    <Compile Include="Engine\Services\WalIndexService.cs" />
   </ItemGroup>
 
 </Project>

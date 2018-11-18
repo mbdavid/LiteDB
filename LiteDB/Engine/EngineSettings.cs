@@ -36,6 +36,11 @@ namespace LiteDB.Engine
         public string Filename { get; set; }
 
         /// <summary>
+        /// Get database password to decrypt pages
+        /// </summary>
+        public string Password { get; set; }
+
+        /// <summary>
         /// Timeout for waiting unlock operations (default: 1 minute)
         /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
@@ -71,30 +76,31 @@ namespace LiteDB.Engine
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
-        /// Get datafile factory
+        /// Get Data/Log Stream factory
         /// </summary>
-        internal IDiskFactory GetDataDiskFactory()
+        internal IStreamFactory GetStreamFactory(DbFileMode filemode)
         {
-            if (this.DataStream != null)
-            {
-                return new StreamDiskFactory(this.DataStream);
-            }
-            else if (this.Filename == ":memory:")
-            {
-                return new StreamDiskFactory(new MemoryStream());
-            }
-            else if (this.Filename == ":temp:")
-            {
-                return new StreamDiskFactory(new TempStream());
-            }
-            else if (!string.IsNullOrEmpty(this.Filename))
-            {
-                return new FileStreamDiskFactory(this.Filename, this.ReadOnly);
+            var stream = filemode == DbFileMode.Datafile ? this.DataStream : this.LogStream;
+            var filename = filemode == DbFileMode.Datafile ? this.Filename : FileHelper.GetLogFile(this.Filename);
 
+            if (stream != null)
+            {
+                return new StreamFactory(stream, filemode);
+            }
+            else if (filename == ":memory:")
+            {
+                return new StreamFactory(new MemoryStream(), filemode);
+            }
+            else if (filename == ":temp:")
+            {
+                return new StreamFactory(new TempStream(), filemode);
+            }
+            else if (!string.IsNullOrEmpty(filename))
+            {
+                return new FileStreamFactory(filename, filemode, this.ReadOnly);
             }
 
             throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");
         }
-
     }
 }

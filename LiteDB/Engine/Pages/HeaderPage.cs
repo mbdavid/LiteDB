@@ -28,8 +28,9 @@ namespace LiteDB.Engine
         private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63
         private const int P_LAST_PAGE_ID = 64; // 64-67
         private const int P_CREATION_TIME = 68; // 68-75
-        private const int P_USER_VERSION = 76; // 76-79
-        // reserved 80-95
+        private const int P_LAST_CHECKPOINT = 76; // 76-79
+        private const int P_USER_VERSION = 80; // 80-87
+        // reserved 87-95 (9 bytes)
         private const int P_COLLECTIONS = 96; // 96-8128
         private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS - PAGE_BLOCK_SIZE; // 8064
         // reserved 32 bytes at end of header page (for encryption SALT)
@@ -50,6 +51,11 @@ namespace LiteDB.Engine
         /// DateTime when database was created [8 bytes]
         /// </summary>
         public DateTime CreationTime { get; private set; }
+
+        /// <summary>
+        /// DateTime last checkpoint command was executed [8 bytes]
+        /// </summary>
+        public DateTime LastCheckpoint { get; private set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes
@@ -74,6 +80,7 @@ namespace LiteDB.Engine
         {
             // initialize page version
             this.CreationTime = DateTime.UtcNow;
+            this.LastCheckpoint = DateTime.MinValue;
             this.FreeEmptyPageID = uint.MaxValue;
             this.LastPageID = 0;
             this.UserVersion = 0;
@@ -94,7 +101,7 @@ namespace LiteDB.Engine
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
-            DEBUG(this.PageType != PageType.Header, $"page {this.PageID} should be 'Header' but is {this.PageType}.");
+            ENSURE(this.PageType == PageType.Header, $"page {this.PageID} should be 'Header' but is {this.PageType}.");
 
             var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
             var ver = _buffer[P_FILE_VERSION];
@@ -105,6 +112,7 @@ namespace LiteDB.Engine
             this.FreeEmptyPageID = _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
             this.LastPageID = _buffer.ReadUInt32(P_LAST_PAGE_ID);
             this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
+            this.LastCheckpoint = _buffer.ReadDateTime(P_LAST_CHECKPOINT);
             this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
 
             // clear SALT area in buffer to work CRC
@@ -121,9 +129,10 @@ namespace LiteDB.Engine
 
         public override PageBuffer UpdateBuffer()
         {
-            _buffer.ReadUInt32(P_FREE_EMPTY_PAGE_ID);
-            _buffer.ReadUInt32(P_LAST_PAGE_ID);
-            _buffer.ReadInt32(P_USER_VERSION);
+            _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
+            _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
+            _buffer.Write(this.LastCheckpoint, P_LAST_CHECKPOINT);
+            _buffer.Write(this.UserVersion, P_USER_VERSION);
 
             // CreationTime - never change - no need to override buffer
 
@@ -139,28 +148,6 @@ namespace LiteDB.Engine
             }
 
             return base.UpdateBuffer();
-        }
-
-        /// <summary>
-        /// Update header page with new/drop collections. If any collection change, track this to update on UpdateBuffer()
-        /// </summary>
-        public void UpdateCollections(TransactionPages transPages)
-        {
-            // remove/add collections based on transPages
-            if (transPages.DeletedCollection != null)
-            {
-                _collections.Remove(transPages.DeletedCollection);
-
-                _isCollectionsChanged = true;
-            }
-
-            // add all new collections
-            foreach (var p in transPages.NewCollections)
-            {
-                _collections[p.Key] = (int)p.Value;
-
-                _isCollectionsChanged = true;
-            }
         }
 
         /// <summary>
@@ -187,6 +174,26 @@ namespace LiteDB.Engine
 
                 yield return new KeyValuePair<string, uint>(key, (uint)item.AsInt32);
             }
+        }
+
+        /// <summary>
+        /// Insert new collection in header
+        /// </summary>
+        public void InsertCollection(string name, uint pageID)
+        {
+            _collections[name] = (int)pageID;
+
+            _isCollectionsChanged = true;
+        }
+
+        /// <summary>
+        /// Remove existing collection reference in header
+        /// </summary>
+        public void DeleteCollection(string name)
+        {
+            _collections.Remove(name);
+
+            _isCollectionsChanged = true;
         }
 
         /// <summary>

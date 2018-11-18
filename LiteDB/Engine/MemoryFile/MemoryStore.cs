@@ -19,8 +19,6 @@ namespace LiteDB.Engine
     /// </summary>
     internal class MemoryStore : IDisposable
     {
-        private const int WRITABLE = -1;
-
         /// <summary>
         /// Cached pages contains only clean/readonly pages indexed by position. Inside this collection pages can be in-use (SharedCounter > 0) or
         /// ready to be moved to cache (ShareCounter = 0).
@@ -41,10 +39,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Control read/write store access locker
         /// </summary>
-        private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _locker;
 
-        public MemoryStore()
+        public MemoryStore(ReaderWriterLockSlim locker)
         {
+            _locker = locker;
+
             this.Extend();
         }
 
@@ -113,8 +113,6 @@ namespace LiteDB.Engine
                 // if requested page already in cache, just copy buffer and avoid load from stream
                 if (_cache.TryGetValue(position, out var clean))
                 {
-                    DEBUG(clean.ShareCounter != 0, "ensure this request writable page are not been used as readonly for another thread");
-
                     Buffer.BlockCopy(clean.Array, clean.Offset, page.Array, page.Offset, PAGE_SIZE);
                 }
                 else
@@ -158,7 +156,7 @@ namespace LiteDB.Engine
             page.Position = position;
 
             // define as writable
-            page.ShareCounter = WRITABLE;
+            page.ShareCounter = BUFFER_WRITABLE;
 
             // Timestamp = 0 means this page was never used (do not clear)
             if (clear && page.Timestamp > 0)
@@ -175,69 +173,65 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer MarkAsReadOnly(PageBuffer page, bool pageChanged)
         {
-            DEBUG(page.ShareCounter != WRITABLE, "only writable pages can be marked as clean");
-            DEBUG(page.Position == long.MaxValue, "to clean a page, position must be defined");
+            ENSURE(page.ShareCounter == BUFFER_WRITABLE, "only writable pages can be marked as clean");
+            ENSURE(_locker.IsReadLockHeld, "must be called inside a read lock");
+            ENSURE(page.Position != long.MaxValue, "to clean a page, position must be defined");
 
-            _locker.EnterReadLock();
+            // when I set shareCounter != BUFFER_WRITABLE means this page are now clean page (no writes anymore)
+            // (page instance as no concurrency)
+            // if page will be added into writer queue (pageChaged) shared counter must be 1
+            page.ShareCounter = pageChanged ? 1 : 0;
 
-            try
+            // add in cache (return page inside collection)
+            var result = _cache.AddOrUpdate(page.Position, page, (pos, current) =>
             {
-                // when I set shareCounter != -1 means this page are now clean page (no writes anymore)
-                // (page instance as no concurrency)
-                // if page will be added into writer queue (pageChaged) shared counter must be 1
-                page.ShareCounter = pageChanged ? 1 : 0;
+                ENSURE(current.ShareCounter == 0, "user must ensure this page are not in use when mark as read only");
 
-                // add in cache (return page inside collection)
-                var result = _cache.AddOrUpdate(page.Position, page, (pos, current) =>
+                // if page already in cache, this is a duplicate page in memory
+                // must update cached page with new page content
+                if (pageChanged)
                 {
-                    DEBUG(current.ShareCounter != 0, "user must ensure this page are not in use when mark as read only");
+                    Buffer.BlockCopy(page.Array, page.Offset, current.Array, current.Offset, PAGE_SIZE);
+                }
 
-                    // if page already in cache, this is a duplicate page in memory
-                    // must update cached page with new page content
-                    if (pageChanged)
-                    {
-                        Buffer.BlockCopy(page.Array, page.Offset, current.Array, current.Offset, PAGE_SIZE);
-                    }
+                // and duplicated page now can return to store list (contains non-zero data - Timestamp must be > 0)
+                page.ShareCounter = 0;
+                page.Position = long.MaxValue;
+                page.Timestamp = 1; // this will ensure run "clear buffer" when request NewPage()
+                _store.Enqueue(page);
 
-                    // and duplicated page now can return to store list (contains non-zero data - Timestamp must be > 0)
-                    page.ShareCounter = 0;
-                    page.Position = long.MaxValue;
-                    page.Timestamp = 1; // this will ensure "clear" when request NewPage()
-                    _store.Enqueue(page);
+                // same current page will be inside page
+                return current;
+            });
 
-                    // same current page will be inside page
-                    return current;
-                });
+            // result page are inside _cache (concurrent), so any change must be done with Interlocked
 
-                // update LRU
-                Interlocked.Exchange(ref result.Timestamp, DateTime.UtcNow.Ticks);
+            // update LRU
+            Interlocked.Exchange(ref result.Timestamp, DateTime.UtcNow.Ticks);
 
-                // result page must increment shared count - i can't just set to 1 because result page is concurrency page
-                Interlocked.Increment(ref result.ShareCounter);
+            // result page must increment shared count - i can't just set to 1 because result page is concurrency page
+            Interlocked.Increment(ref result.ShareCounter);
 
-                return result;
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return result;
         }
 
         /// <summary>
         /// After use a page (for read/write) must return this page into store
+        /// Lock must be done outside
         /// </summary>
         public void ReturnPage(PageBuffer page)
         {
-            DEBUG(page.ShareCounter == 0, "page must be shared OR writable before return");
+            ENSURE(page.ShareCounter != 0, "page must be shared OR writable before return");
+            ENSURE(_locker.IsReadLockHeld, "need read lock");
 
             // if page is writable it's mean that this page was requested to write BUT was not saved (was discard)
             // all pages that are queue to write are not in WRITABLE share counter state
-            if (page.ShareCounter == WRITABLE)
+            if (page.ShareCounter == BUFFER_WRITABLE)
             {
                 // update page instance with result page
                 page = this.MarkAsReadOnly(page, false);
 
-                DEBUG(page.ShareCounter < 1, "after mark page as read only, share counter must return >= 1");
+                ENSURE(page.ShareCounter >= 1, "after mark page as read only, share counter must return >= 1");
             }
 
             // now, decrement shareCounter
@@ -249,18 +243,18 @@ namespace LiteDB.Engine
         /// </summary>
         private PageBuffer GetPageFromStore()
         {
+            ENSURE(_locker.IsReadLockHeld, "need read lock");
+
             if (_store.TryDequeue(out var page))
             {
-                DEBUG(page.Position != long.MaxValue, "pages in memory store must have no position defined");
-                DEBUG(page.ShareCounter != 0, "pages in memory store must be non-shared");
+                ENSURE(page.Position == long.MaxValue, "pages in memory store must have no position defined");
+                ENSURE(page.ShareCounter == 0, "pages in memory store must be non-shared");
 
                 return page;
             }
             // if no more page inside memory store - extend store/reuse non-shared pages
             else
             {
-                DEBUG(_locker.IsReadLockHeld == false, "GetPageFromStore must be called inside read lock");
-
                 _locker.ExitReadLock();
 
                 this.Extend();

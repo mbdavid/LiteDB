@@ -69,17 +69,17 @@ namespace LiteDB.Demo
             var file = new MemoryFile(pool, aes);
             var reader = file.GetReader(true);
 
-            var buffer0 = reader.NewPage();
+            var buffer0 = reader.NewPage(true);
             var p0 = new HeaderPage(buffer0, 0);
 
             p0.UserVersion = 99;
             p0.NextPageID = 25;
             p0.PrevPageID = 26;
-            p0.UpdateCollections(new TransactionPages { NewCollections = new Dictionary<string, uint>() { ["myCol1"] = 1234 } });
+            //p0.UpdateCollections(new TransactionPages { NewCollections = new Dictionary<string, uint>() { ["myCol1"] = 1234 } });
 
             p0.UpdateBuffer();
 
-            var p1 = reader.NewPage();
+            var p1 = reader.NewPage(true);
             p1.Array.Fill((byte)25, p1.Offset, p1.Count);
 
 
@@ -99,8 +99,8 @@ namespace LiteDB.Demo
             var file = new MemoryFile(pool, aes);
             var reader = file.GetReader(true);
 
-            var p0 = reader.GetPage(0);
-            var p1 = reader.GetPage(8192);
+            var p0 = reader.GetPage(0, true);
+            var p1 = reader.GetPage(8192, true);
 
             var h = new HeaderPage(p0);
 

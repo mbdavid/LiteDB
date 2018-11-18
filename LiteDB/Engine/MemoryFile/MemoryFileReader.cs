@@ -19,32 +19,43 @@ namespace LiteDB.Engine
     internal class MemoryFileReader : IDisposable
     {
         private readonly MemoryStore _store;
+        private readonly ReaderWriterLockSlim _locker;
         private readonly StreamPool _pool;
-        private readonly Stream _stream;
         private readonly AesEncryption _aes;
         private readonly bool _writable;
 
-        private readonly List<PageBuffer> _pages = new List<PageBuffer>();
+        private readonly Stream _stream;
 
-        public MemoryFileReader(MemoryStore store, StreamPool pool, AesEncryption aes, bool writable)
+        private readonly List<PageBuffer> _tracker0 = new List<PageBuffer>(); // main tracker
+        private readonly List<PageBuffer> _tracker1 = new List<PageBuffer>();
+
+        public MemoryFileReader(MemoryStore store, ReaderWriterLockSlim locker, StreamPool pool, AesEncryption aes, bool writable)
         {
             _store = store;
+            _locker = locker;
             _pool = pool;
             _aes = aes;
             _writable = writable;
 
+            // rent a new stream for this reader
             _stream = _pool.Rent();
         }
 
-        public PageBuffer GetPage(long position)
+        /// <summary>
+        /// Load page from Stream. If release = true, page will released at "ReleasePages()". If false, only on "Dispose()"
+        /// </summary>
+        public PageBuffer GetPage(long position, bool release)
         {
-            DEBUG(_pages.Any(x => x.Position == position), "only 1 page buffer instance per reader");
+            ENSURE(_tracker0.Any(x => x.Position == position) == false, "only 1 page buffer instance per reader");
+            ENSURE(_tracker1.Any(x => x.Position == position) == false, "only 1 page buffer instance per reader");
 
             var page = _writable ?
                 _store.GetWritablePage(position, this.ReadStream) :
                 _store.GetReadablePage(position, this.ReadStream);
 
-            _pages.Add(page);
+            var track = release ? _tracker0 : _tracker1;
+
+            track.Add(page);
 
             return page;
         }
@@ -70,40 +81,59 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new page in memory to be used when engine need add page into datafile (log file first)
         /// This page has position yet - will be appended on file only when WriteAsync
+        /// If release = true, page will released at "ReleasePages()". If false, only on "Dispose()"
         /// </summary>
-        public PageBuffer NewPage()
+        public PageBuffer NewPage(bool release)
         {
-            DEBUG(_writable == false, "only writable readers can create new pages");
+            ENSURE(_writable, "only writable readers can create new pages");
 
             var page = _store.NewPage();
 
-            _pages.Add(page);
+            var track = release ? _tracker0 : _tracker1;
+
+            track.Add(page);
 
             return page;
         }
 
         /// <summary>
-        /// Release all loaded pages that was loaded by this reader. Decrement page share counter
+        /// Release all loaded pages that was loaded by this reader (marked as release). Decrement page share counter
         /// Release a page doesn't mean clear page - I'm only saing that this reader will not use this page anymore
         /// If page get 0 share counter will be cleaner in next cleanup thread
         /// </summary>
         public void ReleasePages()
         {
-            foreach(var page in _pages)
+            this.ReleasePages(_tracker0);
+        }
+
+        private void ReleasePages(List<PageBuffer> track)
+        {
+            _locker.EnterReadLock();
+
+            try
             {
-                _store.ReturnPage(page);
+                foreach (var page in track)
+                {
+                    _store.ReturnPage(page);
+                }
+            }
+            finally
+            {
+                _locker.ExitReadLock();
             }
 
-            _pages.Clear();
+            track.Clear();
         }
 
         /// <summary>
         /// Decrement share-counter for all pages used in this reader
         /// All page that was write before reader dispose was incremented, so will note be clean after here
+        /// Release all pages (including pages marked as release = false)
         /// </summary>
         public void Dispose()
         {
-            this.ReleasePages();
+            this.ReleasePages(_tracker0);
+            this.ReleasePages(_tracker1);
 
             // return stream back to pool
             _pool.Return(_stream);

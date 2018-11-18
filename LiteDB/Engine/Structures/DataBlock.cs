@@ -5,6 +5,11 @@ namespace LiteDB.Engine
 {
     internal class DataBlock
     {
+        /// <summary>
+        /// Get fixed part of DataBlock
+        /// </summary>
+        public const int DATA_BLOCK_FIXED_SIZE = 6; // DataIndex[1] + NextBlock[5]
+
         private readonly PageSegment _pageSegment;
         private readonly PageAddress _position;
         private readonly byte _dataIndex;

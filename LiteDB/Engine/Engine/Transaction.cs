@@ -7,7 +7,7 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
-        private ConcurrentDictionary<ObjectId, TransactionService> _transactions = new ConcurrentDictionary<ObjectId, TransactionService>();
+        private readonly ConcurrentDictionary<long, TransactionService> _transactions = new ConcurrentDictionary<long, TransactionService>();
         private LocalDataStoreSlot _slot = Thread.GetNamedDataSlot(Guid.NewGuid().ToString("n"));
 
         internal TransactionService GetTransaction(bool create, out bool isNew)
@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             {
                 isNew = true;
 
-                transaction = new TransactionService(_header, _locker, _dataFile, _wal, _log, (id) =>
+                transaction = new TransactionService(_header, _locker, _dataFile, _logFile, _walIndex, _log, (id) =>
                 {
                     Thread.SetData(_slot, null);
 

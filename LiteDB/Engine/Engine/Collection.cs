@@ -11,19 +11,43 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<string> GetCollectionNames()
         {
-            return _header.Collections.Keys.AsEnumerable();
+            return _header.GetCollections().Select(x => x.Key);
+        }
+
+        /// <summary>
+        /// Create new collection in database
+        /// </summary>
+        public bool CreateCollection(string name)
+        {
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
+
+            // drop collection is possible only in exclusive transaction for this
+            if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("CreateCollection", TransactionState.Active);
+
+            return this.AutoTransaction(transaction =>
+            {
+                var snapshot = transaction.CreateSnapshot(LockMode.Write, name, true);
+                var col = snapshot.CollectionPage;
+
+                return true;
+            });
+
+
+
         }
 
         /// <summary>
         /// Drop collection including all documents, indexes and extended pages (do not support transactions)
         /// </summary>
-        public bool DropCollection(string collection)
+        public bool DropCollection(string name)
         {
-            if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
+            if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
             // drop collection is possible only in exclusive transaction for this
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("DropCollection", TransactionState.Active);
 
+            return true;
+            /*
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
@@ -41,6 +65,7 @@ namespace LiteDB.Engine
 
                 return true;
             });
+            */
         }
 
         /// <summary>
@@ -55,6 +80,8 @@ namespace LiteDB.Engine
             // rename collection is possible only in exclusive transaction for this
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("RenameCollection", TransactionState.Active);
 
+            return true;
+            /*
             return this.AutoTransaction(transaction =>
             {
                 var currentSnapshot = transaction.CreateSnapshot(LockMode.Write, collection, false);
@@ -85,6 +112,7 @@ namespace LiteDB.Engine
 
                 return true;
             });
+            */
         }
     }
 }

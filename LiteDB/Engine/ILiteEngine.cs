@@ -23,11 +23,12 @@ namespace LiteDB.Engine
         int Delete(string collection, IEnumerable<BsonValue> ids);
         int DeleteMany(string collection, BsonExpression predicate);
 
+        bool CreateCollection(string name);
+        bool DropCollection(string name);
+        bool RenameCollection(string name, string newName);
+
         bool EnsureIndex(string collection, string name, BsonExpression expression, bool unique);
         bool DropIndex(string collection, string name);
-        bool DropCollection(string collection);
-        bool RenameCollection(string collection, string newName);
-
 
         BsonValue DbParam(string parameterName);
         bool DbParam(string parameterName, BsonValue value);

@@ -73,8 +73,7 @@ namespace LiteDB.Engine
             // do not move fordward if source finish
             if (_isEOF) return false;
 
-            //DEBUG
-            if (_currentPosition + count > _current.Count) throw new InvalidOperationException("fordward are only for current segment");
+            ENSURE(_currentPosition + count <= _current.Count, "fordward are only for current segment");
 
             _currentPosition += count;
             _position += count;
@@ -128,7 +127,7 @@ namespace LiteDB.Engine
                 if (_isEOF) break;
             }
 
-            DEBUG(count != bufferPosition, "current value must fit inside defined buffer");
+            ENSURE(count == bufferPosition, "current value must fit inside defined buffer");
 
             return bufferPosition;
         }
@@ -439,7 +438,7 @@ namespace LiteDB.Engine
             var end = _position + length - 5;
             var remaining = fields == null || fields.Count == 0 ? null : new HashSet<string>(fields, StringComparer.OrdinalIgnoreCase);
 
-            DEBUG(remaining != null && remaining.Contains("$"), "if contains $, should be be empty/full hash");
+            ENSURE(remaining != null && remaining.Contains("$"), remaining.Count == 1, "if contains $, should be be empty/full hash");
 
             var doc = new BsonDocument();
 

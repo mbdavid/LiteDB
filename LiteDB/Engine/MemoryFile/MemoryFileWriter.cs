@@ -19,9 +19,10 @@ namespace LiteDB.Engine
     {
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
         private readonly MemoryStore _store;
+        private readonly ReaderWriterLockSlim _locker;
+        private readonly AesEncryption _aes;
 
         private readonly Stream _stream;
-        private readonly AesEncryption _aes;
         private readonly DbFileMode _mode;
         private long _appendPosition;
 
@@ -30,12 +31,14 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public MemoryFileWriter(MemoryStore store, StreamPool pool, AesEncryption aes)
+        public MemoryFileWriter(MemoryStore store, ReaderWriterLockSlim locker, StreamPool pool, AesEncryption aes)
         {
-            _stream = pool.Writer;
             _store = store;
+            _locker = locker;
             _aes = aes;
+
             _mode = pool.Factory.FileMode;
+            _stream = pool.Writer;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
             _appendPosition = _stream.Length - PAGE_SIZE;
@@ -53,9 +56,10 @@ namespace LiteDB.Engine
         /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
-        public long QueuePage(PageBuffer page)
+        public void QueuePage(PageBuffer page)
         {
-            DEBUG(page.ShareCounter != -1, "to queue page to write, page must be writable");
+            ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to queue page to write, page must be writable");
+            ENSURE(_mode == DbFileMode.Logfile, page.Position == long.MaxValue, "for log file, page always must be with no position (will be add at end of file)");
 
             if (page.Position == long.MaxValue)
             {
@@ -73,12 +77,10 @@ namespace LiteDB.Engine
             // mark this page as read-only and get cached paged to enqueue to write
             var cached = _store.MarkAsReadOnly(page, true);
 
-            DEBUG(!(page.ShareCounter >= 2), "cached page must be shared at least twice (becasue this method must be called before release pages)");
-            DEBUG(page.Position != cached.Position, "cached and page position must be equals (are same updated page)");
+            ENSURE(page.ShareCounter >= 2, "cached page must be shared at least twice (becasue this method must be called before release pages)");
+            ENSURE(page.Position == cached.Position, "cached and page position must be equals (are same updated page)");
 
             _queue.Enqueue(cached);
-
-            return page.Position;
         }
 
         /// <summary>
@@ -118,8 +120,8 @@ namespace LiteDB.Engine
                     }
                     else
                     {
-                        DEBUG(page.ShareCounter <= 0, "page must be shared at least 1");
-                        DEBUG(_store.InCache(page) == false, "page (instance+position) must be cache inside");
+                        ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
+                        ENSURE(_store.InCache(page), "page (instance+position) must be cache inside");
 
                         // set stream position according to page
                         _stream.Position = page.Position;
@@ -141,8 +143,17 @@ namespace LiteDB.Engine
                             _stream.Write(page.Array, page.Offset, PAGE_SIZE);
                         }
 
-                        // decreasing share counter only after page is in disk
-                        _store.ReturnPage(page);
+                        // enter in read lock before return page
+                        _locker.EnterReadLock();
+
+                        try
+                        {
+                            _store.ReturnPage(page);
+                        }
+                        finally
+                        {
+                            _locker.ExitReadLock();
+                        }
                     }
                 }
 
