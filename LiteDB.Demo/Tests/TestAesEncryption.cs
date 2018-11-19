@@ -77,7 +77,7 @@ namespace LiteDB.Demo
             p0.PrevPageID = 26;
             //p0.UpdateCollections(new TransactionPages { NewCollections = new Dictionary<string, uint>() { ["myCol1"] = 1234 } });
 
-            p0.UpdateBuffer();
+            p0.GetBuffer(true);
 
             var p1 = reader.NewPage(true);
             p1.Array.Fill((byte)25, p1.Offset, p1.Count);

@@ -178,10 +178,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Write header data from variable into byte[] buffer. When override, call base.UpdateBuffer() after write your code
         /// </summary>
-        public virtual PageBuffer UpdateBuffer()
+        public virtual PageBuffer GetBuffer(bool update)
         {
             // using fixed position to be faster than BufferWriter
             ENSURE(this.PageID == _buffer.ReadUInt32(P_PAGE_ID), "pageID can't be changed");
+
+            if (update == false) return _buffer;
 
             // page information
             // PageID   - never change!

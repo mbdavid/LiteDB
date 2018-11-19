@@ -46,7 +46,7 @@ namespace LiteDB.Engine
 
                     if (lastBlock != null)
                     {
-                        lastBlock.UpdateNextBlock(dataBlock.Position);
+                        lastBlock.SetNextBlock(dataBlock.Position);
                     }
 
                     if (firstBlock == null) firstBlock = dataBlock;

@@ -194,8 +194,6 @@ namespace LiteDB.Engine
                 // create new database (empty header page)
                 var header = new HeaderPage(buffer, 0);
 
-                header.UpdateBuffer();
-
                 pool.Writer.Write(buffer.Array, 0, PAGE_SIZE);
 
                 if (_settings.InitialSize > 0)

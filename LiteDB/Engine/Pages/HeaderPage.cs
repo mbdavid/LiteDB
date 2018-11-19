@@ -127,8 +127,10 @@ namespace LiteDB.Engine
             }
         }
 
-        public override PageBuffer UpdateBuffer()
+        public override PageBuffer GetBuffer(bool update)
         {
+            if (update == false) return _buffer;
+
             _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
             _buffer.Write(this.LastCheckpoint, P_LAST_CHECKPOINT);
@@ -147,7 +149,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            return base.UpdateBuffer();
+            return base.GetBuffer(update);
         }
 
         /// <summary>

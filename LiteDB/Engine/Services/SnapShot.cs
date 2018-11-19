@@ -261,7 +261,7 @@ namespace LiteDB.Engine
                     pageID = free.PageID;
 
                     // get buffer inside re-used page
-                    buffer = free.UpdateBuffer();
+                    buffer = free.GetBuffer();
                 }
                 else
                 {

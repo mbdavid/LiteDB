@@ -59,7 +59,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read new DataBlock from filled pageSegment
+        /// Create new DataBlock and fill into buffer
         /// </summary>
         public DataBlock(DataPage page, PageSegment pageSegment, byte dataIndex, PageAddress nextBlock)
         {
@@ -79,7 +79,7 @@ namespace LiteDB.Engine
             _buffer = _pageSegment.Buffer.Slice(P_BUFFER, (_pageSegment.Length * PAGE_BLOCK_SIZE) - P_BUFFER - 1);
         }
 
-        public void UpdateNextBlock(PageAddress nextBlock)
+        public void SetNextBlock(PageAddress nextBlock)
         {
             _nextBlock = nextBlock;
 

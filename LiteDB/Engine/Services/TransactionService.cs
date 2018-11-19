@@ -125,7 +125,7 @@ namespace LiteDB.Engine
                         page.Item.IsConfirmed = markLastAsConfirmed;
                     }
 
-                    var buffer = page.Item.UpdateBuffer();
+                    var buffer = page.Item.GetBuffer(true);
 
                     buffer.Position = long.MaxValue; // position will be defined when enter in queue
 
@@ -213,7 +213,7 @@ namespace LiteDB.Engine
                                 // clone header page
                                 var buffer = logReader.NewPage(true);
 
-                                Buffer.BlockCopy(_header.UpdateBuffer().Array, 0, buffer.Array, buffer.Offset, buffer.Count);
+                                Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, buffer.Array, buffer.Offset, buffer.Count);
 
                                 // persist header in log file
                                 _logFile.WriteAsync(new[] { buffer });
@@ -323,7 +323,7 @@ namespace LiteDB.Engine
                                 TransactionID = transactionID
                             };
 
-                            yield return page.UpdateBuffer();
+                            yield return page.GetBuffer(true);
 
                             // update wal
                             pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
@@ -344,7 +344,7 @@ namespace LiteDB.Engine
                         var clone = logReader.NewPage(true);
                         var header = new HeaderPage(clone);
 
-                        Buffer.BlockCopy(_header.UpdateBuffer().Array, 0, clone.Array, clone.Offset, clone.Count);
+                        Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
 
                         yield return clone;
                     };

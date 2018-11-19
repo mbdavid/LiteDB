@@ -14,47 +14,59 @@ namespace LiteDB.Engine
                                                   1 + // KeyLength (byte)
                                                   PageAddress.SIZE + // DataBlock
                                                   1; // BsonType (byte)
-                                                  
+
+        private readonly PageAddress _position;
+        private readonly byte _level;
+        private readonly BsonValue _key;
+        private readonly PageAddress _dataBlock;
+
+        private PageAddress _prevNode;
+        private PageAddress _nextNode;
+        private PageAddress[] _prev;
+        private PageAddress[] _next;
+
+        private readonly IndexPage _page;
+        private readonly PageSegment _pageSegment;
 
         /// <summary>
         /// Position of this node inside a IndexPage (not persist)
         /// </summary>
-        public PageAddress Position { get; set; }
+        public PageAddress Position => _position;
+
+        /// <summary>
+        /// Skip-list level (0-31) - [1 byte]
+        /// </summary>
+        public byte Level => _level;
+
+        /// <summary>
+        /// The object value that was indexed (max 255 bytes value)
+        /// </summary>
+        public BsonValue Key => _key;
+
+        /// <summary>
+        /// Reference for a datablock address
+        /// </summary>
+        public PageAddress DataBlock => _dataBlock;
 
         /// <summary>
         /// Prev node in same document list index nodes [5 bytes]
         /// </summary>
-        public PageAddress PrevNode { get; set; }
+        public PageAddress PrevNode => _prevNode;
 
         /// <summary>
         /// Next node in same document list index nodes  [5 bytes]
         /// </summary>
-        public PageAddress NextNode { get; set; }
+        public PageAddress NextNode => _nextNode;
 
         /// <summary>
         /// Link to prev value (used in skip lists - Prev.Length = Next.Length) [5 bytes]
         /// </summary>
-        public PageAddress[] Prev { get; set; }
+        public PageAddress[] Prev => _prev;
 
         /// <summary>
         /// Link to next value (used in skip lists - Prev.Length = Next.Length)
         /// </summary>
-        public PageAddress[] Next { get; set; }
-
-        /// <summary>
-        /// The object value that was indexed
-        /// </summary>
-        public BsonValue Key { get; set; }
-
-        /// <summary>
-        /// Reference for a datablock - the value
-        /// </summary>
-        public PageAddress DataBlock { get; set; }
-
-        /// <summary>
-        /// Get page reference
-        /// </summary>
-//**        public IndexPage Page { get; set; }
+        public PageAddress[] Next => _next;
 
         /// <summary>
         /// Returns Next (order == 1) OR Prev (order == -1)
@@ -65,45 +77,76 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Returns if this node is header or tail from collection Index
+        /// Calculate how many bytes this node will need on page segment
         /// </summary>
-        public bool IsHeadTail(CollectionIndex index)
+        public static int GetNodeLength(byte level, BsonValue key)
         {
-            return this.Position == index.HeadNode || this.Position == index.TailNode;
+            throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Get the length size of this node in disk - not persistable
+        /// Get how many bytes will be used to store this value. Must consider:
+        /// [1 byte] - BsonType
+        /// [1 byte] - KeyLength (used only in String|Byte[])
+        /// [N bytes] - BsonValue in bytes (0-255)
         /// </summary>
-        public int Length
+        public static int GetKeyLength(BsonValue key)
         {
-            get
-            {
-                return IndexNode.INDEX_NODE_FIXED_SIZE +
-                    (this.Prev.Length * PageAddress.SIZE * 2) +  // Prev + Next
-                    this.Key.GetBytesCount(false); // bytes count in BsonValue
-            }
+            throw new NotImplementedException();
         }
 
-        private IndexNode()
+        /// <summary>
+        /// Read index node from page segment
+        /// </summary>
+        public IndexNode(IndexPage page, PageSegment pageSegment)
         {
         }
 
-        public IndexNode(byte level)
+        /// <summary>
+        /// Create new index node and persist into pageSegment
+        /// </summary>
+        public IndexNode(IndexPage page, PageSegment pageSegment, byte level, BsonValue key, PageAddress dataBlock)
         {
-            this.Position = PageAddress.Empty;
-            this.PrevNode = PageAddress.Empty;
-            this.NextNode = PageAddress.Empty;
-            this.DataBlock = PageAddress.Empty;
-            this.Prev = new PageAddress[level];
-            this.Next = new PageAddress[level];
+            _position = new PageAddress(page.PageID, pageSegment.Index);
+            _level = level;
+            _key = key;
+            _dataBlock = dataBlock;
+
+            _prevNode = PageAddress.Empty;
+            _nextNode = PageAddress.Empty;
+
+            _next = new PageAddress[level];
+            _prev = new PageAddress[level];
 
             for (var i = 0; i < level; i++)
             {
-                this.Prev[i] = PageAddress.Empty;
-                this.Next[i] = PageAddress.Empty;
+                _prev[i] = PageAddress.Empty;
+                _next[i] = PageAddress.Empty;
             }
+
+            // persist all data into pageSegment
+            // _pageSegment.Buffer[P_LEVEL] = _level;
         }
+
+        // need update methods (persist also in pageSegment) - set page.isdity = true
+        public void SetPrevNode(PageAddress value)
+        {
+        }
+
+        public void SetNextNode(PageAddress value)
+        {
+        }
+
+        public void SetPrev(byte level, PageAddress value)
+        {
+        }
+
+        public void SetNext(byte level, PageAddress value)
+        {
+        }
+
+
+
     }
 
     internal class IndexNodeComparer : IEqualityComparer<IndexNode>

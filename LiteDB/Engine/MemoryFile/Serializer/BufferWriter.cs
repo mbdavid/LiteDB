@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     /// Write data into multiple array segment
     /// NO ThreadSafe
     /// </summary>
-    public class BufferWriter : IDisposable
+    internal class BufferWriter : IDisposable
     {
         private readonly IEnumerator<BufferSlice> _source;
 

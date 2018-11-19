@@ -87,7 +87,7 @@ namespace LiteDB.Demo
 
                     if (lastBlock != null)
                     {
-                        lastBlock.UpdateNextBlock(dataBlock.Position);
+                        lastBlock.SetNextBlock(dataBlock.Position);
                     }
 
                     if (firstBlock == null) firstBlock = dataBlock;
@@ -180,7 +180,7 @@ namespace LiteDB.Demo
 
                     if (lastBlock != null)
                     {
-                        lastBlock.UpdateNextBlock(dataBlock.Position);
+                        lastBlock.SetNextBlock(dataBlock.Position);
                     }
 
                     yield return dataBlock.Buffer;
@@ -193,7 +193,7 @@ namespace LiteDB.Demo
                 }
 
                 // update last block with no next block
-                lastBlock.UpdateNextBlock(PageAddress.Empty);
+                lastBlock.SetNextBlock(PageAddress.Empty);
 
                 // delete extra datablock
                 this.Delete(address);
@@ -210,7 +210,7 @@ namespace LiteDB.Demo
 
         public void Dispose()
         {
-            _file.WriteAsync(_local.Values.Where(x => x.IsDirty).Select(x => x.UpdateBuffer()));
+            _file.WriteAsync(_local.Values.Where(x => x.IsDirty).Select(x => x.GetBuffer(true)));
             _reader.Dispose();
             _file.Dispose();
         }

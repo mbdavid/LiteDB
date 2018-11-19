@@ -110,8 +110,10 @@ namespace LiteDB.Engine
             }
         }
 
-        public override PageBuffer UpdateBuffer()
+        public override PageBuffer GetBuffer(bool update)
         {
+            if (update == false) return _buffer;
+
             var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);
 
             using (var w = new BufferWriter(area))
@@ -152,7 +154,7 @@ namespace LiteDB.Engine
                 }
             }
 
-            return base.UpdateBuffer();
+            return base.GetBuffer(update);
         }
 
         /// <summary>

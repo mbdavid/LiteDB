@@ -17,7 +17,7 @@ namespace LiteDB.Engine
     /// Read multiple array segment as a single linear segment - Fordward Only
     /// NO ThreadSafe
     /// </summary>
-    public class BufferReader : IDisposable
+    internal class BufferReader : IDisposable
     {
         private readonly IEnumerator<BufferSlice> _source;
         private readonly bool _utcDate;
