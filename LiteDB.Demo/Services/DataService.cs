@@ -1,218 +1,218 @@
-﻿using LiteDB;
-using LiteDB.Engine;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿//using LiteDB;
+//using LiteDB.Engine;
+//using System;
+//using System.Collections.Generic;
+//using System.Diagnostics;
+//using System.IO;
+//using System.Linq;
+//using System.Linq.Expressions;
+//using System.Text;
+//using System.Threading;
+//using System.Threading.Tasks;
 
-namespace LiteDB.Demo
-{
-    internal class DataService : IDisposable
-    {
-        private FileStreamFactory _factory;
-        private StreamPool _pool;
-        private MemoryFile _file;
-        private MemoryFileReader _reader;
+//namespace LiteDB.Demo
+//{
+//    internal class DataService : IDisposable
+//    {
+//        private FileStreamFactory _factory;
+//        private StreamPool _pool;
+//        private MemoryFile _file;
+//        private MemoryFileReader _reader;
 
-        private uint _lastPageID = 0;
-        private Dictionary<uint, DataPage> _local = new Dictionary<uint, DataPage>();
+//        private uint _lastPageID = 0;
+//        private Dictionary<uint, DataPage> _local = new Dictionary<uint, DataPage>();
 
-        public DataService(string path)
-        {
-            _factory = new FileStreamFactory(path, DbFileMode.Logfile, false);
-            _pool = new StreamPool(_factory);
-            _file = new MemoryFile(_pool, null);
-            _reader = _file.GetReader(true);
-        }
+//        public DataService(string path)
+//        {
+//            _factory = new FileStreamFactory(path, DbFileMode.Logfile, false);
+//            _pool = new StreamPool(_factory);
+//            _file = new MemoryFile(_pool, null);
+//            _reader = _file.GetReader(true);
+//        }
 
-        private DataPage GetNewPage(int minBytes)
-        {
-            var freeBlocks = (byte)((minBytes / 32) + 1);
+//        private DataPage GetNewPage(int minBytes)
+//        {
+//            var freeBlocks = (byte)((minBytes / 32) + 1);
 
-            // check if there is pages in my dirty list
-            var p = _local.Values.FirstOrDefault(x => x.FreeBlocks >= freeBlocks);
+//            // check if there is pages in my dirty list
+//            var p = _local.Values.FirstOrDefault(x => x.FreeBlocks >= freeBlocks);
 
-            if (p == null)
-            {
-                p = new DataPage(_reader.NewPage(true), _lastPageID++);
+//            if (p == null)
+//            {
+//                p = new DataPage(_reader.NewPage(true), _lastPageID++);
 
-                _local[p.PageID] = p;
-            }
+//                _local[p.PageID] = p;
+//            }
 
-            p.IsDirty = true;
+//            p.IsDirty = true;
 
-            return p;
-        }
+//            return p;
+//        }
 
-        private DataPage GetPage(uint pageID, bool markAsDirty)
-        {
-            if(_local.TryGetValue(pageID, out var page))
-            {
-                if (markAsDirty) page.IsDirty = true;
+//        private DataPage GetPage(uint pageID, bool markAsDirty)
+//        {
+//            if(_local.TryGetValue(pageID, out var page))
+//            {
+//                if (markAsDirty) page.IsDirty = true;
 
-                return page;
-            }
+//                return page;
+//            }
 
-            page = new DataPage(_reader.GetPage(pageID * 8192, true));
-            _local[pageID] = page;
-            if (markAsDirty) page.IsDirty = true;
-            return page;
-        }
+//            page = new DataPage(_reader.GetPage(pageID * 8192, true));
+//            _local[pageID] = page;
+//            if (markAsDirty) page.IsDirty = true;
+//            return page;
+//        }
 
-        public DataBlock Insert(BsonDocument doc)
-        {
-            var bytesLeft = doc.GetBytesCount(true);
+//        public DataBlock Insert(BsonDocument doc)
+//        {
+//            var bytesLeft = doc.GetBytesCount(true);
 
-            if (bytesLeft > 2 * 1024 * 1024) throw new Exception("too big - 2mb max");
+//            if (bytesLeft > 2 * 1024 * 1024) throw new Exception("too big - 2mb max");
 
-            DataBlock firstBlock = null;
+//            DataBlock firstBlock = null;
 
-            IEnumerable<BufferSlice> source()
-            {
-                byte dataIndex = 0;
-                DataBlock lastBlock = null;
+//            IEnumerable<BufferSlice> source()
+//            {
+//                byte dataIndex = 0;
+//                DataBlock lastBlock = null;
 
-                while (bytesLeft > 0)
-                {
-                    var bytesToCopy = Math.Min(bytesLeft, (254 * 32) - 7); // 254 blocos - 6 blockHeader - 1 segmentHeader
-                    var dataPage = this.GetNewPage(bytesToCopy);
-                    var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
+//                while (bytesLeft > 0)
+//                {
+//                    var bytesToCopy = Math.Min(bytesLeft, (254 * 32) - 7); // 254 blocos - 6 blockHeader - 1 segmentHeader
+//                    var dataPage = this.GetNewPage(bytesToCopy);
+//                    var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
 
-                    dataIndex++;
+//                    dataIndex++;
 
-                    if (lastBlock != null)
-                    {
-                        lastBlock.SetNextBlock(dataBlock.Position);
-                    }
+//                    if (lastBlock != null)
+//                    {
+//                        lastBlock.SetNextBlock(dataBlock.Position);
+//                    }
 
-                    if (firstBlock == null) firstBlock = dataBlock;
+//                    if (firstBlock == null) firstBlock = dataBlock;
 
-                    yield return dataBlock.Buffer;
+//                    yield return dataBlock.Buffer;
 
-                    lastBlock = dataBlock;
+//                    lastBlock = dataBlock;
 
-                    bytesLeft -= bytesToCopy;
-                }
-            }
+//                    bytesLeft -= bytesToCopy;
+//                }
+//            }
 
-            using (var w = new BufferWriter(source()))
-            {
-                w.WriteDocument(doc);
-            }
+//            using (var w = new BufferWriter(source()))
+//            {
+//                w.WriteDocument(doc);
+//            }
 
-            return firstBlock;
-        }
+//            return firstBlock;
+//        }
 
-        public BsonDocument Read(PageAddress address)
-        {
-            IEnumerable<BufferSlice> source()
-            {
-                while(address != PageAddress.Empty)
-                {
-                    var dataPage = this.GetPage(address.PageID, false);
+//        public BsonDocument Read(PageAddress address)
+//        {
+//            IEnumerable<BufferSlice> source()
+//            {
+//                while(address != PageAddress.Empty)
+//                {
+//                    var dataPage = this.GetPage(address.PageID, false);
 
-                    var block = dataPage.ReadBlock(address.Index);
+//                    var block = dataPage.ReadBlock(address.Index);
 
-                    yield return block.Buffer;
+//                    yield return block.Buffer;
 
-                    address = block.NextBlock;
-                }
-            }
+//                    address = block.NextBlock;
+//                }
+//            }
 
-            using (var r = new BufferReader(source(), true))
-            {
-                return r.ReadDocument();
-            }
-        }
+//            using (var r = new BufferReader(source(), true))
+//            {
+//                return r.ReadDocument();
+//            }
+//        }
 
-        public void Delete(PageAddress address)
-        {
-            while (address != PageAddress.Empty)
-            {
-                var dataPage = this.GetPage(address.PageID, true);
-                var block = dataPage.DeleteBlock(address.Index);
+//        public void Delete(PageAddress address)
+//        {
+//            while (address != PageAddress.Empty)
+//            {
+//                var dataPage = this.GetPage(address.PageID, true);
+//                var block = dataPage.DeleteBlock(address.Index);
 
-                address = block.NextBlock;
-            }
-        }
+//                address = block.NextBlock;
+//            }
+//        }
 
-        public void Update(PageAddress address, BsonDocument doc)
-        {
-            var bytesLeft = doc.GetBytesCount(true);
+//        public void Update(PageAddress address, BsonDocument doc)
+//        {
+//            var bytesLeft = doc.GetBytesCount(true);
 
-            if (bytesLeft > 2 * 1024 * 1024) throw new Exception("too big - 2mb max");
+//            if (bytesLeft > 2 * 1024 * 1024) throw new Exception("too big - 2mb max");
 
-            IEnumerable<BufferSlice> source()
-            {
-                byte dataIndex = 0;
-                DataBlock lastBlock = null;
+//            IEnumerable<BufferSlice> source()
+//            {
+//                byte dataIndex = 0;
+//                DataBlock lastBlock = null;
 
-                while (bytesLeft > 0)
-                {
-                    var bytesToCopy = 0;
-                    DataBlock dataBlock;
+//                while (bytesLeft > 0)
+//                {
+//                    var bytesToCopy = 0;
+//                    DataBlock dataBlock;
 
-                    // new page
-                    if (address == PageAddress.Empty)
-                    {
-                        bytesToCopy = Math.Min(bytesLeft, (254 * 32) - 7); // 254 blocos - 6 blockHeader - 1 segmentHeader
-                        var dataPage = this.GetNewPage(bytesToCopy);
+//                    // new page
+//                    if (address == PageAddress.Empty)
+//                    {
+//                        bytesToCopy = Math.Min(bytesLeft, (254 * 32) - 7); // 254 blocos - 6 blockHeader - 1 segmentHeader
+//                        var dataPage = this.GetNewPage(bytesToCopy);
 
-                        dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
-                    }
-                    // update current page
-                    else
-                    {
-                        var dataPage = this.GetPage(address.PageID, true);
-                        var currentBlock = dataPage.ReadBlock(address.Index);
-                        var spaceInPage = (dataPage.FreeBlocks * 32) + currentBlock.Buffer.Count;
+//                        dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
+//                    }
+//                    // update current page
+//                    else
+//                    {
+//                        var dataPage = this.GetPage(address.PageID, true);
+//                        var currentBlock = dataPage.ReadBlock(address.Index);
+//                        var spaceInPage = (dataPage.FreeBlocks * 32) + currentBlock.Buffer.Count;
 
-                        bytesToCopy = Math.Min(bytesLeft, spaceInPage);
-                        dataBlock = dataPage.UpdateBlock(currentBlock, bytesToCopy);
-                    }
+//                        bytesToCopy = Math.Min(bytesLeft, spaceInPage);
+//                        dataBlock = dataPage.UpdateBlock(currentBlock, bytesToCopy);
+//                    }
 
-                    dataIndex++;
+//                    dataIndex++;
 
-                    if (lastBlock != null)
-                    {
-                        lastBlock.SetNextBlock(dataBlock.Position);
-                    }
+//                    if (lastBlock != null)
+//                    {
+//                        lastBlock.SetNextBlock(dataBlock.Position);
+//                    }
 
-                    yield return dataBlock.Buffer;
+//                    yield return dataBlock.Buffer;
 
-                    lastBlock = dataBlock;
+//                    lastBlock = dataBlock;
 
-                    address = dataBlock.NextBlock;
+//                    address = dataBlock.NextBlock;
 
-                    bytesLeft -= bytesToCopy;
-                }
+//                    bytesLeft -= bytesToCopy;
+//                }
 
-                // update last block with no next block
-                lastBlock.SetNextBlock(PageAddress.Empty);
+//                // update last block with no next block
+//                lastBlock.SetNextBlock(PageAddress.Empty);
 
-                // delete extra datablock
-                this.Delete(address);
-            }
+//                // delete extra datablock
+//                this.Delete(address);
+//            }
 
-            using (var w = new BufferWriter(source()))
-            {
-                w.WriteDocument(doc);
+//            using (var w = new BufferWriter(source()))
+//            {
+//                w.WriteDocument(doc);
 
-                // force consume all source enumerable
-                w.Consume();
-            }
-        }
+//                // force consume all source enumerable
+//                w.Consume();
+//            }
+//        }
 
-        public void Dispose()
-        {
-            _file.WriteAsync(_local.Values.Where(x => x.IsDirty).Select(x => x.GetBuffer(true)));
-            _reader.Dispose();
-            _file.Dispose();
-        }
-    }
-}
+//        public void Dispose()
+//        {
+//            _file.WriteAsync(_local.Values.Where(x => x.IsDirty).Select(x => x.GetBuffer(true)));
+//            _reader.Dispose();
+//            _file.Dispose();
+//        }
+//    }
+//}

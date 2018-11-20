@@ -24,21 +24,18 @@ namespace LiteDB.Engine
         private readonly AesEncryption _aes;
         private readonly bool _writable;
 
-        private readonly Stream _stream;
+        private readonly Lazy<Stream> _stream;
 
         private readonly List<PageBuffer> _tracker0 = new List<PageBuffer>(); // main tracker
         private readonly List<PageBuffer> _tracker1 = new List<PageBuffer>();
 
-        public MemoryFileReader(MemoryStore store, ReaderWriterLockSlim locker, StreamPool pool, AesEncryption aes, bool writable)
+        public MemoryFileReader(MemoryStore store, ReaderWriterLockSlim locker, Lazy<Stream> stream, AesEncryption aes, bool writable)
         {
             _store = store;
             _locker = locker;
-            _pool = pool;
+            _stream = stream;
             _aes = aes;
             _writable = writable;
-
-            // rent a new stream for this reader
-            _stream = _pool.Rent();
         }
 
         /// <summary>
@@ -65,16 +62,16 @@ namespace LiteDB.Engine
         /// </summary>
         private void ReadStream(long position, BufferSlice buffer)
         {
-            _stream.Position = position;
+            _stream.Value.Position = position;
 
             // read encrypted or plain data from Stream into buffer
             if (_aes != null)
             {
-                _aes.Decrypt(_stream, buffer);
+                _aes.Decrypt(_stream.Value, buffer);
             }
             else
             {
-                _stream.Read(buffer.Array, buffer.Offset, buffer.Count);
+                _stream.Value.Read(buffer.Array, buffer.Offset, buffer.Count);
             }
         }
 
@@ -134,9 +131,6 @@ namespace LiteDB.Engine
         {
             this.ReleasePages(_tracker0);
             this.ReleasePages(_tracker1);
-
-            // return stream back to pool
-            _pool.Return(_stream);
         }
     }
 }

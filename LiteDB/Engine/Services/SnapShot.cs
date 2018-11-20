@@ -16,7 +16,7 @@ namespace LiteDB.Engine
         private readonly HeaderPage _header;
         private readonly LockService _locker;
         private readonly MemoryFileReader _dataReader;
-        private readonly Lazy<MemoryFileReader> _logReader;
+        private readonly MemoryFileReader _logReader;
         private readonly WalIndexService _walIndex;
 
         // instances from transaction
@@ -45,7 +45,7 @@ namespace LiteDB.Engine
         // local page cache - contains only pages about this collection (but do not contains CollectionPage - use this.CollectionPage)
         private readonly Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
 
-        public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalIndexService walIndex, MemoryFile dataFile, MemoryFile logFile, bool addIfNotExists)
+        public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalIndexService walIndex, MemoryFileThread dataFile, MemoryFileThread logFile, bool addIfNotExists)
         {
             this.Mode = mode;
 
@@ -58,7 +58,7 @@ namespace LiteDB.Engine
 
             // initialize data/log readers
             _dataReader = dataFile.GetReader(mode == LockMode.Write);
-            _logReader = new Lazy<MemoryFileReader>(() => logFile.GetReader(mode == LockMode.Write));
+            _logReader = logFile.GetReader(mode == LockMode.Write);
 
             // enter in lock mode according initial mode
             if (mode == LockMode.Read)
@@ -107,11 +107,7 @@ namespace LiteDB.Engine
         {
             _localPages.Clear();
             _dataReader.ReleasePages();
-
-            if(_logReader.IsValueCreated)
-            {
-                _logReader.Value.ReleasePages();
-            }
+            _logReader.ReleasePages();
         }
 
         /// <summary>
@@ -125,11 +121,7 @@ namespace LiteDB.Engine
         public void Dispose()
         {
             _dataReader.Dispose();
-
-            if (_logReader.IsValueCreated)
-            {
-                _logReader.Value.Dispose();
-            }
+            _logReader.Dispose();
 
             if (this.Mode == LockMode.Read)
             {
@@ -183,7 +175,7 @@ namespace LiteDB.Engine
             // if not inside local pages can be a dirty page saved in log file
             if (_transPages.DirtyPages.TryGetValue(pageID, out var position))
             {
-                var buffer = _logReader.Value.GetPage(position.Position, release);
+                var buffer = _logReader.GetPage(position.Position, release);
                 var dirty = BasePage.ReadPage<T>(buffer);
 
                 return dirty;
@@ -194,7 +186,7 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var buffer = _logReader.Value.GetPage(position.Position, release);
+                var buffer = _logReader.GetPage(position.Position, release);
                 var logPage = BasePage.ReadPage<T>(buffer);
 
                 // clear some data inside this page (will be override when write on log file)
@@ -271,7 +263,7 @@ namespace LiteDB.Engine
                     pageID = ++_header.LastPageID;
 
                     // request for a new buffer
-                    buffer = _logReader.Value.NewPage(release);
+                    buffer = _logReader.NewPage(release);
                 }
             }
 
