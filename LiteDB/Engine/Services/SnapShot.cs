@@ -334,7 +334,7 @@ namespace LiteDB.Engine
             }
 
             // remove from linked-list
-            //** TODO this.RemoveFreeList<BasePage>(page, )
+            ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
 
             // define page as empty
             page.PageType = PageType.Empty;
@@ -406,10 +406,20 @@ namespace LiteDB.Engine
         /// </summary>
         public void AddOrRemoveFreeList<T>(T page, int initialSlot) where T : BasePage
         {
+            ENSURE(page.PageType == PageType.Index || page.PageType == PageType.Data, "only index/data page contains free linked-list");
+
             var newSlot = BasePage.FreeIndexSlot(page.FreeBlocks);
 
             // there is no slot change - just exit (no need any change)
             if (newSlot == initialSlot) return;
+
+            // select if I will get from free index list or data list
+            var freeLists = page.PageType == PageType.Index ?
+                this.CollectionPage.FreeIndexPageID :
+                this.CollectionPage.FreeDataPageID;
+
+            // remove from intial slot
+            this.RemoveFreeList<T>(page, ref freeLists[initialSlot]);
 
             // if there is no items, delete page
             if (page.ItemsCount == 0)
@@ -418,14 +428,6 @@ namespace LiteDB.Engine
             }
             else
             {
-                // select if I will get from free index list or data list
-                var freeLists = page.PageType == PageType.Index ?
-                    this.CollectionPage.FreeIndexPageID :
-                    this.CollectionPage.FreeDataPageID;
-
-                // remove from intial slot
-                this.RemoveFreeList<T>(page, ref freeLists[initialSlot]);
-
                 // add into current slot
                 this.AddFreeList<T>(page, ref freeLists[newSlot]);
             }
@@ -436,6 +438,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void AddFreeList<T>(T page, ref uint startPageID) where T : BasePage
         {
+            ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "only non-linked page can be added in linked list");
+
             // fix first/next page
             if (startPageID != uint.MaxValue)
             {
