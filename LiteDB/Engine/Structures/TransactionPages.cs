@@ -18,12 +18,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Contains all dirty pages already persist in LOG file (used in all snapshots). Store in [uint, PagePosition] to reuse same method in save pages into log and get saved page positions on log
         /// </summary>
-        public Dictionary<uint, PagePosition> DirtyPages { get; private set; } = new Dictionary<uint, PagePosition>();
+        public Dictionary<uint, PagePosition> DirtyPages { get; } = new Dictionary<uint, PagePosition>();
 
         /// <summary>
         /// Handle created pages during transaction (for rollback) - Is a list because order is important
         /// </summary>
-        public List<uint> NewPages { get; private set; } = new List<uint>();
+        public List<uint> NewPages { get; } = new List<uint>();
 
         /// <summary>
         /// First deleted pageID 

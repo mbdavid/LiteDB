@@ -35,7 +35,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Represent page number - start in 0 with HeaderPage [4 bytes]
         /// </summary>
-        public uint PageID { get; private set; }
+        public uint PageID { get; }
 
         /// <summary>
         /// Indicate the page type [1 byte]

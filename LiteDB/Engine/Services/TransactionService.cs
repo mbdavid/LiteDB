@@ -28,11 +28,11 @@ namespace LiteDB.Engine
         private bool _shutdown = false;
 
         // transaction info
-        public int ThreadID { get; private set; } = Thread.CurrentThread.ManagedThreadId;
-        public long TransactionID { get; private set; } = System.Diagnostics.Stopwatch.GetTimestamp();
+        public int ThreadID { get; } = Thread.CurrentThread.ManagedThreadId;
+        public long TransactionID { get; } = System.Diagnostics.Stopwatch.GetTimestamp();
         public TransactionState State { get; private set; } = TransactionState.New;
-        public Dictionary<string, Snapshot> Snapshots => _snapshots;
-        public TransactionPages Pages => _transPages;
+        //**public Dictionary<string, Snapshot> Snapshots => _snapshots;
+        //**public TransactionPages Pages => _transPages;
 
         public TransactionService(HeaderPage header, LockService locker, MemoryFile dataFile, MemoryFile logFile, WalIndexService walIndex, Logger log, Action<long> done)
         {

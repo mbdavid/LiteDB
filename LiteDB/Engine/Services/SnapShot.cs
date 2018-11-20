@@ -22,27 +22,39 @@ namespace LiteDB.Engine
         // instances from transaction
         private readonly TransactionPages _transPages;
 
-        // snapshot controls
-        private readonly string _collectionName;
-        private readonly CollectionPage _collectionPage;
-        private readonly LockMode _mode;
-        private readonly int _readVersion;
+        /// <summary>
+        /// Read WAL version data
+        /// </summary>
+        public int ReadVersion { get; }
 
-        // local page cache - contains only pages about this collection (but do not contains CollectionPage - use _collectionPage)
+        /// <summary>
+        /// Identify Snapshot mode (read or write)
+        /// </summary>
+        public LockMode Mode { get; }
+
+        /// <summary>
+        /// Get collection name - always have a value
+        /// </summary>
+        public string CollectionName { get; }
+
+        /// <summary>
+        /// Get collection page - can be null
+        /// </summary>
+        public CollectionPage CollectionPage { get; }
+
+        // local page cache - contains only pages about this collection (but do not contains CollectionPage - use this.CollectionPage)
         private readonly Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
-
-        // expose services
-        public int ReadVersion => _readVersion;
-        public LockMode Mode => _mode;
 
         public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalIndexService walIndex, MemoryFile dataFile, MemoryFile logFile, bool addIfNotExists)
         {
-            _mode = mode;
-            _collectionName = collectionName;
+            this.Mode = mode;
+
             _header = header;
             _transPages = transPages;
             _locker = locker;
             _walIndex = walIndex;
+
+            this.CollectionName = collectionName;
 
             // initialize data/log readers
             _dataReader = dataFile.GetReader(mode == LockMode.Write);
@@ -51,20 +63,20 @@ namespace LiteDB.Engine
             // enter in lock mode according initial mode
             if (mode == LockMode.Read)
             {
-                _locker.EnterRead(_collectionName);
+                _locker.EnterRead(this.CollectionName);
             }
             else
             {
-                _locker.EnterReserved(_collectionName);
+                _locker.EnterReserved(this.CollectionName);
             }
 
             // get lastest read version from wal-index
-            _readVersion = _walIndex.CurrentReadVersion;
+            this.ReadVersion = _walIndex.CurrentReadVersion;
 
             var srv = new CollectionService(_header, this, _transPages);
 
             // read collection (create if new - load virtual too)
-            _collectionPage = srv.Get(_collectionName, addIfNotExists);
+            this.CollectionPage = srv.Get(this.CollectionName, addIfNotExists);
         }
 
         /// <summary>
@@ -73,7 +85,7 @@ namespace LiteDB.Engine
         public IEnumerable<BasePage> GetDirtyPages(bool includeCollectionPage)
         {
             // if snapshot is read only, just exit
-            if (_mode == LockMode.Read) yield break;
+            if (this.Mode == LockMode.Read) yield break;
 
             foreach(var page in _localPages.Values.Where(x => x.IsDirty))
             {
@@ -82,9 +94,9 @@ namespace LiteDB.Engine
                 yield return page;
             }
 
-            if (includeCollectionPage && _collectionPage != null && _collectionPage.IsDirty)
+            if (includeCollectionPage && this.CollectionPage != null && this.CollectionPage.IsDirty)
             {
-                yield return _collectionPage;
+                yield return this.CollectionPage;
             }
         }
 
@@ -108,16 +120,6 @@ namespace LiteDB.Engine
         public int LocalPagesCount => _localPages.Count;
 
         /// <summary>
-        /// Get collection name - always have a value
-        /// </summary>
-        public string CollectionName => _collectionName;
-
-        /// <summary>
-        /// Get collection page - can be null
-        /// </summary>
-        public CollectionPage CollectionPage => _collectionPage;
-
-        /// <summary>
         /// Return all collection Unlock all collections locks on dispose
         /// </summary>
         public void Dispose()
@@ -129,13 +131,13 @@ namespace LiteDB.Engine
                 _logReader.Value.Dispose();
             }
 
-            if (_mode == LockMode.Read)
+            if (this.Mode == LockMode.Read)
             {
-                _locker.ExitRead(_collectionName);
+                _locker.ExitRead(this.CollectionName);
             }
-            else if(_mode == LockMode.Write)
+            else if(this.Mode == LockMode.Write)
             {
-                _locker.ExitReserved(_collectionName);
+                _locker.ExitReserved(this.CollectionName);
             }
         }
 
@@ -188,7 +190,7 @@ namespace LiteDB.Engine
             }
 
             // now, look inside wal-index
-            var pos = _walIndex.GetPageIndex(pageID, _readVersion);
+            var pos = _walIndex.GetPageIndex(pageID, this.ReadVersion);
 
             if (pos != long.MaxValue)
             {
@@ -261,7 +263,7 @@ namespace LiteDB.Engine
                     pageID = free.PageID;
 
                     // get buffer inside re-used page
-                    buffer = free.GetBuffer();
+                    buffer = free.GetBuffer(false);
                 }
                 else
                 {
@@ -281,8 +283,8 @@ namespace LiteDB.Engine
                 _localPages[pageID] = page;
             }
 
-            // define ColID for this new page (if _collectionPage is null, so this is new collection page)
-            page.ColID = _collectionPage?.PageID ?? page.PageID;
+            // define ColID for this new page (if this.CollectionPage is null, so this is new collection page)
+            page.ColID = this.CollectionPage?.PageID ?? page.PageID;
 
             // define as dirty to override pageType
             page.IsDirty = true;
@@ -355,8 +357,8 @@ namespace LiteDB.Engine
 
             // select if I will get from free index list or data list
             var freeLists = typeof(T) == typeof(IndexPage) ?
-                _collectionPage.FreeIndexPageID :
-                _collectionPage.FreeDataPageID;
+                this.CollectionPage.FreeIndexPageID :
+                this.CollectionPage.FreeDataPageID;
 
             // do not consider last slot (keep this as PCT_FREE) pages with less than 76 blocks will no use for new data
             var startSlot = Math.Min(BasePage.FreeIndexSlot(length), (byte)3);
@@ -418,8 +420,8 @@ namespace LiteDB.Engine
             {
                 // select if I will get from free index list or data list
                 var freeLists = page.PageType == PageType.Index ?
-                    _collectionPage.FreeIndexPageID :
-                    _collectionPage.FreeDataPageID;
+                    this.CollectionPage.FreeIndexPageID :
+                    this.CollectionPage.FreeDataPageID;
 
                 // remove from intial slot
                 this.RemoveFreeList<T>(page, ref freeLists[initialSlot]);
@@ -447,7 +449,7 @@ namespace LiteDB.Engine
 
             startPageID = page.PageID;
 
-            _collectionPage.IsDirty = true;
+            this.CollectionPage.IsDirty = true;
         }
 
         /// <summary>
@@ -475,7 +477,7 @@ namespace LiteDB.Engine
             if (startPageID == page.PageID)
             {
                 startPageID = page.NextPageID;
-                _collectionPage.IsDirty = true;
+                this.CollectionPage.IsDirty = true;
             }
 
             // clear page pointer (MaxValue = not used)
@@ -486,7 +488,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return _collectionName + " (pages: " + _localPages.Count + ")";
+            return this.CollectionName + " (pages: " + _localPages.Count + ")";
         }
     }
 }

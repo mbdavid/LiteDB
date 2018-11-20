@@ -17,9 +17,9 @@ namespace LiteDB.Engine
     /// </summary>
     internal class BufferSlice
     {
-        public readonly int Offset;
-        public readonly int Count;
-        public readonly byte[] Array;
+        public int Offset { get; }
+        public int Count { get; }
+        public byte[] Array { get; }
 
         public BufferSlice(byte[] array, int offset, int count)
         {

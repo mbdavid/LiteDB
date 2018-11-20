@@ -10,12 +10,18 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexPage : BasePage
     {
+        /// <summary>
+        /// Read existing IndexPage in buffer
+        /// </summary>
         public IndexPage(PageBuffer buffer)
             : base(buffer)
         {
             ENSURE(this.PageType == PageType.Index);
         }
 
+        /// <summary>
+        /// Create new IndexPage
+        /// </summary>
         public IndexPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Index)
         {

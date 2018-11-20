@@ -21,22 +21,22 @@ namespace LiteDB
         /// <summary>
         /// Get timestamp
         /// </summary>
-        public int Timestamp { get; private set; }
+        public int Timestamp { get; }
 
         /// <summary>
         /// Get machine number
         /// </summary>
-        public int Machine { get; private set; }
+        public int Machine { get; }
 
         /// <summary>
         /// Get pid number
         /// </summary>
-        public short Pid { get; private set; }
+        public short Pid { get; }
 
         /// <summary>
         /// Get increment
         /// </summary>
-        public int Increment { get; private set; }
+        public int Increment { get; }
 
         /// <summary>
         /// Get creation time

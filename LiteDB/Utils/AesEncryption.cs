@@ -17,7 +17,7 @@ namespace LiteDB
         private readonly ICryptoTransform _encryptor;
         private readonly ICryptoTransform _decryptor;
 
-        public byte[] Salt { get; private set; }
+        public byte[] Salt { get; }
 
         public AesEncryption(string password, byte[] salt)
         {

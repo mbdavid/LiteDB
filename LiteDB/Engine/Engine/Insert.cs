@@ -18,7 +18,6 @@ namespace LiteDB.Engine
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
-                var col = snapshot.CollectionPage;
                 var count = 0;
                 //var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
@@ -28,7 +27,7 @@ namespace LiteDB.Engine
                     transaction.Safepoint();
 
                     //this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
-                    this.InsertDocument(snapshot, col, doc, autoId, data);
+                    this.InsertDocument(snapshot, doc, autoId, data);
 
                     count++;
                 }
@@ -41,7 +40,7 @@ namespace LiteDB.Engine
         /// Internal implementation of insert a document
         /// </summary>
         //private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
-        private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, DataService data)
+        private void InsertDocument(Snapshot snapshot, BsonDocument doc, BsonAutoId autoId, DataService data)
         {
             // if no _id, use AutoId
             if (!doc.RawValue.TryGetValue("_id", out var id))
@@ -50,7 +49,7 @@ namespace LiteDB.Engine
                     autoId == BsonAutoId.ObjectId ? new BsonValue(ObjectId.NewObjectId()) :
                     autoId == BsonAutoId.Guid ? new BsonValue(Guid.NewGuid()) :
                     autoId == BsonAutoId.DateTime ? new BsonValue(DateTime.Now) :
-                    this.GetSequence(col, snapshot, autoId);
+                    this.GetSequence(snapshot, autoId);
             }
             else if(id.IsNumber)
             {
@@ -102,7 +101,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get lastest value from a _id collection and plus 1 - use _sequence cache
         /// </summary>
-        private BsonValue GetSequence(CollectionPage col, Snapshot snapshot, BsonAutoId autoId)
+        private BsonValue GetSequence(Snapshot snapshot, BsonAutoId autoId)
         {
             throw new NotImplementedException();
             /*
@@ -137,7 +136,7 @@ namespace LiteDB.Engine
         /// Update sequence number with new _id passed by user, IF this number are higher than current last _id
         /// At this point, newId.Type is Number
         /// </summary>
-        private void SetSequence(CollectionPage col, Snapshot snapshot, BsonValue newId)
+        private void SetSequence(Snapshot snapshot, BsonValue newId)
         {
             throw new NotImplementedException();
             /*
@@ -167,7 +166,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get last _id index key from collection. Returns MinValue if collection are empty
         /// </summary>
-        private BsonValue GetLastId(CollectionPage col, Snapshot snapshot)
+        private BsonValue GetLastId(Snapshot snapshot)
         {
             throw new NotImplementedException();
             /*

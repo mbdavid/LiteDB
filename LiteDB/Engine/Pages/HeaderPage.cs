@@ -50,7 +50,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// DateTime when database was created [8 bytes]
         /// </summary>
-        public DateTime CreationTime { get; private set; }
+        public DateTime CreationTime { get; }
 
         /// <summary>
         /// DateTime last checkpoint command was executed [8 bytes]

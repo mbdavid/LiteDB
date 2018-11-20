@@ -10,12 +10,18 @@ namespace LiteDB.Engine
     /// </summary>
     internal class DataPage : BasePage
     {
+        /// <summary>
+        /// Read existing DataPage in buffer
+        /// </summary>
         public DataPage(PageBuffer buffer)
             : base(buffer)
         {
             ENSURE(this.PageType == PageType.Data);
         }
 
+        /// <summary>
+        /// Create new DataPage
+        /// </summary>
         public DataPage(PageBuffer buffer, uint pageID)
             : base(buffer, pageID, PageType.Data)
         {
