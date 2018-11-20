@@ -246,13 +246,9 @@ namespace LiteDB.Engine
             }
         }
 
-        public void Write(Int16 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 2);
         public void Write(Int32 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 4);
         public void Write(Int64 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 8);
-        public void Write(UInt16 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 2);
         public void Write(UInt32 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 4);
-        public void Write(UInt64 value) => this.WriteNumber(value, BufferExtensions.ToBytes, 8);
-        public void Write(Single value) => this.WriteNumber(value, BufferExtensions.ToBytes, 4);
         public void Write(Double value) => this.WriteNumber(value, BufferExtensions.ToBytes, 8);
 
         public void Write(Decimal value)
@@ -331,48 +327,6 @@ namespace LiteDB.Engine
         {
             this.Write(address.PageID);
             this.Write(address.Index);
-        }
-
-        #endregion
-
-        #region BsonValue for IndexKey
-
-        /// <summary>
-        /// Write a BSON value into output. Do not respect BSON document specs, becase write single value
-        /// Do not store length for variable types (byte[] or string) - must know when read
-        /// If value is BsonArray or BsonDocument will write full BSON spcecs (using Elements)
-        /// Used ONLY Index Key storage
-        /// </summary>
-        public void WriteBsonValue(BsonValue value)
-        {
-            this.Write((byte)value.Type);
-
-            switch (value.Type)
-            {
-                case BsonType.Null:
-                case BsonType.MinValue:
-                case BsonType.MaxValue:
-                    break;
-
-                case BsonType.Int32: this.Write((Int32)value.RawValue); break;
-                case BsonType.Int64: this.Write((Int64)value.RawValue); break;
-                case BsonType.Double: this.Write((Double)value.RawValue); break;
-                case BsonType.Decimal: this.Write((Decimal)value.RawValue); break;
-
-                case BsonType.String: this.WriteString((String)value.RawValue, false); break;
-
-                case BsonType.Document: this.WriteDocument(value.AsDocument); break;
-                case BsonType.Array: this.WriteArray(value.AsArray); break;
-
-                case BsonType.Binary: this.Write((Byte[])value.RawValue); break;
-                case BsonType.ObjectId: this.Write((ObjectId)value.RawValue); break;
-                case BsonType.Guid: this.Write((Guid)value.RawValue); break;
-
-                case BsonType.Boolean: this.Write((Boolean)value.RawValue); break;
-                case BsonType.DateTime: this.Write((DateTime)value.RawValue); break;
-
-                default: throw new NotImplementedException();
-            }
         }
 
         #endregion

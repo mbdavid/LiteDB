@@ -277,6 +277,8 @@ namespace LiteDB.Engine
             this.ItemsCount++;
             this.UsedContentBlocks += length;
 
+            this.IsDirty = true;
+
             // create page item (will set length in first byte block)
             return new PageSegment(_buffer, index, block, length);
         }
@@ -341,6 +343,8 @@ namespace LiteDB.Engine
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
             var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks (+1 for store segment length)
             var isLastSegment = index == this.HighestIndex;
+
+            this.IsDirty = true;
 
             // best situation: same block count
             if (newLength == originalLength)

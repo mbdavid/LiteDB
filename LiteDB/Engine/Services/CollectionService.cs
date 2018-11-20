@@ -62,10 +62,10 @@ namespace LiteDB.Engine
             // update header page on commit
             _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
-            // create pk first index
-            var indexer = new IndexService(_snapshot);
-            var pk = indexer.CreateIndex(collectionPage, "_id", "$._id", true);
-            
+            // create first index (_id pk)
+            var indexer = new IndexService(_snapshot, collectionPage);
+
+            indexer.CreateIndex("_id", "$._id", true);
 
             return collectionPage;
         }

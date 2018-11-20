@@ -8,17 +8,19 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get fixed part of DataBlock
         /// </summary>
-        public const int DATA_BLOCK_FIXED_SIZE = 6; // DataIndex[1] + NextBlock[5]
+        public const int DATA_BLOCK_FIXED_SIZE = 1 + // DataIndex
+                                                 PageAddress.SIZE; // NextBlock
 
         private const int P_DATA_INDEX = 0; // 00
         private const int P_NEXT_BLOCK = 1; // 01-05
         private const int P_BUFFER = 6; // 06-EOF
 
-        private readonly PageSegment _pageSegment;
         private readonly PageAddress _position;
         private readonly byte _dataIndex;
         private PageAddress _nextBlock;
         private readonly BufferSlice _buffer;
+
+        private readonly PageSegment _segment;
 
         /// <summary>
         /// Position block inside page
@@ -43,40 +45,40 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read new DataBlock from filled pageSegment
         /// </summary>
-        public DataBlock(DataPage page, PageSegment pageSegment)
+        public DataBlock(DataPage page, PageSegment segment)
         {
-            _pageSegment = pageSegment;
-            _position = new PageAddress(page.PageID, pageSegment.Index);
+            _segment = segment;
+            _position = new PageAddress(page.PageID, segment.Index);
 
             // byte 00: DataIndex
-            _dataIndex = _pageSegment.Buffer[P_DATA_INDEX];
+            _dataIndex = _segment.Buffer[P_DATA_INDEX];
 
             // byte 01-05: NextBlock (PageID, Index)
-            _nextBlock = _pageSegment.Buffer.ReadPageAddress(P_NEXT_BLOCK);
+            _nextBlock = _segment.Buffer.ReadPageAddress(P_NEXT_BLOCK);
 
             // byte 06-EOL: Buffer
-            _buffer = _pageSegment.Buffer.Slice(P_BUFFER, (_pageSegment.Length * PAGE_BLOCK_SIZE) - P_BUFFER- 1);
+            _buffer = _segment.Buffer.Slice(P_BUFFER, (_segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER- 1);
         }
 
         /// <summary>
         /// Create new DataBlock and fill into buffer
         /// </summary>
-        public DataBlock(DataPage page, PageSegment pageSegment, byte dataIndex, PageAddress nextBlock)
+        public DataBlock(DataPage page, PageSegment segment, byte dataIndex, PageAddress nextBlock)
         {
-            _pageSegment = pageSegment;
-            _position = new PageAddress(page.PageID, pageSegment.Index);
+            _segment = segment;
+            _position = new PageAddress(page.PageID, segment.Index);
 
             _nextBlock = nextBlock;
             _dataIndex = dataIndex;
 
             // byte 00: Data Index
-            _pageSegment.Buffer[P_DATA_INDEX] = dataIndex;
+            _segment.Buffer[P_DATA_INDEX] = dataIndex;
 
             // byte 01-04 (can be updated in "UpdateNextBlock")
-            _pageSegment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
+            _segment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
 
             // byte 06-EOL: Buffer
-            _buffer = _pageSegment.Buffer.Slice(P_BUFFER, (_pageSegment.Length * PAGE_BLOCK_SIZE) - P_BUFFER - 1);
+            _buffer = _segment.Buffer.Slice(P_BUFFER, (_segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER - 1);
         }
 
         public void SetNextBlock(PageAddress nextBlock)
@@ -84,7 +86,7 @@ namespace LiteDB.Engine
             _nextBlock = nextBlock;
 
             // update segment buffer with NextBlock (uint + byte)
-            _pageSegment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
+            _segment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
         }
 
         public override string ToString()

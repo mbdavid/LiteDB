@@ -31,6 +31,11 @@ namespace LiteDB.Engine
         public PageAddress TailNode { get; set; } = PageAddress.Empty;
 
         /// <summary>
+        /// Get/Set collection max level
+        /// </summary>
+        public byte MaxLevel { get; set; } = 0;
+
+        /// <summary>
         /// Counter of keys in this index
         /// </summary>
         public uint KeyCount { get; set; } = 0;
@@ -67,11 +72,6 @@ namespace LiteDB.Engine
         {
             get { return string.IsNullOrEmpty(this.Name); }
         }
-
-        /// <summary>
-        /// Get a reference for page
-        /// </summary>
-//**        public CollectionPage Page { get; set; }
 
         public CollectionIndex()
         {

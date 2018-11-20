@@ -101,6 +101,7 @@ namespace LiteDB.Engine
                         Name = name, // .Length + 1 
                         Expression = r.ReadCString(), // .Length + 1 
                         Unique = r.ReadBoolean(), // 1
+                        MaxLevel = r.ReadByte(), // 1
                         HeadNode = r.ReadPageAddress(), // 5
                         TailNode = r.ReadPageAddress(), // 5
                         KeyCount = r.ReadUInt32(), // 4
@@ -146,6 +147,7 @@ namespace LiteDB.Engine
                         w.WriteCString(index.Name);
                         w.WriteCString(index.Expression);
                         w.Write(index.Unique);
+                        w.Write(index.MaxLevel);
                         w.Write(index.HeadNode);
                         w.Write(index.TailNode);
                         w.Write(index.KeyCount);
@@ -201,7 +203,21 @@ namespace LiteDB.Engine
 
             _isIndexesChanged = true;
 
+            this.IsDirty = true;
+
             return index;
+        }
+
+        /// <summary>
+        /// Return index instance and mark as updatable
+        /// </summary>
+        public CollectionIndex UpdateIndex(string name)
+        {
+            _isIndexesChanged = true;
+
+            this.IsDirty = true;
+
+            return _indexes[name];
         }
 
         /// <summary>
@@ -211,6 +227,8 @@ namespace LiteDB.Engine
         {
             _indexes.Remove(name);
 
+            this.IsDirty = true;
+
             _isIndexesChanged = true;
         }
 
@@ -219,7 +237,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int GetAvaiableIndexSpace()
         {
-            return 0;
+            throw new NotImplementedException();
         }
     }
 }

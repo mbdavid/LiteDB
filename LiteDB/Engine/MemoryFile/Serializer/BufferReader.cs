@@ -282,13 +282,9 @@ namespace LiteDB.Engine
             return value;
         }
 
-        public Int16 ReadInt16() => this.ReadNumber(BitConverter.ToInt16, 2);
         public Int32 ReadInt32() => this.ReadNumber(BitConverter.ToInt32, 4);
         public Int64 ReadInt64() => this.ReadNumber(BitConverter.ToInt64, 8);
-        public UInt16 ReadUInt16() => this.ReadNumber(BitConverter.ToUInt16, 2);
         public UInt32 ReadUInt32() => this.ReadNumber(BitConverter.ToUInt32, 4);
-        public UInt64 ReadUInt64() => this.ReadNumber(BitConverter.ToUInt64, 8);
-        public Single ReadSingle() => this.ReadNumber(BitConverter.ToSingle, 4);
         public Double ReadDouble() => this.ReadNumber(BitConverter.ToDouble, 8);
 
         public Decimal ReadDecimal()
@@ -319,7 +315,21 @@ namespace LiteDB.Engine
         /// </summary>
         public Guid ReadGuid()
         {
-            return new Guid(this.ReadBytes(16));
+            Guid value;
+
+            if (_currentPosition + 16 <= _current.Count)
+            {
+                value = _current.ReadGuid(_currentPosition);
+
+                this.MoveFordward(16);
+            }
+            else
+            {
+                // can't use _tempoBuffer because Guid validate 16 bytes array length
+                value = new Guid(this.ReadBytes(16));
+            }
+
+            return value;
         }
 
         /// <summary>
@@ -350,7 +360,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool ReadBoolean()
         {
-            var value = _current[_currentPosition] == 1;
+            var value = _current[_currentPosition] != 0;
             this.MoveFordward(1);
             return value;
         }
@@ -381,48 +391,6 @@ namespace LiteDB.Engine
             var buffer = new byte[count];
             this.Read(buffer, 0, count);
             return buffer;
-        }
-
-        #endregion
-
-        #region BsonValue for IndexKey
-
-        /// <summary>
-        /// Read a BSON value from buffer. Do not respect BSON document specs, becase read single value
-        /// Need know length for variable types (string|binary)
-        /// If buffer contains a BsonArray or BsonDocument will write full BSON spcecs (using Elements)
-        /// Used ONLY Index Key storage
-        /// </summary>
-        public BsonValue ReadBsonValue(ushort length)
-        {
-            var type = (BsonType)this.ReadByte();
-
-            switch (type)
-            {
-                case BsonType.Null: return BsonValue.Null;
-
-                case BsonType.Int32: return this.ReadInt32();
-                case BsonType.Int64: return this.ReadInt64();
-                case BsonType.Double: return this.ReadDouble();
-                case BsonType.Decimal: return this.ReadDecimal();
-
-                case BsonType.String: return this.ReadString(length);
-
-                case BsonType.Document: return this.ReadDocument();
-                case BsonType.Array: return this.ReadArray();
-
-                case BsonType.Binary: return this.ReadBytes(length);
-                case BsonType.ObjectId: return this.ReadObjectId();
-                case BsonType.Guid: return this.ReadGuid();
-
-                case BsonType.Boolean: return this.ReadBoolean();
-                case BsonType.DateTime: return this.ReadDateTime();
-
-                case BsonType.MinValue: return BsonValue.MinValue;
-                case BsonType.MaxValue: return BsonValue.MaxValue;
-
-                default: throw new NotImplementedException();
-            }
         }
 
         #endregion

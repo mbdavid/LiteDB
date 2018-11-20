@@ -10,8 +10,6 @@ namespace LiteDB.Engine
     /// </summary>
     internal class IndexPage : BasePage
     {
-        private const int P_KEY_LENGTH = 1;
-
         public IndexPage(PageBuffer buffer)
             : base(buffer)
         {
@@ -30,98 +28,17 @@ namespace LiteDB.Engine
         {
             var segment = base.Get(index);
 
-            using (var r = new BufferReader(segment.Buffer))
-            {
-                // read levels
-                var levels = r.ReadByte();
-
-                var node = new IndexNode(levels);
-
-                // read keyLength + key
-                var keyLength = r.ReadUInt16();
-                r.ReadBsonValue(keyLength);
-
-                // read data block
-                node.DataBlock = r.ReadPageAddress();
-
-                // read prev+next
-                node.PrevNode = r.ReadPageAddress();
-                node.NextNode = r.ReadPageAddress();
-
-                // read double-linked list
-                for (var i = 0; i < levels; i++)
-                {
-                    node.Prev[i] = r.ReadPageAddress();
-                    node.Next[i] = r.ReadPageAddress();
-                }
-
-                return node;
-            }
+            return new IndexNode(this, segment);
         }
 
         /// <summary>
         /// Insert new IndexNode. After call this, "node" instance can't be changed
         /// </summary>
-        public PageAddress InsertNode(IndexNode node)
+        public IndexNode InsertNode(byte level, BsonValue key, PageAddress dataBlock)
         {
-            var segment = base.Insert(node.Length);
+            var segment = base.Insert(IndexNode.GetNodeLength(level, key));
 
-            using (var w = new BufferWriter(segment.Buffer))
-            {
-                var keyLength = node.Key.GetBytesCount(false);
-
-                // store linked-list levels
-                w.Write((byte)node.Prev.Length);
-
-                // store index key
-                w.Write((byte)keyLength);
-                w.WriteBsonValue(node.Key);
-
-                // data block position
-                w.Write(node.DataBlock);
-
-                // store inter-nodes liked-list
-                w.Write(node.PrevNode);
-                w.Write(node.NextNode);
-
-                // store levels linked-list
-                for (var i = 0; i < node.Prev.Length; i++)
-                {
-                    w.Write(node.Prev[i]);
-                    w.Write(node.Next[i]);
-                }
-            }
-
-            node.Position = new PageAddress(this.PageID, segment.Index);
-
-            return node.Position;
-        }
-
-        /// <summary>
-        /// Update index node inside page
-        /// </summary>
-        public void UpdateNode(IndexNode node)
-        {
-            var segment = base.Update(node.Position.Index, node.Length);
-
-            using (var w = new BufferWriter(segment.Buffer))
-            {
-                var keyLength = segment.Buffer[P_KEY_LENGTH];
-
-                // skip fixed data: levels [1], keyLength [1], key, dataBlock [5]
-                w.Skip(1 + 1 + keyLength + 5);
-
-                // update prev/next
-                w.Write(node.PrevNode);
-                w.Write(node.NextNode);
-
-                // update levels linked-list
-                for (var i = 0; i < node.Prev.Length; i++)
-                {
-                    w.Write(node.Prev[i]);
-                    w.Write(node.Next[i]);
-                }
-            }
+            return new IndexNode(this, segment, level, key, dataBlock);
         }
 
         /// <summary>
