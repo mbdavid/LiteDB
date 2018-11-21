@@ -138,7 +138,7 @@ namespace LiteDB.Engine
             };
 
             // write all pages, in sequence on log-file and store references into log pages on transPages
-            _logFile.Value.WriteAsync(source());
+            _logFile.WriteAsync(source());
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
@@ -175,7 +175,7 @@ namespace LiteDB.Engine
                         // lock header page to avoid concurrency when writing on header
                         lock (_header)
                         {
-                            using (var logReader = _logFile.Value.GetReader(true))
+                            using (var logReader = _logFile.GetReader(true))
                             {
                                 var newEmptyPageID = _header.FreeEmptyPageID;
 
@@ -198,7 +198,7 @@ namespace LiteDB.Engine
                                         };
 
                                         // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                        _logFile.Value.WriteAsync(new [] { empty });
+                                        _logFile.WriteAsync(new [] { empty });
                                     }
                                 }
 
@@ -218,7 +218,7 @@ namespace LiteDB.Engine
                                 Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, buffer.Array, buffer.Offset, buffer.Count);
 
                                 // persist header in log file
-                                _logFile.Value.WriteAsync(new[] { buffer });
+                                _logFile.WriteAsync(new[] { buffer });
 
                                 // and update wal-index (before release _header lock)
                                 _walIndex.ConfirmTransaction(this.TransactionID, _transPages.DirtyPages.Values);
@@ -298,7 +298,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void ReturnNewPages()
         {
-            using (var logReader = _logFile.Value.GetReader(true))
+            using (var logReader = _logFile.GetReader(true))
             {
                 // create new transaction ID
                 var transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -352,7 +352,7 @@ namespace LiteDB.Engine
                     };
 
                     // write all pages (including new header)
-                    _logFile.Value.Writer.WriteAsync(source());
+                    _logFile.WriteAsync(source());
 
                     // now confirm this transaction to wal
                     _walIndex.ConfirmTransaction(transactionID, pagePositions.Values);
@@ -388,11 +388,7 @@ namespace LiteDB.Engine
 
             // release memory file thread (stream)
             _dataFile.Dispose();
-
-            if (_logFile.IsValueCreated)
-            {
-                _logFile.Value.Dispose();
-            }
+            _logFile.Dispose();
 
             // call done
             _done(this.TransactionID);

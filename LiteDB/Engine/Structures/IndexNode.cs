@@ -112,16 +112,13 @@ namespace LiteDB.Engine
             this.Next = new PageAddress[this.Level];
             this.Prev = new PageAddress[this.Level];
 
-            var pos = P_PREV_NEXT;
-
             for (var i = 0; i < this.Level; i++)
             {
-                this.Prev[i] = segment.Buffer.ReadPageAddress(pos += PageAddress.SIZE);
-                this.Next[i] = segment.Buffer.ReadPageAddress(pos += PageAddress.SIZE);
+                this.Prev[i] = segment.Buffer.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2));
+                this.Next[i] = segment.Buffer.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2) + PageAddress.SIZE);
             }
 
             this.Key = segment.Buffer.ReadIndexKey(P_KEY);
-
         }
 
         /// <summary>
@@ -201,7 +198,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetNext(byte index, PageAddress value)
         {
-            this.Prev[index] = value;
+            this.Next[index] = value;
 
             _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2) + PageAddress.SIZE);
             _page.IsDirty = true;

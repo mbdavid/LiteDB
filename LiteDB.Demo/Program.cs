@@ -18,8 +18,6 @@ namespace LiteDB.Demo
         {
             var sw = new Stopwatch();
 
-            sw.Start();
-
             //TestMemoryFile.Run(sw);
             //TestAesEncryption.CreateEncryptedFile(sw);
             //TestAesEncryption.ReadEncryptedFile(sw);

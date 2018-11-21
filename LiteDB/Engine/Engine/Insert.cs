@@ -19,15 +19,14 @@ namespace LiteDB.Engine
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Write, collection, true);
                 var count = 0;
-                //var indexer = new IndexService(snapshot);
+                var indexer = new IndexService(snapshot);
                 var data = new DataService(snapshot);
 
                 foreach (var doc in docs)
                 {
                     transaction.Safepoint();
 
-                    //this.InsertDocument(snapshot, col, doc, autoId, indexer, data);
-                    this.InsertDocument(snapshot, doc, autoId, data);
+                    this.InsertDocument(snapshot, doc, autoId, indexer, data);
 
                     count++;
                 }
@@ -39,8 +38,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Internal implementation of insert a document
         /// </summary>
-        //private void InsertDocument(Snapshot snapshot, CollectionPage col, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
-        private void InsertDocument(Snapshot snapshot, BsonDocument doc, BsonAutoId autoId, DataService data)
+        private void InsertDocument(Snapshot snapshot, BsonDocument doc, BsonAutoId autoId, IndexService indexer, DataService data)
         {
             // if no _id, use AutoId
             if (!doc.RawValue.TryGetValue("_id", out var id))
@@ -64,31 +62,23 @@ namespace LiteDB.Engine
             }
 
             // storage in data pages - returns dataBlock address
-            var dataBlock = data.Insert(doc);
-
-            /*
-            // store id in a PK index [0 array]
-            var pk = indexer.AddNode(col.PK, id, null);
-
-            // do link between index <-> data block
-            pk.DataBlock = dataBlock.Position;
-
+            var dataBlock = data.Insert(doc);/*
+            
             // for each index, insert new IndexNode
-            foreach (var index in col.GetIndexes(false))
+            foreach (var index in snapshot.CollectionPage.GetAllIndexes())
             {
                 // for each index, get all keys (support now multi-key) - gets distinct values only
                 // if index are unique, get single key only
                 var expr = BsonExpression.Create(index.Expression);
                 var keys = expr.Execute(doc, true);
 
+                IndexNode last = null;
+
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)
                 {
                     // insert node
-                    var node = indexer.AddNode(index, key, pk);
-
-                    // link my index node to data block address
-                    node.DataBlock = dataBlock.Position;
+                    var node = indexer.AddNode(index, key, dataBlock, last);
                 }
             }*/
         }

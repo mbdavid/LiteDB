@@ -12,12 +12,10 @@ namespace LiteDB.Engine
     {
         private readonly Random _rand = new Random();
         private readonly Snapshot _snapshot;
-        private readonly CollectionPage _collectionPage;
 
-        public IndexService(Snapshot snapshot, CollectionPage collectionPage)
+        public IndexService(Snapshot snapshot)
         {
             _snapshot = snapshot;
-            _collectionPage = collectionPage;
         }
 
         /// <summary>
@@ -25,22 +23,28 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex CreateIndex(string name, string expr, bool unique)
         {
-            var index = _collectionPage.InsertIndex(name, expr, unique);
+            var index = _snapshot.CollectionPage.InsertIndex(name, expr, unique);
 
             // get a free index page for head note
             var indexPage = _snapshot.GetFreePage<IndexPage>(IndexNode.GetNodeLength(MAX_LEVEL_LENGTH, BsonValue.MinValue));
 
-            // for head node, just insert in page
+            // insert head/tail nodes
             var head = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty);
+            var tail = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty);
 
-            // set head position
-            index.HeadNode = head.Position;
+            // link head-to-tail with double link list in all levels
+            for(byte i = 0; i < MAX_LEVEL_LENGTH; i++)
+            {
+                head.SetNext(i, tail.Position);
+                tail.SetNext(i, head.Position);
+            }
 
-            // insert tail node (now, use offical AddNode method)
-            var tail = this.AddNode(index, BsonValue.MaxValue, PageAddress.Empty, MAX_LEVEL_LENGTH, null);
+            // set head/tail position in collection index
+            index.Head = head.Position;
+            index.Tail = tail.Position;
 
-            // set tail position
-            index.TailNode = tail.Position;
+            index.HeadNode = head;
+            index.TailNode = tail;
 
             return index;
         }
@@ -63,7 +67,7 @@ namespace LiteDB.Engine
             if (level > index.MaxLevel)
             {
                 // update max level
-                _collectionPage.UpdateIndex(index.Name).MaxLevel = level;
+                _snapshot.CollectionPage.UpdateIndex(index.Name).MaxLevel = level;
             }
 
             // call AddNode with key value
@@ -87,13 +91,13 @@ namespace LiteDB.Engine
             var node = indexPage.InsertNode(level, key, dataBlock);
 
             // now, let's link my index node on right place
-            var cur = this.GetNode(index.HeadNode);
+            var cur = index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head));
 
             // using as cache last
             IndexNode cache = null;
 
             // scan from top left
-            for (byte i = (byte)(index.MaxLevel - 1); i >= 0; i--)
+            for (int i = index.MaxLevel - 1; i >= 0; i--)
             {
                 // get cache for last node
                 cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
@@ -121,9 +125,9 @@ namespace LiteDB.Engine
 
                     //**curPage.IsDirty = true;
 
-                    node.SetNext(i, cur.Next[i]);
-                    node.SetPrev(i, cur.Next[i]);
-                    cur.SetNext(i, node.Position);
+                    node.SetNext((byte)i, cur.Next[i]);
+                    node.SetPrev((byte)i, cur.Next[i]);
+                    cur.SetNext((byte)i, node.Position);
 
                     //**node.Next[i] = cur.Next[i];
                     //**node.Prev[i] = cur.Position;
@@ -133,7 +137,7 @@ namespace LiteDB.Engine
 
                     if (next != null)
                     {
-                        node.SetPrev(i, node.Position);
+                        node.SetPrev((byte)i, node.Position);
                         //**next.Prev[i] = node.Position;
                         //**_snapshot.SetDirty(next.Page);
                     }
@@ -147,31 +151,33 @@ namespace LiteDB.Engine
             if (last != null)
             {
                 // link new node with last node
-                if (last.NextNode.IsEmpty == false)
-                {
-                    // fix link pointer with has more nodes in list
-                    var next = this.GetNode(last.NextNode);
+                //**if (last.NextNode.IsEmpty == false)
+                //**{
+                //**    // fix link pointer with has more nodes in list
+                //**    var next = this.GetNode(last.NextNode);
+                //**
+                //**    next.SetPrevNode(node.Position);
+                //**    last.SetNextNode(node.Position);
+                //**    node.SetPrevNode(last.Position);
+                //**    node.SetNextNode(next.Position);
+                //**
+                //**    //**next.PrevNode = node.Position;
+                //**    //**last.NextNode = node.Position;
+                //**    //**node.PrevNode = last.Position;
+                //**    //**node.NextNode = next.Position;
+                //**
+                //**    //**_snapshot.SetDirty(next.Page);
+                //**}
+                //**else
+                //**{
+                ENSURE(last.NextNode == PageAddress.Empty, "last index node must point to null");
 
-                    next.SetPrevNode(node.Position);
                     last.SetNextNode(node.Position);
                     node.SetPrevNode(last.Position);
-                    node.SetNextNode(next.Position);
-
-                    //**next.PrevNode = node.Position;
-                    //**last.NextNode = node.Position;
-                    //**node.PrevNode = last.Position;
-                    //**node.NextNode = next.Position;
-
-                    //**_snapshot.SetDirty(next.Page);
-                }
-                else
-                {
-                    last.SetNextNode(node.Position);
-                    node.SetPrevNode(last.Position);
 
                     //**last.NextNode = node.Position;
                     //**node.PrevNode = last.Position;
-                }
+                //**}
 
                 // set last node page as dirty
                 //_snapshot.SetDirty(last.Page);

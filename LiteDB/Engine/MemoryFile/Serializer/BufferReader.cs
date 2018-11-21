@@ -307,7 +307,7 @@ namespace LiteDB.Engine
         {
             var date = new DateTime(this.ReadInt64(), DateTimeKind.Utc);
 
-            return _utcDate ? date.ToLocalTime() : date;
+            return _utcDate ? date.ToLocal() : date;
         }
 
         /// <summary>

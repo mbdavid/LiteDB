@@ -32,19 +32,25 @@ namespace LiteDB.Demo
             File.Delete(PATH);
             File.Delete(PATH_LOG);
 
+            sw.Start();
+
             using (var db = new LiteEngine(PATH))
             {
 
                 IEnumerable<BsonDocument> source()
                 {
-                    for (var i = 0; i < 1000000; i++)
+                    for (var i = 0; i < 100000; i++)
+                    {
+                        doc["_id"] = i + 1;
                         yield return doc;
+                    }
                 }
 
                 //db.CreateCollection("col1");
 
                 db.Insert("col1", source(), BsonAutoId.Int32);
 
+                //sw.Stop();
 
             }
            

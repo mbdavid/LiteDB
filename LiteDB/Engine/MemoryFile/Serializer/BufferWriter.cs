@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -427,7 +428,7 @@ namespace LiteDB.Engine
                     this.WriteCString(key);
                     var date = (DateTime)value.RawValue;
                     // do not convert to UTC min/max date values - #19
-                    var utc = (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUniversalTime();
+                    var utc = (date == DateTime.MinValue || date == DateTime.MaxValue) ? date : date.ToUtc();
                     var ts = utc - BsonValue.UnixEpoch;
                     this.Write(Convert.ToInt64(ts.TotalMilliseconds));
                     break;

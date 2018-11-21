@@ -20,7 +20,6 @@ namespace LiteDB.Engine
     {
         private readonly MemoryStore _store;
         private readonly ReaderWriterLockSlim _locker;
-        private readonly StreamPool _pool;
         private readonly AesEncryption _aes;
         private readonly bool _writable;
 

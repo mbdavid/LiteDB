@@ -22,7 +22,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get collection page instance (or create a new one)
         /// </summary>
-        public CollectionPage Get(string name, bool addIfNotExists)
+        public void Get(string name, bool addIfNotExists, ref CollectionPage collectionPage)
         {
             // virtual collection
             if (name.StartsWith("$"))
@@ -36,38 +36,34 @@ namespace LiteDB.Engine
 
             if (pageID != uint.MaxValue)
             {
-                return _snapshot.GetPage<CollectionPage>(pageID);
+                collectionPage = _snapshot.GetPage<CollectionPage>(pageID);
             }
             else if (addIfNotExists)
             {
-                return this.Add(name);
+                this.Add(name, ref collectionPage);
             }
-
-            return null;
         }
 
         /// <summary>
         /// Add a new collection. Check if name the not exists. Create only in transaction page - will update header only in commit
         /// </summary>
-        private CollectionPage Add(string name)
+        private void Add(string name, ref CollectionPage collectionPage)
         {
             if (Encoding.UTF8.GetByteCount(name) > _header.GetAvaiableCollectionSpace()) throw LiteException.InvalidCollectionName(name, "There is no space in header for more collections");
             if (!name.IsWord()) throw LiteException.InvalidCollectionName(name, "Use only [a-Z$_]");
             if (name.StartsWith("$")) throw LiteException.InvalidCollectionName(name, "Collection can't starts with `$` (reserved for system collections)");
 
             // create new collection page
-            var collectionPage = _snapshot.NewPage<CollectionPage>();
+            collectionPage = _snapshot.NewPage<CollectionPage>();
             var pageID = collectionPage.PageID;
 
             // update header page on commit
             _transPages.Commit += (h) => h.InsertCollection(name, pageID);
 
-            // create first index (_id pk)
-            var indexer = new IndexService(_snapshot, collectionPage);
+            // create first index (_id pk) (must pass collectionPage because snapshot contains null in CollectionPage prop)
+            var indexer = new IndexService(_snapshot);
 
             indexer.CreateIndex("_id", "$._id", true);
-
-            return collectionPage;
         }
 
         /// <summary>

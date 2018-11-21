@@ -102,8 +102,8 @@ namespace LiteDB.Engine
                         Expression = r.ReadCString(), // .Length + 1 
                         Unique = r.ReadBoolean(), // 1
                         MaxLevel = r.ReadByte(), // 1
-                        HeadNode = r.ReadPageAddress(), // 5
-                        TailNode = r.ReadPageAddress(), // 5
+                        Head = r.ReadPageAddress(), // 5
+                        Tail = r.ReadPageAddress(), // 5
                         KeyCount = r.ReadUInt32(), // 4
                         UniqueKeyCount = r.ReadUInt32() // 4
                     };
@@ -148,8 +148,8 @@ namespace LiteDB.Engine
                         w.WriteCString(index.Expression);
                         w.Write(index.Unique);
                         w.Write(index.MaxLevel);
-                        w.Write(index.HeadNode);
-                        w.Write(index.TailNode);
+                        w.Write(index.Head);
+                        w.Write(index.Tail);
                         w.Write(index.KeyCount);
                         w.Write(index.UniqueKeyCount);
                     }
@@ -180,7 +180,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all indexes in this collection page
         /// </summary>
-        public IEnumerable<CollectionIndex> GetIndexes(bool includePK)
+        public IEnumerable<CollectionIndex> GetAllIndexes()
         {
             return _indexes.Values;
         }

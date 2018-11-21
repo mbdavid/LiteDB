@@ -23,17 +23,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// Head page address for this index
         /// </summary>
-        public PageAddress HeadNode { get; set; } = PageAddress.Empty;
+        public PageAddress Head { get; set; } = PageAddress.Empty;
+
+        /// <summary>
+        /// Retain Head index node instance to avoid re-read all times (this node never change)
+        /// </summary>
+        public IndexNode HeadNode { get; set; }
 
         /// <summary>
         /// A link pointer to tail node
         /// </summary>
-        public PageAddress TailNode { get; set; } = PageAddress.Empty;
+        public PageAddress Tail { get; set; } = PageAddress.Empty;
+
+        /// <summary>
+        /// Retain Tail index node instance to avoid re-read all times (this node never change)
+        /// </summary>
+        public IndexNode TailNode { get; set; }
 
         /// <summary>
         /// Get/Set collection max level
         /// </summary>
-        public byte MaxLevel { get; set; } = 0;
+        public byte MaxLevel { get; set; } = 1;
 
         /// <summary>
         /// Counter of keys in this index

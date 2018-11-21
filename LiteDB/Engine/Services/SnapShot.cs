@@ -40,7 +40,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get collection page - can be null
         /// </summary>
-        public CollectionPage CollectionPage { get; }
+        public readonly CollectionPage CollectionPage;
 
         // local page cache - contains only pages about this collection (but do not contains CollectionPage - use this.CollectionPage)
         private readonly Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
@@ -76,7 +76,7 @@ namespace LiteDB.Engine
             var srv = new CollectionService(_header, this, _transPages);
 
             // read collection (create if new - load virtual too)
-            this.CollectionPage = srv.Get(this.CollectionName, addIfNotExists);
+            srv.Get(this.CollectionName, addIfNotExists, ref this.CollectionPage);
         }
 
         /// <summary>
@@ -141,6 +141,8 @@ namespace LiteDB.Engine
         public T GetPage<T>(uint pageID)
             where T : BasePage
         {
+            ENSURE(pageID != 0, "never should request header page (always use global _header instance)");
+
             // first, look for this page inside local pages
             if (_localPages.TryGetValue(pageID, out var page))
             {
