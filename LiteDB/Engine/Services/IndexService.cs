@@ -89,7 +89,7 @@ namespace LiteDB.Engine
 
             // create node in buffer
             var node = indexPage.InsertNode(level, key, dataBlock);
-
+            //return node;
             // now, let's link my index node on right place
             var cur = index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head));
 
@@ -99,14 +99,20 @@ namespace LiteDB.Engine
             // scan from top left
             for (int i = index.MaxLevel - 1; i >= 0; i--)
             {
+                var curNext = cur.GetNext((byte)i);
+
                 // get cache for last node
-                cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
+                //**cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
+                cache = cache != null && cache.Position == curNext ? cache : this.GetNode(curNext);
 
                 // for(; <while_not_this>; <do_this>) { ... }
-                for (; cur.Next[i].IsEmpty == false; cur = cache)
+                for (; curNext.IsEmpty == false; cur = cache)
                 {
+                    curNext = cur.GetNext((byte)i);
+
                     // get cache for last node
-                    cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
+                    //cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
+                    cache = cache != null && cache.Position == curNext ? cache : this.GetNode(curNext);
 
                     // read next node to compare
                     var diff = cache.Key.CompareTo(key);
@@ -125,15 +131,18 @@ namespace LiteDB.Engine
 
                     //**curPage.IsDirty = true;
 
-                    node.SetNext((byte)i, cur.Next[i]);
-                    node.SetPrev((byte)i, cur.Next[i]);
+                    //node.SetNext((byte)i, cur.Next[i]);
+                    //node.SetPrev((byte)i, cur.Next[i]);
+                    node.SetNext((byte)i, curNext);
+                    node.SetPrev((byte)i, curNext);
                     cur.SetNext((byte)i, node.Position);
 
                     //**node.Next[i] = cur.Next[i];
                     //**node.Prev[i] = cur.Position;
                     //**cur.Next[i] = node.Position;
 
-                    var next = this.GetNode(node.Next[i]);
+                    //var next = this.GetNode(node.Next[i]);
+                    var next = this.GetNode(node.GetNext((byte)i));
 
                     if (next != null)
                     {

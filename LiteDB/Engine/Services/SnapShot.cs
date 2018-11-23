@@ -188,7 +188,7 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var buffer = _logReader.GetPage(position.Position, release);
+                var buffer = _logReader.GetPage(pos, release);
                 var logPage = BasePage.ReadPage<T>(buffer);
 
                 // clear some data inside this page (will be override when write on log file)

@@ -9,7 +9,7 @@ namespace LiteDB
 {
     internal static class BufferSliceExtensions
     {
-        #region Read Data
+        #region Read Extensions
 
         public static Int32 ReadInt32(this BufferSlice buffer, int offset)
         {
@@ -61,7 +61,7 @@ namespace LiteDB
 
         public static DateTime ReadDateTime(this BufferSlice buffer, int offset)
         {
-            return new DateTime(buffer.ReadInt64(offset), DateTimeKind.Utc).ToLocalTime();
+            return new DateTime(buffer.ReadInt64(offset), DateTimeKind.Utc).ToLocal();
         }
 
         public static PageAddress ReadPageAddress(this BufferSlice buffer, int offset)
@@ -126,7 +126,7 @@ namespace LiteDB
 
         #endregion
 
-        #region Read/Write Shortcuts
+        #region Write Extensions
 
         public static void Write(this BufferSlice buffer, Int32 value, int offset)
         {
@@ -159,7 +159,7 @@ namespace LiteDB
 
         public static void Write(this BufferSlice buffer, DateTime value, int offset)
         {
-            value.Ticks.ToBytes(buffer.Array, buffer.Offset + offset);
+            value.ToUtc().Ticks.ToBytes(buffer.Array, buffer.Offset + offset);
         }
 
         public static void Write(this BufferSlice buffer, PageAddress value, int offset)
@@ -185,7 +185,7 @@ namespace LiteDB
 
         public static void Write(this BufferSlice buffer, string value, int offset, int count)
         {
-            Encoding.UTF8.GetBytes(value, 0, count, buffer.Array, buffer.Offset + count);
+            Encoding.UTF8.GetBytes(value, 0, count, buffer.Array, buffer.Offset + offset);
         }
 
         /// <summary>

@@ -31,45 +31,27 @@ namespace LiteDB.Engine
         /// <summary>
         /// Skip-list level (0-31) - [1 byte]
         /// </summary>
-        public byte Level { get; }
+        public byte Level => _segment.Buffer[P_LEVEL];
 
         /// <summary>
         /// The object value that was indexed (max 255 bytes value)
         /// </summary>
-        public BsonValue Key { get; }
+        public BsonValue Key => _segment.Buffer.ReadIndexKey(P_KEY);
 
         /// <summary>
         /// Reference for a datablock address
         /// </summary>
-        public PageAddress DataBlock { get; }
+        public PageAddress DataBlock => _segment.Buffer.ReadPageAddress(P_DATA_BLOCK);
 
         /// <summary>
         /// Prev node in same document list index nodes [5 bytes]
         /// </summary>
-        public PageAddress PrevNode { get; private set; }
+        public PageAddress PrevNode => _segment.Buffer.ReadPageAddress(P_PREV_NODE);
 
         /// <summary>
         /// Next node in same document list index nodes  [5 bytes]
         /// </summary>
-        public PageAddress NextNode { get; private set; }
-
-        /// <summary>
-        /// Link to prev value (used in skip lists - Prev.Length = Next.Length) [5 bytes]
-        /// </summary>
-        public PageAddress[] Prev { get; private set; }
-
-        /// <summary>
-        /// Link to next value (used in skip lists - Prev.Length = Next.Length)
-        /// </summary>
-        public PageAddress[] Next { get; private set; }
-
-        /// <summary>
-        /// Returns Next (order == 1) OR Prev (order == -1)
-        /// </summary>
-        public PageAddress NextPrev(int index, int order)
-        {
-            return order == Query.Ascending ? this.Next[index] : this.Prev[index];
-        }
+        public PageAddress NextNode => _segment.Buffer.ReadPageAddress(P_NEXT_NODE);
 
         /// <summary>
         /// Calculate how many bytes this node will need on page segment
@@ -95,7 +77,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read index node from page segment
+        /// Read index node from page segment (lazy-load)
         /// </summary>
         public IndexNode(IndexPage page, PageSegment segment)
         {
@@ -103,22 +85,6 @@ namespace LiteDB.Engine
             _segment = segment;
 
             this.Position = new PageAddress(page.PageID, segment.Index);
-            this.Level = segment.Buffer[P_LEVEL];
-            this.DataBlock = segment.Buffer.ReadPageAddress(P_DATA_BLOCK);
-
-            this.PrevNode = segment.Buffer.ReadPageAddress(P_PREV_NODE);
-            this.NextNode = segment.Buffer.ReadPageAddress(P_NEXT_NODE);
-
-            this.Next = new PageAddress[this.Level];
-            this.Prev = new PageAddress[this.Level];
-
-            for (var i = 0; i < this.Level; i++)
-            {
-                this.Prev[i] = segment.Buffer.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2));
-                this.Next[i] = segment.Buffer.ReadPageAddress(P_PREV_NEXT + (i * PageAddress.SIZE * 2) + PageAddress.SIZE);
-            }
-
-            this.Key = segment.Buffer.ReadIndexKey(P_KEY);
         }
 
         /// <summary>
@@ -130,21 +96,6 @@ namespace LiteDB.Engine
             _segment = segment;
 
             this.Position = new PageAddress(page.PageID, segment.Index);
-            this.Level = level;
-            this.Key = key;
-            this.DataBlock = dataBlock;
-
-            this.PrevNode = PageAddress.Empty;
-            this.NextNode = PageAddress.Empty;
-
-            this.Next = new PageAddress[level];
-            this.Prev = new PageAddress[level];
-
-            for (var i = 0; i < level; i++)
-            {
-                this.Prev[i] = PageAddress.Empty;
-                this.Next[i] = PageAddress.Empty;
-            }
 
             // persist in buffer read only data
             segment.Buffer[P_LEVEL] = level;
@@ -165,8 +116,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetPrevNode(PageAddress value)
         {
-            this.PrevNode = value;
-
             _segment.Buffer.Write(value, P_PREV_NODE);
             _page.IsDirty = true;
         }
@@ -176,10 +125,16 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetNextNode(PageAddress value)
         {
-            this.NextNode = value;
-
             _segment.Buffer.Write(value, P_NEXT_NODE);
             _page.IsDirty = true;
+        }
+
+        /// <summary>
+        /// Get Prev[index]
+        /// </summary>
+        public PageAddress GetPrev(byte index)
+        {
+            return _segment.Buffer.ReadPageAddress(P_PREV_NEXT + (index * PageAddress.SIZE * 2));
         }
 
         /// <summary>
@@ -187,10 +142,16 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetPrev(byte index, PageAddress value)
         {
-            this.Prev[index] = value;
-
             _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2));
             _page.IsDirty = true;
+        }
+
+        /// <summary>
+        /// Get Next[index]
+        /// </summary>
+        public PageAddress GetNext(byte index)
+        {
+            return _segment.Buffer.ReadPageAddress(P_PREV_NEXT + (index * PageAddress.SIZE * 2) + PageAddress.SIZE);
         }
 
         /// <summary>
@@ -198,10 +159,16 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetNext(byte index, PageAddress value)
         {
-            this.Next[index] = value;
-
             _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2) + PageAddress.SIZE);
             _page.IsDirty = true;
+        }
+
+        /// <summary>
+        /// Returns Next (order == 1) OR Prev (order == -1)
+        /// </summary>
+        public PageAddress GetNextPrev(byte index, int order)
+        {
+            return order == Query.Ascending ? this.GetNext(index) : this.GetPrev(index);
         }
 
         public override string ToString()

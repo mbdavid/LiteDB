@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static LiteDB.Constants;
 
 namespace LiteDB.Demo
 {
@@ -23,9 +24,6 @@ namespace LiteDB.Demo
             //TestAesEncryption.ReadEncryptedFile(sw);
             //TestDataPage.Run(sw);
             TestEngine.Run(sw);
-
-
-
 
             Console.WriteLine("===============================");
             Console.WriteLine("Elapsed: " + sw.ElapsedMilliseconds);

@@ -29,6 +29,8 @@ namespace LiteDB
         /// </summary>
         public static DateTime ToUtc(this DateTime dt)
         {
+            if (dt.Kind == DateTimeKind.Utc) return dt;
+
             return dt.Subtract(_timeZoneDiff);
         }
 
@@ -37,6 +39,8 @@ namespace LiteDB
         /// </summary>
         public static DateTime ToLocal(this DateTime dt)
         {
+            if (dt.Kind == DateTimeKind.Local) return dt;
+
             return dt.Add(_timeZoneDiff);
         }
 

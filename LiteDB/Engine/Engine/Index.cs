@@ -18,7 +18,7 @@ namespace LiteDB.Engine
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             if (expression.IsIndexable == false) throw new ArgumentException("Index expressions must contains at least one document field. Used methods must be immutable. Parameters are not supported.", nameof(expression));
 
-            if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_PER_COLLECTION);
+            //**if (name.Length > INDEX_NAME_MAX_LENGTH) throw LiteException.InvalidIndexName(name, collection, "MaxLength = " + INDEX_PER_COLLECTION);
             if (!name.IsWord()) throw LiteException.InvalidIndexName(name, collection, "Use only [a-Z$_]");
             if (name.StartsWith("$")) throw LiteException.InvalidIndexName(name, collection, "Index name can't starts with `$`");
 
@@ -44,15 +44,13 @@ namespace LiteDB.Engine
                 }
 
                 // create index head
-                var index = indexer.CreateIndex(col);
+                var index = indexer.CreateIndex(name, expression.Source, unique);
 
                 index.Name = name;
                 index.Expression = expression.Source;
                 index.Unique = unique;
 
-                // test if this new name/expression fit on PAGE_SIZE
-                col.CalculateNameSize();
-
+                /*
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))
                 {
@@ -74,12 +72,13 @@ namespace LiteDB.Engine
                         // link index node to datablock
                         node.DataBlock = pkNode.DataBlock;
                     }
-                }
+                }*/
 
                 return true;
             });
         }
 
+        /*
         /// <summary>
         /// Drop an index from a collection
         /// </summary>
@@ -117,5 +116,6 @@ namespace LiteDB.Engine
                 return true;
             });
         }
+        */
     }
 }

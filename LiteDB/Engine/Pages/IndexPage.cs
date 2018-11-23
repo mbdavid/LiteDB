@@ -42,7 +42,8 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode InsertNode(byte level, BsonValue key, PageAddress dataBlock)
         {
-            var segment = base.Insert(IndexNode.GetNodeLength(level, key));
+            var length = IndexNode.GetNodeLength(level, key);
+            var segment = base.Insert(length);
 
             return new IndexNode(this, segment, level, key, dataBlock);
         }

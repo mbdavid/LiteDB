@@ -116,13 +116,13 @@ namespace LiteDB
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
-        public static void ENSURE(bool testRule, string message = null)
+        public static void ENSURE(bool conditional, string message = null)
         {
-            if (testRule == false)
+            if (conditional == false)
             {
                 if (Debugger.IsAttached)
                 {
-                    Debugger.Break();
+                    Debug.Fail(message);
                 }
                 else
                 {
@@ -136,13 +136,13 @@ namespace LiteDB
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
-        public static void ENSURE(bool ifTrue, bool testRule, string message = null)
+        public static void ENSURE(bool ifTrue, bool conditional, string message = null)
         {
-            if (ifTrue && testRule == false)
+            if (ifTrue && conditional == false)
             {
                 if (Debugger.IsAttached)
                 {
-                    Debugger.Break();
+                    Debug.Fail(message);
                 }
                 else
                 {
