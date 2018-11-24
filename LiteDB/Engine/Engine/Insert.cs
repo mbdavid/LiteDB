@@ -7,6 +7,28 @@ namespace LiteDB.Engine
 {
     public partial class LiteEngine
     {
+        public BsonDocument Find_by_id(string collection, BsonValue value)
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
+                var indexer = new IndexService(snapshot);
+                var data = new DataService(snapshot);
+
+                var node = indexer.Find(snapshot.CollectionPage.PK, value, false, 1);
+
+                var buffer = data.Read(node.DataBlock);
+
+                using(var r = new BufferReader(buffer))
+                {
+                    var doc = r.ReadDocument();
+
+                    return doc;
+                }
+            });
+        }
+
+
         /// <summary>
         /// Insert all documents in collection. If document has no _id, use AutoId generation.
         /// </summary>

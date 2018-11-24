@@ -406,8 +406,6 @@ namespace LiteDB.Engine
             var end = _position + length - 5;
             var remaining = fields == null || fields.Count == 0 ? null : new HashSet<string>(fields, StringComparer.OrdinalIgnoreCase);
 
-            ENSURE(remaining != null && remaining.Contains("$"), remaining.Count == 1, "if contains $, should be be empty/full hash");
-
             var doc = new BsonDocument();
 
             while (_position < end && (remaining == null || remaining?.Count > 0))

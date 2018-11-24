@@ -14,6 +14,7 @@ namespace LiteDB.Demo
 {
     public class TestEngine
     {
+        static Random RND = new Random();
         static string PATH = @"D:\memory-file.db";
         static string PATH_LOG = @"D:\memory-file-log.db";
 
@@ -37,23 +38,31 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(PATH))
             {
 
-                IEnumerable<BsonDocument> source()
+                IEnumerable<BsonDocument> source(int k)
                 {
-                    for (var i = 0; i < 100000; i++)
+                    for (var i = k; i < k + 100000; i++)
                     {
-                        doc["_id"] = i;
-                        doc["name"] = Guid.NewGuid().ToString();
+                        doc["_id"] = i;// Guid.NewGuid().ToString();
+                        doc["rnd"] = Guid.NewGuid().ToString(); // RND.Next(1, 200000);
+                        doc["name"] = Guid.NewGuid().ToString() + " == " + i;
+                        doc["bytes"] = new byte[RND.Next(30, 1500)];
                         yield return doc;
                     }
 
                 }
 
-                db.EnsureIndex("col1", "idx_1", "$.name", false);
+                db.EnsureIndex("col1", "idx_1", "rnd", false);
 
-                db.Insert("col1", source(), BsonAutoId.Int32);
-
+                db.Insert("col1", source(0), BsonAutoId.Int32);
                 //sw.Stop();
 
+                db.Insert("col1", source(101000), BsonAutoId.Int32);
+
+
+                var d0 = db.Find_by_id("col1", 137737);
+
+
+                Console.WriteLine(d0.ToString());
             }
            
         }

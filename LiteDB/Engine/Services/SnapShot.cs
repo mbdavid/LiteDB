@@ -54,11 +54,10 @@ namespace LiteDB.Engine
             _locker = locker;
             _walIndex = walIndex;
 
-            this.CollectionName = collectionName;
-
-            // initialize data/log readers
             _dataReader = dataFile.GetReader(mode == LockMode.Write);
             _logReader = logFile.GetReader(mode == LockMode.Write);
+
+            this.CollectionName = collectionName;
 
             // enter in lock mode according initial mode
             if (mode == LockMode.Read)
@@ -106,6 +105,7 @@ namespace LiteDB.Engine
         public void ClearLocalPages()
         {
             _localPages.Clear();
+
             _dataReader.ReleasePages();
             _logReader.ReleasePages();
         }

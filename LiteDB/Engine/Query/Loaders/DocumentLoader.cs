@@ -9,16 +9,14 @@ namespace LiteDB.Engine
     internal class DocumentLoader : IDocumentLoader
     {
         protected readonly DataService _data;
-        protected readonly BsonReader _bsonReader;
+        protected readonly BufferReader _bsonReader;
         protected readonly HashSet<string> _fields;
-        protected readonly CursorInfo _cursor;
 
-        public DocumentLoader(DataService data, bool utcDate, HashSet<string> fields, CursorInfo cursor)
+        public DocumentLoader(DataService data, bool utcDate, HashSet<string> fields)
         {
             _data = data;
             _bsonReader = new BsonReader(utcDate);
             _fields = fields;
-            _cursor = cursor;
         }
 
         public virtual BsonDocument Load(PageAddress rawId)

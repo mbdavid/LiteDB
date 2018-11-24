@@ -26,7 +26,7 @@ namespace LiteDB.Engine
 
         private readonly Lazy<Stream> _stream;
 
-        public MemoryFileThread(MemoryStore store,  StreamPool pool, AesEncryption aes, ReaderWriterLockSlim locker, Lazy<MemoryFileWriter> writer)
+        public MemoryFileThread(MemoryStore store, StreamPool pool, AesEncryption aes, ReaderWriterLockSlim locker, Lazy<MemoryFileWriter> writer)
         {
             _store = store;
             _pool = pool;

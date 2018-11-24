@@ -301,8 +301,6 @@ namespace LiteDB.Engine
                 }
                 else
                 {
-                    Debug.Print($"Extending memory array. Segments: {this.ExtendSegments} - Total: {StorageUnitHelper.FormatFileSize(this.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE)}");
-
                     // create big linear array in heap (G2 - > 85Kb)
                     var buffer = new byte[PAGE_SIZE * MEMORY_SEGMENT_SIZE];
 
@@ -313,6 +311,8 @@ namespace LiteDB.Engine
                     {
                         _store.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE));
                     }
+
+                    Debug.Print($"Extending memory array. Segments: {this.ExtendSegments} - Total: {StorageUnitHelper.FormatFileSize(this.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE)}");
                 }
             }
             finally

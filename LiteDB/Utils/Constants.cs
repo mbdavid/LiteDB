@@ -142,7 +142,7 @@ namespace LiteDB
             {
                 if (Debugger.IsAttached)
                 {
-                    Debug.Fail(message);
+                    Debugger.Break();
                 }
                 else
                 {

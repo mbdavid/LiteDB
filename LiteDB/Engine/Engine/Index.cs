@@ -46,10 +46,6 @@ namespace LiteDB.Engine
                 // create index head
                 var index = indexer.CreateIndex(name, expression.Source, unique);
 
-                index.Name = name;
-                index.Expression = expression.Source;
-                index.Unique = unique;
-
                 /*
                 // read all objects (read from PK index)
                 foreach (var pkNode in new IndexAll("_id", LiteDB.Query.Ascending).Run(col, indexer))

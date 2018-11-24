@@ -308,7 +308,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(bool value)
         {
-            _current[_currentPosition] = value ? (byte)0x00 : (byte)0x01;
+            _current[_currentPosition] = value ? (byte)0x01 : (byte)0x00;
             this.MoveFordward(1);
         }
 

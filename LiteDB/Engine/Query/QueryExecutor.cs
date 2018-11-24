@@ -176,20 +176,20 @@ namespace LiteDB.Engine
 
             var result = 0;
 
-            // if collection starts with $ it's system collection
-            if (into.StartsWith("$"))
-            {
-                SqlParser.ParseCollection(new Tokenizer(into), out var name, out var options);
-
-                var sys = _engine.GetSystemCollection(name);
-
-                result = sys.Output(getResultset(), options);
-            }
-            // otherwise insert as normal collection
-            else
-            {
+            //**// if collection starts with $ it's system collection
+            //**if (into.StartsWith("$"))
+            //**{
+            //**    SqlParser.ParseCollection(new Tokenizer(into), out var name, out var options);
+            //**
+            //**    var sys = _engine.GetSystemCollection(name);
+            //**
+            //**    result = sys.Output(getResultset(), options);
+            //**}
+            //**// otherwise insert as normal collection
+            //**else
+            //**{
                 result = _engine.Insert(into, getResultset(), autoId);
-            }
+            //**}
 
             return new BsonDataReader(result);
         }

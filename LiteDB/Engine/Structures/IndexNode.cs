@@ -77,7 +77,7 @@ namespace LiteDB.Engine
         /// Get how many bytes will be used to store this value. Must consider:
         /// [1 byte] - BsonType
         /// [1 byte] - KeyLength (used only in String|Byte[])
-        /// [N bytes] - BsonValue in bytes (0-255)
+        /// [N bytes] - BsonValue in bytes (0-254)
         /// </summary>
         public static int GetKeyLength(BsonValue key)
         {
@@ -147,8 +147,6 @@ namespace LiteDB.Engine
             segment.Buffer.Write(this.PrevNode, P_PREV_NODE);
             segment.Buffer.Write(this.NextNode, P_NEXT_NODE);
 
-            // prev/next will be modified by method "Set" (i'm sure about this)
-
             page.IsDirty = true;
         }
 
@@ -157,7 +155,10 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetPrevNode(PageAddress value)
         {
+            this.PrevNode = value;
+
             _segment.Buffer.Write(value, P_PREV_NODE);
+
             _page.IsDirty = true;
         }
 
@@ -166,41 +167,34 @@ namespace LiteDB.Engine
         /// </summary>
         public void SetNextNode(PageAddress value)
         {
+            this.NextNode = value;
+
             _segment.Buffer.Write(value, P_NEXT_NODE);
+
             _page.IsDirty = true;
         }
-//**
-//**        /// <summary>
-//**        /// Get Prev[index]
-//**        /// </summary>
-//**        public PageAddress GetPrev(byte index)
-//**        {
-//**            return _segment.Buffer.ReadPageAddress(P_PREV_NEXT + (index * PageAddress.SIZE * 2));
-//**        }
 
         /// <summary>
         /// Update Prev[index] pointer (update in buffer too). Also, set page as dirty
         /// </summary>
         public void SetPrev(byte index, PageAddress value)
         {
+            this.Prev[index] = value;
+
             _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2));
+
             _page.IsDirty = true;
         }
-//**
-//**        /// <summary>
-//**        /// Get Next[index]
-//**        /// </summary>
-//**        public PageAddress GetNext(byte index)
-//**        {
-//**            return _segment.Buffer.ReadPageAddress(P_PREV_NEXT + (index * PageAddress.SIZE * 2) + PageAddress.SIZE);
-//**        }
 
         /// <summary>
         /// Update Next[index] pointer (update in buffer too). Also, set page as dirty
         /// </summary>
         public void SetNext(byte index, PageAddress value)
         {
+            this.Next[index] = value;
+
             _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2) + PageAddress.SIZE);
+
             _page.IsDirty = true;
         }
 

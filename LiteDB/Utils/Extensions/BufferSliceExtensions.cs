@@ -165,7 +165,7 @@ namespace LiteDB
         public static void Write(this BufferSlice buffer, PageAddress value, int offset)
         {
             value.PageID.ToBytes(buffer.Array, buffer.Offset + offset);
-            buffer.Array[buffer.Offset + offset + 4] = value.Index;
+            buffer[offset + 4] = value.Index;
         }
 
         public static void Write(this BufferSlice buffer, Guid value, int offset)

@@ -9,11 +9,6 @@ namespace LiteDB.Engine
     public partial class LiteEngine
     {
         /// <summary>
-        /// Store all cursor information
-        /// </summary>
-        private LinkedList<CursorInfo> _cursors = new LinkedList<CursorInfo>();
-
-        /// <summary>
         /// Run query over collection using a query definition
         /// </summary>
         public IBsonDataReader Query(string collection, QueryDefinition query)

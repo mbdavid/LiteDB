@@ -94,19 +94,19 @@ namespace LiteDB.Engine
 
                 for(var i = 0; i < count; i++)
                 {
-                    var name = r.ReadCString();
-
-                    _indexes[name] = new CollectionIndex
+                    var index = new CollectionIndex(
+                        name: r.ReadCString(),
+                        expr: r.ReadCString(),
+                        unique: r.ReadBoolean(),
+                        head: r.ReadPageAddress(),
+                        tail: r.ReadPageAddress())
                     {
-                        Name = name, // .Length + 1 
-                        Expression = r.ReadCString(), // .Length + 1 
-                        Unique = r.ReadBoolean(), // 1
                         MaxLevel = r.ReadByte(), // 1
-                        Head = r.ReadPageAddress(), // 5
-                        Tail = r.ReadPageAddress(), // 5
                         KeyCount = r.ReadUInt32(), // 4
                         UniqueKeyCount = r.ReadUInt32() // 4
                     };
+
+                    _indexes[index.Name] = index;
                 }
             }
         }
@@ -147,9 +147,9 @@ namespace LiteDB.Engine
                         w.WriteCString(index.Name);
                         w.WriteCString(index.Expression);
                         w.Write(index.Unique);
-                        w.Write(index.MaxLevel);
                         w.Write(index.Head);
                         w.Write(index.Tail);
+                        w.Write(index.MaxLevel);
                         w.Write(index.KeyCount);
                         w.Write(index.UniqueKeyCount);
                     }
@@ -188,18 +188,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Insert new index inside this collection page
         /// </summary>
-        public CollectionIndex InsertIndex(string name, string expr, bool unique)
+        public CollectionIndex InsertIndex(string name, string expr, bool unique, PageAddress head, PageAddress tail)
         {
             //TODO: test page space for this new index
 
-            var index = new CollectionIndex
-            {
-                Name = name,
-                Expression = expr,
-                Unique = unique
-            };
+            var index = new CollectionIndex(name, expr, unique, head, tail);
             
-            _indexes[index.Name] = index;
+            _indexes[name] = index;
 
             _isIndexesChanged = true;
 

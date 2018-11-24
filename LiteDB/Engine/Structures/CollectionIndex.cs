@@ -8,22 +8,22 @@ namespace LiteDB.Engine
         /// <summary>
         /// Index name
         /// </summary>
-        public string Name { get; set; } = "";
+        public string Name { get; }
 
         /// <summary>
         /// Get index expression (path or expr)
         /// </summary>
-        public string Expression { get; set; } = "";
+        public string Expression { get; }
 
         /// <summary>
         /// Indicate if this index has distinct values only
         /// </summary>
-        public bool Unique { get; set; }
+        public bool Unique { get; }
 
         /// <summary>
         /// Head page address for this index
         /// </summary>
-        public PageAddress Head { get; set; } = PageAddress.Empty;
+        public PageAddress Head { get; }
 
         /// <summary>
         /// Retain Head index node instance to avoid re-read all times (this node never change)
@@ -33,7 +33,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// A link pointer to tail node
         /// </summary>
-        public PageAddress Tail { get; set; } = PageAddress.Empty;
+        public PageAddress Tail { get; }
 
         /// <summary>
         /// Retain Tail index node instance to avoid re-read all times (this node never change)
@@ -83,8 +83,13 @@ namespace LiteDB.Engine
             get { return string.IsNullOrEmpty(this.Name); }
         }
 
-        public CollectionIndex()
+        public CollectionIndex(string name, string expr, bool unique, PageAddress head, PageAddress tail)
         {
+            this.Name = name;
+            this.Expression = expr;
+            this.Unique = unique;
+            this.Head = head;
+            this.Tail = tail;
         }
     }
 }

@@ -85,12 +85,9 @@ namespace LiteDB.Engine
         /// </summary>
         public static CollectionPage CreateCollectionPage(string name)
         {
-            var col = new CollectionPage(0) { CollectionName = name };
+            var col = new CollectionPage(null, 0);
 
-            var pk = col.GetFreeIndex();
-
-            pk.Name = "_id";
-            pk.Expression = "$._id";
+            var pk = col.InsertIndex("_id", "$._id", true);
 
             return col;
         }
