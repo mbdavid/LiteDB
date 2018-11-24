@@ -149,7 +149,7 @@ namespace LiteDB.Engine
                 return (T)page;
             }
 
-            // if page is not in local cache, get from disk
+            // if page is not in local cache, get from disk (log/wal/data)
             page = this.ReadPage<T>(pageID);
 
             // store now in local cache (except collection page)
@@ -199,6 +199,8 @@ namespace LiteDB.Engine
             }
             else
             {
+                ENSURE(pageID <= _header.LastPageID, "request page must be less or equals lastest page in data file");
+
                 // for last chance, look inside original disk data file
                 var pagePosition = BasePage.GetPagePosition(pageID);
 

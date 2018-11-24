@@ -41,14 +41,14 @@ namespace LiteDB.Demo
                 {
                     for (var i = 0; i < 100000; i++)
                     {
-                        doc["_id"] = Guid.NewGuid().ToString();
-                        //doc["name"] = DateTime.Now;
+                        doc["_id"] = i;
+                        doc["name"] = Guid.NewGuid().ToString();
                         yield return doc;
                     }
 
                 }
 
-                //db.EnsureIndex("col1", "idx_1", "$.name", false);
+                db.EnsureIndex("col1", "idx_1", "$.name", false);
 
                 db.Insert("col1", source(), BsonAutoId.Int32);
 

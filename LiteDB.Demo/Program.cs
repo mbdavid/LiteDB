@@ -25,7 +25,6 @@ namespace LiteDB.Demo
             //TestDataPage.Run(sw);
             TestEngine.Run(sw);
 
-            Console.WriteLine("===============================");
             Console.WriteLine("Elapsed: " + sw.ElapsedMilliseconds);
             Console.ReadKey();
 

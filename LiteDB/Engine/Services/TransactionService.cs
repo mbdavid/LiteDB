@@ -129,8 +129,7 @@ namespace LiteDB.Engine
 
                     var buffer = page.Item.GetBuffer(true);
 
-                    buffer.Position = long.MaxValue; // position will be defined when enter in queue
-
+                    // buffer position will be set at end of file (it´s always log file)
                     yield return buffer;
 
                     _transPages.DirtyPages[page.Item.PageID] = new PagePosition(page.Item.PageID, buffer.Position);

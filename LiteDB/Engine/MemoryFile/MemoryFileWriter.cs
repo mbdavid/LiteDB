@@ -59,9 +59,8 @@ namespace LiteDB.Engine
         public void QueuePage(PageBuffer page)
         {
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to queue page to write, page must be writable");
-            ENSURE(_mode == DbFileMode.Logfile, page.Position == long.MaxValue, "for log file, page always must be with no position (will be add at end of file)");
 
-            if (page.Position == long.MaxValue)
+            if (_mode == DbFileMode.Logfile || page.Position == long.MaxValue)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
@@ -75,7 +74,7 @@ namespace LiteDB.Engine
             }
 
             // mark this page as read-only and get cached paged to enqueue to write
-            var cached = _store.MarkAsReadOnly(page, true);
+            var cached = _store.MarkAsReadOnly(page);
 
             ENSURE(page.ShareCounter >= 2, "cached page must be shared at least twice (becasue this method must be called before release pages)");
             ENSURE(page.Position == cached.Position, "cached and page position must be equals (are same updated page)");

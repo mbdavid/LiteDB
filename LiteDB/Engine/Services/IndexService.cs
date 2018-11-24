@@ -60,7 +60,7 @@ namespace LiteDB.Engine
                 throw LiteException.InvalidIndexKey($"BsonValue MaxValue/MinValue are not supported as index key");
             }
 
-            // random level (flip coin mode)
+            // random level (flip coin mode) - return number between 1-32
             var level = this.FlipCoin();
 
             // set index collection with max-index level
@@ -99,20 +99,14 @@ namespace LiteDB.Engine
             // scan from top left
             for (int i = index.MaxLevel - 1; i >= 0; i--)
             {
-                var curNext = cur.GetNext((byte)i);
-
                 // get cache for last node
-                //**cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
-                cache = cache != null && cache.Position == curNext ? cache : this.GetNode(curNext);
+                cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
 
                 // for(; <while_not_this>; <do_this>) { ... }
-                for (; curNext.IsEmpty == false; cur = cache)
+                for (; cur.Next[i].IsEmpty == false; cur = cache)
                 {
-                    curNext = cur.GetNext((byte)i);
-
                     // get cache for last node
-                    //cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
-                    cache = cache != null && cache.Position == curNext ? cache : this.GetNode(curNext);
+                    cache = cache != null && cache.Position == cur.Next[i] ? cache : this.GetNode(cur.Next[i]);
 
                     // read next node to compare
                     var diff = cache.Key.CompareTo(key);
@@ -131,18 +125,15 @@ namespace LiteDB.Engine
 
                     //**curPage.IsDirty = true;
 
-                    //node.SetNext((byte)i, cur.Next[i]);
-                    //node.SetPrev((byte)i, cur.Next[i]);
-                    node.SetNext((byte)i, curNext);
-                    node.SetPrev((byte)i, curNext);
+                    node.SetNext((byte)i, cur.Next[i]);
+                    node.SetPrev((byte)i, cur.Next[i]);
                     cur.SetNext((byte)i, node.Position);
 
                     //**node.Next[i] = cur.Next[i];
                     //**node.Prev[i] = cur.Position;
                     //**cur.Next[i] = node.Position;
 
-                    //var next = this.GetNode(node.Next[i]);
-                    var next = this.GetNode(node.GetNext((byte)i));
+                    var next = this.GetNode(node.Next[i]);
 
                     if (next != null)
                     {
@@ -200,7 +191,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode GetNode(PageAddress address)
         {
-            if (address.IsEmpty) return null;
+            if (address.PageID == uint.MaxValue) return null;
 
             var page = _snapshot.GetPage<IndexPage>(address.PageID);
 

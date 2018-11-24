@@ -66,7 +66,7 @@ namespace LiteDB
 
         public static PageAddress ReadPageAddress(this BufferSlice buffer, int offset)
         {
-            return new PageAddress(buffer.ReadUInt32(offset), buffer.Array[buffer.Offset + offset + 4]);
+            return new PageAddress(buffer.ReadUInt32(offset), buffer[offset + 4]);
         }
 
         public static string ReadString(this BufferSlice buffer, int offset, int count)

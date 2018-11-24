@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -171,16 +172,13 @@ namespace LiteDB.Engine
         /// Mark a writable page as read only page after made changes.
         /// If page is duplicated (already in clean list) update clean list and return page
         /// </summary>
-        public PageBuffer MarkAsReadOnly(PageBuffer page, bool pageChanged)
+        public PageBuffer MarkAsReadOnly(PageBuffer page)
         {
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "only writable pages can be marked as clean");
             ENSURE(_locker.IsReadLockHeld, "must be called inside a read lock");
             ENSURE(page.Position != long.MaxValue, "to clean a page, position must be defined");
 
-            // when I set shareCounter != BUFFER_WRITABLE means this page are now clean page (no writes anymore)
-            // (page instance as no concurrency)
-            // if page will be added into writer queue (pageChaged) shared counter must be 1
-            page.ShareCounter = pageChanged ? 1 : 0;
+            page.ShareCounter = 1;
 
             // add in cache (return page inside collection)
             var result = _cache.AddOrUpdate(page.Position, page, (pos, current) =>
@@ -189,10 +187,7 @@ namespace LiteDB.Engine
 
                 // if page already in cache, this is a duplicate page in memory
                 // must update cached page with new page content
-                if (pageChanged)
-                {
-                    Buffer.BlockCopy(page.Array, page.Offset, current.Array, current.Offset, PAGE_SIZE);
-                }
+                Buffer.BlockCopy(page.Array, page.Offset, current.Array, current.Offset, PAGE_SIZE);
 
                 // and duplicated page now can return to store list (contains non-zero data - Timestamp must be > 0)
                 page.ShareCounter = 0;
@@ -224,18 +219,19 @@ namespace LiteDB.Engine
             ENSURE(page.ShareCounter != 0, "page must be shared OR writable before return");
             ENSURE(_locker.IsReadLockHeld, "need read lock");
 
-            // if page is writable it's mean that this page was requested to write BUT was not saved (was discard)
+            // if page is writable it's mean that this page was requested to write BUT was not saved (must be discard)
             // all pages that are queue to write are not in WRITABLE share counter state
             if (page.ShareCounter == BUFFER_WRITABLE)
             {
-                // update page instance with result page
-                page = this.MarkAsReadOnly(page, false);
-
-                ENSURE(page.ShareCounter >= 1, "after mark page as read only, share counter must return >= 1");
+                // just set this page if no share counter
+                page.ShareCounter = 0;
+            }
+            else
+            {
+                // now, decrement shareCounter
+                Interlocked.Decrement(ref page.ShareCounter);
             }
 
-            // now, decrement shareCounter
-            Interlocked.Decrement(ref page.ShareCounter);
         }
 
         /// <summary>
@@ -300,9 +296,13 @@ namespace LiteDB.Engine
                             _store.Enqueue(page);
                         }
                     }
+
+                    Debug.Print("Re-using cache pages");
                 }
                 else
                 {
+                    Debug.Print($"Extending memory array. Segments: {this.ExtendSegments} - Total: {StorageUnitHelper.FormatFileSize(this.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE)}");
+
                     // create big linear array in heap (G2 - > 85Kb)
                     var buffer = new byte[PAGE_SIZE * MEMORY_SEGMENT_SIZE];
 
