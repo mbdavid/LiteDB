@@ -142,7 +142,7 @@ namespace LiteDB.Engine
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
             {
-                snapshot.ClearLocalPages();
+                snapshot.Clear();
             }
 
             // there is no local pages in cache and all dirty pages are in log file

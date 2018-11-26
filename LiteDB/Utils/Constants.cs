@@ -92,27 +92,17 @@ namespace LiteDB
         public const string DB_PARAM_USERVERSION = "USERVERSION";
 
         /// <summary>
-        /// Stop VisualStudio if condition are true and we are running over #DEBUG - great for testing unexpected flow
+        /// Log a message using Debug.WriteLine
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
-        public static void DEBUG(bool conditional, string message = null)
+        public static void LOG(string message, string category = null)
         {
-            if(conditional)
-            {
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
-                else
-                {
-                    throw new SystemException(message);
-                }
-            }
+            Debug.WriteLine(message, category);
         }
 
         /// <summary>
-        /// Ensure conditional is true - if not stop VisualStudio when running over #DEBUG - great for testing unexpected flow
+        /// Ensure conditional is true - if not stop VisualStudio when running over #DEBUG - used for testing
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
@@ -126,27 +116,7 @@ namespace LiteDB
                 }
                 else
                 {
-                    throw new SystemException(message);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Ensure conditional is true - if not stop VisualStudio when running over #DEBUG - great for testing unexpected flow
-        /// </summary>
-        [DebuggerHidden]
-        [Conditional("DEBUG")]
-        public static void ENSURE(bool ifTrue, bool conditional, string message = null)
-        {
-            if (ifTrue && conditional == false)
-            {
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
-                else
-                {
-                    throw new SystemException(message);
+                    throw new SystemException("ENSURE: " + message);
                 }
             }
         }

@@ -297,7 +297,7 @@ namespace LiteDB.Engine
                         }
                     }
 
-                    Debug.Print("Re-using cache pages");
+                    LOG("Re-using cache pages", "CACHE");
                 }
                 else
                 {
@@ -312,7 +312,7 @@ namespace LiteDB.Engine
                         _store.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE));
                     }
 
-                    Debug.Print($"Extending memory array. Segments: {this.ExtendSegments} - Total: {StorageUnitHelper.FormatFileSize(this.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE)}");
+                    LOG($"Extending memory array. Segments: {this.ExtendSegments} - Total: {StorageUnitHelper.FormatFileSize(this.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE)}", "CACHE");
                 }
             }
             finally

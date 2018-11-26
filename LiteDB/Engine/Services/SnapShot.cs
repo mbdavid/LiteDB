@@ -79,7 +79,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Return all dirty pages
+        /// Return all dirty pages (can include collection)
         /// </summary>
         public IEnumerable<BasePage> GetDirtyPages(bool includeCollectionPage)
         {
@@ -100,9 +100,9 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Clear all localpages and return to file reader
+        /// Clear all local pages and return page buffer to file reader
         /// </summary>
-        public void ClearLocalPages()
+        public void Clear()
         {
             _localPages.Clear();
 
@@ -111,12 +111,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get local pages counter
-        /// </summary>
-        public int LocalPagesCount => _localPages.Count;
-
-        /// <summary>
-        /// Return all collection Unlock all collections locks on dispose
+        /// Dispose stream readers and exit collection lock
         /// </summary>
         public void Dispose()
         {
