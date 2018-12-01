@@ -26,11 +26,6 @@ namespace LiteDB.Engine
         public Stream LogStream { get; set; } = null;
 
         /// <summary>
-        /// Get/Set custom instance for Logger
-        /// </summary>
-        public Logger Log { get; set; } = null;
-
-        /// <summary>
         /// Full path or relative path from DLL directory. Can use ':temp:' for temp database or ':memory:' for in-memory database. (default: null)
         /// </summary>
         public string Filename { get; set; }
@@ -54,11 +49,6 @@ namespace LiteDB.Engine
         /// Max limit of datafile (in bytes) (default: MaxValue)
         /// </summary>
         public long LimitSize { get; set; } = long.MaxValue;
-
-        /// <summary>
-        /// Debug messages from database - (default: Logger.NONE)
-        /// </summary>
-        public byte LogLevel { get; set; } = Logger.NONE;
 
         /// <summary>
         /// Returns date in UTC timezone from BSON deserialization (default: false == LocalTime)

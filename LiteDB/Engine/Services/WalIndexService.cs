@@ -11,7 +11,6 @@ namespace LiteDB.Engine
     internal class WalIndexService
     {
         private readonly LockService _locker;
-        private readonly Logger _log;
 
         private readonly List<long> _confirmedTransactions = new List<long>();
         private readonly ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
@@ -22,10 +21,9 @@ namespace LiteDB.Engine
 //**        public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
 //**        public List<long> ConfirmedTransactions => _confirmedTransactions;
 
-        public WalIndexService(LockService locker, Logger log)
+        public WalIndexService(LockService locker)
         {
             _locker = locker;
-            _log = log;
         }
 
         /// <summary>

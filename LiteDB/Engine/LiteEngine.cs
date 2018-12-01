@@ -16,8 +16,6 @@ namespace LiteDB.Engine
     {
         #region Services instances
 
-        private readonly Logger _log;
-
         private readonly LockService _locker;
 
         private readonly DiskService _disk;
@@ -96,12 +94,9 @@ namespace LiteDB.Engine
 
             try
             {
-                // create factory based on connection string if there is no factory
-                _log = settings.Log ?? new Logger(settings.LogLevel);
-
                 _settings = settings;
 
-                _log.Info($"initializing database");
+                LOG("initializing database");
 
                 // initialize disk service (will create database if needed)
                 _disk = new DiskService(settings);
@@ -115,7 +110,7 @@ namespace LiteDB.Engine
                 }
 
                 // initialize wal-index service
-                _walIndex = new WalIndexService(_locker, _log);
+                _walIndex = new WalIndexService(_locker);
 
                 // if exists log file, restore wal index references (can update full _header instance)
                 if (_disk.HasLogFile)
@@ -124,7 +119,7 @@ namespace LiteDB.Engine
                 }
 
                 // initialize another services
-                _locker = new LockService(settings.Timeout, settings.ReadOnly, _log);
+                _locker = new LockService(settings.Timeout, settings.ReadOnly);
 
 
                 // register system collections
@@ -138,7 +133,7 @@ namespace LiteDB.Engine
             }
             catch (Exception ex)
             {
-                _log.Error(ex);
+                LOG(ex.Message, "ERROR");
 
                 // explicit dispose (but do not run shutdown operation)
                 this.Dispose(true);
@@ -166,7 +161,7 @@ namespace LiteDB.Engine
             // start shutdown operation
             _shutdown = true;
 
-            _log.Info("shutting down the database");
+            LOG("shutting down the database");
 
 //**            // mark all transaction as shotdown status
 //**            foreach (var trans in _transactions.Values)

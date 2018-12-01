@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -21,7 +22,7 @@ namespace LiteDB.Engine
             {
                 isNew = true;
 
-                transaction = new TransactionService(_header, _locker, _disk, _walIndex, _log, (id) =>
+                transaction = new TransactionService(_header, _locker, _disk, _walIndex, (id) =>
                 {
                     Thread.SetData(_slot, null);
 
@@ -107,7 +108,7 @@ namespace LiteDB.Engine
             }
             catch(Exception ex)
             {
-                _log.Error(ex);
+                LOG(ex.Message, "ERROR");
 
                 transaction.Rollback();
 

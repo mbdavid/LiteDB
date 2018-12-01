@@ -19,7 +19,6 @@ namespace LiteDB.Engine
         private readonly DiskService _disk;
         private readonly DiskReader _reader;
         private readonly WalIndexService _walIndex;
-        private readonly Logger _log;
 
         // transaction controls
         private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
@@ -34,14 +33,13 @@ namespace LiteDB.Engine
         //**public Dictionary<string, Snapshot> Snapshots => _snapshots;
         //**public TransactionPages Pages => _transPages;
 
-        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Logger log, Action<long> done)
+        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<long> done)
         {
             // retain instances
             _header = header;
             _locker = locker;
             _disk = disk;
             _walIndex = walIndex;
-            _log = log;
             _done = done;
 
             _reader = _disk.GetReader();
