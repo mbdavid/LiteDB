@@ -12,11 +12,6 @@ namespace LiteDB.Engine
     internal interface IStreamFactory
     {
         /// <summary>
-        /// Get file mode (datafile or logfile)
-        /// </summary>
-        DbFileMode FileMode { get; }
-
-        /// <summary>
         /// Get filename
         /// </summary>
         string Filename { get; }

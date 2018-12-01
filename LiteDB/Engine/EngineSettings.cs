@@ -76,28 +76,38 @@ namespace LiteDB.Engine
         public bool ReadOnly { get; set; } = false;
 
         /// <summary>
+        /// Create new IStreamFactory for datafile
+        /// </summary>
+        internal IStreamFactory CreateDataFactory() => this.CreateStreamFactory(true);
+
+        /// <summary>
+        /// Create new IStreamFactory for logfile
+        /// </summary>
+        internal IStreamFactory CreateLogFactory() => this.CreateStreamFactory(false);
+
+        /// <summary>
         /// Get Data/Log Stream factory
         /// </summary>
-        internal IStreamFactory GetStreamFactory(DbFileMode filemode)
+        private IStreamFactory CreateStreamFactory(bool dataFile)
         {
-            var stream = filemode == DbFileMode.Datafile ? this.DataStream : this.LogStream;
-            var filename = filemode == DbFileMode.Datafile ? this.Filename : FileHelper.GetLogFile(this.Filename);
+            var stream = dataFile ? this.DataStream : this.LogStream;
+            var filename = dataFile ? this.Filename : FileHelper.GetLogFile(this.Filename);
 
             if (stream != null)
             {
-                return new StreamFactory(stream, filemode);
+                return new StreamFactory(stream);
             }
             else if (filename == ":memory:")
             {
-                return new StreamFactory(new MemoryStream(), filemode);
+                return new StreamFactory(new MemoryStream());
             }
             else if (filename == ":temp:")
             {
-                return new StreamFactory(new TempStream(), filemode);
+                return new StreamFactory(new TempStream());
             }
             else if (!string.IsNullOrEmpty(filename))
             {
-                return new FileStreamFactory(filename, filemode, this.ReadOnly);
+                return new FileStreamFactory(filename, this.ReadOnly);
             }
 
             throw new ArgumentException("EngineSettings must have Filename or DataStream as data source");

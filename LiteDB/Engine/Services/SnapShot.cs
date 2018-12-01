@@ -15,8 +15,7 @@ namespace LiteDB.Engine
         // instances from Engine
         private readonly HeaderPage _header;
         private readonly LockService _locker;
-        private readonly MemoryFileReader _dataReader;
-        private readonly MemoryFileReader _logReader;
+        private readonly DiskReader _reader;
         private readonly WalIndexService _walIndex;
 
         // instances from transaction
@@ -45,7 +44,7 @@ namespace LiteDB.Engine
         // local page cache - contains only pages about this collection (but do not contains CollectionPage - use this.CollectionPage)
         private readonly Dictionary<uint, BasePage> _localPages = new Dictionary<uint, BasePage>();
 
-        public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalIndexService walIndex, MemoryFileThread dataFile, MemoryFileThread logFile, bool addIfNotExists)
+        public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalIndexService walIndex, DiskReader reader, bool addIfNotExists)
         {
             this.Mode = mode;
 
@@ -53,9 +52,7 @@ namespace LiteDB.Engine
             _transPages = transPages;
             _locker = locker;
             _walIndex = walIndex;
-
-            _dataReader = dataFile.GetReader(mode == LockMode.Write);
-            _logReader = logFile.GetReader(mode == LockMode.Write);
+            _reader = reader;
 
             this.CollectionName = collectionName;
 
@@ -104,10 +101,11 @@ namespace LiteDB.Engine
         /// </summary>
         public void Clear()
         {
-            _localPages.Clear();
+            // release all pages (except collection page)
+            _localPages.Values
+                .ForEach((i, p) => p.GetBuffer(false).Release());
 
-            _dataReader.ReleasePages();
-            _logReader.ReleasePages();
+            _localPages.Clear();
         }
 
         /// <summary>
@@ -115,8 +113,8 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
-            _dataReader.Dispose();
-            _logReader.Dispose();
+            // release collection page
+            this.CollectionPage?.GetBuffer(false).Release();
 
             if (this.Mode == LockMode.Read)
             {
@@ -166,13 +164,11 @@ namespace LiteDB.Engine
         private T ReadPage<T>(uint pageID)
             where T : BasePage
         {
-            // do not release collection page (only at dispose)
-            var release = typeof(T) != typeof(CollectionPage);
-
             // if not inside local pages can be a dirty page saved in log file
             if (_transPages.DirtyPages.TryGetValue(pageID, out var position))
             {
-                var buffer = _logReader.GetPage(position.Position, release);
+                // read page from log file
+                var buffer = _reader.ReadPage(position.Position, this.Mode == LockMode.Write, PageMode.Log);
                 var dirty = BasePage.ReadPage<T>(buffer);
 
                 return dirty;
@@ -183,7 +179,8 @@ namespace LiteDB.Engine
 
             if (pos != long.MaxValue)
             {
-                var buffer = _logReader.GetPage(pos, release);
+                // read page from log file
+                var buffer = _reader.ReadPage(position.Position, this.Mode == LockMode.Write, PageMode.Log);
                 var logPage = BasePage.ReadPage<T>(buffer);
 
                 // clear some data inside this page (will be override when write on log file)
@@ -199,7 +196,8 @@ namespace LiteDB.Engine
                 // for last chance, look inside original disk data file
                 var pagePosition = BasePage.GetPagePosition(pageID);
 
-                var buffer = _dataReader.GetPage(pagePosition, release);
+                // read page from data file
+                var buffer = _reader.ReadPage(position.Position, this.Mode == LockMode.Write, PageMode.Data);
                 var diskpage = BasePage.ReadPage<T>(buffer);
 
                 return diskpage;
@@ -262,7 +260,7 @@ namespace LiteDB.Engine
                     pageID = ++_header.LastPageID;
 
                     // request for a new buffer
-                    buffer = _logReader.NewPage(release);
+                    buffer = _reader.NewPage();
                 }
             }
 

@@ -32,8 +32,7 @@ namespace LiteDB.Engine
         private const int P_USER_VERSION = 80; // 80-87
         // reserved 87-95 (9 bytes)
         private const int P_COLLECTIONS = 96; // 96-8128
-        private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS - PAGE_BLOCK_SIZE; // 8064
-        // reserved 32 bytes at end of header page (for encryption SALT)
+        private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS; // 8096
 
         #endregion
 
@@ -114,9 +113,6 @@ namespace LiteDB.Engine
             this.CreationTime = _buffer.ReadDateTime(P_CREATION_TIME);
             this.LastCheckpoint = _buffer.ReadDateTime(P_LAST_CHECKPOINT);
             this.UserVersion = _buffer.ReadInt32(P_USER_VERSION);
-
-            // clear SALT area in buffer to work CRC
-            _buffer.Array.Fill((byte)0, _buffer.Offset + P_ENCRYPTION_SALT, ENCRYPTION_SALT_SIZE);
 
             // create new buffer area to store BsonDocument collections
             var area = _buffer.Slice(P_COLLECTIONS, P_COLLECTIONS_COUNT);

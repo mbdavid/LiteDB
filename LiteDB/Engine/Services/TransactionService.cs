@@ -16,8 +16,8 @@ namespace LiteDB.Engine
         // instances from Engine
         private readonly HeaderPage _header;
         private readonly LockService _locker;
-        private readonly MemoryFileThread _dataFile;
-        private readonly MemoryFileThread _logFile;
+        private readonly DiskService _disk;
+        private readonly DiskReader _reader;
         private readonly WalIndexService _walIndex;
         private readonly Logger _log;
 
@@ -34,19 +34,17 @@ namespace LiteDB.Engine
         //**public Dictionary<string, Snapshot> Snapshots => _snapshots;
         //**public TransactionPages Pages => _transPages;
 
-        public TransactionService(HeaderPage header, LockService locker, MemoryFile dataFile, MemoryFile logFile, WalIndexService walIndex, Logger log, Action<long> done)
+        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Logger log, Action<long> done)
         {
+            // retain instances
+            _header = header;
+            _locker = locker;
+            _disk = disk;
             _walIndex = walIndex;
             _log = log;
             _done = done;
 
-            // retain instances
-            _header = header;
-            _locker = locker;
-
-            // get thread memoryfile instance
-            _dataFile = dataFile.Open();
-            _logFile = logFile.Open();
+            _reader = _disk.GetReader();
 
             // enter transaction locker to avoid 2 transactions in same thread
             _locker.EnterTransaction();
@@ -62,7 +60,7 @@ namespace LiteDB.Engine
 
             this.State = TransactionState.Active;
 
-            Snapshot create() => new Snapshot(mode, collection, _header, _transPages, _locker, _walIndex, _dataFile, _logFile, addIfNotExists);
+            Snapshot create() => new Snapshot(mode, collection, _header, _transPages, _locker, _walIndex, _reader, addIfNotExists);
 
             if (_snapshots.TryGetValue(collection, out var snapshot))
             {
@@ -137,7 +135,7 @@ namespace LiteDB.Engine
             };
 
             // write all pages, in sequence on log-file and store references into log pages on transPages
-            _logFile.WriteAsync(source());
+            _disk.LogWriter.Write(source());
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
@@ -174,54 +172,57 @@ namespace LiteDB.Engine
                         // lock header page to avoid concurrency when writing on header
                         lock (_header)
                         {
-                            using (var logReader = _logFile.GetReader(true))
+                            var newEmptyPageID = _header.FreeEmptyPageID;
+
+                            // if has deleted pages in this transaction, fix FreeEmptyPageID
+                            if (_transPages.DeletedPages > 0)
                             {
-                                var newEmptyPageID = _header.FreeEmptyPageID;
+                                // now, my free list will starts with first page ID
+                                newEmptyPageID = _transPages.FirstDeletedPageID;
 
-                                // if has deleted pages in this transaction, fix FreeEmptyPageID
-                                if (_transPages.DeletedPages > 0)
+                                // if free empty list was not empty, let's fix my last page
+                                if (_header.FreeEmptyPageID != uint.MaxValue)
                                 {
-                                    // now, my free list will starts with first page ID
-                                    newEmptyPageID = _transPages.FirstDeletedPageID;
+                                    var empty = _reader.NewPage();
 
-                                    // if free empty list was not empty, let's fix my last page
-                                    if (_header.FreeEmptyPageID != uint.MaxValue)
+                                    var lastDeletedPage = new BasePage(empty, _transPages.LastDeletedPageID, PageType.Empty)
                                     {
-                                        var empty = logReader.NewPage(true);
+                                        // update nextPageID of last deleted page to old first page ID
+                                        NextPageID = _header.FreeEmptyPageID,
+                                        TransactionID = this.TransactionID
+                                    };
 
-                                        var lastDeletedPage = new BasePage(empty, _transPages.LastDeletedPageID, PageType.Empty)
-                                        {
-                                            // update nextPageID of last deleted page to old first page ID
-                                            NextPageID = _header.FreeEmptyPageID,
-                                            TransactionID = this.TransactionID
-                                        };
+                                    // this page will write twice on wal, but no problem, only this last version will be saved on data file
+                                    _disk.LogWriter.Write(new [] { lastDeletedPage.GetBuffer(true) });
 
-                                        // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                        _logFile.WriteAsync(new [] { empty });
-                                    }
+                                    // release page just after write on disk
+                                    empty.Release();
                                 }
-
-                                // update this confirm page with current transactionID
-                                _header.FreeEmptyPageID = newEmptyPageID;
-                                _header.TransactionID = this.TransactionID;
-
-                                // this header page will be marked as confirmed page in log file
-                                _header.IsConfirmed = true;
-
-                                // invoke all header callbacks (new/drop collections)
-                                _transPages.OnCommit(_header);
-
-                                // clone header page
-                                var buffer = logReader.NewPage(true);
-
-                                Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, buffer.Array, buffer.Offset, buffer.Count);
-
-                                // persist header in log file
-                                _logFile.WriteAsync(new[] { buffer });
-
-                                // and update wal-index (before release _header lock)
-                                _walIndex.ConfirmTransaction(this.TransactionID, _transPages.DirtyPages.Values);
                             }
+
+                            // update this confirm page with current transactionID
+                            _header.FreeEmptyPageID = newEmptyPageID;
+                            _header.TransactionID = this.TransactionID;
+
+                            // this header page will be marked as confirmed page in log file
+                            _header.IsConfirmed = true;
+
+                            // invoke all header callbacks (new/drop collections)
+                            _transPages.OnCommit(_header);
+
+                            // clone header page
+                            var buffer = _reader.NewPage();
+
+                            Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, buffer.Array, buffer.Offset, buffer.Count);
+
+                            // persist header in log file
+                            _disk.LogWriter.Write(new[] { buffer });
+
+                            // release page just after write on disk
+                            buffer.Release();
+
+                            // and update wal-index (before release _header lock)
+                            _walIndex.ConfirmTransaction(this.TransactionID, _transPages.DirtyPages.Values);
                         }
                     }
                     else if (_transPages.DirtyPages.Count > 0)
@@ -297,65 +298,61 @@ namespace LiteDB.Engine
         /// </summary>
         public void ReturnNewPages()
         {
-            using (var logReader = _logFile.GetReader(true))
+            // create new transaction ID
+            var transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
+
+            // now lock header to update FreePageList
+            lock (_header)
             {
-                // create new transaction ID
-                var transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
+                // persist all empty pages into wal-file
+                var pagePositions = new Dictionary<uint, PagePosition>();
 
-                // now lock header to update FreePageList
-                lock (_header)
+                IEnumerable<PageBuffer> source()
                 {
-                    // persist all empty pages into wal-file
-                    var pagePositions = new Dictionary<uint, PagePosition>();
-
-                    IEnumerable<PageBuffer> source()
+                    // create list of empty pages with forward link pointer
+                    for (var i = 0; i < _transPages.NewPages.Count; i++)
                     {
-                        // create list of empty pages with forward link pointer
-                        for (var i = 0; i < _transPages.NewPages.Count; i++)
+                        var pageID = _transPages.NewPages[i];
+                        var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : _header.FreeEmptyPageID;
+
+                        var buffer = _disk.NewPage();
+
+                        var page = new BasePage(buffer, pageID, PageType.Empty)
                         {
-                            var pageID = _transPages.NewPages[i];
-                            var next = i < _transPages.NewPages.Count - 1 ? _transPages.NewPages[i + 1] : _header.FreeEmptyPageID;
+                            NextPageID = next,
+                            TransactionID = transactionID
+                        };
 
-                            var buffer = logReader.NewPage(true);
+                        yield return page.GetBuffer(true);
 
-                            var page = new BasePage(buffer, pageID, PageType.Empty)
-                            {
-                                NextPageID = next,
-                                TransactionID = transactionID
-                            };
+                        buffer.Release();
 
-                            yield return page.GetBuffer(true);
+                        // update wal
+                        pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
 
-                            // update wal
-                            pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
+                    }
 
-                            // safe point
-                            if (i % MAX_TRANSACTION_SIZE == 0)
-                            {
-                                logReader.ReleasePages();
-                            }
-                        }
+                    // update header page with my new transaction ID
+                    _header.TransactionID = transactionID;
+                    _header.FreeEmptyPageID = _transPages.NewPages[0];
+                    _header.IsConfirmed = true;
 
-                        // update header page with my new transaction ID
-                        _header.TransactionID = transactionID;
-                        _header.FreeEmptyPageID = _transPages.NewPages[0];
-                        _header.IsConfirmed = true;
+                    // clone header
+                    var clone = _reader.NewPage();
+                    var header = new HeaderPage(clone);
 
-                        // clone header
-                        var clone = logReader.NewPage(true);
-                        var header = new HeaderPage(clone);
+                    Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
 
-                        Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
+                    yield return clone;
 
-                        yield return clone;
-                    };
+                    clone.Release();
+                };
 
-                    // write all pages (including new header)
-                    _logFile.WriteAsync(source());
+                // write all pages (including new header)
+                _disk.LogWriter.Write(source());
 
-                    // now confirm this transaction to wal
-                    _walIndex.ConfirmTransaction(transactionID, pagePositions.Values);
-                }
+                // now confirm this transaction to wal
+                _walIndex.ConfirmTransaction(transactionID, pagePositions.Values);
             }
         }
 
@@ -386,8 +383,7 @@ namespace LiteDB.Engine
             _locker.ExitTransaction();
 
             // release memory file thread (stream)
-            _dataFile.Dispose();
-            _logFile.Dispose();
+            _reader.Dispose();
 
             // call done
             _done(this.TransactionID);

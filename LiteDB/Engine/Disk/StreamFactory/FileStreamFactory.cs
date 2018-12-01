@@ -13,20 +13,13 @@ namespace LiteDB.Engine
     internal class FileStreamFactory : IStreamFactory
     {
         private readonly string _filename;
-        private readonly DbFileMode _filemode;
         private readonly bool _readonly;
 
-        public FileStreamFactory(string filename, DbFileMode filemode, bool readOnly)
+        public FileStreamFactory(string filename, bool readOnly)
         {
             _filename = filename;
-            _filemode = filemode;
             _readonly = readOnly;
         }
-
-        /// <summary>
-        /// Get database file mode (data\log)
-        /// </summary>
-        public DbFileMode FileMode => _filemode;
 
         /// <summary>
         /// Get data filename

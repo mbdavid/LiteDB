@@ -21,7 +21,7 @@ namespace LiteDB.Engine
             {
                 isNew = true;
 
-                transaction = new TransactionService(_header, _locker, _dataFile, _logFile, _walIndex, _log, (id) =>
+                transaction = new TransactionService(_header, _locker, _disk, _walIndex, _log, (id) =>
                 {
                     Thread.SetData(_slot, null);
 

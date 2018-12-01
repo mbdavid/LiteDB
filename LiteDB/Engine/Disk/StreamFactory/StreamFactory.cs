@@ -12,18 +12,11 @@ namespace LiteDB.Engine
     internal class StreamFactory : IStreamFactory
     {
         private readonly Stream _stream;
-        private readonly DbFileMode _filemode;
 
-        public StreamFactory(Stream stream, DbFileMode filemode)
+        public StreamFactory(Stream stream)
         {
             _stream = stream;
-            _filemode = filemode;
         }
-
-        /// <summary>
-        /// Get database file mode (data\log)
-        /// </summary>
-        public DbFileMode FileMode => _filemode;
 
         /// <summary>
         /// Stream has no name (use stream type)

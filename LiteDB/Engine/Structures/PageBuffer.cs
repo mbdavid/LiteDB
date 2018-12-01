@@ -18,9 +18,19 @@ namespace LiteDB.Engine
     internal class PageBuffer : BufferSlice
     {
         /// <summary>
+        /// Get, on initialize, a unique ID in all database instance for this PageBufer. Is a simple global incremented counter
+        /// </summary>
+        public readonly int UniqueID;
+
+        /// <summary>
         /// Get/Set page position. If page are writable, this postion CAN be MaxValue (has not defined position yet)
         /// </summary>
         public long Position;
+
+        /// <summary>
+        /// Get/Set page mode (data/log) - represent WHERE page came from (not where you will write)
+        /// </summary>
+        public PageMode Mode;
 
         /// <summary>
         /// Get/Set how many read-share threads are using this page. -1 means 1 thread are using as writable
@@ -32,12 +42,31 @@ namespace LiteDB.Engine
         /// </summary>
         public long Timestamp;
 
-        public PageBuffer(byte[] buffer, int offset)
+        public PageBuffer(byte[] buffer, int offset, int uniqueID)
             : base(buffer, offset, PAGE_SIZE)
         {
+            this.UniqueID = uniqueID;
             this.Position = long.MaxValue;
-            this.Timestamp = 0;
+            this.Mode = PageMode.None;
             this.ShareCounter = 0;
+            this.Timestamp = 0;
+        }
+
+        /// <summary>
+        /// Release this page - decrement ShareCounter
+        /// </summary>
+        public void Release()
+        {
+            ENSURE(this.ShareCounter > 0, "ShareCounter must be > 0 in Dispose()");
+
+            //TODO: pode ser q seja zero mesmo.... ou seja, removi antes do tempo
+
+            Interlocked.Decrement(ref this.ShareCounter);
+        }
+
+        ~PageBuffer()
+        {
+            ENSURE(this.ShareCounter == 0, "Share count must be 0 in destroy PageBuffer");
         }
     }
 }

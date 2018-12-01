@@ -97,7 +97,7 @@ namespace LiteDB.Engine
         /// Load all confirmed transactions from log file (used only when open datafile)
         /// Don't need lock because it's called on ctor of LiteEngine
         /// </summary>
-        public void RestoreIndex(StreamPool pool, ref HeaderPage header)
+        public void RestoreIndex(DiskService disk, ref HeaderPage header)
         {
             // leio as paginas SEM o MemoryFile (é mais eficiente pois vou ver poucos dados)
             // uso apenas 1 buffer[8k] de temp + 1 buffer[8k] ultima header

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -19,9 +20,7 @@ namespace LiteDB.Engine
 
         private readonly LockService _locker;
 
-        private readonly MemoryFile _dataFile;
-
-        private readonly MemoryFile _logFile;
+        private readonly DiskService _disk;
 
         private readonly WalIndexService _walIndex;
 
@@ -102,42 +101,30 @@ namespace LiteDB.Engine
 
                 _settings = settings;
 
-                // create StreamFactory and StreamPool for data file
-                var dataFactory = settings.GetStreamFactory(DbFileMode.Datafile);
-                var dataPool = new StreamPool(dataFactory);
+                _log.Info($"initializing database");
 
-                _log.Info($"initializing database '{dataFactory.Filename}'");
+                // initialize disk service (will create database if needed)
+                _disk = new DiskService(settings);
 
-                AesEncryption aes = null;
-
-                // if has password, create AES encryption
-                if (settings.Password != null)
+                // read header page
+                using (var reader = _disk.GetReader())
                 {
-                    aes = AesEncryption.CreateAes(dataPool, _settings.Password);
+                    var buffer = reader.ReadPage(0, false, PageMode.Data);
+
+                    _header = new HeaderPage(buffer);
                 }
-
-                // create StreamFatory and StreamPool for log file
-                var logFactory = settings.GetStreamFactory(DbFileMode.Logfile);
-                var logPool = new StreamPool(logFactory);
-
-                // initialize memory files
-                _dataFile = new MemoryFile(dataPool, aes);
-                _logFile = new MemoryFile(logPool, aes);
-
-                // initialize another services
-                _locker = new LockService(settings.Timeout, settings.ReadOnly, _log);
-
-                // load header or create new database
-                _header = this.OpenOrCreateDatabase(dataPool);
 
                 // initialize wal-index service
                 _walIndex = new WalIndexService(_locker, _log);
 
                 // if exists log file, restore wal index references (can update full _header instance)
-                if (_logFile.Length > 0)
+                if (_disk.HasLogFile)
                 {
-                    _walIndex.RestoreIndex(logPool, ref _header);
+                    _walIndex.RestoreIndex(_disk, ref _header);
                 }
+
+                // initialize another services
+                _locker = new LockService(settings.Timeout, settings.ReadOnly, _log);
 
 
                 // register system collections
@@ -161,51 +148,7 @@ namespace LiteDB.Engine
 
         #endregion
 
-        /// <summary>
-        /// Open/Create new datafile and read first header page (read direct from Stream, do not use MemoryFile)
-        /// </summary>
-        private HeaderPage OpenOrCreateDatabase(StreamPool pool)
-        {
-            // header buffer contains a own buffer instance (not shared)
-            var buffer = new PageBuffer(new byte[PAGE_SIZE], 0) { ShareCounter = -2 /* static buffer */ };
 
-            if (pool.Factory.Exists())
-            {
-                // load header direct from stream
-                var stream = pool.Rent();
-
-                try
-                {
-                    stream.Position = 0;
-
-                    stream.Read(buffer.Array, 0, PAGE_SIZE);
-
-                    var header = new HeaderPage(buffer);
-
-                    return header;
-                }
-                finally
-                {
-                    pool.Return(stream);
-                }
-            }
-            else
-            {
-                // create new database (empty header page)
-                var header = new HeaderPage(buffer, 0);
-
-                pool.Writer.Write(buffer.Array, 0, PAGE_SIZE);
-
-                if (_settings.InitialSize > 0)
-                {
-                    pool.Writer.SetLength(_settings.InitialSize);
-                }
-
-                pool.Writer.FlushToDisk();
-
-                return header;
-            }
-        }
 
         /// <summary>
         /// Request a database checkpoint
@@ -247,12 +190,14 @@ namespace LiteDB.Engine
 
             if (disposing)
             {
+                // release header page
+                _header?.GetBuffer(false).Release();
+
+                // close all disk connections
+                _disk?.Dispose();
+
                 // dispose lockers
                 _locker?.Dispose();
-
-                // close all Dispose services
-                _dataFile?.Dispose();
-                _logFile?.Dispose();
 
                 if (_disposeTempdb)
                 {

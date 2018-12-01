@@ -37,9 +37,9 @@ namespace LiteDB
         public const int ENCRYPTION_SALT_SIZE = 16;
 
         /// <summary>
-        /// Position, in file (first page page) that contains SALT encryption (position 8176)
+        /// Position in disk to write SALT bytes - 1 byte from second page (Page #1) - This page will store only this data - never ever change
         /// </summary>
-        public const int P_ENCRYPTION_SALT = PAGE_SIZE - ENCRYPTION_SALT_SIZE;
+        public const int P_ENCRYPTION_SALT = PAGE_SIZE;
 
         /// <summary>
         /// Define ShareCounter buffer as writable

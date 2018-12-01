@@ -14,17 +14,12 @@ namespace LiteDB.Engine
         private readonly Lazy<Stream> _writer;
         private readonly IStreamFactory _factory;
 
-        public StreamPool(IStreamFactory factory)
+        public StreamPool(IStreamFactory factory, bool appendOnly)
         {
             _factory = factory;
 
-            _writer = new Lazy<Stream>(() => _factory.GetStream(true, _factory.FileMode == DbFileMode.Logfile));
+            _writer = new Lazy<Stream>(() => _factory.GetStream(true, appendOnly));
         }
-
-        /// <summary>
-        /// Get Stream factory
-        /// </summary>
-        public IStreamFactory Factory => _factory;
 
         /// <summary>
         /// Get single Stream writer instance

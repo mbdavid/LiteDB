@@ -90,30 +90,6 @@ namespace LiteDB
             return salt;
         }
 
-        /// <summary>
-        /// Get new AesEncryption instance. Use Stream to read SALT (at end of first page) and checks if password are correct
-        /// </summary>
-        public static AesEncryption CreateAes(StreamPool pool, string password)
-        {
-            if (pool.Factory.Exists() == false) return new AesEncryption(password, NewSalt());
-
-            var stream = pool.Rent();
-
-            try
-            {
-                var salt = new byte[ENCRYPTION_SALT_SIZE];
-
-                stream.Position = P_ENCRYPTION_SALT;
-                stream.Read(salt, 0, ENCRYPTION_SALT_SIZE);
-
-                return new AesEncryption(password, salt);
-            }
-            finally
-            {
-                pool.Return(stream);
-            }
-        }
-
         public void Dispose()
         {
             _encryptor.Dispose();

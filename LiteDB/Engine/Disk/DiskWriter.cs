@@ -15,15 +15,16 @@ namespace LiteDB.Engine
     /// <summary>
     /// ThreadSafe
     /// </summary>
-    internal class MemoryFileWriter : IDisposable
+    internal class DiskWriter : IDisposable
     {
         private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
-        private readonly MemoryStore _store;
+        private readonly MemoryCache _cache;
         private readonly ReaderWriterLockSlim _locker;
         private readonly AesEncryption _aes;
 
         private readonly Stream _stream;
-        private readonly DbFileMode _mode;
+
+        private readonly bool _append;
         private long _appendPosition;
 
         // async thread controls
@@ -31,14 +32,14 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public MemoryFileWriter(MemoryStore store, ReaderWriterLockSlim locker, StreamPool pool, AesEncryption aes)
+        public DiskWriter(MemoryCache cache, ReaderWriterLockSlim locker, Stream stream, bool append, AesEncryption aes)
         {
-            _store = store;
+            _cache = cache;
             _locker = locker;
             _aes = aes;
 
-            _mode = pool.Factory.FileMode;
-            _stream = pool.Writer;
+            _stream = stream;
+            _append = append;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
             _appendPosition = _stream.Length - PAGE_SIZE;
@@ -50,17 +51,35 @@ namespace LiteDB.Engine
             _thread.Start();
         }
 
-        public long Length => _appendPosition + PAGE_SIZE;
+        /// <summary>
+        /// Enqueue pages to write in async thread
+        /// </summary>
+        public void Write(IEnumerable<PageBuffer> pages)
+        {
+            _locker.EnterReadLock();
+
+            try
+            {
+                foreach(var page in pages)
+                {
+                    this.QueuePage(page);
+                }
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
+        }
 
         /// <summary>
         /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
-        public void QueuePage(PageBuffer page)
+        private void QueuePage(PageBuffer page)
         {
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to queue page to write, page must be writable");
 
-            if (_mode == DbFileMode.Logfile || page.Position == long.MaxValue)
+            if (_append || page.Position == long.MaxValue)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
@@ -74,22 +93,26 @@ namespace LiteDB.Engine
             }
 
             // mark this page as read-only and get cached paged to enqueue to write
-            var cached = _store.MarkAsReadOnly(page);
+            var readable = _cache.MoveToReadable(page);
 
-            ENSURE(page.ShareCounter >= 2, "cached page must be shared at least twice (becasue this method must be called before release pages)");
-            ENSURE(page.Position == cached.Position, "cached and page position must be equals (are same updated page)");
+            ENSURE(readable.ShareCounter >= 2, "cached page must be shared at least twice (becasue this method must be called before release pages)");
 
-            _queue.Enqueue(cached);
+            _queue.Enqueue(readable);
         }
+
+        /// <summary>
+        /// Get file length
+        /// </summary>
+        public long Length => _appendPosition + PAGE_SIZE;
 
         /// <summary>
         /// Create a fake page to be added in queue. When queue run this page, just set new stream length
         /// </summary>
-        public void QueueLength(long length)
+        public void SetLength(long length)
         {
             Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
 
-            _queue.Enqueue(new PageBuffer(null, 0) { Position = length });
+            _queue.Enqueue(new PageBuffer(null, 0, 0) { Position = length });
         }
 
         /// <summary>
@@ -120,7 +143,6 @@ namespace LiteDB.Engine
                     else
                     {
                         ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
-                        ENSURE(_store.InCache(page), "page (instance+position) must be cache inside");
 
                         // set stream position according to page
                         _stream.Position = page.Position;
@@ -129,30 +151,14 @@ namespace LiteDB.Engine
                         if (_aes != null)
                         {
                             _aes.Encrypt(page, _stream);
-
-                            // in datafile, header page will store plain SALT encryption
-                            if (page.Position == 0 && _mode == DbFileMode.Datafile)
-                            {
-                                _stream.Position = P_ENCRYPTION_SALT;
-                                _stream.Write(_aes.Salt, 0, ENCRYPTION_SALT_SIZE);
-                            }
                         }
                         else
                         {
                             _stream.Write(page.Array, page.Offset, PAGE_SIZE);
                         }
 
-                        // enter in read lock before return page
-                        _locker.EnterReadLock();
-
-                        try
-                        {
-                            _store.ReturnPage(page);
-                        }
-                        finally
-                        {
-                            _locker.ExitReadLock();
-                        }
+                        // release this page to be re-used
+                        page.Release();
                     }
                 }
 
