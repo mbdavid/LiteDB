@@ -27,11 +27,12 @@ namespace LiteDB.Engine
         private bool _shutdown = false;
 
         // transaction info
-        public int ThreadID { get; } = Thread.CurrentThread.ManagedThreadId;
-        public long TransactionID { get; } = System.Diagnostics.Stopwatch.GetTimestamp();
-        public TransactionState State { get; private set; } = TransactionState.New;
-        //**public Dictionary<string, Snapshot> Snapshots => _snapshots;
-        //**public TransactionPages Pages => _transPages;
+        public readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
+        public readonly long _transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
+        public TransactionState _state = TransactionState.New;
+
+        // expose
+        public long TransactionID => _transactionID;
 
         public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<long> done)
         {
@@ -54,9 +55,9 @@ namespace LiteDB.Engine
         public Snapshot CreateSnapshot(LockMode mode, string collection, bool addIfNotExists)
         {
             // if transaction are commited/aborted do not accept new snapshots
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) throw LiteException.InvalidTransactionState("CreateSnapshot", this.State);
+            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) throw LiteException.InvalidTransactionState("CreateSnapshot", _state);
 
-            this.State = TransactionState.Active;
+            _state = TransactionState.Active;
 
             Snapshot create() => new Snapshot(mode, collection, _header, _transPages, _locker, _walIndex, _reader, addIfNotExists);
 
@@ -90,7 +91,7 @@ namespace LiteDB.Engine
             if (_shutdown) throw LiteException.DatabaseShutdown();
 
             // Safepoint are valid only during transaction execution
-            ENSURE(this.State == TransactionState.Active, "Safepoint() are called during an invalid transaction state");
+            ENSURE(_state == TransactionState.Active, "Safepoint() are called during an invalid transaction state");
 
             if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
@@ -115,7 +116,7 @@ namespace LiteDB.Engine
                 foreach (var page in pages.IsLast())
                 {
                     // update page transactionID
-                    page.Item.TransactionID = this.TransactionID;
+                    page.Item.TransactionID = _transactionID;
 
                     // if last page, mask as confirm (if requested)
                     if (page.IsLast)
@@ -150,9 +151,9 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Commit()
         {
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
+            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) return false;
 
-            if (this.State == TransactionState.Active)
+            if (_state == TransactionState.Active)
             {
                 // first, check if has any write snapshot
                 var hasWriteSnapshot = _snapshots.Values
@@ -187,7 +188,7 @@ namespace LiteDB.Engine
                                     {
                                         // update nextPageID of last deleted page to old first page ID
                                         NextPageID = _header.FreeEmptyPageID,
-                                        TransactionID = this.TransactionID
+                                        TransactionID = _transactionID
                                     };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
@@ -200,7 +201,7 @@ namespace LiteDB.Engine
 
                             // update this confirm page with current transactionID
                             _header.FreeEmptyPageID = newEmptyPageID;
-                            _header.TransactionID = this.TransactionID;
+                            _header.TransactionID = _transactionID;
 
                             // this header page will be marked as confirmed page in log file
                             _header.IsConfirmed = true;
@@ -220,13 +221,13 @@ namespace LiteDB.Engine
                             buffer.Release();
 
                             // and update wal-index (before release _header lock)
-                            _walIndex.ConfirmTransaction(this.TransactionID, _transPages.DirtyPages.Values);
+                            _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
                         }
                     }
                     else if (_transPages.DirtyPages.Count > 0)
                     {
                         // update wal-index 
-                        _walIndex.ConfirmTransaction(this.TransactionID, _transPages.DirtyPages.Values);
+                        _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
                     }
                 }
 
@@ -247,9 +248,9 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Rollback()
         {
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
+            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) return false;
 
-            if (this.State == TransactionState.Active)
+            if (_state == TransactionState.Active)
             {
                 // only return pages if transaction has new pages
                 if (_transPages.NewPages.Count > 0)
@@ -274,9 +275,9 @@ namespace LiteDB.Engine
         /// </summary>
         public bool Release()
         {
-            if (this.State == TransactionState.Commited || this.State == TransactionState.Aborted) return false;
+            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) return false;
 
-            if (this.State == TransactionState.Active)
+            if (_state == TransactionState.Active)
             {
                 // dispose all snaps an release locks
                 foreach (var snaphost in _snapshots.Values)
@@ -360,7 +361,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Shutdown()
         {
-            if (Thread.CurrentThread.ManagedThreadId == this.ThreadID)
+            if (Thread.CurrentThread.ManagedThreadId == _threadID)
             {
                 this.Rollback();
             }
@@ -375,7 +376,7 @@ namespace LiteDB.Engine
         /// </summary>
         private void Done(TransactionState state)
         {
-            this.State = state;
+            _state = state;
 
             // release thread transaction lock
             _locker.ExitTransaction();
@@ -384,7 +385,7 @@ namespace LiteDB.Engine
             _reader.Dispose();
 
             // call done
-            _done(this.TransactionID);
+            _done(_transactionID);
         }
     }
 }

@@ -78,12 +78,19 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Dispose all stream (if used)
+        /// When dispose, return stream to pool
         /// </summary>
         public void Dispose()
         {
-            if (_dataStream.IsValueCreated) _dataStream.Value.Dispose();
-            if (_logStream.IsValueCreated) _logStream.Value.Dispose();
+            if (_dataStream.IsValueCreated)
+            {
+                _dataPool.Return(_dataStream.Value);
+            }
+
+            if (_logStream.IsValueCreated)
+            {
+                _logPool.Return(_logStream.Value);
+            }
         }
     }
 }

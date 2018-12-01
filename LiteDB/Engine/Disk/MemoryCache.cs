@@ -43,7 +43,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get how many extends was made in this store
         /// </summary>
-        public int ExtendSegments { get; private set; } = 0;
+        private int _extends = 0;
 
         public MemoryCache(ReaderWriterLockSlim locker)
         {
@@ -229,6 +229,7 @@ namespace LiteDB.Engine
         public PageBuffer MoveToReadable(PageBuffer page)
         {
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable before from to readable dict");
+            ENSURE(_locker.IsReadLockHeld, "this method must be called inside a read locker");
 
             var key = this.GetReadableKey(page.Position, page.Mode);
 
@@ -344,17 +345,17 @@ namespace LiteDB.Engine
                     // create big linear array in heap memory (G2 -> 85Kb)
                     var buffer = new byte[PAGE_SIZE * MEMORY_SEGMENT_SIZE];
 
-                    this.ExtendSegments++;
-
                     // slit linear array into many array slices
                     for (var i = 0; i < MEMORY_SEGMENT_SIZE; i++)
                     {
-                        var uniqueID = ((this.ExtendSegments - 1) * MEMORY_SEGMENT_SIZE) + i;
+                        var uniqueID = (_extends * MEMORY_SEGMENT_SIZE) + i;
 
                         _free.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE, uniqueID));
                     }
 
-                    LOG($"Extending memory usage. Segments: {this.ExtendSegments} - Used: {StorageUnitHelper.FormatFileSize(this.ExtendSegments * MEMORY_SEGMENT_SIZE * PAGE_SIZE)}", "CACHE");
+                    _extends++;
+
+                    LOG($"extending memory usage: (segments: {_extends} - used: {StorageUnitHelper.FormatFileSize(_extends * MEMORY_SEGMENT_SIZE * PAGE_SIZE)})", "CACHE");
                 }
             }
             finally

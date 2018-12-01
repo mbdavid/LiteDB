@@ -120,7 +120,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// When a page are requested as Writable but not saved in disk, must be discard before release
         /// </summary>
-        public void DiscardPage(IEnumerable<PageBuffer> pages, bool isDirty)
+        public void DiscardPages(IEnumerable<PageBuffer> pages, bool isDirty)
         {
             if (isDirty == false)
             {
