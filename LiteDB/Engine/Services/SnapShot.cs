@@ -86,13 +86,23 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get all clean pages (not modified)
+        /// </summary>
+        public IEnumerable<BasePage> GetCleanPages()
+        {
+            return _localPages.Values.Where(x => x.IsDirty == false);
+        }
+
+        /// <summary>
         /// Clear all local pages and return page buffer to file reader
         /// </summary>
         public void Clear()
         {
             // release all pages (except collection page)
-            _localPages.Values
-                .ForEach((i, p) => p.GetBuffer(false).Release());
+            foreach(var page in _localPages.Values)
+            {
+                page.GetBuffer(false).Release();
+            }
 
             _localPages.Clear();
         }
@@ -157,7 +167,7 @@ namespace LiteDB.Engine
             if (_transPages.DirtyPages.TryGetValue(pageID, out var position))
             {
                 // read page from log file
-                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, PageMode.Log);
+                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, FileOrigin.Log);
                 var dirty = BasePage.ReadPage<T>(buffer);
 
                 return dirty;
@@ -169,7 +179,7 @@ namespace LiteDB.Engine
             if (pos != long.MaxValue)
             {
                 // read page from log file
-                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, PageMode.Log);
+                var buffer = _reader.ReadPage(pos, _mode == LockMode.Write, FileOrigin.Log);
                 var logPage = BasePage.ReadPage<T>(buffer);
 
                 // clear some data inside this page (will be override when write on log file)
@@ -186,7 +196,7 @@ namespace LiteDB.Engine
                 var pagePosition = BasePage.GetPagePosition(pageID);
 
                 // read page from data file
-                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, PageMode.Data);
+                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, FileOrigin.Data);
                 var diskpage = BasePage.ReadPage<T>(buffer);
 
                 return diskpage;

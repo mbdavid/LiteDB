@@ -29,7 +29,7 @@ namespace LiteDB
         /// </summary>
         public static DateTime ToUtc(this DateTime dt)
         {
-            if (dt.Kind == DateTimeKind.Utc) return dt;
+            if (dt.Kind == DateTimeKind.Utc || dt == DateTime.MinValue || dt == DateTime.MaxValue) return dt;
 
             return dt.Subtract(_timeZoneDiff);
         }
@@ -39,7 +39,7 @@ namespace LiteDB
         /// </summary>
         public static DateTime ToLocal(this DateTime dt)
         {
-            if (dt.Kind == DateTimeKind.Local) return dt;
+            if (dt.Kind == DateTimeKind.Local || dt == DateTime.MinValue || dt == DateTime.MaxValue) return dt;
 
             return dt.Add(_timeZoneDiff);
         }

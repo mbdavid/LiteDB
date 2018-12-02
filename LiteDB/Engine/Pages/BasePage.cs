@@ -416,13 +416,13 @@ namespace LiteDB.Engine
             // first get all segments inside this page
             var segments = new List<PageSegment>();
 
-            for (byte i = 0; i <= this.HighestIndex; i++)
+            for (var i = 0; i <= this.HighestIndex; i++)
             {
                 var block = _buffer[PAGE_SIZE - i - 1];
 
                 if (block != 0)
                 {
-                    segments.Add(new PageSegment(_buffer, i, block));
+                    segments.Add(new PageSegment(_buffer, (byte)i, block));
                 }
             }
 
@@ -469,11 +469,11 @@ namespace LiteDB.Engine
         {
             var maxIndex = PAGE_AVAILABLE_BLOCKS;
 
-            for (byte index = 0; index <= maxIndex; index++) // 256 - 1 - 1
+            for (var index = 0; index <= maxIndex; index++) // 256 - 1 - 1
             {
                 var block = _buffer[PAGE_SIZE - index - 1];
 
-                if (block == 0) return index;
+                if (block == 0) return (byte)index;
             }
 
             throw new InvalidOperationException("This page has no more free space to insert new data");
@@ -484,13 +484,13 @@ namespace LiteDB.Engine
         /// </summary>
         protected IEnumerable<byte> GetIndexes()
         {
-            for (byte i = 0; i <= this.HighestIndex; i++)
+            for (var i = 0; i <= this.HighestIndex; i++)
             {
                 var block = _buffer[PAGE_SIZE - i - 1];
 
                 if (block != 0)
                 {
-                    yield return i;
+                    yield return (byte)i;
                 }
             }
         }
@@ -500,13 +500,13 @@ namespace LiteDB.Engine
         /// </summary>
         private void UpdateHighestIndex()
         {
-            for (byte i = (byte)(this.HighestIndex - 1); i <= 0; i--)
+            for (var i = this.HighestIndex - 1; i <= 0; i--)
             {
                 var block = _buffer[PAGE_SIZE - i - 1];
 
                 if (block != 0)
                 {
-                    this.HighestIndex = i;
+                    this.HighestIndex = (byte)i;
                     break;
                 }
             }

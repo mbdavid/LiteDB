@@ -16,7 +16,7 @@ namespace LiteDB.Engine
         public DataPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Data);
+            ENSURE(this.PageType == PageType.Data, "invalid data page buffer");
         }
 
         /// <summary>

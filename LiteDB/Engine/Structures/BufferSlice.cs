@@ -61,7 +61,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return $"Count: {this.Count} - Offset: {this.Offset}";
+            return $"Offset: {this.Offset} - Count: {this.Count}";
         }
     }
 }

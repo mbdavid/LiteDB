@@ -92,19 +92,19 @@ namespace LiteDB.Engine
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
 
+            _settings = settings;
+
+            LOG("engine initializing", "ENGINE");
+
             try
             {
-                _settings = settings;
-
-                LOG("initializing database");
-
                 // initialize disk service (will create database if needed)
                 _disk = new DiskService(settings);
 
                 // read header page
                 using (var reader = _disk.GetReader())
                 {
-                    var buffer = reader.ReadPage(0, false, PageMode.Data);
+                    var buffer = reader.ReadPage(0, false, FileOrigin.Data);
 
                     _header = new HeaderPage(buffer);
                 }
@@ -130,6 +130,8 @@ namespace LiteDB.Engine
                 //** {
                 //**     this.Upgrade();
                 //** }
+
+                LOG("initialized completed", "ENGINE");
             }
             catch (Exception ex)
             {
@@ -144,10 +146,9 @@ namespace LiteDB.Engine
         #endregion
 
 
-
-        /// <summary>
-        /// Request a database checkpoint
-        /// </summary>
+//**        /// <summary>
+//**        /// Request a database checkpoint
+//**        /// </summary>
 //**        public int Checkpoint() => _walIndex.Checkpoint(_header, true);
 
         /// <summary>
@@ -161,19 +162,19 @@ namespace LiteDB.Engine
             // start shutdown operation
             _shutdown = true;
 
-            LOG("shutting down the database");
+            LOG("shutting down the database", "ENGINE");
 
-//**            // mark all transaction as shotdown status
-//**            foreach (var trans in _transactions.Values)
-//**            {
-//**                trans.Shutdown();
-//**            }
-//**
-//**            if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
-//**            {
-//**                // do checkpoint (with no-lock check)
+            // mark all transaction as shotdown status
+            foreach (var trans in _transactions.Values)
+            {
+                trans.Shutdown();
+            }
+
+            if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
+            {
+                // do checkpoint (with no-lock check)
 //**                _walIndex.Checkpoint(null, false);
-//**            }
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -220,6 +221,8 @@ namespace LiteDB.Engine
             this.Dispose(true);
 
             GC.SuppressFinalize(this);
+
+            LOG("database disposed", "ENGINE");
         }
 
         ~LiteEngine()

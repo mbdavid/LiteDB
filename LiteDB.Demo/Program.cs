@@ -16,16 +16,9 @@ namespace LiteDB.Demo
 {
     class Program
     {
-        public static string _var = "nao chamou o MudaVariavel()";
-
         static void Main(string[] args)
         {
             var sw = new Stopwatch();
-
-            //Debug.Assert(MudaVariavel());
-
-
-            Console.WriteLine(_var);
 
             //TestMemoryFile.Run(sw);
             //TestAesEncryption.CreateEncryptedFile(sw);
@@ -36,13 +29,6 @@ namespace LiteDB.Demo
             Console.WriteLine("Elapsed: " + sw.ElapsedMilliseconds);
             Console.ReadKey();
 
-        }
-
-        static bool MudaVariavel()
-        {
-            _var = "alterou no metodo";
-
-            return false;
         }
     }
 

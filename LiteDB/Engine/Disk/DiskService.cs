@@ -42,12 +42,14 @@ namespace LiteDB.Engine
                 new AesEncryption(settings.Password, isNew ? AesEncryption.NewSalt() : this.ReadSalt(_dataPool)) : 
                 null;
 
-            _dataWriter = new Lazy<DiskWriter>(() => new DiskWriter(_cache, _locker, _dataPool.Writer, false, _aes));
-            _logWriter = new Lazy<DiskWriter>(() => new DiskWriter(_cache, _locker, _logPool.Writer, true, _aes));
+            _dataWriter = new Lazy<DiskWriter>(() => new DiskWriter(_cache, _locker, _dataPool.Writer, FileOrigin.Data, _aes));
+            _logWriter = new Lazy<DiskWriter>(() => new DiskWriter(_cache, _locker, _logPool.Writer, FileOrigin.Log, _aes));
 
             // create new database if not exist yet
             if (isNew)
             {
+                LOG($"creating new database: {dataFactory.Filename}", "DISK");
+
                 this.Initialize(_dataPool.Writer, _aes, settings.InitialSize);
             }
 
@@ -162,7 +164,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Read all database pages inside file with no cache using
         /// </summary>
-        public IEnumerable<PageBuffer> ReadFull(PageMode mode)
+        public IEnumerable<PageBuffer> ReadFull(FileOrigin origin)
         {
             throw new NotImplementedException();
         }

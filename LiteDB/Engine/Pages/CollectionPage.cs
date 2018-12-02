@@ -64,7 +64,7 @@ namespace LiteDB.Engine
         public CollectionPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Collection);
+            ENSURE(this.PageType == PageType.Collection, "invalid collection page buffer");
 
             // create new buffer area to store BsonDocument indexes
             var area = _buffer.Slice(PAGE_HEADER_SIZE, PAGE_SIZE - PAGE_HEADER_SIZE);

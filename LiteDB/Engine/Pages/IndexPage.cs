@@ -21,7 +21,7 @@ namespace LiteDB.Engine
         public IndexPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Index);
+            ENSURE(this.PageType == PageType.Index, "invalid index page buffer");
         }
 
         /// <summary>

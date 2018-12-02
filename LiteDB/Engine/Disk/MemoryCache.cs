@@ -57,7 +57,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get page from clean cache (readable). If page not exits, create this new page and load data using factory fn
         /// </summary>
-        public PageBuffer GetReadablePage(long position, PageMode mode, Action<long, BufferSlice> factory)
+        public PageBuffer GetReadablePage(long position, FileOrigin mode, Action<long, BufferSlice> factory)
         {
             _locker.EnterReadLock();
 
@@ -73,7 +73,7 @@ namespace LiteDB.Engine
                     var newPage = this.GetFreePage();
 
                     newPage.Position = position;
-                    newPage.Mode = mode;
+                    newPage.Origin = mode;
 
                     // load page content with disk stream
                     factory(position, newPage);
@@ -98,9 +98,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get unique position in dictionary according DbFileMode. Use + or -
         /// </summary>
-        private long GetReadableKey(long position, PageMode mode)
+        private long GetReadableKey(long position, FileOrigin mode)
         {
-            if (mode == PageMode.Data)
+            if (mode == FileOrigin.Data)
             {
                 return position;
             }
@@ -120,7 +120,7 @@ namespace LiteDB.Engine
         /// Writable pages can be write or just released (with no write)
         /// Before Dispose, a writable page must be marked as clean
         /// </summary>
-        public PageBuffer GetWritablePage(long position, PageMode mode, Action<long, BufferSlice> factory)
+        public PageBuffer GetWritablePage(long position, FileOrigin mode, Action<long, BufferSlice> factory)
         {
             _locker.EnterReadLock();
 
@@ -157,7 +157,7 @@ namespace LiteDB.Engine
 
             try
             {
-                return this.NewPage(long.MaxValue, PageMode.None, true);
+                return this.NewPage(long.MaxValue, FileOrigin.None, true);
             }
             finally
             {
@@ -168,7 +168,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Create new page using an empty buffer block. Mark this page as writable. Add into _writable dict
         /// </summary>
-        private PageBuffer NewPage(long position, PageMode mode, bool clear)
+        private PageBuffer NewPage(long position, FileOrigin mode, bool clear)
         {
             var page = this.GetFreePage();
 
@@ -184,7 +184,7 @@ namespace LiteDB.Engine
                 Array.Clear(page.Array, page.Offset, page.Count);
             }
 
-            page.Mode = mode;
+            page.Origin = mode;
 
             // add into writable dict
             _writable.TryAdd(page.UniqueID, page);
@@ -199,8 +199,9 @@ namespace LiteDB.Engine
         {
             ENSURE(page.Position != long.MaxValue, "Page must have a position");
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "Page must be writable");
+            ENSURE(page.Origin != FileOrigin.None, "page must has defined source");
 
-            var key = this.GetReadableKey(page.Position, page.Mode);
+            var key = this.GetReadableKey(page.Position, page.Origin);
 
             // set shareCounter to 1 (is in use) - there is no concurrency in write
             page.ShareCounter = 1;
@@ -209,7 +210,9 @@ namespace LiteDB.Engine
             {
                 // there is no need to this 2 operation be concurrent (add in _readable + remove in _writable)
                 // because writable page has no concurrency
-                _writable.TryRemove(page.UniqueID, out var dummy);
+                var removed = _writable.TryRemove(page.UniqueID, out var dummy);
+
+                ENSURE(removed, "page must be removed from _writable list");
 
                 return true;
             }
@@ -230,17 +233,19 @@ namespace LiteDB.Engine
         {
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable before from to readable dict");
             ENSURE(_locker.IsReadLockHeld, "this method must be called inside a read locker");
+            ENSURE(page.Origin != FileOrigin.None, "page should be a source before move to readable");
 
-            var key = this.GetReadableKey(page.Position, page.Mode);
+            var key = this.GetReadableKey(page.Position, page.Origin);
 
             // no concurrency in writable page
-            page.ShareCounter = 1;
+            // share counter must set in 2 because will be released twice (on write/on page release) 
+            page.ShareCounter = 2;
 
             var readable = _readable.AddOrUpdate(key, page, (newKey, current) =>
             {
                 ENSURE(current.ShareCounter == 0, "user must ensure this page are not in use when mark as read only");
 
-                current.ShareCounter = 1;
+                current.ShareCounter = 2;
 
                 // if page already in cache, this is a duplicate page in memory
                 // must update cached page with new page content
@@ -248,6 +253,10 @@ namespace LiteDB.Engine
 
                 return current;
             });
+
+            var removed = _writable.TryRemove(page.UniqueID, out var dummy);
+
+            ENSURE(removed, "page must be removed from _writable list");
 
             return readable;
         }
@@ -265,7 +274,7 @@ namespace LiteDB.Engine
             {
                 ENSURE(page.Position == long.MaxValue, "pages in memory store must have no position defined");
                 ENSURE(page.ShareCounter == 0, "pages in memory store must be non-shared");
-                ENSURE(page.Mode == PageMode.None, "page in memory must have no page mode");
+                ENSURE(page.Origin == FileOrigin.None, "page in memory must have no page mode");
 
                 return page;
             }
@@ -313,7 +322,7 @@ namespace LiteDB.Engine
                         if (_readable.TryRemove(key, out var page))
                         {
                             page.Position = long.MaxValue;
-                            page.Mode = PageMode.None;
+                            page.Origin = FileOrigin.None;
 
                             _free.Enqueue(page);
                         }
@@ -332,13 +341,13 @@ namespace LiteDB.Engine
                         if (_writable.TryRemove(key, out var page))
                         {
                             page.Position = long.MaxValue;
-                            page.Mode = PageMode.None;
+                            page.Origin = FileOrigin.None;
 
                             _free.Enqueue(page);
                         }
                     }
 
-                    LOG($"Re-using cache pages", "CACHE");
+                    LOG($"re-using cache pages ({_free.Count})", "CACHE");
                 }
                 else
                 {
@@ -348,7 +357,7 @@ namespace LiteDB.Engine
                     // slit linear array into many array slices
                     for (var i = 0; i < MEMORY_SEGMENT_SIZE; i++)
                     {
-                        var uniqueID = (_extends * MEMORY_SEGMENT_SIZE) + i;
+                        var uniqueID = (_extends * MEMORY_SEGMENT_SIZE) + i + 1;
 
                         _free.Enqueue(new PageBuffer(buffer, i * PAGE_SIZE, uniqueID));
                     }
@@ -357,6 +366,8 @@ namespace LiteDB.Engine
 
                     LOG($"extending memory usage: (segments: {_extends} - used: {StorageUnitHelper.FormatFileSize(_extends * MEMORY_SEGMENT_SIZE * PAGE_SIZE)})", "CACHE");
                 }
+
+                ENSURE(_free.Count + _readable.Count + _writable.Count == _extends * MEMORY_SEGMENT_SIZE, "all pages must be inside a cache list");
             }
             finally
             {

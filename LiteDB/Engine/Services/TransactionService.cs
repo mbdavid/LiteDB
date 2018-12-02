@@ -133,8 +133,13 @@ namespace LiteDB.Engine
                 }
             };
 
-            // write all pages, in sequence on log-file and store references into log pages on transPages
+            // write all dirty pages, in sequence on log-file and store references into log pages on transPages
             _disk.LogWriter.Write(source());
+
+            // now, discard all clean pages (because those pages are writable and must be readable)
+            _disk.DiscardPages(_snapshots.Values
+                    .SelectMany(x => x.GetCleanPages())
+                    .Select(x => x.GetBuffer(false)), false);
 
             // clear local pages in all snapshots
             foreach (var snapshot in _snapshots.Values)
@@ -210,15 +215,15 @@ namespace LiteDB.Engine
                             _transPages.OnCommit(_header);
 
                             // clone header page
-                            var buffer = _reader.NewPage();
+                            var clone = _reader.NewPage();
 
-                            Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, buffer.Array, buffer.Offset, buffer.Count);
+                            Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
 
                             // persist header in log file
-                            _disk.LogWriter.Write(new[] { buffer });
+                            _disk.LogWriter.Write(new[] { clone });
 
                             // release page just after write on disk
-                            buffer.Release();
+                            clone.Release();
 
                             // and update wal-index (before release _header lock)
                             _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
@@ -257,6 +262,16 @@ namespace LiteDB.Engine
                 {
                     this.ReturnNewPages();
                 }
+
+                // discard all dirty pages
+                _disk.DiscardPages(_snapshots.Values
+                        .SelectMany(x => x.GetDirtyPages(true))
+                        .Select(x => x.GetBuffer(false)), true);
+
+                // discard all clean pages
+                _disk.DiscardPages(_snapshots.Values
+                        .SelectMany(x => x.GetCleanPages())
+                        .Select(x => x.GetBuffer(false)), false);
 
                 // dispose all snaps an release locks
                 foreach (var snapshot in _snapshots.Values)

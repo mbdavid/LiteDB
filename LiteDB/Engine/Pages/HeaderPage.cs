@@ -100,7 +100,7 @@ namespace LiteDB.Engine
         public HeaderPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Header);
+            ENSURE(this.PageType == PageType.Header, "invalid header page buffer");
 
             var info = _buffer.ReadString(P_HEADER_INFO, HEADER_INFO.Length);
             var ver = _buffer[P_FILE_VERSION];

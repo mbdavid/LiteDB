@@ -28,9 +28,9 @@ namespace LiteDB.Engine
         public long Position;
 
         /// <summary>
-        /// Get/Set page mode (data/log) - represent WHERE page came from (not where you will write)
+        /// Get/Set page bytes origin (data/log)
         /// </summary>
-        public PageMode Mode;
+        public FileOrigin Origin;
 
         /// <summary>
         /// Get/Set how many read-share threads are using this page. -1 means 1 thread are using as writable
@@ -47,7 +47,7 @@ namespace LiteDB.Engine
         {
             this.UniqueID = uniqueID;
             this.Position = long.MaxValue;
-            this.Mode = PageMode.None;
+            this.Origin = FileOrigin.None;
             this.ShareCounter = 0;
             this.Timestamp = 0;
         }
@@ -67,6 +67,16 @@ namespace LiteDB.Engine
         ~PageBuffer()
         {
             ENSURE(this.ShareCounter == 0, "Share count must be 0 in destroy PageBuffer");
+        }
+
+        public override string ToString()
+        {
+            var p = this.Position == long.MaxValue ? "<empty>" : this.Position.ToString();
+            var s = this.ShareCounter == BUFFER_WRITABLE ? "<writable>" : this.ShareCounter.ToString();
+            var pageID = this.ReadUInt32(0);
+            var pageType = this[4];
+
+            return $"ID: {this.UniqueID} - Position: {p}/{this.Origin} - Shared: {s} - ({base.ToString()}) :: Content: [{pageID}/{pageType}]";
         }
     }
 }

@@ -96,7 +96,7 @@ namespace LiteDB
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
-        public static void LOG(string message, string category = null)
+        public static void LOG(string message, string category)
         {
             Debug.WriteLine(message, category);
         }

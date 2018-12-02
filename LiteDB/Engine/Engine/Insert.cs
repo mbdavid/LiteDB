@@ -17,6 +17,8 @@ namespace LiteDB.Engine
 
                 var node = indexer.Find(snapshot.CollectionPage.PK, value, false, 1);
 
+                if (node == null) return null;
+
                 var buffer = data.Read(node.DataBlock);
 
                 using(var r = new BufferReader(buffer))

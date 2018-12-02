@@ -38,15 +38,15 @@ namespace LiteDB.Engine
             _logStream = new Lazy<Stream>(() => _logPool.Rent());
         }
 
-        public PageBuffer ReadPage(long position, bool writable, PageMode mode)
+        public PageBuffer ReadPage(long position, bool writable, FileOrigin origin)
         {
-            var stream = mode == PageMode.Data ?
+            var stream = origin == FileOrigin.Data ?
                 _dataStream.Value :
                 _logStream.Value;
 
             var page = writable ?
-                _cache.GetWritablePage(position, mode, (pos, buf) => this.ReadStream(stream, pos, buf)) :
-                _cache.GetReadablePage(position, mode, (pos, buf) => this.ReadStream(stream, pos, buf));
+                _cache.GetWritablePage(position, origin, (pos, buf) => this.ReadStream(stream, pos, buf)) :
+                _cache.GetReadablePage(position, origin, (pos, buf) => this.ReadStream(stream, pos, buf));
 
             return page;
         }

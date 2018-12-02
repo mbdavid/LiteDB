@@ -24,7 +24,7 @@ namespace LiteDB.Engine
 
         private readonly Stream _stream;
 
-        private readonly bool _append;
+        private readonly FileOrigin _origin;
         private long _appendPosition;
 
         // async thread controls
@@ -32,14 +32,14 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public DiskWriter(MemoryCache cache, ReaderWriterLockSlim locker, Stream stream, bool append, AesEncryption aes)
+        public DiskWriter(MemoryCache cache, ReaderWriterLockSlim locker, Stream stream, FileOrigin origin, AesEncryption aes)
         {
             _cache = cache;
             _locker = locker;
             _aes = aes;
 
             _stream = stream;
-            _append = append;
+            _origin = origin;
 
             // get append position in end of file (remove page_size length to use Interlock on write)
             _appendPosition = _stream.Length - PAGE_SIZE;
@@ -64,6 +64,8 @@ namespace LiteDB.Engine
                 {
                     this.QueuePage(page);
                 }
+
+                this.RunQueue();
             }
             finally
             {
@@ -79,7 +81,7 @@ namespace LiteDB.Engine
         {
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to queue page to write, page must be writable");
 
-            if (_append || page.Position == long.MaxValue)
+            if (_origin == FileOrigin.Log || page.Position == long.MaxValue)
             {
                 // adding this page into file AS new page (at end of file)
                 // must add into cache to be sure that new readers can see this page
@@ -92,10 +94,12 @@ namespace LiteDB.Engine
                 _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);
             }
 
+            page.Origin = _origin;
+
             // mark this page as read-only and get cached paged to enqueue to write
             var readable = _cache.MoveToReadable(page);
 
-            ENSURE(readable.ShareCounter >= 2, "cached page must be shared at least twice (becasue this method must be called before release pages)");
+            ENSURE(readable.ShareCounter == 2, "readable page must be shared counter = 2 (will release twice)");
 
             _queue.Enqueue(readable);
         }
@@ -118,7 +122,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// If queue contains pages and are not running, starts run queue again now
         /// </summary>
-        public void RunQueue()
+        private void RunQueue()
         {
             if (_queue.IsEmpty) return;
             if (_waiter.IsSet) return;
