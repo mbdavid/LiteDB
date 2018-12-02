@@ -24,7 +24,7 @@ namespace LiteDB.Engine
         public readonly byte Length;
 
         /// <summary>
-        /// Get buffer data of this page item (contains 1 byte less because was used to store length)
+        /// Get buffer data of this page item
         /// </summary>
         public readonly BufferSlice Buffer;
 
@@ -37,11 +37,14 @@ namespace LiteDB.Engine
             this.Block = block;
             this.Length = length;
 
+            ENSURE(length > 0, "length should always be > 0");
+            ENSURE(block > 0, "page segment block position should always between 1 and 255");
+
             // store block length at initial first byte
             buffer[block * PAGE_BLOCK_SIZE] = length;
 
-            // slice original buffer removing this first byte
-            this.Buffer = buffer.Slice((block * PAGE_BLOCK_SIZE) + 1, (this.Length * PAGE_BLOCK_SIZE) - 1);
+            // slice original page into a single buffer segment
+            this.Buffer = buffer.Slice(block * PAGE_BLOCK_SIZE, this.Length * PAGE_BLOCK_SIZE);
         }
 
         /// <summary>
@@ -55,8 +58,11 @@ namespace LiteDB.Engine
             // read block length
             this.Length = buffer[block * PAGE_BLOCK_SIZE];
 
-            // slice original buffer removing this first byte
-            this.Buffer = buffer.Slice((block * PAGE_BLOCK_SIZE) + 1, (this.Length * PAGE_BLOCK_SIZE) - 1);
+            ENSURE(this.Length > 0, "page segment length should always be > 0");
+            ENSURE(block > 0, "page segment block position should always between 1 and 255");
+
+            // slice original page into a single buffer segment
+            this.Buffer = buffer.Slice(block * PAGE_BLOCK_SIZE, this.Length * PAGE_BLOCK_SIZE);
         }
 
         public override string ToString()

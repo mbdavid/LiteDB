@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
@@ -13,11 +14,12 @@ namespace LiteDB.Engine
                                                   PageAddress.SIZE + // DataBlock
                                                   (PageAddress.SIZE * 2); // Prev/Next Node (5 bytes)
 
-        private const int P_LEVEL = 0; // 00 (byte)
-        private const int P_DATA_BLOCK = 1; // 01-05 (PageAddress)
-        private const int P_PREV_NODE = 6; // 06-10 (PageAddress)
-        private const int P_NEXT_NODE = 11; // 11-15 (PageAddress)
-        private const int P_PREV_NEXT = 16; // 16-(_level * 5 [PageAddress] * 2 [prev-next])
+        // private const int P_SEGMENT_LENGTH = 0;
+        private const int P_LEVEL = 1; // 01 (byte)
+        private const int P_DATA_BLOCK = 2; // 02-06 (PageAddress)
+        private const int P_PREV_NODE = 7; // 07-11 (PageAddress)
+        private const int P_NEXT_NODE = 12; // 12-16 (PageAddress)
+        private const int P_PREV_NEXT = 17; // 17-(_level * 5 [PageAddress] * 2 [prev-next])
         private int P_KEY => P_PREV_NEXT + (this.Level * PageAddress.SIZE * 2); // just after NEXT
 
         private readonly IndexPage _page;
@@ -134,6 +136,9 @@ namespace LiteDB.Engine
 
             for (var i = 0; i < level; i++)
             {
+                //**this.SetPrev((byte)i, PageAddress.Empty);
+                //**this.SetNext((byte)i, PageAddress.Empty);
+
                 this.Prev[i] = PageAddress.Empty;
                 this.Next[i] = PageAddress.Empty;
             }
@@ -177,11 +182,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Update Prev[index] pointer (update in buffer too). Also, set page as dirty
         /// </summary>
-        public void SetPrev(byte index, PageAddress value)
+        public void SetPrev(byte level, PageAddress value)
         {
-            this.Prev[index] = value;
+            ENSURE(level < this.Level, "out of index in level");
 
-            _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2));
+            this.Prev[level] = value;
+
+            _segment.Buffer.Write(value, P_PREV_NEXT + (level * PageAddress.SIZE * 2));
 
             _page.IsDirty = true;
         }
@@ -189,11 +196,13 @@ namespace LiteDB.Engine
         /// <summary>
         /// Update Next[index] pointer (update in buffer too). Also, set page as dirty
         /// </summary>
-        public void SetNext(byte index, PageAddress value)
+        public void SetNext(byte level, PageAddress value)
         {
-            this.Next[index] = value;
+            ENSURE(level < this.Level, "out of index in level");
 
-            _segment.Buffer.Write(value, P_PREV_NEXT + (index * PageAddress.SIZE * 2) + PageAddress.SIZE);
+            this.Next[level] = value;
+
+            _segment.Buffer.Write(value, P_PREV_NEXT + (level * PageAddress.SIZE * 2) + PageAddress.SIZE);
 
             _page.IsDirty = true;
         }
@@ -201,9 +210,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Returns Next (order == 1) OR Prev (order == -1)
         /// </summary>
-        public PageAddress GetNextPrev(byte index, int order)
+        public PageAddress GetNextPrev(byte level, int order)
         {
-            return order == Query.Ascending ? this.Next[index] : this.Prev[index];
+            return order == Query.Ascending ? this.Next[level] : this.Prev[level];
         }
 
         public override string ToString()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using static LiteDB.Constants;
@@ -73,7 +74,7 @@ namespace LiteDB.Engine
         public byte FragmentedBlocks { get; private set; }
 
         /// <summary>
-        /// Get next free block. Starts with block 3 (first after header) - It always at end of last block - there is no fragmentation after this [1 byte]
+        /// Get next free block. Starts with block 1 (first after header) - It always at end of last block - there is no fragmentation after this [1 byte]
         /// </summary>
         public byte NextFreeBlock { get; private set; }
 
@@ -132,7 +133,7 @@ namespace LiteDB.Engine
             this.ItemsCount = 0;
             this.UsedContentBlocks = 0;
             this.FragmentedBlocks = 0;
-            this.NextFreeBlock = PAGE_HEADER_SIZE / PAGE_BLOCK_SIZE; // first block index should be 3 (blocks 0, 1, 2 are reserved to header)
+            this.NextFreeBlock = PAGE_HEADER_SIZE / PAGE_BLOCK_SIZE; // first block index should be #1 (block #0 is reserved to header)
             this.HighestIndex = 0;
 
             // default data
@@ -231,9 +232,10 @@ namespace LiteDB.Engine
         protected PageSegment Insert(int bytesLength)
         {
             // length in blocks (+1 to consider store length inside page segment)
-            var length = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1);
+            var length = (byte)Math.Ceiling((double)(bytesLength + 1) / PAGE_BLOCK_SIZE);
+            var index = this.GetFreeIndex();
 
-            return this.Insert(this.GetFreeIndex(), length);
+            return this.Insert(index, length);
         }
 
         /// <summary>
@@ -270,6 +272,8 @@ namespace LiteDB.Engine
             // update index slot with this block position
             _buffer[slot] = block;
 
+            ENSURE(this.NextFreeBlock > 0, "next block should respect header > 0");
+
             // and update for next insert
             this.NextFreeBlock += length;
 
@@ -298,19 +302,19 @@ namespace LiteDB.Engine
             var position = block * PAGE_BLOCK_SIZE;
 
             // read how many blocks this segment use
-            var blocks = _buffer[position];
+            var length = _buffer[position];
 
             // clear slot index
             _buffer[slot] = (byte)0;
 
             // add as free blocks
             this.ItemsCount--;
-            this.UsedContentBlocks -= blocks;
+            this.UsedContentBlocks -= length;
 
             if (this.HighestIndex != index)
             {
                 // if segment is in middle of the page, add this blocks as fragment block
-                this.FragmentedBlocks += blocks;
+                this.FragmentedBlocks += length;
             }
             else
             {
@@ -323,7 +327,7 @@ namespace LiteDB.Engine
             this.IsDirty = true;
 
             // get deleted page segment
-            return new PageSegment(_buffer, index, block, blocks);
+            return new PageSegment(_buffer, index, block, length);
         }
 
         /// <summary>
@@ -341,7 +345,7 @@ namespace LiteDB.Engine
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
-            var newLength = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1); // length in blocks (+1 for store segment length)
+            var newLength = (byte)Math.Ceiling((double)(bytesLength + 1) / PAGE_BLOCK_SIZE); // length in blocks (+1 for store segment length)
             var isLastSegment = index == this.HighestIndex;
 
             this.IsDirty = true;
@@ -467,11 +471,12 @@ namespace LiteDB.Engine
         /// </summary>
         private byte GetFreeIndex()
         {
-            var maxIndex = PAGE_AVAILABLE_BLOCKS;
+            var maxIndex = PAGE_AVAILABLE_BLOCKS; // 255
 
             for (var index = 0; index <= maxIndex; index++) // 256 - 1 - 1
             {
-                var block = _buffer[PAGE_SIZE - index - 1];
+                var slot = PAGE_SIZE - index - 1;
+                var block = _buffer[slot];
 
                 if (block == 0) return (byte)index;
             }
@@ -594,7 +599,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return "PageID: " + this.PageID.ToString().PadLeft(4, '0') + " : " + this.PageType + " (" + this.ItemsCount + " Items)";
+            return $"PageID: {this.PageID.ToString().PadLeft(4, '0')} : {this.PageType} ({this.ItemsCount} Items)";
         }
     }
 }

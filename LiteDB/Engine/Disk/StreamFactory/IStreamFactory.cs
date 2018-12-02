@@ -12,9 +12,9 @@ namespace LiteDB.Engine
     internal interface IStreamFactory
     {
         /// <summary>
-        /// Get filename
+        /// Get stream name
         /// </summary>
-        string Filename { get; }
+        string Name { get; }
 
         /// <summary>
         /// Get new file stream instance

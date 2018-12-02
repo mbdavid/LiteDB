@@ -101,15 +101,11 @@ namespace LiteDB.Engine
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)
                 {
-                    //_indexQueue.Enqueue(new Tuple<BsonValue, PageAddress>(key, dataBlock));
-
                     // insert node
                     var node = indexer.AddNode(index, key, dataBlock, last);
                 }
             }
         }
-
-        private ConcurrentQueue<Tuple<BsonValue, PageAddress>> _indexQueue = new ConcurrentQueue<Tuple<BsonValue, PageAddress>>();
 
         /// <summary>
         /// Collection last sequence cache

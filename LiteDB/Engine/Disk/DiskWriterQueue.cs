@@ -15,34 +15,30 @@ namespace LiteDB.Engine
     /// <summary>
     /// ThreadSafe
     /// </summary>
-    internal class DiskWriter : IDisposable
+    internal class DiskWriterQueue : IDisposable
     {
-        private readonly ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
-        private readonly MemoryCache _cache;
-        private readonly ReaderWriterLockSlim _locker;
         private readonly AesEncryption _aes;
 
-        private readonly Stream _stream;
-
-        private readonly FileOrigin _origin;
-        private long _appendPosition;
+        private readonly Stream _dataStream;
+        private readonly Stream _logStream;
 
         // async thread controls
         private readonly Thread _thread;
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        public DiskWriter(MemoryCache cache, ReaderWriterLockSlim locker, Stream stream, FileOrigin origin, AesEncryption aes)
+        private long _appendPosition;
+
+        private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
+
+        public DiskWriterQueue(Stream dataStream, Stream logStream, AesEncryption aes)
         {
-            _cache = cache;
-            _locker = locker;
+            _dataStream = dataStream;
+            _logStream = logStream;
             _aes = aes;
 
-            _stream = stream;
-            _origin = origin;
-
             // get append position in end of file (remove page_size length to use Interlock on write)
-            _appendPosition = _stream.Length - PAGE_SIZE;
+            _appendPosition = _logStream.Length - PAGE_SIZE;
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
@@ -52,69 +48,32 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enqueue pages to write in async thread
+        /// Increment last log file position and return
         /// </summary>
-        public void Write(IEnumerable<PageBuffer> pages)
+        public long AppendPosition()
         {
-            _locker.EnterReadLock();
-
-            try
-            {
-                foreach(var page in pages)
-                {
-                    this.QueuePage(page);
-                }
-
-                this.RunQueue();
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return Interlocked.Add(ref _appendPosition, PAGE_SIZE);
         }
 
         /// <summary>
         /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
-        private void QueuePage(PageBuffer page)
+        public void EnqueuePage(PageBuffer page)
         {
-            ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to queue page to write, page must be writable");
-
-            if (_origin == FileOrigin.Log || page.Position == long.MaxValue)
-            {
-                // adding this page into file AS new page (at end of file)
-                // must add into cache to be sure that new readers can see this page
-                page.Position = Interlocked.Add(ref _appendPosition, PAGE_SIZE);
-            }
-            else
-            {
-                // get highest value between new page or last page 
-                // don't worry about concurrency becasue only 1 instance call this (Checkpoint)
-                _appendPosition = Math.Max(_appendPosition, page.Position - PAGE_SIZE);
-            }
-
-            page.Origin = _origin;
-
-            // mark this page as read-only and get cached paged to enqueue to write
-            var readable = _cache.MoveToReadable(page);
-
-            ENSURE(readable.ShareCounter == 2, "readable page must be shared counter = 2 (will release twice)");
-
-            _queue.Enqueue(readable);
+            _queue.Enqueue(page);
         }
-
-        /// <summary>
-        /// Get file length
-        /// </summary>
-        public long Length => _appendPosition + PAGE_SIZE;
 
         /// <summary>
         /// Create a fake page to be added in queue. When queue run this page, just set new stream length
         /// </summary>
-        public void SetLength(long length)
+        public void EnqueueLength(long length, FileOrigin origin)
         {
-            Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
+            // for log file, must fix _appendPosition
+            if (origin == FileOrigin.Log)
+            {
+                Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
+            }
 
             _queue.Enqueue(new PageBuffer(null, 0, 0) { Position = length });
         }
@@ -122,7 +81,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// If queue contains pages and are not running, starts run queue again now
         /// </summary>
-        private void RunQueue()
+        public void Run()
         {
             if (_queue.IsEmpty) return;
             if (_waiter.IsSet) return;
@@ -137,28 +96,32 @@ namespace LiteDB.Engine
 
             while(_running)
             {
+                Stream stream = null;
+
                 while (_queue.TryDequeue(out var page))
                 {
-                    // if buffer is null, is a file length change
+                    stream = page.Origin == FileOrigin.Data ? _dataStream : _logStream;
+
+                    // if array is null, is Position = file length
                     if (page.Array == null)
                     {
-                        _stream.SetLength(page.Position);
+                        stream.SetLength(page.Position);
                     }
                     else
                     {
                         ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
                         // set stream position according to page
-                        _stream.Position = page.Position;
+                        stream.Position = page.Position;
 
                         // write plain or encrypted data into strea
                         if (_aes != null)
                         {
-                            _aes.Encrypt(page, _stream);
+                            _aes.Encrypt(page, stream);
                         }
                         else
                         {
-                            _stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                            stream.Write(page.Array, page.Offset, PAGE_SIZE);
                         }
 
                         // release this page to be re-used
@@ -167,7 +130,7 @@ namespace LiteDB.Engine
                 }
 
                 // after this I will have 100% sure data are safe
-                _stream.FlushToDisk();
+                stream?.FlushToDisk();
 
                 // suspend thread and wait another signal
                 _waiter.Reset();

@@ -86,6 +86,8 @@ namespace LiteDB.Engine
             // create node in buffer
             var node = indexPage.InsertNode(level, key, dataBlock);
 
+            //return node;
+
             // now, let's link my index node on right place
             var cur = index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head));
 

@@ -13,12 +13,10 @@ namespace LiteDB.Engine
     internal class DiskService
     {
         private readonly MemoryCache _cache;
+        private readonly Lazy<DiskWriterQueue> _queue;
 
         private readonly StreamPool _dataPool;
         private readonly StreamPool _logPool;
-
-        private readonly Lazy<DiskWriter> _dataWriter;
-        private readonly Lazy<DiskWriter> _logWriter;
 
         private readonly AesEncryption _aes;
 
@@ -42,13 +40,13 @@ namespace LiteDB.Engine
                 new AesEncryption(settings.Password, isNew ? AesEncryption.NewSalt() : this.ReadSalt(_dataPool)) : 
                 null;
 
-            _dataWriter = new Lazy<DiskWriter>(() => new DiskWriter(_cache, _locker, _dataPool.Writer, FileOrigin.Data, _aes));
-            _logWriter = new Lazy<DiskWriter>(() => new DiskWriter(_cache, _locker, _logPool.Writer, FileOrigin.Log, _aes));
+            // create lazy async writer queue
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_dataPool.Writer, _logPool.Writer, _aes));
 
             // create new database if not exist yet
             if (isNew)
             {
-                LOG($"creating new database: {dataFactory.Filename}", "DISK");
+                LOG($"creating new database: '{Path.GetFileName(dataFactory.Name)}'", "DISK");
 
                 this.Initialize(_dataPool.Writer, _aes, settings.InitialSize);
             }
@@ -152,14 +150,50 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get writer that to write pages on Data file
+        /// Write pages inside file origin
         /// </summary>
-        public DiskWriter DataWriter => _dataWriter.Value;
+        public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
+        {
+            _locker.EnterReadLock();
+
+            try
+            {
+                foreach (var page in pages)
+                {
+                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
+
+                    if (origin == FileOrigin.Log)
+                    {
+                        // adding this page into file AS new page (at end of file)
+                        // must add into cache to be sure that new readers can see this page
+                        page.Position = _queue.Value.AppendPosition();
+                    }
+
+                    // must define page origin to be saved in correct place (before move to Readable)
+                    // only writable pages can change Origin
+                    page.Origin = origin;
+
+                    // mark this page as readable and get cached paged to enqueue
+                    var readable = _cache.MoveToReadable(page);
+
+                    _queue.Value.EnqueuePage(readable);
+                }
+
+                _queue.Value.Run();
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
+        }
 
         /// <summary>
-        /// Get writer that to write pages on Log file
+        /// Create a fake page to be added in queue. When queue run this page, just set new stream length
         /// </summary>
-        public DiskWriter LogWriter => _logWriter.Value;
+        public void SetLength(long length, FileOrigin origin)
+        {
+            _queue.Value.EnqueueLength(length, origin);
+        }
 
         /// <summary>
         /// Read all database pages inside file with no cache using
@@ -171,9 +205,8 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            // dispose writers (will wait async thread finish)
-            if (_dataWriter.IsValueCreated) _dataWriter.Value.Dispose();
-            if (_logWriter.IsValueCreated) _logWriter.Value.Dispose();
+            // dispose queue (wait finish)
+            if (_queue.IsValueCreated) _queue.Value.Dispose();
 
             // dispose Stream pools
             _dataPool.Dispose();

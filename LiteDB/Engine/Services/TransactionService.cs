@@ -104,6 +104,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void PersistDirtyPages(bool includeCollectionPages, bool markLastAsConfirmed)
         {
+            var dirty = 0;
+
             // inner method to get all dirty pages
             IEnumerable<PageBuffer> source()
             {
@@ -129,12 +131,15 @@ namespace LiteDB.Engine
                     // buffer position will be set at end of file (it´s always log file)
                     yield return buffer;
 
+                    dirty++;
                     _transPages.DirtyPages[page.Item.PageID] = new PagePosition(page.Item.PageID, buffer.Position);
                 }
             };
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages
-            _disk.LogWriter.Write(source());
+            _disk.Write(source(), FileOrigin.Log);
+
+            LOG($"persisted dirty pages ({dirty})", "TRANSACTION");
 
             // now, discard all clean pages (because those pages are writable and must be readable)
             _disk.DiscardPages(_snapshots.Values
@@ -197,7 +202,7 @@ namespace LiteDB.Engine
                                     };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _disk.LogWriter.Write(new [] { lastDeletedPage.GetBuffer(true) });
+                                    _disk.Write(new [] { lastDeletedPage.GetBuffer(true) }, FileOrigin.Log);
 
                                     // release page just after write on disk
                                     empty.Release();
@@ -220,7 +225,7 @@ namespace LiteDB.Engine
                             Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
 
                             // persist header in log file
-                            _disk.LogWriter.Write(new[] { clone });
+                            _disk.Write(new[] { clone }, FileOrigin.Log);
 
                             // release page just after write on disk
                             clone.Release();
@@ -363,7 +368,7 @@ namespace LiteDB.Engine
                 };
 
                 // write all pages (including new header)
-                _disk.LogWriter.Write(source());
+                _disk.Write(source(), FileOrigin.Log);
 
                 // now confirm this transaction to wal
                 _walIndex.ConfirmTransaction(transactionID, pagePositions.Values);

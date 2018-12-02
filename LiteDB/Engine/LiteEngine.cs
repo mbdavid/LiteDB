@@ -94,7 +94,7 @@ namespace LiteDB.Engine
 
             _settings = settings;
 
-            LOG("engine initializing", "ENGINE");
+            LOG("start initializing", "ENGINE");
 
             try
             {
@@ -131,7 +131,7 @@ namespace LiteDB.Engine
                 //**     this.Upgrade();
                 //** }
 
-                LOG("initialized completed", "ENGINE");
+                LOG("initialization completed", "ENGINE");
             }
             catch (Exception ex)
             {
@@ -162,7 +162,7 @@ namespace LiteDB.Engine
             // start shutdown operation
             _shutdown = true;
 
-            LOG("shutting down the database", "ENGINE");
+            LOG("shutting down", "ENGINE");
 
             // mark all transaction as shotdown status
             foreach (var trans in _transactions.Values)
@@ -222,7 +222,7 @@ namespace LiteDB.Engine
 
             GC.SuppressFinalize(this);
 
-            LOG("database disposed", "ENGINE");
+            LOG("engine disposed", "ENGINE");
         }
 
         ~LiteEngine()

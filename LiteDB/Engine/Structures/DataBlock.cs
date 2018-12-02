@@ -11,9 +11,10 @@ namespace LiteDB.Engine
         public const int DATA_BLOCK_FIXED_SIZE = 1 + // DataIndex
                                                  PageAddress.SIZE; // NextBlock
 
-        private const int P_DATA_INDEX = 0; // 00
-        private const int P_NEXT_BLOCK = 1; // 01-05
-        private const int P_BUFFER = 6; // 06-EOF
+        // private const int P_SEGMENT_LENGTH = 0;
+        private const int P_DATA_INDEX = 1; // 01
+        private const int P_NEXT_BLOCK = 2; // 02-06
+        private const int P_BUFFER = 7; // 07-EOF
 
         private readonly PageSegment _segment;
 
@@ -46,14 +47,14 @@ namespace LiteDB.Engine
 
             this.Position = new PageAddress(page.PageID, segment.Index);
 
-            // byte 00: DataIndex
+            // byte 01: DataIndex
             this.DataIndex = segment.Buffer[P_DATA_INDEX];
 
-            // byte 01-05: NextBlock (PageID, Index)
+            // byte 02-06: NextBlock (PageID, Index)
             this.NextBlock = segment.Buffer.ReadPageAddress(P_NEXT_BLOCK);
 
-            // byte 06-EOL: Buffer
-            this.Buffer = segment.Buffer.Slice(P_BUFFER, (segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER- 1);
+            // byte 07-EOL: Buffer
+            this.Buffer = segment.Buffer.Slice(P_BUFFER, (segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER);
         }
 
         /// <summary>
@@ -68,14 +69,14 @@ namespace LiteDB.Engine
             this.NextBlock = nextBlock;
             this.DataIndex = dataIndex;
 
-            // byte 00: Data Index
+            // byte 01: Data Index
             segment.Buffer[P_DATA_INDEX] = dataIndex;
 
-            // byte 01-04 (can be updated in "UpdateNextBlock")
+            // byte 02-06 (can be updated in "UpdateNextBlock")
             segment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
 
-            // byte 06-EOL: Buffer
-            this.Buffer = segment.Buffer.Slice(P_BUFFER, (segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER - 1);
+            // byte 07-EOL: Buffer
+            this.Buffer = segment.Buffer.Slice(P_BUFFER, (segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER);
         }
 
         public void SetNextBlock(PageAddress nextBlock)

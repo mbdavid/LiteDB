@@ -72,19 +72,19 @@ namespace LiteDB
         public const int MAX_CACHE_DOCUMENT_LOADER_SIZE = 1000;
 
         /// <summary>
-        /// Max cursor info history
-        /// </summary>
-        public const int MAX_CURSOR_HISTORY = 1000;
-
-        /// <summary>
         /// Max pages in a transaction before persist on disk and clear transaction local pages
         /// </summary>
-        public const int MAX_TRANSACTION_SIZE = 1000;
+        public const int MAX_TRANSACTION_SIZE = 1000000;
 
         /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
         /// </summary>
         public const int MEMORY_SEGMENT_SIZE = 1000;
+
+        /// <summary>
+        /// Minimum pages not in use to remove pages from _readable/_writable list to _free list
+        /// </summary>
+        public const int MINIMUM_CACHE_REUSE = 10000;
 
         /// <summary>
         /// Database header parameter: USERVERSION
@@ -102,13 +102,33 @@ namespace LiteDB
         }
 
         /// <summary>
-        /// Ensure conditional is true - if not stop VisualStudio when running over #DEBUG - used for testing
+        /// Ensure condition is true, otherwise stop execution (for Debug proposes only)
         /// </summary>
         [DebuggerHidden]
         [Conditional("DEBUG")]
         public static void ENSURE(bool conditional, string message = null)
         {
             if (conditional == false)
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debug.Fail(message);
+                }
+                else
+                {
+                    throw new SystemException("ENSURE: " + message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// If ifTest are true, ensure condition is true, otherwise stop execution (for Debug proposes only)
+        /// </summary>
+        [DebuggerHidden]
+        [Conditional("DEBUG")]
+        public static void ENSURE(bool ifTest, bool conditional, string message = null)
+        {
+            if (ifTest && conditional == false)
             {
                 if (Debugger.IsAttached)
                 {
