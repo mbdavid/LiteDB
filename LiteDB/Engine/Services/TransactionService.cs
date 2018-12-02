@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using static LiteDB.Constants;
 
@@ -132,6 +133,7 @@ namespace LiteDB.Engine
                     yield return buffer;
 
                     dirty++;
+
                     _transPages.DirtyPages[page.Item.PageID] = new PagePosition(page.Item.PageID, buffer.Position);
                 }
             };
@@ -173,6 +175,7 @@ namespace LiteDB.Engine
                 if (hasWriteSnapshot)
                 {
                     // persist all pages into log file (mark last page as confirmed if has no header change)
+                    // also, release all data/index pages
                     this.PersistDirtyPages(true, _transPages.HeaderChanged == false);
 
                     // if header was changed, be last page to persist (and mark as confirm)
@@ -262,47 +265,27 @@ namespace LiteDB.Engine
 
             if (_state == TransactionState.Active)
             {
-                // only return pages if transaction has new pages
+                // if transaction contains new pages, must return to database in another transaction
                 if (_transPages.NewPages.Count > 0)
                 {
                     this.ReturnNewPages();
                 }
 
-                // discard all dirty pages
-                _disk.DiscardPages(_snapshots.Values
-                        .SelectMany(x => x.GetDirtyPages(true))
-                        .Select(x => x.GetBuffer(false)), true);
-
-                // discard all clean pages
-                _disk.DiscardPages(_snapshots.Values
-                        .SelectMany(x => x.GetCleanPages())
-                        .Select(x => x.GetBuffer(false)), false);
-
-                // dispose all snaps an release locks
+                // dispose all snaphosts
                 foreach (var snapshot in _snapshots.Values)
                 {
+                    // but first, if writable, discard changes
+                    if (snapshot.Mode == LockMode.Write)
+                    {
+                        // discard all dirty pages
+                        _disk.DiscardPages(snapshot.GetDirtyPages(true).Select(x => x.GetBuffer(false)), true);
+
+                        // discard all clean pages
+                        _disk.DiscardPages(snapshot.GetCleanPages().Select(x => x.GetBuffer(false)), false);
+                    }
+
+                    // now, release pages
                     snapshot.Dispose();
-                }
-            }
-
-            this.Done(TransactionState.Aborted);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Release transaction as is - it's same as rollback but has no return pages (for new pages) and 
-        /// </summary>
-        public bool Release()
-        {
-            if (_state == TransactionState.Commited || _state == TransactionState.Aborted) return false;
-
-            if (_state == TransactionState.Active)
-            {
-                // dispose all snaps an release locks
-                foreach (var snaphost in _snapshots.Values)
-                {
-                    snaphost.Dispose();
                 }
             }
 
@@ -315,7 +298,7 @@ namespace LiteDB.Engine
         /// Return added pages when occurs an rollback transaction (run this only in rollback). Create new transactionID and add into
         /// Log file all new pages as EmptyPage in a linked order - also, update SharedPage before store
         /// </summary>
-        public void ReturnNewPages()
+        private void ReturnNewPages()
         {
             // create new transaction ID
             var transactionID = System.Diagnostics.Stopwatch.GetTimestamp();

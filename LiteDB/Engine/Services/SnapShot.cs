@@ -112,6 +112,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void Dispose()
         {
+            // release all data/index pages
+            this.Clear();
+
             // release collection page
             _collectionPage?.GetBuffer(false).Release();
 
@@ -134,6 +137,7 @@ namespace LiteDB.Engine
             where T : BasePage
         {
             ENSURE(pageID != 0, "never should request header page (always use global _header instance)");
+            ENSURE(pageID <= _header.LastPageID, "request page must be less or equals lastest page in data file");
 
             // first, look for this page inside local pages
             if (_localPages.TryGetValue(pageID, out var page))
@@ -190,8 +194,6 @@ namespace LiteDB.Engine
             }
             else
             {
-                ENSURE(pageID <= _header.LastPageID, "request page must be less or equals lastest page in data file");
-
                 // for last chance, look inside original disk data file
                 var pagePosition = BasePage.GetPagePosition(pageID);
 
@@ -340,16 +342,16 @@ namespace LiteDB.Engine
         public T GetFreePage<T>(int bytesLength)
             where T : BasePage
         {
-            // get length in blocks
-            var length = (byte)((bytesLength / PAGE_BLOCK_SIZE) + 1);
+            // get length in blocks (include + 1 byte for segment length)
+            var length = PageSegment.GetLength(bytesLength); // length in blocks (add inside method +1 byte)
 
             // select if I will get from free index list or data list
             var freeLists = typeof(T) == typeof(IndexPage) ?
                 _collectionPage.FreeIndexPageID :
                 _collectionPage.FreeDataPageID;
 
-            // do not consider last slot (keep this as PCT_FREE) pages with less than 76 blocks will no use for new data
-            var startSlot = Math.Min(BasePage.FreeIndexSlot(length), (byte)3);
+            // get minimum slot to check for free page. Returns -1 if need NewPage
+            var startSlot = BasePage.GetMinimumIndexSlot(length);
 
             // check for avaiable re-usable page
             for(int currentSlot = startSlot; currentSlot >= 0; currentSlot--)
@@ -369,6 +371,8 @@ namespace LiteDB.Engine
                     this.RemoveFreeList<T>(page, ref freeLists[currentSlot]);
                     this.AddFreeList<T>(page, ref freeLists[newSlot]);
                 }
+
+                ENSURE(page.FreeBlocks >= length, "ensure selected page has space enougth for this content");
 
                 // mark page page as dirty
                 page.IsDirty = true;

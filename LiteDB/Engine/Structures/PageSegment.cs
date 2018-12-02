@@ -65,6 +65,14 @@ namespace LiteDB.Engine
             this.Buffer = buffer.Slice(block * PAGE_BLOCK_SIZE, this.Length * PAGE_BLOCK_SIZE);
         }
 
+        /// <summary>
+        /// Get content length in blocks (in byte). Add +1 byte in bytesLength for segment length (first byte)
+        /// </summary>
+        public static byte GetLength(int bytesLength)
+        {
+            return (byte)Math.Ceiling((double)(bytesLength + 1) / PAGE_BLOCK_SIZE);
+        }
+
         public override string ToString()
         {
             return $"Slot: {this.Index} - Block: {this.Block} - Len: {this.Length}";

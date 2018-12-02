@@ -180,7 +180,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all indexes in this collection page
         /// </summary>
-        public IEnumerable<CollectionIndex> GetAllIndexes()
+        public IEnumerable<CollectionIndex> GetCollectionIndexes()
         {
             return _indexes.Values;
         }

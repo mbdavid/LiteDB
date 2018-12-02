@@ -29,11 +29,31 @@ namespace LiteDB.Demo
             File.Delete(PATH);
 
             var buffer = new PageBuffer(new byte[8192], 0, 0) { ShareCounter = -1 };
-            var p0 = new IndexPage(buffer, 0);
+            var p0 = new IndexPage(buffer, 99);
 
-            var ss = p0.InsertNode(3, "okok", new PageAddress(123, 25));
+            var len = IndexNode.GetNodeLength(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-            ss.SetNext(2, new PageAddress(1, 1));
+            var s0 = p0.InsertNode(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", new PageAddress(98, 97));
+
+            s0.SetPrev(0, new PageAddress(1, 2));
+            s0.SetNext(0, new PageAddress(3, 4));
+
+            s0.SetPrev(1, new PageAddress(5, 6));
+            s0.SetNext(1, new PageAddress(7, 8));
+
+            s0.SetPrev(2, new PageAddress(9, 10));
+            s0.SetNext(2, new PageAddress(11, 12));
+
+            p0.GetBuffer(true);
+
+            var s1 = p0.InsertNode(1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", new PageAddress(98, 97));
+
+            s1.SetPrev(0, new PageAddress(1, 2));
+            s1.SetNext(0, new PageAddress(3, 4));
+
+            p0.GetBuffer(true);
+
+            ;
 
 
         }

@@ -231,8 +231,7 @@ namespace LiteDB.Engine
         /// </summary>
         protected PageSegment Insert(int bytesLength)
         {
-            // length in blocks (+1 to consider store length inside page segment)
-            var length = (byte)Math.Ceiling((double)(bytesLength + 1) / PAGE_BLOCK_SIZE);
+            var length = PageSegment.GetLength(bytesLength); // length in blocks (add inside method +1 byte)
             var index = this.GetFreeIndex();
 
             return this.Insert(index, length);
@@ -345,7 +344,7 @@ namespace LiteDB.Engine
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
             var originalLength = _buffer[block * PAGE_BLOCK_SIZE]; // length in blocks
-            var newLength = (byte)Math.Ceiling((double)(bytesLength + 1) / PAGE_BLOCK_SIZE); // length in blocks (+1 for store segment length)
+            var newLength = PageSegment.GetLength(bytesLength); // length in blocks (add inside method +1 byte)
             var isLastSegment = index == this.HighestIndex;
 
             this.IsDirty = true;
@@ -593,6 +592,19 @@ namespace LiteDB.Engine
             if (freeBlocks >= 127) return 2;
             if (freeBlocks >= 76) return 3;
             return 4;
+        }
+
+        /// <summary>
+        /// Get minimum slot with space enough for your data content
+        /// if your need 228 - 254 blocks => no slot => there is no garanteed slot (-1)
+        /// if your need 190 - 227 blocks => slot 0
+        /// if your need 127 - 189 blocks => slots 1, 0
+        /// if your need  76 - 126 blocks => slots 2, 1, 0
+        /// if your need   0 -  75 blocks => slots 3, 2, 1, 0
+        /// </summary>
+        public static int GetMinimumIndexSlot(byte length)
+        {
+            return FreeIndexSlot(length) - 1;
         }
 
         #endregion

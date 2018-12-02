@@ -11,6 +11,11 @@ namespace LiteDB
     {
         #region Read Extensions
 
+        public static Int16 ReadInt16(this BufferSlice buffer, int offset)
+        {
+            return BitConverter.ToInt16(buffer.Array, buffer.Offset + offset);
+        }
+
         public static Int32 ReadInt32(this BufferSlice buffer, int offset)
         {
             return BitConverter.ToInt32(buffer.Array, buffer.Offset + offset);

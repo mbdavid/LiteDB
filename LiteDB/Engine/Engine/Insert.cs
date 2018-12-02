@@ -30,6 +30,40 @@ namespace LiteDB.Engine
             });
         }
 
+        public bool Read_All_Docs(string collection)
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
+                var data = new DataService(snapshot);
+
+                for(var slot = 0; slot < 5; slot++)
+                {
+                    var next = snapshot.CollectionPage.FreeDataPageID[slot];
+
+                    while (next != uint.MaxValue)
+                    {
+                        var page = snapshot.GetPage<DataPage>(next);
+
+                        foreach(var block in page.GetBlocks())
+                        {
+                            using (var r = new BufferReader(data.Read(block)))
+                            {
+                                var doc = r.ReadDocument();
+
+                                ;
+                            }
+                        }
+
+
+                        next = page.NextPageID;
+                    }
+                }
+
+                return true;
+
+            });
+        }
 
         /// <summary>
         /// Insert all documents in collection. If document has no _id, use AutoId generation.
@@ -89,7 +123,7 @@ namespace LiteDB.Engine
             var dataBlock = data.Insert(doc);
             
             // for each index, insert new IndexNode
-            foreach (var index in snapshot.CollectionPage.GetAllIndexes())
+            foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
             {
                 // for each index, get all keys (support now multi-key) - gets distinct values only
                 // if index are unique, get single key only

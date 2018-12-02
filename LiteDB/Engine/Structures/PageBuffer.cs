@@ -57,16 +57,14 @@ namespace LiteDB.Engine
         /// </summary>
         public void Release()
         {
-            ENSURE(this.ShareCounter > 0, "ShareCounter must be > 0 in Dispose()");
-
-            //TODO: pode ser q seja zero mesmo.... ou seja, removi antes do tempo
+            ENSURE(this.ShareCounter > 0, "share counter must be > 0 in Release()");
 
             Interlocked.Decrement(ref this.ShareCounter);
         }
 
         ~PageBuffer()
         {
-            ENSURE(this.ShareCounter == 0, "Share count must be 0 in destroy PageBuffer");
+            ENSURE(this.ShareCounter == 0, "share count must be 0 in destroy PageBuffer");
         }
 
         public override string ToString()

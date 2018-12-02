@@ -8,7 +8,8 @@ namespace LiteDB.Engine
     internal class DataService
     {
         /// <summary>
-        /// Get max data will be saved in a page. Must consider minimum footer (-1 block) and (-1 byte) per pageSegment (length)
+        /// Get max data will be saved in a page. 
+        /// Must consider minimum footer (-1 block) and (-1 byte) per pageSegment (length)
         /// </summary>
         private const int MAX_DATA_BYTES_PER_PAGE = ((PAGE_AVAILABLE_BLOCKS - 1) * PAGE_BLOCK_SIZE) - 1 - DataBlock.DATA_BLOCK_FIXED_SIZE;
 

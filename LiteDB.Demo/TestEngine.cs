@@ -38,7 +38,7 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(PATH))
             {
-                var N = 1000000;
+                var N = 100000;
 
                 IEnumerable<BsonDocument> source(int sequence)
                 {
@@ -47,10 +47,10 @@ namespace LiteDB.Demo
 
                     for (var i = start; i < end; i++)
                     {
-                        doc["_id"] = i;// Guid.NewGuid().ToString();
+                        doc["_id"] = Guid.NewGuid().ToString();
                         //doc["rnd"] = Guid.NewGuid().ToString(); // RND.Next(1, 200000);
                         //doc["name"] = Guid.NewGuid().ToString() + " == " + i;
-                        //doc["bytes"] = new byte[RND.Next(30, 1500)];
+                        doc["bytes"] = new byte[RND.Next(30, 1500)];
                         yield return doc;
                     }
 
@@ -66,10 +66,11 @@ namespace LiteDB.Demo
                 }
 
 
-                var d0 = db.Find_by_id("col1", 7737);
+                //var d0 = db.Find_by_id("col1", 7737);
+                db.Read_All_Docs("col1");
 
 
-                Console.WriteLine(d0?.ToString());
+                //Console.WriteLine(d0?.ToString());
             }
            
         }

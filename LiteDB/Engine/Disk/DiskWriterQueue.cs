@@ -42,10 +42,16 @@ namespace LiteDB.Engine
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
+
             _thread = new Thread(this.CreateThread);
             _thread.Name = "LiteDB_Writer";
             _thread.Start();
         }
+
+        /// <summary>
+        /// Get how many pages are waiting for store
+        /// </summary>
+        public int Length => _queue.Count;
 
         /// <summary>
         /// Increment last log file position and return
@@ -83,10 +89,10 @@ namespace LiteDB.Engine
         /// </summary>
         public void Run()
         {
-            if (_queue.IsEmpty) return;
-            if (_waiter.IsSet) return;
-
-            _waiter.Set();
+            if (_queue.Count > 0)
+            {
+                _waiter.Set();
+            }
         }
 
         private void CreateThread()
@@ -96,65 +102,83 @@ namespace LiteDB.Engine
 
             while(_running)
             {
-                Stream stream = null;
+                this.ExecuteQueue();
 
-                while (_queue.TryDequeue(out var page))
-                {
-                    stream = page.Origin == FileOrigin.Data ? _dataStream : _logStream;
-
-                    // if array is null, is Position = file length
-                    if (page.Array == null)
-                    {
-                        stream.SetLength(page.Position);
-                    }
-                    else
-                    {
-                        ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
-
-                        // set stream position according to page
-                        stream.Position = page.Position;
-
-                        // write plain or encrypted data into strea
-                        if (_aes != null)
-                        {
-                            _aes.Encrypt(page, stream);
-                        }
-                        else
-                        {
-                            stream.Write(page.Array, page.Offset, PAGE_SIZE);
-                        }
-
-                        // release this page to be re-used
-                        page.Release();
-                    }
-                }
-
-                // after this I will have 100% sure data are safe
-                stream?.FlushToDisk();
-
-                // suspend thread and wait another signal
                 _waiter.Reset();
 
-                if (!_running) return;
+                if (_running == false) return;
 
                 _waiter.Wait();
             }
         }
 
+        /// <summary>
+        /// Execute all items in queue sync
+        /// </summary>
+        private void ExecuteQueue()
+        {
+            if (_queue.Count == 0) return;
+
+            Stream stream = null;
+            var count = 0;
+
+            while (_queue.TryDequeue(out var page))
+            {
+                stream = page.Origin == FileOrigin.Data ? _dataStream : _logStream;
+
+                // if array is null, is Position = file length
+                if (page.Array == null)
+                {
+                    stream.SetLength(page.Position);
+                }
+                else
+                {
+                    ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
+
+                    // set stream position according to page
+                    stream.Position = page.Position;
+
+                    // write plain or encrypted data into strea
+                    if (_aes != null)
+                    {
+                        _aes.Encrypt(page, stream);
+                    }
+                    else
+                    {
+                        stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                    }
+
+                    // release this page to be re-used
+                    page.Release();
+
+                    count++;
+                }
+            }
+
+            LOG($"flushing {count} pages on disk", "DISK");
+
+            // after this I will have 100% sure data are safe
+            stream?.FlushToDisk();
+        }
+
         public void Dispose()
         {
+            this.Run();
+
             // stop running async task in next while check
             _running = false;
 
-            if (_waiter.IsSet == false)
-            {
-                _waiter.Set();
-            }
+            _waiter.Set();
 
-            // wait writer async task finish before dispose (be sync)
+            // wait async task finish before dispose
             _thread.Join();
 
             _waiter.Dispose();
+
+            // if still have any page in queue, run synchronized
+            this.ExecuteQueue();
+
+            ENSURE(_queue.Count == 0, "must have no pages in queue before Dispose");
         }
     }
 }

@@ -18,15 +18,19 @@ namespace LiteDB.Demo
     {
         static void Main(string[] args)
         {
-            var sw = new Stopwatch();
+            for (var i = 0; i < 10; i++)
+            {
+                var sw = new Stopwatch();
 
-            //TestMemoryFile.Run(sw);
-            //TestAesEncryption.CreateEncryptedFile(sw);
-            //TestAesEncryption.ReadEncryptedFile(sw);
-            //TestDataPage.Run(sw);
-            TestEngine.Run(sw);
+                //TestMemoryFile.Run(sw);
+                //TestAesEncryption.CreateEncryptedFile(sw);
+                //TestAesEncryption.ReadEncryptedFile(sw);
+                //TestDataPage.Run(sw);
+                TestEngine.Run(sw);
 
-            Console.WriteLine("Elapsed: " + sw.ElapsedMilliseconds);
+                Console.WriteLine($"{i} - Elapsed: {sw.ElapsedMilliseconds}");
+
+            }
             Console.ReadKey();
 
         }

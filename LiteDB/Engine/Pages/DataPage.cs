@@ -66,5 +66,23 @@ namespace LiteDB.Engine
 
             return new DataBlock(this, segment);
         }
+
+        /// <summary>
+        /// Get all block positions inside this page that are DataIndex = 0 (initial data block)
+        /// </summary>
+        public IEnumerable<PageAddress> GetBlocks()
+        {
+            foreach(var index in base.GetIndexes())
+            {
+                var slot = PAGE_SIZE - index - 1;
+                var block = _buffer[slot];
+                var dataIndex = _buffer[(block * PAGE_BLOCK_SIZE) + 1];
+
+                if (dataIndex == 0)
+                {
+                    yield return new PageAddress(this.PageID, index);
+                }
+            }
+        }
     }
 }
