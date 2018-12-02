@@ -18,7 +18,7 @@ namespace LiteDB.Demo
     {
         static void Main(string[] args)
         {
-            for (var i = 0; i < 10; i++)
+            for (var i = 1; i <= 10; i++)
             {
                 var sw = new Stopwatch();
 
@@ -31,6 +31,9 @@ namespace LiteDB.Demo
                 Console.WriteLine($"{i} - Elapsed: {sw.ElapsedMilliseconds}");
 
             }
+
+            Console.WriteLine("===========================================================");
+            Console.WriteLine("End");
             Console.ReadKey();
 
         }

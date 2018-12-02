@@ -47,10 +47,10 @@ namespace LiteDB.Demo
 
                     for (var i = start; i < end; i++)
                     {
-                        doc["_id"] = Guid.NewGuid().ToString();
-                        //doc["rnd"] = Guid.NewGuid().ToString(); // RND.Next(1, 200000);
-                        //doc["name"] = Guid.NewGuid().ToString() + " == " + i;
-                        doc["bytes"] = new byte[RND.Next(30, 1500)];
+                        doc["_id"] = i;
+                        doc["rnd"] = Guid.NewGuid().ToString(); // RND.Next(1, 200000);
+                        doc["name"] = Guid.NewGuid().ToString() + " == " + i;
+                        doc["bytes"] = new byte[RND.Next(30, 15000)];
                         yield return doc;
                     }
 
@@ -61,13 +61,12 @@ namespace LiteDB.Demo
                 for(var r = 0; r < 1; r++)
                 {
                     db.Insert("col1", source(r), BsonAutoId.Int32);
-
-                    Console.WriteLine(r);
                 }
 
+                sw.Stop();
 
                 //var d0 = db.Find_by_id("col1", 7737);
-                db.Read_All_Docs("col1");
+                db.Read_All_Docs("col1", 7737);
 
 
                 //Console.WriteLine(d0?.ToString());

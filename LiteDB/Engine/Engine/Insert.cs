@@ -30,12 +30,13 @@ namespace LiteDB.Engine
             });
         }
 
-        public bool Read_All_Docs(string collection)
+        public bool Read_All_Docs(string collection, BsonValue id)
         {
             return this.AutoTransaction(transaction =>
             {
                 var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
                 var data = new DataService(snapshot);
+                var count = 0;
 
                 for(var slot = 0; slot < 5; slot++)
                 {
@@ -51,15 +52,22 @@ namespace LiteDB.Engine
                             {
                                 var doc = r.ReadDocument();
 
-                                ;
+                                if (doc["_id"] == id)
+                                {
+                                    Console.WriteLine(doc.ToString());
+                                }
+
+                                count++;
                             }
                         }
 
+                        transaction.Safepoint();
 
                         next = page.NextPageID;
                     }
                 }
 
+                Console.WriteLine($"Total documents in `{collection}`: {count}");
                 return true;
 
             });
@@ -121,7 +129,9 @@ namespace LiteDB.Engine
 
             // storage in data pages - returns dataBlock address
             var dataBlock = data.Insert(doc);
-            
+
+            return;
+
             // for each index, insert new IndexNode
             foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
             {

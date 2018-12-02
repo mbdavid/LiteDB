@@ -192,8 +192,6 @@ namespace LiteDB.Engine
                 Array.Clear(page.Array, page.Offset, page.Count);
             }
 
-            ENSURE(clear, page.Array.IsFullValue(0, page.Offset, page.Count), "page should be full 0");
-
             page.Origin = origin;
             page.Timestamp = DateTime.UtcNow.Ticks;
 
@@ -210,7 +208,7 @@ namespace LiteDB.Engine
         {
             ENSURE(page.Position != long.MaxValue, "Page must have a position");
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "Page must be writable");
-            ENSURE(page.Origin != FileOrigin.None, "page must has defined source");
+            ENSURE(page.Origin != FileOrigin.None, "page must has defined origin");
 
             var key = this.GetReadableKey(page.Position, page.Origin);
 

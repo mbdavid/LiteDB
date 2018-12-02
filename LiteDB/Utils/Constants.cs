@@ -74,7 +74,7 @@ namespace LiteDB
         /// <summary>
         /// Max pages in a transaction before persist on disk and clear transaction local pages
         /// </summary>
-        public const int MAX_TRANSACTION_SIZE = 1000; // 10000
+        public const int MAX_TRANSACTION_SIZE = 10000; // 10000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
@@ -84,7 +84,7 @@ namespace LiteDB
         /// <summary>
         /// Minimum pages not in use to remove pages from _readable/_writable list to _free list
         /// </summary>
-        public const int MINIMUM_CACHE_REUSE = 1000; // 10000
+        public const int MINIMUM_CACHE_REUSE = 10000; // 10000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Database header parameter: USERVERSION

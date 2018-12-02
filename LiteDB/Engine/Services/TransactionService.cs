@@ -114,6 +114,7 @@ namespace LiteDB.Engine
                 // can include (or not) collection pages
                 // update DirtyPagesLog inside transPage for all dirty pages was write on disk
                 var pages = _snapshots.Values
+                    .Where(x => x.Mode == LockMode.Write)
                     .SelectMany(x => x.GetDirtyPages(includeCollectionPages));
 
                 foreach (var page in pages.IsLast())
@@ -139,16 +140,19 @@ namespace LiteDB.Engine
             };
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages
+            // (works only for Write snapshots)
             _disk.Write(source(), FileOrigin.Log);
 
             LOG($"persisted dirty pages ({dirty})", "TRANSACTION");
 
             // now, discard all clean pages (because those pages are writable and must be readable)
+            // from write snapshots
             _disk.DiscardPages(_snapshots.Values
+                    .Where(x => x.Mode == LockMode.Write)
                     .SelectMany(x => x.GetCleanPages())
                     .Select(x => x.GetBuffer(false)), false);
 
-            // clear local pages in all snapshots
+            // clear local pages in all snapshots (read/write snapshosts)
             foreach (var snapshot in _snapshots.Values)
             {
                 snapshot.Clear();

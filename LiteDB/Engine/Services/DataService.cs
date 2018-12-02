@@ -11,7 +11,8 @@ namespace LiteDB.Engine
         /// Get max data will be saved in a page. 
         /// Must consider minimum footer (-1 block) and (-1 byte) per pageSegment (length)
         /// </summary>
-        private const int MAX_DATA_BYTES_PER_PAGE = ((PAGE_AVAILABLE_BLOCKS - 1) * PAGE_BLOCK_SIZE) - 1 - DataBlock.DATA_BLOCK_FIXED_SIZE;
+        //private const int MAX_DATA_BYTES_PER_PAGE = ((PAGE_AVAILABLE_BLOCKS - 1) * PAGE_BLOCK_SIZE) - 1 - DataBlock.DATA_BLOCK_FIXED_SIZE;
+        private const int MAX_DATA_BYTES_PER_PAGE = 8121; // 254 blocks - 7
 
         private Snapshot _snapshot;
 
@@ -29,7 +30,7 @@ namespace LiteDB.Engine
 
             if (bytesLeft > MAX_DOCUMENT_SIZE) throw new LiteException(0, "Document size exceed {0} limit", MAX_DOCUMENT_SIZE);
 
-            DataBlock firstBlock = null;
+            var firstBlock = PageAddress.Empty;
 
             IEnumerable<BufferSlice> source()
             {
@@ -39,8 +40,7 @@ namespace LiteDB.Engine
                 while (bytesLeft > 0)
                 {
                     var bytesToCopy = Math.Min(bytesLeft, MAX_DATA_BYTES_PER_PAGE);
-                    var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy);
-                    var initialSlot = BasePage.FreeIndexSlot(dataPage.FreeBlocks);
+                    var dataPage = _snapshot.GetFreePage<DataPage>(bytesToCopy + DataBlock.DATA_BLOCK_FIXED_SIZE);
                     var dataBlock = dataPage.InsertBlock(bytesToCopy, dataIndex);
 
                     dataIndex++;
@@ -50,7 +50,7 @@ namespace LiteDB.Engine
                         lastBlock.SetNextBlock(dataBlock.Position);
                     }
 
-                    if (firstBlock == null) firstBlock = dataBlock;
+                    if (firstBlock.IsEmpty) firstBlock = dataBlock.Position;
 
                     yield return dataBlock.Buffer;
 
@@ -68,7 +68,7 @@ namespace LiteDB.Engine
                 w.Consume();
             }
 
-            return firstBlock.Position;
+            return firstBlock;
         }
 
         /// <summary>
