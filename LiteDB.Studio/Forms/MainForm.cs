@@ -21,7 +21,7 @@ namespace LiteDB.Studio
         private readonly SynchronizationContext _synchronizationContext;
 
         private LiteDatabase _db = null;
-        private ConnectionString _connectionString = null;
+        private ConnectionString _connectionString = new ConnectionString();
         private bool _running = true;
         private SqlCodeCompletion _codeCompletion;
 
@@ -43,6 +43,8 @@ namespace LiteDB.Studio
 
             txtSql.ActiveTextAreaControl.TextArea.Caret.PositionChanged += (s, e) =>
             {
+                if (this.ActiveTask == null) return;
+
                 this.ActiveTask.EditorContent = txtSql.Text;
                 this.ActiveTask.SelectedTab = tabResult.SelectedTab.Name;
                 this.ActiveTask.Position = new Tuple<int, int>(txtSql.ActiveTextAreaControl.TextArea.Caret.Line, txtSql.ActiveTextAreaControl.TextArea.Caret.Column);
@@ -122,7 +124,7 @@ namespace LiteDB.Studio
             btnCheckpoint.Enabled = enabled;
         }
 
-        private TaskData ActiveTask => tabSql.SelectedTab.Tag as TaskData;
+        private TaskData ActiveTask => tabSql.SelectedTab?.Tag as TaskData;
 
         private void AddNewTab(string content)
         {
@@ -527,6 +529,8 @@ namespace LiteDB.Studio
 
         private void TabResult_Selected(object sender, TabControlEventArgs e)
         {
+            if (tabSql.TabPages.Count == 0) return;
+
             this.LoadResult(this.ActiveTask);
 
             // set focus to result

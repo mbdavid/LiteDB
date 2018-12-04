@@ -17,17 +17,7 @@ namespace LiteDB.Demo
         {
             var sw = new Stopwatch();
 
-            sw.Start();
-
-            using (var db = new LiteDatabase("c:/temp/app.db"))
-            {
-                var r = db.Execute("SELECT { city, t: COUNT(_id) } FROM zip GROUP BY city");
-
-                while(r.Read())
-                {
-                    var rr = r.Current;
-                }
-            }
+            TestEngine.Run(sw);
 
             sw.Stop();
 
@@ -37,4 +27,49 @@ namespace LiteDB.Demo
         }
     }
 
+    public class TestEngine
+    {
+        static string PATH = @"D:\memory-file.db";
+        static string PATH_LOG = @"D:\memory-file-log.db";
+
+        static BsonDocument doc = new BsonDocument
+        {
+            ["_id"] = 1,
+            ["name"] = "NoSQL Database",
+            ["birthday"] = new DateTime(1977, 10, 30),
+            ["phones"] = new BsonArray { "000000", "12345678" },
+            //["large"] = new byte[500],
+            ["active"] = true
+        }; // 109b (with no-large field)
+
+        public static void Run(Stopwatch sw)
+        {
+            File.Delete(PATH);
+            File.Delete(PATH_LOG);
+
+            sw.Start();
+
+            using (var db = new LiteEngine(new EngineSettings { Filename = PATH, CheckpointOnShutdown = true }))
+            {
+
+                IEnumerable<BsonDocument> source()
+                {
+                    for (var i = 0; i < 1000000; i++)
+                    {
+                        doc["_id"] = i + 1;
+                        yield return doc;
+                    }
+                }
+
+                //db.CreateCollection("col1");
+
+                db.Insert("col1", source(), BsonAutoId.Int32);
+
+                //sw.Stop();
+
+            }
+
+        }
+
+    }
 }
