@@ -37,29 +37,30 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode ReadNode(byte index)
         {
-            if (_cache.TryGetValue(index, out var node))
-            {
-                return node;
-            }
-            else
+            //if (_cache.TryGetValue(index, out var node))
+            //{
+            //    return node;
+            //}
+            //else
             {
                 var segment = base.Get(index);
 
-                return (_cache[index] = new IndexNode(this, segment));
+                return new IndexNode(this, segment);
+
+                //return (_cache[index] = new IndexNode(this, segment));
             }
         }
 
         /// <summary>
         /// Insert new IndexNode. After call this, "node" instance can't be changed
         /// </summary>
-        public IndexNode InsertNode(byte level, BsonValue key, PageAddress dataBlock)
+        public IndexNode InsertNode(byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
         {
-            var length = IndexNode.GetNodeLength(level, key);
-            var segment = base.Insert(length);
+            var segment = base.Insert(bytesLength);
 
             var node = new IndexNode(this, segment, level, key, dataBlock);
 
-            _cache[node.Position.Index] = node;
+            //_cache[node.Position.Index] = node;
 
             return node;
         }
@@ -71,7 +72,18 @@ namespace LiteDB.Engine
         {
             base.Delete(index);
 
-            _cache.Remove(index);
+            //_cache.Remove(index);
+        }
+
+        /// <summary>
+        /// Get all index nodes inside this page
+        /// </summary>
+        public IEnumerable<IndexNode> GetNodes()
+        {
+            foreach (var index in base.GetIndexes())
+            {
+                yield return this.ReadNode(index);
+            }
         }
     }
 }

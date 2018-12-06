@@ -31,9 +31,9 @@ namespace LiteDB.Demo
             var buffer = new PageBuffer(new byte[8192], 0, 0) { ShareCounter = -1 };
             var p0 = new IndexPage(buffer, 99);
 
-            var len = IndexNode.GetNodeLength(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+            var len0 = IndexNode.GetNodeLength(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-            var s0 = p0.InsertNode(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", new PageAddress(98, 97));
+            var s0 = p0.InsertNode(3, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", new PageAddress(98, 97), len0);
 
             s0.SetPrev(0, new PageAddress(1, 2));
             s0.SetNext(0, new PageAddress(3, 4));
@@ -46,7 +46,9 @@ namespace LiteDB.Demo
 
             p0.GetBuffer(true);
 
-            var s1 = p0.InsertNode(1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", new PageAddress(98, 97));
+            var len1 = IndexNode.GetNodeLength(1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+
+            var s1 = p0.InsertNode(1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", new PageAddress(98, 97), len1);
 
             s1.SetPrev(0, new PageAddress(1, 2));
             s1.SetNext(0, new PageAddress(3, 4));

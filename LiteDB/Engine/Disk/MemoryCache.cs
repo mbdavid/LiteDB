@@ -387,6 +387,15 @@ namespace LiteDB.Engine
 
         #endregion
 
+        /// <summary>
+        /// Return how many pages are in use when call this method (ShareCounter != 0).
+        /// Used only for DEBUG propose
+        /// </summary>
+        public int PagesInUse => 
+                _free.Where(x => x.ShareCounter != 0).Count() +
+                _readable.Values.Where(x => x.ShareCounter != 0).Count() +
+                _writable.Values.Where(x => x.ShareCounter != 0).Count();
+
         public void Dispose()
         {
         }

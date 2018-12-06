@@ -73,6 +73,52 @@ namespace LiteDB.Engine
             });
         }
 
+        public bool Read_All_Docs_By_Index(string collection, BsonValue id)
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
+                var data = new DataService(snapshot);
+                var indexer = new IndexService(snapshot);
+                var count = 0;
+
+                for (var slot = 0; slot < 5; slot++)
+                {
+                    var nextIndexPage = snapshot.CollectionPage.FreeIndexPageID[slot];
+
+                    while (nextIndexPage != uint.MaxValue)
+                    {
+                        var indexPage = snapshot.GetPage<IndexPage>(nextIndexPage);
+
+                        foreach (var node in indexPage.GetNodes())
+                        {
+                            if (node.Key.IsMinValue || node.Key.IsMaxValue) continue;
+
+                            using (var r = new BufferReader(data.Read(node.DataBlock)))
+                            {
+                                var doc = r.ReadDocument();
+
+                                if (doc["_id"] == id)
+                                {
+                                    Console.WriteLine(doc.ToString());
+                                }
+
+                                count++;
+                            }
+                        }
+
+                        transaction.Safepoint();
+
+                        nextIndexPage = indexPage.NextPageID;
+                    }
+                }
+
+                Console.WriteLine($"Total nodes in `{collection}`: {count}");
+                return true;
+
+            });
+        }
+
         /// <summary>
         /// Insert all documents in collection. If document has no _id, use AutoId generation.
         /// </summary>
@@ -130,7 +176,7 @@ namespace LiteDB.Engine
             // storage in data pages - returns dataBlock address
             var dataBlock = data.Insert(doc);
 
-            return;
+            //return;
 
             // for each index, insert new IndexNode
             foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())

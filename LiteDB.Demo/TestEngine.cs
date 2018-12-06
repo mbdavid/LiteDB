@@ -19,16 +19,6 @@ namespace LiteDB.Demo
         static string PATH = @"D:\memory-file.db";
         static string PATH_LOG = @"D:\memory-file-log.db";
 
-        static BsonDocument doc = new BsonDocument
-        {
-            ["_id"] = 1,
-            ["name"] = "NoSQL Database",
-            ["birthday"] = new DateTime(1977, 10, 30),
-            ["phones"] = new BsonArray { "000000", "12345678" },
-            //["large"] = new byte[500],
-            ["active"] = true
-        }; // 109b (with no-large field)
-
         public static void Run(Stopwatch sw)
         {
             File.Delete(PATH);
@@ -38,40 +28,64 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(PATH))
             {
-                var N = 100000;
+                db.EnsureIndex("col1", "idx_1", "rnd", false);
+                db.EnsureIndex("col2", "idx_1", "rnd", false);
 
-                IEnumerable<BsonDocument> source(int sequence)
+                var ta = Task.Factory.StartNew(() =>
                 {
-                    var start = sequence * N;
-                    var end = start + N;
+                    Console.WriteLine("Begin: col1");
+                    db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32);
+                    Console.WriteLine("End: col1");
+                });
 
-                    for (var i = start; i < end; i++)
-                    {
-                        doc["_id"] = i;
-                        doc["rnd"] = Guid.NewGuid().ToString(); // RND.Next(1, 200000);
-                        doc["name"] = Guid.NewGuid().ToString() + " == " + i;
-                        doc["bytes"] = new byte[RND.Next(30, 15000)];
-                        yield return doc;
-                    }
-
-                }
-
-                //db.EnsureIndex("col1", "idx_1", "rnd", false);
-
-                for(var r = 0; r < 1; r++)
+                var tb = Task.Factory.StartNew(() =>
                 {
-                    db.Insert("col1", source(r), BsonAutoId.Int32);
-                }
+                    Console.WriteLine("Begin: col2");
+                    db.Insert("col2", GetDocs(1, 100000), BsonAutoId.Int32);
+                    Console.WriteLine("End: col2");
+                });
+
+                Task.WaitAll(ta, tb);
+
+                Console.WriteLine("Pages In Use: " + db.PagesInUse);
 
                 sw.Stop();
 
-                //var d0 = db.Find_by_id("col1", 7737);
                 db.Read_All_Docs("col1", 7737);
+                db.Read_All_Docs_By_Index("col1", 7737);
 
+                db.Read_All_Docs("col2", 7737);
+                db.Read_All_Docs_By_Index("col2", 7737);
 
-                //Console.WriteLine(d0?.ToString());
+                // wait writer thread finish
+                Thread.Sleep(1000);
+
+                Console.WriteLine("Pages In Use: " + db.PagesInUse);
+
+                Debug.Assert(db.PagesInUse == 1);
+
             }
-           
+
+        }
+
+        static IEnumerable<BsonDocument> GetDocs(int sequence, int count)
+        {
+            var start = sequence * count;
+            var end = start + count;
+
+            for (var i = start; i < end; i++)
+            {
+                yield return new BsonDocument
+                {
+                    ["_id"] = i,
+                    ["rnd"] = Guid.NewGuid().ToString(),
+                    ["name"] = "NoSQL Database",
+                    ["birthday"] = new DateTime(1977, 10, 30),
+                    ["phones"] = new BsonArray { "000000", "12345678" },
+                    ["bytes"] = new byte[RND.Next(30, 1500)],
+                    ["active"] = true
+                };
+            }
         }
     }
 }

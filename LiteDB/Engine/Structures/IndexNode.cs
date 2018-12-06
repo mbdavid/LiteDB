@@ -136,8 +136,11 @@ namespace LiteDB.Engine
 
             for (var i = 0; i < level; i++)
             {
-                this.Prev[i] = PageAddress.Empty;
-                this.Next[i] = PageAddress.Empty;
+                this.SetPrev((byte)i, PageAddress.Empty);
+                this.SetNext((byte)i, PageAddress.Empty);
+
+                //**this.Prev[i] = PageAddress.Empty;
+                //**this.Next[i] = PageAddress.Empty;
             }
 
             // persist in buffer read only data

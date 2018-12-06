@@ -203,6 +203,12 @@ namespace LiteDB.Engine
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Return how many pages are in use when call this method (ShareCounter != 0).
+        /// Used only for DEBUG propose
+        /// </summary>
+        public int PagesInUse => _cache.PagesInUse;
+
         public void Dispose()
         {
             // dispose queue (wait finish)

@@ -145,11 +145,16 @@ namespace LiteDB.Engine
 
         #endregion
 
+        /// <summary>
+        /// Return how many pages are in use when call this method (ShareCounter != 0).
+        /// Used only for DEBUG propose
+        /// </summary>
+        public int PagesInUse => _disk.PagesInUse;
 
-//**        /// <summary>
-//**        /// Request a database checkpoint
-//**        /// </summary>
-//**        public int Checkpoint() => _walIndex.Checkpoint(_header, true);
+        //**        /// <summary>
+        //**        /// Request a database checkpoint
+        //**        /// </summary>
+        //**        public int Checkpoint() => _walIndex.Checkpoint(_header, true);
 
         /// <summary>
         /// Shutdown database and do not accept any other access. Wait finish all transactions

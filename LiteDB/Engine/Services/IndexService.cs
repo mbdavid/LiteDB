@@ -24,19 +24,27 @@ namespace LiteDB.Engine
         /// </summary>
         public CollectionIndex CreateIndex(string name, string expr, bool unique)
         {
-            // get a free index page for head note
-            var indexPage = _snapshot.GetFreePage<IndexPage>(IndexNode.GetNodeLength(MAX_LEVEL_LENGTH, BsonValue.MinValue));
+            // get how many butes needed fore each head/tail (both has same size)
+            var bytesLength = IndexNode.GetNodeLength(MAX_LEVEL_LENGTH, BsonValue.MinValue);
+
+            // get a free index page for head note (x2 for head + tail)
+            var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength * 2);
 
             // insert head/tail nodes
-            var head = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty);
-            var tail = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty);
+            var head = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
+            var tail = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
 
             // link head-to-tail with double link list in all levels
-            for(byte i = 0; i < MAX_LEVEL_LENGTH; i++)
-            {
-                head.SetNext(i, tail.Position);
-                tail.SetNext(i, head.Position);
-            }
+            //**for(byte i = 0; i < MAX_LEVEL_LENGTH; i++)
+            //**{
+            //**    head.SetNext(i, tail.Position);
+            //**    tail.SetPrev(i, head.Position);
+            //**
+            //**    head.SetPrev(i, tail.Position);
+            //**    tail.SetNext(i, head.Position);
+            //**}
+            head.SetNext(0, tail.Position);
+            tail.SetPrev(0, head.Position);
 
             // create index ref
             var index = _snapshot.CollectionPage.InsertIndex(name, expr, unique, head.Position, tail.Position);
@@ -84,9 +92,9 @@ namespace LiteDB.Engine
             var indexPage = _snapshot.GetFreePage<IndexPage>(bytesLength);
 
             // create node in buffer
-            var node = indexPage.InsertNode(level, key, dataBlock);
+            var node = indexPage.InsertNode(level, key, dataBlock, bytesLength);
 
-            //return node;
+            return node;
 
             // now, let's link my index node on right place
             var cur = index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head));
