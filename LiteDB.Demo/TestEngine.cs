@@ -58,11 +58,14 @@ namespace LiteDB.Demo
                 db.Read_All_Docs_By_Index("col2", 7737);
 
                 // wait writer thread finish
-                Thread.Sleep(1000);
+                // Thread.Sleep(3000);
+
+
+                db.Dispose();
 
                 Console.WriteLine("Pages In Use: " + db.PagesInUse);
 
-                Debug.Assert(db.PagesInUse == 1);
+                Debug.Assert(db.PagesInUse == 0);
 
             }
 

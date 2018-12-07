@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LiteDB.Engine
@@ -93,6 +94,15 @@ namespace LiteDB.Engine
                         foreach (var node in indexPage.GetNodes())
                         {
                             if (node.Key.IsMinValue || node.Key.IsMaxValue) continue;
+
+                            // testa se os ponteiros estão todos ok
+                            //for(var i = 0; i < node.Level; i++)
+                            //{
+                            //    Debug.Assert(node.Next[i] == PageAddress.Empty);
+                            //    Debug.Assert(node.Prev[i] == PageAddress.Empty);
+                            //}
+
+                            //Console.Write(node.Key.ToString() + " ");
 
                             using (var r = new BufferReader(data.Read(node.DataBlock)))
                             {
