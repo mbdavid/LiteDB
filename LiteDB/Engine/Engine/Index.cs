@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,23 +24,34 @@ namespace LiteDB
             if (field == "_id") return false; // always exists
             if (expression != null && expression.Length > 200) throw new ArgumentException("expression is limited in 200 characters", "expression");
 
+            expression = expression ?? "$." + field;
+
             return this.Transaction<bool>(collection, true, (col) =>
             {
                 // check if index already exists
                 var current = col.GetIndex(field);
 
-                // if already exists, just exit
+                // if an excatly same index already exists, just exit
                 if (current != null)
                 {
-                    // do not test any difference between current index and new defition
-                    return false;
+                    if (current.Expression == expression && current.Unique == unique)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        // drop the old index
+                        _indexer.DropIndex(current);
+                        current.Clear();
+                        _pager.SetDirty(col);
+                    }
                 }
 
                 // create index head
                 var index = _indexer.CreateIndex(col);
 
                 index.Field = field;
-                index.Expression = expression ?? "$." + field;
+                index.Expression = expression;
                 index.Unique = unique;
 
                 _log.Write(Logger.COMMAND, "create index on '{0}' :: {1} unique: {2}", collection, index.Expression, unique);
