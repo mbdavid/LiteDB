@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using System.Linq;
@@ -94,6 +94,37 @@ namespace LiteDB.Tests.Engine
                     db.Shrink();
 
                     // test again
+                    DoTest(db);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Shrink_With_Custom_Index_Expressions()
+        {
+            const string Col = "col";
+            const string Idx = "idx_full_name";
+            const string IdxExpr = "$.first + $.name";
+
+            Action<LiteEngine> DoTest = (db) => {
+                Assert.IsTrue(db.GetIndexes(Col).First(x=>x.Field == Idx).Expression == IdxExpr);
+                var doc = db.FindAll(Col).First().AsDocument;
+                var fullName = doc["first"].AsString + doc["name"].AsString;
+                var result = db.Find(Col, Query.EQ(Idx, fullName)).First();
+                Assert.IsTrue(result["name"] == doc["name"]);
+            };
+
+            using (var file = new TempFile()) {
+                using (var dbe = new LiteDatabase(file.Filename)) {
+                    var db = dbe.Engine;
+
+                    db.EnsureIndex(Col, Idx, IdxExpr, false);
+                    db.Insert(Col, GetDocs(1, 1000));
+
+                    DoTest(db);
+
+                    db.Shrink();
+
                     DoTest(db);
                 }
             }
