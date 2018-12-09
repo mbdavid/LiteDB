@@ -338,7 +338,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteArray(BsonArray value)
         {
-            this.Write(value.GetBytesCount(false));
+            this.Write(value.GetBytesCount());
 
             for (var i = 0; i < value.Count; i++)
             {
@@ -353,7 +353,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteDocument(BsonDocument value)
         {
-            this.Write(value.GetBytesCount(true));
+            this.Write(value.GetBytesCount());
 
             foreach (var key in value.Keys)
             {

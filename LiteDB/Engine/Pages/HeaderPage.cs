@@ -202,7 +202,7 @@ namespace LiteDB.Engine
         public int GetAvaiableCollectionSpace()
         {
             return P_COLLECTIONS_COUNT -
-                _collections.GetBytesCount(true) -
+                _collections.GetBytesCount() -
                 1 + // for int32 type (0x10)
                 1 + // for new CString ('\0')
                 4 + // for PageID (int32)

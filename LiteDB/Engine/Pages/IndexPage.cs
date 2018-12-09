@@ -11,11 +11,6 @@ namespace LiteDB.Engine
     internal class IndexPage : BasePage
     {
         /// <summary>
-        /// Local page cache for used-only nodes
-        /// </summary>
-        private readonly Dictionary<byte, IndexNode> _cache = new Dictionary<byte, IndexNode>();
-
-        /// <summary>
         /// Read existing IndexPage in buffer
         /// </summary>
         public IndexPage(PageBuffer buffer)
@@ -37,18 +32,9 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode ReadNode(byte index)
         {
-            //if (_cache.TryGetValue(index, out var node))
-            //{
-            //    return node;
-            //}
-            //else
-            {
-                var segment = base.Get(index);
+            var segment = base.Get(index);
 
-                return new IndexNode(this, segment);
-
-                //return (_cache[index] = new IndexNode(this, segment));
-            }
+            return new IndexNode(this, segment);
         }
 
         /// <summary>
@@ -60,8 +46,6 @@ namespace LiteDB.Engine
 
             var node = new IndexNode(this, segment, level, key, dataBlock);
 
-            //_cache[node.Position.Index] = node;
-
             return node;
         }
 
@@ -71,8 +55,6 @@ namespace LiteDB.Engine
         public void DeleteNode(byte index)
         {
             base.Delete(index);
-
-            //_cache.Remove(index);
         }
 
         /// <summary>

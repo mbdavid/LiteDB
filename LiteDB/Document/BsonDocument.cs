@@ -49,6 +49,8 @@ namespace LiteDB
             }
             set
             {
+                this.Length = null; // reset GetBytesLength()
+
                 this.RawValue[name] = value ?? BsonValue.Null;
             }
         }
@@ -77,6 +79,8 @@ namespace LiteDB
             {
                 myDict[key] = otherDict[key];
             }
+
+            this.Length = null; // reset GetBytesLength()
 
             return this;
         }
@@ -109,6 +113,7 @@ namespace LiteDB
 
             // test keys length to check which is bigger
             if (i == thisLength) return i == otherLength ? 0 : -1;
+
             return 1;
         }
 
@@ -162,11 +167,15 @@ namespace LiteDB
 
         public void Add(string key, BsonValue value)
         {
+            this.Length = null; // reset GetBytesLength()
+
             this[key] = value;
         }
 
         public bool Remove(string key)
         {
+            this.Length = null; // reset GetBytesLength()
+
             return this.RawValue.Remove(key);
         }
 
@@ -177,11 +186,15 @@ namespace LiteDB
 
         public void Add(KeyValuePair<string, BsonValue> item)
         {
+            this.Length = null; // reset GetBytesLength()
+
             this[item.Key] = item.Value;
         }
 
         public void Clear()
         {
+            this.Length = null; // reset GetBytesLength()
+
             this.RawValue.Clear();
         }
 
@@ -192,6 +205,8 @@ namespace LiteDB
 
         public void CopyTo(KeyValuePair<string, BsonValue>[] array, int arrayIndex)
         {
+            this.Length = null; // reset GetBytesLength()
+
             ((ICollection<KeyValuePair<string, BsonValue>>)this.RawValue).CopyTo(array, arrayIndex);
         }
 
@@ -208,6 +223,8 @@ namespace LiteDB
 
         public bool Remove(KeyValuePair<string, BsonValue> item)
         {
+            this.Length = null; // reset GetBytesLength()
+
             return this.RawValue.Remove(item.Key);
         }
 

@@ -69,25 +69,15 @@ namespace LiteDB
             }
             set
             {
+                this.Length = null; // reset GetBytesLength()
+
                 this.RawValue[index] = value ?? BsonValue.Null;
             }
         }
 
-        public int Count
-        {
-            get
-            {
-                return this.RawValue.Count;
-            }
-        }
+        public int Count => this.RawValue.Count;
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public bool IsReadOnly => false;
 
         public void Add(BsonValue item)
         {
@@ -99,6 +89,8 @@ namespace LiteDB
         {
             if (array == null) throw new ArgumentNullException(nameof(array));
 
+            this.Length = null; // reset GetBytesLength()
+
             foreach (var item in array)
             {
                 this.Add(item ?? BsonValue.Null);
@@ -107,6 +99,8 @@ namespace LiteDB
 
         public void Clear()
         {
+            this.Length = null; // reset GetBytesLength()
+
             this.RawValue.Clear();
         }
 
@@ -132,16 +126,22 @@ namespace LiteDB
 
         public void Insert(int index, BsonValue item)
         {
+            this.Length = null; // reset GetBytesLength()
+
             this.RawValue.Insert(index, item);
         }
 
         public bool Remove(BsonValue item)
         {
+            this.Length = null; // reset GetBytesLength()
+
             return this.RawValue.Remove(item);
         }
 
         public void RemoveAt(int index)
         {
+            this.Length = null; // reset GetBytesLength()
+
             this.RawValue.RemoveAt(index);
         }
 

@@ -28,7 +28,7 @@ namespace LiteDB.Demo
                 //TestDataPage.Run(sw);
                 TestEngine.Run(sw);
 
-                Console.WriteLine($"{i} - Elapsed: {sw.ElapsedMilliseconds}");
+                Console.WriteLine($">>> ({i}) - Elapsed: [[[ {sw.ElapsedMilliseconds} ]]]");
 
             }
 

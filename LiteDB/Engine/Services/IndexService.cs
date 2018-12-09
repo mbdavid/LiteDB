@@ -34,15 +34,7 @@ namespace LiteDB.Engine
             var head = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MinValue, PageAddress.Empty, bytesLength);
             var tail = indexPage.InsertNode(MAX_LEVEL_LENGTH, BsonValue.MaxValue, PageAddress.Empty, bytesLength);
 
-            // link head-to-tail with double link list in all levels
-            //**for(byte i = 0; i < MAX_LEVEL_LENGTH; i++)
-            //**{
-            //**    head.SetNext(i, tail.Position);
-            //**    tail.SetPrev(i, head.Position);
-            //**
-            //**    head.SetPrev(i, tail.Position);
-            //**    tail.SetNext(i, head.Position);
-            //**}
+            // link head-to-tail with double link list in first level
             head.SetNext(0, tail.Position);
             tail.SetPrev(0, head.Position);
 

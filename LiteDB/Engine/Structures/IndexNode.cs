@@ -85,7 +85,7 @@ namespace LiteDB.Engine
         {
             return 1 +
                 ((key.IsString || key.IsBinary) ? 1 : 0) +
-                key.GetBytesCount(false);
+                key.GetBytesCount();
         }
 
         /// <summary>
@@ -134,6 +134,12 @@ namespace LiteDB.Engine
             this.Next = new PageAddress[level];
             this.Prev = new PageAddress[level];
 
+            for (var i = 0; i < level; i++)
+            {
+                this.SetPrev((byte)i, PageAddress.Empty);
+                this.SetNext((byte)i, PageAddress.Empty);
+            }
+
             // persist in buffer read only data
             segment.Buffer[P_LEVEL] = level;
             segment.Buffer.Write(dataBlock, P_DATA_BLOCK);
@@ -142,16 +148,6 @@ namespace LiteDB.Engine
             // prevNode/nextNode must be defined as Empty
             segment.Buffer.Write(this.PrevNode, P_PREV_NODE);
             segment.Buffer.Write(this.NextNode, P_NEXT_NODE);
-
-
-            for (var i = 0; i < level; i++)
-            {
-                this.SetPrev((byte)i, PageAddress.Empty);
-                this.SetNext((byte)i, PageAddress.Empty);
-
-                //**this.Prev[i] = PageAddress.Empty;
-                //**this.Next[i] = PageAddress.Empty;
-            }
 
             page.IsDirty = true;
         }
