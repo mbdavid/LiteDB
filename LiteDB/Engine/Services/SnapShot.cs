@@ -19,6 +19,7 @@ namespace LiteDB.Engine
         private readonly WalIndexService _walIndex;
 
         // instances from transaction
+        private readonly long _transactionID;
         private readonly TransactionPages _transPages;
 
         // snapshot controls
@@ -35,11 +36,12 @@ namespace LiteDB.Engine
         public string CollectionName => _collectionName;
         public CollectionPage CollectionPage => _collectionPage;
 
-        public Snapshot(LockMode mode, string collectionName, HeaderPage header, TransactionPages transPages, LockService locker, WalIndexService walIndex, DiskReader reader, bool addIfNotExists)
+        public Snapshot(LockMode mode, string collectionName, HeaderPage header, long transactionID, TransactionPages transPages, LockService locker, WalIndexService walIndex, DiskReader reader, bool addIfNotExists)
         {
             _mode = mode;
             _collectionName = collectionName;
             _header = header;
+            _transactionID = transactionID;
             _transPages = transPages;
             _locker = locker;
             _walIndex = walIndex;
@@ -65,36 +67,28 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Return all dirty pages (can include collection)
+        /// Get writable pages (only if snapshot mode is Write). Can be Dirty (changed) or Clean 
         /// </summary>
-        public IEnumerable<BasePage> GetDirtyPages(bool includeCollectionPage)
+        public IEnumerable<BasePage> GetWritablePages(bool dirty, bool includeCollectionPage)
         {
             // if snapshot is read only, just exit
             if (_mode == LockMode.Read) yield break;
 
-            foreach(var page in _localPages.Values.Where(x => x.IsDirty))
+            foreach(var page in _localPages.Values.Where(x => x.IsDirty == dirty))
             {
                 ENSURE(page.PageType != PageType.Header && page.PageType != PageType.Collection, "local cache cann't contains this page type");
 
                 yield return page;
             }
 
-            if (includeCollectionPage && _collectionPage != null && _collectionPage.IsDirty)
+            if (includeCollectionPage && _collectionPage != null && _collectionPage.IsDirty == dirty)
             {
                 yield return _collectionPage;
             }
         }
 
         /// <summary>
-        /// Get all clean pages (not modified)
-        /// </summary>
-        public IEnumerable<BasePage> GetCleanPages()
-        {
-            return _localPages.Values.Where(x => x.IsDirty == false);
-        }
-
-        /// <summary>
-        /// Clear all local pages and return page buffer to file reader
+        /// Clear all local pages and return page buffer to file reader. Do not release CollectionPage (only in Dispose method)
         /// </summary>
         public void Clear()
         {
@@ -174,6 +168,8 @@ namespace LiteDB.Engine
                 var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, FileOrigin.Log);
                 var dirty = BasePage.ReadPage<T>(buffer);
 
+                ENSURE(dirty.TransactionID == _transactionID, "this page must came from same transaction");
+
                 return dirty;
             }
 
@@ -200,6 +196,8 @@ namespace LiteDB.Engine
                 // read page from data file
                 var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, FileOrigin.Data);
                 var diskpage = BasePage.ReadPage<T>(buffer);
+
+                ENSURE(diskpage.IsConfirmed == false || diskpage.TransactionID != 0, "page are not header-clear in data file");
 
                 return diskpage;
             }

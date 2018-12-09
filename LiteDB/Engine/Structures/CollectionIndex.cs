@@ -26,19 +26,9 @@ namespace LiteDB.Engine
         public PageAddress Head { get; }
 
         /// <summary>
-        /// Retain Head index node instance to avoid re-read all times (this node never change)
-        /// </summary>
-        public IndexNode HeadNode { get; set; }
-
-        /// <summary>
         /// A link pointer to tail node
         /// </summary>
         public PageAddress Tail { get; }
-
-        /// <summary>
-        /// Retain Tail index node instance to avoid re-read all times (this node never change)
-        /// </summary>
-        public IndexNode TailNode { get; set; }
 
         /// <summary>
         /// Get/Set collection max level

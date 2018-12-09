@@ -34,13 +34,15 @@ namespace LiteDB.Demo
                 var ta = Task.Factory.StartNew(() =>
                 {
                     Console.WriteLine("Begin: col1");
-                    db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32);
+                    GetDocs(1, 500).ToList().ForEach(d => db.Insert("col1", new[] { d }, BsonAutoId.Int32));
+                    //db.Insert("col1", GetDocs(1, 100), BsonAutoId.Int32);
                     Console.WriteLine("End: col1");
                 });
 
                 var tb = Task.Factory.StartNew(() =>
                 {
                     Console.WriteLine("Begin: col2");
+                    //GetDocs(1, 100).ToList().ForEach(d => db.Insert("col2", new[] { d }, BsonAutoId.Int32));
                     db.Insert("col2", GetDocs(1, 100000), BsonAutoId.Int32);
                     Console.WriteLine("End: col2");
                 });
@@ -50,12 +52,17 @@ namespace LiteDB.Demo
                 Console.WriteLine("Pages In Use: " + db.PagesInUse);
 
                 sw.Stop();
+            }
 
-                db.Read_All_Docs("col1", 7737);
-                db.Read_All_Docs_By_Index("col1", 7737);
+            using (var db = new LiteEngine(PATH))
+            {
 
-                db.Read_All_Docs("col2", 7737);
-                db.Read_All_Docs_By_Index("col2", 7737);
+                db.Read_All_Docs("col1", 37);
+                db.Read_All_Docs_By_Index("col1", 37);
+                db.Read_All_Docs_By_Index_Id("col1", 1, 100);
+
+                db.Read_All_Docs("col2", 37);
+                db.Read_All_Docs_By_Index("col2", 37);
 
                 // wait writer thread finish
                 // Thread.Sleep(3000);
@@ -71,16 +78,15 @@ namespace LiteDB.Demo
 
         }
 
-        static IEnumerable<BsonDocument> GetDocs(int sequence, int count)
+        static IEnumerable<BsonDocument> GetDocs(int start, int count)
         {
-            var start = sequence * count;
             var end = start + count;
 
             for (var i = start; i < end; i++)
             {
                 yield return new BsonDocument
                 {
-                    ["_id"] = i,
+                    ["_id"] = i, // Guid.NewGuid(),
                     ["rnd"] = Guid.NewGuid().ToString(),
                     ["name"] = "NoSQL Database",
                     ["birthday"] = new DateTime(1977, 10, 30),

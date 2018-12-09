@@ -8,6 +8,9 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// [ThreadSafe]
+    /// </summary>
     internal class WalIndexService
     {
         private readonly LockService _locker;
@@ -97,20 +100,23 @@ namespace LiteDB.Engine
         /// </summary>
         public void RestoreIndex(DiskService disk, ref HeaderPage header)
         {
-            // leio as paginas SEM o MemoryFile (é mais eficiente pois vou ver poucos dados)
-            // uso apenas 1 buffer[8k] de temp + 1 buffer[8k] ultima header
-            // a header deve ser sobregravada (o buffer) com uma mais recente
-            // sobregravar leia-se buffercopy na pagePage
-
-            throw new NotImplementedException();
-            /*
             // get all page positions
-            var positions = new Dictionary<ObjectId, List<PagePosition>>();
+            var positions = new Dictionary<long, List<PagePosition>>();
             var current = 0L;
 
             // read all pages to get confirmed transactions (do not read page content, only page header)
-            foreach(var page in _logFile.ReadPages(false))
+            foreach(var buffer in disk.ReadFull(FileOrigin.Log))
             {
+                var page = new BasePage(buffer);
+
+                // check if page is ok
+                var crc = page.ComputeChecksum();
+
+                if (page.CRC != crc)
+                {
+                    throw new LiteException(0, $"Invalid chechsum (CRC) in position {current}");
+                }
+
                 var position = new PagePosition(page.PageID, current);
 
                 if (positions.TryGetValue(page.TransactionID, out var list))
@@ -126,10 +132,16 @@ namespace LiteDB.Engine
                 {
                     this.ConfirmTransaction(page.TransactionID, positions[page.TransactionID]);
 
+                    // when a header is modified in transaction, must always be the last page inside log file (per transaction)
                     if (page.PageType == PageType.Header)
                     {
-                        // if confirmed page is header need realod full page from WAL (current page contains only header data)
-                        header = _logFile.ReadPage(current) as HeaderPage;
+                        var headerBuffer = header.GetBuffer(false);
+
+                        // copy this buffer block into original header block
+                        Buffer.BlockCopy(buffer.Array, buffer.Offset, headerBuffer.Array, headerBuffer.Offset, PAGE_SIZE);
+
+                        // re-load header (using same buffer)
+                        header = new HeaderPage(headerBuffer);
                         header.TransactionID = 0;
                         header.IsConfirmed = false;
                     }
@@ -137,7 +149,6 @@ namespace LiteDB.Engine
 
                 current += PAGE_SIZE;
             }
-            */
         }
     }
 }

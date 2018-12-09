@@ -15,7 +15,6 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Read multiple array segment as a single linear segment - Fordward Only
-    /// NO ThreadSafe
     /// </summary>
     internal class BufferReader : IDisposable
     {

@@ -10,6 +10,10 @@ using static LiteDB.Constants;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// Implement custom fast/in memory mapped disk access
+    /// [ThreadSafe]
+    /// </summary>
     internal class DiskService
     {
         private readonly MemoryCache _cache;
@@ -196,11 +200,26 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Read all database pages inside file with no cache using
+        /// Read all database pages inside file with no cache using. PageBuffers dont need to be Released
         /// </summary>
         public IEnumerable<PageBuffer> ReadFull(FileOrigin origin)
         {
-            throw new NotImplementedException();
+            var buffer = new byte[PAGE_SIZE];
+
+            var pool = origin == FileOrigin.Log ? _logPool : _dataPool;
+
+            var writer = pool.Writer;
+
+            ENSURE(writer.Position == 0, "this method can be used only before any writer use");
+
+            while(writer.Position < writer.Length)
+            {
+                writer.Read(buffer, 0, PAGE_SIZE);
+
+                yield return new PageBuffer(buffer, 0, 0);
+            }
+
+            writer.Position = 0;
         }
 
         /// <summary>

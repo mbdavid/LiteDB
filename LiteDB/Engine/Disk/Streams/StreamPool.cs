@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Engine
 {
+    /// <summary>
+    /// [ThreadSafe]
+    /// </summary>
     internal class StreamPool : IDisposable
     {
         private readonly ConcurrentBag<Stream> _pool = new ConcurrentBag<Stream>();

@@ -35,6 +35,11 @@ namespace LiteDB.Engine
         // expose
         public long TransactionID => _transactionID;
 
+        /// <summary>
+        /// Return if this transaction is readonly or writable. If any snapshot are writable, return as Writable.
+        /// </summary>
+        public LockMode Mode => _snapshots.Any(x => x.Value.Mode == LockMode.Write) ? LockMode.Write : LockMode.Read;
+
         public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<long> done)
         {
             // retain instances
@@ -60,7 +65,7 @@ namespace LiteDB.Engine
 
             _state = TransactionState.Active;
 
-            Snapshot create() => new Snapshot(mode, collection, _header, _transPages, _locker, _walIndex, _reader, addIfNotExists);
+            Snapshot create() => new Snapshot(mode, collection, _header, _transactionID, _transPages, _locker, _walIndex, _reader, addIfNotExists);
 
             if (_snapshots.TryGetValue(collection, out var snapshot))
             {
@@ -96,7 +101,20 @@ namespace LiteDB.Engine
 
             if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
-                this.PersistDirtyPages(false, false);
+                // if any snapshot are writable, persist pages
+                if (this.Mode == LockMode.Write)
+                {
+                    this.PersistDirtyPages(false, false);
+                }
+
+                // clear local pages in all snapshots (read/write snapshosts)
+                foreach (var snapshot in _snapshots.Values)
+                {
+                    snapshot.Clear();
+                }
+
+                // there is no local pages in cache and all dirty pages are in log file
+                _transPages.TransactionSize = 0;
             }
         }
 
@@ -115,7 +133,7 @@ namespace LiteDB.Engine
                 // update DirtyPagesLog inside transPage for all dirty pages was write on disk
                 var pages = _snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
-                    .SelectMany(x => x.GetDirtyPages(includeCollectionPages));
+                    .SelectMany(x => x.GetWritablePages(true, includeCollectionPages));
 
                 foreach (var page in pages.IsLast())
                 {
@@ -143,23 +161,14 @@ namespace LiteDB.Engine
             // (works only for Write snapshots)
             _disk.Write(source(), FileOrigin.Log);
 
-            LOG($"persisted dirty pages ({dirty})", "TRANSACTION");
+            LOG($"writing dirty pages ({dirty})", "TRANSACTION");
 
             // now, discard all clean pages (because those pages are writable and must be readable)
             // from write snapshots
             _disk.DiscardPages(_snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
-                    .SelectMany(x => x.GetCleanPages())
+                    .SelectMany(x => x.GetWritablePages(false, includeCollectionPages))
                     .Select(x => x.GetBuffer(false)), false);
-
-            // clear local pages in all snapshots (read/write snapshosts)
-            foreach (var snapshot in _snapshots.Values)
-            {
-                snapshot.Clear();
-            }
-
-            // there is no local pages in cache and all dirty pages are in log file
-            _transPages.TransactionSize = 0;
         }
 
         /// <summary>
@@ -171,12 +180,7 @@ namespace LiteDB.Engine
 
             if (_state == TransactionState.Active)
             {
-                // first, check if has any write snapshot
-                var hasWriteSnapshot = _snapshots.Values
-                    .Where(x => x.Mode == LockMode.Write)
-                    .Any();
-
-                if (hasWriteSnapshot)
+                if (this.Mode == LockMode.Write)
                 {
                     // persist all pages into log file (mark last page as confirmed if has no header change)
                     // also, release all data/index pages
@@ -227,9 +231,12 @@ namespace LiteDB.Engine
                             _transPages.OnCommit(_header);
 
                             // clone header page
+                            var buffer = _header.GetBuffer(true);
                             var clone = _reader.NewPage();
 
-                            Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
+                            Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
+
+                            var rr = new HeaderPage(buffer);
 
                             // persist header in log file
                             _disk.Write(new[] { clone }, FileOrigin.Log);
@@ -248,7 +255,7 @@ namespace LiteDB.Engine
                     }
                 }
 
-                // dispose all snaps and release locks only after wal index are updated
+                // dispose all snapshosts
                 foreach (var snapshot in _snapshots.Values)
                 {
                     snapshot.Dispose();
@@ -282,10 +289,10 @@ namespace LiteDB.Engine
                     if (snapshot.Mode == LockMode.Write)
                     {
                         // discard all dirty pages
-                        _disk.DiscardPages(snapshot.GetDirtyPages(true).Select(x => x.GetBuffer(false)), true);
+                        _disk.DiscardPages(snapshot.GetWritablePages(true, true).Select(x => x.GetBuffer(false)), true);
 
                         // discard all clean pages
-                        _disk.DiscardPages(snapshot.GetCleanPages().Select(x => x.GetBuffer(false)), false);
+                        _disk.DiscardPages(snapshot.GetWritablePages(false, true).Select(x => x.GetBuffer(false)), false);
                     }
 
                     // now, release pages
@@ -335,7 +342,6 @@ namespace LiteDB.Engine
 
                         // update wal
                         pagePositions[pageID] = new PagePosition(pageID, buffer.Position);
-
                     }
 
                     // update header page with my new transaction ID
@@ -343,11 +349,11 @@ namespace LiteDB.Engine
                     _header.FreeEmptyPageID = _transPages.NewPages[0];
                     _header.IsConfirmed = true;
 
-                    // clone header
+                    // clone header buffer
+                    var buf = _header.GetBuffer(true);
                     var clone = _reader.NewPage();
-                    var header = new HeaderPage(clone);
 
-                    Buffer.BlockCopy(_header.GetBuffer(true).Array, 0, clone.Array, clone.Offset, clone.Count);
+                    Buffer.BlockCopy(buf.Array, buf.Offset, clone.Array, clone.Offset, clone.Count);
 
                     yield return clone;
 

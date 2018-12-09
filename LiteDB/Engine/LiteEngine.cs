@@ -11,6 +11,7 @@ namespace LiteDB.Engine
     /// <summary>
     /// A public class that take care of all engine data structure access - it´s basic implementation of a NoSql database
     /// Its isolated from complete solution - works on low level only (no linq, no poco... just BSON objects)
+    /// [ThreadSafe]
     /// </summary>
     public partial class LiteEngine : IDisposable//: ILiteEngine
     {

@@ -16,7 +16,6 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Write data into multiple array segment
-    /// NO ThreadSafe
     /// </summary>
     internal class BufferWriter : IDisposable
     {
@@ -354,7 +353,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void WriteDocument(BsonDocument value)
         {
-            this.Write(value.GetBytesCount(false));
+            this.Write(value.GetBytesCount(true));
 
             foreach (var key in value.Keys)
             {

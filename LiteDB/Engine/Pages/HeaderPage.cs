@@ -143,6 +143,8 @@ namespace LiteDB.Engine
                 {
                     w.WriteDocument(_collections);
                 }
+
+                _isCollectionsChanged = false;
             }
 
             return base.GetBuffer(update);

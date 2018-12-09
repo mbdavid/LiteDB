@@ -8,6 +8,7 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Simple stream disk implementation of disk factory - used for Memory/Temp database
+    /// [ThreadSafe]
     /// </summary>
     internal class StreamFactory : IStreamFactory
     {

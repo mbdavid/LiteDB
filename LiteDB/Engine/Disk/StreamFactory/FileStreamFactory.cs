@@ -9,6 +9,7 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// FileStream disk implementation of disk factory
+    /// [ThreadSafe]
     /// </summary>
     internal class FileStreamFactory : IStreamFactory
     {

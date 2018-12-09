@@ -777,7 +777,7 @@ namespace LiteDB
         /// </summary>
         public int GetBytesCount(bool recalc)
         {
-            if (recalc == false && this.Length.HasValue) return this.Length.Value;
+            //if (recalc == false && this.Length.HasValue) return this.Length.Value;
 
             switch (this.Type)
             {

@@ -153,6 +153,8 @@ namespace LiteDB.Engine
                         w.Write(index.KeyCount);
                         w.Write(index.UniqueKeyCount);
                     }
+
+                    _isIndexesChanged = false;
                 }
             }
 

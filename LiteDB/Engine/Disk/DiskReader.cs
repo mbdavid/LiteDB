@@ -14,7 +14,6 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Memory file reader - must call Dipose after use to return reader into pool
-    /// 1 instance per thread - (NO thread safe)
     /// </summary>
     internal class DiskReader : IDisposable
     {

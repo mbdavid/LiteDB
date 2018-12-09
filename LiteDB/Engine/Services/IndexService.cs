@@ -97,7 +97,7 @@ namespace LiteDB.Engine
             //return node;
 
             // now, let's link my index node on right place
-            var cur = index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head));
+            var cur = this.GetNode(index.Head);
 
             // using as cache last
             IndexNode cache = null;
@@ -319,9 +319,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<IndexNode> FindAll(CollectionIndex index, int order)
         {
-            var cur = order == Query.Ascending ? 
-                (index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head))) : 
-                (index.TailNode ?? (index.TailNode = this.GetNode(index.Tail)));
+            var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
 
             while (!cur.GetNextPrev(0, order).IsEmpty)
             {
@@ -341,9 +339,7 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode Find(CollectionIndex index, BsonValue value, bool sibling, int order)
         {
-            var cur = order == Query.Ascending ?
-                (index.HeadNode ?? (index.HeadNode = this.GetNode(index.Head))) :
-                (index.TailNode ?? (index.TailNode = this.GetNode(index.Tail)));
+            var cur = order == Query.Ascending ? this.GetNode(index.Head) : this.GetNode(index.Tail);
 
             for (int i = index.MaxLevel - 1; i >= 0; i--)
             {

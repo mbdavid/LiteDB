@@ -350,6 +350,8 @@ namespace LiteDB.Engine
                     {
                         if (_writable.TryRemove(key, out var page))
                         {
+                            ENSURE(page.ShareCounter == 0, "only non-shared pages can be re-used");
+
                             page.Position = long.MaxValue;
                             page.Origin = FileOrigin.None;
 

@@ -27,7 +27,7 @@ namespace LiteDB.Engine
             // virtual collection
             if (name.StartsWith("$"))
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException("implementar coleção virtual-fake");
                 //return new CollectionPage()
             }
 

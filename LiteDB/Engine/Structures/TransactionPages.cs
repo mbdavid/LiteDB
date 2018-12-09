@@ -7,6 +7,7 @@ namespace LiteDB.Engine
 {
     /// <summary>
     /// Represent a simple structure to store added/removed pages in a transaction. One instance per transaction
+    /// [SingleThread]
     /// </summary>
     internal class TransactionPages
     {

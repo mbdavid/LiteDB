@@ -55,16 +55,16 @@ namespace LiteDB.Engine
 
                                 if (doc["_id"] == id)
                                 {
-                                    Console.WriteLine(doc.ToString());
+                                    Console.WriteLine("doc found: " + id.ToString() + " - " + doc.GetBytesCount(true));
                                 }
 
                                 count++;
                             }
                         }
 
-                        transaction.Safepoint();
-
                         next = page.NextPageID;
+
+                        transaction.Safepoint();
                     }
                 }
 
@@ -95,35 +95,59 @@ namespace LiteDB.Engine
                         {
                             if (node.Key.IsMinValue || node.Key.IsMaxValue) continue;
 
-                            // testa se os ponteiros estão todos ok
-                            //for(var i = 0; i < node.Level; i++)
-                            //{
-                            //    Debug.Assert(node.Next[i] == PageAddress.Empty);
-                            //    Debug.Assert(node.Prev[i] == PageAddress.Empty);
-                            //}
-
-                            //Console.Write(node.Key.ToString() + " ");
-
                             using (var r = new BufferReader(data.Read(node.DataBlock)))
                             {
                                 var doc = r.ReadDocument();
 
                                 if (doc["_id"] == id)
                                 {
-                                    Console.WriteLine(doc.ToString());
+                                    Console.WriteLine("doc found: " + id.ToString() + " - " + doc.GetBytesCount(true));
                                 }
 
                                 count++;
                             }
                         }
 
-                        transaction.Safepoint();
-
                         nextIndexPage = indexPage.NextPageID;
+
+                        transaction.Safepoint();
                     }
                 }
 
                 Console.WriteLine($"Total nodes in `{collection}`: {count}");
+                return true;
+
+            });
+        }
+
+        public void Read_All_Docs_By_Index_Id(string collection, int start, int end)
+        {
+            this.AutoTransaction(transaction =>
+            {
+                var counter = 0;
+                var snapshot = transaction.CreateSnapshot(LockMode.Read, collection, false);
+                var data = new DataService(snapshot);
+                var indexer = new IndexService(snapshot);
+
+                for (var i = start; i <= end; i++)
+                {
+                    var node = indexer.Find(snapshot.CollectionPage.PK, i, false, 1);
+
+                    if (node != null)
+                    {
+                        using (var r = new BufferReader(data.Read(node.DataBlock), false))
+                        {
+                            var doc = r.ReadDocument();
+
+                            counter++;
+                        }
+                    }
+
+                    transaction.Safepoint();
+                }
+
+                Console.WriteLine("FindIndexId: " + counter + " (range: " + start + " - " + end + ")");
+                
                 return true;
 
             });

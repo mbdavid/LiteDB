@@ -12,7 +12,7 @@ namespace LiteDB
     internal class Constants
     {
         /// <summary>
-        /// The size of each page in disk - new v5 use 8192 as all major databases
+        /// The size of each page in disk - use 8192 as all major databases
         /// </summary>
         public const int PAGE_SIZE = 8192;
 
@@ -69,22 +69,22 @@ namespace LiteDB
         /// <summary>
         /// DocumentLoader max cache size
         /// </summary>
-        public const int MAX_CACHE_DOCUMENT_LOADER_SIZE = 1000;
+        //** public const int MAX_CACHE_DOCUMENT_LOADER_SIZE = 1000;
 
         /// <summary>
         /// Max pages in a transaction before persist on disk and clear transaction local pages
         /// </summary>
-        public const int MAX_TRANSACTION_SIZE = 100000; // 10000 (default) - 1000 (for tests)
+        public const int MAX_TRANSACTION_SIZE = 1000; // 10000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Size, in PAGES, for each buffer array (used in MemoryStore) - Each byte array will be created with this size * PAGE_SIZE
         /// </summary>
-        public const int MEMORY_SEGMENT_SIZE = 10000;
+        public const int MEMORY_SEGMENT_SIZE = 1000; // 8Mb per extend
 
         /// <summary>
         /// Minimum pages not in use to remove pages from _readable/_writable list to _free list
         /// </summary>
-        public const int MINIMUM_CACHE_REUSE = 10000; // 10000 (default) - 1000 (for tests)
+        public const int MINIMUM_CACHE_REUSE = 1000; // 10000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Database header parameter: USERVERSION
