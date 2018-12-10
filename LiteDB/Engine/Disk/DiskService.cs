@@ -78,6 +78,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Get async queue writer
+        /// </summary>
+        public DiskWriterQueue Queue => _queue.Value;
+
+        /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
         private void Initialize(Stream stream, AesEncryption aes, long initialSize)
@@ -216,8 +221,6 @@ namespace LiteDB.Engine
         {
             if (origin == FileOrigin.Log)
             {
-                if (_logFactory.Exists() == false) return 0;
-
                 return _logLength + PAGE_SIZE;
             }
             else

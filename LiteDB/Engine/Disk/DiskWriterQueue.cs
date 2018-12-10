@@ -26,7 +26,9 @@ namespace LiteDB.Engine
         // async thread controls
         private readonly Thread _thread;
         private readonly ManualResetEventSlim _waiter;
+
         private bool _running = true;
+        private bool _suspend = false;
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
@@ -50,6 +52,24 @@ namespace LiteDB.Engine
         public int Length => _queue.Count;
 
         /// <summary>
+        /// Stop running queue
+        /// </summary>
+        public void Pause()
+        {
+            _suspend = true;
+        }
+
+        /// <summary>
+        /// Resume queue
+        /// </summary>
+        public void Resume()
+        {
+            _suspend = false;
+
+            this.Run();
+        }
+
+        /// <summary>
         /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
@@ -71,7 +91,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void Run()
         {
-            if (_queue.Count > 0)
+            if (_queue.Count > 0 && !_suspend)
             {
                 _waiter.Set();
             }
@@ -134,6 +154,14 @@ namespace LiteDB.Engine
                     page.Release();
 
                     count++;
+                }
+
+                // if thread are paused, stop writing page and wait for resume()
+                if (_suspend)
+                {
+                    stream.FlushToDisk();
+                    _waiter.Reset();
+                    return;
                 }
             }
 

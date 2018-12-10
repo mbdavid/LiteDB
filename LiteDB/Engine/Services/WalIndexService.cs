@@ -103,7 +103,6 @@ namespace LiteDB.Engine
             _confirmedTransactions.Clear();
             _index.Clear();
             _currentReadVersion = 0;
-
         }
 
         /// <summary>

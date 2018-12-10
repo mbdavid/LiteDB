@@ -49,6 +49,10 @@ namespace LiteDB.Demo
 
                 Task.WaitAll(ta, tb);
 
+                db.Checkpoint();
+
+                GetDocs(501, 10).ToList().ForEach(d => db.Insert("col1", new[] { d }, BsonAutoId.Int32));
+
                 Console.WriteLine("Pages In Use: " + db.PagesInUse);
 
                 sw.Stop();
