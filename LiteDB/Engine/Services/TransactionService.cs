@@ -35,11 +35,6 @@ namespace LiteDB.Engine
         // expose
         public long TransactionID => _transactionID;
 
-        /// <summary>
-        /// Return if this transaction is readonly or writable. If any snapshot are writable, return as Writable.
-        /// </summary>
-        public LockMode Mode => _snapshots.Any(x => x.Value.Mode == LockMode.Write) ? LockMode.Write : LockMode.Read;
-
         public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<long> done)
         {
             // retain instances
@@ -54,6 +49,11 @@ namespace LiteDB.Engine
             // enter transaction locker to avoid 2 transactions in same thread
             _locker.EnterTransaction();
         }
+
+        /// <summary>
+        /// Return if this transaction is readonly or writable. If any snapshot are writable, return as Writable.
+        /// </summary>
+        public LockMode Mode => _snapshots.Any(x => x.Value.Mode == LockMode.Write) ? LockMode.Write : LockMode.Read;
 
         /// <summary>
         /// Create (or get from transaction-cache) snapshot and return

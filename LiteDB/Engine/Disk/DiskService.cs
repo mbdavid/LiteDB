@@ -22,6 +22,9 @@ namespace LiteDB.Engine
         private readonly StreamPool _dataPool;
         private readonly StreamPool _logPool;
 
+        private long _dataLength;
+        private long _logLength;
+
         private readonly AesEncryption _aes;
 
         private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
@@ -30,6 +33,7 @@ namespace LiteDB.Engine
         {
             _cache = new MemoryCache(_locker);
 
+            // get new stream factory based on settings
             var dataFactory = settings.CreateDataFactory();
             var logFactory = settings.CreateLogFactory();
 
@@ -55,7 +59,22 @@ namespace LiteDB.Engine
                 this.Initialize(_dataPool.Writer, _aes, settings.InitialSize);
             }
 
-            this.HasLogFile = logFactory.Exists();
+            // get initial data file length
+            var dataStream = _dataPool.Rent();
+            _dataLength = dataStream.Length - PAGE_SIZE;
+            _dataPool.Return(dataStream);
+
+            // get initial log file length
+            if (logFactory.Exists())
+            {
+                var logStream = _logPool.Rent();
+                _logLength = logStream.Length - PAGE_SIZE;
+                _logPool.Return(logStream);
+            }
+            else
+            {
+                _logLength = -PAGE_SIZE;
+            }
         }
 
         /// <summary>
@@ -107,11 +126,6 @@ namespace LiteDB.Engine
                 pool.Return(stream);
             }
         }
-
-        /// <summary>
-        /// Indicate if disk already contains log file. Loaded only in ctor (never update this)
-        /// </summary>
-        public bool HasLogFile { get; }
 
         /// <summary>
         /// Get a new instance for read data/log pages. This instance are not thread-safe - must request 1 per thread (used in Transaction)
@@ -170,7 +184,11 @@ namespace LiteDB.Engine
                     {
                         // adding this page into file AS new page (at end of file)
                         // must add into cache to be sure that new readers can see this page
-                        page.Position = _queue.Value.AppendPosition();
+                        page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
+                    }
+                    else
+                    {
+                        _dataLength = Math.Max(_dataLength, page.Position);
                     }
 
                     // must define page origin to be saved in correct place (before move to Readable)
@@ -192,10 +210,36 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Create a fake page to be added in queue. When queue run this page, just set new stream length
+        /// Get file length
+        /// </summary>
+        public long GetLength(FileOrigin origin)
+        {
+            if (origin == FileOrigin.Log)
+            {
+                if (_logFactory.Exists() == false) return 0;
+
+                return _logLength + PAGE_SIZE;
+            }
+            else
+            {
+                return _dataLength + PAGE_SIZE;
+            }
+        }
+
+        /// <summary>
+        /// Set new length for file. Will run async during writer queue
         /// </summary>
         public void SetLength(long length, FileOrigin origin)
         {
+            if (origin == FileOrigin.Log)
+            {
+                Interlocked.Exchange(ref _logLength, length - PAGE_SIZE);
+            }
+            else
+            {
+                Interlocked.Exchange(ref _dataLength, length - PAGE_SIZE);
+            }
+
             _queue.Value.EnqueueLength(length, origin);
         }
 
@@ -207,19 +251,23 @@ namespace LiteDB.Engine
             var buffer = new byte[PAGE_SIZE];
 
             var pool = origin == FileOrigin.Log ? _logPool : _dataPool;
+            var stream = pool.Rent();
 
-            var writer = pool.Writer;
-
-            ENSURE(writer.Position == 0, "this method can be used only before any writer use");
-
-            while(writer.Position < writer.Length)
+            try
             {
-                writer.Read(buffer, 0, PAGE_SIZE);
+                stream.Position = 0;
 
-                yield return new PageBuffer(buffer, 0, 0);
+                while (stream.Position < stream.Length)
+                {
+                    stream.Read(buffer, 0, PAGE_SIZE);
+
+                    yield return new PageBuffer(buffer, 0, 0);
+                }
             }
-
-            writer.Position = 0;
+            finally
+            {
+                pool.Return(stream);
+            }
         }
 
         /// <summary>

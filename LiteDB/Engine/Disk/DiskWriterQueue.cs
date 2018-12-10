@@ -28,8 +28,6 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
         private bool _running = true;
 
-        private long _appendPosition;
-
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
         public DiskWriterQueue(Stream dataStream, Stream logStream, AesEncryption aes)
@@ -37,9 +35,6 @@ namespace LiteDB.Engine
             _dataStream = dataStream;
             _logStream = logStream;
             _aes = aes;
-
-            // get append position in end of file (remove page_size length to use Interlock on write)
-            _appendPosition = _logStream.Length - PAGE_SIZE;
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
@@ -55,14 +50,6 @@ namespace LiteDB.Engine
         public int Length => _queue.Count;
 
         /// <summary>
-        /// Increment last log file position and return
-        /// </summary>
-        public long AppendPosition()
-        {
-            return Interlocked.Add(ref _appendPosition, PAGE_SIZE);
-        }
-
-        /// <summary>
         /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
@@ -76,12 +63,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void EnqueueLength(long length, FileOrigin origin)
         {
-            // for log file, must fix _appendPosition
-            if (origin == FileOrigin.Log)
-            {
-                Interlocked.Exchange(ref _appendPosition, -PAGE_SIZE);
-            }
-
             _queue.Enqueue(new PageBuffer(null, 0, 0) { Position = length });
         }
 

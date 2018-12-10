@@ -54,7 +54,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// DateTime last checkpoint command was executed [8 bytes]
         /// </summary>
-        public DateTime LastCheckpoint { get; private set; }
+        public DateTime LastCheckpoint { get; set; }
 
         /// <summary>
         /// UserVersion int - for user get/set database version changes

@@ -34,7 +34,7 @@ namespace LiteDB.Engine
         public bool IsInTransaction => _transaction.IsReadLockHeld;
 
         /// <summary>
-        /// Use ReaderWriterLockSlim to manage only one transaction per thread
+        /// Enter transaction read lock
         /// </summary>
         public void EnterTransaction()
         {
@@ -52,7 +52,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit transaction locker
+        /// Exit transaction read lock
         /// </summary>
         public void ExitTransaction()
         {
@@ -63,7 +63,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter collection in read lock mode
+        /// Enter collection in read lock
         /// </summary>
         public void EnterRead(string collectionName)
         {
@@ -77,7 +77,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit read lock
+        /// Exit collection read lock
         /// </summary>
         public void ExitRead(string collectionName)
         {
@@ -87,7 +87,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Enter collection in reserved lock mode
+        /// Enter collection reserved lock mode (only 1 collection per time can have this lock)
         /// </summary>
         public void EnterReserved(string collectionName)
         {
@@ -115,7 +115,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit reserved lock
+        /// Exit collection reserved lock
         /// </summary>
         public void ExitReserved(string collectionName)
         {
@@ -152,6 +152,7 @@ namespace LiteDB.Engine
                 {
                     // exit transaction write lock
                     _transaction.ExitWriteLock();
+
                     throw LiteException.LockTimeout("reserved", _timeout);
                 }
             }
@@ -166,7 +167,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Exit reserved lock
+        /// Exit reserved/exclusive lock
         /// </summary>
         public void ExitReserved(bool exclusive)
         {

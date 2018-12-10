@@ -20,14 +20,15 @@ namespace LiteDB.Engine
 
         private int _currentReadVersion = 0;
 
-//**        public LogFileService LogFile => _logFile;
-//**        public ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> Index => _index;
-//**        public List<long> ConfirmedTransactions => _confirmedTransactions;
-
         public WalIndexService(LockService locker)
         {
             _locker = locker;
         }
+
+        /// <summary>
+        /// Get all confirmed transactions inside log file
+        /// </summary>
+        public IReadOnlyList<long> ConfirmedTransactions => _confirmedTransactions;
 
         /// <summary>
         /// Get current read version for all new transactions
@@ -92,6 +93,17 @@ namespace LiteDB.Engine
                     slot.AddOrUpdate(_currentReadVersion, pos.Position, (v, old) => pos.Position);
                 }
             }
+        }
+
+        /// <summary>
+        /// Clear all wal index references - used after full checkpoint
+        /// </summary>
+        public void Clear()
+        {
+            _confirmedTransactions.Clear();
+            _index.Clear();
+            _currentReadVersion = 0;
+
         }
 
         /// <summary>
