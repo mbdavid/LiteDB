@@ -22,16 +22,30 @@ namespace LiteDB.Engine
     {
         /// <summary>
         /// Contains free ready-to-use pages in memory
+        /// - All pages here MUST be ShareCounter = 0
+        /// - All pages here MUST be Position = MaxValue
         /// </summary>
         private readonly ConcurrentQueue<PageBuffer> _free = new ConcurrentQueue<PageBuffer>();
 
         /// <summary>
         /// Contains only clean pages (from both data/log file) - support page concurrency use
+        /// - MUST have defined Origin and Position
+        /// - Contains only 1 instance per Position/Origin
+        /// - Contains only pages with ShareCounter >= 0
+        /// *  = 0 - Page are avaiable but are not using by anyone (can be moved into _free list in next Extend())
+        /// * >= 1 - Page are in used by 1 or more threads. Each page use must run "Release" when finish
         /// </summary>
         private readonly ConcurrentDictionary<long, PageBuffer> _readable = new ConcurrentDictionary<long, PageBuffer>();
 
         /// <summary>
         /// Contains only writable (exclusive) pages. Can be loaded data from (data/log/new page) - no page concurrency
+        /// - Can be a clean page (NewPage - no Position/Origin) or a COPIED page from disk (or _readable) (have Position + Origin)
+        /// - Has no reference (byte[] ref) with any _readable
+        /// - Contains pages with ShareCounter >= -1
+        /// -  = -1 - This page are in use and can be changed content.
+        /// -  =  0 - This page are not used by anyone (can be moved into _free list in next Extend())
+        /// -  >= 1 - This page are in used by another thread. Can be in WriterQueue (that decrement this counter) or just
+        ///           waiting next Release()
         /// </summary>
         private readonly ConcurrentDictionary<int, PageBuffer> _writable = new ConcurrentDictionary<int, PageBuffer>();
 
@@ -44,11 +58,6 @@ namespace LiteDB.Engine
         /// Get how many extends was made in this store
         /// </summary>
         private int _extends = 0;
-
-        /// <summary>
-        /// Get how many times was possible re-used same pages
-        /// </summary>
-        private int _reusable = 0;
 
         public MemoryCache()
         {
@@ -341,7 +350,7 @@ namespace LiteDB.Engine
                         }
                     }
 
-                    LOG($"re-using ({_reusable++}) cache pages (flushing {_free.Count} pages)", "CACHE");
+                    LOG($"re-using cache pages (flushing {_free.Count} pages)", "CACHE");
                 }
                 else
                 {
@@ -360,9 +369,6 @@ namespace LiteDB.Engine
 
                     LOG($"extending memory usage: (segments: {_extends} - used: {StorageUnitHelper.FormatFileSize(_extends * MEMORY_SEGMENT_SIZE * PAGE_SIZE)})", "CACHE");
                 }
-
-                ENSURE(_free.Count + _readable.Count + _writable.Count == _extends * MEMORY_SEGMENT_SIZE, "all pages must be inside a cache list");
-
             }
         }
 

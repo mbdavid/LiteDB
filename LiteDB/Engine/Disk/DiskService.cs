@@ -27,11 +27,9 @@ namespace LiteDB.Engine
 
         private readonly AesEncryption _aes;
 
-        private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
-
         public DiskService(EngineSettings settings)
         {
-            _cache = new MemoryCache(_locker);
+            _cache = new MemoryCache();
 
             // get new stream factory based on settings
             var dataFactory = settings.CreateDataFactory();
@@ -177,41 +175,32 @@ namespace LiteDB.Engine
         /// </summary>
         public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
         {
-            _locker.EnterReadLock();
-
-            try
+            foreach (var page in pages)
             {
-                foreach (var page in pages)
+                ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
+
+                if (origin == FileOrigin.Log)
                 {
-                    ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
-
-                    if (origin == FileOrigin.Log)
-                    {
-                        // adding this page into file AS new page (at end of file)
-                        // must add into cache to be sure that new readers can see this page
-                        page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
-                    }
-                    else
-                    {
-                        _dataLength = Math.Max(_dataLength, page.Position);
-                    }
-
-                    // must define page origin to be saved in correct place (before move to Readable)
-                    // only writable pages can change Origin
-                    page.Origin = origin;
-
-                    // mark this page as readable and get cached paged to enqueue
-                    var readable = _cache.MoveToReadable(page);
-
-                    _queue.Value.EnqueuePage(readable);
+                    // adding this page into file AS new page (at end of file)
+                    // must add into cache to be sure that new readers can see this page
+                    page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
+                }
+                else
+                {
+                    _dataLength = Math.Max(_dataLength, page.Position);
                 }
 
-                _queue.Value.Run();
+                // must define page origin to be saved in correct place (before move to Readable)
+                // only writable pages can change Origin
+                page.Origin = origin;
+
+                // mark this page as readable and get cached paged to enqueue
+                var readable = _cache.MoveToReadable(page);
+
+                _queue.Value.EnqueuePage(readable);
             }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+
+            _queue.Value.Run();
         }
 
         /// <summary>
@@ -291,7 +280,6 @@ namespace LiteDB.Engine
             // other disposes
             _cache.Dispose();
             _aes?.Dispose();
-            _locker.Dispose();
         }
     }
 }
