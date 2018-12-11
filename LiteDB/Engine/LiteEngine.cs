@@ -105,7 +105,8 @@ namespace LiteDB.Engine
                 // read header page
                 using (var reader = _disk.GetReader())
                 {
-                    var buffer = reader.ReadPage(0, false, FileOrigin.Data);
+                    // read page with no cache ref (has a own PageBuffer) - do not Release() support
+                    var buffer = _disk.ReadFull(FileOrigin.Data).First();
 
                     _header = new HeaderPage(buffer);
                 }
@@ -192,8 +193,7 @@ namespace LiteDB.Engine
 
             if (disposing)
             {
-                // release header page
-                _header?.GetBuffer(false).Release();
+                // do not release _header page because header contains an own PageBuffer
 
                 // close all disk connections
                 _disk?.Dispose();

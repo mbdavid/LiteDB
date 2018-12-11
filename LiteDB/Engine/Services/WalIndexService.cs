@@ -151,7 +151,7 @@ namespace LiteDB.Engine
                         // copy this buffer block into original header block
                         Buffer.BlockCopy(buffer.Array, buffer.Offset, headerBuffer.Array, headerBuffer.Offset, PAGE_SIZE);
 
-                        // re-load header (using same buffer)
+                        // re-load header (using new buffer data)
                         header = new HeaderPage(headerBuffer);
                         header.TransactionID = 0;
                         header.IsConfirmed = false;

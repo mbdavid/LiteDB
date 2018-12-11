@@ -129,10 +129,9 @@ namespace LiteDB.Engine
 
             _buffer.Write(this.FreeEmptyPageID, P_FREE_EMPTY_PAGE_ID);
             _buffer.Write(this.LastPageID, P_LAST_PAGE_ID);
+            // CreationTime - never change - no need to override buffer
             _buffer.Write(this.LastCheckpoint, P_LAST_CHECKPOINT);
             _buffer.Write(this.UserVersion, P_USER_VERSION);
-
-            // CreationTime - never change - no need to override buffer
 
             // update collection only if needed
             if (_isCollectionsChanged)

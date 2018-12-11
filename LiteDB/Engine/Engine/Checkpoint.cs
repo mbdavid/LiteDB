@@ -14,6 +14,9 @@ namespace LiteDB.Engine
         /// </summary>
         public int Checkpoint()
         {
+            return 0;
+
+            /*
             _locker.EnterReserved(true);
 
             try
@@ -30,12 +33,18 @@ namespace LiteDB.Engine
                     {
                         while(position < length)
                         {
-                            var buffer = reader.ReadPage(position, false, FileOrigin.Log);
+                            var buffer = reader.ReadPage(position, true, FileOrigin.Log);
                             var page = new BasePage(buffer);
 
                             if (sortedConfirmTransactions.Contains(page.TransactionID))
                             {
+                                buffer.Position = BasePage.GetPagePosition(page.PageID);
+
                                 yield return buffer;
+                            }
+                            else
+                            {
+                                _disk.DiscardPages(new[] { buffer }, false);
                             }
 
                             position += PAGE_SIZE;
@@ -44,10 +53,11 @@ namespace LiteDB.Engine
                         }
 
                         // update header page with last checkpoint
-                        _header.LastCheckpoint = DateTime.Now;
+                        // _header.LastCheckpoint = DateTime.UtcNow;
 
                         var headerBuffer = _header.GetBuffer(true);
                         var clone = reader.NewPage();
+                        clone.Position = 0;
 
                         Buffer.BlockCopy(headerBuffer.Array, headerBuffer.Offset, clone.Array, clone.Offset, clone.Count);
 
@@ -71,6 +81,7 @@ namespace LiteDB.Engine
             }
 
             return 0;
+            */
         }
     }
 }

@@ -194,7 +194,7 @@ namespace LiteDB.Engine
                 var pagePosition = BasePage.GetPagePosition(pageID);
 
                 // read page from data file
-                var buffer = _reader.ReadPage(position.Position, _mode == LockMode.Write, FileOrigin.Data);
+                var buffer = _reader.ReadPage(pagePosition, _mode == LockMode.Write, FileOrigin.Data);
                 var diskpage = BasePage.ReadPage<T>(buffer);
 
                 ENSURE(diskpage.IsConfirmed == false || diskpage.TransactionID != 0, "page are not header-clear in data file");

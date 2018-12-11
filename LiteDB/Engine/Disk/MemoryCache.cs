@@ -36,9 +36,9 @@ namespace LiteDB.Engine
         private readonly ConcurrentDictionary<int, PageBuffer> _writable = new ConcurrentDictionary<int, PageBuffer>();
 
         /// <summary>
-        /// Control read/write store access locker
+        /// Locker for multi extend()
         /// </summary>
-        private readonly ReaderWriterLockSlim _locker;
+        private readonly object _locker = new object();
 
         /// <summary>
         /// Get how many extends was made in this store
@@ -50,10 +50,8 @@ namespace LiteDB.Engine
         /// </summary>
         private int _reusable = 0;
 
-        public MemoryCache(ReaderWriterLockSlim locker)
+        public MemoryCache()
         {
-            _locker = locker;
-
             this.Extend();
         }
 
@@ -64,40 +62,31 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetReadablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
         {
-            _locker.EnterReadLock();
+            // get dict key based on position/origin
+            var key = this.GetReadableKey(position, origin);
 
-            try
+            // try get from _readble dict or create new
+            var page = _readable.GetOrAdd(key, (k) =>
             {
-                // get dict key based on position/origin
-                var key = this.GetReadableKey(position, origin);
+                // get new page from _free pages (or extend)
+                var newPage = this.GetFreePage();
 
-                // try get from _readble dict or create new
-                var page = _readable.GetOrAdd(key, (k) =>
-                {
-                    // get new page from _free pages (or extend)
-                    var newPage = this.GetFreePage();
+                newPage.Position = position;
+                newPage.Origin = origin;
 
-                    newPage.Position = position;
-                    newPage.Origin = origin;
+                // load page content with disk stream
+                factory(position, newPage);
 
-                    // load page content with disk stream
-                    factory(position, newPage);
+                return newPage;
+            });
 
-                    return newPage;
-                });
+            // update LRU
+            Interlocked.Exchange(ref page.Timestamp, DateTime.UtcNow.Ticks);
 
-                // update LRU
-                Interlocked.Exchange(ref page.Timestamp, DateTime.UtcNow.Ticks);
+            // increment share counter
+            Interlocked.Increment(ref page.ShareCounter);
 
-                // increment share counter
-                Interlocked.Increment(ref page.ShareCounter);
-
-                return page;
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return page;
         }
 
         /// <summary>
@@ -130,30 +119,21 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer GetWritablePage(long position, FileOrigin origin, Action<long, BufferSlice> factory)
         {
-            _locker.EnterReadLock();
+            // write pages always contains a new buffer array
+            var writable = this.NewPage(position, origin, false);
+            var key = this.GetReadableKey(position, origin);
 
-            try
+            // if requested page already in cache, just copy buffer and avoid load from stream
+            if (_readable.TryGetValue(key, out var clean))
             {
-                // write pages always contains a new buffer array
-                var writable = this.NewPage(position, origin, false);
-                var key = this.GetReadableKey(position, origin);
-
-                // if requested page already in cache, just copy buffer and avoid load from stream
-                if (_readable.TryGetValue(key, out var clean))
-                {
-                    Buffer.BlockCopy(clean.Array, clean.Offset, writable.Array, writable.Offset, PAGE_SIZE);
-                }
-                else
-                {
-                    factory(position, writable);
-                }
-
-                return writable;
+                Buffer.BlockCopy(clean.Array, clean.Offset, writable.Array, writable.Offset, PAGE_SIZE);
             }
-            finally
+            else
             {
-                _locker.ExitReadLock();
+                factory(position, writable);
             }
+
+            return writable;
         }
 
         /// <summary>
@@ -161,16 +141,7 @@ namespace LiteDB.Engine
         /// </summary>
         public PageBuffer NewPage()
         {
-            _locker.EnterReadLock();
-
-            try
-            {
-                return this.NewPage(long.MaxValue, FileOrigin.None, true);
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return this.NewPage(long.MaxValue, FileOrigin.None, true);
         }
 
         /// <summary>
@@ -243,7 +214,6 @@ namespace LiteDB.Engine
             ENSURE(page.Position != long.MaxValue, "page must have position to be readable");
             ENSURE(page.Origin != FileOrigin.None, "page should be a source before move to readable");
             ENSURE(page.ShareCounter == BUFFER_WRITABLE, "page must be writable before from to readable dict");
-            ENSURE(_locker.IsReadLockHeld, "this method must be called inside a read locker");
 
             var key = this.GetReadableKey(page.Position, page.Origin);
 
@@ -291,11 +261,7 @@ namespace LiteDB.Engine
             // if no more page inside memory store - extend store/reuse non-shared pages
             else
             {
-                _locker.ExitReadLock();
-
                 this.Extend();
-
-                _locker.EnterReadLock();
 
                 return this.GetFreePage();
             }
@@ -307,12 +273,10 @@ namespace LiteDB.Engine
         /// </summary>
         private void Extend()
         {
-            _locker.EnterWriteLock();
-
-            try
+            lock(_locker)
             {
                 // count how many pages in cache (read/write) are avaiable to be re-used
-                var emptyShareCounter = 
+                var emptyShareCounter =
                     _readable.Values.Count(x => x.ShareCounter == 0) +
                     _writable.Values.Count(x => x.ShareCounter == 0);
 
@@ -331,10 +295,21 @@ namespace LiteDB.Engine
                     {
                         if (_readable.TryRemove(key, out var page))
                         {
-                            page.Position = long.MaxValue;
-                            page.Origin = FileOrigin.None;
+                            if (page.ShareCounter != 0)
+                            {
+                                // if have any change, return page into _readable list
+                                if (_readable.TryAdd(key, page)) continue;
 
-                            _free.Enqueue(page);
+                                ENSURE(true, "is possible not re-insert page into _readable list?");
+                            }
+                            else
+                            {
+                                // otherwise, make as free buffer
+                                page.Position = long.MaxValue;
+                                page.Origin = FileOrigin.None;
+
+                                _free.Enqueue(page);
+                            }
                         }
                     }
 
@@ -346,12 +321,19 @@ namespace LiteDB.Engine
                         .Take(MINIMUM_CACHE_REUSE)
                         .ToArray();
 
-                    foreach(var key in writables)
+                    foreach (var key in writables)
                     {
                         if (_writable.TryRemove(key, out var page))
                         {
-                            ENSURE(page.ShareCounter == 0, "only non-shared pages can be re-used");
+                            if (page.ShareCounter != 0)
+                            {
+                                // if have any change, return page into _writable list
+                                if (_writable.TryAdd(key, page)) continue;
 
+                                ENSURE(true, "is possible not re-insert page into _writable list?");
+                            }
+
+                            // otherwise, make as free buffer
                             page.Position = long.MaxValue;
                             page.Origin = FileOrigin.None;
 
@@ -380,10 +362,7 @@ namespace LiteDB.Engine
                 }
 
                 ENSURE(_free.Count + _readable.Count + _writable.Count == _extends * MEMORY_SEGMENT_SIZE, "all pages must be inside a cache list");
-            }
-            finally
-            {
-                _locker.ExitWriteLock();
+
             }
         }
 
