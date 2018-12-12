@@ -55,7 +55,7 @@ namespace LiteDB.Engine
 
                                 if (doc["_id"] == id)
                                 {
-                                    Console.WriteLine("doc found: " + id.ToString() + " - " + doc.GetBytesCount());
+                                    //Console.WriteLine("doc found: " + id.ToString() + " - " + doc.GetBytesCount());
                                 }
 
                                 count++;
@@ -101,7 +101,7 @@ namespace LiteDB.Engine
 
                                 if (doc["_id"] == id)
                                 {
-                                    Console.WriteLine("doc found: " + id.ToString() + " - " + doc.GetBytesCount());
+                                    //Console.WriteLine("doc found: " + id.ToString() + " - " + doc.GetBytesCount());
                                 }
 
                                 count++;

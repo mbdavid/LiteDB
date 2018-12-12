@@ -379,7 +379,6 @@ namespace LiteDB.Engine
         /// Used only for DEBUG propose
         /// </summary>
         public int PagesInUse => 
-                _free.Where(x => x.ShareCounter != 0).Count() +
                 _readable.Values.Where(x => x.ShareCounter != 0).Count() +
                 _writable.Values.Where(x => x.ShareCounter != 0).Count();
 

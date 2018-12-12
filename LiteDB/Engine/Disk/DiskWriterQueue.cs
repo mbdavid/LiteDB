@@ -28,18 +28,25 @@ namespace LiteDB.Engine
         private readonly ManualResetEventSlim _waiter;
 
         private bool _running = true;
-        private bool _suspend = false;
+        private readonly ManualResetEventSlim _writing;
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
-        public DiskWriterQueue(Stream dataStream, Stream logStream, AesEncryption aes)
+        /// <summary>
+        /// Callback function to notify that some transaction already saved in disk
+        /// </summary>
+        private readonly Action<long> _flushed;
+
+        public DiskWriterQueue(Stream dataStream, Stream logStream, AesEncryption aes, Action<long> flushed)
         {
             _dataStream = dataStream;
             _logStream = logStream;
             _aes = aes;
+            _flushed = flushed;
 
             // prepare async thread writer
             _waiter = new ManualResetEventSlim(false);
+            _writing = new ManualResetEventSlim(false);
 
             _thread = new Thread(this.CreateThread);
             _thread.Name = "LiteDB_Writer";
@@ -52,21 +59,16 @@ namespace LiteDB.Engine
         public int Length => _queue.Count;
 
         /// <summary>
-        /// Stop running queue
+        /// Wait until all queue be executed and no more pending pages are waiting for write
         /// </summary>
-        public void Pause()
+        public void Wait()
         {
-            _suspend = true;
-        }
+            if (_writing.IsSet == false)
+            {
+                _writing.Wait();
+            }
 
-        /// <summary>
-        /// Resume queue
-        /// </summary>
-        public void Resume()
-        {
-            _suspend = false;
-
-            this.Run();
+            ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
         }
 
         /// <summary>
@@ -79,19 +81,11 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Create a fake page to be added in queue. When queue run this page, just set new stream length
-        /// </summary>
-        public void EnqueueLength(long length, FileOrigin origin)
-        {
-            _queue.Enqueue(new PageBuffer(null, 0, 0) { Position = length });
-        }
-
-        /// <summary>
         /// If queue contains pages and are not running, starts run queue again now
         /// </summary>
         public void Run()
         {
-            if (_queue.Count > 0 && !_suspend)
+            if (_queue.Count > 0)
             {
                 _waiter.Set();
             }
@@ -104,9 +98,13 @@ namespace LiteDB.Engine
 
             while(_running)
             {
+                _writing.Reset();
+
                 this.ExecuteQueue();
 
                 _waiter.Reset();
+
+                _writing.Set();
 
                 if (_running == false) return;
 
@@ -122,53 +120,50 @@ namespace LiteDB.Engine
             if (_queue.Count == 0) return;
 
             Stream stream = null;
+            var transactions = new List<long>();
             var count = 0;
 
             while (_queue.TryDequeue(out var page))
             {
                 stream = page.Origin == FileOrigin.Data ? _dataStream : _logStream;
 
-                // if array is null, is Position = file length
-                if (page.Array == null)
+                ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
+
+                // set stream position according to page
+                stream.Position = page.Position;
+
+                // write plain or encrypted data into strea
+                if (_aes != null)
                 {
-                    stream.SetLength(page.Position);
+                    _aes.Encrypt(page, stream);
                 }
                 else
                 {
-                    ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
-
-                    // set stream position according to page
-                    stream.Position = page.Position;
-
-                    // write plain or encrypted data into strea
-                    if (_aes != null)
-                    {
-                        _aes.Encrypt(page, stream);
-                    }
-                    else
-                    {
-                        stream.Write(page.Array, page.Offset, PAGE_SIZE);
-                    }
-
-                    // release this page to be re-used
-                    page.Release();
-
-                    count++;
+                    stream.Write(page.Array, page.Offset, PAGE_SIZE);
                 }
 
-                // if thread are paused, stop writing page and wait for resume()
-                if (_suspend)
+                // when writing in log file a confirmed page, trigger event
+                if (page.Origin == FileOrigin.Log && page[BasePage.P_IS_CONFIRMED] == 1)
                 {
-                    stream.FlushToDisk();
-                    _waiter.Reset();
-                    return;
+                    transactions.Add(page.ReadInt64(BasePage.P_TRANSACTION_ID));
                 }
+
+                // release this page to be re-used
+                page.Release();
+
+                count++;
             }
 
             LOG($"flushing {count} pages on disk", "DISK");
 
             // after this I will have 100% sure data are safe
             stream?.FlushToDisk();
+
+            // notifiy all confirmed transactions that was write in disk
+            foreach(var transactionID in transactions)
+            {
+                _flushed?.Invoke(transactionID);
+            }
         }
 
         public void Dispose()

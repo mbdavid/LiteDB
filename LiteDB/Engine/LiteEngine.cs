@@ -99,6 +99,9 @@ namespace LiteDB.Engine
 
             try
             {
+                // initialize locker service (no dependency)
+                _locker = new LockService(settings.Timeout, settings.ReadOnly);
+
                 // initialize disk service (will create database if needed)
                 _disk = new DiskService(settings);
 
@@ -112,17 +115,13 @@ namespace LiteDB.Engine
                 }
 
                 // initialize wal-index service
-                _walIndex = new WalIndexService(_locker);
+                _walIndex = new WalIndexService(_disk, _locker);
 
                 // if exists log file, restore wal index references (can update full _header instance)
                 if (_disk.GetLength(FileOrigin.Log) > 0)
                 {
-                    _walIndex.RestoreIndex(_disk, ref _header);
+                    _walIndex.RestoreIndex(ref _header);
                 }
-
-                // initialize another services
-                _locker = new LockService(settings.Timeout, settings.ReadOnly);
-
 
                 // register system collections
                 //** this.InitializeSystemCollections();
@@ -147,11 +146,10 @@ namespace LiteDB.Engine
 
         #endregion
 
-        /// <summary>
-        /// Return how many pages are in use when call this method (ShareCounter != 0).
-        /// Used only for DEBUG propose
-        /// </summary>
         public int PagesInUse => _disk.PagesInUse;
+        public int QueueLength => _disk.Queue.Length;
+        public void WaitQueue() => _disk.Queue.Wait();
+        public int Checkpoint() => _walIndex.Checkpoint(_header, CheckpointMode.Incremental);
 
         //**        /// <summary>
         //**        /// Request a database checkpoint
@@ -179,8 +177,7 @@ namespace LiteDB.Engine
 
             if (_settings.CheckpointOnShutdown && _settings.ReadOnly == false)
             {
-                // do checkpoint (with no-lock check)
-//**                _walIndex.Checkpoint(null, false);
+                _walIndex.Checkpoint(_header, CheckpointMode.Shutdown);
             }
         }
 

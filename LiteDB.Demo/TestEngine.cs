@@ -24,18 +24,24 @@ namespace LiteDB.Demo
             File.Delete(PATH);
             File.Delete(PATH_LOG);
 
+            var settings = new EngineSettings
+            {
+                Filename = PATH,
+                CheckpointOnShutdown = true
+            };
+
             sw.Start();
 
-            using (var db = new LiteEngine(PATH))
+            using (var db = new LiteEngine(settings))
             {
-                db.EnsureIndex("col1", "idx_1", "rnd", false);
-                db.EnsureIndex("col2", "idx_1", "rnd", false);
+                //db.EnsureIndex("col1", "idx_1", "rnd", false);
+                //db.EnsureIndex("col2", "idx_1", "rnd", false);
 
                 var ta = Task.Factory.StartNew(() =>
                 {
                     Console.WriteLine("Begin: col1");
                     GetDocs(1, 500).ToList().ForEach(d => db.Insert("col1", new[] { d }, BsonAutoId.Int32));
-                    //db.Insert("col1", GetDocs(1, 100), BsonAutoId.Int32);
+                    //db.Insert("col1", GetDocs(1, 10000), BsonAutoId.Int32);
                     Console.WriteLine("End: col1");
                 });
 
@@ -43,20 +49,21 @@ namespace LiteDB.Demo
                 {
                     Console.WriteLine("Begin: col2");
                     //GetDocs(1, 100).ToList().ForEach(d => db.Insert("col2", new[] { d }, BsonAutoId.Int32));
-                    db.Insert("col2", GetDocs(1, 100000), BsonAutoId.Int32);
+                    db.Insert("col2", GetDocs(1, 50000), BsonAutoId.Int32);
                     Console.WriteLine("End: col2");
                 });
 
                 Task.WaitAll(ta, tb);
 
-                db.Checkpoint();
+                //db.WaitQueue();
 
-                Console.WriteLine("Pages In Use: " + db.PagesInUse);
+                //Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + db.Checkpoint());
+
 
                 sw.Stop();
             }
 
-            using (var db = new LiteEngine(PATH))
+            using (var db = new LiteEngine(settings))
             {
 
                 db.Read_All_Docs("col1", 37);

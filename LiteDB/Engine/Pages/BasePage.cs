@@ -15,21 +15,21 @@ namespace LiteDB.Engine
 
         #region Buffer Field Positions
 
-        private const int P_PAGE_ID = 0;  // 00-03
-        private const int P_PAGE_TYPE = 4; // 04
-        private const int P_PREV_PAGE_ID = 5; // 05-08
-        private const int P_NEXT_PAGE_ID = 9; // 09-12
-        private const int P_CRC = 13;
+        public const int P_PAGE_ID = 0;  // 00-03
+        public const int P_PAGE_TYPE = 4; // 04
+        public const int P_PREV_PAGE_ID = 5; // 05-08
+        public const int P_NEXT_PAGE_ID = 9; // 09-12
+        public const int P_CRC = 13;
 
-        private const int P_TRANSACTION_ID = 14; // 14-21
-        private const int P_IS_CONFIRMED = 22;
-        private const int P_COL_ID = 23; // 23-26
+        public const int P_TRANSACTION_ID = 14; // 14-21
+        public const int P_IS_CONFIRMED = 22;
+        public const int P_COL_ID = 23; // 23-26
 
-        private const int P_ITEMS_COUNT = 27;
-        private const int P_USED_CONTENT_BLOCKS = 28;
-        private const int P_FRAGMENTED_BLOCKS = 29;
-        private const int P_NEXT_FREE_BLOCK = 30;
-        private const int P_HIGHEST_INDEX = 31;
+        public const int P_ITEMS_COUNT = 27;
+        public const int P_USED_CONTENT_BLOCKS = 28;
+        public const int P_FRAGMENTED_BLOCKS = 29;
+        public const int P_NEXT_FREE_BLOCK = 30;
+        public const int P_HIGHEST_INDEX = 31;
 
         #endregion
 

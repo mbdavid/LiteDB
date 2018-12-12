@@ -28,8 +28,8 @@ namespace LiteDB.Engine
         private const int P_FREE_EMPTY_PAGE_ID = 60; // 60-63
         private const int P_LAST_PAGE_ID = 64; // 64-67
         private const int P_CREATION_TIME = 68; // 68-75
-        private const int P_LAST_CHECKPOINT = 76; // 76-79
-        private const int P_USER_VERSION = 80; // 80-87
+        private const int P_LAST_CHECKPOINT = 76; // 76-83
+        private const int P_USER_VERSION = 84; // 84-87
         // reserved 87-95 (9 bytes)
         private const int P_COLLECTIONS = 96; // 96-8128
         private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS; // 8096

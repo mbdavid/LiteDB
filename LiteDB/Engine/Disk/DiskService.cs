@@ -19,6 +19,9 @@ namespace LiteDB.Engine
         private readonly MemoryCache _cache;
         private readonly Lazy<DiskWriterQueue> _queue;
 
+        private readonly IStreamFactory _logFactory;
+        private readonly IStreamFactory _dataFactory;
+
         private readonly StreamPool _dataPool;
         private readonly StreamPool _logPool;
 
@@ -27,19 +30,21 @@ namespace LiteDB.Engine
 
         private readonly AesEncryption _aes;
 
+        public event Action<long> Flush;
+
         public DiskService(EngineSettings settings)
         {
             _cache = new MemoryCache();
 
             // get new stream factory based on settings
-            var dataFactory = settings.CreateDataFactory();
-            var logFactory = settings.CreateLogFactory();
+            _dataFactory = settings.CreateDataFactory();
+            _logFactory = settings.CreateLogFactory();
 
             // create stream pool
-            _dataPool = new StreamPool(dataFactory, false);
-            _logPool = new StreamPool(logFactory, true);
+            _dataPool = new StreamPool(_dataFactory, false);
+            _logPool = new StreamPool(_logFactory, true);
 
-            var isNew = dataFactory.Exists() == false;
+            var isNew = _dataFactory.Exists() == false;
 
             // load AES encryption class instance
             _aes = settings.Password != null ? 
@@ -47,12 +52,12 @@ namespace LiteDB.Engine
                 null;
 
             // create lazy async writer queue
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_dataPool.Writer, _logPool.Writer, _aes));
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_dataPool.Writer, _logPool.Writer, _aes, this.Flush));
 
             // create new database if not exist yet
             if (isNew)
             {
-                LOG($"creating new database: '{Path.GetFileName(dataFactory.Name)}'", "DISK");
+                LOG($"creating new database: '{Path.GetFileName(_dataFactory.Name)}'", "DISK");
 
                 this.Initialize(_dataPool.Writer, _aes, settings.InitialSize);
             }
@@ -63,7 +68,7 @@ namespace LiteDB.Engine
             _dataPool.Return(dataStream);
 
             // get initial log file length
-            if (logFactory.Exists())
+            if (_logFactory.Exists())
             {
                 var logStream = _logPool.Rent();
                 _logLength = logStream.Length - PAGE_SIZE;
@@ -171,10 +176,12 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside file origin
+        /// Write pages inside file origin using async queue
         /// </summary>
-        public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
+        public void WriteAsync(IEnumerable<PageBuffer> pages, FileOrigin origin)
         {
+            ENSURE(origin == FileOrigin.Log, "async writer must be in Log file");
+
             foreach (var page in pages)
             {
                 ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
@@ -218,22 +225,7 @@ namespace LiteDB.Engine
             }
         }
 
-        /// <summary>
-        /// Set new length for file. Will run async during writer queue
-        /// </summary>
-        public void SetLength(long length, FileOrigin origin)
-        {
-            if (origin == FileOrigin.Log)
-            {
-                Interlocked.Exchange(ref _logLength, length - PAGE_SIZE);
-            }
-            else
-            {
-                Interlocked.Exchange(ref _dataLength, length - PAGE_SIZE);
-            }
-
-            _queue.Value.EnqueueLength(length, origin);
-        }
+        #region Sync Read/Write operations
 
         /// <summary>
         /// Read all database pages inside file with no cache using. PageBuffers dont need to be Released
@@ -247,13 +239,23 @@ namespace LiteDB.Engine
 
             try
             {
+                // get length before starts (avoid grow during loop)
+                var length = stream.Length;
+
                 stream.Position = 0;
 
-                while (stream.Position < stream.Length)
+                while (stream.Position < length)
                 {
+                    var position = stream.Position;
+
                     stream.Read(buffer, 0, PAGE_SIZE);
 
-                    yield return new PageBuffer(buffer, 0, 0);
+                    yield return new PageBuffer(buffer, 0, 0)
+                    {
+                        Position = position,
+                        Origin = origin,
+                        ShareCounter = 0
+                    };
                 }
             }
             finally
@@ -261,6 +263,68 @@ namespace LiteDB.Engine
                 pool.Return(stream);
             }
         }
+
+        /// <summary>
+        /// Write pages inside disk with no async queue. This pages are not cached and are not shared
+        /// </summary>
+        public void Write(IEnumerable<PageBuffer> pages, FileOrigin origin)
+        {
+            ENSURE(origin == FileOrigin.Data);
+
+            var stream = origin == FileOrigin.Data ? _dataPool.Writer : _logPool.Writer;
+
+            foreach (var page in pages)
+            {
+                ENSURE(page.ShareCounter == 0, "this page can't be shared to use sync operation");
+
+                stream.Position = page.Position;
+
+                stream.Write(page.Array, page.Offset, PAGE_SIZE);
+            }
+
+            stream.FlushToDisk();
+        }
+
+        /// <summary>
+        /// Set new length for file in sync mode. Queue must be empty before set length
+        /// </summary>
+        public void SetLength(long length, FileOrigin origin)
+        {
+            var stream = origin == FileOrigin.Log ? _logPool.Writer : _dataPool.Writer;
+
+            if (origin == FileOrigin.Log)
+            {
+                Interlocked.Exchange(ref _logLength, length - PAGE_SIZE);
+            }
+            else
+            {
+                Interlocked.Exchange(ref _dataLength, length - PAGE_SIZE);
+            }
+
+            ENSURE(_queue.Value.Length == 0, "queue must be empty before set new length");
+
+            stream.SetLength(length);
+        }
+
+        /// <summary>
+        /// Delete file - checks if empty (0 bytes) before delete - dispose all Stream (this Disk instance can't be used after this)
+        /// </summary>
+        public bool Delete(FileOrigin origin)
+        {
+            var factory = origin == FileOrigin.Log ? _logFactory : _dataFactory;
+
+            if (this.GetLength(origin) > 0 || factory.Exists() == false) return false;
+
+            this.Dispose();
+
+            LOG($"deleting `{Path.GetFileName(factory.Name)}` file", "DISK");
+
+            factory.Delete();
+
+            return true;
+        }
+
+        #endregion
 
         /// <summary>
         /// Return how many pages are in use when call this method (ShareCounter != 0).
