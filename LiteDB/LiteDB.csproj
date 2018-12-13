@@ -116,7 +116,6 @@
   <ItemGroup>
     <Compile Include="Client\Structures\Query.cs" />
     <Compile Include="Engine\Engine\CheckIntegrity.cs" />
-    <Compile Include="Engine\Engine\Find.cs" />
     <Compile Include="Engine\Engine\Collection.cs" />
     <Compile Include="Engine\Engine\Index.cs" />
     <Compile Include="Engine\Engine\Insert.cs" />

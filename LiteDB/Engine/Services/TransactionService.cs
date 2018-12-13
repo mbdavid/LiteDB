@@ -220,29 +220,39 @@ namespace LiteDB.Engine
                                 }
                             }
 
-                            // update this confirm page with current transactionID
-                            _header.FreeEmptyPageID = newEmptyPageID;
-                            _header.TransactionID = _transactionID;
+                            // create a header save point before any change
+                            _header.Savepoint();
 
-                            // this header page will be marked as confirmed page in log file
-                            _header.IsConfirmed = true;
+                            try
+                            {
+                                // update this confirm page with current transactionID
+                                _header.FreeEmptyPageID = newEmptyPageID;
+                                _header.TransactionID = _transactionID;
 
-                            // invoke all header callbacks (new/drop collections)
-                            _transPages.OnCommit(_header);
+                                // this header page will be marked as confirmed page in log file
+                                _header.IsConfirmed = true;
 
-                            // clone header page
-                            var buffer = _header.GetBuffer(true);
-                            var clone = _reader.NewPage();
+                                // invoke all header callbacks (new/drop collections)
+                                _transPages.OnCommit(_header);
 
-                            Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
+                                // clone header page
+                                var buffer = _header.GetBuffer(true);
+                                var clone = _reader.NewPage();
 
-                            var rr = new HeaderPage(buffer);
+                                Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
 
-                            // persist header in log file
-                            _disk.WriteAsync(new[] { clone }, FileOrigin.Log);
+                                // persist header in log file
+                                _disk.WriteAsync(new[] { clone }, FileOrigin.Log);
 
-                            // release page just after write on disk
-                            clone.Release();
+                                // release page just after write on disk
+                                clone.Release();
+                            }
+                            catch
+                            {
+                                // must revert all header content if any error occurs during header change
+                                _header.RestoreSavepoint();
+                                throw;
+                            }
 
                             // and update wal-index (before release _header lock)
                             _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
@@ -360,8 +370,20 @@ namespace LiteDB.Engine
                     clone.Release();
                 };
 
-                // write all pages (including new header)
-                _disk.WriteAsync(source(), FileOrigin.Log);
+                // create a header save point before any change
+                _header.Savepoint();
+
+                try
+                {
+                    // write all pages (including new header)
+                    _disk.WriteAsync(source(), FileOrigin.Log);
+                }
+                catch
+                {
+                    // must revert all header content if any error occurs during header change
+                    _header.RestoreSavepoint();
+                    throw;
+                }
 
                 // now confirm this transaction to wal
                 _walIndex.ConfirmTransaction(transactionID, pagePositions.Values);

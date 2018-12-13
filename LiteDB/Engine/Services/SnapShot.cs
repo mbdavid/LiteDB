@@ -237,6 +237,9 @@ namespace LiteDB.Engine
             // lock header instance to get new page
             lock (_header)
             {
+                // there is need for _header.Savepoint() because changes here will incremental and will be persist later
+                // if any problem occurs here, rollback will catch this changes
+
                 // try get page from Empty free list
                 if (_header.FreeEmptyPageID != uint.MaxValue)
                 {
@@ -261,6 +264,9 @@ namespace LiteDB.Engine
                     // request for a new buffer
                     buffer = _reader.NewPage();
                 }
+
+                // retain a list of created pages to, in a rollback situation, back pages to empty list
+                _transPages.NewPages.Add(pageID);
             }
 
             var page = BasePage.CreatePage<T>(buffer, pageID);
@@ -276,9 +282,6 @@ namespace LiteDB.Engine
 
             // define as dirty to override pageType
             page.IsDirty = true;
-
-            // retain a list of created pages to, in a rollback situation, back pages to empty list
-            _transPages.NewPages.Add(pageID);
 
             // increment transaction size
             _transPages.TransactionSize++;

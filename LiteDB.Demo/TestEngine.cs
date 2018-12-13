@@ -65,8 +65,10 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(settings))
             {
 
-                db.FindAll("col1").Count();
-                db.FindAll("col2").Count();
+                //db.FindAll("col1").Count();
+                //db.FindAll("col2").Count();
+
+                Console.WriteLine(db.CheckIntegrity());
 
                 // wait writer thread finish
                 // Thread.Sleep(3000);
