@@ -16,7 +16,7 @@ namespace LiteDB.Engine
         public IndexPage(PageBuffer buffer)
             : base(buffer)
         {
-            ENSURE(this.PageType == PageType.Index, "invalid index page buffer");
+            if (this.PageType != PageType.Index) throw new LiteException(0, $"Invalid IndexPage buffer on {PageID}");
         }
 
         /// <summary>

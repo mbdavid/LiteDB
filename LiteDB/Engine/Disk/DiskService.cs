@@ -86,6 +86,11 @@ namespace LiteDB.Engine
         public DiskWriterQueue Queue => _queue.Value;
 
         /// <summary>
+        /// Get memory cache instance
+        /// </summary>
+        public MemoryCache Cache => _cache;
+
+        /// <summary>
         /// Create a new empty database (use synced mode)
         /// </summary>
         private void Initialize(Stream stream, AesEncryption aes, long initialSize)
@@ -276,6 +281,8 @@ namespace LiteDB.Engine
             foreach (var page in pages)
             {
                 ENSURE(page.ShareCounter == 0, "this page can't be shared to use sync operation");
+
+                _dataLength = Math.Max(_dataLength, page.Position);
 
                 stream.Position = page.Position;
 

@@ -56,6 +56,8 @@ namespace LiteDB.Demo
                 Task.WaitAll(ta, tb);
 
                 Console.WriteLine(db.CheckIntegrity());
+                db.Checkpoint();
+                Console.WriteLine(db.CheckIntegrity());
 
                 sw.Stop();
             }

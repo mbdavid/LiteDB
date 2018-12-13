@@ -65,6 +65,7 @@ namespace LiteDB.Engine
         {
             if (_writing.IsSet == false)
             {
+                _waiter.Set();
                 _writing.Wait();
             }
 

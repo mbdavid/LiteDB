@@ -25,7 +25,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get data filename
         /// </summary>
-        public string Name => _filename;
+        public string Name => Path.GetFileName(_filename);
 
         /// <summary>
         /// Create new data file FileStream instance based on filename

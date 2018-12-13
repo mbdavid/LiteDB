@@ -99,7 +99,7 @@ namespace LiteDB
 
         internal static LiteException FileSizeExceeded(long limit)
         {
-            return new LiteException(FILE_SIZE_EXCEEDED, "Database size exceeds limit of {0}.", StorageUnitHelper.FormatFileSize(limit));
+            return new LiteException(FILE_SIZE_EXCEEDED, "Database size exceeds limit of {0}.", FileHelper.FormatFileSize(limit));
         }
 
         internal static LiteException CollectionLimitExceeded(int limit)

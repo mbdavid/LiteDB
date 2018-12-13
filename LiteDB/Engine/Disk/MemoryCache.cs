@@ -367,20 +367,41 @@ namespace LiteDB.Engine
 
                     _extends++;
 
-                    LOG($"extending memory usage: (segments: {_extends} - used: {StorageUnitHelper.FormatFileSize(_extends * MEMORY_SEGMENT_SIZE * PAGE_SIZE)})", "CACHE");
+                    LOG($"extending memory usage: (segments: {_extends} - used: {FileHelper.FormatFileSize(_extends * MEMORY_SEGMENT_SIZE * PAGE_SIZE)})", "CACHE");
                 }
             }
         }
-
-        #endregion
 
         /// <summary>
         /// Return how many pages are in use when call this method (ShareCounter != 0).
         /// Used only for DEBUG propose
         /// </summary>
-        public int PagesInUse => 
+        public int PagesInUse =>
                 _readable.Values.Where(x => x.ShareCounter != 0).Count() +
                 _writable.Values.Where(x => x.ShareCounter != 0).Count();
+
+        /// <summary>
+        /// Remove all pages from _readable and _writable to _free pages
+        /// Must ensure that all pages are not in use
+        /// Used for DEBUG only
+        /// </summary>
+        public void Clear()
+        {
+            if (this.PagesInUse > 0) throw new LiteException(0, "The cache may not be in use when cleaning");
+
+            foreach (var page in _readable.Values.Union(_readable.Values))
+            {
+                Array.Clear(page.Array, page.Offset, page.Count);
+                page.Position = long.MaxValue;
+                page.Origin = FileOrigin.None;
+                _free.Enqueue(page);
+            }
+
+            _readable.Clear();
+            _writable.Clear();
+        }
+
+        #endregion
 
         public void Dispose()
         {
