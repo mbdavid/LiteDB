@@ -324,6 +324,14 @@ namespace LiteDB.Engine
             return true;
         }
 
+        /// <summary>
+        /// Get file name (or Stream name)
+        /// </summary>
+        public string GetName(FileOrigin origin)
+        {
+            return origin == FileOrigin.Data ? _dataFactory.Name : _logFactory.Name;
+        }
+
         #endregion
 
         /// <summary>

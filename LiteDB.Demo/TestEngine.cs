@@ -55,10 +55,7 @@ namespace LiteDB.Demo
 
                 Task.WaitAll(ta, tb);
 
-                //db.WaitQueue();
-
-                //Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + db.Checkpoint());
-
+                Console.WriteLine(db.CheckIntegrity());
 
                 sw.Stop();
             }
@@ -66,20 +63,14 @@ namespace LiteDB.Demo
             using (var db = new LiteEngine(settings))
             {
 
-                db.Read_All_Docs("col1", 37);
-                db.Read_All_Docs_By_Index("col1", 37);
-                db.Read_All_Docs_By_Index_Id("col1", 1, 100);
-
-                db.Read_All_Docs("col2", 37);
-                db.Read_All_Docs_By_Index("col2", 37);
+                db.FindAll("col1").Count();
+                db.FindAll("col2").Count();
 
                 // wait writer thread finish
                 // Thread.Sleep(3000);
 
 
                 db.Dispose();
-
-                Console.WriteLine("Pages In Use: " + db.PagesInUse);
 
                 Debug.Assert(db.PagesInUse == 0);
 
