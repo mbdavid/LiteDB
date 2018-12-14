@@ -19,16 +19,14 @@ namespace LiteDB.Engine
     internal class DiskWriterQueue : IDisposable
     {
         private readonly AesEncryption _aes;
-
-        private readonly Stream _dataStream;
-        private readonly Stream _logStream;
+        private readonly Stream _stream;
 
         // async thread controls
         private readonly Thread _thread;
         private readonly ManualResetEventSlim _waiter;
+        private readonly ManualResetEventSlim _writing;
 
         private bool _running = true;
-        private readonly ManualResetEventSlim _writing;
 
         private ConcurrentQueue<PageBuffer> _queue = new ConcurrentQueue<PageBuffer>();
 
@@ -37,10 +35,9 @@ namespace LiteDB.Engine
         /// </summary>
         private readonly Action<long> _flushed;
 
-        public DiskWriterQueue(Stream dataStream, Stream logStream, AesEncryption aes, Action<long> flushed)
+        public DiskWriterQueue(Stream stream, AesEncryption aes, Action<long> flushed)
         {
-            _dataStream = dataStream;
-            _logStream = logStream;
+            _stream = stream;
             _aes = aes;
             _flushed = flushed;
 
@@ -59,25 +56,13 @@ namespace LiteDB.Engine
         public int Length => _queue.Count;
 
         /// <summary>
-        /// Wait until all queue be executed and no more pending pages are waiting for write
-        /// </summary>
-        public void Wait()
-        {
-            if (_writing.IsSet == false)
-            {
-                _waiter.Set();
-                _writing.Wait();
-            }
-
-            ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
-        }
-
-        /// <summary>
         /// Add page into writer queue and will be saved in disk by another thread. If page.Position = MaxValue, store at end of file (will get final Position)
         /// After this method, this page will be available into reader as a clean page
         /// </summary>
         public void EnqueuePage(PageBuffer page)
         {
+            ENSURE(page.Origin == FileOrigin.Log, "async writer must use only for Log file");
+
             _queue.Enqueue(page);
         }
 
@@ -92,24 +77,46 @@ namespace LiteDB.Engine
             }
         }
 
+        /// <summary>
+        /// Wait until all queue be executed and no more pending pages are waiting for write
+        /// </summary>
+        public void Wait()
+        {
+            if (_writing.IsSet == false)
+            {
+                _waiter.Set();
+                _writing.Wait();
+            }
+
+            if (_queue.Count > 0)
+            {
+                _writing.Reset();
+                _waiter.Set();
+                _writing.Wait();
+            }
+
+            ENSURE(_queue.Count == 0, "queue should be empty after wait() call");
+        }
+
         private void CreateThread()
         {
-            // start thread waiting for first signal
-            _waiter.Wait();
-
             while(_running)
             {
+                // wait next `_waiter.Set()`
+                _waiter.Wait();
+
+                if (_running == false) return;
+
+                // lock `_writing` in next wait
                 _writing.Reset();
 
                 this.ExecuteQueue();
 
-                _waiter.Reset();
-
+                // release `_writing` lock
                 _writing.Set();
 
-                if (_running == false) return;
-
-                _waiter.Wait();
+                // lock `_waiter` in next wait
+                _waiter.Reset();
             }
         }
 
@@ -120,27 +127,24 @@ namespace LiteDB.Engine
         {
             if (_queue.Count == 0) return;
 
-            Stream stream = null;
             var transactions = new List<long>();
             var count = 0;
 
             while (_queue.TryDequeue(out var page))
             {
-                stream = page.Origin == FileOrigin.Data ? _dataStream : _logStream;
-
                 ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
                 // set stream position according to page
-                stream.Position = page.Position;
+                _stream.Position = page.Position;
 
-                // write plain or encrypted data into strea
+                // write plain or encrypted data into stream
                 if (_aes != null)
                 {
-                    _aes.Encrypt(page, stream);
+                    _aes.Encrypt(page, _stream);
                 }
                 else
                 {
-                    stream.Write(page.Array, page.Offset, PAGE_SIZE);
+                    _stream.Write(page.Array, page.Offset, PAGE_SIZE);
                 }
 
                 // when writing in log file a confirmed page, trigger event
@@ -158,7 +162,7 @@ namespace LiteDB.Engine
             LOG($"flushing {count} pages on disk", "DISK");
 
             // after this I will have 100% sure data are safe
-            stream?.FlushToDisk();
+            _stream.FlushToDisk();
 
             // notifiy all confirmed transactions that was write in disk
             foreach(var transactionID in transactions)
@@ -169,8 +173,6 @@ namespace LiteDB.Engine
 
         public void Dispose()
         {
-            this.Run();
-
             // stop running async task in next while check
             _running = false;
 
@@ -180,6 +182,7 @@ namespace LiteDB.Engine
             _thread.Join();
 
             _waiter.Dispose();
+            _writing.Dispose();
 
             // if still have any page in queue, run synchronized
             this.ExecuteQueue();

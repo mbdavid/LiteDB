@@ -28,10 +28,10 @@ namespace LiteDB.Engine
             _disk = disk;
             _locker = locker;
 
-            // when writer queue flush some transaction, confirm in my transaction list
+            // when writer queue flush some transaction, confirm in my transaction list (or add)
             disk.Flush += (transactionID) =>
             {
-                _transactions.TryUpdate(transactionID, true, false);
+                _transactions.AddOrUpdate(transactionID, true, (t, o) => true);
             };
         }
 
@@ -76,7 +76,7 @@ namespace LiteDB.Engine
         /// </summary>
         public void ConfirmTransaction(long transactionID, ICollection<PagePosition> pagePositions)
         {
-            // mark transaction as confirmed but not persisted
+            // if this transaction was no persisted yet (by async writer) create as not persisted yet
             _transactions.TryAdd(transactionID, false);
 
             // if no pages was saved, just exit
@@ -185,6 +185,8 @@ namespace LiteDB.Engine
                 // wait all async writer queue runs
                 _disk.Queue.Wait();
 
+                ENSURE(_transactions.Where(x => x.Value == false).Count() == 0, "should not have any pending transaction after queue wait");
+
                 locked = true;
             }
 
@@ -245,6 +247,9 @@ namespace LiteDB.Engine
             {
                 _disk.Delete(FileOrigin.Log);
             }
+
+            ENSURE(mode == CheckpointMode.Full, _disk.GetLength(FileOrigin.Log) == 0, "full checkpoint must finish with log file = 0");
+            ENSURE(mode == CheckpointMode.Shutdown, _disk.GetLength(FileOrigin.Log) == 0, "shutdown checkpoint must finish with log file = 0");
 
             // exit exclusive lock (if full/shutdown)
             if (locked) _locker.ExitReserved(true);

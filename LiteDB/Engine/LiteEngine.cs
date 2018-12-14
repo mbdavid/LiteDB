@@ -149,7 +149,7 @@ namespace LiteDB.Engine
         public int PagesInUse => _disk.PagesInUse;
         public int QueueLength => _disk.Queue.Length;
         public void WaitQueue() => _disk.Queue.Wait();
-        public int Checkpoint() => _walIndex.Checkpoint(_header, CheckpointMode.Incremental);
+        public int Checkpoint(CheckpointMode mode) => _walIndex.Checkpoint(_header, mode);
 
         //**        /// <summary>
         //**        /// Request a database checkpoint

@@ -51,8 +51,8 @@ namespace LiteDB.Engine
                 new AesEncryption(settings.Password, isNew ? AesEncryption.NewSalt() : this.ReadSalt(_dataPool)) : 
                 null;
 
-            // create lazy async writer queue
-            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_dataPool.Writer, _logPool.Writer, _aes, this.Flush));
+            // create lazy async writer queue for log file
+            _queue = new Lazy<DiskWriterQueue>(() => new DiskWriterQueue(_logPool.Writer, _aes, this.Flush));
 
             // create new database if not exist yet
             if (isNew)
@@ -181,30 +181,21 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Write pages inside file origin using async queue
+        /// Write pages inside file origin using async queue - works only for log file
         /// </summary>
-        public void WriteAsync(IEnumerable<PageBuffer> pages, FileOrigin origin)
+        public void WriteAsync(IEnumerable<PageBuffer> pages)
         {
-            ENSURE(origin == FileOrigin.Log, "async writer must be in Log file");
-
             foreach (var page in pages)
             {
                 ENSURE(page.ShareCounter == BUFFER_WRITABLE, "to enqueue page, page must be writable");
 
-                if (origin == FileOrigin.Log)
-                {
-                    // adding this page into file AS new page (at end of file)
-                    // must add into cache to be sure that new readers can see this page
-                    page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
-                }
-                else
-                {
-                    _dataLength = Math.Max(_dataLength, page.Position);
-                }
+                // adding this page into file AS new page (at end of file)
+                // must add into cache to be sure that new readers can see this page
+                page.Position = Interlocked.Add(ref _logLength, PAGE_SIZE);
 
-                // must define page origin to be saved in correct place (before move to Readable)
-                // only writable pages can change Origin
-                page.Origin = origin;
+                // shloud mark page origin to log because async queue works only for log file
+                // if this page came from data file, must be changed before MoveToReadable
+                page.Origin = FileOrigin.Log;
 
                 // mark this page as readable and get cached paged to enqueue
                 var readable = _cache.MoveToReadable(page);

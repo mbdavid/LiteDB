@@ -145,6 +145,8 @@ namespace LiteDB.Engine
             // wait finish all transactions before enter in reserved mode
             if (_transaction.TryEnterWriteLock(_timeout) == false) throw LiteException.LockTimeout("reserved", _timeout);
 
+            ENSURE(_transaction.RecursiveReadCount == 0, "must have no other transaction here");
+
             try
             {
                 // reserved locker in write lock

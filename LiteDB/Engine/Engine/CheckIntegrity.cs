@@ -11,48 +11,30 @@ namespace LiteDB.Engine
         /// <summary>
         /// Do many database checks to verify if data file are consistent
         /// </summary>
-        public string CheckIntegrity()
+        public DatabaseReport CheckIntegrity()
         {
             _locker.EnterReserved(true);
 
             _disk.Queue.Wait();
             _disk.Cache.Clear();
 
-            var report = new StringBuilder();
             var time = Stopwatch.StartNew();
+            var rpt = new DatabaseReport();
 
-            report.AppendLine("LiteDB Check Integrity Report");
-            report.AppendLine("=============================");
-
-            Run("Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")");
-            Run("Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")");
-            Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
-            Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));
-            Run("Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList());
-            Run("Verify data pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Data));
-            Run("Verify index pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Index));
-            Run("Verify index nodes", "OK ({0} nodes)", () => this.VerifyIndexNodes());
-            Run("Verify data blocks", "OK ({0} documents)", () => this.VerifyDataBlocks());
-            Run("Total time elapsed", "{0}", () => time.Elapsed);
-
-            void Run(string title, string ok, Func<object> action)
-            {
-                report.Append(title.PadRight(28, '.') + ": ");
-
-                try
-                {
-                    var result = action();
-                    report.AppendLine(string.Format(ok, result));
-                }
-                catch (Exception ex)
-                {
-                    report.AppendLine("ERR: " + ex.Message);
-                }
-            };
+            rpt.Run("Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")");
+            rpt.Run("Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")");
+            rpt.Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
+            rpt.Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));
+            rpt.Run("Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList());
+            rpt.Run("Verify data pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Data));
+            rpt.Run("Verify index pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Index));
+            rpt.Run("Verify index nodes", "OK ({0} nodes)", () => this.VerifyIndexNodes());
+            rpt.Run("Verify data blocks", "OK ({0} documents)", () => this.VerifyDataBlocks());
+            rpt.Run("Total time elapsed", "{0}", () => time.Elapsed);
 
             _locker.ExitReserved(true);
 
-            return report.ToString();
+            return rpt;
         }
 
         /// <summary>

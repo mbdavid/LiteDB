@@ -159,7 +159,7 @@ namespace LiteDB.Engine
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages
             // (works only for Write snapshots)
-            _disk.WriteAsync(source(), FileOrigin.Log);
+            _disk.WriteAsync(source());
 
             LOG($"writing dirty pages ({dirty})", "TRANSACTION");
 
@@ -213,7 +213,7 @@ namespace LiteDB.Engine
                                     };
 
                                     // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _disk.WriteAsync(new [] { lastDeletedPage.GetBuffer(true) }, FileOrigin.Log);
+                                    _disk.WriteAsync(new [] { lastDeletedPage.GetBuffer(true) });
 
                                     // release page just after write on disk
                                     empty.Release();
@@ -242,7 +242,7 @@ namespace LiteDB.Engine
                                 Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
 
                                 // persist header in log file
-                                _disk.WriteAsync(new[] { clone }, FileOrigin.Log);
+                                _disk.WriteAsync(new[] { clone });
 
                                 // release page just after write on disk
                                 clone.Release();
@@ -376,7 +376,7 @@ namespace LiteDB.Engine
                 try
                 {
                     // write all pages (including new header)
-                    _disk.WriteAsync(source(), FileOrigin.Log);
+                    _disk.WriteAsync(source());
                 }
                 catch
                 {
