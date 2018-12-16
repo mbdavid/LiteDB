@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace LiteDB.Demo
 {
-    public class TestEngine
+    public class TestInsertEngine
     {
         static Random RND = new Random();
         static string PATH = @"D:\memory-file.db";
@@ -27,7 +27,7 @@ namespace LiteDB.Demo
             var settings = new EngineSettings
             {
                 Filename = PATH,
-                CheckpointOnShutdown = true
+                CheckpointOnShutdown = false
             };
 
             sw.Start();

@@ -33,21 +33,21 @@ namespace LiteDB.Engine
                     // if pk not found, continue
                     if (pkNode == null) continue;
 
-                    transaction.Safepoint();
-
                     // get all indexes nodes from this data block
                     var allNodes = indexer.GetNodeList(pkNode, true).ToArray();
 
                     // lets remove all indexes that point to this in dataBlock
                     foreach (var linkNode in allNodes)
                     {
-                        var index = col.GetIndex(linkNode.Slot);
-
-                        indexer.Delete(index, linkNode.Position);
+                        //**var index = col.GetIndex(linkNode.Slot);
+                        //**
+                        //**indexer.Delete(index, linkNode.Position);
                     }
 
                     // remove object data
-                    data.Delete(col, pkNode.DataBlock);
+                    data.Delete(pkNode.DataBlock);
+
+                    //**transaction.Safepoint();
 
                     count++;
                 }
@@ -61,6 +61,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int DeleteMany(string collection, BsonExpression predicate)
         {
+            throw new NotImplementedException();/*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
@@ -94,7 +95,12 @@ namespace LiteDB.Engine
 
                     return this.Delete(collection, getIds());
                 }
-            });
+            });*/
+        }
+
+        private void Delete(Snapshot snapshot, IEnumerable<IndexNode> ids)
+        {
+
         }
     }
 }

@@ -151,11 +151,23 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode GetNode(PageAddress address)
         {
-            if (address.PageID == uint.MaxValue) return null;
+            return this.GetNode(address, out var indexPage);
+        }
 
-            var page = _snapshot.GetPage<IndexPage>(address.PageID);
+        /// <summary>
+        /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
+        /// </summary>
+        public IndexNode GetNode(PageAddress address, out IndexPage indexPage)
+        {
+            if (address.PageID == uint.MaxValue)
+            {
+                indexPage = null;
+                return null;
+            }
 
-            return page.ReadNode(address.Index);
+            indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
+
+            return indexPage.ReadNode(address.Index);
         }
 
         /// <summary>
@@ -199,20 +211,16 @@ namespace LiteDB.Engine
             }
             return level;
         }
-        /*
+
         /// <summary>
         /// Deletes an indexNode from a Index and adjust Next/Prev nodes
         /// </summary>
         public void Delete(CollectionIndex index, PageAddress nodeAddress)
         {
-            var node = this.GetNode(nodeAddress);
-            var page = node.Page;
+            var node = this.GetNode(nodeAddress, out var indexPage);
             var isUniqueKey = false;
 
-            // mark page as dirty here because, if deleted, page type will change
-            _snapshot.SetDirty(page);
-
-            for (int i = node.Prev.Length - 1; i >= 0; i--)
+            for (int i = node.Level - 1; i >= 0; i--)
             {
                 // get previous and next nodes (between my deleted node)
                 var prev = this.GetNode(node.Prev[i]);
@@ -220,13 +228,11 @@ namespace LiteDB.Engine
 
                 if (prev != null)
                 {
-                    prev.Next[i] = node.Next[i];
-                    _snapshot.SetDirty(prev.Page);
+                    prev.SetNext((byte)i, node.Next[i]);
                 }
                 if (next != null)
                 {
-                    next.Prev[i] = node.Prev[i];
-                    _snapshot.SetDirty(next.Page);
+                    next.SetPrev((byte)i, node.Prev[i]);
                 }
 
                 // in level 0, if any sibling are same value it's not an unique key
@@ -236,21 +242,12 @@ namespace LiteDB.Engine
                 }
             }
 
-            page.DeleteNode(node);
+            // remove node from page (fix position)
+            var slot = BasePage.FreeIndexSlot(indexPage.FreeBlocks);
 
-            // if there is no more nodes in this page, delete them
-            if (page.NodesCount == 0)
-            {
-                // first, remove from free list
-                _snapshot.AddOrRemoveToFreeList(false, page, index.Page, ref index.FreeIndexPageID);
+            indexPage.DeleteNode(node.Position.Index);
 
-                _snapshot.DeletePage(page.PageID);
-            }
-            else
-            {
-                // add or remove page from free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > INDEX_RESERVED_BYTES, node.Page, index.Page, ref index.FreeIndexPageID);
-            }
+            _snapshot.AddOrRemoveFreeList(indexPage, slot);
 
             // now remove node from nodelist 
             var prevNode = this.GetNode(node.PrevNode);
@@ -258,13 +255,11 @@ namespace LiteDB.Engine
 
             if (prevNode != null)
             {
-                prevNode.NextNode = node.NextNode;
-                _snapshot.SetDirty(prevNode.Page);
+                prevNode.SetNextNode(node.NextNode);
             }
             if (nextNode != null)
             {
-                nextNode.PrevNode = node.PrevNode;
-                _snapshot.SetDirty(nextNode.Page);
+                nextNode.SetPrevNode(node.PrevNode);
             }
         }
 
@@ -273,6 +268,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void DropIndex(CollectionIndex index)
         {
+            // vai navegando a Head ate o Tail pelo Next[0] excluindo os nodos encontrados
+
+            throw new NotImplementedException(); /*
             var pages = new HashSet<uint>();
             var nodes = this.FindAll(index, Query.Ascending);
 
@@ -301,8 +299,8 @@ namespace LiteDB.Engine
             foreach (var pageID in pages)
             {
                 _snapshot.DeletePage(pageID);
-            }
-        }*/
+            }*/
+        }
 
         #region Find
         

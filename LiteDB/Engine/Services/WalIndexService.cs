@@ -19,7 +19,7 @@ namespace LiteDB.Engine
         private readonly LockService _locker;
 
         private readonly ConcurrentDictionary<long, bool> _transactions = new ConcurrentDictionary<long, bool>();
-        private readonly ConcurrentDictionary<uint, ConcurrentDictionary<int, long>> _index = new ConcurrentDictionary<uint, ConcurrentDictionary<int, long>>();
+        private readonly ConcurrentDictionary<uint, List<KeyValuePair<int, long>>> _index = new ConcurrentDictionary<uint, List<KeyValuePair<int, long>>>();
 
         private int _currentReadVersion = 0;
 
@@ -49,23 +49,28 @@ namespace LiteDB.Engine
             if (version == 0) return long.MaxValue;
 
             // get page slot in cache
-            if (_index.TryGetValue(pageID, out var slot))
+            if (_index.TryGetValue(pageID, out var list))
             {
+                // list are sorted by version number
+                var idx = list.Count;
+                var position = long.MaxValue;
+
                 // get all page versions in wal-index
                 // and then filter only equals-or-less then selected version
-                var v = slot.Keys
-                    .Where(x => x <= version)
-                    .OrderByDescending(x => x)
-                    .FirstOrDefault();
-
-                // if versions on index are higher then request, exit
-                if (v == 0) return long.MaxValue;
-
-                // try get for concurrent dict this page (it's possible this page are no anymore in cache - other concurrency thread clear cache)
-                if (slot.TryGetValue(v, out var position))
+                while (idx > 0)
                 {
-                    return position;
+                    idx--;
+
+                    var v = list[idx];
+
+                    if (v.Key <= version)
+                    {
+                        position = v.Value;
+                        break;
+                    }
                 }
+
+                return position;
             }
 
             return long.MaxValue;
@@ -92,10 +97,10 @@ namespace LiteDB.Engine
                 foreach (var pos in pagePositions)
                 {
                     // get page slot in _index (by pageID) (or create if not exists)
-                    var slot = _index.GetOrAdd(pos.PageID, new ConcurrentDictionary<int, long>());
+                    var slot = _index.GetOrAdd(pos.PageID, new List<KeyValuePair<int, long>>());
 
-                    // add page version (update if already exists)
-                    slot.AddOrUpdate(_currentReadVersion, pos.Position, (v, old) => pos.Position);
+                    // add version/position into pageID slot
+                    slot.Add(new KeyValuePair<int, long>(_currentReadVersion, pos.Position));
                 }
             }
         }
@@ -111,7 +116,7 @@ namespace LiteDB.Engine
             var current = 0L;
 
             // read all pages to get confirmed transactions (do not read page content, only page header)
-            foreach(var buffer in _disk.ReadFull(FileOrigin.Log))
+            foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
             {
                 var page = new BasePage(buffer);
 
@@ -195,7 +200,7 @@ namespace LiteDB.Engine
 
             IEnumerable<PageBuffer> source()
             {
-                foreach(var buffer in _disk.ReadFull(FileOrigin.Log))
+                foreach (var buffer in _disk.ReadFull(FileOrigin.Log))
                 {
                     var page = new BasePage(buffer);
 
@@ -253,7 +258,7 @@ namespace LiteDB.Engine
 
             // exit exclusive lock (if full/shutdown)
             if (locked) _locker.ExitReserved(true);
-            
+
             return counter;
         }
     }

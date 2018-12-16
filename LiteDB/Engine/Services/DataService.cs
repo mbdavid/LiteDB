@@ -145,42 +145,29 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Delete one dataBlock
+        /// Delete all datablock that contains a document (can use multiples data blocks)
         /// </summary>
-        public DataBlock Delete(CollectionPage col, PageAddress blockAddress)
+        public void Delete(PageAddress blockAddress)
         {
-            throw new NotImplementedException();/*
-            // get page and mark as dirty
-            var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
-            var block = page.GetBlock(blockAddress.Index);
+            var index = 0;
 
-            // if there a extended page, delete all
-            if (block.ExtendPageID != uint.MaxValue)
+            // delete all document blocks
+            while(blockAddress != PageAddress.Empty)
             {
-                _snapshot.DeletePages(block.ExtendPageID);
+                var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
+                var block = page.ReadBlock(blockAddress.Index);
+                var slot = BasePage.FreeIndexSlot(page.FreeBlocks);
+
+                ENSURE(block.DataIndex == index++, "blocks must be in order");
+
+                // delete block inside page
+                page.DeleteBlock(blockAddress.Index);
+
+                // fix page empty list (or delete page)
+                _snapshot.AddOrRemoveFreeList(page, slot);
+
+                blockAddress = block.NextBlock;
             }
-
-            // delete block inside page
-            page.DeleteBlock(block);
-
-            // set page as dirty here
-            _snapshot.SetDirty(page);
-
-            // if there is no more datablocks, lets delete all page
-            if (page.BlocksCount == 0)
-            {
-                // first, remove from free list
-                _snapshot.AddOrRemoveToFreeList(false, page, col, ref col.FreeDataPageID);
-
-                _snapshot.DeletePage(page.PageID);
-            }
-            else
-            {
-                // add or remove to free list
-                _snapshot.AddOrRemoveToFreeList(page.FreeBytes > DATA_RESERVED_BYTES, page, col, ref col.FreeDataPageID);
-            }
-
-            return block;*/
         }
     }
 }
