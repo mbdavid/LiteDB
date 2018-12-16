@@ -295,7 +295,7 @@ namespace LiteDB.Engine
             var slot = PAGE_SIZE - index - 1;
             var block = _buffer[slot];
 
-            ENSURE(block > 1, "existing page segment must contains a valid block position (after header)");
+            ENSURE(block > 0, "existing page segment must contains a valid block position (after header that use only first block 0)");
             ENSURE(_buffer.ShareCounter == BUFFER_WRITABLE, "page must be writable to support changes");
 
             var position = block * PAGE_BLOCK_SIZE;
@@ -504,14 +504,14 @@ namespace LiteDB.Engine
         /// </summary>
         private void UpdateHighestIndex()
         {
-            for (var i = this.HighestIndex - 1; i <= 0; i--)
+            for (var i = this.HighestIndex - 1; i > 0; i--)
             {
                 var block = _buffer[PAGE_SIZE - i - 1];
 
                 if (block != 0)
                 {
                     this.HighestIndex = (byte)i;
-                    break;
+                    return;
                 }
             }
 

@@ -12,14 +12,13 @@ namespace LiteDB.Engine
     {
         private const int INDEX_NODE_FIXED_SIZE = 1 + // Levels (byte)
                                                   PageAddress.SIZE + // DataBlock
-                                                  (PageAddress.SIZE * 2); // Prev/Next Node (5 bytes)
+                                                  PageAddress.SIZE; // NextNode (5 bytes)
 
         // private const int P_SEGMENT_LENGTH = 0;
         private const int P_LEVEL = 1; // 01 (byte)
         private const int P_DATA_BLOCK = 2; // 02-06 (PageAddress)
-        private const int P_PREV_NODE = 7; // 07-11 (PageAddress)
-        private const int P_NEXT_NODE = 12; // 12-16 (PageAddress)
-        private const int P_PREV_NEXT = 17; // 17-(_level * 5 [PageAddress] * 2 [prev-next])
+        private const int P_NEXT_NODE = 7; // 07-11 (PageAddress)
+        private const int P_PREV_NEXT = 12; // 12-(_level * 5 [PageAddress] * 2 [prev-next])
         private int P_KEY => P_PREV_NEXT + (this.Level * PageAddress.SIZE * 2); // just after NEXT
 
         private readonly IndexPage _page;
@@ -46,12 +45,7 @@ namespace LiteDB.Engine
         public PageAddress DataBlock { get; }
 
         /// <summary>
-        /// Prev node in same document list index nodes [5 bytes]
-        /// </summary>
-        public PageAddress PrevNode { get; private set; }
-
-        /// <summary>
-        /// Next node in same document list index nodes  [5 bytes]
+        /// Single linked-list for all nodes from a single document [5 bytes]
         /// </summary>
         public PageAddress NextNode { get; private set; }
 
@@ -100,7 +94,6 @@ namespace LiteDB.Engine
             this.Level = segment.Buffer[P_LEVEL];
             this.DataBlock = segment.Buffer.ReadPageAddress(P_DATA_BLOCK);
 
-            this.PrevNode = segment.Buffer.ReadPageAddress(P_PREV_NODE);
             this.NextNode = segment.Buffer.ReadPageAddress(P_NEXT_NODE);
 
             this.Next = new PageAddress[this.Level];
@@ -127,8 +120,6 @@ namespace LiteDB.Engine
             this.Level = level;
             this.Key = key;
             this.DataBlock = dataBlock;
-
-            this.PrevNode = PageAddress.Empty;
             this.NextNode = PageAddress.Empty;
 
             this.Next = new PageAddress[level];
@@ -146,22 +137,9 @@ namespace LiteDB.Engine
             segment.Buffer.WriteIndexKey(key, P_KEY);
 
             // prevNode/nextNode must be defined as Empty
-            segment.Buffer.Write(this.PrevNode, P_PREV_NODE);
             segment.Buffer.Write(this.NextNode, P_NEXT_NODE);
 
             page.IsDirty = true;
-        }
-
-        /// <summary>
-        /// Update PrevNode pointer (update in buffer too). Also, set page as dirty
-        /// </summary>
-        public void SetPrevNode(PageAddress value)
-        {
-            this.PrevNode = value;
-
-            _segment.Buffer.Write(value, P_PREV_NODE);
-
-            _page.IsDirty = true;
         }
 
         /// <summary>

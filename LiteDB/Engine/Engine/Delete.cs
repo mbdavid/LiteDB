@@ -33,21 +33,13 @@ namespace LiteDB.Engine
                     // if pk not found, continue
                     if (pkNode == null) continue;
 
-                    // get all indexes nodes from this data block
-                    var allNodes = indexer.GetNodeList(pkNode, true).ToArray();
-
-                    // lets remove all indexes that point to this in dataBlock
-                    foreach (var linkNode in allNodes)
-                    {
-                        //**var index = col.GetIndex(linkNode.Slot);
-                        //**
-                        //**indexer.Delete(index, linkNode.Position);
-                    }
+                    // delete all nodes (start in pk node)
+                    indexer.Delete(pkNode.Position);
 
                     // remove object data
                     data.Delete(pkNode.DataBlock);
 
-                    //**transaction.Safepoint();
+                    transaction.Safepoint();
 
                     count++;
                 }

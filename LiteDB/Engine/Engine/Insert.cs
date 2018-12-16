@@ -67,6 +67,8 @@ namespace LiteDB.Engine
 
             //return;
 
+            IndexNode last = null;
+
             // for each index, insert new IndexNode
             foreach (var index in snapshot.CollectionPage.GetCollectionIndexes())
             {
@@ -75,13 +77,13 @@ namespace LiteDB.Engine
                 var expr = BsonExpression.Create(index.Expression);
                 var keys = expr.Execute(doc, true);
 
-                IndexNode last = null;
-
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)
                 {
                     // insert node
                     var node = indexer.AddNode(index, key, dataBlock, last);
+
+                    last = node;
                 }
             }
         }

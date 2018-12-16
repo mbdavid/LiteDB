@@ -21,7 +21,7 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5");
             Console.WriteLine("===========================================================");
 
-            for (var i = 1; i <= 5; i++)
+            for (var i = 1; i <= 1; i++)
             {
                 var sw = new Stopwatch();
 
@@ -29,7 +29,7 @@ namespace LiteDB.Demo
                 //TestAesEncryption.CreateEncryptedFile(sw);
                 //TestAesEncryption.ReadEncryptedFile(sw);
                 //TestDataPage.Run(sw);
-                TestInsertEngine.Run(sw);
+                TestDeleteEngine.Run(sw);
 
                 Console.WriteLine($">>> ({i}) - Elapsed: [[[ {sw.ElapsedMilliseconds} ]]]");
 

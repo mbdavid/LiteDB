@@ -140,7 +140,6 @@ namespace LiteDB.Engine
                 ENSURE(last.NextNode == PageAddress.Empty, "last index node must point to null");
 
                 last.SetNextNode(node.Position);
-                node.SetPrevNode(last.Position);
             }
 
             return node;
@@ -173,13 +172,12 @@ namespace LiteDB.Engine
         /// <summary>
         /// Gets all node list from any index node (go forward and backward)
         /// </summary>
-        public IEnumerable<IndexNode> GetNodeList(IndexNode node, bool includeInitial)
+        public IEnumerable<IndexNode> GetNodeList(IndexNode pkNode, bool includeInitial)
         {
-            var next = node.NextNode;
-            var prev = node.PrevNode;
+            var next = pkNode.NextNode;
 
             // returns some initial node
-            if (includeInitial) yield return node;
+            if (includeInitial) yield return pkNode;
 
             // go forward
             while (next.IsEmpty == false)
@@ -187,14 +185,6 @@ namespace LiteDB.Engine
                 var n = this.GetNode(next);
                 next = n.NextNode;
                 yield return n;
-            }
-
-            // go backward
-            while (prev.IsEmpty == false)
-            {
-                var p = this.GetNode(prev);
-                prev = p.PrevNode;
-                yield return p;
             }
         }
 
@@ -213,53 +203,43 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Deletes an indexNode from a Index and adjust Next/Prev nodes
+        /// Deletes all indexes nodes from pkNode
         /// </summary>
-        public void Delete(CollectionIndex index, PageAddress nodeAddress)
+        public void Delete(PageAddress pkAddress)
         {
-            var node = this.GetNode(nodeAddress, out var indexPage);
-            var isUniqueKey = false;
+            var next = pkAddress;
 
-            for (int i = node.Level - 1; i >= 0; i--)
+            // get all nodes
+            while(next != PageAddress.Empty)
             {
-                // get previous and next nodes (between my deleted node)
-                var prev = this.GetNode(node.Prev[i]);
-                var next = this.GetNode(node.Next[i]);
+                var node = this.GetNode(next, out var indexPage);
 
-                if (prev != null)
+                for (int i = node.Level - 1; i >= 0; i--)
                 {
-                    prev.SetNext((byte)i, node.Next[i]);
+                    // get previous and next nodes (between my deleted node)
+                    var prevNode = this.GetNode(node.Prev[i]);
+                    var nextNode = this.GetNode(node.Next[i]);
+
+                    if (prevNode != null)
+                    {
+                        prevNode.SetNext((byte)i, node.Next[i]);
+                    }
+                    if (nextNode != null)
+                    {
+                        nextNode.SetPrev((byte)i, node.Prev[i]);
+                    }
                 }
-                if (next != null)
-                {
-                    next.SetPrev((byte)i, node.Prev[i]);
-                }
 
-                // in level 0, if any sibling are same value it's not an unique key
-                if (i == 0)
-                {
-                    isUniqueKey = next?.Key == node.Key || prev?.Key == node.Key || false;
-                }
-            }
+                // get current slot position in free list
+                var slot = BasePage.FreeIndexSlot(indexPage.FreeBlocks);
 
-            // remove node from page (fix position)
-            var slot = BasePage.FreeIndexSlot(indexPage.FreeBlocks);
+                indexPage.DeleteNode(node.Position.Index);
 
-            indexPage.DeleteNode(node.Position.Index);
+                // update (if needed) slot position
+                _snapshot.AddOrRemoveFreeList(indexPage, slot);
 
-            _snapshot.AddOrRemoveFreeList(indexPage, slot);
-
-            // now remove node from nodelist 
-            var prevNode = this.GetNode(node.PrevNode);
-            var nextNode = this.GetNode(node.NextNode);
-
-            if (prevNode != null)
-            {
-                prevNode.SetNextNode(node.NextNode);
-            }
-            if (nextNode != null)
-            {
-                nextNode.SetPrevNode(node.PrevNode);
+                // move to next node
+                next = node.NextNode;
             }
         }
 

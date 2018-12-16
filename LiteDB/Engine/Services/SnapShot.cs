@@ -403,8 +403,8 @@ namespace LiteDB.Engine
 
             var newSlot = BasePage.FreeIndexSlot(page.FreeBlocks);
 
-            // there is no slot change - just exit (no need any change)
-            if (newSlot == initialSlot) return;
+            // there is no slot change - just exit (no need any change) [except if has no more items)
+            if (newSlot == initialSlot && page.ItemsCount > 0) return;
 
             // select if I will get from free index list or data list
             var freeLists = page.PageType == PageType.Index ?

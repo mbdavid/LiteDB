@@ -70,7 +70,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get all block positions inside this page that are DataIndex = 0 (initial data block)
         /// </summary>
-        public IEnumerable<PageAddress> GetBlocks()
+        public IEnumerable<PageAddress> GetBlocks(bool onlyRootBlock)
         {
             foreach(var index in base.GetIndexes())
             {
@@ -78,7 +78,7 @@ namespace LiteDB.Engine
                 var block = _buffer[slot];
                 var dataIndex = _buffer[(block * PAGE_BLOCK_SIZE) + 1];
 
-                if (dataIndex == 0)
+                if (onlyRootBlock == false || dataIndex == 0)
                 {
                     yield return new PageAddress(this.PageID, index);
                 }

@@ -23,13 +23,15 @@ namespace LiteDB.Engine
 
             rpt.Run("Data file", "{0}", () => _disk.GetName(FileOrigin.Data) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Data)) + ")");
             rpt.Run("Log file", "{0}", () => _disk.GetName(FileOrigin.Log) + " (" + FileHelper.FormatFileSize(_disk.GetLength(FileOrigin.Log)) + ")");
+            rpt.Run("Last checkpoint", "{0}", () => _header.LastCheckpoint);
             rpt.Run("Verify CRC data file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Data));
             rpt.Run("Verify CRC log file", "OK ({0} pages)", () => this.VerifyPageCRC(FileOrigin.Log));
             rpt.Run("Verify free empty list", "OK ({0} pages)", () => this.VerifyFreeEmptyList());
             rpt.Run("Verify data pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Data));
             rpt.Run("Verify index pages links", "OK ({0} pages)", () => this.VerifyPagesType(PageType.Index));
             rpt.Run("Verify index nodes", "OK ({0} nodes)", () => this.VerifyIndexNodes());
-            rpt.Run("Verify data blocks", "OK ({0} documents)", () => this.VerifyDataBlocks());
+            rpt.Run("Verify data blocks", "OK ({0} blocks)", () => this.VerifyDataBlocks());
+            rpt.Run("Verify documents", "OK ({0} documents)", () => this.VerifyDataBlocks());
             rpt.Run("Total time elapsed", "{0}", () => time.Elapsed);
 
             _locker.ExitReserved(true);
@@ -81,6 +83,8 @@ namespace LiteDB.Engine
                     {
                         throw new LiteException(0, $"Page {page.PageID} should be Empty type");
                     }
+
+                    next = page.NextPageID;
 
                     transaction.Safepoint();
 
@@ -151,11 +155,16 @@ namespace LiteDB.Engine
                         {
                             var page = snapshot.GetPage<IndexPage>(next);
 
-                            var nodes = page.GetNodes();
+                            var nodes = page.GetNodes().ToArray();
 
                             foreach(var node in nodes)
                             {
-                                if (node.Key.IsMaxValue || node.Key.IsMinValue) continue;
+                                // head/tail
+                                if (node.Key.IsMaxValue || node.Key.IsMinValue)
+                                {
+                                    counter++;
+                                    continue;
+                                }
 
                                 var dataPage = snapshot.GetPage<BasePage>(node.DataBlock.PageID);
 
@@ -164,7 +173,6 @@ namespace LiteDB.Engine
                                     throw new LiteException(0, $"Invalid page type on index node data block point: {node.DataBlock}");
                                 }
 
-                                LookupNode(node.PrevNode, snapshot, null, null);
                                 LookupNode(node.NextNode, snapshot, null, null);
 
                                 for (var i = 0; i < node.Level; i++)
@@ -206,7 +214,7 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Check for all data blocks and deserialize all documents
+        /// Check for all data blocks
         /// </summary>
         public int VerifyDataBlocks()
         {
@@ -227,7 +235,47 @@ namespace LiteDB.Engine
                         {
                             var page = snapshot.GetPage<DataPage>(next);
 
-                            foreach (var block in page.GetBlocks())
+                            foreach (var address in page.GetBlocks(false))
+                            {
+                                var block = page.ReadBlock(address.Index);
+
+                                counter++;
+                            }
+
+                            next = page.NextPageID;
+                            transaction.Safepoint();
+                        }
+                    }
+                }
+
+                return counter;
+            });
+
+        }
+
+        /// <summary>
+        /// Check for all document and deserialize to test if ok (use PK index)
+        /// </summary>
+        public int VerifyDocuments()
+        {
+            return this.AutoTransaction(transaction =>
+            {
+                var counter = 0;
+
+                foreach (var col in _header.GetCollections())
+                {
+                    var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
+                    var data = new DataService(snapshot);
+
+                    for (var slot = 0; slot < 5; slot++)
+                    {
+                        var next = snapshot.CollectionPage.FreeDataPageID[slot];
+
+                        while (next != uint.MaxValue)
+                        {
+                            var page = snapshot.GetPage<DataPage>(next);
+
+                            foreach (var block in page.GetBlocks(true))
                             {
                                 using (var r = new BufferReader(data.Read(block)))
                                 {
