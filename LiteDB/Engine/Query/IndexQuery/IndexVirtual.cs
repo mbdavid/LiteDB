@@ -11,9 +11,6 @@ namespace LiteDB.Engine
     internal class IndexVirtual : Index, IDocumentLoader
     {
         private readonly IEnumerable<BsonDocument> _source;
-        private readonly Dictionary<uint, BsonDocument> _cache = new Dictionary<uint, BsonDocument>();
-        private BsonDocument _current = null;
-        private uint _counter = 0;
 
         public IndexVirtual(IEnumerable<BsonDocument> source)
             : base("_id", Query.Ascending)
@@ -36,60 +33,19 @@ namespace LiteDB.Engine
         {
             foreach(var doc in _source)
             {
-                _counter++;
-
-                // create an fake page address for this document
-                doc.RawId = new PageAddress(_counter, 1);
-
-                // if cache reach max count, clear cache and use only single value (with no support from random access - group by)
-                if (_counter > MAX_CACHE_DOCUMENT_LOADER_SIZE)
-                {
-                    _current = doc;
-                }
-                else
-                {
-                    // and add this document into cache to be used on Load method
-                    _cache[_counter] = doc;
-                }
-
                 // return an fake indexNode
-                yield return new IndexNode(0)
-                {
-                    Key = (int)_counter,
-                    DataBlock = doc.RawId
-                };
+                yield return new IndexNode(doc);
             }
         }
 
-        public BsonDocument Load(PageAddress dataBlock)
+        public BsonDocument Load(IndexNode node)
         {
-            if (_current != null)
-            {
-                if (_current.RawId.PageID != dataBlock.PageID) throw new LiteException(0, $"When system collection reach {MAX_CACHE_DOCUMENT_LOADER_SIZE} documents there is no more support for random access (like in group by operations)");
-
-                return _current;
-            }
-            else
-            {
-                return _cache[dataBlock.PageID];
-            }
+            return node.Key as BsonDocument;
         }
 
         public override string ToString()
         {
             return string.Format("FULL INDEX SCAN(VIRTUAL)");
-        }
-
-        /// <summary>
-        /// Create fake collection page for virtual collections
-        /// </summary>
-        public static CollectionPage CreateCollectionPage(string name)
-        {
-            var col = new CollectionPage(null, 0);
-
-            var pk = col.InsertIndex("_id", "$._id", true);
-
-            return col;
         }
     }
 }

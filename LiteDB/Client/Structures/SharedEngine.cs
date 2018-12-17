@@ -24,7 +24,7 @@ namespace LiteDB
         {
             if (Interlocked.Increment(ref _counter) == 1)
             {
-                DEBUG(_engine != null, "engine here must be null");
+                ENSURE(_engine == null, "engine here must be null");
 
                 _engine = new LiteEngine(_settings);
             }
@@ -57,13 +57,13 @@ namespace LiteDB
             }
         }
 
-        public int Checkpoint()
+        public int Checkpoint(CheckpointMode mode)
         {
             this.OpenShared();
 
             try
             {
-                return _engine.Checkpoint();
+                return _engine.Checkpoint(mode);
             }
             finally
             {
@@ -222,20 +222,6 @@ namespace LiteDB
         #endregion
 
         #region EnsureIndex/DropIndex/Drop/Rename
-
-        public bool CreateCollection(string collection)
-        {
-            this.OpenShared();
-
-            try
-            {
-                return _engine.CreateCollection(collection);
-            }
-            finally
-            {
-                this.CloseShared();
-            }
-        }
 
         public bool DropCollection(string collection)
         {

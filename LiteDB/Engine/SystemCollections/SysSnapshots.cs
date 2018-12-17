@@ -10,6 +10,7 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysSnapshots()
         {
+            throw new NotImplementedException(); /*
             foreach (var transaction in _transactions.Values)
             {
                 foreach (var snapshot in transaction.Snapshots.Values)
@@ -26,7 +27,7 @@ namespace LiteDB.Engine
                         ["pagesInMemory"] = snapshot.LocalPagesCount
                     };
                 }
-            }
+            }*/
         }
     }
 }

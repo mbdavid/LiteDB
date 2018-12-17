@@ -53,7 +53,7 @@ namespace LiteDB.Engine
             else if(id.IsNumber)
             {
                 // update memory sequence of numeric _id
-//**                this.SetSequence(col, snapshot, id);
+                this.SetSequence(snapshot, id);
             }
 
             // test if _id is a valid type
@@ -98,11 +98,9 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonValue GetSequence(Snapshot snapshot, BsonAutoId autoId)
         {
-            throw new NotImplementedException();
-            /*
-            var next = _sequences.AddOrUpdate(col.CollectionName, (s) =>
+            var next = _sequences.AddOrUpdate(snapshot.CollectionName, (s) =>
             {
-                var lastId = this.GetLastId(col, snapshot);
+                var lastId = this.GetLastId(snapshot);
 
                 // emtpy collection, return 1
                 if (lastId.IsMinValue) return 1;
@@ -110,7 +108,7 @@ namespace LiteDB.Engine
                 // if lastId is not number, throw exception
                 if (!lastId.IsNumber)
                 {
-                    throw new LiteException(0, $"It's not possible use AutoId={autoId} because '{col.CollectionName}' collection constains not only numbers in _id index ({lastId}).");
+                    throw new LiteException(0, $"It's not possible use AutoId={autoId} because '{snapshot.CollectionName}' collection constains not only numbers in _id index ({lastId}).");
                 }
 
                 // return nextId
@@ -124,7 +122,7 @@ namespace LiteDB.Engine
 
             return autoId == BsonAutoId.Int32 ?
                 new BsonValue((int)next) :
-                new BsonValue(next);*/
+                new BsonValue(next);
         }
 
         /// <summary>
@@ -133,11 +131,9 @@ namespace LiteDB.Engine
         /// </summary>
         private void SetSequence(Snapshot snapshot, BsonValue newId)
         {
-            throw new NotImplementedException();
-            /*
-            _sequences.AddOrUpdate(col.CollectionName, (s) =>
+            _sequences.AddOrUpdate(snapshot.CollectionName, (s) =>
             {
-                var lastId = this.GetLastId(col, snapshot);
+                var lastId = this.GetLastId(snapshot);
 
                 // create new collection based with max value between last _id index key or new passed _id
                 if (lastId.IsNumber)
@@ -155,7 +151,7 @@ namespace LiteDB.Engine
             {
                 // return max value between current sequence value vs new inserted value
                 return Math.Max(value, newId.AsInt64);
-            });*/
+            });
         }
 
         /// <summary>
@@ -163,30 +159,26 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonValue GetLastId(Snapshot snapshot)
         {
-            throw new NotImplementedException();
-            /*
-            // add method
-            var tail = col.GetIndex(0).TailNode;
-            var head = col.GetIndex(0).HeadNode;
+            var pk = snapshot.CollectionPage.PK;
 
             // get tail page and previous page
-            var tailPage = snapshot.GetPage<IndexPage>(tail.PageID);
-            var node = tailPage.GetNode(tail.Index);
+            var tailPage = snapshot.GetPage<IndexPage>(pk.Tail.PageID);
+            var node = tailPage.ReadNode(pk.Tail.Index);
             var prevNode = node.Prev[0];
 
-            if (prevNode == head)
+            if (prevNode == pk.Head)
             {
                 return BsonValue.MinValue;
             }
             else
             {
                 var lastPage = prevNode.PageID == tailPage.PageID ? tailPage : snapshot.GetPage<IndexPage>(prevNode.PageID);
-                var lastNode = lastPage.GetNode(prevNode.Index);
+                var lastNode = lastPage.ReadNode(prevNode.Index);
 
                 var lastKey = lastNode.Key;
 
                 return lastKey;
-            }*/
+            }
         }
     }
 }

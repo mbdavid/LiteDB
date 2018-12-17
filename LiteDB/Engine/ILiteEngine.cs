@@ -6,7 +6,7 @@ namespace LiteDB.Engine
     public interface ILiteEngine : IDisposable
     {
         int Analyze(string[] collections);
-        int Checkpoint();
+        int Checkpoint(CheckpointMode mode);
         long Shrink();
         int Vaccum();
 
@@ -23,7 +23,6 @@ namespace LiteDB.Engine
         int Delete(string collection, IEnumerable<BsonValue> ids);
         int DeleteMany(string collection, BsonExpression predicate);
 
-        bool CreateCollection(string name);
         bool DropCollection(string name);
         bool RenameCollection(string name, string newName);
 

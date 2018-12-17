@@ -79,6 +79,7 @@ http://minisqlquery.codeplex.com/license
         <Key word="VALUES" />
         <Key word="SELECT" />
         <Key word="ALL" />
+        <Key word="FULL" />
         <Key word="FROM" />
         <Key word="WHERE" />
         <Key word="INCLUDE" />

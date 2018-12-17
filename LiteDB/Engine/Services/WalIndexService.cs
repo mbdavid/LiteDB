@@ -156,6 +156,9 @@ namespace LiteDB.Engine
                         header.TransactionID = 0;
                         header.IsConfirmed = false;
                     }
+
+                    // mark transaction as persisted
+                    _transactions[page.TransactionID] = true;
                 }
 
                 current += PAGE_SIZE;

@@ -185,13 +185,10 @@ namespace LiteDB.Engine
             }
             else
             {
-                // find query user defined index (must exists)
-                var idx = _snapshot.CollectionPage.GetIndex(_query.Index.Name);
+                ENSURE(_query.Index is IndexVirtual, "pre-defined index must be only for virtual collections");
 
-                if (idx == null) throw LiteException.IndexNotFound(_query.Index.Name, _snapshot.CollectionName);
-
-                _query.IndexCost = _query.Index.GetCost(idx);
-                _query.IndexExpression = idx.Expression;
+                _query.IndexCost = 0;
+                _query.IndexExpression = "<virtual>";
             }
 
             // if is only 1 field to deserialize and this field are same as index, use IndexKeyOnly = rue
@@ -215,7 +212,7 @@ namespace LiteDB.Engine
         /// </summary>
         private IndexCost ChooseIndex(HashSet<string> fields)
         {
-            var indexes = _snapshot.CollectionPage.GetAllIndexes().ToArray();
+            var indexes = _snapshot.CollectionPage.GetCollectionIndexes().ToArray();
 
             // if query contains a single field used, give preferred if this index exists
             var preferred = fields.Count == 1 ? "$." + fields.First() : null;
@@ -226,7 +223,7 @@ namespace LiteDB.Engine
             // test all possible predicates in terms
             foreach (var expr in _terms.Where(x => x.IsPredicate))
             {
-                DEBUG(expr.Left == null || expr.Right == null, "predicate expression must has left/right expressions");
+                ENSURE(expr.Left != null && expr.Right != null, "predicate expression must has left/right expressions");
 
                 // get index that match with expression left/right side 
                 var index = indexes

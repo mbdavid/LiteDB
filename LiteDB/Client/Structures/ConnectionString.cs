@@ -46,12 +46,6 @@ namespace LiteDB
         public long LimitSize { get; set; } = long.MaxValue;
 
         /// <summary>
-        /// "log": Debug messages from engine - (default: Logger.NONE)
-        /// Supported in [Local, Shared] connection type
-        /// </summary>
-        public byte Log { get; set; } = Logger.NONE;
-
-        /// <summary>
         /// "utc": Returns date in UTC timezone from BSON deserialization (default: false - LocalTime)
         /// Supported in [Local, Shared] connection type
         /// </summary>
@@ -103,7 +97,6 @@ namespace LiteDB
             this.Timeout = _values.GetValue("timeout", this.Timeout);
             this.InitialSize = _values.GetFileSize(@"initial size", this.InitialSize);
             this.LimitSize = _values.GetFileSize(@"limit size", this.LimitSize);
-            this.Log = _values.GetValue("log", this.Log);
             this.UtcDate = _values.GetValue("utc", this.UtcDate);
             this.ReadOnly = _values.GetValue("readonly", this.ReadOnly);
             this.CheckpointOnShutdown = _values.GetValue("checkpoint", this.CheckpointOnShutdown);
@@ -127,7 +120,6 @@ namespace LiteDB
                 LimitSize = this.LimitSize,
                 UtcDate = this.UtcDate,
                 Timeout = this.Timeout,
-                LogLevel = this.Log,
                 CheckpointOnShutdown = this.CheckpointOnShutdown,
                 ReadOnly = this.ReadOnly
             };

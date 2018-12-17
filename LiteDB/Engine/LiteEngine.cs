@@ -13,7 +13,7 @@ namespace LiteDB.Engine
     /// Its isolated from complete solution - works on low level only (no linq, no poco... just BSON objects)
     /// [ThreadSafe]
     /// </summary>
-    public partial class LiteEngine : IDisposable//: ILiteEngine
+    public partial class LiteEngine : ILiteEngine
     {
         #region Services instances
 
@@ -111,6 +111,9 @@ namespace LiteDB.Engine
                     // read page with no cache ref (has a own PageBuffer) - do not Release() support
                     var buffer = _disk.ReadFull(FileOrigin.Data).First();
 
+                    //TODO: ler se o banco de dados precisa de UPGRADE aqui, antes mesmo de ler a pagina
+                    //this.Upgrade();
+
                     _header = new HeaderPage(buffer);
                 }
 
@@ -124,13 +127,7 @@ namespace LiteDB.Engine
                 }
 
                 // register system collections
-                //** this.InitializeSystemCollections();
-
-                // if fileVersion are less than current version, must upgrade datafile
-                //** if (_header.FileVersion < HeaderPage.FILE_VERSION)
-                //** {
-                //**     this.Upgrade();
-                //** }
+                this.InitializeSystemCollections();
 
                 LOG("initialization completed", "ENGINE");
             }
@@ -149,12 +146,16 @@ namespace LiteDB.Engine
         public int PagesInUse => _disk.PagesInUse;
         public int QueueLength => _disk.Queue.Length;
         public void WaitQueue() => _disk.Queue.Wait();
-        public int Checkpoint(CheckpointMode mode) => _walIndex.Checkpoint(_header, mode);
 
-        //**        /// <summary>
-        //**        /// Request a database checkpoint
-        //**        /// </summary>
-        //**        public int Checkpoint() => _walIndex.Checkpoint(_header, true);
+        /// <summary>
+        /// Run checkpoint command to copy log file into data file
+        /// </summary>
+        public int Checkpoint(CheckpointMode mode)
+        {
+            if (mode == CheckpointMode.Shutdown && _shutdown == false) throw new LiteException(0, "Checkpoint shutdown mode are avaiable only when database are closing");
+
+            return _walIndex.Checkpoint(_header, mode);
+        }
 
         /// <summary>
         /// Shutdown database and do not accept any other access. Wait finish all transactions

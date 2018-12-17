@@ -28,21 +28,15 @@ namespace LiteDB.Engine
         /// </summary>
         public abstract IEnumerable<BsonDocument> Pipe(IEnumerable<IndexNode> nodes, QueryPlan query);
 
-        // load documents from disk or make a "fake" document using index key only (useful for COUNT/EXISTS)
-        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes, bool indexKeyOnly, string field)
+        // load documents from document loader
+        protected IEnumerable<BsonDocument> LoadDocument(IEnumerable<IndexNode> nodes)
         {
-            DEBUG(indexKeyOnly && field == null, "should not be indexOnly = null with no field name");
-
             foreach (var node in nodes)
             {
+                yield return _loader.Load(node);
+
                 // check if transaction all full of pages to clear before continue
                 _transaction.Safepoint();
-
-                // if is indexKeyOnly, load here from IndexNode, otherwise, read from Loader
-
-                yield return indexKeyOnly ?
-                    new BsonDocument { [field] = node.Key, RawId = node.Position } :
-                    _loader.Load(node.DataBlock);
             }
         }
 
@@ -83,8 +77,7 @@ namespace LiteDB.Engine
                         indexer = new IndexService(snapshot);
                         data = new DataService(snapshot);
 
-                        //TODO: oferecer suporte a include com campos selecionados!!
-                        loader = new DocumentLoader(data, _engine.UtcDate, null);
+                        loader = new DocumentLoader(data, _engine.Settings.UtcDate, null);
 
                         index = snapshot.CollectionPage?.PK;
                     }
@@ -106,7 +99,7 @@ namespace LiteDB.Engine
                         else
                         {
                             // load document based on dataBlock position
-                            var refDoc = loader.Load(node.DataBlock);
+                            var refDoc = loader.Load(node);
 
                             value.Remove("$id");
                             value.Remove("$ref");

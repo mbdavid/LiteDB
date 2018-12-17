@@ -17,18 +17,16 @@ namespace LiteDB.Engine
             _name = name;
         }
 
-        public BsonDocument Load(PageAddress rawId)
+        public BsonDocument Load(IndexNode node)
         {
-            DEBUG(rawId.IsEmpty, "Never should be empty rawid");
-
-            var node = _indexer.GetNode(rawId);
+            ENSURE(node.DataBlock.IsEmpty == false, "Never should be empty rawid");
 
             var doc = new BsonDocument
             {
                 [_name] = node.Key,
             };
 
-            doc.RawId = rawId;
+            doc.RawId = node.DataBlock;
 
             return doc;
         }

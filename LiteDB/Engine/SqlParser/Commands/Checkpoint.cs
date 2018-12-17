@@ -11,11 +11,18 @@ namespace LiteDB.Engine
         /// </summary>
         private BsonDataReader ParseCheckpoint()
         {
+            // read CHECKPOINT
             var token = _tokenizer.ReadToken();
+            var mode = CheckpointMode.Incremental;
 
-            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon);
+            if (token.Value.ToUpper() == "FULL")
+            {
+                mode = CheckpointMode.Full;
+            }
 
-            var result = _engine.Checkpoint();
+            _tokenizer.ReadToken().Expect(TokenType.EOF, TokenType.SemiColon, TokenType.Word);
+
+            var result = _engine.Checkpoint(mode);
 
             return new BsonDataReader(result);
         }

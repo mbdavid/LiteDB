@@ -66,7 +66,6 @@ namespace LiteDB.Studio.Forms
             {
                 txtFilename.Text = openFileDialog.FileName;
             }
-
         }
     }
 }

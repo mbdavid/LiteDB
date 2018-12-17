@@ -53,7 +53,7 @@ namespace LiteDB.Engine
                 // first go fordward
                 while (!node.Next[0].IsEmpty && ((node = indexer.GetNode(node.Next[0])).Key.CompareTo(_value) == 0))
                 {
-                    if (node.IsHeadTail(index)) yield break;
+                    if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
                     yield return node;
                 }
@@ -63,8 +63,8 @@ namespace LiteDB.Engine
                 // and than, go backward
                 while (!node.Prev[0].IsEmpty && ((node = indexer.GetNode(node.Prev[0])).Key.CompareTo(_value) == 0))
                 {
-                    if (node.IsHeadTail(index)) yield break;
-                
+                    if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
+
                     yield return node;
                 }
             }

@@ -74,12 +74,12 @@ namespace LiteDB.Engine
             });
         }
 
-        /*
         /// <summary>
         /// Drop an index from a collection
         /// </summary>
         public bool DropIndex(string collection, string name)
         {
+            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (name.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(name));
 
@@ -110,8 +110,7 @@ namespace LiteDB.Engine
                 snapshot.SetDirty(col);
             
                 return true;
-            });
+            });*/
         }
-        */
     }
 }

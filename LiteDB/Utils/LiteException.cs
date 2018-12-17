@@ -172,9 +172,9 @@ namespace LiteDB
             return new LiteException(INVALID_INDEX_KEY, text);
         }
 
-        internal static LiteException IndexNotFound(string collection, string name)
+        internal static LiteException IndexNotFound(string name)
         {
-            return new LiteException(INDEX_NOT_FOUND, "Index not found on '{0}.{1}'.", collection, name);
+            return new LiteException(INDEX_NOT_FOUND, "Index not found '{0}'.", name);
         }
 
         internal static LiteException LockTimeout(string mode, TimeSpan ts)

@@ -12,6 +12,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int Upsert(string collection, IEnumerable<BsonDocument> docs, BsonAutoId autoId)
         {
+            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
@@ -37,7 +38,7 @@ namespace LiteDB.Engine
                 
                 // returns how many document was inserted
                 return count;
-            });
+            });*/
         }
     }
 }

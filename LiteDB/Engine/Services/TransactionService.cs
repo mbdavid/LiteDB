@@ -28,12 +28,14 @@ namespace LiteDB.Engine
         private bool _shutdown = false;
 
         // transaction info
-        public readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
-        public readonly long _transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
-        public TransactionState _state = TransactionState.New;
+        private readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
+        private readonly long _transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
+        private TransactionState _state = TransactionState.New;
 
         // expose
+        public int ThreadID => _threadID;
         public long TransactionID => _transactionID;
+        public TransactionState State => _state;
 
         public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<long> done)
         {

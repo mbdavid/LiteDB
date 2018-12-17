@@ -60,6 +60,11 @@ namespace LiteDB.Engine
         public PageAddress[] Next { get; private set; }
 
         /// <summary>
+        /// Get index page reference
+        /// </summary>
+        public IndexPage Page => _page;
+
+        /// <summary>
         /// Calculate how many bytes this node will need on page segment
         /// </summary>
         public static int GetNodeLength(byte level, BsonValue key)
@@ -140,6 +145,22 @@ namespace LiteDB.Engine
             segment.Buffer.Write(this.NextNode, P_NEXT_NODE);
 
             page.IsDirty = true;
+        }
+
+        /// <summary>
+        /// Create a fake index node used only in Virtual Index runner
+        /// </summary>
+        public IndexNode(BsonDocument doc)
+        {
+            _page = null;
+            _segment = new PageSegment();
+
+            this.Position = new PageAddress(0, 0);
+            this.Level = 0;
+            this.DataBlock = PageAddress.Empty;
+
+            // index node key IS document
+            this.Key = doc;
         }
 
         /// <summary>

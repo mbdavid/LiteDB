@@ -25,6 +25,7 @@ namespace LiteDB.Engine
         /// </summary>
         public bool DbParam(string parameterName, BsonValue value)
         {
+            throw new NotImplementedException(); /*
             // check if same value or database are in shutdown mode
             if (this.DbParam(parameterName) == value || _shutdown) return false;
 
@@ -66,7 +67,7 @@ namespace LiteDB.Engine
             finally
             {
                 _locker.ExitReserved(false);
-            }
+            }*/
         }
     }
 }

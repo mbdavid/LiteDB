@@ -7,6 +7,6 @@ namespace LiteDB.Engine
     /// </summary>
     internal interface IDocumentLoader
     {
-        BsonDocument Load(PageAddress dataBlock);
+        BsonDocument Load(IndexNode node);
     }
 }

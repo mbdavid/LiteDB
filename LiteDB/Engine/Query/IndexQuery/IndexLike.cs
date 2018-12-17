@@ -58,7 +58,7 @@ namespace LiteDB.Engine
             while (node != null)
             {
                 // if current node are edges exit while
-                if (node.IsHeadTail(index)) break;
+                if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
                 var valueString = node.Key.AsString;
 
@@ -78,16 +78,16 @@ namespace LiteDB.Engine
                     break;
                 }
 
-                node = indexer.GetNode(node.NextPrev(0, -this.Order));
+                node = indexer.GetNode(node.GetNextPrev(0, -this.Order));
             }
 
             // move fordward
-            node = indexer.GetNode(first.NextPrev(0, this.Order));
+            node = indexer.GetNode(first.GetNextPrev(0, this.Order));
 
             while (node != null)
             {
                 // if current node are edges exit while
-                if (node.IsHeadTail(index)) break;
+                if (node.Key.IsMinValue || node.Key.IsMaxValue) break;
 
                 var valueString = node.Key.AsString;
 
@@ -109,7 +109,7 @@ namespace LiteDB.Engine
                 }
 
                 // first, go backward to get all same values
-                node = indexer.GetNode(node.NextPrev(0, this.Order));
+                node = indexer.GetNode(node.GetNextPrev(0, this.Order));
             }
         }
 

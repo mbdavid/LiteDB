@@ -278,9 +278,9 @@ namespace LiteDB
         /// <summary>
         /// Do database checkpoint. Copy all commited transaction from log file into datafile.
         /// </summary>
-        public int Checkpoint()
+        public int Checkpoint(CheckpointMode mode)
         {
-            return _engine.Value.Checkpoint();
+            return _engine.Value.Checkpoint(mode);
         }
 
         /// <summary>

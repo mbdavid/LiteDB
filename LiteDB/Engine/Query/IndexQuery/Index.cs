@@ -189,7 +189,7 @@ namespace LiteDB.Engine
             // get index for this query
             var index = col.GetIndex(this.Name);
 
-            if (index == null) throw LiteException.IndexNotFound(col.CollectionName, this.Name);
+            if (index == null) throw LiteException.IndexNotFound(this.Name);
 
             // execute query to get all IndexNodes
             return this.Execute(indexer, index);

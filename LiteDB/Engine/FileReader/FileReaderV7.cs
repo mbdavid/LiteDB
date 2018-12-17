@@ -256,7 +256,7 @@ namespace LiteDB.Engine
 
                     var length = _reader.ReadUInt16();
 
-                    block["data"] = _reader.ReadBinary(length);
+                    block["data"] = _reader.ReadBytes(length);
 
                     page["blocks"].AsArray.Add(block);
                 }

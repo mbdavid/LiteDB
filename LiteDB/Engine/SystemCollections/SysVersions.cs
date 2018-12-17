@@ -11,9 +11,10 @@ namespace LiteDB.Engine
     {
         private IEnumerable<BsonDocument> SysVersions()
         {
+            throw new NotImplementedException(); /*
             var version = 0;
 
-            foreach (var transaction in _wal.ConfirmedTransactions)
+            foreach (var transaction in _walIndex.ConfirmedTransactions)
             {
                 version++;
 
@@ -27,7 +28,7 @@ namespace LiteDB.Engine
                     ["startTime"] = transaction.CreationTime,
                     ["pages"] = pages
                 };
-            }
+            }*/
         }
     }
 }

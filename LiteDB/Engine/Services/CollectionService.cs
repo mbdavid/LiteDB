@@ -24,13 +24,6 @@ namespace LiteDB.Engine
         /// </summary>
         public void Get(string name, bool addIfNotExists, ref CollectionPage collectionPage)
         {
-            // virtual collection
-            if (name.StartsWith("$"))
-            {
-                throw new NotImplementedException("implementar coleção virtual-fake");
-                //return new CollectionPage()
-            }
-
             // get collection pageID from header
             var pageID = _header.GetCollectionPageID(name);
 

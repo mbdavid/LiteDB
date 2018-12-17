@@ -13,7 +13,8 @@ namespace LiteDB.Engine
         /// </summary>
         private void Upgrade()
         {
-            _log.Info($"upgrading datafile from {_header.FileVersion} to new v8 version");
+            throw new NotImplementedException(); /*
+            LOG($"upgrading datafile from {_header.FileVersion} to new v8 version", "UPGRADE");
 
             // only FileStream can be upgratable
             if (!(_factory is FileStreamDiskFactory))
@@ -33,7 +34,7 @@ namespace LiteDB.Engine
 
                 // upgrade is same operation than Shrink, but use custom file reader
                 this.Shrink(reader);
-            }
+            }*/
         }
     }
 }

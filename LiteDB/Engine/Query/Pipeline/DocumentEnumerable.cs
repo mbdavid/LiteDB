@@ -13,13 +13,13 @@ namespace LiteDB.Engine
     internal class DocumentEnumerable : IEnumerable<BsonDocument>, IDisposable
     {
         private IEnumerator<BsonDocument> _enumerator;
-        private List<PageAddress> _cache = new List<PageAddress>();
-        private IDocumentLoader _loader;
 
-        public DocumentEnumerable(IEnumerable<BsonDocument> source, IDocumentLoader loader)
+        //TODO: should be a virtual/temp disk?
+        private List<BsonDocument> _cache = new List<BsonDocument>();
+
+        public DocumentEnumerable(IEnumerable<BsonDocument> source)
         {
             _enumerator = source.GetEnumerator();
-            _loader = loader;
         }
 
         public void Dispose()
@@ -43,9 +43,9 @@ namespace LiteDB.Engine
             // enumerate the _cache first
             for (; index < _cache.Count; index++)
             {
-                var rawId = _cache[index];
+                var doc = _cache[index];
 
-                yield return _loader.Load(rawId);
+                yield return doc;
             }
 
             // continue enumeration of the original _enumerator, until it is finished. 
@@ -53,7 +53,7 @@ namespace LiteDB.Engine
             for (; _enumerator != null && _enumerator.MoveNext(); index++)
             {
                 var current = _enumerator.Current;
-                _cache.Add(current.RawId);
+                _cache.Add(current);
                 yield return current;
             }
 
@@ -67,9 +67,9 @@ namespace LiteDB.Engine
             // can add more items to the cache, so we need to enumerate them as well
             for (; index < _cache.Count; index++)
             {
-                var rawId = _cache[index];
+                var doc = _cache[index];
             
-                yield return _loader.Load(rawId);
+                yield return doc;
             }
         }
 

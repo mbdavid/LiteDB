@@ -463,7 +463,7 @@ namespace LiteDB.Studio
             {
                 if (_db == null)
                 {
-                    var dialog = new ConnectionForm(_connectionString);
+                    var dialog = new ConnectionForm(_connectionString ?? new ConnectionString());
 
                     dialog.ShowDialog();
 

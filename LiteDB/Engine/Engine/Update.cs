@@ -11,6 +11,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int Update(string collection, IEnumerable<BsonDocument> docs)
         {
+            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (docs == null) throw new ArgumentNullException(nameof(docs));
 
@@ -33,7 +34,7 @@ namespace LiteDB.Engine
                 }
 
                 return count;
-            });
+            });*/
         }
 
         /// <summary>
@@ -41,6 +42,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int UpdateMany(string collection, BsonExpression extend, BsonExpression predicate)
         {
+            throw new NotImplementedException(); /*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (extend == null) throw new ArgumentNullException(nameof(extend));
 
@@ -84,9 +86,10 @@ namespace LiteDB.Engine
                         }
                     }
                 }
-            });
+            });*/
         }
 
+        /*
         /// <summary>
         /// Implement internal update document
         /// </summary>
@@ -152,6 +155,6 @@ namespace LiteDB.Engine
             }
 
             return true;
-        }
+        }*/
     }
 }

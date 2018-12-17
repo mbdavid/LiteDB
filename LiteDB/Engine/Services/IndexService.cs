@@ -150,21 +150,9 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode GetNode(PageAddress address)
         {
-            return this.GetNode(address, out var indexPage);
-        }
+            if (address.PageID == uint.MaxValue) return null;
 
-        /// <summary>
-        /// Get a node inside a page using PageAddress - Returns null if address IsEmpty
-        /// </summary>
-        public IndexNode GetNode(PageAddress address, out IndexPage indexPage)
-        {
-            if (address.PageID == uint.MaxValue)
-            {
-                indexPage = null;
-                return null;
-            }
-
-            indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
+            var indexPage = _snapshot.GetPage<IndexPage>(address.PageID);
 
             return indexPage.ReadNode(address.Index);
         }
@@ -212,7 +200,7 @@ namespace LiteDB.Engine
             // get all nodes
             while(next != PageAddress.Empty)
             {
-                var node = this.GetNode(next, out var indexPage);
+                var node = this.GetNode(next);
 
                 for (int i = node.Level - 1; i >= 0; i--)
                 {
@@ -231,12 +219,12 @@ namespace LiteDB.Engine
                 }
 
                 // get current slot position in free list
-                var slot = BasePage.FreeIndexSlot(indexPage.FreeBlocks);
+                var slot = BasePage.FreeIndexSlot(node.Page.FreeBlocks);
 
-                indexPage.DeleteNode(node.Position.Index);
+                node.Page.DeleteNode(node.Position.Index);
 
                 // update (if needed) slot position
-                _snapshot.AddOrRemoveFreeList(indexPage, slot);
+                _snapshot.AddOrRemoveFreeList(node.Page, slot);
 
                 // move to next node
                 next = node.NextNode;

@@ -16,6 +16,7 @@ namespace LiteDB.Engine
         private const int P_NEXT_BLOCK = 2; // 02-06
         private const int P_BUFFER = 7; // 07-EOF
 
+        private readonly DataPage _page;
         private readonly PageSegment _segment;
 
         /// <summary>
@@ -43,6 +44,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DataBlock(DataPage page, PageSegment segment)
         {
+            _page = page;
             _segment = segment;
 
             this.Position = new PageAddress(page.PageID, segment.Index);
@@ -62,6 +64,7 @@ namespace LiteDB.Engine
         /// </summary>
         public DataBlock(DataPage page, PageSegment segment, byte dataIndex, PageAddress nextBlock)
         {
+            _page = page;
             _segment = segment;
 
             this.Position = new PageAddress(page.PageID, segment.Index);
@@ -77,6 +80,8 @@ namespace LiteDB.Engine
 
             // byte 07-EOL: Buffer
             this.Buffer = segment.Buffer.Slice(P_BUFFER, (segment.Length * PAGE_BLOCK_SIZE) - P_BUFFER);
+
+            page.IsDirty = true;
         }
 
         public void SetNextBlock(PageAddress nextBlock)
@@ -85,6 +90,8 @@ namespace LiteDB.Engine
 
             // update segment buffer with NextBlock (uint + byte)
             _segment.Buffer.Write(nextBlock, P_NEXT_BLOCK);
+
+            _page.IsDirty = true;
         }
 
         public override string ToString()

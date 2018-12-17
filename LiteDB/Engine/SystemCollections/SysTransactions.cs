@@ -13,21 +13,19 @@ namespace LiteDB.Engine
         {
             foreach (var transaction in _transactions.Values)
             {
-                var write = transaction.Snapshots.Values.Where(x => x.Mode == LockMode.Write).Any();
-
                 yield return new BsonDocument
                 {
                     ["threadID"] = transaction.ThreadID,
                     ["transactionID"] = transaction.TransactionID,
                     ["transactionState"] = transaction.State.ToString(),
-                    ["startTime"] = transaction.TransactionID.CreationTime,
-                    ["mode"] = write ? "Write" : "Read",
-                    ["snapshots"] = transaction.Snapshots.Count(),
-                    ["pagesInMemory"] = transaction.Snapshots.Values.Select(x => x.LocalPagesCount).Sum(),
-                    ["pagesInLogFile"] = transaction.Pages.DirtyPagesWal.Count,
-                    ["newPages"] = transaction.Pages.NewPages.Count,
-                    ["deletedPages"] = transaction.Pages.DeletedPages,
-                    ["newCollections"] = transaction.Pages.NewCollections.Count
+                    //["startTime"] = transaction,
+                    ["mode"] = transaction.Mode.ToString(),
+                    //["snapshots"] = transaction.Snapshots.Count(),
+                    //["pagesInMemory"] = transaction.Snapshots.Values.Select(x => x.LocalPagesCount).Sum(),
+                    //["pagesInLogFile"] = transaction.Pages.DirtyPagesWal.Count,
+                    //["newPages"] = transaction.Pages.NewPages.Count,
+                    //["deletedPages"] = transaction.Pages.DeletedPages,
+                    //["newCollections"] = transaction.Pages.NewCollections.Count
                 };
             }
         }

@@ -13,6 +13,7 @@ namespace LiteDB.Engine
         /// </summary>
         public int Vaccum()
         {
+            throw new NotImplementedException(); /*
             // shrink can only run with no transaction
             if (_locker.IsInTransaction) throw LiteException.InvalidTransactionState("Vaccum", TransactionState.Active);
 
@@ -43,7 +44,7 @@ namespace LiteDB.Engine
             finally
             {
                 _locker.ExitReserved(false);
-            }
+            }*/
         }
     }
 }
