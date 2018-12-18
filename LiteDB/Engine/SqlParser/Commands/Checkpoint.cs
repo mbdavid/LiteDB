@@ -15,7 +15,7 @@ namespace LiteDB.Engine
             var token = _tokenizer.ReadToken();
             var mode = CheckpointMode.Incremental;
 
-            if (token.Value.ToUpper() == "FULL")
+            if (token.Is("FULL"))
             {
                 mode = CheckpointMode.Full;
             }

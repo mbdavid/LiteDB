@@ -92,6 +92,7 @@ namespace LiteDB.Studio
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {
                 var task = tab.Tag as TaskData;
+                task.WaitHandle.Dispose();
                 task.Thread.Abort();
             }
 
@@ -201,7 +202,7 @@ namespace LiteDB.Studio
         {
             while(_running)
             {
-                task.WaitHandle.WaitOne();
+                task.WaitHandle.Wait();
 
                 if (task.Sql.Trim() == "")
                 {

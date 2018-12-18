@@ -53,7 +53,6 @@ namespace LiteDB.Engine
         /// </summary>
         public int DeleteMany(string collection, BsonExpression predicate)
         {
-            throw new NotImplementedException();/*
             if (collection.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(collection));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
@@ -87,12 +86,7 @@ namespace LiteDB.Engine
 
                     return this.Delete(collection, getIds());
                 }
-            });*/
-        }
-
-        private void Delete(Snapshot snapshot, IEnumerable<IndexNode> ids)
-        {
-
+            });
         }
     }
 }

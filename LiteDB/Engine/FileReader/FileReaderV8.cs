@@ -15,8 +15,6 @@ namespace LiteDB.Engine
         private LiteEngine _engine;
 
         public DateTime CreationTime { get; set; } = DateTime.Now;
-        public uint CommitCounter { get; set; } = 0;
-        public DateTime LastCommit { get; set; } = DateTime.MinValue;
         public int UserVersion { get; set; }
 
         public FileReaderV8(LiteEngine engine, HeaderPage header)

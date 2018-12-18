@@ -34,7 +34,7 @@ namespace LiteDB.Studio
         public bool IsParametersLoaded = false;
 
         public Thread Thread { get; set; }
-        public ManualResetEvent WaitHandle = new ManualResetEvent(false);
+        public ManualResetEventSlim WaitHandle = new ManualResetEventSlim(false);
 
         public void ReadResult(IBsonDataReader reader)
         {
