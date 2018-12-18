@@ -29,7 +29,7 @@ namespace LiteDB.Engine
             _locker = locker;
 
             // when writer queue flush some transaction, confirm in my transaction list (or add)
-            disk.Flush += (transactionID) =>
+            _disk.Flush += (transactionID) =>
             {
                 _transactions.AddOrUpdate(transactionID, true, (t, o) => true);
             };
@@ -183,7 +183,7 @@ namespace LiteDB.Engine
                 return 0;
             }
 
-            LOG($"checkpoint: {mode}", "WAL");
+            LOG($"{mode.ToString().ToLower()} checkpoint", "WAL");
 
             // for full/shutdown checkpoint need exclusive lock
             if (mode == CheckpointMode.Full || mode == CheckpointMode.Shutdown)
@@ -211,13 +211,20 @@ namespace LiteDB.Engine
                     {
                         buffer.Position = BasePage.GetPagePosition(page.PageID);
 
+                        var isConfirmed = page.IsConfirmed;
+                        var transactionID = page.TransactionID;
+
+                        // clean log-only data
+                        page.IsConfirmed = false;
+                        page.TransactionID = long.MaxValue;
+
                         yield return buffer;
 
                         // can remove from list when store in disk
-                        if (page.IsConfirmed)
+                        if (isConfirmed)
                         {
                             counter++;
-                            _transactions.TryRemove(page.TransactionID, out var d);
+                            _transactions.TryRemove(transactionID, out var d);
                         }
                     }
                 }

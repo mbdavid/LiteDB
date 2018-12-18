@@ -159,7 +159,7 @@ namespace LiteDB.Engine
                 count++;
             }
 
-            LOG($"flushing {count} pages on disk", "DISK");
+            LOG($"flushing {count} pages on log disk ({transactions.Count} transactions)", "DISK");
 
             // after this I will have 100% sure data are safe
             _stream.FlushToDisk();
@@ -169,6 +169,8 @@ namespace LiteDB.Engine
             {
                 _flushed?.Invoke(transactionID);
             }
+
+            if (_queue.Count > 0) this.ExecuteQueue();
         }
 
         public void Dispose()

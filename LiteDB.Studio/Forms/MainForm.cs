@@ -36,7 +36,11 @@ namespace LiteDB.Studio
 
             _codeCompletion = new SqlCodeCompletion(txtSql, imgCodeCompletion);
 
-            if (!string.IsNullOrWhiteSpace(filename))
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                this.Disconnect();
+            }
+            else
             {
                 this.Connect(new ConnectionString(filename));
             }
@@ -92,8 +96,8 @@ namespace LiteDB.Studio
             foreach (var tab in tabSql.TabPages.Cast<TabPage>().Where(x => x.Name != "+").ToArray())
             {
                 var task = tab.Tag as TaskData;
-                task.WaitHandle.Dispose();
-                task.Thread.Abort();
+                task.ThreadRunning = false;
+                task.WaitHandle.Set();
             }
 
             // clear all tabs and controls
@@ -154,7 +158,7 @@ namespace LiteDB.Studio
 
         private void ExecuteSql(string sql)
         {
-            if (this.ActiveTask.Running == false)
+            if (this.ActiveTask.Executing == false)
             {
                 this.ActiveTask.Sql = sql;
                 this.ActiveTask.WaitHandle.Set();
@@ -200,7 +204,7 @@ namespace LiteDB.Studio
 
         private void CreateThread(TaskData task)
         {
-            while(_running)
+            while (task.ThreadRunning)
             {
                 task.WaitHandle.Wait();
 
@@ -215,7 +219,7 @@ namespace LiteDB.Studio
 
                 try
                 {
-                    task.Running = true;
+                    task.Executing = true;
                     task.IsGridLoaded = task.IsTextLoaded = task.IsParametersLoaded = false;
 
                     _synchronizationContext.Post(new SendOrPostCallback(o =>
@@ -237,7 +241,7 @@ namespace LiteDB.Studio
 
                     task.Elapsed = sw.Elapsed;
                     task.Exception = null;
-                    task.Running = false;
+                    task.Executing = false;
 
                     // update form button selected
                     _synchronizationContext.Post(new SendOrPostCallback(o =>
@@ -253,7 +257,7 @@ namespace LiteDB.Studio
                 }
                 catch (Exception ex)
                 {
-                    task.Running = false;
+                    task.Executing = false;
                     task.Result = null;
                     task.Elapsed = sw.Elapsed;
                     task.Exception = ex;
@@ -274,13 +278,15 @@ namespace LiteDB.Studio
                 // put thread in wait mode
                 task.WaitHandle.Reset();
             }
+
+            task.WaitHandle.Dispose();
         }
 
         private void LoadResult(TaskData data)
         {
-            btnRun.Enabled = !data.Running;
+            btnRun.Enabled = !data.Executing;
 
-            if (data.Running)
+            if (data.Executing)
             {
                 grdResult.Clear();
                 txtResult.Clear();
@@ -551,7 +557,8 @@ namespace LiteDB.Studio
 
                 if (tab.Tag is TaskData task)
                 {
-                    task.Thread.Abort();
+                    task.ThreadRunning = false;
+                    task.WaitHandle.Set();
                     tabs.Remove(tab);
                 }
             }

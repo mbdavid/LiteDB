@@ -327,11 +327,11 @@ namespace LiteDB.Engine
             // remove from linked-list
             ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
 
-            // define page as empty
-            page.PageType = PageType.Empty;
-            page.IsDirty = true;
+            // update localPage to new Empty Page
+            _localPages[page.PageID] =
+                new BasePage(page.GetBuffer(false), page.PageID, PageType.Empty);
 
-            // there is no need update _localPages because page instance still same
+            page.IsDirty = true;
 
             _transPages.DeletedPages++;
         }
