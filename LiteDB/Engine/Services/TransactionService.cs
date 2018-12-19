@@ -103,10 +103,12 @@ namespace LiteDB.Engine
 
             if (_transPages.TransactionSize >= MAX_TRANSACTION_SIZE)
             {
+                LOG("safepoint flushing transaction pages", "TRANSACTION");
+
                 // if any snapshot are writable, persist pages
                 if (this.Mode == LockMode.Write)
                 {
-                    this.PersistDirtyPages(false, false);
+                    this.PersistDirtyPages(false);
                 }
 
                 // clear local pages in all snapshots (read/write snapshosts)
@@ -123,7 +125,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Persist all dirty in-memory pages (in all snapshots) and clear local pages (even clean pages)
         /// </summary>
-        private void PersistDirtyPages(bool includeCollectionPages, bool markLastAsConfirmed)
+        private void PersistDirtyPages(bool commit)
         {
             var dirty = 0;
 
@@ -135,7 +137,10 @@ namespace LiteDB.Engine
                 // update DirtyPagesLog inside transPage for all dirty pages was write on disk
                 var pages = _snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
-                    .SelectMany(x => x.GetWritablePages(true, includeCollectionPages));
+                    .SelectMany(x => x.GetWritablePages(true, commit));
+
+                // mark last dirty page as confirmed only if there is no header change in commit
+                var markLastAsConfirmed = commit && _transPages.HeaderChanged == false;
 
                 foreach (var page in pages.IsLast())
                 {
@@ -157,19 +162,77 @@ namespace LiteDB.Engine
 
                     _transPages.DirtyPages[page.Item.PageID] = new PagePosition(page.Item.PageID, buffer.Position);
                 }
+
+                // in commit with header page change, last page will be header
+                if (commit && _transPages.HeaderChanged)
+                {
+                    // lock header page to avoid concurrency when writing on header
+                    lock (_header)
+                    {
+                        var newEmptyPageID = _header.FreeEmptyPageID;
+
+                        // if has deleted pages in this transaction, fix FreeEmptyPageID
+                        if (_transPages.DeletedPages > 0)
+                        {
+                            // now, my free list will starts with first page ID
+                            newEmptyPageID = _transPages.FirstDeletedPageID;
+
+                            // if free empty list was not empty, let's fix my last page
+                            if (_header.FreeEmptyPageID != uint.MaxValue)
+                            {
+                                var empty = _reader.NewPage();
+
+                                var lastDeletedPage = new BasePage(empty, _transPages.LastDeletedPageID, PageType.Empty)
+                                {
+                                    // update nextPageID of last deleted page to old first page ID
+                                    NextPageID = _header.FreeEmptyPageID,
+                                    TransactionID = _transactionID
+                                };
+
+                                // this page will write twice on wal, but no problem, only this last version will be saved on data file
+                                yield return lastDeletedPage.GetBuffer(true);
+
+                                // release page just after write on disk
+                                empty.Release();
+                            }
+                        }
+
+                        // update this confirm page with current transactionID
+                        _header.FreeEmptyPageID = newEmptyPageID;
+                        _header.TransactionID = _transactionID;
+
+                        // this header page will be marked as confirmed page in log file
+                        _header.IsConfirmed = true;
+
+                        // invoke all header callbacks (new/drop collections)
+                        _transPages.OnCommit(_header);
+
+                        // clone header page
+                        var buffer = _header.GetBuffer(true);
+                        var clone = _reader.NewPage();
+
+                        // mem copy from current header to new header clone
+                        Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
+
+                        // persist header in log file
+                        yield return clone;
+
+                        // release page just after write on disk
+                        clone.Release();
+                    }
+                }
+
             };
 
             // write all dirty pages, in sequence on log-file and store references into log pages on transPages
             // (works only for Write snapshots)
             _disk.WriteAsync(source());
 
-            LOG($"writing dirty pages ({dirty})", "TRANSACTION");
-
             // now, discard all clean pages (because those pages are writable and must be readable)
             // from write snapshots
             _disk.DiscardPages(_snapshots.Values
                     .Where(x => x.Mode == LockMode.Write)
-                    .SelectMany(x => x.GetWritablePages(false, includeCollectionPages))
+                    .SelectMany(x => x.GetWritablePages(false, commit))
                     .Select(x => x.GetBuffer(false)), false);
         }
 
@@ -184,87 +247,11 @@ namespace LiteDB.Engine
             {
                 if (this.Mode == LockMode.Write)
                 {
-                    // persist all pages into log file (mark last page as confirmed if has no header change)
-                    // also, release all data/index pages
-                    this.PersistDirtyPages(true, _transPages.HeaderChanged == false);
+                    // persist all dirty page as commit mode (mark last page as IsConfirm)
+                    this.PersistDirtyPages(true);
 
-                    // if header was changed, be last page to persist (and mark as confirm)
-                    if (_transPages.HeaderChanged)
-                    {
-                        // lock header page to avoid concurrency when writing on header
-                        lock (_header)
-                        {
-                            var newEmptyPageID = _header.FreeEmptyPageID;
-
-                            // if has deleted pages in this transaction, fix FreeEmptyPageID
-                            if (_transPages.DeletedPages > 0)
-                            {
-                                // now, my free list will starts with first page ID
-                                newEmptyPageID = _transPages.FirstDeletedPageID;
-
-                                // if free empty list was not empty, let's fix my last page
-                                if (_header.FreeEmptyPageID != uint.MaxValue)
-                                {
-                                    var empty = _reader.NewPage();
-
-                                    var lastDeletedPage = new BasePage(empty, _transPages.LastDeletedPageID, PageType.Empty)
-                                    {
-                                        // update nextPageID of last deleted page to old first page ID
-                                        NextPageID = _header.FreeEmptyPageID,
-                                        TransactionID = _transactionID
-                                    };
-
-                                    // this page will write twice on wal, but no problem, only this last version will be saved on data file
-                                    _disk.WriteAsync(new [] { lastDeletedPage.GetBuffer(true) });
-
-                                    // release page just after write on disk
-                                    empty.Release();
-                                }
-                            }
-
-                            // create a header save point before any change
-                            _header.Savepoint();
-
-                            try
-                            {
-                                // update this confirm page with current transactionID
-                                _header.FreeEmptyPageID = newEmptyPageID;
-                                _header.TransactionID = _transactionID;
-
-                                // this header page will be marked as confirmed page in log file
-                                _header.IsConfirmed = true;
-
-                                // invoke all header callbacks (new/drop collections)
-                                _transPages.OnCommit(_header);
-
-                                // clone header page
-                                var buffer = _header.GetBuffer(true);
-                                var clone = _reader.NewPage();
-
-                                Buffer.BlockCopy(buffer.Array, buffer.Offset, clone.Array, clone.Offset, clone.Count);
-
-                                // persist header in log file
-                                _disk.WriteAsync(new[] { clone });
-
-                                // release page just after write on disk
-                                clone.Release();
-                            }
-                            catch
-                            {
-                                // must revert all header content if any error occurs during header change
-                                _header.RestoreSavepoint();
-                                throw;
-                            }
-
-                            // and update wal-index (before release _header lock)
-                            _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
-                        }
-                    }
-                    else if (_transPages.DirtyPages.Count > 0)
-                    {
-                        // update wal-index 
-                        _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
-                    }
+                    // update wal-index 
+                    _walIndex.ConfirmTransaction(_transactionID, _transPages.DirtyPages.Values);
                 }
 
                 // dispose all snapshosts

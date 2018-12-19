@@ -170,6 +170,7 @@ namespace LiteDB.Engine
                 _flushed?.Invoke(transactionID);
             }
 
+            // when done, if has more pages in queue, run again
             if (_queue.Count > 0) this.ExecuteQueue();
         }
 
