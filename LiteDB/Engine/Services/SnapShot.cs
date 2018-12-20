@@ -328,10 +328,11 @@ namespace LiteDB.Engine
             ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
 
             // update localPage to new Empty Page
-            _localPages[page.PageID] =
-                new BasePage(page.GetBuffer(false), page.PageID, PageType.Empty);
+            page = new BasePage(page.GetBuffer(false), page.PageID, PageType.Empty);
 
             page.IsDirty = true;
+
+            _localPages[page.PageID] = page;
 
             _transPages.DeletedPages++;
         }
