@@ -18,10 +18,10 @@ namespace LiteDB.Demo
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("LITE DB v5");
+            Console.WriteLine("LITE DB v5-VF");
             Console.WriteLine("===========================================================");
 
-            for (var i = 1; i <= 1; i++)
+            for (var i = 1; i <= 3; i++)
             {
                 var sw = new Stopwatch();
 
@@ -29,7 +29,7 @@ namespace LiteDB.Demo
                 //TestAesEncryption.CreateEncryptedFile(sw);
                 //TestAesEncryption.ReadEncryptedFile(sw);
                 //TestDataPage.Run(sw);
-                TestDeleteEngine.Run(sw);
+                TestScript.Run(sw);
 
                 Console.WriteLine($">>> ({i}) - Elapsed: [[[ {sw.ElapsedMilliseconds} ]]]");
 

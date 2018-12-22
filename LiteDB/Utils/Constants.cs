@@ -79,7 +79,7 @@ namespace LiteDB
         /// <summary>
         /// Minimum pages not in use to remove pages from _readable/_writable list to _free list
         /// </summary>
-        public const int MINIMUM_CACHE_REUSE = 10000; // 10000 (default) - 1000 (for tests)
+        public const int MINIMUM_CACHE_REUSE = 1000; // 10000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Database header parameter: USERVERSION

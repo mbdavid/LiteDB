@@ -311,7 +311,9 @@ namespace LiteDB.Engine
         {
             var factory = origin == FileOrigin.Log ? _logFactory : _dataFactory;
 
-            if (this.GetLength(origin) > 0 || factory.Exists() == false) return false;
+            if (factory.Exists() == false) return false;
+
+            ENSURE(this.GetLength(origin) == 0, "file should be 0 length before delete");
 
             this.Dispose();
 
