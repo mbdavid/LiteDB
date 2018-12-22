@@ -64,6 +64,12 @@ namespace LiteDB.Engine
 
             // read collection (create if new - load virtual too)
             srv.Get(_collectionName, addIfNotExists, ref _collectionPage);
+
+            // clear local pages (will clear _collectionPage link reference)
+            if (_collectionPage != null)
+            {
+                _localPages.Remove(_collectionPage.PageID);
+            }
         }
 
         /// <summary>
@@ -142,15 +148,11 @@ namespace LiteDB.Engine
             // if page is not in local cache, get from disk (log/wal/data)
             page = this.ReadPage<T>(pageID);
 
-            // store now in local cache (except collection page)
-            if (page.PageType != PageType.Collection)
-            {
-                // add into local pages
-                _localPages[pageID] = page;
+            // add into local pages
+            _localPages[pageID] = page;
 
-                // increment transaction size counter
-                _transPages.TransactionSize++;
-            }
+            // increment transaction size counter
+            _transPages.TransactionSize++;
 
             return (T)page;
         }

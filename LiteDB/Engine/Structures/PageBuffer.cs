@@ -74,7 +74,7 @@ namespace LiteDB.Engine
             var pageID = this.ReadUInt32(0);
             var pageType = this[4];
 
-            return $"ID: {this.UniqueID} - Position: {p}/{this.Origin} - Shared: {s} - ({base.ToString()}) :: Content: [{pageID}/{pageType}]";
+            return $"ID: {this.UniqueID} - Position: {p}/{this.Origin} - Shared: {s} - ({base.ToString()}) :: Content: [{pageID.ToString("0:0000")}/{(PageType)pageType}]";
         }
     }
 }

@@ -22,7 +22,6 @@ namespace LiteDB.Studio
 
         private LiteDatabase _db = null;
         private ConnectionString _connectionString = null;
-        private bool _running = true;
         private SqlCodeCompletion _codeCompletion;
 
         public MainForm(string filename)
@@ -47,6 +46,8 @@ namespace LiteDB.Studio
 
             txtSql.ActiveTextAreaControl.TextArea.Caret.PositionChanged += (s, e) =>
             {
+                if (this.ActiveTask == null) return;
+
                 this.ActiveTask.EditorContent = txtSql.Text;
                 this.ActiveTask.SelectedTab = tabResult.SelectedTab.Name;
                 this.ActiveTask.Position = new Tuple<int, int>(txtSql.ActiveTextAreaControl.TextArea.Caret.Line, txtSql.ActiveTextAreaControl.TextArea.Caret.Column);
@@ -69,7 +70,6 @@ namespace LiteDB.Studio
 
             _codeCompletion.UpdateCodeCompletion(_db);
 
-            _running = true;
             btnConnect.Text = "Disconnect";
 
             this.UIState(true);
@@ -84,11 +84,6 @@ namespace LiteDB.Studio
 
         private void Disconnect()
         {
-            _db?.Dispose();
-            _db = null;
-
-            _running = false;
-
             btnConnect.Text = "Connect";
 
             this.UIState(false);
@@ -110,6 +105,9 @@ namespace LiteDB.Studio
 
             tvwDatabase.Nodes.Clear();
             tvwDatabase.Focus();
+
+            _db?.Dispose();
+            _db = null;
         }
 
         private void UIState(bool enabled)
@@ -127,7 +125,7 @@ namespace LiteDB.Studio
             btnCheckpoint.Enabled = enabled;
         }
 
-        private TaskData ActiveTask => tabSql.SelectedTab.Tag as TaskData;
+        private TaskData ActiveTask => tabSql.SelectedTab?.Tag as TaskData;
 
         private void AddNewTab(string content)
         {
@@ -158,7 +156,7 @@ namespace LiteDB.Studio
 
         private void ExecuteSql(string sql)
         {
-            if (this.ActiveTask.Executing == false)
+            if (this.ActiveTask?.Executing == false)
             {
                 this.ActiveTask.Sql = sql;
                 this.ActiveTask.WaitHandle.Set();
@@ -231,7 +229,7 @@ namespace LiteDB.Studio
 
                     var sql = new StringReader(task.Sql.Trim());
 
-                    while(sql.Peek() >= 0)
+                    while(sql.Peek() >= 0 && _db != null)
                     {
                         using (var reader = _db.Execute(sql, task.Parameters))
                         {
@@ -248,7 +246,7 @@ namespace LiteDB.Studio
                     {
                         var t = o as TaskData;
 
-                        if (this.ActiveTask.Id == t.Id)
+                        if (this.ActiveTask?.Id == t.Id)
                         {
                             this.LoadResult(o as TaskData);
                         }
@@ -266,7 +264,7 @@ namespace LiteDB.Studio
                     {
                         var t = o as TaskData;
 
-                        if (this.ActiveTask.Id == t.Id)
+                        if (this.ActiveTask?.Id == t.Id)
                         {
                             tabResult.SelectedTab = tabText;
                             this.LoadResult(o as TaskData);
@@ -284,6 +282,8 @@ namespace LiteDB.Studio
 
         private void LoadResult(TaskData data)
         {
+            if (data == null) return;
+
             btnRun.Enabled = !data.Executing;
 
             if (data.Executing)
