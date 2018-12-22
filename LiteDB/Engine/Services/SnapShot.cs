@@ -310,6 +310,9 @@ namespace LiteDB.Engine
         /// </summary>
         public void DeletePage(BasePage page)
         {
+            // remove from linked-list
+            ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
+
             // if first page in sequence
             if (_transPages.FirstDeletedPageID == uint.MaxValue)
             {
@@ -325,9 +328,6 @@ namespace LiteDB.Engine
                 // and then, set this current deleted page as first page making a linked list
                 _transPages.FirstDeletedPageID = page.PageID;
             }
-
-            // remove from linked-list
-            ENSURE(page.PrevPageID == uint.MaxValue && page.NextPageID == uint.MaxValue, "before delete a page, no linked list with any another page");
 
             // update localPage to new Empty Page
             page = new BasePage(page.GetBuffer(false), page.PageID, PageType.Empty);

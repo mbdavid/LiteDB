@@ -188,9 +188,9 @@ namespace LiteDB
             Buffer.BlockCopy(value, 0, buffer.Array, buffer.Offset + offset, value.Length);
         }
 
-        public static void Write(this BufferSlice buffer, string value, int offset, int count)
+        public static void Write(this BufferSlice buffer, string value, int offset)
         {
-            Encoding.UTF8.GetBytes(value, 0, count, buffer.Array, buffer.Offset + offset);
+            Encoding.UTF8.GetBytes(value, 0, value.Length, buffer.Array, buffer.Offset + offset);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace LiteDB
                     var str = (string)value.RawValue;
                     var strLength = (byte)Encoding.UTF8.GetByteCount(str);
                     buffer[offset++] = strLength;
-                    buffer.Write(str, offset, strLength);
+                    buffer.Write(str, offset);
                     break;
 
                 case BsonType.Document:

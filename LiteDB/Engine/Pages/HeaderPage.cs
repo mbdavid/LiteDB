@@ -90,7 +90,7 @@ namespace LiteDB.Engine
             this.UserVersion = 0;
 
             // writing direct into buffer in Ctor() because there is no change later (write once)
-            _buffer.Write(HEADER_INFO, P_HEADER_INFO, HEADER_INFO.Length);
+            _buffer.Write(HEADER_INFO, P_HEADER_INFO);
             _buffer[P_FILE_VERSION] = FILE_VERSION;
 
             _buffer.Write(this.CreationTime, P_CREATION_TIME);
