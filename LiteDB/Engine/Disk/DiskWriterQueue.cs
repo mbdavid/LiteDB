@@ -33,9 +33,9 @@ namespace LiteDB.Engine
         /// <summary>
         /// Callback function to notify that some transaction already saved in disk
         /// </summary>
-        private readonly Action<long> _flushed;
+        private readonly Action<uint> _flushed;
 
-        public DiskWriterQueue(Stream stream, AesEncryption aes, Action<long> flushed)
+        public DiskWriterQueue(Stream stream, AesEncryption aes, Action<uint> flushed)
         {
             _stream = stream;
             _aes = aes;
@@ -127,7 +127,7 @@ namespace LiteDB.Engine
         {
             if (_queue.Count == 0) return;
 
-            var transactions = new List<long>();
+            var transactions = new List<uint>();
             var count = 0;
 
             while (_queue.TryDequeue(out var page))
@@ -150,7 +150,7 @@ namespace LiteDB.Engine
                 // when writing in log file a confirmed page, trigger event
                 if (page.Origin == FileOrigin.Log && page[BasePage.P_IS_CONFIRMED] == 1)
                 {
-                    transactions.Add(page.ReadInt64(BasePage.P_TRANSACTION_ID));
+                    transactions.Add(page.ReadUInt32(BasePage.P_TRANSACTION_ID));
                 }
 
                 // release this page to be re-used

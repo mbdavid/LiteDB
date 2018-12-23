@@ -34,7 +34,7 @@ namespace LiteDB.Engine
         {
             var segment = base.Get(index);
 
-            return new DataBlock(this, segment);
+            return new DataBlock(this, index, segment);
         }
 
         /// <summary>
@@ -42,9 +42,10 @@ namespace LiteDB.Engine
         /// </summary>
         public DataBlock InsertBlock(int bytesLength, byte dataIndex)
         {
-            var segment = base.Insert(bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE);
+            var index = base.GetFreeIndex();
+            var segment = base.Insert(index, bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
-            return new DataBlock(this, segment, dataIndex, PageAddress.Empty);
+            return new DataBlock(this, index, segment, dataIndex, PageAddress.Empty);
         }
 
         /// <summary>
@@ -54,17 +55,15 @@ namespace LiteDB.Engine
         {
             var segment = base.Update(currentBlock.Position.Index, bytesLength + DataBlock.DATA_BLOCK_FIXED_SIZE);
 
-            return new DataBlock(this, segment, currentBlock.DataIndex, currentBlock.NextBlock);
+            return new DataBlock(this, currentBlock.Position.Index, segment, currentBlock.DataIndex, currentBlock.NextBlock);
         }
 
         /// <summary>
         /// Delete single data block inside this page
         /// </summary>
-        public DataBlock DeleteBlock(byte index)
+        public void DeleteBlock(byte index)
         {
-            var segment = base.Delete(index);
-
-            return new DataBlock(this, segment);
+            base.Delete(index);
         }
 
         /// <summary>
@@ -74,9 +73,10 @@ namespace LiteDB.Engine
         {
             foreach(var index in base.GetIndexes())
             {
-                var slot = PAGE_SIZE - index - 1;
-                var block = _buffer[slot];
-                var dataIndex = _buffer[(block * PAGE_BLOCK_SIZE) + 1];
+                var slotPosition = BasePage.CalcPositionAddr(index);
+                var position = _buffer.ReadUInt16(slotPosition);
+
+                var dataIndex = _buffer[position + DataBlock.P_DATA_INDEX];
 
                 if (onlyRootBlock == false || dataIndex == 0)
                 {

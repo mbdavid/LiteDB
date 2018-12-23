@@ -18,7 +18,7 @@ namespace LiteDB.Engine
         private readonly DiskService _disk;
         private readonly LockService _locker;
 
-        private readonly ConcurrentDictionary<long, bool> _transactions = new ConcurrentDictionary<long, bool>();
+        private readonly ConcurrentDictionary<uint, bool> _transactions = new ConcurrentDictionary<uint, bool>();
         private readonly ConcurrentDictionary<uint, List<KeyValuePair<int, long>>> _index = new ConcurrentDictionary<uint, List<KeyValuePair<int, long>>>();
 
         private int _currentReadVersion = 0;
@@ -79,7 +79,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Add transactionID in confirmed list and update WAL index with all pages positions
         /// </summary>
-        public void ConfirmTransaction(long transactionID, ICollection<PagePosition> pagePositions)
+        public void ConfirmTransaction(uint transactionID, ICollection<PagePosition> pagePositions)
         {
             // if this transaction was no persisted yet (by async writer) create as not persisted yet
             _transactions.TryAdd(transactionID, false);
@@ -155,6 +155,7 @@ namespace LiteDB.Engine
                         header = new HeaderPage(headerBuffer);
                         header.TransactionID = 0;
                         header.IsConfirmed = false;
+                        header.LastTransactionID = (int)page.TransactionID;
                     }
 
                     // mark transaction as persisted
@@ -199,7 +200,7 @@ namespace LiteDB.Engine
             }
 
             // get only flushed transactions (need run before starts)
-            var confirmTransactions = new HashSet<long>(_transactions.Where(x => x.Value).Select(x => x.Key));
+            var confirmTransactions = new HashSet<uint>(_transactions.Where(x => x.Value).Select(x => x.Key));
 
             IEnumerable<PageBuffer> source()
             {
@@ -216,7 +217,7 @@ namespace LiteDB.Engine
 
                         // clean log-only data
                         page.IsConfirmed = false;
-                        page.TransactionID = long.MaxValue;
+                        page.TransactionID = uint.MaxValue;
 
                         yield return buffer;
 

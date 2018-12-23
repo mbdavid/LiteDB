@@ -24,20 +24,20 @@ namespace LiteDB.Engine
         // transaction controls
         private readonly Dictionary<string, Snapshot> _snapshots = new Dictionary<string, Snapshot>(StringComparer.OrdinalIgnoreCase);
         private readonly TransactionPages _transPages = new TransactionPages();
-        private readonly Action<long> _done;
+        private readonly Action<uint> _done;
         private bool _shutdown = false;
 
         // transaction info
         private readonly int _threadID = Thread.CurrentThread.ManagedThreadId;
-        private readonly long _transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
+        private readonly uint _transactionID;
         private TransactionState _state = TransactionState.New;
 
         // expose
         public int ThreadID => _threadID;
-        public long TransactionID => _transactionID;
+        public uint TransactionID => _transactionID;
         public TransactionState State => _state;
 
-        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<long> done)
+        public TransactionService(HeaderPage header, LockService locker, DiskService disk, WalIndexService walIndex, Action<uint> done)
         {
             // retain instances
             _header = header;
@@ -45,6 +45,9 @@ namespace LiteDB.Engine
             _disk = disk;
             _walIndex = walIndex;
             _done = done;
+
+            // create new transactionID
+            _transactionID = (uint)Interlocked.Increment(ref _header.LastTransactionID);
 
             _reader = _disk.GetReader();
 
@@ -311,7 +314,8 @@ namespace LiteDB.Engine
         private void ReturnNewPages()
         {
             // create new transaction ID
-            var transactionID = System.Diagnostics.Stopwatch.GetTimestamp();
+            var transactionID = (uint)Interlocked.Increment(ref _header.LastTransactionID);
+
 
             // now lock header to update FreePageList
             lock (_header)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiteDB.Engine;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -17,19 +18,9 @@ namespace LiteDB
         public const int PAGE_SIZE = 8192;
 
         /// <summary>
-        /// Header page size (only 1 page block - 32 bytes)
+        /// Header page size
         /// </summary>
         public const int PAGE_HEADER_SIZE = 32;
-
-        /// <summary>
-        /// Page are build over 256 page blocks of 32 bytes each
-        /// </summary>
-        public const int PAGE_BLOCK_SIZE = 32;
-
-        /// <summary>
-        /// Bytes available to store data removing page header size - 8160 bytes (255 page blocks)
-        /// </summary>
-        public const int PAGE_AVAILABLE_BLOCKS = (PAGE_SIZE - PAGE_HEADER_SIZE) / PAGE_BLOCK_SIZE;
 
         /// <summary>
         /// Bytes used in encryption salt
@@ -62,9 +53,9 @@ namespace LiteDB
         public const int MAX_INDEX_KEY_LENGTH = 255;
 
         /// <summary>
-        /// Document limit size - must use 250 pages (+2 begin/end non-full page blocks) = 2MiB
+        /// Document limit size - must use max 250 pages [1 byte] => 250 * 8149 = ~2MiB
         /// </summary>
-        public const int MAX_DOCUMENT_SIZE = 250 * (250 * PAGE_BLOCK_SIZE);
+        public const int MAX_DOCUMENT_SIZE = 250 * (DataService.MAX_DATA_BYTES_PER_PAGE);
 
         /// <summary>
         /// Max pages in a transaction before persist on disk and clear transaction local pages
@@ -79,7 +70,7 @@ namespace LiteDB
         /// <summary>
         /// Minimum pages not in use to remove pages from _readable/_writable list to _free list
         /// </summary>
-        public const int MINIMUM_CACHE_REUSE = 1000; // 10000 (default) - 1000 (for tests)
+        public const int MINIMUM_CACHE_REUSE = 10000; // 10000 (default) - 1000 (for tests)
 
         /// <summary>
         /// Database header parameter: USERVERSION

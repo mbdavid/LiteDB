@@ -16,6 +16,11 @@ namespace LiteDB
             return BitConverter.ToInt16(buffer.Array, buffer.Offset + offset);
         }
 
+        public static UInt16 ReadUInt16(this BufferSlice buffer, int offset)
+        {
+            return BitConverter.ToUInt16(buffer.Array, buffer.Offset + offset);
+        }
+
         public static Int32 ReadInt32(this BufferSlice buffer, int offset)
         {
             return BitConverter.ToInt32(buffer.Array, buffer.Offset + offset);
@@ -132,6 +137,16 @@ namespace LiteDB
         #endregion
 
         #region Write Extensions
+
+        public static void Write(this BufferSlice buffer, Int16 value, int offset)
+        {
+            value.ToBytes(buffer.Array, buffer.Offset + offset);
+        }
+
+        public static void Write(this BufferSlice buffer, UInt16 value, int offset)
+        {
+            value.ToBytes(buffer.Array, buffer.Offset + offset);
+        }
 
         public static void Write(this BufferSlice buffer, Int32 value, int offset)
         {

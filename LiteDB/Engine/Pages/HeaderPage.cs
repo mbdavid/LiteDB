@@ -32,7 +32,7 @@ namespace LiteDB.Engine
         private const int P_USER_VERSION = 84; // 84-87
         // reserved 87-95 (9 bytes)
         private const int P_COLLECTIONS = 96; // 96-8128
-        private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS; // 8096
+        private const int P_COLLECTIONS_COUNT = PAGE_SIZE - P_COLLECTIONS - 1; // 8095 [-1 for CRC]
 
         #endregion
 
@@ -60,6 +60,11 @@ namespace LiteDB.Engine
         /// UserVersion int - for user get/set database version changes
         /// </summary>
         public int UserVersion { get; set; }
+
+        /// <summary>
+        /// Global last used transaction ID (should be int to use in Interlocked.Increment)
+        /// </summary>
+        public int LastTransactionID = 0;
 
         /// <summary>
         /// All collections names/link ponter are stored inside this document

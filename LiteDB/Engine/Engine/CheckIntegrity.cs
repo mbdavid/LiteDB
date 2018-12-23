@@ -108,7 +108,7 @@ namespace LiteDB.Engine
                 {
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
 
-                    for (var slot = 0; slot < 5; slot++)
+                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
                     {
                         var next = type == PageType.Data ?
                             snapshot.CollectionPage.FreeDataPageID[slot] :
@@ -147,7 +147,7 @@ namespace LiteDB.Engine
                 {
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
 
-                    for (var slot = 0; slot < 5; slot++)
+                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
                     {
                         var next = snapshot.CollectionPage.FreeIndexPageID[slot];
 
@@ -227,7 +227,7 @@ namespace LiteDB.Engine
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
                     var data = new DataService(snapshot);
 
-                    for (var slot = 0; slot < 5; slot++)
+                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
                     {
                         var next = snapshot.CollectionPage.FreeDataPageID[slot];
 
@@ -267,7 +267,7 @@ namespace LiteDB.Engine
                     var snapshot = transaction.CreateSnapshot(LockMode.Read, col.Key, false);
                     var data = new DataService(snapshot);
 
-                    for (var slot = 0; slot < 5; slot++)
+                    for (var slot = 0; slot < CollectionPage.PAGE_FREE_LIST_SLOTS; slot++)
                     {
                         var next = snapshot.CollectionPage.FreeDataPageID[slot];
 

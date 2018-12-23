@@ -41,7 +41,7 @@ namespace LiteDB.Engine
 
             var segment = base.Get(index);
 
-            node = new IndexNode(this, segment);
+            node = new IndexNode(this, index, segment);
 
             _cache.Add(index, node);
 
@@ -53,11 +53,12 @@ namespace LiteDB.Engine
         /// </summary>
         public IndexNode InsertNode(byte level, BsonValue key, PageAddress dataBlock, int bytesLength)
         {
-            var segment = base.Insert(bytesLength);
+            var index = base.GetFreeIndex();
+            var segment = base.Insert(index, bytesLength);
 
-            var node = new IndexNode(this, segment, level, key, dataBlock);
+            var node = new IndexNode(this, index, segment, level, key, dataBlock);
 
-            _cache.Add(segment.Index, node);
+            _cache.Add(index, node);
 
             return node;
         }

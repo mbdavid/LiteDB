@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Represents a page address inside a page structure - index could be byte offset position OR index in a list (5 bytes)
+    /// Represents a page address inside a page structure - index could be byte offset position OR index in a list (6 bytes)
     /// </summary>
     [DebuggerStepThrough]
     internal struct PageAddress
@@ -65,7 +65,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return this.IsEmpty ? "(empty)" : this.PageID.ToString().PadLeft(4, '0') + ":" + this.Index.ToString();
+            return this.IsEmpty ? "(empty)" : this.PageID.ToString().PadLeft(4, '0') + ":" + this.Index.ToString().PadLeft(2, '0');
         }
     }
 }

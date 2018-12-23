@@ -10,22 +10,27 @@ namespace LiteDB.Engine
 {
     internal class CollectionPage : BasePage
     {
+        /// <summary>
+        /// Get how many slots collection pages will have for free list page (data/index)
+        /// </summary>
+        public const int PAGE_FREE_LIST_SLOTS = 6;
+
         #region Buffer Field Positions
 
         private const int P_INDEXES = 96; // 96-8192
-        private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES; // 8096
+        private const int P_INDEXES_COUNT = PAGE_SIZE - P_INDEXES - 1; // 8095 [1 for CRC]
 
         #endregion
 
         /// <summary>
-        /// Free data page linked-list (5 lists for different range of FreeBlocks)
+        /// Free data page linked-list (N lists for different range of FreeBlocks)
         /// </summary>
-        public uint[] FreeDataPageID = new uint[5];
+        public uint[] FreeDataPageID = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
-        /// Free index page linked-list (5 lists for different range of FreeBlocks)
+        /// Free index page linked-list (N lists for different range of FreeBlocks)
         /// </summary>
-        public uint[] FreeIndexPageID = new uint[5];
+        public uint[] FreeIndexPageID = new uint[PAGE_FREE_LIST_SLOTS];
 
         /// <summary>
         /// DateTime when collection was created
@@ -54,7 +59,7 @@ namespace LiteDB.Engine
             this.CreationTime = DateTime.Now;
             this.LastAnalyzed = DateTime.MinValue;
 
-            for(var i = 0; i < 5; i++)
+            for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
             {
                 this.FreeDataPageID[i] = uint.MaxValue;
                 this.FreeIndexPageID[i] = uint.MaxValue;
@@ -71,19 +76,12 @@ namespace LiteDB.Engine
 
             using (var r = new BufferReader(new[] { area }, false))
             {
-                // read 5 position of FreeDataPage (20 bytes)
-                this.FreeDataPageID[0] = r.ReadUInt32();
-                this.FreeDataPageID[1] = r.ReadUInt32();
-                this.FreeDataPageID[2] = r.ReadUInt32();
-                this.FreeDataPageID[3] = r.ReadUInt32();
-                this.FreeDataPageID[4] = r.ReadUInt32();
-
-                // read 5 position of FreeIndexPage (20 bytes)
-                this.FreeIndexPageID[0] = r.ReadUInt32();
-                this.FreeIndexPageID[1] = r.ReadUInt32();
-                this.FreeIndexPageID[2] = r.ReadUInt32();
-                this.FreeIndexPageID[3] = r.ReadUInt32();
-                this.FreeIndexPageID[4] = r.ReadUInt32();
+                // read position for FreeDataPage and FreeIndexPage
+                for(var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
+                {
+                    this.FreeDataPageID[i] = r.ReadUInt32();
+                    this.FreeIndexPageID[i] = r.ReadUInt32();
+                }
 
                 // read create/last analyzed (16 bytes)
                 this.CreationTime = r.ReadDateTime();
@@ -119,19 +117,12 @@ namespace LiteDB.Engine
 
             using (var w = new BufferWriter(area))
             {
-                // write 5 position of FreeDataPage (20 bytes)
-                w.Write(this.FreeDataPageID[0]);
-                w.Write(this.FreeDataPageID[1]);
-                w.Write(this.FreeDataPageID[2]);
-                w.Write(this.FreeDataPageID[3]);
-                w.Write(this.FreeDataPageID[4]);
-
-                // write 5 position of FreeIndexPage (20 bytes)
-                w.Write(this.FreeIndexPageID[0]);
-                w.Write(this.FreeIndexPageID[1]);
-                w.Write(this.FreeIndexPageID[2]);
-                w.Write(this.FreeIndexPageID[3]);
-                w.Write(this.FreeIndexPageID[4]);
+                // read position for FreeDataPage and FreeIndexPage
+                for (var i = 0; i < PAGE_FREE_LIST_SLOTS; i++)
+                {
+                    w.Write(this.FreeDataPageID[i]);
+                    w.Write(this.FreeIndexPageID[i]);
+                }
 
                 // write creation/last analyzed (16 bytes)
                 w.Write(this.CreationTime);

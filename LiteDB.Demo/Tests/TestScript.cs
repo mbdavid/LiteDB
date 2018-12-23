@@ -73,6 +73,7 @@ limit 150000;";
 
             using (var db = new LiteDatabase(connection))
             {
+
                 using (var r = new StringReader(SQL))
                 {
                     while(r.Peek() >= 0)

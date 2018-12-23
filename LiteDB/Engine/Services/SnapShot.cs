@@ -19,7 +19,7 @@ namespace LiteDB.Engine
         private readonly WalIndexService _walIndex;
 
         // instances from transaction
-        private readonly long _transactionID;
+        private readonly uint _transactionID;
         private readonly TransactionPages _transPages;
 
         // snapshot controls
@@ -36,7 +36,7 @@ namespace LiteDB.Engine
         public string CollectionName => _collectionName;
         public CollectionPage CollectionPage => _collectionPage;
 
-        public Snapshot(LockMode mode, string collectionName, HeaderPage header, long transactionID, TransactionPages transPages, LockService locker, WalIndexService walIndex, DiskReader reader, bool addIfNotExists)
+        public Snapshot(LockMode mode, string collectionName, HeaderPage header, uint transactionID, TransactionPages transPages, LockService locker, WalIndexService walIndex, DiskReader reader, bool addIfNotExists)
         {
             _mode = mode;
             _collectionName = collectionName;
@@ -346,8 +346,7 @@ namespace LiteDB.Engine
         public T GetFreePage<T>(int bytesLength)
             where T : BasePage
         {
-            // get length in blocks (include + 1 byte for segment length)
-            var length = PageSegment.GetLength(bytesLength); // length in blocks (add inside method +1 byte)
+            var length = bytesLength + PageSlot.SIZE; // add +4 bytes for footer slot
 
             // select if I will get from free index list or data list
             var freeLists = typeof(T) == typeof(IndexPage) ?
@@ -367,7 +366,7 @@ namespace LiteDB.Engine
 
                 var page = this.GetPage<T>(freePageID);
 
-                var newSlot = BasePage.FreeIndexSlot((byte)(page.FreeBlocks - length));
+                var newSlot = BasePage.FreeIndexSlot(page.FreeBytes - length);
 
                 // if slots will change, fix now
                 if (currentSlot != newSlot)
@@ -376,7 +375,7 @@ namespace LiteDB.Engine
                     this.AddFreeList<T>(page, ref freeLists[newSlot]);
                 }
 
-                ENSURE(page.FreeBlocks >= length, "ensure selected page has space enougth for this content");
+                ENSURE(page.FreeBytes >= length, "ensure selected page has space enougth for this content");
 
                 // mark page page as dirty
                 page.IsDirty = true;
@@ -388,7 +387,7 @@ namespace LiteDB.Engine
             var newPage = this.NewPage<T>();
 
             // get slot based on how many blocks page will have after use
-            var slot = BasePage.FreeIndexSlot((byte)(newPage.FreeBlocks - length));
+            var slot = BasePage.FreeIndexSlot(newPage.FreeBytes - length - PageSlot.SIZE);
 
             // and add into free-list
             this.AddFreeList<T>(newPage, ref freeLists[slot]);
@@ -404,7 +403,7 @@ namespace LiteDB.Engine
         {
             ENSURE(page.PageType == PageType.Index || page.PageType == PageType.Data, "only index/data page contains free linked-list");
 
-            var newSlot = BasePage.FreeIndexSlot(page.FreeBlocks);
+            var newSlot = BasePage.FreeIndexSlot(page.FreeBytes);
 
             // there is no slot change - just exit (no need any change) [except if has no more items)
             if (newSlot == initialSlot && page.ItemsCount > 0) return;

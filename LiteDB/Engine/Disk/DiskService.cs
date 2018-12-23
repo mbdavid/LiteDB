@@ -30,7 +30,7 @@ namespace LiteDB.Engine
 
         private readonly AesEncryption _aes;
 
-        public event Action<long> Flush;
+        public event Action<uint> Flush;
 
         public DiskService(EngineSettings settings)
         {

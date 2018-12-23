@@ -25,11 +25,13 @@ namespace LiteDB.Demo
             {
                 var sw = new Stopwatch();
 
+                //TestBasePage.Run(sw);
                 //TestMemoryFile.Run(sw);
                 //TestAesEncryption.CreateEncryptedFile(sw);
                 //TestAesEncryption.ReadEncryptedFile(sw);
                 //TestDataPage.Run(sw);
-                TestScript.Run(sw);
+                TestInsertEngine.Run(sw);
+                //TestScript.Run(sw);
 
                 Console.WriteLine($">>> ({i}) - Elapsed: [[[ {sw.ElapsedMilliseconds} ]]]");
 

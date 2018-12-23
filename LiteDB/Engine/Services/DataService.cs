@@ -8,10 +8,14 @@ namespace LiteDB.Engine
     internal class DataService
     {
         /// <summary>
-        /// Get max data will be saved in a page. Must consider minimum footer (-1 block) and (-1 byte) per pageSegment (length)
-        /// 8121 bytes
+        /// Get maximum data bytes[] that fit in 1 page = 8149
         /// </summary>
-        private const int MAX_DATA_BYTES_PER_PAGE = ((PAGE_AVAILABLE_BLOCKS - 1) * PAGE_BLOCK_SIZE) - 1 - DataBlock.DATA_BLOCK_FIXED_SIZE;
+        public const int MAX_DATA_BYTES_PER_PAGE =
+            PAGE_SIZE - // 8192
+            PAGE_HEADER_SIZE - // [32 bytes]
+            1 - // CRC [1 byte]
+            PageSlot.SIZE - // [4 bytes]
+            DataBlock.DATA_BLOCK_FIXED_SIZE; // [6 bytes];
 
         private Snapshot _snapshot;
 
@@ -156,7 +160,7 @@ namespace LiteDB.Engine
             {
                 var page = _snapshot.GetPage<DataPage>(blockAddress.PageID);
                 var block = page.ReadBlock(blockAddress.Index);
-                var slot = BasePage.FreeIndexSlot(page.FreeBlocks);
+                var slot = BasePage.FreeIndexSlot(page.FreeBytes);
 
                 ENSURE(block.DataIndex == index++, "blocks must be in order");
 

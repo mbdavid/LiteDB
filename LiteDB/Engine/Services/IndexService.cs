@@ -217,7 +217,7 @@ namespace LiteDB.Engine
                 }
 
                 // get current slot position in free list
-                var slot = BasePage.FreeIndexSlot(node.Page.FreeBlocks);
+                var slot = BasePage.FreeIndexSlot(node.Page.FreeBytes);
 
                 node.Page.DeleteNode(node.Position.Index);
 
