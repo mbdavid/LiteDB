@@ -21,7 +21,7 @@ namespace LiteDB.Demo
             Console.WriteLine("LITE DB v5-VF");
             Console.WriteLine("===========================================================");
 
-            for (var i = 1; i <= 1; i++)
+            for (var i = 1; i <= 3; i++)
             {
                 var sw = new Stopwatch();
 

@@ -30,12 +30,21 @@ namespace LiteDB.Demo
                 CheckpointOnShutdown = true
             };
 
+            var query = new QueryDefinition();
+            var expr = BsonExpression.Create("_id = @p0");
+            query.Where.Add(expr);
+
             sw.Start();
 
             using (var db = new LiteEngine(settings))
             {
-
                 db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32);
+
+                for(var i = 0; i < 30000; i++)
+                {
+                    expr.Parameters["p0"] = i;
+                    db.Query("col1", query).Dispose();
+                }
             }
 
             sw.Stop();
