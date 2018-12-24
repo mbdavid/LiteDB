@@ -53,7 +53,7 @@ namespace LiteDB.Engine
 
                 var page = new BasePage(buffer);
 
-                if (page.CRC != page.ComputeChecksum())
+                if (page.CRC != buffer.ComputeChecksum())
                 {
                     throw new LiteException(0, $"Invalid CRC at page {page.PageID}");
                 }

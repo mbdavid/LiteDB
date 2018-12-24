@@ -130,9 +130,7 @@ namespace LiteDB
         {
             get
             {
-                return this.RawValue.Keys
-                    .OrderBy(x => x == "_id" ? 1 : 2)
-                    .ToList();
+                return this.RawValue.Keys;
             }
         }
 

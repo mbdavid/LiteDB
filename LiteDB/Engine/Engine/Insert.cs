@@ -74,8 +74,7 @@ namespace LiteDB.Engine
             {
                 // for each index, get all keys (support now multi-key) - gets distinct values only
                 // if index are unique, get single key only
-                var expr = BsonExpression.Create(index.Expression);
-                var keys = expr.Execute(doc, true);
+                var keys = index.BsonExpr.Execute(doc, true);
 
                 // do a loop with all keys (multi-key supported)
                 foreach(var key in keys)

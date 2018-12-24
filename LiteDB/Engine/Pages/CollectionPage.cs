@@ -13,7 +13,7 @@ namespace LiteDB.Engine
         /// <summary>
         /// Get how many slots collection pages will have for free list page (data/index)
         /// </summary>
-        public const int PAGE_FREE_LIST_SLOTS = 6;
+        public const int PAGE_FREE_LIST_SLOTS = 5;
 
         #region Buffer Field Positions
 

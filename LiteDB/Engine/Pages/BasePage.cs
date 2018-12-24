@@ -207,9 +207,6 @@ namespace LiteDB.Engine
             _buffer.Write((ushort)this.NextFreePosition, P_NEXT_FREE_POSITION);
             _buffer[P_HIGHEST_INDEX] = this.HighestIndex;
 
-            // last serialize field must be CRC checksum
-            _buffer[P_CRC] = this.ComputeChecksum();
-
             return _buffer;
         }
 
@@ -473,6 +470,12 @@ namespace LiteDB.Engine
         /// </summary>
         public byte GetFreeIndex()
         {
+            // if no fragment data, there is no fragment index too (use HighestIndex)
+            if (this.FragmentedBytes == 0)
+            {
+                return this.ItemsCount == 0 ? (byte)0 : (byte)(this.HighestIndex + 1);
+            }
+
             for (var index = 0; index <= 255; index++)
             {
                 var slot = CalcPositionAddr((byte)index);
@@ -519,14 +522,6 @@ namespace LiteDB.Engine
             }
 
             this.HighestIndex = 0;
-        }
-
-        /// <summary>
-        /// Computed checksum using CRC-8 from current page (from 0 to 8190)
-        /// </summary>
-        public byte ComputeChecksum()
-        {
-            return Crc8.ComputeChecksum(_buffer.Array, _buffer.Offset, PAGE_SIZE - 2);
         }
 
         #endregion
@@ -591,44 +586,37 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
-        /// Get index slot on FreeDataPageID/FreeIndexPageID - Get based on "FreeBlocks"
-        /// 7344 - 8160 bytes => slot 0 (great than 90% free)
-        /// 6120 - 7343 bytes => slot 1 (between 75% and 90% free)
-        /// 4080 - 6119 bytes => slot 2 (between 50% and 75% free)
-        /// 2448 - 4079 bytes => slot 3 (between  30% and 50% free)
-        ///    0 - 2447 bytes => slot 4 (less than 30% free)
+        /// FreeBytes ranges on slot for free list page
+        /// 90% - 100% = 0
+        /// 75% -  90% = 1
+        /// 60% -  75% = 2
+        /// 30% -  60% = 3
+        ///  0% -  30% = 4
         /// </summary>
-        private static int[] _slotRanges = new[] 
+        private static int[] _freeSlots = new[] 
         {
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .90),
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .75),
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .60),
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .40),
-            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .20)
+            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .90), // 0
+            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .75), // 1
+            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .60), // 2
+            (int)((PAGE_SIZE - PAGE_HEADER_SIZE) * .30)  // 3
         };
 
+        /// <summary>
+        /// Get index slot on FreeDataPageID/FreeIndexPageID 
+        /// </summary>
         public static int FreeIndexSlot(int freeBytes)
         {
-            for(var i = 0; i < _slotRanges.Length; i++)
+            for(var i = 0; i < _freeSlots.Length; i++)
             {
-                if (freeBytes >= _slotRanges[i]) return i;
+                if (freeBytes >= _freeSlots[i]) return i;
             }
 
-            //if (freeBytes >= 7344) return 0;
-            //if (freeBytes >= 6120) return 1;
-            //if (freeBytes >= 4080) return 2;
-            //if (freeBytes >= 2448) return 3;
-
-            return CollectionPage.PAGE_FREE_LIST_SLOTS - 1;
+            return CollectionPage.PAGE_FREE_LIST_SLOTS - 1; // 4
         }
 
         /// <summary>
         /// Get minimum slot with space enough for your data content
-        /// if your need 7344 - 8160 bytes => no slot => there is no garanteed slot (-1)
-        /// if your need 6120 - 7343 bytes => slot 0
-        /// if your need 4080 - 6119 bytes => slots 1, 0
-        /// if your need  572 - 4079 bytes => slots 2, 1, 0
-        /// if your need    1 -  571 bytes => slots 3, 2, 1, 0
+        /// Returns -1 if no space guaranteed (more than 90%)
         /// </summary>
         public static int GetMinimumIndexSlot(int length)
         {

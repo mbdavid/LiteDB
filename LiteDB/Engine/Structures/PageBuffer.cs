@@ -53,6 +53,14 @@ namespace LiteDB.Engine
         }
 
         /// <summary>
+        /// Computed checksum using CRC-8 from current page (from 0 to 8190)
+        /// </summary>
+        public byte ComputeChecksum()
+        {
+            return Crc8.ComputeChecksum(this.Array, this.Offset, PAGE_SIZE - 2);
+        }
+
+        /// <summary>
         /// Release this page - decrement ShareCounter
         /// </summary>
         public void Release()

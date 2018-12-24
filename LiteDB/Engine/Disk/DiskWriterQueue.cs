@@ -134,6 +134,9 @@ namespace LiteDB.Engine
             {
                 ENSURE(page.ShareCounter > 0, "page must be shared at least 1");
 
+                // compute CRC just before write on disk (use page last position)
+                page[BasePage.P_CRC] = page.ComputeChecksum();
+
                 // set stream position according to page
                 _stream.Position = page.Position;
 

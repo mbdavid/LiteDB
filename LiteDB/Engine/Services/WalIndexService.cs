@@ -121,7 +121,7 @@ namespace LiteDB.Engine
                 var page = new BasePage(buffer);
 
                 // check if page is ok
-                var crc = page.ComputeChecksum();
+                var crc = buffer.ComputeChecksum();
 
                 if (page.CRC != crc)
                 {

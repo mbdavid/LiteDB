@@ -16,6 +16,11 @@ namespace LiteDB.Engine
         public string Expression { get; }
 
         /// <summary>
+        /// Get BsonExpression from Expression
+        /// </summary>
+        public BsonExpression BsonExpr { get; }
+
+        /// <summary>
         /// Indicate if this index has distinct values only
         /// </summary>
         public bool Unique { get; }
@@ -80,6 +85,8 @@ namespace LiteDB.Engine
             this.Unique = unique;
             this.Head = head;
             this.Tail = tail;
+
+            this.BsonExpr = BsonExpression.Create(expr);
         }
     }
 }

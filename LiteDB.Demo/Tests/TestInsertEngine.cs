@@ -34,6 +34,7 @@ namespace LiteDB.Demo
 
             using (var db = new LiteEngine(settings))
             {
+
                 db.Insert("col1", GetDocs(1, 100000), BsonAutoId.Int32);
             }
 
@@ -49,7 +50,7 @@ namespace LiteDB.Demo
                 yield return new BsonDocument
                 {
                     ["_id"] = i, // Guid.NewGuid(),
-                    ["rnd"] = Guid.NewGuid().ToString(),
+                    ["rnd"] = Guid.NewGuid(),
                     ["name"] = "NoSQL Database",
                     ["birthday"] = new DateTime(1977, 10, 30),
                     ["phones"] = new BsonArray { "000000", "12345678" },
