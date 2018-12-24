@@ -72,10 +72,11 @@ namespace LiteDB.Engine
                 {
                     IEnumerable<BsonValue> getIds()
                     {
-                        var q = new QueryDefinition { Select = "_id", ForUpdate = true };
-                        q.Where.Add(predicate);
+                        var query = new QueryDefinition { Select = "_id" };
 
-                        using (var reader = this.Query(collection, q))
+                        query.Where.Add(predicate);
+
+                        using (var reader = this.Query(collection, query))
                         {
                             while (reader.Read())
                             {

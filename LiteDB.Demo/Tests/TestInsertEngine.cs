@@ -16,8 +16,8 @@ namespace LiteDB.Demo
     public class TestInsertEngine
     {
         static Random RND = new Random();
-        static string PATH = @"D:\insert-vf.db";
-        static string PATH_LOG = @"D:\insert-vf-log.db";
+        static string PATH = @"c:\temp\insert-vf.db";
+        static string PATH_LOG = @"c:\temp\insert-vf-log.db";
 
         public static void Run(Stopwatch sw)
         {

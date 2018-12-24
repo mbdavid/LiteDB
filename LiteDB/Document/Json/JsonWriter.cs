@@ -117,9 +117,9 @@ namespace LiteDB
 
             var index = 0;
 
-            foreach (var key in obj.Keys)
+            foreach (var el in obj.GetElements())
             {
-                this.WriteKeyValue(key, obj[key], index++ < length - 1);
+                this.WriteKeyValue(el.Key, el.Value, index++ < length - 1);
             }
 
             this.WriteEndBlock("}", hasData);

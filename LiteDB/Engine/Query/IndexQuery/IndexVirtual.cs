@@ -6,7 +6,7 @@ using static LiteDB.Constants;
 namespace LiteDB.Engine
 {
     /// <summary>
-    /// Implement virtual index for system collections
+    /// Implement virtual index for system collections AND full data collection read
     /// </summary>
     internal class IndexVirtual : Index, IDocumentLoader
     {
@@ -45,7 +45,7 @@ namespace LiteDB.Engine
 
         public override string ToString()
         {
-            return string.Format("FULL INDEX SCAN(VIRTUAL)");
+            return string.Format("FULL COLLECTION SCAN()");
         }
     }
 }

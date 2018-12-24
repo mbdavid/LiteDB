@@ -355,9 +355,9 @@ namespace LiteDB.Engine
         {
             this.Write(value.GetBytesCount());
 
-            foreach (var key in value.Keys)
+            foreach (var el in value.GetElements())
             {
-                this.WriteElement(key, value[key] ?? BsonValue.Null);
+                this.WriteElement(el.Key, el.Value ?? BsonValue.Null);
             }
 
             this.Write((byte)0x00);

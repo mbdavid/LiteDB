@@ -293,7 +293,6 @@ namespace LiteDB.Engine
 
                 return counter;
             });
-
         }
     }
 }

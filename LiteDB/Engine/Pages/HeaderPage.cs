@@ -204,11 +204,9 @@ namespace LiteDB.Engine
         /// </summary>
         public IEnumerable<KeyValuePair<string, uint>> GetCollections()
         {
-            foreach(var key in _collections.Keys)
+            foreach(var el in _collections.GetElements())
             {
-                var item = _collections[key];
-
-                yield return new KeyValuePair<string, uint>(key, (uint)item.AsInt32);
+                yield return new KeyValuePair<string, uint>(el.Key, (uint)el.Value.AsInt32);
             }
         }
 

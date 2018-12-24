@@ -321,7 +321,7 @@ namespace LiteDB.Engine
 
             return null;
         }
-        
+
         #endregion
     }
 }
